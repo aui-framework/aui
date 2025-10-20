@@ -170,39 +170,46 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-15, windows-latest]
+        compiler: ["Default", "Clang"]
         build_type: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
-        compiler: ["Default", "Clang"]
         generator: ["Ninja"]
         exclude:
-          - os: windows-latest
-            compiler: "Clang"
           - os: macos-15
+            compiler: "Clang"
+          - os: windows-latest
             compiler: "Clang"
         include:
           - os: macos-15
+            compiler: "Clang"
             build_type: RelWithDebInfo
             shared_or_static: static
             arch: x86_64
-            compiler: "Clang"
             generator: "Ninja"
 
           - os: windows-latest
+            compiler: "Default"
             build_type: RelWithDebInfo
             shared_or_static: shared
             arch: x86_64
-            compiler: "Default"
             generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
 
           - os: windows-latest
+            compiler: "Default"
             build_type: RelWithDebInfo
             shared_or_static: static
             arch: x86_64
-            compiler: "Default"
             generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
+
+          - os: windows-latest
+            compiler: "MinGW"
+            build_type: RelWithDebInfo
+            shared_or_static: static
+            arch: x86_64
+            generator: "Ninja"
 
     steps:
       - uses: actions/checkout@v5
