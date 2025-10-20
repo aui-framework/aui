@@ -10,7 +10,7 @@ else()
     else()
         auib_import(CURL https://github.com/aui-framework/curl/archive/b29a88ef1ac5d0b5a41c116f7713204dc377e9e7.zip
                     ARCHIVE
-                    CMAKE_ARGS -DCURL_USE_MBEDTLS=ON -DBUILD_CURL_EXE=OFF -DCURL_DISABLE_LDAP=ON -DCURL_DISABLE_LDAPS=ON
+                    CMAKE_ARGS -DCURL_USE_MBEDTLS=ON -DBUILD_CURL_EXE=OFF -DUSE_NGHTTP2=OFF -DCURL_DISABLE_LDAP=ON -DCURL_DISABLE_LDAPS=ON -DUSE_LIBIDN2=OFF -DCURL_USE_LIBPSL=OFF
         )
     endif()
 endif()
