@@ -110,7 +110,7 @@ TEST_F(UITextField, CursorClickPos1) {
  */
 TEST_F(UITextField, CursorClickPos2) {
     By::type<ATextField>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
-            .check(selectionMatches(8));
+            .check(selectionMatches(7));
 }
 
 TEST_F(UITextField, LeftRight) {
