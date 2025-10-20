@@ -343,7 +343,7 @@ macro(_aui_import_google_benchmark)
                 find_package(benchmark REQUIRED CONFIG)
             else()
                 auib_import(benchmark https://github.com/google/benchmark
-                            VERSION v1.8.3
+                            VERSION v1.9.4
                             CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
                             LINK STATIC)
             endif()
