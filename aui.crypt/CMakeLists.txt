@@ -5,7 +5,7 @@ if(AUIB_DISABLE)
 else()
     auib_import(MbedTLS https://github.com/Mbed-TLS/mbedtls
                 VERSION mbedtls-3.6.5
-                CMAKE_ARGS -DENABLE_PROGRAMS=OFF
+                CMAKE_ARGS -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF
     )
 endif()
 
