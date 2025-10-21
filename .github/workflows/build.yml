@@ -251,6 +251,9 @@ jobs:
         run: |
           echo "CC=$(brew --prefix llvm@18)/bin/clang " >> $GITHUB_ENV
           echo "CXX=$(brew --prefix llvm@18)/bin/clang++ " >> $GITHUB_ENV
+          echo "AR=$(brew --prefix llvm@18)/bin/llvm-ar " >> $GITHUB_ENV
+          echo "RANLIB=$(brew --prefix llvm@18)/bin/llvm-ranlib" >> $GITHUB_ENV
+          echo "STRIP=$(brew --prefix llvm@18)/bin/llvm-strip" >> $GITHUB_ENV
 
       - name: Setup AppleClang for macOS
         if: matrix.compiler == 'Default' && runner.os == 'macOS'
