@@ -272,6 +272,7 @@ jobs:
           sudo ./llvm.sh 20 all
           echo "CC=clang-20" >> $GITHUB_ENV
           echo "CXX=clang++-20" >> $GITHUB_ENV
+          echo "LDFLAGS=\"-fuse-ld=lld\"" >> $GITHUB_ENV
 
       - name: Add GCC to env for Linux
         if: matrix.compiler == 'GCC' && runner.os == 'Linux'
