@@ -257,6 +257,10 @@ namespace aui {
  *   return 0;
  * }
  * ```
+ *
+ * This macro enable developers to create `shared_ptr` that manage the lifetime of a parent object while directly
+ * referencing a specific member or sub-object. This enhances flexibility in managing object ownership where a component
+ * might only need a pointer to a specific property within a larger state object, as demonstrated by the example above.
  */
 #define AUI_PTR_ALIAS(owner, field) aui::ptr::alias(owner, owner->field)
 
