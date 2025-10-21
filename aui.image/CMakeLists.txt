@@ -18,7 +18,7 @@ endforeach()
 if(AUIB_DISABLE)
     find_package(WebP REQUIRED CONFIG)
 else()
-    auib_import(WebP https://github.com/webmproject/libwebp VERSION v1.3.1 CMAKE_ARGS ${WEBP_CMAKE_ARGS})
+    auib_import(WebP https://github.com/webmproject/libwebp VERSION v1.6.0 CMAKE_ARGS ${WEBP_CMAKE_ARGS})
 endif()
 
 aui_module(aui.image WHOLEARCHIVE EXPORT aui)
