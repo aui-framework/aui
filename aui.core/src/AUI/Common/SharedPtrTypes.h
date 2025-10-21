@@ -214,7 +214,7 @@ namespace aui {
          * copy of `&to`.
          *
          * It is the responsibility of the programmer to make sure that this ptr remains valid as long as this
-         * `shared_ptr` exists, such as in the typical use cases where ptr is a member of the object managed by `owner`
+         * `shared_ptr` exists, such as in the typical use cases where `to` is a member of the object managed by `owner`
          * or is an alias (e.g., downcast) of `owner.get()`.
          *
          * To reduce error proneness while using `aui::ptr::alias`, it is recommended to use `AUI_PTR_ALIAS` macro
@@ -266,7 +266,7 @@ namespace aui {
 
 
 /**
- * @brief @brief An std::weak_ptr with AUI extensions.
+ * @brief An std::shared_ptr with AUI extensions.
  * @details
  * !!! note
  *
@@ -341,7 +341,7 @@ public:
     /**
      * @brief Constructs a shared_ptr which shares ownership of the object managed by `v`.
      * @details
-     * Constructs a shared_ptr which shares ownership of the object managed by `v`. If `r` manages no object, `*this`
+     * Constructs a shared_ptr which shares ownership of the object managed by `v`. If `v` manages no object, `*this`
      * manages no object either.
      */
     _(const std::shared_ptr<T>& v): std::shared_ptr<T>(v) {}
@@ -376,11 +376,15 @@ public:
 
     /**
      * @brief Constructs a shared_ptr which shares ownership of the object managed by `v`.
+     * @details
+     * Throws `std::bad_weak_ptr` if expired.
      */
     _(const std::weak_ptr<T>& v): std::shared_ptr<T>(v) {}
 
     /**
      * @brief Constructs a shared_ptr which shares ownership of the object managed by `v`.
+     * @details
+     * Throws `std::bad_weak_ptr` if expired.
      */
     _(const _weak<T>& v): std::shared_ptr<T>(v) {}
 
