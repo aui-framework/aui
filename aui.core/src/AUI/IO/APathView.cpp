@@ -208,8 +208,8 @@ ADeque<APath> APathView::listDir(AFileListFlags f) const {
                 isDirectory = S_ISDIR(st.st_mode);
             }
         } else {
-            bool isFile = i->d_type & DT_REG;
-            bool isDirectory = i->d_type & DT_DIR;
+            isFile = i->d_type & DT_REG;
+            isDirectory = i->d_type & DT_DIR;
         }
 #endif
 
