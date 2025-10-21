@@ -170,22 +170,16 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-15, windows-latest]
-        compiler: ["Default", "Clang", "GCC"]
+        compiler: ["Default", "Clang"]
         build_type: [Debug, Release]
         shared_or_static: [shared, static]
         arch: [x86_64]
         generator: ["Ninja"]
         exclude:
-          - os: ubuntu-latest
-            compiler: "Default"
           - os: macos-15
             compiler: "Clang"
-          - os: macos-15
-            compiler: "GCC"
           - os: windows-latest
             compiler: "Clang"
-          - os: windows-latest
-            compiler: "GCC"
         include:
           - os: macos-15
             compiler: "Clang"
@@ -256,13 +250,6 @@ jobs:
           sudo ./llvm.sh 20 all
           echo "CC=clang-20" >> $GITHUB_ENV
           echo "CXX=clang++-20" >> $GITHUB_ENV
-          echo "LDFLAGS=\"-fuse-ld=lld\"" >> $GITHUB_ENV
-
-      - name: Add GCC to env for Linux
-        if: matrix.compiler == 'GCC' && runner.os == 'Linux'
-        run: |
-          echo "CC=gcc" >> $GITHUB_ENV
-          echo "CXX=g++" >> $GITHUB_ENV
 
       - name: Install MacOS dependencies
         if: runner.os == 'macOS'
