@@ -15,13 +15,6 @@
 static constexpr auto LOG_TAG = "OpenGLRenderingContext";
 
 void OpenGLRenderingContext::tryEnableFramebuffer(glm::uvec2 windowSize) {
-#if !AUI_PLATFORM_ANDROID && !AUI_PLATFORM_IOS
-    if (!GLAD_GL_ARB_sample_shading) {
-        ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: ARB_sample_shading is not present";
-        mFramebuffer = Failed{};
-        return;
-    }
-#endif
     try {
         mFramebuffer.emplace<gl::Framebuffer>(newOffscreenRenderingFramebuffer(windowSize));
     } catch (const AException& e) {
