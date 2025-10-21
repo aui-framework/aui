@@ -4,7 +4,7 @@ if(AUIB_DISABLE)
     find_package(MbedTLS REQUIRED)
 else()
     auib_import(MbedTLS https://github.com/aui-framework/mbedtls
-                VERSION d0c567d79ef37d672a3c7c49a2dc90754e246ffd
+                VERSION de9def97747dc9eb97374af8c4c19de9e71f39ea
                 CMAKE_ARGS -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF
     )
 endif()
