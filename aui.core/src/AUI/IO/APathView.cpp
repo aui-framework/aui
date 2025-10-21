@@ -23,7 +23,7 @@
 #include <AUI/Platform/ErrorToException.h>
 #include <AUI/Traits/platform.h>
 
-#ifdef WIN32
+#if AUI_PLATFORM_WIN
 #include <Windows.h>
 #include <direct.h>
 #else
