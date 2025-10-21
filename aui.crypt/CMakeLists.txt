@@ -3,8 +3,8 @@ cmake_minimum_required(VERSION 3.10)
 if(AUIB_DISABLE)
     find_package(MbedTLS REQUIRED)
 else()
-    auib_import(MbedTLS https://github.com/Mbed-TLS/mbedtls
-                VERSION mbedtls-3.6.5
+    auib_import(MbedTLS https://github.com/aui-framework/mbedtls
+                VERSION d0c567d79ef37d672a3c7c49a2dc90754e246ffd
                 CMAKE_ARGS -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF
     )
 endif()
