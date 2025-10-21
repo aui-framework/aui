@@ -347,7 +347,7 @@ jobs:
           execute_install_scripts: true
           version: 4.0
 
-      - name: Install macos dependencies
+      - name: Install macOS dependencies
         if: runner.os == 'macOS'
         run: brew install ninja
 
@@ -360,7 +360,7 @@ jobs:
         with:
           path: ${{github.workspace}}/artifacts
           merge-multiple: 'true'
-          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} default
+          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} Default
 
       - name: Configure test app
         run: |
