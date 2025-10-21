@@ -32,7 +32,7 @@ class FreeType;
 
 struct FT_FaceRec_;
 
-class AFont {
+class API_AUI_VIEWS AFont {
 public:
     /**
      * @brief Character data for a glyph.
