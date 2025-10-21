@@ -187,6 +187,14 @@ jobs:
           - os: windows-latest
             compiler: "GCC"
         include:
+          - os: ubuntu-latest
+            compiler: "Clang"
+            build_type: RelWithDebInfo
+            shared_or_static: static
+            arch: arm64
+            generator: "Ninja"
+            additional_cmake_flags: '-DCMAKE_C_COMPILER_TARGET=aarch64-linux-gnu -DCMAKE_CXX_COMPILER_TARGET=aarch64-linux-gnu'
+
           - os: macos-15
             compiler: "Clang"
             build_type: RelWithDebInfo
@@ -245,6 +253,14 @@ jobs:
         uses: awalsh128/cache-apt-pkgs-action@9f7a885e33ff6f8166b600e3e74a981ec11b92c3
         with:
           packages: pkg-config zlib1g-dev libssl-dev libcrypt-dev libcurl4-openssl-dev libgtk-3-dev libepoxy-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev
+          execute_install_scripts: true
+          version: 4.0
+
+      - name: Install Linux dependencies (arm64 cross)
+        if: runner.os == 'Linux' && matrix.arch == 'arm64'
+        uses: awalsh128/cache-apt-pkgs-action@9f7a885e33ff6f8166b600e3e74a981ec11b92c3
+        with:
+          packages: libstdc++-10-dev-arm64-cross libgcc-10-dev-arm64-cross libc6-dev-arm64-cross
           execute_install_scripts: true
           version: 4.0
 
