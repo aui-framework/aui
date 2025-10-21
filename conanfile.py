@@ -71,7 +71,6 @@ class AUIRecipe(ConanFile):
         self.requires("mbedtls/3.6.4")
         # CURL
         self.requires("libcurl/8.15.0")
-        self.requires("ixwebsocket/11.4.5")
         # Image
         self.requires("lunasvg/3.0.1")
         self.requires("libwebp/1.5.0")
