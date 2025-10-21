@@ -14,6 +14,7 @@
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Common/AByteBuffer.h>
 #include <AUI/Util/APimpl.h>
+#include <AUI/api.h>
 
 /**
  * @brief Stores public and/or private RSA key.

@@ -10,9 +10,9 @@
  */
 
 #pragma once
-#include "AUI/Rsa.h"
-#include "AUI/Common/AByteBuffer.h"
-#include "AX509.h"
+
+#include <AUI/Crypt/AX509.h>
+#include <AUI/Common/AByteBuffer.h>
 
 /**
  * @brief x509 certificate store object.

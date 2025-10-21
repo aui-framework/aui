@@ -17,6 +17,7 @@
 #include <mbedtls/ctr_drbg.h>
 #include <mbedtls/pem.h>
 #include <mbedtls/des.h>
+#include <mbedtls/error.h>
 #include <AUI/Common/AException.h>
 #include <glm/glm.hpp>
 
@@ -39,10 +40,15 @@ public:
             throw AException("Failed to seed RNG");
         }
     }
+
     ~ARsaPrivate() {
         mbedtls_pk_free(&pk);
         mbedtls_ctr_drbg_free(&ctr_drbg);
         mbedtls_entropy_free(&entropy);
+    }
+
+    mbedtls_rsa_context* getRsaContext() const {
+        return mbedtls_pk_rsa(pk);
     }
 };
 
@@ -53,18 +59,33 @@ ARsa::~ARsa() {}
 AByteBuffer ARsa::encrypt(AByteBufferView in) {
     AByteBuffer buf;
     buf.reserve(in.size() + 0x1000);
-    for (auto it = in.begin(); it != in.end();) {
-        auto toRead = glm::min(size_t(in.end() - it), getKeyLength() - RSA_PKCS1_PADDING_SIZE);
-        int r = RSA_public_encrypt(
-            toRead, reinterpret_cast<const unsigned char*>(it),
-            reinterpret_cast<unsigned char*>(buf.data() + buf.getSize()), static_cast<RSA*>(mRsa), RSA_PKCS1_PADDING);
 
-        if (r < 0)
-            throw AException("Could not RSA_public_encrypt");
+    auto rsa = mPrivate->getRsaContext();
+    size_t keyLen = mbedtls_rsa_get_len(rsa);
+    size_t paddingSize = 11; // PKCS#1 v1.5 padding size
+
+    for (auto it = in.begin(); it != in.end();) {
+        auto toRead = glm::min(static_cast<size_t>(in.end() - it), keyLen - paddingSize);
+
+        size_t oldSize = buf.getSize();
+        buf.setSize(oldSize + keyLen);
+
+        int r = mbedtls_rsa_pkcs1_encrypt(
+            rsa,
+            mbedtls_ctr_drbg_random,
+            &mPrivate->ctr_drbg,
+            toRead,
+            reinterpret_cast<const unsigned char*>(it),
+            reinterpret_cast<unsigned char*>(buf.data() + oldSize)
+        );
+
+        if (r != 0) {
+            char error_buf[100];
+            mbedtls_strerror(r, error_buf, sizeof(error_buf));
+            throw AException("Could not encrypt: {}"_format(error_buf));
+        }
 
         it += toRead;
-
-        buf.setSize(buf.getSize() + r);
     }
 
     return buf;
@@ -73,84 +94,152 @@ AByteBuffer ARsa::encrypt(AByteBufferView in) {
 AByteBuffer ARsa::decrypt(AByteBufferView in) {
     AByteBuffer buf;
     buf.reserve(in.size() + 0x1000);
+
+    auto rsa = mPrivate->getRsaContext();
+    size_t keyLen = mbedtls_rsa_get_len(rsa);
+
     for (auto it = in.begin(); it != in.end();) {
-        auto toRead = glm::min(size_t(in.end() - it), getKeyLength());
-        int r = RSA_private_decrypt(
-            toRead, reinterpret_cast<const unsigned char*>(it),
-            reinterpret_cast<unsigned char*>(buf.data() + buf.getSize()), static_cast<RSA*>(mRsa), RSA_PKCS1_PADDING);
-        if (r < 0)
-            throw AException("Could not RSA_private_decrypt");
+        auto toRead = glm::min(static_cast<size_t>(in.end() - it), keyLen);
+
+        unsigned char temp[4096];
+        size_t olen = 0;
+
+        int r = mbedtls_rsa_pkcs1_decrypt(
+            rsa,
+            mbedtls_ctr_drbg_random,
+            &mPrivate->ctr_drbg,
+            &olen,
+            reinterpret_cast<const unsigned char*>(it),
+            temp,
+            sizeof(temp)
+        );
+
+        if (r != 0) {
+            char error_buf[64];
+            mbedtls_strerror(r, error_buf, sizeof(error_buf));
+            throw AException("Could not decrypt: {}"_format(error_buf));
+        }
+
+        size_t oldSize = buf.getSize();
+        buf.setSize(oldSize + olen);
+        memcpy(buf.data() + oldSize, temp, olen);
 
         it += toRead;
-
-        buf.setSize(buf.getSize() + r);
     }
+
     return buf;
 }
 
-size_t ARsa::getKeyLength() const { return RSA_size(static_cast<RSA*>(mRsa)); }
+size_t ARsa::getKeyLength() const {
+    return mbedtls_rsa_get_len(mPrivate->getRsaContext());
+}
 
 AByteBuffer ARsa::getPrivateKeyPEM() const {
-    AByteBuffer byteBuffer;
-    BIO* bioKey = BIO_new(BIO_s_mem());
-    PEM_write_bio_RSAPrivateKey(bioKey, (RSA*) mRsa, EVP_des_ede3_cbc(), nullptr, 0, nullptr, gKey);
-    char* data;
-    long size = BIO_get_mem_data(bioKey, &data);
+    std::vector<uint8_t> output(16000);
+    int ret = mbedtls_pk_write_key_pem(&mPrivate->pk, output.data(), output.size());
 
-    byteBuffer.write(data, size);
-    BIO_free(bioKey);
+    if (ret != 0) {
+        char error_buf[64];
+        mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+        throw AException("Could not write private key: {}"_format(error_buf));
+    }
+
+    AByteBuffer byteBuffer;
+    size_t len = strlen(reinterpret_cast<const char*>(output.data()));
+    byteBuffer.write(reinterpret_cast<const char*>(output.data()), len);
 
     return byteBuffer;
 }
+
 AByteBuffer ARsa::getPublicKeyPEM() const {
+    std::vector<uint8_t> output(16000);
+    int ret = mbedtls_pk_write_pubkey_pem(&mPrivate->pk, output.data(), output.size());
+
+    if (ret != 0) {
+        char error_buf[64];
+        mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+        throw AException("Could not write public key: {}"_format(error_buf));
+    }
+
     AByteBuffer byteBuffer;
-    BIO* bioKey = BIO_new(BIO_s_mem());
-    PEM_write_bio_RSAPublicKey(bioKey, (RSA*) mRsa);
-
-    char* data;
-    long size = BIO_get_mem_data(bioKey, &data);
-
-    byteBuffer.write(data, size);
-    BIO_free(bioKey);
+    size_t len = strlen(reinterpret_cast<const char*>(output.data()));
+    byteBuffer.write(reinterpret_cast<const char*>(output.data()), len);
 
     return byteBuffer;
 }
 
 _<ARsa> ARsa::generate(int bits) {
-    auto bne = BN_new();
-    if (auto r = BN_set_word(bne, RSA_F4); r != 1) {
-        BN_free(bne);
-        throw AException("BN_set_word failed: {}"_format(r));
+    auto instance = aui::ptr::manage_shared(new ARsa());
+
+    int ret = mbedtls_pk_setup(&instance->mPrivate->pk,
+                                mbedtls_pk_info_from_type(MBEDTLS_PK_RSA));
+    if (ret != 0) {
+        char error_buf[64];
+        mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+        throw AException("mbedtls_pk_setup failed: {}"_format(error_buf));
     }
-    auto rsa = RSA_new();
-    if (auto r = RSA_generate_key_ex(rsa, bits, bne, nullptr); r != 1) {
-        BN_free(bne);
-        RSA_free(rsa);
-        throw AException("RSA_generate_key_ex failed: {}"_format(r));
+
+    ret = mbedtls_rsa_gen_key(
+        instance->mPrivate->getRsaContext(),
+        mbedtls_ctr_drbg_random,
+        &instance->mPrivate->ctr_drbg,
+        bits,
+        65537 // RSA_F4
+    );
+
+    if (ret != 0) {
+        char error_buf[64];
+        mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+        throw AException("mbedtls_rsa_gen_key failed: {}"_format(error_buf));
     }
-    return aui::ptr::manage_shared(new ARsa(rsa, bne));
+
+    return instance;
 }
 
 _<ARsa> ARsa::fromPrivateKeyPEM(AByteBufferView buffer) {
-    BIO* inputBuffer = BIO_new_mem_buf(buffer.data(), buffer.size());
-    RSA* rsa = nullptr;
-    PEM_read_bio_RSAPrivateKey(inputBuffer, (RSA**) &rsa, nullptr, gKey);
-    BIO_free(inputBuffer);
+    auto instance = aui::ptr::manage_shared(new ARsa());
 
-    if (rsa == nullptr)
-        throw AException("Could not create RSA private key");
+    AByteBuffer nullTerminated;
+    nullTerminated.write(buffer.data(), buffer.size());
+    nullTerminated.write("\0", 1);
 
-    return aui::ptr::manage_shared(new ARsa(rsa, nullptr));
+    int ret = mbedtls_pk_parse_key(
+        &instance->mPrivate->pk,
+        reinterpret_cast<const unsigned char*>(nullTerminated.data()),
+        nullTerminated.size(),
+        gKey,
+        sizeof(gKey) - 1,
+        mbedtls_ctr_drbg_random,
+        &instance->mPrivate->ctr_drbg
+    );
+
+    if (ret != 0) {
+        char error_buf[64];
+        mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+        throw AException("Could not parse RSA private key: {}"_format(error_buf));
+    }
+
+    return instance;
 }
 
 _<ARsa> ARsa::fromPublicKeyPEM(AByteBufferView buffer) {
-    BIO* inputBuffer = BIO_new_mem_buf(buffer.data(), buffer.size());
-    RSA* rsa = nullptr;
-    PEM_read_bio_RSAPublicKey(inputBuffer, (RSA**) &rsa, nullptr, nullptr);
-    BIO_free(inputBuffer);
+    auto instance = aui::ptr::manage_shared(new ARsa());
 
-    if (rsa == nullptr)
-        throw AException("Could not create RSA public key");
+    AByteBuffer nullTerminated;
+    nullTerminated.write(buffer.data(), buffer.size());
+    nullTerminated.write("\0", 1);
 
-    return aui::ptr::manage_shared(new ARsa(rsa, nullptr));
+    int ret = mbedtls_pk_parse_public_key(
+        &instance->mPrivate->pk,
+        reinterpret_cast<const unsigned char*>(nullTerminated.data()),
+        nullTerminated.size()
+    );
+
+    if (ret != 0) {
+        char error_buf[100];
+        mbedtls_strerror(ret, error_buf, sizeof(error_buf));
+        throw AException("Could not parse RSA public key: {}"_format(error_buf));
+    }
+
+    return instance;
 }
