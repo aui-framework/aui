@@ -60,6 +60,9 @@ public:
             "2. Dereference the property via asterisk * to obtain current property value.\n");
     }
 
+    template<typename Expr>
+    In(aui::react::Expression<Expr>&& reactiveExpression): mImpl(ReactiveExpression { _new<APropertyPrecomputed<T>>(std::move(reactiveExpression.expression)) }) {}
+
     template <APropertyWritable DestinationProperty>
     void bindTo(DestinationProperty&& destinationProperty) {
         std::visit(
