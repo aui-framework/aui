@@ -12,6 +12,7 @@
 #pragma once
 
 #include <AUI/Util/Declarative/Concepts.h>
+#include <AUI/Common/React.h>
 
 namespace declarative::contract {
 
@@ -58,8 +59,6 @@ public:
             "1. Explicitly express an intention to use a reactive value by using AUI_REACT macro, or\n"
             "2. Dereference the property via asterisk * to obtain current property value.\n");
     }
-
-    In(aui::factory<T> auto&& t) : mImpl(ReactiveExpression { _new<APropertyPrecomputed<T>>(std::move(t)) }) {}
 
     template <APropertyWritable DestinationProperty>
     void bindTo(DestinationProperty&& destinationProperty) {

@@ -85,7 +85,8 @@
  * 3. Re-evaluates when dependencies change.
  *
  * The macros itself consists of a lambda syntax with forced `[=]` capture and explicit `decltype(auto)` return type.
+ * The lambda is wrapped with aui::react::Expression to be strongly typed.
  */
-#define AUI_REACT(expression) [=]() -> decltype(auto) { return (expression); }
+#define AUI_REACT(expression) ::aui::react::Expression{ [=]() -> decltype(auto) { return (expression); } }
 
 //NOLINTEND(modernize-*,cppcoreguidelines-macro-usage,bugprone-macro-parentheses)
