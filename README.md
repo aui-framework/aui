@@ -192,7 +192,7 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 
 ## Used libraries
 - [libcurl](https://curl.se/) for http/https requests
-- [OpenSSL](https://github.com/openssl/openssl) for encryption
+- [MbedTLS](https://github.com/Mbed-TLS/mbedtls) for encryption
 - `OpenGL` as graphics hardware acceleration backend
 - [glm](https://github.com/g-truc/glm) for linear algebra
 - [stbimage](https://github.com/nothings/stb) for image loading
