@@ -56,12 +56,4 @@ struct API_AUI_CORE DependencyObserverRegistrar {
 private:
     DependencyObserver* mPrevObserver;
 };
-
-/**
- * @brief Reactive expression produced by AUI_REACT macro.
- */
-template <aui::invocable F>
-struct Expression {
-    F expression;
-};
 }   // namespace aui::react

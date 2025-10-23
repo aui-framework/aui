@@ -108,15 +108,6 @@ struct APropertyPrecomputed final : aui::react::DependencyObserver {
         return value();
     }
 
-    /**
-     * @brief Makes a readonly [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
-     */
-    template <aui::invocable<const Underlying&> Projection>
-    [[nodiscard]]
-    auto readProjected(Projection&& projection) noexcept {
-        return aui::detail::property::makeReadonlyProjection(*this, std::forward<Projection>(projection));
-    }
-
     [[nodiscard]]
     const T* operator->() const noexcept {
         return &value();
@@ -133,3 +124,70 @@ template<aui::invocable<> Factory>
 APropertyPrecomputed(Factory&& f) -> APropertyPrecomputed<std::decay_t<std::invoke_result_t<Factory>>>;
 
 static_assert(APropertyReadable<APropertyPrecomputed<int>>, "APropertyPrecomputed must be a APropertyReadable");
+
+namespace aui::react {
+
+/**
+ * @brief Reactive expression produced by AUI_REACT macro.
+ */
+template <aui::invocable F>
+struct Expression {
+    F expression;
+
+
+    template <typename Object, typename Invocable>
+    void bindTo(ASlotDef<Object, Invocable> destination) {
+        aui::tuple_visitor<typename aui::lambda_info<Invocable>::args>::for_each_all([&]<typename ExtractedType>() {
+            using T = std::decay_t<ExtractedType>;
+            auto precomputed = _new<APropertyPrecomputed<T>>(std::move(expression));
+            auto& precomputedValue = *precomputed; // extract reference to precomputed, because we'll std::move the
+                                                   // shared_ptr
+            AObject::connect(
+                precomputedValue, destination.boundObject,
+                [keepMeAlive = std::move(precomputed), invocable = std::move(destination.invocable)](const T& value) {
+                    std::invoke(invocable, value);
+                });
+            });
+    }
+};
+}
+
+
+/**
+ * @brief Explicitly denotes a [reactive](reactive.md) expression.
+ * @ingroup useful_macros
+ * @ingroup reactive
+ * @details
+ * AUI_REACT is a core component of AUI Framework's [reactive](reactive.md) reactive programming model. It's used to
+ * create [reactive](reactive.md) expressions that automatically update UI elements when their dependent values
+ * change.
+ *
+ * The expression is a C++ expression that depends on AProperty values:
+ *
+ * ```cpp
+ * AUI_REACT(expression)
+ * ```
+ *
+ * ## Basic example
+ *
+ * This creates a label that automatically updates when property `mCounter` changes:
+ *
+ * <!-- aui:snippet examples/7guis/counter/src/main.cpp counter -->
+ *
+ * ## Formatted label example
+ *
+ * <!-- aui:snippet examples/7guis/timer/src/main.cpp example -->
+ *
+ * ### Implementation details
+ *
+ * When used in declarative UI building, `AUI_REACT` creates an instance of `APropertyPrecomputed<T>` behind the scenes,
+ * which:
+ *
+ * 1. Evaluates the expression initially.
+ * 2. Sets up observers for all dependent properties.
+ * 3. Re-evaluates when dependencies change.
+ *
+ * The macros itself consists of a lambda syntax with forced `[=]` capture and explicit `decltype(auto)` return type.
+ * The lambda is wrapped with aui::react::Expression to be strongly typed.
+ */
+#define AUI_REACT(expression) ::aui::react::Expression { [=] { return (expression); } }

@@ -1,4 +1,4 @@
-/*
+// /*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -32,8 +32,7 @@ auto formatDate(system_clock::time_point date) { return "{0:%d}.{0:%m}.{0:%G}"_f
 auto dateTextField(DateTextFieldState& state) {
     return _new<ATextField>() AUI_LET {
         AObject::biConnect(
-            state.parsed.biProjected(aui::lambda_overloaded {
-              [](const AOptional<system_clock::time_point>& v) -> AString {
+            /* state.parsed.biProjected(...) */ -> AString {
                   if (!v) {
                       return "";
                   }
@@ -70,9 +69,7 @@ public:
         } });
         setContents(Centered {
           Vertical {
-            _new<ADropdownList>(AListModel<AString>::make({ "one-way flight", "return flight" })) AUI_LET {
-                    connect(it->selectionId().readProjected([](int selectionId) { return selectionId == 1; }),
-                            mIsReturnFlight);
+            _new<ADropdownList>(AListModel<AString>::make({ "one-way flight", "return flight" })) AUI_LET {// connect(it->selectionId().readProjected(...), mIsReturnFlight);
                 },
             dateTextField(mDepartureDate),
             dateTextField(mReturnDate) AUI_LET { connect(mIsReturnFlight, AUI_SLOT(it)::setEnabled); },

@@ -729,7 +729,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER_H3
         MyWindow(const _<User>& user) {
             _<ALabel> label;
             setContents(Centered {
-                _new<ALabel>() & user->name.readProjected(&AString::uppercase)
+                Label { AUI_REACT(user->name->uppercase()) },
             });
         }
     };

@@ -35,6 +35,7 @@
 #include "AUI/View/ARadioGroup.h"
 #include "AUI/View/AGroupBox.h"
 #include "AUI/Common/AString.h"
+#include "AUI/View/AForEachUI.h"
 
 using namespace ass;
 using namespace declarative;
@@ -104,17 +105,13 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
         GroupBox {
           Label { "Visibility" },
-          _new<ARadioGroup>() AUI_LET {
-                  static constexpr auto POSSIBLE_VALUES = aui::enumerate::ALL_VALUES<Visibility>;
-                  it->setModel(AListModel<AString>::fromVector(
-                      POSSIBLE_VALUES | ranges::views::transform(&AEnumerate<Visibility>::toName) | ranges::to_vector));
-                  AObject::biConnect(
-                      targetView->visibility().biProjected(aui::lambda_overloaded {
-                        [](Visibility v) -> int { return aui::indexOf(POSSIBLE_VALUES, v).valueOr(0); },
-                        [](int v) -> Visibility { return POSSIBLE_VALUES[v]; },
-                      }),
-                      it->selectionId());
-              },
+          AUI_DECLARATIVE_FOR(i, aui::enumerate::ALL_VALUES<Visibility>, AVerticalLayout) {
+              return RadioButton {
+                  .checked = AUI_REACT(targetView->visibility() == i),
+                  .onClick = [=] { targetView->visibility() = i;  },
+                  .content = Label { "{}"_format(i) },
+              };
+          },
         },
 
         Label { "view's custom style" },

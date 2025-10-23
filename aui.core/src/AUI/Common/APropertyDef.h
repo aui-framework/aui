@@ -146,37 +146,6 @@ struct APropertyDef {
     }
 
     /**
-     * @brief Makes a readonly [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
-     */
-    template <aui::invocable<const Underlying&> Projection>
-    [[nodiscard]]
-    auto readProjected(Projection&& projection) noexcept {
-        return aui::detail::property::makeReadonlyProjection(std::move(*this), std::forward<Projection>(projection));
-    }
-
-    /**
-     * @brief Makes a bidirectional [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
-     */
-    template <
-        aui::invocable<const Underlying&> ProjectionRead,
-        aui::invocable<const std::invoke_result_t<ProjectionRead, Underlying>&> ProjectionWrite>
-    [[nodiscard]]
-    auto biProjected(ProjectionRead&& projectionRead, ProjectionWrite&& projectionWrite) noexcept {
-        return aui::detail::property::makeBidirectionalProjection(
-            std::move(*this), std::forward<ProjectionRead>(projectionRead),
-            std::forward<ProjectionWrite>(projectionWrite));
-    }
-
-    /**
-     * @brief Makes a bidirectional projection of this property (by a single aui::lambda_overloaded).
-     */
-    template <aui::detail::property::ProjectionBidirectional<Underlying> Projection>
-    [[nodiscard]]
-    auto biProjected(Projection&& projectionBidirectional) noexcept {
-        return aui::detail::property::makeBidirectionalProjection(std::move(*this), projectionBidirectional);
-    };
-
-    /**
      * @return @copybrief aui::PropertyModifier See aui::PropertyModifier.
      */
     aui::PropertyModifier<APropertyDef> writeScope() noexcept {
@@ -192,15 +161,16 @@ struct APropertyDef {
         }
     }
 
-private:
-    friend class AObject;
     /**
-     * @brief Makes a callable that assigns value to this property.
+     * @brief Makes ASlotDef that assigns value to this property.
      */
     [[nodiscard]]
     auto assignment() noexcept {
         return aui::detail::property::makeAssignment(std::move(*this));
     }
+
+private:
+    friend class AObject;
 };
 
 // implementation of property modifier for APropertyDef (in comparison to AProperty) has to call getter, store a copy

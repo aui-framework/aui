@@ -71,7 +71,7 @@ public:
      * @details
      * See [signal-slot system](signal_slot.md) for more info.
      * ```cpp
-     * connect(view->clicked, AUI_DO_ONCE(otherObjectRawPtr)::handleButtonClicked);
+     * connect(view->clicked, AUI_SLOT(otherObjectRawPtr)::handleButtonClicked);
      * ```
      * @param signal signal
      * @param object instance of <code>AObject</code>
@@ -92,7 +92,7 @@ public:
      *
      * See [signal-slot system](signal_slot.md) for more info.
      * ```cpp
-     * connect(textField->text(), AUI_DO_ONCE(otherObjectRawPtr)::handleText);
+     * connect(textField->text(), AUI_SLOT(otherObjectRawPtr)::handleText);
      * ```
      * @param property property
      * @param object instance of <code>AObject</code>
@@ -166,7 +166,7 @@ public:
      * @details
      * [signal-slot system](signal_slot.md) for more info.
      * ```cpp
-     * connect(view->clicked, AUI_DO_ONCE(otherObjectRef)::handleButtonClicked);
+     * connect(view->clicked, AUI_SLOT(otherObjectRef)::handleButtonClicked);
      * ```
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
@@ -204,8 +204,8 @@ public:
      * @details
      * See [signal-slot system](signal_slot.md) for more info.
      * ```cpp
-     * connect(view->clicked, AUI_DO_ONCE(otherObjectSharedPtr)::handleButtonClicked);
-     * connect(textField->text(), AUI_DO_ONCE(otherObjectSharedPtr)::handleText);
+     * connect(view->clicked, AUI_SLOT(otherObjectSharedPtr)::handleButtonClicked);
+     * connect(textField->text(), AUI_SLOT(otherObjectSharedPtr)::handleText);
      * ```
      *
      * !!! note
@@ -234,8 +234,8 @@ public:
      * See [signal-slot system](signal_slot.md) for more info.
      *
      * ```cpp
-     * connect(view->clicked, ASlotDef { AUI_DO_ONCE(otherObject)::handleButtonClicked });
-     * connect(textField->text(), ASlotDef { AUI_DO_ONCE(otherObject)::handleText });
+     * connect(view->clicked, ASlotDef { AUI_SLOT(otherObject)::handleButtonClicked });
+     * connect(textField->text(), ASlotDef { AUI_SLOT(otherObject)::handleText });
      * ```
      *
      * !!! note
@@ -244,7 +244,7 @@ public:
      *     possible, consider using shorter overload:
      *
      *     ```cpp
-     *     connect(view->clicked, AUI_DO_ONCE(otherObject)::handleButtonClicked);
+     *     connect(view->clicked, AUI_SLOT(otherObject)::handleButtonClicked);
      *     ```
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, typename Function>

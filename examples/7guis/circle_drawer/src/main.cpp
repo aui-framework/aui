@@ -222,10 +222,11 @@ public:
           Centered {
             Horizontal {
               Button { Label { "Undo" }, {me::undo} } AUI_LET {
-                  it & mState.history.nextAction.readProjected([&](UndoStack::Iterator i) { return i != mState.history.begin(); }) > &AView::setEnabled;
+
+                  connect(AUI_REACT(mState.history.nextAction != mState.history.begin()), AUI_SLOT(it)::setEnabled);
               },
               Button { Label { "Redo" }, {me::redo} } AUI_LET {
-                it & mState.history.nextAction.readProjected([&](UndoStack::Iterator i) { return i != mState.history.end(); }) > &AView::setEnabled;
+                  // AUI_REACT(mState.history.nextAction != mState.history.end()).bindTo({AUI_SLOT(it)::setEnabled});
               },
             },
           },
