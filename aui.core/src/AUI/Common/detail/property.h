@@ -139,3 +139,17 @@ struct fmt::formatter<T> {
 
     auto format(T& c, format_context& ctx) const { return fmt::format_to(ctx.out(), "{}", *c); }
 };
+
+template<AAnyProperty T>
+struct aui::detail::ConnectionSourceTraits<T> {
+
+    /**
+     * @brief Helper function for AObject::connect to make connection.
+     */
+    template <::aui::convertible_to<AObjectBase*> Object, ::aui::not_overloaded_lambda Function>
+    decltype(auto) connect(T& source, Object object, Function&& function) {
+        auto lambda = ::aui::detail::makeLambda(object, std::forward<Function>(function));
+        ::aui::detail::signal::makeRawInvocable<decltype(lambda)&, decltype(*source)>(lambda)(*source);
+        return AObject::connect(source.changed, object, std::move(lambda));
+    }
+};

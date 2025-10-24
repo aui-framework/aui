@@ -88,6 +88,8 @@ struct projection_info<Projection> {
     using args = typename info::args;
 };
 
+// TODO: remove ProjectedSignal/projection_info/ dead code
+
 template <
     typename AnySignal,   // can't use AAnySignal here, as concept would depend on itself
     typename Projection>
@@ -142,6 +144,13 @@ private:
     }
 };
 
+template <aui::not_overloaded_lambda Lambda, typename ... Args>
+auto makeRawInvocable(Lambda&& lambda) {
+    return [lambda = std::forward<Lambda>(lambda)](const Args&... args) mutable {
+        aui::detail::signal::callIgnoringExcessArgs(lambda, args...);
+    };
+}
+
 }   // namespace aui::detail::signal
 
 /**
@@ -159,6 +168,7 @@ class ASignal final : public AAbstractSignal {
 
     /* ASignal <-> AObject implementation stuff */
     friend class AObject;
+    friend struct aui::detail::ConnectionSourceTraits<ASignal>;
 
     /* tests */
     friend class PropertyPrecomputedTest_APropertyPrecomputed_Complex_Test;
@@ -389,6 +399,9 @@ private:
 
     void invokeSignal(AObject* sender, std::tuple<const Args&...> args = {});
 
+    /**
+     * @brief Helper function for AObject::connect to make connection.
+     */
     template <aui::convertible_to<AObjectBase*> Object, aui::not_overloaded_lambda Lambda>
     const _<ConnectionImpl>& connect(Object objectBase, Lambda&& lambda) {
         AObject* object = nullptr;
@@ -400,7 +413,7 @@ private:
             conn->sender = this;
             conn->receiverBase = objectBase;
             conn->receiver = object;
-            conn->func = makeRawInvocable(std::forward<Lambda>(lambda));
+            conn->func = ::aui::detail::signal::makeRawInvocable<Lambda&&, Args...>(std::forward<Lambda>(lambda));
             std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
 
             std::erase_if(mOutgoingConnections, [](const SenderConnectionOwner& o) {
@@ -419,12 +432,6 @@ private:
         return connect(receiver, [observer = std::move(observer)] { observer(); });
     }
 
-    template <aui::not_overloaded_lambda Lambda>
-    auto makeRawInvocable(Lambda&& lambda) const {
-        return [lambda = std::forward<Lambda>(lambda)](const Args&... args) mutable {
-            aui::detail::signal::callIgnoringExcessArgs(lambda, args...);
-        };
-    }
 
 private:
     template <typename Predicate>
@@ -584,6 +591,17 @@ using emits = ASignal<Args...>;
 
 #define signals public
 
+template<typename ... Args>
+struct aui::detail::ConnectionSourceTraits<ASignal<Args...>> {
+
+    /**
+     * @brief Helper function for AObject::connect to make connection.
+     */
+    template <aui::convertible_to<AObjectBase*> Object, aui::not_overloaded_lambda Lambda>
+    decltype(auto) connect(ASignal<Args...>& source, Object objectBase, Lambda&& lambda) {
+        return source.connect(objectBase, std::forward<Lambda>(lambda));
+    }
+};
 
 /*
 
