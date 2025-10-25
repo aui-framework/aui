@@ -188,7 +188,7 @@ struct aui::detail::ConnectionSourceTraits<aui::react::Expression<Expr>> {
  * The macros itself consists of a lambda syntax with forced `[=]` capture and explicit `decltype(auto)` return type.
  * The lambda is wrapped with aui::react::Expression to be strongly typed.
  */
-#define AUI_REACT(expression)        \
+#define AUI_REACT(...)        \
     ::aui::react::Expression {       \
-        [=] { return (expression); } \
+        [=] { return (__VA_ARGS__); } \
     }

@@ -50,10 +50,14 @@ public:
                             experimental::Dynamic {
                                 .content = AUI_REACT(mSearchQuery->empty() ? indexedList() : searchQueryList()),
                             },
-                            Label { AUI_REACT("{} contact(s)"_format(mContactCount)) }
-
-                                & mSearchQuery.readProjected([](const AString& s) { return s.empty(); }) > &AView::setVisible
-                                 AUI_WITH_STYLE { FontSize { 10_pt }, ATextAlign::CENTER, Margin { 8_dp } },
+                            Label { AUI_REACT("{} contact(s)"_format(mContactCount)) } AUI_LET {
+                                AObject::connect(AUI_REACT(ass::PropertyList{
+                                    FontSize { 10_pt },
+                                    ATextAlign::CENTER,
+                                    Margin { 8_dp },
+                                    mSearchQuery->empty() ? Visibility::VISIBLE : Visibility::GONE,
+                                }), AUI_SLOT(it)::setCustomStyle);
+                            },
                           } AUI_WITH_STYLE { Padding(0, 8_dp) })
                       .build() AUI_WITH_STYLE { Expanding(0, 1), MinSize(200_dp) },
 

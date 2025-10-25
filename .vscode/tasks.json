@@ -3,45 +3,30 @@
 	"tasks": [
 		{
 			"type": "cmake",
-			"label": "CMake: build aui.example.views",
+			"label": "build",
 			"command": "build",
 			"targets": [
-				"aui.example.views"
+				"all"
 			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"problemMatcher": [],
-			"detail": "CMake template build task"
-		},
-		{
-			"type": "cmake",
-			"label": "CMake: build Tests",
-			"command": "build",
-			"targets": [
-				"Tests"
+			"preset": "__defaultBuildPreset__",
+			"group": "build",
+			"problemMatcher": [
+				{
+					"owner": "gcc-problem-matcher",
+					"pattern": [
+						{
+							"regexp": "^(.*?):(\\d+):(\\d*):?\\s+(?:fatal\\s+)?(warning|error):\\s+(.*)$",
+							"file": 1,
+							"line": 2,
+							"column": 3,
+							"severity": 4,
+							"message": 5
+						}
+					]
+				}
 			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"problemMatcher": [],
-			"detail": "CMake template build task"
-		},
-		{
-			"type": "cmake",
-			"label": "CMake: build Benchmarks",
-			"command": "build",
-			"targets": [
-				"Benchmarks"
-			],
-			"group": {
-				"kind": "build",
-				"isDefault": true
-			},
-			"problemMatcher": [],
-			"detail": "CMake template build task"
-		},
+			
+			"detail": "Use this task to build the project."
+		}
 	]
 }
