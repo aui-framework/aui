@@ -81,6 +81,8 @@ struct AProperty: AObjectBase {
      * This field stores AProperty's wrapped value. It is not recommended to use this in casual use; although there are
      * might be an use case to modify the value without notifying. You can use `notify()` to send a change notification.
      * Use at your own risk.
+     *
+     * Accessing directly to `raw` avoids dependency tracking of reactive expressions.
      */
     T raw{};
 
@@ -108,6 +110,12 @@ struct AProperty: AObjectBase {
     }
 
     AProperty(AProperty&& value) noexcept: raw(std::move(value.raw)) {
+        static constexpr auto IS_COMPARABLE = requires { this->raw == value.raw; };
+        if constexpr (IS_COMPARABLE) {
+            if (this->raw == value.raw) [[unlikely]] {
+                return;
+            }
+        }
         value.notify();
     }
 
@@ -162,7 +170,7 @@ struct AProperty: AObjectBase {
 
     [[nodiscard]]
     const T& value() const noexcept {
-        aui::react::DependencyObserverRegistrar::addDependency(changed);
+        aui::react::DependencyObserverScope::addDependency(changed);
         return raw;
     }
 
@@ -202,7 +210,7 @@ struct AProperty: AObjectBase {
      */
     [[nodiscard]]
     auto assignment() noexcept {
-        return aui::detail::property::makeAssignment(std::move(*this));
+        return aui::detail::property::makeAssignment(*this);
     }
 
 private:

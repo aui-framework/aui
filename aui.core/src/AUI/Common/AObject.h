@@ -12,6 +12,7 @@
 #pragma once
 
 #include "AObjectBase.h"
+#include "React.h"
 #include "AUI/Traits/types.h"
 
 namespace aui::detail {
@@ -272,6 +273,7 @@ public:
     static void connect(const Property& property, _<Object> object, Function&& function)
         requires(!aui::derived_from<Object, AObject>)
     {
+        aui::react::DependencyObserverScope r(nullptr); // drop current dependency observer so it won't track source
         property.changed.makeRawInvocable(function)(*property);
         connect(property.changed, object, std::forward<Function>(function));
         const_cast<std::decay_t<decltype(property.changed)>&>(property.changed)

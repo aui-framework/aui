@@ -112,19 +112,19 @@ struct APropertyDef {
 
     [[nodiscard]]
     GetterReturnT value() const noexcept {
-        aui::react::DependencyObserverRegistrar::addDependency(changed);
+        aui::react::DependencyObserverScope::addDependency(changed);
         return std::invoke(get, base);
     }
 
     [[nodiscard]]
     GetterReturnT operator*() const noexcept {
-        aui::react::DependencyObserverRegistrar::addDependency(changed);
+        aui::react::DependencyObserverScope::addDependency(changed);
         return std::invoke(get, base);
     }
 
     [[nodiscard]]
     auto operator->() const noexcept {
-        aui::react::DependencyObserverRegistrar::addDependency(changed);
+        aui::react::DependencyObserverScope::addDependency(changed);
         if constexpr (std::is_reference_v<GetterReturnT>) {
             return &std::invoke(get, base);
         } else {
@@ -136,7 +136,7 @@ struct APropertyDef {
     }
 
     [[nodiscard]] operator GetterReturnT() const noexcept {
-        aui::react::DependencyObserverRegistrar::addDependency(changed);
+        aui::react::DependencyObserverScope::addDependency(changed);
         return std::invoke(get, base);
     }
 

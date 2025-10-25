@@ -149,6 +149,7 @@ struct aui::detail::ConnectionSourceTraits<T> {
     template <::aui::convertible_to<AObjectBase*> Object, ::aui::not_overloaded_lambda Function>
     decltype(auto) connect(T& source, Object object, Function&& function) {
         auto lambda = ::aui::detail::makeLambda(object, std::forward<Function>(function));
+        aui::react::DependencyObserverScope r(nullptr); // drop current dependency observer so it won't track source
         ::aui::detail::signal::makeRawInvocable<decltype(lambda)&, decltype(*source)>(lambda)(*source);
         return AObject::connect(source.changed, object, std::move(lambda));
     }

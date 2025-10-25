@@ -62,7 +62,7 @@ public:
                       .build() AUI_WITH_STYLE { Expanding(0, 1), MinSize(200_dp) },
 
               experimental::Dynamic {
-                  .content = AUI_REACT(mSelectedContact ? contactDetails(mSelectedContact) : nullptr),
+                  .content = AUI_REACT(mSelectedContact != nullptr ? contactDetails(mSelectedContact) : nullptr),
               } AUI_WITH_STYLE { Expanding(), MinSize(300_dp), BackgroundSolid { AColor::WHITE } },
             } AUI_WITH_STYLE {
               Padding(0),

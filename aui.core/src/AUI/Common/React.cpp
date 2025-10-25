@@ -19,14 +19,14 @@ namespace {
 thread_local DependencyObserver* gCurrentDependencyObserver = nullptr;
 }
 
-DependencyObserverRegistrar::DependencyObserverRegistrar(DependencyObserver& observer)
-  : mPrevObserver(std::exchange(gCurrentDependencyObserver, &observer)) {
-    observer.mObserverConnections.clear();
+DependencyObserverScope::DependencyObserverScope(DependencyObserver* observer)
+  : mPrevObserver(std::exchange(gCurrentDependencyObserver, observer)) {
+    AUI_NULLSAFE(observer)->mObserverConnections.clear();
 }
 
-DependencyObserverRegistrar::~DependencyObserverRegistrar() { gCurrentDependencyObserver = mPrevObserver; }
+DependencyObserverScope::~DependencyObserverScope() { gCurrentDependencyObserver = mPrevObserver; }
 
-void DependencyObserverRegistrar::addDependency(const AAbstractSignal& signal) {
+void DependencyObserverScope::addDependency(const AAbstractSignal& signal) {
     if (!gCurrentDependencyObserver) {
         return;
     }

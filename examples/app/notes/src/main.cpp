@@ -91,7 +91,7 @@ _<AView> noteEditor(const _<Note>& note) {
           _new<TitleTextArea>("Untitled") AUI_LET {
                   it->setCustomStyle({ FontSize { 14_pt }, Expanding { 1, 0 } });
                   AObject::biConnect(note->title, it->text());
-                  if (note->content->empty()) {
+                  if (note->content.raw.empty()) {
                       it->focus();
                   }
               },
@@ -158,7 +158,7 @@ public:
                             connect(AUI_REACT(mCurrentNote != nullptr), AUI_SLOT(it)::setEnabled);
                         },
                       },
-                      experimental::Dynamic { AUI_REACT(noteEditor(mCurrentNote)) },
+                      experimental::Dynamic { AUI_REACT(noteEditor(mCurrentNote)) } AUI_WITH_STYLE { Expanding() },
                     } << ".plain_bg" AUI_WITH_STYLE { MinSize { 200_dp } },
                   })
                   .build() AUI_WITH_STYLE { Expanding() },
