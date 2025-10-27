@@ -378,7 +378,7 @@ public:
      */
     [[nodiscard]]
     size_type sizeBytes() const noexcept {
-        return view().length();
+        return size();
     }
 
     /**

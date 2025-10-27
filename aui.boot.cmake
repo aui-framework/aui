@@ -19,7 +19,7 @@
 # =====================================================================================================================
 #
 
-cmake_minimum_required(VERSION 3.16)
+cmake_minimum_required(VERSION 3.24)
 
 find_program(GIT_EXECUTABLE NAMES git git.exe git.cmd git.bat)
 if (NOT GIT_EXECUTABLE)
@@ -44,6 +44,7 @@ option(AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT "install dependencies managed with
 option(AUIB_DISABLE "Disables AUI.Boot and replaces it's calls to find_package" OFF)
 option(AUIB_LOCAL_CACHE "Redirects AUI.Boot cache dir from the home directory to CMAKE_BINARY_DIR/aui.boot" OFF)
 option(CMAKE_POSITION_INDEPENDENT_CODE "Use position independent code (-fPIC). Enabled by default for compatibility and security reasons." ON)
+option(CMAKE_FIND_PACKAGE_TARGETS_GLOBAL "promote all imported targets to a global scope in the importing project" ON)
 set(AUIB_VALIDATION_LEVEL 1 CACHE STRING "Package validation level")
 
 auib_mark_var_forwardable(AUIB_NO_PRECOMPILED)
@@ -338,10 +339,12 @@ function(_auib_validate_target_installation _target _dep_install_prefix)
             if (_ok)
                 continue()
             endif()
+            file(REMOVE ${DEP_INSTALLED_FLAG})
             message(FATAL_ERROR
                     "While importing ${AUI_MODULE_NAME}:\n"
-                    "Imported target ${_target} depends on an out-of-tree file\n${_property_item} IN ${_property}\n"
+                    "Imported target ${_target} depends on hardcoded path\n${_property_item} IN ${_property}\n"
                     "This effectively means that the library (and thus your project) is not portable. "
+                    "PRECOMPILED-enabled packages must use target names instead of hardcoded paths."
                     "Possible solutions:\n"
                     "1. -DAUIB_NO_PRECOMPILED=TRUE, or\n"
                     "2. -DAUIB_${AUI_MODULE_NAME_UPPER}_VALIDATE=OFF (just silences the error), or\n"
@@ -472,7 +475,7 @@ endfunction()
 function(_auib_postprocess_check_hardcoded_paths _cmake_file)
     file(READ ${_cmake_file} _contents)
 
-    string(FIND "${_contents}" "\"${AUIB_CACHE_DIR}" _match)
+    string(FIND "${_contents}" "${AUIB_CACHE_DIR}" _match)
     if (_match STREQUAL "-1")
         return()
     endif()
@@ -486,6 +489,7 @@ function(_auib_postprocess_check_hardcoded_paths _cmake_file)
     get_property(_previously_imported_targets GLOBAL PROPERTY AUIB_IMPORTED_TARGETS)
     foreach (_previously_imported_target ${_previously_imported_targets})
         if (NOT TARGET ${_previously_imported_target})
+            # would not happen, unless CMAKE_FIND_PACKAGE_TARGETS_GLOBAL is OFF
             continue()
         endif()
         string(TOUPPER "${CMAKE_BUILD_TYPE}" CMAKE_BUILD_TYPE_UPPER)
@@ -494,7 +498,13 @@ function(_auib_postprocess_check_hardcoded_paths _cmake_file)
             if (NOT _v)
                 continue()
             endif()
-            string(REPLACE "\"${_v}\"" ${_previously_imported_target} _contents2 "${_contents}")
+            if (_v MATCHES ".*;.*")
+                continue()
+            endif ()
+            if (NOT EXISTS ${_v})
+                continue()
+            endif ()
+            string(REPLACE "${_v}" ${_previously_imported_target} _contents2 "${_contents}")
             if (_contents2 STREQUAL "${_contents}")
                 continue()
             endif()

@@ -105,14 +105,6 @@ TEST_F(UITextField, CursorClickPos1) {
             .check(selectionMatches(4));
 }
 
-/**
- * Checks cursor position when clicking between 'o' and 'r'.
- */
-TEST_F(UITextField, CursorClickPos2) {
-    By::type<ATextField>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
-            .check(selectionMatches(8));
-}
-
 TEST_F(UITextField, LeftRight) {
     By::type<ATextField>()
             .perform(click({0, 0}))

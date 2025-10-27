@@ -12,98 +12,8 @@
 #pragma once
 
 #include <iterator>
-#include "AUI/Reflect/AEnumerate.h"
-#include <AUI/Common/AString.h>
-#include <AUI/Common/ADeque.h>
-#include <AUI/Common/AVector.h>
 #include <AUI/Traits/serializable.h>
-
-/**
- * @brief Flag enum for APath::find
- * @ingroup io
- */
-AUI_ENUM_FLAG(APathFinder) {
-    NONE,
-
-    /**
-     * In addition to specified paths, use the system paths (PATH environment variable)
-     */
-    USE_SYSTEM_PATHS = 1 << 0,
-
-    /**
-     * Do scan recursively (slow)
-     */
-    RECURSIVE = 1 << 1,
-
-    /**
-     * Return only one file
-     */
-    SINGLE = 1 << 2
-};
-
-/**
- * @brief Flag enum for APath::listDir
- * @ingroup io
- */
-AUI_ENUM_FLAG(AFileListFlags) {
-    NONE = 0,
-
-    /**
-     * @brief Some file systems include ". " and " .. " to the list of files. In AUI, these elements are skipped by
-     *        default. This flag overrides this behaviour.
-     */
-    DONT_IGNORE_DOTS = 1 << 0,
-
-    /**
-     * @brief Include folders to the list of files.
-     */
-    DIRS = 1 << 1,
-
-    /**
-     * @brief Include regular files to the list of files.
-     */
-    REGULAR_FILES = 1 << 2,
-
-    /**
-     * @brief Walk thru the folder recursively (i.e. include the contents of child folders). The paths of child files
-     * are set relative to the folder where the <code>listDir()</code> is called.
-    * @details
-     *
-     * <ul>
-     *     <li>/home</li>
-     *     <li>/home/user</li>
-     *     <li>/home/user/file1.txt</li>
-     *     <li>/home/user/file2.txt</li>
-     *     <li>/home/other</li>
-     *     <li>/home/other/code1.cpp</li>
-     *     <li>/home/other/code2.cpp</li>
-     * </ul>
-     */
-    RECURSIVE = 1 << 3,
-
-    DEFAULT_FLAGS = AFileListFlags::DIRS | AFileListFlags::REGULAR_FILES
-};
-
-/**
- * @brief Flag enum for APath::isEffectivelyAccessible
- * @ingroup io
- */
-AUI_ENUM_FLAG(AFileAccess) {
-    /**
-     * @brief File is Readable flag.
-     */
-    R = 0b100,
-
-    /**
-     * @brief File is Writeable flag.
-     */
-    W = 0b010,
-
-    /**
-     * @brief File is eXecutable flag.
-     */
-    X = 0b001,
-};
+#include <AUI/IO/APathView.h>
 
 /**
  * @brief An add-on to AString with functions for working with the path.
@@ -132,8 +42,11 @@ AUI_ENUM_FLAG(AFileAccess) {
  *        <li><b>folder</b> (directory) - a file that may have child files (both regular files and folders)</li>
  *     </ul>
  */
-class API_AUI_CORE APath final: public AString {
+class API_AUI_CORE APath: public AString {
 private:
+    using super = AString;
+    friend class APathView;
+
     APath ensureSlashEnding() const;
     APath ensureNonSlashEnding() const;
 
@@ -148,13 +61,25 @@ private:
 
 public:
     APath() = default;
-    APath(AString&& other) noexcept: AString(std::move(other)) {
+    APath(AString&& other) noexcept : super(std::move(other)) {
         removeBackSlashes();
     }
-    APath(const AString& other) noexcept: AString(other) {
+    APath(const AString& other) : super(other) {
         removeBackSlashes();
     }
-    APath(const char* utf8) noexcept: AString(utf8) {
+    APath(std::string&& other) noexcept : super(std::move(other)) {
+        removeBackSlashes();
+    }
+    APath(const std::string& other) : super(other) {
+        removeBackSlashes();
+    }
+    APath(std::string_view other) : super(other) {
+        removeBackSlashes();
+    }
+    APath(const char* utf8) : super(utf8) {
+        removeBackSlashes();
+    }
+    APath(APathView other) : super(other) {
         removeBackSlashes();
     }
 
@@ -171,37 +96,13 @@ public:
     }
 
     /**
-     * @brief Generates a unique, process-agnostic temporary directory in the system's temp directory.
-     * @details
-     * Creates a safe and islocated workspace for each application instance. By generating a new directory for each
-     * process, it prevents, potential conflicts between concurrent processes.
-     *
-     * When the application closes, a directory cleanup attempt will be performed.
-     *
-     * @sa APath::nextRandomTemporary
-     *
-     * @return Path to a process-agnostic empty pre-created directory in system temp directory.
-     */
-    [[nodiscard]]
-    static const APath& processTemporaryDir();
-
-    /**
-     * @brief Creates a path to non-existent random file in system temp directory.
-     * @details
-     * The file is guaranteed to be non-existent, however, its parent directory does. The such path can be used for
-     * general purposes. The application might create any kind of file on this location (including dirs) or don't create
-     * any file either.
-     * @sa APathOwner
-     * @sa APath:processTemporaryDir:
-     */
-    [[nodiscard]]
-    static APath nextRandomTemporary();
-
-    /**
      * Creates a file.
      * @return this.
      */
-    const APath& touch() const;
+    const APath& touch() const {
+        view().touch();
+        return *this;
+    }
 
     /**
      * @brief Transforms this path to string with platform's native slashes.
@@ -211,13 +112,17 @@ public:
      *
      * On any other platform, returns path with forward slashes `/`.
      */
-    AString systemSlashDirection() const;
+    AString systemSlashDirection() const {
+        return view().systemSlashDirection();
+    }
 
     /**
      * @brief Get the absolute (full) path to the file.
      * @return the absolute (full) path to the file
      */
-    APath absolute() const;
+    APath absolute() const {
+        return view().absolute();
+    }
 
     /**
      * @brief Get list of (by default) direct children of this folder. This function outputs paths including the path
@@ -227,14 +132,18 @@ public:
      * @details
      * Use AFileListFlags enum flags to customize behaviour of this function.
      */
-    ADeque<APath> listDir(AFileListFlags f = AFileListFlags::DEFAULT_FLAGS) const;
+    ADeque<APath> listDir(AFileListFlags f = AFileListFlags::DEFAULT_FLAGS) const {
+        return view().listDir(f);
+    }
 
     /**
      * @details
      * `/home/user -> /home`
      * @return path to parent folder
      */
-    [[nodiscard]] APath parent() const;
+    [[nodiscard]] APath parent() const {
+        return view().parent();
+    }
 
     /**
      * @brief Path of the child element. Relevant only for folders.
@@ -250,7 +159,9 @@ public:
      * @param fileName name of child file
      * @return path to child file relatively to this folder
      */
-    [[nodiscard]] APath file(const AString& fileName) const;
+    [[nodiscard]] APath file(AStringView fileName) const {
+        return view().file(fileName);
+    }
 
     /**
      * @brief File name.
@@ -258,7 +169,9 @@ public:
      * `/home/user/file.cpp -> file.cpp`
      * @return file name
      */
-    [[nodiscard]] APath filename() const;
+    [[nodiscard]] APath filename() const {
+        return view().filename();
+    }
 
     /**
      * @brief File name without extension.
@@ -266,7 +179,9 @@ public:
      * `/home/user/file.cpp -> file
      * @return file name without extension
      */
-    [[nodiscard]] APath filenameWithoutExtension() const;
+    [[nodiscard]] APath filenameWithoutExtension() const {
+        return view().filenameWithoutExtension();
+    }
 
     /**
      * @brief File extension.
@@ -274,7 +189,9 @@ public:
      * `/home/user/file.cpp -> cpp
      * @return file extension
      */
-    [[nodiscard]] AString extension() const;
+    [[nodiscard]] AStringView extension() const {
+        return view().extension();
+    }
 
     /**
      * @brief Remove the uppermost folder from this path
@@ -282,7 +199,9 @@ public:
      * v1.0.0/client/azaza.zip -> client/azaza.zip
      * @return The same path except uppermost folder
      */
-    [[nodiscard]] APath withoutUppermostFolder() const;
+    [[nodiscard]] APath withoutUppermostFolder() const {
+        return view().withoutUppermostFolder();
+    }
 
     /**
      * @return true if whether regular file or a folder exists on this path
@@ -294,8 +213,9 @@ public:
      * Checkout the <code>isRegularFileExists</code> or <code>isDirectoryExists</code> function to check which
      * type of the file exists on this path.
      */
-    bool exists() const;
-
+    bool exists() const {
+        return view().exists();
+    }
 
     /**
      * @return true if regular file exists on this path
@@ -303,7 +223,9 @@ public:
      * A file can exist as a regular file or(and) as a folder. This function will return false only if regular
      * file does not exists on this path.
      */
-    bool isRegularFileExists() const;
+    bool isRegularFileExists() const {
+        return view().isRegularFileExists();
+    }
 
     /**
      * @return true if folder exists on this path
@@ -311,7 +233,9 @@ public:
      * A file can exist as a regular file or(and) as a folder. This function will return false only if folder does
      * not exists on this path.
      */
-    bool isDirectoryExists() const;
+    bool isDirectoryExists() const {
+        return view().isDirectoryExists();
+    }
 
     /**
      * @brief Delete file. Relevant for empty folders and regular files.
@@ -323,7 +247,10 @@ public:
      * @sa APath::removeFileRecursive()
      * @sa APath::removeDirContentsRecursive()
      */
-    const APath& removeFile() const;
+    const APath& removeFile() const {
+        view().removeFile();
+        return *this;
+    }
 
     /**
      * @brief Delete files recursively, including itself.
@@ -336,7 +263,10 @@ public:
      *
      * @sa APath::removeDirContentsRecursive()
      */
-    const APath& removeFileRecursive() const;
+    const APath& removeFileRecursive() const {
+        view().removeFileRecursive();
+        return *this;
+    }
 
     /**
      * @brief Delete directory contents (recursively).
@@ -349,19 +279,28 @@ public:
      *
      * @sa APath::removeFileRecursive()
      */
-    const APath& removeDirContentsRecursive() const;
+    const APath& removeDirContentsRecursive() const {
+        view().removeDirContentsRecursive();
+        return *this;
+    }
 
     /**
      * @brief Create folder.
      * @return this
      */
-    const APath& makeDir() const;
+    const APath& makeDir() const {
+        view().makeDir();
+        return *this;
+    }
 
     /**
      * @brief Create all nonexistent folders on the path.
      * @return this
      */
-    const APath& makeDirs() const;
+    const APath& makeDirs() const {
+        view().makeDirs();
+        return *this;
+    }
 
     /**
      * @brief Returns same path but without <code>dir</code>
@@ -370,18 +309,26 @@ public:
      * APath("C:/work/mon/test.txt").relativelyTo("C:/work") -> mon/test.txt
      * @return same path but without <code>dir</code>
      */
-    AString relativelyTo(const APath& dir) const;
+    AString relativelyTo(APathView dir) const {
+        view().relativelyTo(dir);
+        return *this;
+    }
 
     /**
      * @brief Returns same path but with extension changed.
      */
-    APath extensionChanged(const AString& newExtension) const;
+    APath extensionChanged(AStringView newExtension) const {
+        return view().extensionChanged(newExtension);
+    }
 
     /**
      * @brief Checks whether path absolute or not.
      * @return true if path is absolute
      */
-    bool isAbsolute() const;
+    bool isAbsolute() const {
+        return view().isAbsolute();
+    }
+
     /**
      * @brief Checks whether path absolute or not.
      * @return true if path is relative
@@ -390,8 +337,13 @@ public:
         return !isAbsolute();
     }
 
-    time_t fileModifyTime() const;
-    size_t fileSize() const;
+    time_t fileModifyTime() const {
+        return view().fileModifyTime();
+    }
+
+    size_t fileSize() const {
+        return view().fileSize();
+    }
 
     /**
      * @brief Changes mode (permissions) on file
@@ -403,7 +355,48 @@ public:
      * p.chmod(0755); // -rwxr-xr-x
      * ```
      */
-    const APath& chmod(int newMode) const;
+    const APath& chmod(int newMode) const {
+        view().chmod(newMode);
+        return *this;
+    }
+
+    /**
+     * @brief Path of the child element. Relevant only for folders.
+     * @param filename child to produce path to
+     * ```cpp
+     * AString filename = "file.txt";
+     * APath path = "path" / "to" / "your" / filename;
+     * ```
+     * Which would supplyValue into "path/to/your/file.txt"
+     * @return path to child file relatively to this folder
+     */
+    [[nodiscard]]
+    APath operator/(AStringView filename) const {
+        return file(filename);
+    }
+
+    /**
+     * @brief Return true if the current process has specified access flags to path.
+     * @details
+     * Checks permissions and existence of the file identified by this APath using the real user and group
+     * identifiers of the process, like if the file were opened by open().
+     *
+     * Using this function to check a process's permissions on a file before performing some operation based on that
+     * information leads to race conditions: the file permissions may change between the two steps. Generally, it is
+     * safer just to attempt the desired operation and handle any permission error that occurs.
+     */
+    [[nodiscard]]
+    bool isEffectivelyAccessible(AFileAccess flags) const noexcept {
+        return view().isEffectivelyAccessible(flags);
+    }
+
+    APathView view() const noexcept {
+        return {*this};
+    }
+
+    AStringView string() const noexcept {
+        return super::view();
+    }
 
     enum DefaultPath {
         /**
@@ -490,35 +483,34 @@ public:
      * @param flags lookup flags (see APathFinder)
      * @return full path to the found file; if file not found, an empty string is returned.
      */
-    static AVector<APath> find(const AString& filename, const AVector<APath>& locations, APathFinder flags = APathFinder::NONE);
+    static AVector<APath> find(AStringView filename, const AVector<APath>& locations, APathFinder flags = APathFinder::NONE);
 
     /**
-     * @brief Path of the child element. Relevant only for folders.
-     * @param filename child to produce path to
-     * ```cpp
-     * AString filename = "file.txt";
-     * APath path = "path" / "to" / "your" / filename;
-     * ```
-     * Which would supplyValue into "path/to/your/file.txt"
-     * @return path to child file relatively to this folder
-     */
-    [[nodiscard]]
-    APath operator/(const AString& filename) const {
-        return file(filename);
-    }
-
-    /**
-     * @brief Return true if the current process has specified access flags to path.
+     * @brief Generates a unique, process-agnostic temporary directory in the system's temp directory.
      * @details
-     * Checks permissions and existence of the file identified by this APath using the real user and group
-     * identifiers of the process, like if the file were opened by open().
+     * Creates a safe and islocated workspace for each application instance. By generating a new directory for each
+     * process, it prevents, potential conflicts between concurrent processes.
      *
-     * Using this function to check a process's permissions on a file before performing some operation based on that
-     * information leads to race conditions: the file permissions may change between the two steps. Generally, it is
-     * safer just to attempt the desired operation and handle any permission error that occurs.
+     * When the application closes, a directory cleanup attempt will be performed.
+     *
+     * @sa APath::nextRandomTemporary
+     *
+     * @return Path to a process-agnostic empty pre-created directory in system temp directory.
      */
     [[nodiscard]]
-    bool isEffectivelyAccessible(AFileAccess flags) const noexcept;
+    static const APath& processTemporaryDir();
+
+    /**
+     * @brief Creates a path to non-existent random file in system temp directory.
+     * @details
+     * The file is guaranteed to be non-existent, however, its parent directory does. The such path can be used for
+     * general purposes. The application might create any kind of file on this location (including dirs) or don't create
+     * any file either.
+     * @sa APathOwner
+     * @sa APath:processTemporaryDir:
+     */
+    [[nodiscard]]
+    static APath nextRandomTemporary();
 };
 
 /**

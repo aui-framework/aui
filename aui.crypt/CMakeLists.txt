@@ -1,31 +1,22 @@
 cmake_minimum_required(VERSION 3.10)
 
-
-unset(OPENSSL_CRYPTO_LIBRARY CACHE)
-unset(OPENSSL_SSL_LIBRARY CACHE)
 if(AUIB_DISABLE)
-    find_package(OpenSSL REQUIRED)
+    find_package(MbedTLS REQUIRED)
 else()
-    auib_import(OpenSSL https://github.com/aui-framework/openssl-cmake/archive/56ee19b7e11b418e0f29825414abdca96ff6b83e.zip ARCHIVE)
+    auib_import(MbedTLS https://github.com/aui-framework/mbedtls
+                VERSION 864e7eb5089cdcfa0609013832891ee1a3ffb5d4
+                CMAKE_ARGS -DENABLE_PROGRAMS=OFF -DENABLE_TESTING=OFF
+    )
 endif()
 
 aui_module(aui.crypt EXPORT aui)
 aui_enable_tests(aui.crypt)
 aui_link(aui.crypt PUBLIC aui::core)
-target_include_directories(aui.crypt PRIVATE ${OPENSSL_INCLUDE_DIR})
+aui_link(aui.crypt PRIVATE MbedTLS::mbedcrypto)
 
-aui_link(aui.crypt PRIVATE OpenSSL::SSL OpenSSL::Crypto)
+set(MBEDTLS_INCLUDE_DIR "${MBEDTLS_ROOT_DIR}/include" CACHE STRING "MbedTLS include directory work-around")
 
-auib_mark_var_forwardable(OPENSSL_CRYPTO_LIBRARY)
-auib_mark_var_forwardable(OPENSSL_CRYPTO_LIBRARIES)
-auib_mark_var_forwardable(OPENSSL_SSL_LIBRARY)
-auib_mark_var_forwardable(OPENSSL_SSL_LIBRARIES)
-auib_mark_var_forwardable(OPENSSL_VERSION)
-auib_mark_var_forwardable(OPENSSL_LIBRARIES)
-auib_mark_var_forwardable(OPENSSL_FOUND)
-auib_mark_var_forwardable(OPENSSL_INCLUDE_DIR)
-auib_mark_var_forwardable(OPENSSL_ROOT_DIR)
-
-if(WIN32 AND NOT BUILD_SHARED_LIBS)
-    aui_link(OpenSSL::Crypto INTERFACE wsock32 ws2_32)
-endif()
+auib_mark_var_forwardable(MBEDTLS_VERSION)
+auib_mark_var_forwardable(MBEDTLS_LIBRARIES)
+auib_mark_var_forwardable(MBEDTLS_INCLUDE_DIR)
+auib_mark_var_forwardable(MBEDTLS_ROOT_DIR)

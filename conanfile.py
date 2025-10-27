@@ -68,7 +68,7 @@ class AUIRecipe(ConanFile):
         if self.settings.os == "Linux":
             self.requires("libbacktrace/cci.20240730")
         # Crypt
-        self.requires("openssl/3.5.2")
+        self.requires("mbedtls/3.6.4")
         # CURL
         self.requires("libcurl/8.15.0")
         # Image

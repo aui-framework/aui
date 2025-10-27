@@ -281,8 +281,9 @@ OpenGLRenderer::OpenGLRenderer() {
 }
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
-    return glm::ortho(0.0f, static_cast<float>(mWindow->getWidth()) - 0.0f,
-                      static_cast<float>(mWindow->getHeight()) - 0.0f, 0.0f, -1.f, 1.f);
+    return glm::ortho(0.0f, static_cast<float>(mWindow->getWidth()),
+                      static_cast<float>(mWindow->getHeight()), 0.0f,
+                      -1.f, 1.f);
 }
 
 void OpenGLRenderer::uploadToShaderCommon() {

@@ -16,7 +16,6 @@
 #include <AUI/Url/AUrl.h>
 
 #include "AUI/Render/FontRendering.h"
-#include "AUI/GL/Texture2D.h"
 
 #include "AUI/Render/SimpleTexturePacker.h"
 
@@ -33,7 +32,7 @@ class FreeType;
 
 struct FT_FaceRec_;
 
-class AFont {
+class API_AUI_VIEWS AFont {
 public:
     /**
      * @brief Character data for a glyph.

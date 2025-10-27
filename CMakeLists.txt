@@ -30,9 +30,12 @@ if(AUI_USE_CCACHE)
     endif()
 endif()
 
-if (MINGW AND NOT AUI_IGNORE_MINGW)
-    message(FATAL_ERROR "MinGW is not supported. See https://aui-framework.github.io/develop/getting-started/")
-endif()
+if (MINGW)
+    if (BUILD_SHARED_LIBS AND NOT AUI_IGNORE_MINGW)
+        message(FATAL_ERROR "Building shared libs with MinGW is not supported. Use -DBUILD_SHARED_LIBS=OFF to use static linkage. See https://aui-framework.github.io/develop/getting-started/")
+    endif()
+    add_compile_options(-Wa,-mbig-obj)
+endif ()
 
 if(MSVC)
     if (AUI_BUILD_FOR STREQUAL "winxp")    # MT / MTd

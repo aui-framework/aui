@@ -44,7 +44,6 @@
 #include <AUI/Util/ALayoutInflater.h>
 #include <AUI/GL/OpenGLRenderer.h>
 
-#include <GL/wglew.h>
 #include <AUI/Util/Cache.h>
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>

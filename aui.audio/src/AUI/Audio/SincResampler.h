@@ -49,7 +49,7 @@ struct RepeatingCallback {
 #endif
 namespace base {
 inline auto AlignedAlloc(size_t size, size_t alignment) -> void* {
-#if defined(_MSC_VER)
+#if defined(_MSC_VER) || defined(__MINGW32__)
   return _aligned_malloc(size, alignment);
 #else
   void* ptr = nullptr;

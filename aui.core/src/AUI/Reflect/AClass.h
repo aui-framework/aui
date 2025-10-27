@@ -31,24 +31,24 @@ public:
         auto openTag = s.find('<') + 1;
         auto closeTag = s.find('>');
         auto name = s.substr(openTag, closeTag - openTag);
-        name = name.substr(name.bytes().rfind(' ') + 1);
+        name = name.bytes().substr(name.bytes().rfind(' ') + 1);
         if (name.endsWith(" &"))
-            name = name.substr(0, name.bytes().size() - 2);
+            name = name.bytes().substr(0, name.bytes().size() - 2);
         return name;
 #elif AUI_COMPILER_CLANG
         #if defined(__PRETTY_FUNCTION__) || defined(__GNUC__) || defined(__clang__)
-            AString s = __PRETTY_FUNCTION__;
+        AString s = __PRETTY_FUNCTION__;
         #elif defined(__FUNCSIG__)
-            AString s = __FUNCSIG__;
+        AString s = __FUNCSIG__;
         #else
-            AString s = __FUNCTION__;
+        AString s = __FUNCTION__;
         #endif
         auto b = s.find("=") + 1;
         auto e = s.find("&", b);
         e = std::min(s.find("]", b), e);
-        auto result = s.substr(b, e - b);
+        auto result = AStringView(s.view().bytes().substr(b, e - b));
         result = result.trim();
-        return result;
+        return AString(result);
 #else
         #if defined(__PRETTY_FUNCTION__) || defined(__GNUC__) || defined(__clang__)
             AString s = __PRETTY_FUNCTION__;

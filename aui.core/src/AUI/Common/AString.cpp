@@ -358,7 +358,6 @@ AString::operator AStringView() const noexcept {
     return {bytes().data(), bytes().size()};
 }
 
-
 AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
     if (length() > s) {
         return substr(0, s) + stringAtEnd;

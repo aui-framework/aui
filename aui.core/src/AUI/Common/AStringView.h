@@ -66,7 +66,7 @@ class API_AUI_CORE AStringVector;
  *
  * To work with raw bytes, use AStringView::bytes() function.
  */
-class API_AUI_CORE AStringView: private std::string_view {
+class API_AUI_CORE AStringView: public std::string_view {
 private:
     using super = std::string_view;
 
@@ -77,6 +77,13 @@ public:
     using const_iterator = AUtf8ConstIterator;
     using reverse_iterator = AUtf8ConstReverseIterator;
     using const_reverse_iterator = AUtf8ConstReverseIterator;
+
+    auto constexpr static NPOS = super::npos;
+
+    static constexpr auto TO_NUMBER_BASE_BIN = 2;
+    static constexpr auto TO_NUMBER_BASE_OCT = 8;
+    static constexpr auto TO_NUMBER_BASE_DEC = 10;
+    static constexpr auto TO_NUMBER_BASE_HEX = 16;
 
     using super::super;
 
@@ -117,7 +124,6 @@ public:
     bool operator!=(std::string_view other) const noexcept {
         return bytes() != other;
     }
-
 
     /**
      * @brief Raw `const char*` pointer to the string.
@@ -193,6 +199,18 @@ public:
     std::string_view bytes() const noexcept {
         return *this;
     }
+
+    AStringView trimLeft(AChar symbol = ' ') const;
+    AStringView trimRight(AChar symbol = ' ') const;
+    AStringView trim(AChar symbol = ' ') const;
+
+    AString uppercase() const;
+
+    AString lowercase() const;
+
+    AString removedAll(AChar c);
+
+    AStringVector split(AChar c) const;
 
     iterator begin() const noexcept {
         return AUtf8ConstIterator(data(), data(), data() + size(), 0);
@@ -335,32 +353,9 @@ public:
         return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", bytes()).c_str());
     }
 
-    AStringVector split(AChar c) const;
-
-    [[nodiscard]]
-    AStringView trimLeft(AChar symbol = ' ') const;
-
-    [[nodiscard]]
-    AStringView trimRight(AChar symbol = ' ') const;
-
-    [[nodiscard]]
-    AStringView trim(AChar symbol = ' ') const
-    {
-        return trimLeft(symbol).trimRight(symbol);
+    std::string toStdString() const {
+        return std::string(bytes());
     }
-
-    [[nodiscard]]
-    AString lowercase() const;
-
-    [[nodiscard]]
-    AString uppercase() const;
-
-    AString removedAll(AChar c);
-
-    static constexpr auto TO_NUMBER_BASE_BIN = 2;
-    static constexpr auto TO_NUMBER_BASE_OCT = 8;
-    static constexpr auto TO_NUMBER_BASE_DEC = 10;
-    static constexpr auto TO_NUMBER_BASE_HEX = 16;
 
 };
 

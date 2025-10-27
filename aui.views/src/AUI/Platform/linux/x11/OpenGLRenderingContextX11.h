@@ -13,6 +13,7 @@
 
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/Platform/linux/x11/RenderingContextX11.h>
+#include <GL/glx.h>
 
 class OpenGLRenderingContextX11: public OpenGLRenderingContext, public RenderingContextX11 {
 public:

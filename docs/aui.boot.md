@@ -201,7 +201,7 @@ You can consult with [Conan Recipes](https://github.com/conan-io/conan-center-in
 You have mispelled the package name (the first argument to `auib_import`). Please change the first argument to
 `auib_import` to `PACKAGE_NAME`.
 
-### "Imported target ... depends on an out-of-tree file"
+### "Imported target ... depends on hardcoded path"
 
 The library's maintainer have misused CMake. Follow one of possible options provided by AUI.Boot or fix the
 library by forking it. You can consult with
