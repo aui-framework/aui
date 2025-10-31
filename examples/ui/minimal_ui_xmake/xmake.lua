@@ -16,3 +16,5 @@ target("aui-minimal-example")
     add_includedirs("src")
     -- Add AUI package to target while linking only required components
     add_packages("aui", {components = {"core", "image", "views", "xml"}})
+    -- Resolve linking by grouping AUI components into link groups
+    add_linkgroups("aui.views", "aui.xml", "aui.image", "aui.core", {whole = true})
