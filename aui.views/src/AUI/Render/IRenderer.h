@@ -12,6 +12,7 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Reflect/AEnumerate.h>
 #include <AUI/Common/ASide.h>
 #include <AUI/Common/AColor.h>
