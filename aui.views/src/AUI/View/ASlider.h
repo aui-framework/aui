@@ -15,6 +15,9 @@
 #include "AViewContainer.h"
 #include "AProgressBar.h"
 
+
+namespace declarative {
+
 /**
  * @brief Slider control.
  *
@@ -22,69 +25,17 @@
  *
  * @ingroup views_input
  */
-class API_AUI_VIEWS ASlider: public AViewContainerBase {
-public:
-    class Handle: public AView {}; // embed class for styling
+struct API_AUI_VIEWS Slider {
+    contract::In<aui::float_within_0_1> value;
+    contract::Slot<aui::float_within_0_1> onValueChanged;
+    _<AView> track = defaultTrack(value);
+    _<AView> handle = defaultHandle();
 
-    ASlider();
-    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
-    void onPointerPressed(const APointerPressedEvent& event) override;
-    void onPointerReleased(const APointerReleasedEvent& event) override;
-    void applyGeometryToChildren() override;
-    bool capturesFocus() override;
-
-    [[nodiscard]]
-    bool isDragging() const noexcept {
-        return isPressed();
-    }
-
-    void setValue(aui::float_within_0_1 value) {
-        mProgress->setValue(value);
-    }
-
-    [[nodiscard]]
-    auto value() const noexcept {
-        return APropertyDef {
-            this,
-            &ASlider::getValue,
-            &ASlider::setValue,
-            valueChanging,
-        };
-    }
-
-    [[nodiscard]]
-    const _<Handle>& handle() const noexcept {
-        return mHandle;
-    }
-
-    [[nodiscard]]
-    const _<AProgressBar>& progressbar() const noexcept {
-        return mProgress;
-    }
-
-signals:
-    emits<aui::float_within_0_1> valueChanging;
-    emits<aui::float_within_0_1> valueChanged;
+    _<AView> operator()();
 
 private:
-    _<Handle> mHandle;
-    _<AProgressBar> mProgress;
-
-    [[nodiscard]]
-    aui::float_within_0_1 getValue() const noexcept {
-        return mProgress->value();
-    }
-
-    void updateSliderWithPosition(glm::ivec2 pointerPosition);
-
-    void updateHandlePosition();
+    static _<AView> defaultTrack(const contract::In<aui::float_within_0_1>& value);
+    static _<AView> defaultHandle();
 };
+}
 
-template<>
-struct ADataBindingDefault<ASlider, aui::float_within_0_1> {
-public:
-    static auto property(const _<ASlider>& view) {
-        return view->value();
-    }
-    static void setup(const _<ASlider>& view) {}
-};

@@ -14,64 +14,88 @@
 //
 
 #include "ASlider.h"
+#include "AUI/Common/AObject.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AProgressBar.h"
 
 using namespace ass;
 using namespace declarative;
 
-ASlider::ASlider() {
-    setContents(Stacked {
-        mProgress = _new<AProgressBar>() AUI_WITH_STYLE {
-            Expanding{1, 0},
-        },
-        mHandle = _new<Handle>()
-    });
 
-    connect(mProgress->value().changed, [this](aui::float_within_0_1 v) {
-        emit valueChanging(v); // we would emit ed signal in pointer release method
-        updateHandlePosition();
-    });
-
-    setValue(0.f);
-}
-
-void ASlider::onPointerPressed(const APointerPressedEvent& event) {
-    AView::onPointerPressed(event); // we do not want to gain focus to some of our childs; so calling AView directly
-    updateSliderWithPosition(event.position);
-}
-
-void ASlider::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-    AViewContainerBase::onPointerMove(pos, event);
-    if (isDragging()) {
-        updateSliderWithPosition(pos);
+namespace {
+class SliderHandleWrapper: public AViewContainerBase {
+public:
+    SliderHandleWrapper(_<AView> handle): mHandle(Centered { std::move(handle) }) {
+        addView(mHandle);
     }
+
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override {
+        AViewContainerBase::onPointerMove(pos, event);
+        if (!isPressed(event.pointerIndex)) {
+            return;
+        }
+        emit valueChanged(pos.x / float(getSize().x));
+    }
+
+    void onPointerPressed(const APointerPressedEvent& event) override {
+        AViewContainerBase::onPointerPressed(event);
+        emit valueChanged(event.position.x / float(getSize().x));
+    }
+
+    bool consumesClick(const glm::ivec2& pos) override {
+        return true;
+    }
+
+    void setValue(aui::float_within_0_1 value) {
+        mValue = value;
+        markMinContentSizeInvalid();
+    }
+
+    int getMinimumWidth() override {
+        return mHandle->getMinimumWidth();
+    }
+
+    int getMinimumHeight() override {
+        return mHandle->getMinimumHeight();
+    }
+
+    emits<aui::float_within_0_1> valueChanged;
+
+protected:
+    void applyGeometryToChildren() override {
+        auto handleSize = mHandle->getMinimumSize();
+        mHandle->setGeometry({getSize().x * mValue - handleSize.x / 2, 0}, { handleSize.x, getSize().y });
+    }
+
+private:
+    _<AView> mHandle;
+    aui::float_within_0_1 mValue = 0;
+};
+
 }
 
-void ASlider::onPointerReleased(const APointerReleasedEvent& event) {
-    AViewContainerBase::onPointerReleased(event);
-    updateSliderWithPosition(event.position);
-
-    emit valueChanged(value());
+_<AView> Slider::defaultTrack(const contract::In<aui::float_within_0_1>& value) {
+    return ProgressBar { .progress = value } AUI_WITH_STYLE {
+        FixedSize { {}, 4_dp },
+        MinSize { 150_dp, {} },
+    };
 }
 
-void ASlider::updateSliderWithPosition(glm::ivec2 pointerPosition) {
-    setValue(float(pointerPosition.x) / float(getContentWidth()));
+_<AView> Slider::defaultHandle() {
+    return _new<AView>() AUI_WITH_STYLE {
+        BackgroundSolid { AStylesheet::getOsThemeColor() },
+        FixedSize { 8_dp },
+        BorderRadius { 4_dp },
+    };
 }
 
-void ASlider::applyGeometryToChildren() {
-    AViewContainerBase::applyGeometryToChildren();
-    updateHandlePosition();
-}
-
-void ASlider::updateHandlePosition() {
-    const auto& progressInner = mProgress->innerView();
-    const auto progressRightCornerAbsolutePos = progressInner->getPositionInWindow().x + progressInner->getWidth();
-    const auto handleCenteringOffset = mHandle->getWidth() / 2;
-    mHandle->setPosition({getPadding().left + progressRightCornerAbsolutePos - getPositionInWindow().x - handleCenteringOffset,
-                          mHandle->getPosition().y });
-}
-
-bool ASlider::capturesFocus() {
-    return true; // we want to receive onPointerMove events even when pointer is outside
+API_AUI_VIEWS _<AView> Slider::operator()() {
+    auto handleWrapper = _new<SliderHandleWrapper>(std::move(handle));
+    value.bindToCopy(ASlotDef{AUI_SLOT(handleWrapper.get())::setValue});
+    onValueChanged.bindTo(handleWrapper->valueChanged);
+    track->setExpanding({1, 0});
+    return Stacked {
+        std::move(track),
+        std::move(handleWrapper) AUI_WITH_STYLE { Expanding{} },
+    };
 }

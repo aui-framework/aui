@@ -38,7 +38,7 @@ auto makeAssignment(Property&& property) {   // note the rvalue reference templa
     using Underlying = std::decay_t<decltype(*property)>;
     struct Invocable {
         Property property;
-        void operator()(const Underlying& value) const {
+        void operator()(Underlying value) const {
             // avoid property assignment loop (bidirectional connection)
             // PropertyCommonTest.Property2PropertyBoth
             if (property.changed.isAtSignalEmissionState()) {

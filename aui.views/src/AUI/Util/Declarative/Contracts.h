@@ -60,24 +60,44 @@ public:
             "2. Dereference the property via asterisk * to obtain current property value.\n");
     }
 
-    template<typename Expr>
-    In(aui::react::Expression<Expr>&& reactiveExpression): mImpl(ReactiveExpression { _new<APropertyPrecomputed<T>>(std::move(reactiveExpression.expression)) }) {}
+    template <typename Expr>
+    In(aui::react::Expression<Expr>&& reactiveExpression)
+      : mImpl(ReactiveExpression { _new<APropertyPrecomputed<T>>(std::move(reactiveExpression.expression)) }) {}
 
-    template <APropertyWritable DestinationProperty>
-    void bindTo(DestinationProperty&& destinationProperty) {
+
+    template <typename ObjectPtr, typename Invocable>
+    void bindToCopy(ASlotDef<ObjectPtr, Invocable> destination) {
+        auto invocable = aui::detail::makeLambda(destination.boundObject, destination.invocable);
         std::visit(
             aui::lambda_overloaded {
               [&](Devastated&) { throw AException("an attempt to bindTo a property twice"); },
-              [&](Constant& c) { destinationProperty = std::move(c.value); },
+              [&](Constant& c) { std::invoke(invocable, c.value); },
               [&](ReactiveExpression& c) {
                   auto& sourceProperty = *c.value;
                   AObject::connect(
-                      sourceProperty, destinationProperty.boundObject(),
-                      [keepAlive = std::move(c.value),
-                       // Using a tuple here to store args... and decide whether to store a value or a reference
-                       // depending on whether the args... are lvalue or rvalue.
-                       destinationProperty = std::tuple<DestinationProperty>(std::forward<DestinationProperty>(
-                           destinationProperty))](const T& v) { std::get<0>(destinationProperty) = v; });
+                      sourceProperty, destination.boundObject,
+                      [keepAlive = c.value, invocable = std::move(invocable)](const T& v) {
+                          std::invoke(invocable, v);
+                      });
+              },
+            },
+            mImpl);
+    }
+
+    template <typename ObjectPtr, typename Invocable>
+    void bindTo(ASlotDef<ObjectPtr, Invocable> destination) {
+        auto invocable = aui::detail::makeLambda(destination.boundObject, destination.invocable);
+        std::visit(
+            aui::lambda_overloaded {
+              [&](Devastated&) { throw AException("an attempt to bindTo a property twice"); },
+              [&](Constant& c) { std::invoke(invocable, std::move(c.value)); },
+              [&](ReactiveExpression& c) {
+                  auto& sourceProperty = *c.value;
+                  AObject::connect(
+                      sourceProperty, destination.boundObject,
+                      [keepAlive = std::move(c.value), invocable = std::move(invocable)](const T& v) {
+                          std::invoke(invocable, v);
+                      });
               },
             },
             mImpl);

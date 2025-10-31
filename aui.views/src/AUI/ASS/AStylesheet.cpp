@@ -661,21 +661,6 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0x40000000_argb },
             Expanding{},
         },
-        {
-            t<ASlider::Handle>(),
-            BackgroundSolid { getOsThemeColor() },
-            FixedSize { 8_dp },
-            BorderRadius { 4_dp },
-        },
-        {
-            t<ASlider>() > t<AProgressBar>(),
-            BorderRadius { 2_dp },
-            FixedSize { {}, 4_dp }
-        },
-        {
-            t<ASlider>() >> t<AProgressBar::Inner>(),
-            BorderRadius { 2_dp },
-        },
     });
 }
 
