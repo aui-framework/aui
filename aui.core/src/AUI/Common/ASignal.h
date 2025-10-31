@@ -90,60 +90,6 @@ struct projection_info<Projection> {
 
 // TODO: remove ProjectedSignal/projection_info/ dead code
 
-template <
-    typename AnySignal,   // can't use AAnySignal here, as concept would depend on itself
-    typename Projection>
-struct ProjectedSignal {
-    friend class ::AObject;
-
-    AnySignal& base;
-    std::decay_t<Projection> projection;
-
-    ProjectedSignal(AnySignal& base, Projection projection) : base(base), projection(std::move(projection)) {}
-
-    using projection_info_t = aui::detail::signal::projection_info<Projection>;
-
-    using projection_returns_t = typename projection_info_t::return_t;
-
-    static constexpr bool IS_PROJECTION_RETURNS_TUPLE = aui::is_tuple<projection_returns_t>;
-
-    using emits_args_t =
-        std::conditional_t<IS_PROJECTION_RETURNS_TUPLE, projection_returns_t, std::tuple<projection_returns_t>>;
-
-    template <convertible_to<AObjectBase*> Object, not_overloaded_lambda Lambda>
-    void connect(Object objectBase, Lambda&& lambda) {
-        base.connect(
-            objectBase,
-            tuple_visitor<typename projection_info_t::args>::for_each_all([&]<typename... ProjectionArgs>() {
-                return [invocable = std::forward<Lambda>(lambda),
-                        projection = projection](const std::decay_t<ProjectionArgs>&... args) {
-                    auto result = std::invoke(projection, args...);
-                    if constexpr (IS_PROJECTION_RETURNS_TUPLE) {
-                        std::apply(invocable, std::move(result));
-                    } else {
-                        std::invoke(invocable, std::move(result));
-                    }
-                };
-            }));
-    }
-
-    operator bool() const { return bool(base); }
-
-    bool isAtSignalEmissionState() const noexcept {
-        return base.isAtSignalEmissionState();
-    }
-
-private:
-    template <not_overloaded_lambda Lambda>
-    auto makeRawInvocable(Lambda&& lambda) const {
-        return tuple_visitor<emits_args_t>::for_each_all([&]<typename... ProjectionResult>() {
-            return [lambda = std::forward<Lambda>(lambda)](const std::decay_t<ProjectionResult>&... args) {
-                aui::detail::signal::callIgnoringExcessArgs(lambda, args...);
-            };
-        });
-    }
-};
-
 template <aui::not_overloaded_lambda Lambda, typename ... Args>
 auto makeRawInvocable(Lambda&& lambda) {
     return [lambda = std::forward<Lambda>(lambda)](const Args&... args) mutable {
@@ -176,20 +122,12 @@ class ASignal final : public AAbstractSignal {
     friend class PropertyTest;
     friend class PropertyPrecomputedTest;
 
-    template <typename AnySignal, typename Projection>
-    friend struct aui::detail::signal::ProjectedSignal;
-
     template <typename T>
     friend class AWatchable;
 
 public:
     using func_t = std::function<void(const Args&...)>;
     using emits_args_t = std::tuple<Args...>;
-
-    template <typename Projection>
-    auto projected(Projection&& projection) const {
-        return aui::detail::signal::ProjectedSignal(const_cast<ASignal&>(*this), std::forward<Projection>(projection));
-    }
 
     struct call_wrapper {
         ASignal& signal;

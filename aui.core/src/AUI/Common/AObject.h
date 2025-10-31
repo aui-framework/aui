@@ -113,27 +113,15 @@ public:
     }
 
     /**
-     * @brief Connects source property to the destination property.
-     * @param propertySource source property, whose value is preserved on connection creation.
+     * @brief Connects a signal or property to a property.
+     * @param connectionSource The signal (or property) to connect.
      * @param propertyDestination destination property, whose value is overwritten on connection creation.
      * @ingroup property-system
-     * @details
-     * Connects `propertySource.changed` to the setter of `propertyDestination` . Additionally, sets the
-     * `propertyDestination` with the current value of the `propertySource` (pre-fire). Hence, dataflow is from left
-     * argument to the right argument.
-     *
-     * connect pulls AObject from `propertyDestination` to maintain the connection.
-     *
-     * See [signal-slot system](signal_slot.md) for more info.
      */
-    template <APropertyReadable PropertySource, APropertyWritable PropertyDestination>
-    static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination)
-        requires requires {
-            // source and destination properties must have compatible underlying types
-            { *propertySource } -> aui::convertible_to<std::decay_t<decltype(*propertyDestination)>>;
-        }
+    template <aui::detail::ConnectionSource ConnectionSource, APropertyWritable PropertyDestination>
+    static void connect(ConnectionSource&& connectionSource, PropertyDestination&& propertyDestination)
     {
-        AObject::connect(propertySource, propertyDestination.assignment());
+        AObject::connect(connectionSource, propertyDestination.assignment());
     }
 
     /**

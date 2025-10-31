@@ -256,7 +256,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H3
                   // goes through projection (&AString::uppercase) first
                   // then it goes to assignment operation of it->text()
                   // property.
-                  AObject::connect(user->name.readProjected(&AString::uppercase), it->text());
+                  AObject::connect(AUI_REACT(user->name->uppercase()), it->text());
                   //                ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->
                   // in other words, this connection is essentially the same as
                   // AObject::connect(user->name.projected(&AString::uppercase), AUI_SLOT(it)::setText);
@@ -475,8 +475,8 @@ TEST_F(UIDataBindingTest, Bidirectional_projection) { // HEADER_H3
                   // (selectionId() type) are incompatible.
                   //
                   // Instead, define bidirectional projection:
-                   AObject::biConnect(
-                       user->gender.biProjected(GENDER_INDEX_PROJECTION),
+                   AObject::connect(
+                       AUI_REACT(GENDER_INDEX_PROJECTION(user->gender)),
                        it->selectionId());
                   },
             });
