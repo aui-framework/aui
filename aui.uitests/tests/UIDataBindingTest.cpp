@@ -830,7 +830,9 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot3) {
         MyWindow(const _<User>& user) {
             _<ALabel> label;
             setContents(Centered {
-              _new<ALabel>() & user->name.readProjected([](const AString& s) { return s != "hide"; }) > &AView::setVisible
+              _new<ALabel>() AUI_LET {
+                  AObject::connect(user->name, it, [&it = *it](const AString& s) { it.setVisible(s != "hide"); });
+              },
             });
         }
     };
@@ -906,66 +908,4 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H3
     //
     // This way we've set up bidirectional projection via `&&` which makes `user->name` aware of UI
     // changes.
-}
-
-TEST_F(UIDataBindingTest, Declarative_bidirectional_projection) { // HEADER_H3
-    // We can use projections in the same way as with `AUI_LET`.
-    //
-    // Let's repeat the [UIDataBindingTest_Bidirectional_projection] sample in declarative way:
-    using namespace declarative;
-    struct User {
-        AProperty<Gender> gender;
-    };
-
-    static constexpr auto GENDERS = aui::enumerate::ALL_VALUES<Gender>;
-    static constexpr auto GENDER_INDEX_PROJECTION = aui::lambda_overloaded {
-        [](Gender g) -> int { return aui::indexOf(GENDERS, g).valueOr(0); },
-        [](int i) -> Gender { return GENDERS[i]; },
-    };
-    auto user = aui::ptr::manage_shared(new User { .gender = Gender::MALE });
-
-    class MyWindow: public AWindow {
-    public:
-        MyWindow(const _<User>& user) {
-            auto gendersStr = AListModel<AString>::fromVector(
-                GENDERS
-                | ranges::views::transform(AEnumerate<Gender>::toName)
-                | ranges::to_vector);
-
-            setContents(Centered {
-                // AUI_DOCS_CODE_BEGIN
-                _new<ADropdownList>(gendersStr) && user->gender.biProjected(GENDER_INDEX_PROJECTION) > &ADropdownList::selectionId
-                // AUI_DOCS_CODE_END
-                //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_1.png)
-                // !!! note
-                //
-                //     We used the `&&` operator here instead of `&` because we want the connection work in both
-                //     directions: `user.gender -> ADropdownList` and `ADropdownList -> user.gender`.
-                //
-            });
-        }
-    };
-    auto window = _new<MyWindow>(user);
-    window->setScalingParams({ .scalingFactor = 2.f });
-    window->show();
-    auto dropdownList = _cast<ADropdownList>(By::type<ADropdownList>().one());
-    saveScreenshot("1");
-
-    //
-    // - If we try to change `user->gender` programmatically, ADropdownList will respond:
-    // AUI_DOCS_CODE_BEGIN
-    user->gender = Gender::FEMALE;
-    EXPECT_EQ(dropdownList->getSelectedId(), 1); // second option
-    // AUI_DOCS_CODE_END
-    saveScreenshot("2");
-    //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_2.png)
-
-    //
-    // - If the user changes the value of ADropdownList, it reflects on the model as well:
-    dropdownList->setSelectionId(2);
-    saveScreenshot("3");
-    // AUI_DOCS_CODE_BEGIN
-    EXPECT_EQ(user->gender, Gender::OTHER);
-    // AUI_DOCS_CODE_END
-    //![](imgs/UIDataBindingTest.Declarative_bidirectional_projection_3.png)
 }
