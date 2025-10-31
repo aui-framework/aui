@@ -42,7 +42,14 @@ public:
             Horizontal {
               Label { "Duration:" },
               _new<ASlider>() AUI_LET {
-                      // it&& mDuration.biProjected(...) ;
+                      it&& mDuration.biProjected(aui::lambda_overloaded {
+                        [](high_resolution_clock::duration d) -> aui::float_within_0_1 {
+                            return float(d.count()) / float(MAX_DURATION.count());
+                        },
+                        [](aui::float_within_0_1 d) -> high_resolution_clock::duration {
+                            return high_resolution_clock::duration(long(float(d) * float(MAX_DURATION.count())));
+                        },
+                      });
                       it->setCustomStyle({ Expanding {} });
                   },
             } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },

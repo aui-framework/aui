@@ -110,6 +110,7 @@ struct AProperty: AObjectBase {
     }
 
     AProperty(AProperty&& value) noexcept: raw(std::move(value.raw)) {
+        // if both are default constructed, no need to notify.
         static constexpr auto IS_COMPARABLE = requires { this->raw == value.raw; };
         if constexpr (IS_COMPARABLE) {
             if (this->raw == value.raw) [[unlikely]] {
