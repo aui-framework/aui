@@ -41,17 +41,14 @@ public:
             Label { AUI_REACT("{:.1f}s"_format(duration_cast<milliseconds>(*mElapsedTime).count() / 1000.f)) },
             Horizontal {
               Label { "Duration:" },
-              _new<ASlider>() AUI_LET {
-                      it&& mDuration.biProjected(aui::lambda_overloaded {
-                        [](high_resolution_clock::duration d) -> aui::float_within_0_1 {
-                            return float(d.count()) / float(MAX_DURATION.count());
-                        },
-                        [](aui::float_within_0_1 d) -> high_resolution_clock::duration {
-                            return high_resolution_clock::duration(long(float(d) * float(MAX_DURATION.count())));
-                        },
-                      });
-                      it->setCustomStyle({ Expanding {} });
-                  },
+              Slider {
+                .value = AUI_REACT(float(mDuration->count()) / float(MAX_DURATION.count())),
+                .onValueChanged =
+                    [this](aui::float_within_0_1 newValue) {
+                        mDuration =
+                            high_resolution_clock::duration(long(float(MAX_DURATION.count()) * float(newValue)));
+                    },
+              } AUI_WITH_STYLE { Expanding { 1, 0 } },
             } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
             _new<AButton>("Reset Timer") AUI_WITH_STYLE {
                   Expanding { 1, 0 },

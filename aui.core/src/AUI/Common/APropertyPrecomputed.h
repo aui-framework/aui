@@ -28,9 +28,6 @@
  *
  * See [property system](property-system.md) for usage info.
  *
- * Despite properties offer [projection methods](property-system.md#UIDataBindingTest_Label_via_declarative_projection), you might
- * want to track and process values of several properties.
- *
  * `APropertyPrecomputed<T>` is a readonly property similar to `AProperty<T>`. It holds an instance of `T` as well.
  * Its value is determined by a [reactive](aui::react) expression specified in `APropertyPrecomputed<T>`'s
  * constructor, typically a C++ lambda.
@@ -50,18 +47,17 @@
  *
  * <!-- aui:parse_tests aui.core/tests/PropertyPrecomputed.cpp -->
  */
-template<typename T>
+template <typename T>
 struct APropertyPrecomputed final : aui::react::DependencyObserver {
     using Underlying = T;
     using Factory = std::function<T()>;
 
-    template<aui::factory<T> Factory>
-    APropertyPrecomputed(Factory&& expression): mCurrentValue([this, expression = std::forward<Factory>(expression)] { // NOLINT(*-explicit-constructor)
-      aui::react::DependencyObserverRegistrar r(*this);
-      return expression();
-    }) {
-
-    }
+    template <aui::factory<T> Factory>
+    APropertyPrecomputed(Factory&& expression)
+      : mCurrentValue([this, expression = std::forward<Factory>(expression)] {   // NOLINT(*-explicit-constructor)
+          aui::react::DependencyObserverScope r(this);
+          return expression();
+      }) {}
 
     APropertyPrecomputed(const APropertyPrecomputed&) = delete;
     APropertyPrecomputed(APropertyPrecomputed&&) noexcept = delete;
@@ -88,33 +84,19 @@ struct APropertyPrecomputed final : aui::react::DependencyObserver {
         }
     }
 
-    const AObjectBase* boundObject() const {
-        return this;
-    }
+    const AObjectBase* boundObject() const { return this; }
 
     [[nodiscard]]
     const T& value() const {
-        aui::react::DependencyObserverRegistrar::addDependency(changed);
+        aui::react::DependencyObserverScope::addDependency(changed);
         return mCurrentValue;
     }
 
-    [[nodiscard]]
-    operator const T&() const {
-        return value();
-    }
+    [[nodiscard]] operator const T&() const { return value(); }
 
     [[nodiscard]]
     const T& operator*() const {
         return value();
-    }
-
-    /**
-     * @brief Makes a readonly [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
-     */
-    template <aui::invocable<const Underlying&> Projection>
-    [[nodiscard]]
-    auto readProjected(Projection&& projection) noexcept {
-        return aui::detail::property::makeReadonlyProjection(*this, std::forward<Projection>(projection));
     }
 
     [[nodiscard]]
@@ -129,7 +111,89 @@ private:
     aui::lazy<T> mCurrentValue;
 };
 
-template<aui::invocable<> Factory>
+template <aui::invocable<> Factory>
 APropertyPrecomputed(Factory&& f) -> APropertyPrecomputed<std::decay_t<std::invoke_result_t<Factory>>>;
 
 static_assert(APropertyReadable<APropertyPrecomputed<int>>, "APropertyPrecomputed must be a APropertyReadable");
+
+namespace aui::react {
+
+/**
+ * @brief Reactive expression produced by AUI_REACT macro.
+ */
+template <aui::invocable F>
+struct Expression {
+    F expression;
+};
+
+template <aui::invocable F>
+Expression<F> makeExpression(F&& f) {
+    return Expression<F>{ std::forward<F>(f) };
+}
+
+}   // namespace aui::react
+
+template <typename Expr>
+struct aui::detail::ConnectionSourceTraits<aui::react::Expression<Expr>> {
+    /**
+     * @brief Helper function for AObject::connect to make connection.
+     */
+    template <aui::convertible_to<AObjectBase*> Object, aui::not_overloaded_lambda Lambda>
+    decltype(auto) connect(aui::react::Expression<Expr> source, Object objectBase, Lambda&& lambda) {
+        aui::tuple_visitor<typename aui::lambda_info<Lambda>::args>::for_each_all([&]<typename ExtractedType>() {
+            using T = std::decay_t<ExtractedType>;
+            auto precomputed = _new<APropertyPrecomputed<T>>(std::move(source.expression));
+            auto& precomputedValue = *precomputed;   // extract reference to precomputed, because we'll std::move the
+                                                     // shared_ptr
+            return AObject::connect(
+                precomputedValue, objectBase,
+                [keepMeAlive = std::move(precomputed), lambda = std::forward<Lambda>(lambda)](const T& value) {
+                    std::invoke(lambda, value);
+                });
+        });
+    }
+};
+
+/**
+ * @brief Explicitly denotes a [reactive](reactive.md) expression.
+ * @ingroup useful_macros
+ * @ingroup reactive
+ * @details
+ * AUI_REACT is a core component of AUI Framework's [reactive](reactive.md) reactive programming model. It's used to
+ * create [reactive](reactive.md) expressions that automatically update UI elements when their dependent values
+ * change.
+ *
+ * The expression is a C++ expression that depends on AProperty values:
+ *
+ * ```cpp
+ * AUI_REACT(expression)
+ * ```
+ *
+ * ## Basic example
+ *
+ * This creates a label that automatically updates when property `mCounter` changes:
+ *
+ * <!-- aui:snippet examples/7guis/counter/src/main.cpp counter -->
+ *
+ * ## Formatted label example
+ *
+ * <!-- aui:snippet examples/7guis/timer/src/main.cpp example -->
+ *
+ * ### Implementation details
+ *
+ * When used in declarative UI building, `AUI_REACT` creates an instance of `APropertyPrecomputed<T>` behind the scenes,
+ * which:
+ *
+ * 1. Evaluates the expression initially.
+ * 2. Sets up observers for all dependent properties.
+ * 3. Re-evaluates when dependencies change.
+ *
+ * The macros itself consists of a lambda syntax with forced `[=]` capture and explicit `decltype(auto)` return type.
+ * The lambda is wrapped with aui::react::Expression to be strongly typed.
+ *
+ * The `decltype(auto)` return type is used to avoid property copy when referenced.
+ */
+#define AUI_REACT(...)        \
+    ::aui::react::makeExpression(       \
+        [=]() -> decltype(auto) { return (__VA_ARGS__); } \
+    )

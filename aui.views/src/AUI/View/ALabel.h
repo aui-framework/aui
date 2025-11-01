@@ -74,7 +74,7 @@ struct Label {
 
     _<ALabel> operator()() {
         auto label = _new<ALabel>();
-        AUI_NULLSAFE(text)->bindTo(label->text());
+        AUI_NULLSAFE(text)->bindTo(label->text().assignment());
         return label;
     }
 };

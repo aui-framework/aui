@@ -201,8 +201,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     });
 
     _<ATabView> tabView;
-    _<AProgressBar> progressBar = _new<AProgressBar>();
-    _<ACircleProgressBar> circleProgressBar = _new<ACircleProgressBar>();
+    auto progressBarState = _new<AProperty<aui::float_within_0_1>>(0);
 
     addView(tabView = _new<ATabView>() AUI_LET {
         it->addTab(
@@ -461,14 +460,15 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 GroupBox {
                   Label { "Progressbar" },
                   Vertical {
-                    progressBar,
-                    circleProgressBar,
+                    ProgressBar { AUI_REACT(*progressBarState) },
+                    CircleProgressBar { AUI_REACT(*progressBarState) },
                     GroupBox {
                       Label { "Slider" },
                       Vertical {
-                        _new<ASlider>()
-                            .connect(&ASlider::valueChanging, AUI_SLOT(progressBar)::setValue)
-                            .connect(&ASlider::valueChanging, AUI_SLOT(circleProgressBar)::setValue),
+                            Slider {
+                              .value = AUI_REACT(*progressBarState),
+                              .onValueChanged = [=](aui::float_within_0_1 v) { *progressBarState = v; },
+                            },
                       },
                     },
                   } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
@@ -527,24 +527,12 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   _new<AButton>("Play .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::play),
                   _new<AButton>("Stop .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::stop),
                   _new<AButton>("Pause .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::pause),
-                  _new<ALabel>("Volume control"),
-                  _new<ASlider>().connect(
-                      &ASlider::valueChanging, this,
-                      [player = mWavAudio](aui::float_within_0_1 value) {
-                          player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
-                      }),
                 } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
                 Vertical {
                   _new<ALabel>("Play music using AUI!"),
                   _new<AButton>("Play .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::play),
                   _new<AButton>("Stop .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::stop),
                   _new<AButton>("Pause .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::pause),
-                  _new<ALabel>("Volume control"),
-                  _new<ASlider>().connect(
-                      &ASlider::valueChanging, this,
-                      [player = mOggAudio](aui::float_within_0_1 value) {
-                          player->setVolume(static_cast<uint32_t>(float(value) * 256.f));
-                      }),
                 } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
                 Vertical {
                   _new<AButton>("Button produces sound when clicked") AUI_WITH_STYLE {

@@ -278,7 +278,7 @@ public:
     void setModel(RangeFactory&& rangeFactory) {
         mListFactory = [this, rangeFactory = std::forward<RangeFactory>(rangeFactory)] {
 //            ALOG_DEBUG("AForEachUIBase") << this << "(" << AReflect::name(this) << ") range expression evaluation";
-            aui::react::DependencyObserverRegistrar r(*this);
+            aui::react::DependencyObserverScope r(this);
             decltype(auto) rng = rangeFactory();
             if (auto it = ranges::begin(rng); it != ranges::end(rng)) {
                 [[maybe_unused]] auto discoverReferencedProperties = *it;

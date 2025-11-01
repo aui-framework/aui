@@ -11,80 +11,89 @@
 
 #pragma once
 
-
 #include "AViewContainer.h"
 #include "AProgressBar.h"
 
+namespace declarative {
+
 /**
  * @brief Slider control.
- *
  * ![](imgs/views/ASlider.png)
+ * @details
+ *
+ * The `Slider` represents a horizontal slider control that can be
+ * used in declarative UI definitions. It exposes a single value in the
+ * range `[0, 1]` and emits a signal whenever the value changes. The visual
+ * representation consists of a *track* and a *handle* view. By default the
+ * track and handle are created using the static helper functions
+ * `defaultTrack()` and `defaultHandle()`, but users may provide custom
+ * implementations by overriding the corresponding member variables.
+ *
+ * The slider automatically handles mouse and keyboard input. When the user
+ * drags the handle, the `onValueChanged` slot is invoked.
  *
  * @ingroup views_input
  */
-class API_AUI_VIEWS ASlider: public AViewContainerBase {
-public:
-    class Handle: public AView {}; // embed class for styling
+struct API_AUI_VIEWS Slider {
+    /**
+     * @brief Current slider value in the range `[0, 1]`.
+     * @details
+     * The value is a contract input, meaning it can be bound to other
+     * components or data models. Changing this value programmatically will
+     * update the handle position.
+     */
+    contract::In<aui::float_within_0_1> value;
 
-    ASlider();
-    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
-    void onPointerPressed(const APointerPressedEvent& event) override;
-    void onPointerReleased(const APointerReleasedEvent& event) override;
-    void applyGeometryToChildren() override;
-    bool capturesFocus() override;
+    /**
+     * @brief Slot that is called whenever the slider value changes.
+     * @details
+     * The slot receives the new value as a `float_within_0_1`. The
+     * implementation expects the consumer to update the `value`
+     * contract inside this slot.
+     */
+    contract::Slot<aui::float_within_0_1> onValueChanged;
 
-    [[nodiscard]]
-    bool isDragging() const noexcept {
-        return isPressed();
-    }
+    /**
+     * @brief View representing the slider track.
+     * @details
+     * By default this is created by `defaultTrack(value)` which creates a
+     * simple rectangular track. Users can replace this with a custom view
+     * to change the appearance.
+     */
+    _<AView> track = defaultTrack(value);
 
-    void setValue(aui::float_within_0_1 value) {
-        mProgress->setValue(value);
-    }
+    /**
+     * @brief View representing the slider handle.
+     * @details
+     * The default implementation is provided by `defaultHandle()`.
+     */
+    _<AView> handle = defaultHandle();
 
-    [[nodiscard]]
-    auto value() const noexcept {
-        return APropertyDef {
-            this,
-            &ASlider::getValue,
-            &ASlider::setValue,
-            valueChanging,
-        };
-    }
+    /**
+     * @brief Creates a default track view.
+     * @param value The slider value contract.
+     * @return A view representing the track.
+     * @details
+     * The returned view is a simple rectangle that visually represents
+     * the slider's range. It listens to the `value` contract to update its
+     * visual state.
+     *
+     * <!-- aui:snippet aui.views/src/AUI/View/ASlider.cpp defaultTrack -->
+     *
+     */
+    static _<AView> defaultTrack(const contract::In<aui::float_within_0_1>& value);
 
-    [[nodiscard]]
-    const _<Handle>& handle() const noexcept {
-        return mHandle;
-    }
+    /**
+     * @brief Creates a default handle view.
+     * @return A view representing the handle.
+     * @details
+     * The handle is a draggable element that the user can move along the
+     * track. It updates the `value` contract when dragged.
+     *
+     * <!-- aui:snippet aui.views/src/AUI/View/ASlider.cpp defaultHandle -->
+     */
+    static _<AView> defaultHandle();
 
-    [[nodiscard]]
-    const _<AProgressBar>& progressbar() const noexcept {
-        return mProgress;
-    }
-
-signals:
-    emits<aui::float_within_0_1> valueChanging;
-    emits<aui::float_within_0_1> valueChanged;
-
-private:
-    _<Handle> mHandle;
-    _<AProgressBar> mProgress;
-
-    [[nodiscard]]
-    aui::float_within_0_1 getValue() const noexcept {
-        return mProgress->value();
-    }
-
-    void updateSliderWithPosition(glm::ivec2 pointerPosition);
-
-    void updateHandlePosition();
+    _<AView> operator()();
 };
-
-template<>
-struct ADataBindingDefault<ASlider, aui::float_within_0_1> {
-public:
-    static auto property(const _<ASlider>& view) {
-        return view->value();
-    }
-    static void setup(const _<ASlider>& view) {}
-};
+}   // namespace declarative

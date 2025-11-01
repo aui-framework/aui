@@ -35,7 +35,7 @@
  */
 namespace aui::react {
 struct DependencyObserver : AObjectBase {
-    friend struct API_AUI_CORE DependencyObserverRegistrar;
+    friend struct API_AUI_CORE DependencyObserverScope;
 
 public:
     virtual void invalidate() = 0;
@@ -44,9 +44,9 @@ private:
     AVector<AAbstractSignal::AutoDestroyedConnection> mObserverConnections;
 };
 
-struct API_AUI_CORE DependencyObserverRegistrar {
-    explicit DependencyObserverRegistrar(DependencyObserver& observer);
-    ~DependencyObserverRegistrar();
+struct API_AUI_CORE DependencyObserverScope {
+    explicit DependencyObserverScope(DependencyObserver* observer);
+    ~DependencyObserverScope();
 
     /**
      * @brief Adds observer to the specified signal, if called inside a reactive expression evaluation.
@@ -56,5 +56,4 @@ struct API_AUI_CORE DependencyObserverRegistrar {
 private:
     DependencyObserver* mPrevObserver;
 };
-
 }   // namespace aui::react

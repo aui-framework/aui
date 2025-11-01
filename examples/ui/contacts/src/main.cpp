@@ -24,6 +24,7 @@
 #include <view/common.h>
 #include <AUI/View/ASpacerFixed.h>
 #include "AUI/Platform/AMessageBox.h"
+#include "AUI/View/Dynamic.h"
 
 using namespace declarative;
 using namespace ass;
@@ -46,28 +47,23 @@ public:
                             SpacerFixed(8_dp),
                             AText::fromString(predefined::DISCLAIMER) AUI_WITH_STYLE { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
-                            CustomLayout {} & mSearchQuery.readProjected([&](const AString& q) {
-                                if (q.empty()) {
-                                    return indexedList();
-                                }
-                                return searchQueryList();
-                            }),
-                            Label { AUI_REACT("{} contact(s)"_format(mContactCount)) }
-                                & mSearchQuery.readProjected([](const AString& s) { return s.empty(); }) > &AView::setVisible
-                                 AUI_WITH_STYLE { FontSize { 10_pt }, ATextAlign::CENTER, Margin { 8_dp } },
+                            experimental::Dynamic {
+                                .content = AUI_REACT(mSearchQuery->empty() ? indexedList() : searchQueryList()),
+                            },
+                            Label { AUI_REACT("{} contact(s)"_format(mContactCount)) } AUI_LET {
+                                AObject::connect(AUI_REACT(ass::PropertyList{
+                                    FontSize { 10_pt },
+                                    ATextAlign::CENTER,
+                                    Margin { 8_dp },
+                                    mSearchQuery->empty() ? Visibility::VISIBLE : Visibility::GONE,
+                                }), AUI_SLOT(it)::setCustomStyle);
+                            },
                           } AUI_WITH_STYLE { Padding(0, 8_dp) })
                       .build() AUI_WITH_STYLE { Expanding(0, 1), MinSize(200_dp) },
 
-              CustomLayout::Expanding {} & mSelectedContact.readProjected([this](const _<Contact>& selectedContact) -> _<AView> {
-                  auto editor = contactDetails(selectedContact);
-                  if (editor != nullptr) {
-                      connect(selectedContact->displayName.changed, editor, [this] {
-                          *mContacts.writeScope() |= CONTACTS_SORT;
-                      });
-                      connect(editor->deleteAction, me::deleteCurrentContact);
-                  }
-                  return editor;
-              }) AUI_WITH_STYLE { Expanding(), MinSize(300_dp), BackgroundSolid { AColor::WHITE } },
+              experimental::Dynamic {
+                  .content = AUI_REACT(mSelectedContact != nullptr ? contactDetails(mSelectedContact) : nullptr),
+              } AUI_WITH_STYLE { Expanding(), MinSize(300_dp), BackgroundSolid { AColor::WHITE } },
             } AUI_WITH_STYLE {
               Padding(0),
             });
@@ -146,7 +142,12 @@ private:
         if (!contact) {
             return nullptr;
         }
-        return _new<ContactDetailsView>(contact);
+        auto d = _new<ContactDetailsView>(contact);
+        connect(contact->displayName.changed, d, [this] {
+            *mContacts.writeScope() |= CONTACTS_SORT;
+        });
+        connect(d->deleteAction, me::deleteCurrentContact);
+        return d;
     }
 };
 

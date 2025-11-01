@@ -42,6 +42,7 @@ _<ALabel> header(AString title) {
 }   // namespace
 
 DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
+    auto scalingParams = _new<AProperty<aui::float_within_0_1>>(1.f / 3.f);
     setContents(Centered { AScrollArea::Builder().withContents(
         Vertical::Expanding {
           header("Profiling"),
@@ -50,7 +51,7 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
               { "These settings are applicable for render-to-texture optimizations.",
                 makeLink("Learn more", "https://aui-framework.github.io/develop/md_docs_Render_to_texture.html") }),
           CheckBox {
-            AUI_REACT(targetWindow->profiling()->highlightRedrawRequests),
+            AUI_REACT(*targetWindow->profiling()->highlightRedrawRequests),
             [targetWindow](bool checked) {
                 targetWindow->profiling()->highlightRedrawRequests = checked;
             },
@@ -91,15 +92,16 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
 
           header("Scale"),
           Vertical {
-            _new<ASlider>() AUI_LET {
-                    it->value() = 1.f / 3.f;
-                    connect(it->value(), [targetWindow, it](float v) {
-                        it->value() = glm::round(v * 6) / 6.f;
-                        targetWindow->setScalingParams({
-                          glm::mix(0.5f, 2.f, float(*it->value())),
-                        });
-                    });
-                },
+            Slider {
+              .value = AUI_REACT(*scalingParams),
+              .onValueChanged = [scalingParams, targetWindow](aui::float_within_0_1 newValue) {
+                  newValue = glm::round(newValue * 6) / 6.f;
+                  *scalingParams = newValue;
+                  targetWindow->setScalingParams({
+                    glm::mix(0.5f, 2.f, float(newValue)),
+                  });
+              },
+            },
             Horizontal {
               Label { "|" },
               SpacerExpanding{},

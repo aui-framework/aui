@@ -25,6 +25,7 @@
 #include "AUI/Reflect/for_each_field.h"
 #include "AUI/Platform/AMessageBox.h"
 #include "AUI/View/ASpacerFixed.h"
+#include "AUI/View/Dynamic.h"
 
 #include <AUI/View/AForEachUI.h>
 #include <AUI/Util/AWordWrappingEngineImpl.h>
@@ -55,23 +56,23 @@ public:
 
 /// [notePreview]
 _<AView> notePreview(const _<Note>& note) {
-    struct StringOneLinePreview {
-        AString operator()(const AString& s) const {
-            if (s.empty()) {
-                return "Empty";
-            }
-            return s.restrictLength(100, "").replacedAll('\n', ' ');
+    auto stringOneLinePreview = [](const AString& s) -> AString {
+        if (s.empty()) {
+            return "Empty";
         }
+        return s.restrictLength(100, "").replacedAll('\n', ' ');
     };
 
     return Vertical {
-        Label {} AUI_WITH_STYLE { FontSize { 10_pt }, ATextOverflow::ELLIPSIS } &
-            note->title.readProjected(StringOneLinePreview {}),
-        Label {} AUI_WITH_STYLE {
-                  ATextOverflow::ELLIPSIS,
-                  Opacity { 0.7f },
-                } &
-            note->content.readProjected(StringOneLinePreview {}),
+        Label {
+          .text = AUI_REACT(stringOneLinePreview(note->title)),
+        } AUI_WITH_STYLE { FontSize { 10_pt }, ATextOverflow::ELLIPSIS },
+        Label {
+          .text = AUI_REACT(stringOneLinePreview(note->content)),
+        } AUI_WITH_STYLE {
+              ATextOverflow::ELLIPSIS,
+              Opacity { 0.7f },
+            },
     } AUI_WITH_STYLE {
         Padding { 4_dp, 8_dp },
         BorderRadius { 8_dp },
@@ -90,7 +91,7 @@ _<AView> noteEditor(const _<Note>& note) {
           _new<TitleTextArea>("Untitled") AUI_LET {
                   it->setCustomStyle({ FontSize { 14_pt }, Expanding { 1, 0 } });
                   AObject::biConnect(note->title, it->text());
-                  if (note->content->empty()) {
+                  if (note->content.raw.empty()) {
                       it->focus();
                   }
               },
@@ -124,9 +125,11 @@ public:
                     Vertical {
                       Centered {
                         Horizontal {
-                          Button { Horizontal { Icon { ":img/save.svg" }, SpacerFixed { 2_dp }, Label { "Save" } }, {me::save} }
-                              & mDirty > &AView::setEnabled,
-                          Button { Horizontal { Icon { ":img/new.svg" }, SpacerFixed { 2_dp }, Label { "New Note" } }, {me::newNote} },
+                          Button { Horizontal { Icon { ":img/save.svg" }, SpacerFixed { 2_dp }, Label { "Save" } },
+                                   { me::save } } &
+                              mDirty > &AView::setEnabled,
+                          Button { Horizontal { Icon { ":img/new.svg" }, SpacerFixed { 2_dp }, Label { "New Note" } },
+                                   { me::newNote } },
                         } AUI_WITH_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } },
                       },
                       /// [scrollarea]
@@ -143,18 +146,20 @@ public:
                               };
                           })
                           .build(),
-                        /// [scrollarea]
+                      /// [scrollarea]
                     } AUI_WITH_STYLE { MinSize { 200_dp } },
 
                     Vertical::Expanding {
                       Centered {
-                        Button { Horizontal { Icon { ":img/trash.svg" }, SpacerFixed { 2_dp }, Label { "Delete" } }, {me::deleteCurrentNote} } &
-                            mCurrentNote.readProjected([](const _<Note>& n) {
-                                return n != nullptr;
-                            }) > &AView::setEnabled,
+                        Button {
+                          Horizontal { Icon { ":img/trash.svg" }, SpacerFixed { 2_dp }, Label { "Delete" } },
+                          { me::deleteCurrentNote },
+                        } AUI_LET {
+                            connect(AUI_REACT(mCurrentNote != nullptr), AUI_SLOT(it)::setEnabled);
+                        },
                       },
-                      CustomLayout::Expanding {} & mCurrentNote.readProjected(noteEditor),
-                    }<< ".plain_bg" AUI_WITH_STYLE { MinSize { 200_dp } },
+                      experimental::Dynamic { AUI_REACT(noteEditor(mCurrentNote)) } AUI_WITH_STYLE { Expanding() },
+                    } << ".plain_bg" AUI_WITH_STYLE { MinSize { 200_dp } },
                   })
                   .build() AUI_WITH_STYLE { Expanding() },
         });
@@ -216,20 +221,18 @@ public:
     }
     /// [deleteCurrentNote]
 
-    void markDirty() {
-        mDirty = true;
-    }
+    void markDirty() { mDirty = true; }
 
     void observeChangesForDirty(const _<Note>& note) {
         aui::reflect::for_each_field_value(
-                *note,
-                aui::lambda_overloaded {
-                        [&](auto& field) {},
-                        [&](APropertyReadable auto& field) {
-                            ALOG_DEBUG(LOG_TAG) << "Observing for changes " << &field;
-                            AObject::connect(field.changed, me::markDirty);
-                        },
-                });
+            *note,
+            aui::lambda_overloaded {
+              [&](auto& field) {},
+              [&](APropertyReadable auto& field) {
+                  ALOG_DEBUG(LOG_TAG) << "Observing for changes " << &field;
+                  AObject::connect(field.changed, me::markDirty);
+              },
+            });
     }
 
 private:

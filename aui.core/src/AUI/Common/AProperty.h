@@ -81,6 +81,8 @@ struct AProperty: AObjectBase {
      * This field stores AProperty's wrapped value. It is not recommended to use this in casual use; although there are
      * might be an use case to modify the value without notifying. You can use `notify()` to send a change notification.
      * Use at your own risk.
+     *
+     * Accessing directly to `raw` avoids dependency tracking of reactive expressions.
      */
     T raw{};
 
@@ -108,6 +110,13 @@ struct AProperty: AObjectBase {
     }
 
     AProperty(AProperty&& value) noexcept: raw(std::move(value.raw)) {
+        // if both are default constructed, no need to notify.
+        static constexpr auto IS_COMPARABLE = requires { this->raw == value.raw; };
+        if constexpr (IS_COMPARABLE) {
+            if (this->raw == value.raw) [[unlikely]] {
+                return;
+            }
+        }
         value.notify();
     }
 
@@ -162,7 +171,7 @@ struct AProperty: AObjectBase {
 
     [[nodiscard]]
     const T& value() const noexcept {
-        aui::react::DependencyObserverRegistrar::addDependency(changed);
+        aui::react::DependencyObserverScope::addDependency(changed);
         return raw;
     }
 
@@ -185,36 +194,6 @@ struct AProperty: AObjectBase {
         return { *this };
     }
 
-    /**
-     * @brief Makes a readonly [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
-     */
-    template<aui::invocable<const T&> Projection>
-    [[nodiscard]]
-    auto readProjected(Projection&& projection) const noexcept {
-        return aui::detail::property::makeReadonlyProjection(*this, std::forward<Projection>(projection));
-    }
-
-    /**
-     * @brief Makes a bidirectional [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
-     */
-    template<aui::invocable<const T&> ProjectionRead,
-             aui::invocable<const std::invoke_result_t<ProjectionRead, T>&> ProjectionWrite>
-    [[nodiscard]]
-    auto biProjected(ProjectionRead&& projectionRead, ProjectionWrite&& projectionWrite) noexcept {
-        return aui::detail::property::makeBidirectionalProjection(*this,
-                                                                  std::forward<ProjectionRead>(projectionRead),
-                                                                  std::forward<ProjectionWrite>(projectionWrite));
-    }
-
-    /**
-     * @brief Makes a bidirectional projection of this property (by a single aui::lambda_overloaded).
-     */
-    template<aui::detail::property::ProjectionBidirectional<T> Projection>
-    [[nodiscard]]
-    auto biProjected(Projection&& projectionBidirectional) noexcept {
-        return aui::detail::property::makeBidirectionalProjection(*this, projectionBidirectional);
-    }
-
     template<typename Rhs>
     decltype(auto) operator[](Rhs&& rhs) const {
         return raw[std::forward<Rhs>(rhs)];
@@ -227,15 +206,16 @@ struct AProperty: AObjectBase {
         return raw != rhs.raw;
     }
 
-private:
-    friend class AObject;
     /**
-     * @brief Makes a callable that assigns value to this property.
+     * @brief Makes ASlotDef that assigns value to this property.
      */
     [[nodiscard]]
     auto assignment() noexcept {
         return aui::detail::property::makeAssignment(*this);
     }
+
+private:
+    friend class AObject;
 };
 static_assert(AAnyProperty<AProperty<int>>, "AProperty does not conform AAnyProperty concept");
 static_assert(AAnyProperty<AProperty<int>&>, "AProperty does not conform AAnyProperty concept");

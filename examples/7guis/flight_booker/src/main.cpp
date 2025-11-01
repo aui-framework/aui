@@ -25,94 +25,116 @@ constexpr auto REGEX_DATE = ctre::match<"([0-9]+)\\.([0-9]+)\\.([0-9]{4})">;
 
 struct DateTextFieldState {
     AProperty<AOptional<system_clock::time_point>> parsed;
+    ASpinlockMutex userChangesText;
 };
 
 auto formatDate(system_clock::time_point date) { return "{0:%d}.{0:%m}.{0:%G}"_format(date); }
 
-auto dateTextField(DateTextFieldState& state) {
+AOptional<system_clock::time_point> parseDate(AStringView s) {
+    auto std = s.bytes();
+    auto match = REGEX_DATE.match(std);
+    if (!match) {
+        return std::nullopt;
+    }
+    year_month_day ymd(
+        year(std::stoi(match.get<3>().str())), month(std::stoi(match.get<2>().str())),
+        day(std::stoi(match.get<1>().str())));
+    if (!ymd.ok()) {
+        return std::nullopt;
+    }
+    return sys_days(ymd);
+}
+
+/**
+ * AUI_REACT(ass::PropertyList { !state->parsed->hasValue() ? BackgroundSolid(AColor::RED) : nullptr })
+ */
+// template<typename T>
+// requires requires { typename ass::prop::Property<T>; }
+// struct std::common_type<T, std::nullptr_t> {
+//     using type = _<ass::prop::IPropertyBase>;
+// };
+
+template<>
+struct std::common_type<ass::BackgroundSolid, std::nullptr_t> {
+    using type = _<ass::prop::IPropertyBase>;
+};
+
+auto dateTextField(_<DateTextFieldState> state) {
     return _new<ATextField>() AUI_LET {
-        AObject::biConnect(
-            state.parsed.biProjected(aui::lambda_overloaded {
-              [](const AOptional<system_clock::time_point>& v) -> AString {
-                  if (!v) {
-                      return "";
-                  }
-                  return formatDate(*v);
-              },
-              [](const AString& s) -> AOptional<system_clock::time_point> {
-                  auto std = s.toStdString();
-                  auto match = REGEX_DATE.match(std);
-                  if (!match) {
-                      return std::nullopt;
-                  }
-                  year_month_day ymd(
-                      year(std::stoi(match.get<3>().str())), month(std::stoi(match.get<2>().str())),
-                      day(std::stoi(match.get<1>().str())));
-                  if (!ymd.ok()) {
-                      return std::nullopt;
-                  }
-                  return sys_days(ymd);
-              },
-            }),
-            it->text());
-        it & state.parsed > [](AView& textField, const AOptional<system_clock::time_point>& value) {
-            textField.setAssName(".red", !value.hasValue());
-        };
+        AObject::connect(
+            state->parsed, it, [&it = *it, &state = *state](const AOptional<system_clock::time_point>& value) {
+                if (!value) {
+                    return;
+                }
+                if (state.userChangesText.is_locked()) {
+                    return;
+                }
+
+                it.text() = formatDate(*value);
+            });
+        AObject::connect(it->text().changed, state->parsed, [&it = *it, &state = *state](const AString& s) {
+            std::unique_lock lock(state.userChangesText);
+            state.parsed = parseDate(s);
+        });
+        AObject::connect(
+            AUI_REACT(ass::PropertyList { BackgroundSolid(!state->parsed->hasValue() ? AColor::RED : AColor::WHITE) }),
+            AUI_SLOT(it)::setCustomStyle);
     };
 }
 
-class FlightBookerWindow : public AWindow {
-public:
-    FlightBookerWindow() : AWindow("AUI - 7GUIs - Book Flight", 150_dp, 50_dp) {
-        setExtraStylesheet(AStylesheet { {
-          ass::c(".red"),
-          ass::BackgroundSolid { AColor::RED },
-        } });
-        setContents(Centered {
-          Vertical {
-            _new<ADropdownList>(AListModel<AString>::make({ "one-way flight", "return flight" })) AUI_LET {
-                    connect(it->selectionId().readProjected([](int selectionId) { return selectionId == 1; }),
-                            mIsReturnFlight);
-                },
-            dateTextField(mDepartureDate),
-            dateTextField(mReturnDate) AUI_LET { connect(mIsReturnFlight, AUI_SLOT(it)::setEnabled); },
-            _new<AButton>("Book") AUI_LET {
-                    connect(it->clicked, me::book);
-                    connect(mIsValid, AUI_SLOT(it)::setEnabled);
-                },
-          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-        });
-    }
-
-private:
-    DateTextFieldState mDepartureDate { system_clock::now() }, mReturnDate { system_clock::now() };
-    AProperty<bool> mIsReturnFlight;
-    APropertyPrecomputed<bool> mIsValid = [&] {
-        if (!mDepartureDate.parsed->hasValue()) {
+struct State {
+    DateTextFieldState departureDate { .parsed = system_clock::now() }, returnDate { .parsed = system_clock::now() };
+    AProperty<bool> isReturnFlight = false;
+    bool isValid() const {
+        if (!departureDate.parsed->hasValue()) {
             return false;
         }
-        if (!mIsReturnFlight) {
+        if (!isReturnFlight) {
             return true;
         }
-        if (!mReturnDate.parsed->hasValue()) {
+        if (!returnDate.parsed->hasValue()) {
             return false;
         }
-        if (mDepartureDate.parsed->value() > mReturnDate.parsed->value()) {
+        if (departureDate.parsed->value() > returnDate.parsed->value()) {
             return false;
         }
         return true;
     };
-
-    void book() {
-        AString msg = "Departure - {}"_format(formatDate(mDepartureDate.parsed->value()));
-        if (mIsReturnFlight) {
-            msg += "\nReturn - {}"_format(formatDate(mReturnDate.parsed->value()));
-        }
-        AMessageBox::show(this, "You've booked the flight", msg);
-    }
 };
 
 AUI_ENTRY {
-    _new<FlightBookerWindow>()->show();
+    // Create state instance
+    _<State> state = _new<State>();
+
+    // Create window
+    auto window = _new<AWindow>("AUI - 7GUIs - Book Flight", 150_dp, 50_dp);
+
+    // Set contents
+    window->setContents(Centered {
+      Vertical {
+        _new<ADropdownList>(AListModel<AString>::make({ "one-way flight", "return flight" })) AUI_LET {
+                AObject::connect(AUI_REACT(state->isReturnFlight ? 1 : 0), it->selectionId());
+                AObject::connect(it->selectionId().changed, AObject::GENERIC_OBSERVER, [=](int newSelection) {
+                    state->isReturnFlight = newSelection == 1;
+                });
+            },
+        dateTextField(AUI_PTR_ALIAS(state, departureDate)),
+        dateTextField(AUI_PTR_ALIAS(state, returnDate))
+            AUI_LET { AObject::connect(state->isReturnFlight, AUI_SLOT(it)::setEnabled); },
+        Button {
+          .content = Label { "Book" },
+          .onClick =
+              [=] {
+                  AString msg = "Departure - {}"_format(formatDate(state->departureDate.parsed->value()));
+                  if (state->isReturnFlight) {
+                      msg += "\nReturn - {}"_format(formatDate(state->returnDate.parsed->value()));
+                  }
+                  AMessageBox::show(window.get(), "You've booked the flight", msg);
+              },
+        } AUI_LET { AObject::connect(AUI_REACT(state->isValid()), AUI_SLOT(it)::setEnabled); },
+      } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+    });
+
+    window->show();
     return 0;
 }

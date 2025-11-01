@@ -12,20 +12,28 @@
 #pragma once
 
 #include "AObjectBase.h"
+#include "React.h"
+#include "AUI/Traits/types.h"
 
 namespace aui::detail {
-  template<typename Object, typename Lambda>
-  Lambda&& makeLambda(Object*, Lambda&& lambda) requires requires { std::is_class_v<Lambda>; } {
+template <typename Object, typename Lambda>
+Lambda&& makeLambda(Object*, Lambda&& lambda)
+    requires requires { std::is_class_v<Lambda>; }
+{
     return std::forward<Lambda>(lambda);
-  }
-
-  template<typename Object1, typename Object2, typename Returns, typename... Args>
-  auto makeLambda(Object1* object, Returns(Object2::*method)(Args...)) {
-    return [object, method](Args... args) {
-      (object->*method)(std::forward<Args>(args)...);
-    };
-  }
 }
+
+template <typename Object1, typename Object2, typename Returns, typename... Args>
+auto makeLambda(Object1* object, Returns (Object2::*method)(Args...)) {
+    return [object, method](Args... args) { (object->*method)(std::forward<Args>(args)...); };
+}
+
+template <typename T>
+struct ConnectionSourceTraits;
+
+template <typename T>
+concept ConnectionSource = aui::is_complete<::aui::detail::ConnectionSourceTraits<T>>;
+}   // namespace aui::detail
 
 /**
  * @brief A base object class.
@@ -36,9 +44,9 @@ namespace aui::detail {
  * AObject keeps reference to itself via std::enable_shared_from_this. It can be accessed with
  * aui::ptr::shared_from_this().
  */
-class API_AUI_CORE AObject: public AObjectBase, public std::enable_shared_from_this<AObject>, public aui::noncopyable {
+class API_AUI_CORE AObject : public AObjectBase, public std::enable_shared_from_this<AObject>, public aui::noncopyable {
     friend class AAbstractSignal;
-    template <typename ... Args>
+    template <typename... Args>
     friend class ASignal;
 
 public:
@@ -66,66 +74,54 @@ public:
     static void disconnect();
 
     /**
-     * @brief Connects signal to the slot of the specified object.
-     * @ingroup signal_slot
-     * @details
-     * See [signal-slot system](signal_slot.md) for more info.
-     * ```cpp
-     * connect(view->clicked, AUI_DO_ONCE(otherObjectRawPtr)::handleButtonClicked);
-     * ```
-     * @param signal signal
-     * @param object instance of <code>AObject</code>
-     * @param function slot. Can be lambda
-     * @return Connection instance
-     */
-    template <AAnySignal Signal, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Signal> Function>
-    static decltype(auto) connect(const Signal& signal, Object* object, Function&& function) {
-        return const_cast<Signal&>(signal).connect(object, aui::detail::makeLambda(object, std::forward<Function>(function)));
-    }
-
-    /**
-     * @brief Connects property to the slot of the specified object.
-     * @ingroup property-system
-     * @details
-     * Connects to "changed" signal of the property. Additionally, calls specified function with the current value of the
-     * property (pre-fire).
+     * @brief Connects a signal or property to a slot on an `AObject`.
      *
-     * See [signal-slot system](signal_slot.md) for more info.
+     * @param connectionSource    The signal (or property) to connect.
+     * @param receiver            Pointer to the target `AObject` instance.
+     * @param function            Slot callable – can be a lambda or a member‑function pointer
+     *                            wrapped with `AUI_SLOT`.
+     * @return                    A connection object that keeps the link alive.
+     *
      * ```cpp
-     * connect(textField->text(), AUI_DO_ONCE(otherObjectRawPtr)::handleText);
+     * // (1) Connect a normal signal – the slot is invoked when the signal fires.
+     * connect(view->clicked, AUI_SLOT(otherObjectRawPtr)::handleButtonClicked);
+     *
+     * // (2) Connect a property – the slot is called immediately with the current
+     * //     value (pre-fire) and subsequently whenever the property changes.
+     * connect(textField->text(), AUI_SLOT(otherObjectRawPtr)::handleText);
+     *
+     * // (3) Connect AUI_REACT – the slot is called immediately with the current
+     * //     value(pre-fire) and subsequently whenever the property changes.
+     * connect(AUI_REACT(textField->text().empty()), AUI_SLOT(otherObjectRawPtr)::setEnabled);
      * ```
-     * @param property property
-     * @param object instance of <code>AObject</code>
-     * @param function slot. Can be lambda
+     *
+     * **Important notes**
+     *
+     * - The `function` can be any callable that is compatible with the signal’s
+     *   arguments; it may ignore some or all of them.
+     * - For properties, the slot receives the current value right after the call to
+     *   `connect`, and thereafter whenever the property changes (pre-fire).
+     *
      */
-    template <AAnyProperty Property, aui::derived_from<AObjectBase> Object, typename Function>
-    static decltype(auto) connect(const Property& property, Object* object, Function&& function) {
-        auto lambda = aui::detail::makeLambda(object, std::forward<Function>(function));
-        property.changed.makeRawInvocable(lambda)(*property);
-        return connect(property.changed, object, std::move(lambda));
+    template <
+        aui::detail::ConnectionSource ConnectionSource, aui::derived_from<AObjectBase> Object,
+        ACompatibleSlotFor<ConnectionSource> Function>
+    static decltype(auto) connect(const ConnectionSource& connectionSource, Object* receiver, Function&& function) {
+        return aui::detail::ConnectionSourceTraits<std::decay_t<ConnectionSource>> {}.connect(
+            const_cast<ConnectionSource&>(connectionSource), receiver,
+            aui::detail::makeLambda(receiver, std::forward<Function>(function)));
     }
 
     /**
-     * @brief Connects source property to the destination property.
-     * @param propertySource source property, whose value is preserved on connection creation.
+     * @brief Connects a signal or property to a property.
+     * @param connectionSource The signal (or property) to connect.
      * @param propertyDestination destination property, whose value is overwritten on connection creation.
      * @ingroup property-system
-     * @details
-     * Connects `propertySource.changed` to the setter of `propertyDestination` . Additionally, sets the
-     * `propertyDestination` with the current value of the `propertySource` (pre-fire). Hence, dataflow is from left
-     * argument to the right argument.
-     *
-     * connect pulls AObject from `propertyDestination` to maintain the connection.
-     *
-     * See [signal-slot system](signal_slot.md) for more info.
      */
-    template <APropertyReadable PropertySource, APropertyWritable PropertyDestination>
-    static void connect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) requires requires {
-            // source and destination properties must have compatible underlying types
-            { *propertySource } -> aui::convertible_to<std::decay_t<decltype(*propertyDestination)>>;
-        } {
-        AObject::connect(propertySource,
-                         propertyDestination.assignment());
+    template <aui::detail::ConnectionSource ConnectionSource, APropertyWritable PropertyDestination>
+    static void connect(ConnectionSource&& connectionSource, PropertyDestination&& propertyDestination)
+    {
+        AObject::connect(connectionSource, propertyDestination.assignment());
     }
 
     /**
@@ -149,35 +145,22 @@ public:
      * @param propertyDestination destination property, whose value is overwritten on connection creation.
      */
     template <APropertyWritable PropertySource, APropertyWritable PropertyDestination>
-    static void biConnect(PropertySource&& propertySource, PropertyDestination&& propertyDestination) requires requires {
+    static void biConnect(PropertySource&& propertySource, PropertyDestination&& propertyDestination)
+        requires requires {
             // source and destination properties must have compatible underlying types
             { *propertySource } -> aui::convertible_to<std::decay_t<decltype(*propertyDestination)>>;
             { *propertyDestination } -> aui::convertible_to<std::decay_t<decltype(*propertySource)>>;
-        } {
-        AObject::connect(propertySource,
-                         propertyDestination.assignment());
-        AObject::connect(propertyDestination.changed,
-                         propertySource.assignment());
+        }
+    {
+        AObject::connect(propertySource, propertyDestination.assignment());
+        AObject::connect(propertyDestination.changed, propertySource.assignment());
     }
 
-    /**
-     * @brief Connects signal or property to the slot of the specified object.
-     * @ingroup signal_slot
-     * @details
-     * [signal-slot system](signal_slot.md) for more info.
-     * ```cpp
-     * connect(view->clicked, AUI_DO_ONCE(otherObjectRef)::handleButtonClicked);
-     * ```
-     * @param connectable signal or property
-     * @param object instance of <code>AObject</code>
-     * @param function slot. Can be lambda
-     * @return Connection instance
-     */
-    template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object,
-        ACompatibleSlotFor<Connectable> Function>
-    static decltype(auto)
-    connect(const Connectable& connectable, Object& object, Function&& function) {
-        return connect(connectable, &object, std::forward<Function>(function));
+    template <
+        aui::detail::ConnectionSource ConnectionSource, aui::derived_from<AObjectBase> Object,
+        ACompatibleSlotFor<ConnectionSource> Function>
+    static decltype(auto) connect(const ConnectionSource& connectionSource, Object& object, Function&& function) {
+        return connect(connectionSource, &object, std::forward<Function>(function));
     }
 
     /**
@@ -204,29 +187,30 @@ public:
      * @details
      * See [signal-slot system](signal_slot.md) for more info.
      * ```cpp
-     * connect(view->clicked, AUI_DO_ONCE(otherObjectSharedPtr)::handleButtonClicked);
-     * connect(textField->text(), AUI_DO_ONCE(otherObjectSharedPtr)::handleText);
+     * connect(view->clicked, AUI_SLOT(otherObjectSharedPtr)::handleButtonClicked);
+     * connect(textField->text(), AUI_SLOT(otherObjectSharedPtr)::handleText);
      * ```
      *
      * !!! note
      *
-     *     `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
-     *      connection creation.
+     *     `_<Object>` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed
+     *     during connection creation.
      *
      * @param connectable signal or property
      * @param object instance of <code>AObject</code>
      * @param function slot. Can be lambda
      * @return Connection instance
      */
-    template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
-    static decltype(auto)
-    connect(const Connectable& connectable, _<Object> object, Function&& function) {
-        return connect(connectable, object.get(), std::forward<Function>(function));
+    template <
+        aui::detail::ConnectionSource ConnectionSource, aui::derived_from<AObjectBase> Object,
+        ACompatibleSlotFor<ConnectionSource> Function>
+    static decltype(auto) connect(const ConnectionSource& connectionSource, _<Object> object, Function&& function) {
+        return connect(connectionSource, object.get(), std::forward<Function>(function));
     }
 
     /**
      * @brief Connects signal to the slot of the specified object. Slot is packed to single argument.
-     * @param connectable signal or property
+     * @param connectionSource signal or property
      * @param slotDef instance of <code>AObject</code> + slot
      * @return Connection instance
      *
@@ -234,8 +218,8 @@ public:
      * See [signal-slot system](signal_slot.md) for more info.
      *
      * ```cpp
-     * connect(view->clicked, ASlotDef { AUI_DO_ONCE(otherObject)::handleButtonClicked });
-     * connect(textField->text(), ASlotDef { AUI_DO_ONCE(otherObject)::handleText });
+     * connect(view->clicked, ASlotDef { AUI_SLOT(otherObject)::handleButtonClicked });
+     * connect(textField->text(), ASlotDef { AUI_SLOT(otherObject)::handleText });
      * ```
      *
      * !!! note
@@ -244,13 +228,12 @@ public:
      *     possible, consider using shorter overload:
      *
      *     ```cpp
-     *     connect(view->clicked, AUI_DO_ONCE(otherObject)::handleButtonClicked);
+     *     connect(view->clicked, AUI_SLOT(otherObject)::handleButtonClicked);
      *     ```
      */
-    template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, typename Function>
-    static decltype(auto)
-    connect(const Connectable& connectable, ASlotDef<Object*, Function> slotDef) {
-        return connect(connectable, slotDef.boundObject, std::move(slotDef.invocable));
+    template <aui::detail::ConnectionSource ConnectionSource, aui::derived_from<AObjectBase> Object, typename Function>
+    static decltype(auto) connect(const ConnectionSource& connectionSource, ASlotDef<Object*, Function> slotDef) {
+        return connect(connectionSource, slotDef.boundObject, std::move(slotDef.invocable));
     }
 
     /**
@@ -275,13 +258,14 @@ public:
      * @param function slot. Can be lambda.
      */
     template <AAnyProperty Property, typename Object, ACompatibleSlotFor<Property> Function>
-    static void
-    connect(const Property& property, _<Object> object, Function&& function)
-        requires (!aui::derived_from<Object, AObject>)
+    static void connect(const Property& property, _<Object> object, Function&& function)
+        requires(!aui::derived_from<Object, AObject>)
     {
+        aui::react::DependencyObserverScope r(nullptr); // drop current dependency observer so it won't track source
         property.changed.makeRawInvocable(function)(*property);
         connect(property.changed, object, std::forward<Function>(function));
-        const_cast<std::decay_t<decltype(property.changed)>&>(property.changed).connectNonAObject(std::move(object), aui::detail::makeLambda(object,std::forward<Function>(function)));
+        const_cast<std::decay_t<decltype(property.changed)>&>(property.changed)
+            .connectNonAObject(std::move(object), aui::detail::makeLambda(object, std::forward<Function>(function)));
     }
 
     void setSignalsEnabled(bool enabled) { mSignalsEnabled = enabled; }
@@ -296,7 +280,9 @@ public:
     }
 
     [[nodiscard]]
-    const _<AAbstractThread>& getThread() const noexcept { return mAttachedThread; }
+    const _<AAbstractThread>& getThread() const noexcept {
+        return mAttachedThread;
+    }
 
     bool isSlotsCallsOnlyOnMyThread() const noexcept { return mSlotsCallsOnlyOnMyThread; }
 

@@ -43,19 +43,24 @@
 #define me this, &std::remove_reference_t<decltype(*this)>
 
 namespace aui::impl::slot {
-    template<typename T>
-    struct decode_type {
-        using type = T;
-    };
+template <typename T>
+struct decode_type {
+    using type = T;
+};
 
-    template<typename T>
-    struct decode_type<_<T>> {
-        using type = T;
-    };
+template <typename T>
+struct decode_type<_<T>> {
+    using type = T;
+};
 
-    template<typename T>
-    using decode_type_t = typename decode_type<T>::type;
-}
+template <typename T>
+struct decode_type<T*> {
+    using type = T;
+};
+
+template <typename T>
+using decode_type_t = typename decode_type<T>::type;
+}   // namespace aui::impl::slot
 
 /**
  * @brief Passes some variable and type of the variable separated by comma. It's convenient to use with the connect
@@ -136,13 +141,12 @@ namespace aui::impl::slot {
  *   </tr>
  * </table>
  */
-#define AUI_PERFORM_AS_MEMBER(object, lambda)                                                  \
-    struct __apply ## __FUNCTION__ ## __LINE__   : std::decay_t<decltype(object)> { \
-        void operator()() {                                                    \
-            lambda;                                                            \
-        }                                                                      \
-    };                                                                         \
-    (static_cast<__apply ## __FUNCTION__ ## __LINE__ &>(object))()
+#define AUI_PERFORM_AS_MEMBER(object, lambda)                                                             \
+    struct __apply##__FUNCTION__##__LINE__ : std::decay_t<decltype(object)> { void operator()() { lambda; \
+    }                                                                                                     \
+    }                                                                                                     \
+    ;                                                                                                     \
+    (static_cast<__apply##__FUNCTION__##__LINE__&>(object))()
 
 /**
  * @brief Emits a signal of a foreign object.
@@ -192,8 +196,7 @@ namespace aui::impl::slot {
  * ```
  * @sa ARaiiHelper
  */
-#define AUI_DEFER ARaiiHelper AUI_PP_CAT($AUI_DEFER_at_line_,  __LINE__) = [&]
-
+#define AUI_DEFER ARaiiHelper AUI_PP_CAT($AUI_DEFER_at_line_, __LINE__) = [&]
 
 /**
  * @brief Performs multiple operations on a single object without repeating its name (in place)
@@ -259,7 +262,7 @@ namespace aui::impl::slot {
  *   </tr>
  * </table>
  */
-#define AUI_LET ^ [&](const auto& it)
+#define AUI_LET ^[&](const auto& it)
 
 /**
  * @brief Allows to define a style to the view right in place.
@@ -284,7 +287,7 @@ namespace aui::impl::slot {
  * });
  * ```
  */
-#define AUI_WITH_STYLE & ass::PropertyListRecursive
+#define AUI_WITH_STYLE &ass::PropertyListRecursive
 
 /**
  * @brief Executes following {} block asynchronously in the [global](AThreadPool::global()) thread pool. Unlike
@@ -293,8 +296,8 @@ namespace aui::impl::slot {
  * @ingroup useful_macros
  * @return <code>AFuture<T></code> where <code>T</code> is the return type of the lambda.
  * @details
- * When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed from
- * the execution queue. Use AFutureSet or AAsyncHolder to keep multiple AFuture<T> alive.
+ * When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed
+ * from the execution queue. Use AFutureSet or AAsyncHolder to keep multiple AFuture<T> alive.
  *
  * Example without a return value:
  * ```cpp
@@ -328,8 +331,7 @@ namespace aui::impl::slot {
  * int status = *futureStatus;
  * ```
  */
-#define AUI_THREADPOOL AThreadPool::global() * [=]()
-
+#define AUI_THREADPOOL AThreadPool::global()* [=]()
 
 /**
  * @brief Executes following {} block asynchronously in the [global](AThreadPool::global()) thread pool. Unlike
@@ -338,8 +340,8 @@ namespace aui::impl::slot {
  * @ingroup useful_macros
  * @return <code>AFuture<T></code> where <code>T</code> is the return type of the lambda.
  * @details
- * When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed from
- * the execution queue. Use AFutureSet or AAsyncHolder to keep multiple AFuture<T> alive.
+ * When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed
+ * from the execution queue. Use AFutureSet or AAsyncHolder to keep multiple AFuture<T> alive.
  *
  * Example without a return value:
  *
@@ -361,7 +363,7 @@ namespace aui::impl::slot {
  * int status = *futureStatus;
  * ```
  */
-#define AUI_THREADPOOL_X AThreadPool::global() *
+#define AUI_THREADPOOL_X AThreadPool::global()*
 
 /**
  * @brief Executes following function call or {} block once per program execution
@@ -392,19 +394,19 @@ namespace aui::impl::slot {
  *   </tr>
  * </table>
  */
-#define AUI_DO_ONCE if(static bool _aui_once = false; (!_aui_once && (_aui_once = true)))
+#define AUI_DO_ONCE if (static bool _aui_once = false; (!_aui_once && (_aui_once = true)))
 
 /**
  * @brief Executes lambda on main thread.
  * @ingroup useful_macros
  */
-#define AUI_UI_THREAD (*AThread::main()) * [=]()
+#define AUI_UI_THREAD (*AThread::main())* [=]()
 
 /**
  * @brief Executes lambda on main thread. Allows to determine lambda's capture.
  * @ingroup useful_macros
  */
-#define AUI_UI_THREAD_X (*AThread::main()) *
+#define AUI_UI_THREAD_X (*AThread::main())*
 
 #define AUI_REPEAT(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex)
 #define AUI_REPEAT_ASYNC(times) for(auto repeatStubIndex = 0; repeatStubIndex < times; ++repeatStubIndex) AThreadPool::global() << [=]()

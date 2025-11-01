@@ -42,6 +42,6 @@ void AProgressBar::updateInnerWidth() {
 
 _<AView> declarative::ProgressBar::operator()() {
     auto view = _new<AProgressBar>();
-    progress.bindTo(view->value());
+    progress.bindTo(view->value().assignment());
     return view;
 }

@@ -20,7 +20,7 @@ using namespace declarative;
 
 struct Circle {
     glm::vec2 position;
-    float radius = 10_dp;
+    AProperty<float> radius = 10_dp;
 };
 
 class IAction {   // IAction: candidate to be committed to the framework
@@ -34,11 +34,11 @@ class UndoStack {
 public:
     using Container = std::list<_unique<IAction>>;
     using Iterator = Container::const_iterator;
+
 private:
     Container mStack;
 
 public:
-
     void undo() {
         if (nextAction == mStack.begin()) {
             return;
@@ -61,13 +61,9 @@ public:
         nextAction.notify();
     }
 
-    Iterator begin() const {
-        return mStack.begin();
-    }
+    Iterator begin() const { return mStack.begin(); }
 
-    Iterator end() const {
-        return mStack.end();
-    }
+    Iterator end() const { return mStack.end(); }
 
     AProperty<Iterator> nextAction = mStack.end();
 };
@@ -98,11 +94,11 @@ public:
         for (const auto& circle : *mState->circles) {
             if (&circle == mHoveredCircle) {
                 ctx.render.roundedRectangle(
-                    ASolidBrush { AColor::GRAY }, circle.position - circle.radius, glm::vec2(circle.radius * 2.f),
+                    ASolidBrush { AColor::GRAY }, circle.position - *circle.radius, glm::vec2(circle.radius * 2.f),
                     circle.radius);
             }
             ctx.render.roundedRectangleBorder(
-                ASolidBrush { AColor::BLACK }, circle.position - circle.radius, glm::vec2(circle.radius * 2.f),
+                ASolidBrush { AColor::BLACK }, circle.position - *circle.radius, glm::vec2(circle.radius * 2.f),
                 circle.radius, 1);
         }
     }
@@ -139,20 +135,18 @@ protected:
               .name = "Adjust radius...",
               .onAction =
                   [this, circle] {
-
-
                       auto radiusPopup = _new<AWindow>(
                           "", 200_dp, 50_dp, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::MODAL);
                       radiusPopup->setContents(Vertical {
                         Label { "Adjust diameter of circle at {}."_format(circle->position) },
-                        _new<ASlider>() AUI_LET {
-                                it->setValue(circle->radius / MAX_RADIUS);
-                                connect(
-                                    it->valueChanging, [this, circle](aui::float_within_0_1 s) {
-                                        circle->radius = s * MAX_RADIUS;
-                                        mState->circles.notify();
-                                    });
-                            },
+                        Slider {
+                          .value = AUI_REACT(circle->radius / MAX_RADIUS),
+                          .onValueChanged =
+                              [this, circle](aui::float_within_0_1 s) {
+                                  circle->radius = s * MAX_RADIUS;
+                                  mState->circles.notify();
+                              },
+                        },
                       });
                       connect(radiusPopup->closed, [this, circle, oldRadius = circle->radius] {
                           if (oldRadius == circle->radius) {
@@ -165,13 +159,9 @@ protected:
 
                               ~ActionChangeRadius() override = default;
 
-                              void undo() override {
-                                  mCircle->radius = mPrevRadius;
-                              }
+                              void undo() override { mCircle->radius = mPrevRadius; }
 
-                              void redo() override {
-                                  mCircle->radius = mNewRadius;
-                              }
+                              void redo() override { mCircle->radius = mNewRadius; }
 
                           private:
                               Circle* mCircle;
@@ -196,12 +186,8 @@ public:
         public:
             ActionAddCircle(_<State> state, Circle circle) : mState(std::move(state)), mCircle(std::move(circle)) {}
             ~ActionAddCircle() override = default;
-            void undo() override {
-                mState->circles.writeScope()->pop_back();
-            }
-            void redo() override {
-                mState->circles.writeScope()->push_back(mCircle);
-            }
+            void undo() override { mState->circles.writeScope()->pop_back(); }
+            void redo() override { mState->circles.writeScope()->push_back(mCircle); }
 
         private:
             _<State> mState;
@@ -218,31 +204,30 @@ private:
 class CircleDrawerWindow : public AWindow {
 public:
     CircleDrawerWindow() : AWindow("AUI - 7GUIs - Circle Drawer", 300_dp, 250_dp) {
-        setContents(Vertical {
-          Centered {
-            Horizontal {
-              Button { Label { "Undo" }, {me::undo} } AUI_LET {
-                  it & mState.history.nextAction.readProjected([&](UndoStack::Iterator i) { return i != mState.history.begin(); }) > &AView::setEnabled;
+        setContents(
+            Vertical {
+              Centered {
+                Horizontal {
+                  Button { Label { "Undo" }, { me::undo } } AUI_LET {
+                          connect(
+                              AUI_REACT(mState.history.nextAction != mState.history.begin()), AUI_SLOT(it)::setEnabled);
+                      },
+                  Button { Label { "Redo" }, { me::redo } } AUI_LET {
+                          connect(
+                              AUI_REACT(mState.history.nextAction != mState.history.end()), AUI_SLOT(it)::setEnabled);
+                      },
+                },
               },
-              Button { Label { "Redo" }, {me::redo} } AUI_LET {
-                it & mState.history.nextAction.readProjected([&](UndoStack::Iterator i) { return i != mState.history.end(); }) > &AView::setEnabled;
-              },
-            },
-          },
-          _new<CircleDrawArea>(aui::ptr::fake_shared(&mState)),
-        } AUI_WITH_STYLE { LayoutSpacing { 4_dp }});
+              _new<CircleDrawArea>(aui::ptr::fake_shared(&mState)),
+            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
     }
 
 private:
     State mState;
 
-    void undo() {
-        mState.history.undo();
-    }
+    void undo() { mState.history.undo(); }
 
-    void redo() {
-        mState.history.redo();
-    }
+    void redo() { mState.history.redo(); }
 };
 
 AUI_ENTRY {
