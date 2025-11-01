@@ -91,7 +91,7 @@ public:
         if (prefix.size() > size()) {
             return false;
         }
-        return substr(0, prefix.size()) == prefix;
+        return substr(0, prefix.size()) == prefix; // NOLINT(*-use-starts-ends-with)
     }
 
     bool endsWith(AStringView suffix) const noexcept {
@@ -110,12 +110,12 @@ public:
     bool contains(AChar c) const noexcept;
     bool contains(AStringView str) const noexcept;
 
-    bool operator==(std::string_view other) const noexcept {
-        return bytes() == other;
+    bool operator==(AStringView other) const noexcept {
+        return bytes() == other.bytes();
     }
 
-    bool operator!=(std::string_view other) const noexcept {
-        return bytes() != other;
+    bool operator!=(AStringView other) const noexcept {
+        return bytes() != other.bytes();
     }
 
 

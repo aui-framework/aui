@@ -128,6 +128,9 @@ template <aui::invocable F>
 struct Expression {
     F expression;
 };
+template <aui::invocable F>
+Expression(F&& f) -> Expression<F>;
+
 }   // namespace aui::react
 
 template <typename Expr>
@@ -187,8 +190,10 @@ struct aui::detail::ConnectionSourceTraits<aui::react::Expression<Expr>> {
  *
  * The macros itself consists of a lambda syntax with forced `[=]` capture and explicit `decltype(auto)` return type.
  * The lambda is wrapped with aui::react::Expression to be strongly typed.
+ *
+ * The `decltype(auto)` return type is used to avoid property copy when referenced.
  */
 #define AUI_REACT(...)        \
     ::aui::react::Expression {       \
-        [=] { return (__VA_ARGS__); } \
+        [=]() -> decltype(auto) { return (__VA_ARGS__); } \
     }
