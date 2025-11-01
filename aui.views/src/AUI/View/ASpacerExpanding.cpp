@@ -15,3 +15,9 @@
 bool ASpacerExpanding::consumesClick(const glm::ivec2& pos) {
     return false;
 }
+
+_<AView> declarative::SpacerExpanding::operator()() {
+    auto s = _new<ASpacerExpanding>();
+    expanding.bindTo(ASlotDef { s.get(), static_cast<void(ASpacerExpanding::*)(int)>(&ASpacerExpanding::setExpanding) });
+    return s;
+}

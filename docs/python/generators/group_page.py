@@ -47,13 +47,7 @@ def _generate_regular_group_page(doxygen, fos, group_id):
 
     print('<div class="grid cards" markdown>', file=fos)
     print(' ', file=fos)
-    for group_item in cpp_parser.index:
-        if not hasattr(group_item, 'doc'):
-            continue
-        if not hasattr(group_item, 'name'):
-            continue
-        if f"@ingroup {group_id}" not in group_item.doc:
-            continue
+    for group_item in cpp_parser.find_entries_belonging_to_group(group_id):
         brief = "\n".join([i[1] for i in common.parse_doxygen(group_item.doc) if f"@brief" in i[0]])
         print(f"""
 -   __{group_item.namespaced_name()}__
@@ -133,14 +127,10 @@ def define_env(env):
                 case 'views_other':
                     views = _find_undocumented_aviews()
                 case _:
-                    for c in cpp_parser.index:
-                        if not hasattr(c, 'name') or not hasattr(c, 'doc'):
-                            continue
-                        if f"@ingroup {name}" in c.doc:
-                            if hasattr(c, 'namespaced_name'):
-                                slugged_name = c.namespaced_name().lower().replace('::', '_')
-                                c.page_url = f'{slugged_name}.md'
-                                views.append(c)
+                    for c in cpp_parser.find_entries_belonging_to_group(name):
+                        slugged_name = c.namespaced_name().lower().replace('::', '_')
+                        c.page_url = f'{slugged_name}.md'
+                        views.append(c)
 
             views.sort(key=lambda c: c.name.lower())
 

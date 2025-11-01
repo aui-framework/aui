@@ -485,6 +485,16 @@ def _scan():
 
 index = _scan()
 
+def find_entries_belonging_to_group(group_id: str):
+    for group_item in index:
+        if not hasattr(group_item, 'doc'):
+            continue
+        if not hasattr(group_item, 'name'):
+            continue
+        if f"@ingroup {group_id}" not in group_item.doc:
+            continue
+        yield group_item
+
 
 def test_parse_comment_lines():
     iterator = iter(Path('test_data/AString.h').read_text().splitlines())

@@ -13,16 +13,6 @@
 #include "AView.h"
 #include <AUI/Util/Declarative/Containers.h>
 
-/**
- * @brief Expanding view which is useful in UI building.
- * @ingroup views_arrangement
- * @details
- * AExpandingSpacer is an expanding blank view which tries acquire space as much as possible.
- *
- * See expanding in [layout managers](layout-managers.md) for more info.
- *
- * @sa AView::setExpanding
- */
 class API_AUI_VIEWS ASpacerExpanding : public AView {
 public:
     ASpacerExpanding(int w = 4, int h = 4) { setExpanding({ w, h }); }
@@ -33,9 +23,13 @@ public:
 
 namespace declarative {
 /**
- * @declarativeformof{ASpacerExpanding}
+ * <!-- aui:no_dedicated_page -->
  */
-struct SpacerExpanding: aui::ui_building::view<ASpacerExpanding> {
-    SpacerExpanding() = default;
+struct API_AUI_VIEWS SpacerExpanding {
+    /**
+     * @brief [Expanding](layout-managers.md#EXPANDING) to acquire.
+     */
+    contract::In<int> expanding = 12;
+    _<AView> operator()();
 };
 }

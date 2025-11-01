@@ -36,3 +36,9 @@ int ASpacerFixed::getContentMinimumHeight() {
 bool ASpacerFixed::consumesClick(const glm::ivec2& pos) {
     return false;
 }
+
+_<AView> declarative::SpacerFixed::operator()() {
+    auto view = _new<ASpacerFixed>(0);
+    space.bindTo(ASlotDef { AUI_SLOT(view.get())::setSpace });
+    return view;
+}

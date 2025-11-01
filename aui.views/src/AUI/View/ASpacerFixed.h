@@ -16,25 +16,59 @@
 #include <AUI/Util/Declarative/Containers.h>
 
 /**
- * @brief Fixed-size view which is useful in UI building.
+ *
+ * ---
+ * title: Spacers
+ * icon: fontawesome/solid/arrows-left-right-to-line
+ * ---
+ *
+ * @brief A transparent view with fixed size used to create a blank space between other views.
  * @ingroup views_arrangement
  * @details
+ * Spacers are transparent views that acquire specified space.
  *
- * ASpacerFixed is fixed size blank view which acquires specified space in `Horizontal` and `Vertical` layouts. For the
- * rest of layout managers it does nothing.
+ * The spacer behaves differently based on its parent container's layout:
  *
- * ASpacerFixed follows direction of its container layout. That is, for `Horizontal` layout it consumes horizontal space
- * only and for `Vertical` layout it consumes vertical space only.
+ * - In Horizontal layouts: Consumes horizontal space (width).
+ * - In Vertical layouts: Consumes vertical space (height).
  *
- * Example usage:
- * ```cpp
- * Horizontal {
- *   Label { "Hello" },
- *   SpacerFixed(100_dp),
- *   Label { "world" },
- * }
- * ```
- * In this case, SpacerFixed occupies `100_dp` in horizontal but nothing in vertical.
+ * ## API surface
+ *
+ * <!-- aui:steal_documentation declarative::SpacerFixed -->
+ *
+ * <!-- aui:steal_documentation declarative::SpacerExpanding -->
+ *
+ * ## Fixed spacer
+ *
+ * `declarative::SpacerFixed` creates a fixed-size gap with a specified amount of space. Unlike [ass::LayoutSpacing],
+ * which adds uniform gaps between all container's views, `SpacerFixed` creates a single customizable gap at a specific
+ * location.
+ *
+ * <!-- aui:snippet examples/ui/button_icon/src/main.cpp AButton_example -->
+ *
+ * ![](imgs/Screenshot_20250719_130034.png)
+ *
+ * ## Expanding spacer
+ *
+ * `declarative::SpacerExpanding` is simply an [expanding](layout-managers.md#EXPANDING) view. It can be used to "push"
+ * subsequent views within a container to the end of that container.
+ *
+ * <!-- aui:snippet examples/ui/spacer_expanding1/src/main.cpp ASpacerExpanding_example -->
+ *
+ * <figure markdown="span">
+ * ![](imgs/Screenshot_20251101_210248.png){ width="500" }
+ * <figcaption>Figure 1. SpacerExpanding in vertical container.</figcaption>
+ *
+ * </figure>
+ *
+ * ---
+ *
+ * <!-- aui:snippet examples/ui/spacer_expanding2/src/main.cpp ASpacerExpanding_example -->
+ *
+ * <figure markdown="span">
+ * ![](imgs/Screenshot_20251101_210531.png){ width="500" }
+ * <figcaption>Figure 2. SpacerExpanding in horizontal container.</figcaption>
+ * </figure>
  */
 class API_AUI_VIEWS ASpacerFixed : public AView {
 public:
@@ -42,6 +76,7 @@ public:
     bool consumesClick(const glm::ivec2& pos) override;
     int getContentMinimumWidth() override;
     int getContentMinimumHeight() override;
+    void setSpace(AMetric space) { mSpace = space; markMinContentSizeInvalid(); }
 
 private:
     AMetric mSpace;
@@ -50,9 +85,14 @@ private:
 namespace declarative {
 
 /**
- * @declarativeformof{ASpacerFixed}
+ * <!-- aui:no_dedicated_page -->
  */
-struct SpacerFixed : aui::ui_building::view<ASpacerFixed> {
-    using aui::ui_building::view<ASpacerFixed>::view;
+struct API_AUI_VIEWS SpacerFixed {
+    /**
+     * @brief Fixed space to acquire.
+     */
+    contract::In<AMetric> space;
+
+    _<AView> operator()();
 };
 }   // namespace declarative

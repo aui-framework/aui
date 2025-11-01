@@ -143,6 +143,7 @@ nav:
     - 'List': aforeachui.md
     - 'Radio button': aradiobutton.md
     - 'Slider': declarative_slider.md
+    - 'Spacers ': aspacerfixed.md
 
   - 'Styling':
     - ass.md
