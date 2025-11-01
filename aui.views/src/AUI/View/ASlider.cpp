@@ -64,7 +64,7 @@ public:
 protected:
     void applyGeometryToChildren() override {
         auto handleSize = mHandle->getMinimumSize();
-        mHandle->setGeometry({getSize().x * mValue - handleSize.x / 2, 0}, { handleSize.x, getSize().y });
+        mHandle->setGeometry({getSize().x * mValue - handleSize.x / 2.f, 0}, { handleSize.x, getSize().y });
     }
 
 private:
