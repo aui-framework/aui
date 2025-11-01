@@ -23,7 +23,7 @@ from pathlib import Path
 from docs.python.generators.examples_helpers import (
     examples_for_symbol_with_snippets as _examples_for_symbol_with_snippets,
     examples_for_symbol as _examples_for_symbol,
-    compute_hl_lines as _compute_hl_lines,
+    compute_hl_lines as compute_highlight_lines,
     filter_examples_by_relevance as _filter_examples_by_relevance,
     dedupe_examples_list as _dedupe_examples_list,
 )
@@ -70,6 +70,20 @@ def _add_relevant_macro_aliases(tokens: list[str], snippet: str) -> list[str]:
             result_set.add(macro)
             
     return list(result_set)
+
+
+def _compute_hl_lines(snippet: str, tokens: list[str]) -> str | None:
+    """Compute highlight lines with automatic macro alias augmentation.
+    
+    Wraps compute_highlight_lines to automatically add relevant macro aliases,
+    eliminating the need for try-except blocks at all call sites.
+    """
+    try:
+        augmented_tokens = _add_relevant_macro_aliases(tokens, snippet)
+        return compute_highlight_lines(snippet, augmented_tokens)
+    except Exception as e:
+        log.warning(f"Error in _compute_hl_lines with macro augmentation: {e}")
+        return compute_highlight_lines(snippet, tokens)
 
 
 def _has_unquoted_match(snippet: str, names: list[str]) -> bool:
@@ -159,10 +173,6 @@ def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=se
                     # compute hl_lines using nested type tokens
                     tokens = [i for i in names_to_search_examples]
                     snippet = ex.get('snippet','') or ''
-                    try:
-                        tokens = _add_relevant_macro_aliases(tokens, snippet)
-                    except Exception as e:
-                        log.warning(f"Error in _add_relevant_macro_aliases: {e}")
                     hl = _compute_hl_lines(snippet, tokens)
                     hl_attr = f' hl_lines="{hl}"' if hl else ''
                     print(f"\n??? note \"{src_rel}\"", file=fos)
@@ -421,10 +431,6 @@ def gen_pages():
                     if hasattr(parse_entry, 'name'):
                         tokens.append(parse_entry.name)
                     snippet = ex.get('snippet','') or ''
-                    try:
-                        tokens = _add_relevant_macro_aliases(tokens, snippet)
-                    except Exception as e:
-                        log.warning(f"Error in _add_relevant_macro_aliases: {e}")
                     hl = _compute_hl_lines(snippet, tokens)
                     hl_attr = f' hl_lines="{hl}"' if hl else ''
                     print(f"??? note \"{src_rel}\"", file=fos)
@@ -537,10 +543,6 @@ def gen_pages():
                             # compute hl_lines using class tokens
                             tokens = _extract_example_names(parse_entry)
                             snippet = ex.get('snippet', '') or ''
-                            try:
-                                tokens = _add_relevant_macro_aliases(tokens, snippet)
-                            except Exception as e:
-                                log.warning(f"Error in _add_relevant_macro_aliases: {e}")
                             hl = _compute_hl_lines(snippet, tokens)
                             hl_attr = f' hl_lines="{hl}"' if hl else ''
                             print(f"\n??? note \"{src_rel}\"", file=fos)
@@ -744,10 +746,6 @@ def gen_pages():
                                 extension = common.determine_extension(ex['src'])
                                 tokens = [field.name]
                                 snippet = ex.get('snippet','') or ''
-                                try:
-                                    tokens = _add_relevant_macro_aliases(tokens, snippet)
-                                except Exception as e:
-                                    log.warning(f"Error in _add_relevant_macro_aliases: {e}")
                                 hl = _compute_hl_lines(snippet, tokens)
                                 hl_attr = f' hl_lines="{hl}"' if hl else ''
                                 print(f"\n??? note \"{src_rel}\"", file=fos)
@@ -846,10 +844,6 @@ def gen_pages():
                                         extension = common.determine_extension(ex['src'])
                                         tokens = [method_full, overload.name]
                                         snippet = ex.get('snippet','') or ''
-                                        try:
-                                            tokens = _add_relevant_macro_aliases(tokens, snippet)
-                                        except Exception as e:
-                                            log.warning(f"Error in _add_relevant_macro_aliases: {e}")
                                         hl = _compute_hl_lines(snippet, tokens)
                                         hl_attr = f' hl_lines="{hl}"' if hl else ''
                                         print(f"\n??? note \"{src_rel}\"", file=fos)
