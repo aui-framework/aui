@@ -62,7 +62,7 @@ def _add_relevant_macro_aliases(tokens: list[str], snippet: str) -> list[str]:
             
         # Check if any of the canonical names are in our search tokens
         for canonical in canonicals:
-            if any(canonical in token or token in canonical for token in tokens):
+            if any(token.split('::')[-1] == canonical.split('::')[-1] for token in tokens):
                 # Macro is relevant - add it
                 result.append(macro)
                 break
