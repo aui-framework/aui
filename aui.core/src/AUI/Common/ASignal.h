@@ -49,47 +49,6 @@ inline void callIgnoringExcessArgs(Lambda&& lambda, const Args&... args) {
     std::apply(lambda, smallerTuple);
 }
 
-template <typename Projection>
-struct projection_info {
-    static_assert(
-        aui::reflect::pointer_to_member<Projection> || aui::not_overloaded_lambda<Projection> ||
-            aui::function_pointer<Projection>,
-        "====================> ASignal: projection is required to be an pointer-to-member or not overloaded lambda or function pointer");
-};
-
-template <aui::reflect::pointer_to_member Projection>
-struct projection_info<Projection> {
-private:
-    template <typename... T>
-    struct cat;
-
-    template <typename First, typename... T>
-    struct cat<First, std::tuple<T...>> {
-        using type = std::tuple<First, T...>;
-    };
-
-public:
-    using info = typename aui::reflect::member<Projection>;
-    using return_t = typename info::return_t;
-    using args = typename cat<typename info::clazz&, typename info::args>::type;
-};
-
-template <aui::not_overloaded_lambda Projection>
-struct projection_info<Projection> {
-    using info = typename aui::lambda_info<Projection>;
-    using return_t = typename info::return_t;
-    using args = typename info::args;
-};
-
-template <aui::function_pointer Projection>
-struct projection_info<Projection> {
-    using info = typename aui::function_info<Projection>;
-    using return_t = typename info::return_t;
-    using args = typename info::args;
-};
-
-// TODO: remove ProjectedSignal/projection_info/ dead code
-
 template <aui::not_overloaded_lambda Lambda, typename ... Args>
 auto makeRawInvocable(Lambda&& lambda) {
     return [lambda = std::forward<Lambda>(lambda)](const Args&... args) mutable {
@@ -540,25 +499,3 @@ struct aui::detail::ConnectionSourceTraits<ASignal<Args...>> {
         return source.connect(objectBase, std::forward<Lambda>(lambda));
     }
 };
-
-/*
-
-// UNCOMMENT THIS to test ProjectedSignal
-
-static_assert(requires (aui::detail::signal::ProjectedSignal<emits<int>, decltype([](int) { return double(0);})> t) {
-    requires !decltype(t)::IS_PROJECTION_RETURNS_TUPLE;
-    { decltype(t)::base } -> aui::same_as<ASignal<int>&>;
-    { decltype(t)::projection } -> aui::not_overloaded_lambda;
-    { decltype(t)::projection_returns_t{} } -> aui::same_as<double>;
-    { decltype(t)::emits_args_t{} } -> aui::same_as<std::tuple<double>>;
-    { decltype(t)::projection_info_t::args{} } -> aui::same_as<std::tuple<int>>;
-    { decltype(t)::projection_info_t::return_t{} } -> aui::same_as<double>;
-});
-
-static_assert(requires (aui::detail::signal::ProjectedSignal<emits<AString>, decltype(&AString::length)> t) {
-    requires !decltype(t)::IS_PROJECTION_RETURNS_TUPLE;
-    { decltype(t)::base } -> aui::same_as<ASignal<AString>&>;
-    { decltype(t)::emits_args_t{} } -> aui::same_as<std::tuple<size_t>>;
-    { decltype(t)::projection_returns_t{} } -> aui::same_as<size_t>;
-});
-*/

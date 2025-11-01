@@ -18,18 +18,6 @@
 
 namespace aui::detail::property {
 
-template <typename Projection, typename Source>
-concept ProjectionBidirectional = requires(Projection&& projectionBidirectional, Source&& source) {
-    // projection must accept SOURCE type.
-    { projectionBidirectional } -> aui::invocable<const Source&>;
-
-    // projection must be able to accept DESTINATION type to perform the opposite conversion.
-    { projectionBidirectional } -> aui::invocable<const std::invoke_result_t<Projection, const Source&>&>;
-
-    // projection's SOURCE type must be distinguishable from DESTINATION type.
-    requires not aui::same_as<std::decay_t<decltype(projectionBidirectional(source))>, std::decay_t<Source>>;
-};
-
 template <typename Property>                 // can't use AAnyProperty here, as concept would depend on itself
 auto makeAssignment(Property&& property) {   // note the rvalue reference template argument here:
     // pass your property as std::move(*this) if your
@@ -104,31 +92,6 @@ AUI_DETAIL_BINARY_OP(>>=)
 
 #undef AUI_DETAIL_BINARY_OP
 
-/*
-// UNCOMMENT THIS to test biProjected
-static_assert(requires (AProperty<int>& intProperty) {
-    { intProperty.biProjected(aui::lambda_overloaded {
-      [](int) -> AString { return ""; },
-      [](const AString&) -> int { return 0; },
-    }).value() } -> aui::convertible_to<AString>;
-
-    { intProperty.biProjected(aui::lambda_overloaded {
-        [](int) -> AString { return ""; },
-        [](const AString&) -> int { return 0; },
-    }) = "AString" };
-
-
-    { intProperty.biProjected(aui::lambda_overloaded {
-        [](int) -> AString { return ""; },
-        [](const AString&) -> int { return 0; },
-    }) };
-
-    { intProperty.biProjected(aui::lambda_overloaded {
-        [](int) -> AString { return ""; },
-        [](const AString&) -> int { return 0; },
-    }).assignment() } -> aui::invocable<AString>;
-});
-*/
 
 template <APropertyReadable T>
 struct fmt::formatter<T> {
