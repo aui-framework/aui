@@ -74,13 +74,16 @@ private:
 
 }
 
+/// [defaultTrack]
 _<AView> Slider::defaultTrack(const contract::In<aui::float_within_0_1>& value) {
     return ProgressBar { .progress = value } AUI_WITH_STYLE {
         FixedSize { {}, 4_dp },
         MinSize { 150_dp, {} },
     };
 }
+/// [defaultTrack]
 
+/// [defaultHandle]
 _<AView> Slider::defaultHandle() {
     return _new<AView>() AUI_WITH_STYLE {
         BackgroundSolid { AStylesheet::getOsThemeColor() },
@@ -88,6 +91,7 @@ _<AView> Slider::defaultHandle() {
         BorderRadius { 4_dp },
     };
 }
+/// [defaultHandle]
 
 API_AUI_VIEWS _<AView> Slider::operator()() {
     auto handleWrapper = _new<SliderHandleWrapper>(std::move(handle));

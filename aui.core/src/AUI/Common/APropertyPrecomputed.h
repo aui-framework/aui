@@ -128,8 +128,11 @@ template <aui::invocable F>
 struct Expression {
     F expression;
 };
+
 template <aui::invocable F>
-Expression(F&& f) -> Expression<F>;
+Expression<F> makeExpression(F&& f) {
+    return Expression<F>{ std::forward<F>(f) };
+}
 
 }   // namespace aui::react
 
@@ -194,6 +197,6 @@ struct aui::detail::ConnectionSourceTraits<aui::react::Expression<Expr>> {
  * The `decltype(auto)` return type is used to avoid property copy when referenced.
  */
 #define AUI_REACT(...)        \
-    ::aui::react::Expression (       \
+    ::aui::react::makeExpression(       \
         [=]() -> decltype(auto) { return (__VA_ARGS__); } \
     )
