@@ -107,9 +107,9 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
           Label { "Visibility" },
           AUI_DECLARATIVE_FOR(i, aui::enumerate::ALL_VALUES<Visibility>, AVerticalLayout) {
               return RadioButton {
-                  .checked = AUI_REACT(targetView->visibility() == i),
-                  .onClick = [=] { targetView->visibility() = i;  },
-                  .content = Label { "{}"_format(i) },
+                  AUI_REACT(targetView->visibility() == i),
+                  [=] { targetView->visibility() = i;  },
+                  Label { "{}"_format(i) },
               };
           },
         },
