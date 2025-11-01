@@ -32,6 +32,47 @@ from docs.python.generators.examples_helpers import _find_unquoted_word_on_nontr
 log = logging.getLogger('mkdocs')
 
 
+# Map of macro aliases to their canonical symbol names
+# Used to add macro tokens for highlighting only when they're relevant
+_MACRO_ALIASES = {
+    'AUI_DECLARATIVE_FOR': ['AForEachUI'],
+    'AUI_WITH_STYLE': ['PropertyListRecursive', 'ass::PropertyListRecursive'],
+}
+
+
+def _add_relevant_macro_aliases(tokens: list[str], snippet: str) -> list[str]:
+    """Add macro aliases to tokens only if they appear in snippet AND relate to existing tokens.
+    
+    This prevents unrelated macros from being highlighted. For example, when documenting
+    PropertyListRecursive, we want AUI_WITH_STYLE highlighted in examples. But when 
+    documenting AForEachUI, we don't want AUI_DECLARATIVE_FOR highlighted in unrelated
+    examples that happen to contain it.
+    """
+    result = list(tokens)
+    
+    # Check if any token matches a canonical name that has macro aliases
+    for macro, canonicals in _MACRO_ALIASES.items():
+        # Skip if macro already in tokens
+        if macro in result:
+            continue
+        
+        # Check if macro appears in snippet
+        if macro not in snippet:
+            continue
+            
+        # Check if any of the canonical names are in our search tokens
+        for canonical in canonicals:
+            for token in tokens:
+                if canonical in token or token in canonical:
+                    # Macro is relevant - add it
+                    result.append(macro)
+                    break
+            if macro in result:
+                break
+    
+    return result
+
+
 def _has_unquoted_match(snippet: str, names: list[str]) -> bool:
     """Return True if any of the names appears in snippet outside double quotes."""
     if not snippet:
@@ -120,8 +161,7 @@ def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=se
                     tokens = [i for i in names_to_search_examples]
                     snippet = ex.get('snippet','') or ''
                     try:
-                        if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
-                            tokens.append('AUI_DECLARATIVE_FOR')
+                        tokens = _add_relevant_macro_aliases(tokens, snippet)
                     except Exception:
                         pass
                     hl = _compute_hl_lines(snippet, tokens)
@@ -383,11 +423,7 @@ def gen_pages():
                         tokens.append(parse_entry.name)
                     snippet = ex.get('snippet','') or ''
                     try:
-                        # highlight macro invocation line when present
-                        if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
-                            tokens.append('AUI_DECLARATIVE_FOR')
-                        if any(t == 'AForEachUI' for t in tokens) and 'AUI_DECLARATIVE_FOR' not in tokens:
-                            tokens.append('AUI_DECLARATIVE_FOR')
+                        tokens = _add_relevant_macro_aliases(tokens, snippet)
                     except Exception:
                         pass
                     hl = _compute_hl_lines(snippet, tokens)
@@ -503,10 +539,7 @@ def gen_pages():
                             tokens = _extract_example_names(parse_entry)
                             snippet = ex.get('snippet', '') or ''
                             try:
-                                if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
-                                    tokens.append('AUI_DECLARATIVE_FOR')
-                                if any(t == 'AForEachUI' for t in tokens) and 'AUI_DECLARATIVE_FOR' not in tokens:
-                                    tokens.append('AUI_DECLARATIVE_FOR')
+                                tokens = _add_relevant_macro_aliases(tokens, snippet)
                             except Exception:
                                 pass
                             hl = _compute_hl_lines(snippet, tokens)
@@ -713,8 +746,7 @@ def gen_pages():
                                 tokens = [field.name]
                                 snippet = ex.get('snippet','') or ''
                                 try:
-                                    if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
-                                        tokens.append('AUI_DECLARATIVE_FOR')
+                                    tokens = _add_relevant_macro_aliases(tokens, snippet)
                                 except Exception:
                                     pass
                                 hl = _compute_hl_lines(snippet, tokens)
@@ -816,8 +848,7 @@ def gen_pages():
                                         tokens = [method_full, overload.name]
                                         snippet = ex.get('snippet','') or ''
                                         try:
-                                            if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
-                                                tokens.append('AUI_DECLARATIVE_FOR')
+                                            tokens = _add_relevant_macro_aliases(tokens, snippet)
                                         except Exception:
                                             pass
                                         hl = _compute_hl_lines(snippet, tokens)
