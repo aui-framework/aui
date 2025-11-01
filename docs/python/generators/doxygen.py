@@ -41,11 +41,11 @@ _MACRO_ALIASES = {
 
 
 # Pre-computed map of canonical base names to their macro aliases for efficient lookup.
-_CANONICAL_BASE_TO_MACROS = {}
+_CANONICAL_BASE_TO_MACROS = defaultdict(list)
 for _macro, _canonicals in _MACRO_ALIASES.items():
     for _canonical in _canonicals:
         _base_name = _canonical.split('::')[-1]
-        _CANONICAL_BASE_TO_MACROS.setdefault(_base_name, []).append(_macro)
+        _CANONICAL_BASE_TO_MACROS[_base_name].append(_macro)
 
 
 def _add_relevant_macro_aliases(tokens: list[str], snippet: str) -> list[str]:
