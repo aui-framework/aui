@@ -56,7 +56,7 @@ def _add_relevant_macro_aliases(tokens: list[str], snippet: str) -> list[str]:
     documenting AForEachUI, we don't want AUI_DECLARATIVE_FOR highlighted in unrelated
     examples that happen to contain it.
     """
-    result = list(tokens)
+    result_set = set(tokens)
     token_base_names = {token.split('::')[-1] for token in tokens}
     
     # Find all macros that could be relevant based on the tokens.
@@ -66,10 +66,10 @@ def _add_relevant_macro_aliases(tokens: list[str], snippet: str) -> list[str]:
 
     # Add relevant macros if they appear in the snippet and are not already present.
     for macro in relevant_macros:
-        if macro not in result and macro in snippet:
-            result.append(macro)
+        if macro not in result_set and re.search(r'\b' + re.escape(macro) + r'\b', snippet):
+            result_set.add(macro)
             
-    return result
+    return list(result_set)
 
 
 def _has_unquoted_match(snippet: str, names: list[str]) -> bool:
