@@ -40,6 +40,14 @@ _MACRO_ALIASES = {
 }
 
 
+# Pre-computed map of canonical base names to their macro aliases for efficient lookup.
+_CANONICAL_BASE_TO_MACROS = {}
+for _macro, _canonicals in _MACRO_ALIASES.items():
+    for _canonical in _canonicals:
+        _base_name = _canonical.split('::')[-1]
+        _CANONICAL_BASE_TO_MACROS.setdefault(_base_name, []).append(_macro)
+
+
 def _add_relevant_macro_aliases(tokens: list[str], snippet: str) -> list[str]:
     """Add macro aliases to tokens only if they appear in snippet AND relate to existing tokens.
     
@@ -49,24 +57,18 @@ def _add_relevant_macro_aliases(tokens: list[str], snippet: str) -> list[str]:
     examples that happen to contain it.
     """
     result = list(tokens)
+    token_base_names = {token.split('::')[-1] for token in tokens}
     
-    # Check if any token matches a canonical name that has macro aliases
-    for macro, canonicals in _MACRO_ALIASES.items():
-        # Skip if macro already in tokens
-        if macro in result:
-            continue
-        
-        # Check if macro appears in snippet
-        if macro not in snippet:
-            continue
+    # Find all macros that could be relevant based on the tokens.
+    relevant_macros = set()
+    for base_name in token_base_names:
+        relevant_macros.update(_CANONICAL_BASE_TO_MACROS.get(base_name, []))
+
+    # Add relevant macros if they appear in the snippet and are not already present.
+    for macro in relevant_macros:
+        if macro not in result and macro in snippet:
+            result.append(macro)
             
-        # Check if any of the canonical names are in our search tokens
-        for canonical in canonicals:
-            if any(token.split('::')[-1] == canonical.split('::')[-1] for token in tokens):
-                # Macro is relevant - add it
-                result.append(macro)
-                break
-    
     return result
 
 
