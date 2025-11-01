@@ -194,6 +194,6 @@ struct aui::detail::ConnectionSourceTraits<aui::react::Expression<Expr>> {
  * The `decltype(auto)` return type is used to avoid property copy when referenced.
  */
 #define AUI_REACT(...)        \
-    ::aui::react::Expression {       \
+    ::aui::react::Expression (       \
         [=]() -> decltype(auto) { return (__VA_ARGS__); } \
-    }
+    )
