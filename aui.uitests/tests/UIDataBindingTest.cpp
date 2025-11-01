@@ -257,13 +257,6 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H3
                   // then it goes to assignment operation of it->text()
                   // property.
                   AObject::connect(AUI_REACT(user->name->uppercase()), it->text());
-                  //                ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->  ->
-                  // in other words, this connection is essentially the same as
-                  // AObject::connect(user->name.projected(&AString::uppercase), AUI_SLOT(it)::setText);
-
-                  // if view's property gets changed (i.e., by user or by occasional
-                  // ALabel::setText), these changes DO NOT reflect on model
-                  // as we requested connect() here instead of biConnect().
               },
               // AUI_DOCS_CODE_END
             });
@@ -273,7 +266,9 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H3
 
     //
     // This gives the following result:
+    //
     // ![](imgs/UIDataBindingTest.Label_via_declarative_projection_1.png)
+    //
     // Note that the label already displays the **projected** value stored in User.
 
     auto label = _cast<ALabel>(By::type<ALabel>().one());
@@ -283,7 +278,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H3
     // AUI_DOCS_CODE_BEGIN
     user->name = "Vasil";
     // AUI_DOCS_CODE_END
-
+    //
     // ![](imgs/UIDataBindingTest.Label_via_declarative_projection_2.png)
     //
     // This way, we've set up data binding with projection.
@@ -333,7 +328,9 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER_H3
     _new<MyWindow>(user)->show();
     //
     // This gives the following result:
+    //
     // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_1.png)
+    //
 
     auto tf = _cast<ATextField>(By::type<ATextField>().one());
 
@@ -381,8 +378,6 @@ AUI_ENUM_VALUES(Gender,
 //
 // The example below is essentially the same as [UIDataBindingTest_Label_via_let] but uses declarative connection set up syntax.
 TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
-    // Use `&` and `>` expression to connect the model's username property to the label's [text](ALabel::text)
-    // property.
     // AUI_DOCS_CODE_BEGIN
     using namespace declarative;
     struct User {
@@ -410,7 +405,9 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
     EXPECT_EQ(label->text(), "Roza");
 
     saveScreenshot("1");
+    //
     // ![](imgs/UIDataBindingTest.Label_via_declarative_1.png)
+    //
 
     // Note that the label already displays the value stored in User.
     //
@@ -422,7 +419,9 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "Vasil");
     saveScreenshot("2");
+    //
     // ![](imgs/UIDataBindingTest.Label_via_declarative_2.png)
+    //
 
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
@@ -437,7 +436,12 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
 }
 
 TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // HEADER_H3
-    // In previous example we have explicitly specified ALabel's property to connect with.
+    //
+    // !!! failure "Deprecated"
+    //
+    //     Use [declarative contracts](retained_immediate_ui.md) instead.
+    //
+    // In the previous example we have explicitly specified ALabel's property to connect with.
     //
     // One of notable features of declarative way (in comparison to procedural `AUI_LET` way) is that we can omit the view's
     // property to connect with if such `ADataBindingDefault` specialization exist for the target view and the property
@@ -483,6 +487,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     // Behaviour of such connection is equal to [UIDataBindingTest_Label_via_declarative]:
     //
     // ![](imgs/UIDataBindingTest.Label_via_declarative_1.png)
+    //
 
     // Note that the label already displays the value stored in User.
     //
@@ -493,7 +498,9 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(label->text(), "Vasil");
+    //
     // ![](imgs/UIDataBindingTest.Label_via_declarative_2.png)
+    //
 
     user->name = "World";
     EXPECT_EQ(label->text(), "World");
@@ -509,6 +516,12 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
 
 TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEADER_H3
     using namespace declarative;
+
+    //
+    // !!! failure "Deprecated"
+    //
+    //     Use [declarative contracts](retained_immediate_ui.md) instead.
+    //
     // Think of `ADataBindingDefault` as we're not only connecting properties to properties, but also creating a
     // "property to view" relationship. This philosophy covers the following scenario.
     //
@@ -595,7 +608,6 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER_H3
     class MyWindow: public AWindow {
     public:
         MyWindow(const _<User>& user) {
-            _<ALabel> label;
             setContents(Centered {
                 Label { AUI_REACT(user->name->uppercase()) },
             });
@@ -714,14 +726,13 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot3) {
 }
 
 TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H3
-    // In previous examples, we've used `&` to make one directional (one sided) connection. This is
-    // perfectly enough for ALabel because it cannot be changed by user.
+    //
+    // !!! failure "Deprecated"
+    //
+    //     Use [declarative contracts](retained_immediate_ui.md) instead.
     //
     // In some cases, you might want to use property-to-property as it's bidirectional. It's used for populating view
     // from model and obtaining data from view back to the model.
-    //
-    // For this example, AUI_LET's use ATextField instead of ALabel as it's an editable view. In this case, we'd want to use
-    // `&&` because we do want `user->name` to be aware of changes of the view.
 
     using namespace declarative;
 
@@ -747,7 +758,9 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H3
     //
     // This gives the following result:
     saveScreenshot("1");
+    //
     // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_1.png)
+    //
 
     auto tf = _cast<ATextField>(By::type<ATextField>().one());
 
@@ -759,7 +772,9 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H3
     //
     // ATextField will respond:
     saveScreenshot("2");
+    //
     // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_2.png)
+    //
 
     EXPECT_EQ(user->name, "Vasil");
     EXPECT_EQ(tf->text(), "Vasil");
@@ -769,7 +784,9 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H3
     tf->selectAll();
     By::value(tf).perform(type("Changed from UI"));
     saveScreenshot("3");
+    //
     // ![](imgs/UIDataBindingTest.Declarative_bidirectional_connection_3.png)
+    //
     // AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(user->name, "Changed from UI");
     // AUI_DOCS_CODE_END
