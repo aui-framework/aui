@@ -9,11 +9,11 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-/// [AProgressBar_example]
+/// [slider_example]
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
-#include "AUI/View/AProgressBar.h"
+#include "AUI/View/ASlider.h"
 
 using namespace ass;
 using namespace declarative;
@@ -22,10 +22,11 @@ struct State {
     AProperty<aui::float_within_0_1> progress = 0.42f;
 };
 
-_<AView> minimalProgress(_<State> state) {
+_<AView> minimalSlider(_<State> state) {
     return Vertical {
-        ProgressBar {
-            .progress = AUI_REACT(state->progress),
+        Slider {
+            .value = AUI_REACT(state->progress),
+            .onValueChanged = [state](aui::float_within_0_1 v) { state->progress = v; },
         },
     };
 }
@@ -35,12 +36,12 @@ AUI_ENTRY {
     auto state = _new<State>();
     window->setContents(
         Vertical {
-          minimalProgress(state),
+          minimalSlider(state),
           Label { AUI_REACT("Progress: {}%"_format(int(state->progress * 100))) },
         }
     );
     window->show();
     return 0;
 }
-/// [AProgressBar_example]
+/// [slider_example]
 

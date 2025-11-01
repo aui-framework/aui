@@ -142,6 +142,7 @@ nav:
     - 'Label': alabel.md
     - 'List': aforeachui.md
     - 'Radio button': aradiobutton.md
+    - 'Slider': declarative_slider.md
 
   - 'Styling':
     - ass.md

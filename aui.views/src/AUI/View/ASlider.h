@@ -17,10 +17,17 @@
 namespace declarative {
 
 /**
- * @brief Slider control.
- * ![](imgs/views/ASlider.png)
- * @details
+ * ---
+ * title: Slider
+ * icon: octicons/sliders-24
+ * ---
  *
+ * @brief Slider control.
+ *
+ * ![](imgs/views/ASlider.png)
+ *
+ * @ingroup views_input
+ * @details
  * The `Slider` represents a horizontal slider control that can be
  * used in declarative UI definitions. It exposes a single value in the
  * range `[0, 1]` and emits a signal whenever the value changes. The visual
@@ -32,7 +39,26 @@ namespace declarative {
  * The slider automatically handles mouse and keyboard input. When the user
  * drags the handle, the `onValueChanged` slot is invoked.
  *
- * @ingroup views_input
+ * ## Creating a basic slider
+ *
+ * The following code snippet shows a minimal slider implementation:
+ *
+ * <!-- aui:snippet examples/ui/slider/src/main.cpp slider_example -->
+ *
+ * <figure markdown="span">
+ * ![](imgs/Screenshot_20251101_153125.png){ width="500" }
+ * <figcaption>Figure 1. Slider control.</figcaption>
+ * </figure>
+ *
+ * ### Key points about this code
+ *
+ * - Uses AProperty<aui::float_within_0_1> to store slider value (0.0 to 1.0 range).
+ * - Initial value set to 0.42f (42%).
+ * - Shared state pattern using _<State> smart pointer for reactive updates.
+ * - Bidirectional binding: Slider value syncs with state property.
+ * - Reactive label: Automatically updates to display percentage when state changes.
+ * - Uses `.onValueChanged` callback to update state when slider is moved.
+ *
  */
 struct API_AUI_VIEWS Slider {
     /**
