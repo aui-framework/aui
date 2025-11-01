@@ -65,9 +65,9 @@ def _add_relevant_macro_aliases(tokens: list[str], snippet: str) -> list[str]:
         relevant_macros.update(_CANONICAL_BASE_TO_MACROS.get(base_name, []))
 
     # Add relevant macros if they appear in the snippet and are not already present.
-    for macro in relevant_macros:
-        if macro not in result_set and re.search(r'\b' + re.escape(macro) + r'\b', snippet):
-            result_set.add(macro)
+    macros_to_check = relevant_macros - result_set
+    if macros_to_check:
+        result_set.update(re.findall(r'\b(' + '|'.join(map(re.escape, macros_to_check)) + r')\b', snippet))
             
     return list(result_set)
 
