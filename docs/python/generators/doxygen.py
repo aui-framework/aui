@@ -14,6 +14,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
 import re
+from collections import defaultdict
 
 import mkdocs_gen_files
 
@@ -68,7 +69,6 @@ def _add_relevant_macro_aliases(tokens: list[str], snippet: str) -> list[str]:
     macros_to_check = relevant_macros - result_set
     if macros_to_check:
         result_set.update(re.findall(r'\b(' + '|'.join(map(re.escape, macros_to_check)) + r')\b', snippet))
-            
     return list(result_set)
 
 
