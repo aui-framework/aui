@@ -62,12 +62,9 @@ def _add_relevant_macro_aliases(tokens: list[str], snippet: str) -> list[str]:
             
         # Check if any of the canonical names are in our search tokens
         for canonical in canonicals:
-            for token in tokens:
-                if canonical in token or token in canonical:
-                    # Macro is relevant - add it
-                    result.append(macro)
-                    break
-            if macro in result:
+            if any(canonical in token or token in canonical for token in tokens):
+                # Macro is relevant - add it
+                result.append(macro)
                 break
     
     return result
@@ -162,8 +159,8 @@ def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=se
                     snippet = ex.get('snippet','') or ''
                     try:
                         tokens = _add_relevant_macro_aliases(tokens, snippet)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        log.warning(f"Error in _add_relevant_macro_aliases: {e}")
                     hl = _compute_hl_lines(snippet, tokens)
                     hl_attr = f' hl_lines="{hl}"' if hl else ''
                     print(f"\n??? note \"{src_rel}\"", file=fos)
@@ -424,8 +421,8 @@ def gen_pages():
                     snippet = ex.get('snippet','') or ''
                     try:
                         tokens = _add_relevant_macro_aliases(tokens, snippet)
-                    except Exception:
-                        pass
+                    except Exception as e:
+                        log.warning(f"Error in _add_relevant_macro_aliases: {e}")
                     hl = _compute_hl_lines(snippet, tokens)
                     hl_attr = f' hl_lines="{hl}"' if hl else ''
                     print(f"??? note \"{src_rel}\"", file=fos)
@@ -540,8 +537,8 @@ def gen_pages():
                             snippet = ex.get('snippet', '') or ''
                             try:
                                 tokens = _add_relevant_macro_aliases(tokens, snippet)
-                            except Exception:
-                                pass
+                            except Exception as e:
+                                log.warning(f"Error in _add_relevant_macro_aliases: {e}")
                             hl = _compute_hl_lines(snippet, tokens)
                             hl_attr = f' hl_lines="{hl}"' if hl else ''
                             print(f"\n??? note \"{src_rel}\"", file=fos)
@@ -747,8 +744,8 @@ def gen_pages():
                                 snippet = ex.get('snippet','') or ''
                                 try:
                                     tokens = _add_relevant_macro_aliases(tokens, snippet)
-                                except Exception:
-                                    pass
+                                except Exception as e:
+                                    log.warning(f"Error in _add_relevant_macro_aliases: {e}")
                                 hl = _compute_hl_lines(snippet, tokens)
                                 hl_attr = f' hl_lines="{hl}"' if hl else ''
                                 print(f"\n??? note \"{src_rel}\"", file=fos)
@@ -849,8 +846,8 @@ def gen_pages():
                                         snippet = ex.get('snippet','') or ''
                                         try:
                                             tokens = _add_relevant_macro_aliases(tokens, snippet)
-                                        except Exception:
-                                            pass
+                                        except Exception as e:
+                                            log.warning(f"Error in _add_relevant_macro_aliases: {e}")
                                         hl = _compute_hl_lines(snippet, tokens)
                                         hl_attr = f' hl_lines="{hl}"' if hl else ''
                                         print(f"\n??? note \"{src_rel}\"", file=fos)
