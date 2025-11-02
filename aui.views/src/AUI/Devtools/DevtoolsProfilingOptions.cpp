@@ -37,7 +37,7 @@ _<AView> makeLink(AString text, AUrl destination) {
 }
 
 _<ALabel> header(AString title) {
-    return Label { std::move(title) } AUI_WITH_STYLE { FontSize{16_pt}, Padding{0}, Margin { 4_dp, 24_dp, 8_dp } };
+    return Label { std::move(title) } AUI_WITH_STYLE { FontSize{16_pt}, Padding{0}, Margin { 16_dp, 24_dp, 16_dp } };
 }
 }   // namespace
 
@@ -124,7 +124,7 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
           AText::fromItems(
               { "In addition to your monitor DPI adjustments, changes scaling factor with AWindow::setScalingParams "
                 "API. In this setting, 100% takes no effect." }),
-          header("Typography"),
+          header("Layout"),
           /// [fromItems]
           CheckBox {
             AUI_REACT(targetWindow->profiling()->showBaseline),
@@ -137,7 +137,18 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
           AText::fromItems(
               { "Displays a horizontal line indicating the text baseline. When multiple text views are placed in a row, "
                 "their baselines should align for proper visual appearance." }),
-        }
+
+          CheckBox {
+              AUI_REACT(targetWindow->profiling()->showLayout),
+              [targetWindow](bool checked) {
+                  targetWindow->profiling()->showLayout = checked;
+                  targetWindow->redraw();
+              },
+              Label { "Show layout" },
+          },
+          AText::fromItems(
+                { "Indicates expanding views and spacers" }),
+          }
         << ".items" AUI_WITH_STYLE {
                       MaxSize { 700_dp, {} },
                     }) });

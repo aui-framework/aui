@@ -49,6 +49,8 @@ struct API_AUI_VIEWS ARenderContext
     Rectangles clippingRects;
     IRenderer& render;
 
+    bool debugLayout = false;
+
     void clip(ARect<int> clipping);
 
     [[nodiscard]]

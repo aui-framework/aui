@@ -188,6 +188,10 @@ void AView::render(ARenderContext ctx)
         w->renderFor(this, ctx);
     }
     mRedrawRequested = false;
+
+    if (ctx.debugLayout) {
+        debugDrawExpanding(ctx);
+    }
 }
 
 static void walkToParentStack(AView* view, aui::invocable<AView*> auto&& callback) {
@@ -838,6 +842,49 @@ void AView::forceUpdateLayoutRecursively() {
 
 void AView::commitStyle() {
 
+}
+
+void AView::debugDrawExpanding(const ARenderContext& ctx) {
+    if (getExpanding() == glm::ivec2(0)) {
+        return;
+    }
+    AVector<std::pair<glm::vec2, glm::vec2>> points;
+    points.reserve(0x100);
+
+    auto drawSpring = [&](glm::vec2 p1, glm::vec2 p2) {
+        auto dst = glm::distance(p1, p2);
+        const float size = 4_dp;
+        const float stepSize = size / dst;
+        glm::vec2 perpendicular = glm::normalize(p2 - p1) * size / 2.f;
+        std::swap(perpendicular.x, perpendicular.y);
+        for (float i = 0; i < 1.f; i += stepSize) {
+            auto sp1 = glm::mix(p1, p2, i);
+            auto sp2 = glm::mix(p1, p2, i + stepSize / 3 * 1) + perpendicular;
+            auto sp3 = glm::mix(p1, p2, i + stepSize / 3 * 2) - perpendicular;
+            auto sp4 = glm::mix(p1, p2, i + stepSize / 3 * 3);
+            for (auto* p : { &sp1, &sp2, &sp3, &sp4 }) {
+                *p = glm::min(*p, p2 - glm::vec2(1.f));
+            }
+            points << std::make_pair(sp1, sp2);
+            points << std::make_pair(sp2, sp3);
+            points << std::make_pair(sp3, sp4);
+        }
+    };
+    auto parentLayoutDirection = ALayoutDirection::NONE;
+    if (getParent() && getParent()->getLayout()) {
+        parentLayoutDirection = getParent()->getLayout()->getLayoutDirection();
+    }
+    if (getExpanding().x > 0 && parentLayoutDirection != ALayoutDirection::VERTICAL) {
+        points << std::make_pair(glm::vec2 { 0, 0 }, glm::ivec2{0, getSize().y });
+        points << std::make_pair(glm::vec2 { getSize().x - 1, 0 }, glm::ivec2{getSize().x - 1, getSize().y });
+        drawSpring(glm::ivec2 { 0, getSize().y / 2.f }, glm::ivec2 { getSize().x, getSize().y / 2.f });
+    }
+    if (getExpanding().y > 0 && parentLayoutDirection != ALayoutDirection::HORIZONTAL) {
+        points << std::make_pair(glm::vec2 { 0, 0 }, glm::ivec2{getSize().x, 0 });
+        points << std::make_pair(glm::vec2 { 0, getSize().y - 1 }, glm::ivec2{getSize().x, getSize().y - 1 });
+        drawSpring(glm::ivec2 { getSize().x / 2.f, 0 }, glm::ivec2 { getSize().x / 2.f, getSize().y });
+    }
+    ctx.render.lines(ASolidBrush { AColor::RED }, points);
 }
 
 std::ostream& operator<<(std::ostream& os, const AView& view) {

@@ -22,7 +22,10 @@
  * icon: fontawesome/solid/arrows-left-right-to-line
  * ---
  *
- * @brief A transparent view with fixed size used to create a blank space between other views.
+ * @brief A transparent view with specific size used to create a blank space between 2 views.
+ *
+ * ![](imgs/Screenshot_20251102_081439.png)
+ *
  * @ingroup views_arrangement
  * @details
  * Spacers are transparent views that acquire specified space.
@@ -31,6 +34,8 @@
  *
  * - In Horizontal layouts: Consumes horizontal space (width).
  * - In Vertical layouts: Consumes vertical space (height).
+ *
+ * You can use [AUI Devtools](devtools.md) to reveal spacers in a layout.
  *
  * ## API surface
  *
@@ -52,6 +57,9 @@
  *
  * `declarative::SpacerExpanding` is simply an [expanding](layout-managers.md#EXPANDING) view. It can be used to "push"
  * subsequent views within a container to the end of that container.
+ *
+ * In most cases, the container must have [ass::MinSize] or [expanding](layout-managers.md#EXPANDING) specified, as
+ * shown in the example below.
  *
  * <!-- aui:snippet examples/ui/spacer_expanding1/src/main.cpp ASpacerExpanding_example -->
  *
@@ -76,10 +84,13 @@ public:
     bool consumesClick(const glm::ivec2& pos) override;
     int getContentMinimumWidth() override;
     int getContentMinimumHeight() override;
+    void render(ARenderContext ctx) override;
     void setSpace(AMetric space) { mSpace = space; markMinContentSizeInvalid(); }
 
 private:
     AMetric mSpace;
+
+    ALayoutDirection getParentLayoutDirection() const;
 };
 
 namespace declarative {

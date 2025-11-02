@@ -73,6 +73,12 @@ public:
          * @brief When set to true, all rendered strings will display their baselines.
          */
         AProperty<bool> showBaseline = false;
+
+
+        /**
+         * @brief When set to true, indicates expanding views and spacers.
+         */
+        AProperty<bool> showLayout = false;
     };
 
 

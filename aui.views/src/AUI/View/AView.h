@@ -1154,6 +1154,8 @@ protected:
 
     virtual void commitStyle();
 
+    void debugDrawExpanding(const ARenderContext& ctx);
+
 private:
     /**
      * @brief Animation.
