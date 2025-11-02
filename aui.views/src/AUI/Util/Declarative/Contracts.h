@@ -24,6 +24,7 @@ namespace declarative::contract {
  * A helper class that allows you to declare a value that can be either a constant or a reactive expression.
  */
 template <typename T>
+requires aui::copy_constructible<T>
 struct In {
 private:
     /**

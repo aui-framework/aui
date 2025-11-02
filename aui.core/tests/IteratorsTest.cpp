@@ -18,7 +18,7 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/Traits/iterators.h>
 #include <array>
-#include "AUI/Traits/any_view.h"
+#include "AUI/Traits/any_range_view.h"
 
 TEST(Iterators, Zip) {
     std::array<int, 3> ints = { 1, 2, 3 };
@@ -62,24 +62,24 @@ TEST(Iterators, Reverse) {
 }
 
 TEST(Iterators, DynRange1) {
-    aui::any_view<int> ints = ranges::views::ints | ranges::views::take(10);
+    aui::any_range_view<int> ints = ranges::views::ints | ranges::views::take(10);
     EXPECT_EQ(ints | ranges::to_vector, std::vector({0, 1, 2, 3, 4, 5, 6, 7, 8, 9}));
 }
 
 TEST(Iterators, DynRange2) {
-    aui::any_view<int> ints = ranges::views::ints | ranges::views::take(10) | ranges::views::filter([](int i) { return i % 2 == 0; });
+    aui::any_range_view<int> ints = ranges::views::ints | ranges::views::take(10) | ranges::views::filter([](int i) { return i % 2 == 0; });
     EXPECT_EQ(ints | ranges::to_vector, std::vector({0, 2, 4, 6, 8 }));
 }
 
 TEST(Iterators, DynRange3) {
-    aui::any_view<int> ints = ranges::views::ints | ranges::views::take(10) | ranges::views::filter([](int i) { return i % 2 == 0; }) | ranges::to_vector;
+    aui::any_range_view<int> ints = ranges::views::ints | ranges::views::take(10) | ranges::views::filter([](int i) { return i % 2 == 0; }) | ranges::to_vector;
     EXPECT_EQ(ints | ranges::to_vector, std::vector({0, 2, 4, 6, 8 }));
 }
 
 TEST(Iterators, DynRange4) {
     /// [DynRange4]
     AVector<int> elements{1,2,3};
-    aui::any_view<int> ints = elements;
+    aui::any_range_view<int> ints = elements;
     EXPECT_EQ(ints | ranges::to_vector, std::vector({1, 2, 3 }));
     elements << 4;
     EXPECT_EQ(ints | ranges::to_vector, std::vector({1, 2, 3, 4 }));
@@ -89,7 +89,7 @@ TEST(Iterators, DynRange4) {
 TEST(Iterators, DynRange5) {
     /// [DynRange5]
     AVector<int> elements{1,2,3};
-    aui::any_view<int> ints = std::move(elements);
+    aui::any_range_view<int> ints = std::move(elements);
     EXPECT_EQ(ints | ranges::to_vector, std::vector({1, 2, 3 }));
     elements << 4;
     EXPECT_EQ(ints | ranges::to_vector, std::vector({1, 2, 3 }));
@@ -98,16 +98,16 @@ TEST(Iterators, DynRange5) {
 
 TEST(Iterators, DynRangeNoCopy1) {
     AVector<std::unique_ptr<int>> elements{};
-    aui::any_view<std::unique_ptr<int>> ints = std::move(elements);
+    aui::any_range_view<std::unique_ptr<int>> ints = std::move(elements);
 }
 
 TEST(Iterators, DynRangeNoCopy2) {
     AVector<std::unique_ptr<int>> elements{};
-    aui::any_view<std::unique_ptr<int>> ints = elements;
+    aui::any_range_view<std::unique_ptr<int>> ints = elements;
 }
 
 TEST(Iterators, DynRangeCaps1) {
-    aui::any_view<int> r = ranges::views::ints;
+    aui::any_range_view<int> r = ranges::views::ints;
     EXPECT_TRUE(r.capabilities().implementsOperatorMinusMinus);
     auto it = r.begin();
     EXPECT_EQ(*it, 0);
@@ -120,7 +120,7 @@ TEST(Iterators, DynRangeCaps1) {
 }
 
 TEST(Iterators, DynRangeCaps2) {
-    aui::any_view<int> r = ranges::views::ints | ranges::views::chunk_by([](int l, int r) { return l / 10 == r / 10; }) | ranges::views::transform([](const auto& i){ return 0; });
+    aui::any_range_view<int> r = ranges::views::ints | ranges::views::chunk_by([](int l, int r) { return l / 10 == r / 10; }) | ranges::views::transform([](const auto& i){ return 0; });
     EXPECT_FALSE(r.capabilities().implementsOperatorMinusMinus);
     auto it = r.begin();
     EXPECT_EQ(*it, 0);

@@ -352,13 +352,6 @@ AStylesheet::AStylesheet() {
         },
         /// [ARadioButton]
 
-        // ADropdownList
-        {
-            t<ADropdownList>() >> t<ALabel>(),
-            Expanding{},
-            ATextAlign::LEFT,
-        },
-
         // AListView
         {
             {t<AListView>(), t<ATreeView>()},

@@ -20,7 +20,7 @@
 #include <AUI/Model/AListModelAdapter.h>
 #include <AUI/Util/ADataBinding.h>
 #include <AUI/Platform/AWindow.h>
-#include <AUI/Traits/any_view.h>
+#include <AUI/Traits/any_range_view.h>
 
 namespace aui::for_each_ui {
 
@@ -70,7 +70,7 @@ public:
         aui::for_each_ui::Key id;
     };
 
-    using List = aui::any_view<Entry>;
+    using List = aui::any_range_view<Entry>;
     AForEachUIBase() {}
     ~AForEachUIBase() override = default;
     void setPosition(glm::ivec2 position) override;
@@ -199,7 +199,7 @@ concept RangeFactory = requires(Factory&& factory) {
  *
  * Alternatively, these requirements can be described by a *ranged for loop*: `for (const auto& value : rng) { ... }`.
  *
- * The range's type is erased with runtime-based *range* layer [aui::any_view].
+ * The range's type is erased with runtime-based *range* layer [aui::any_range_view].
  *
  * [AUI_DECLARATIVE_FOR] can be nested with no restrictions in both directions.
  *
