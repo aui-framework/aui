@@ -246,9 +246,9 @@ to free you from dependency management and focus you right to development of you
        ![](imgs/Screenshot_2025-08-23_05.21.07.png)
     4. ++f1++ `>CMake: Debug`.
         For building examples:
-    1. Press ++Ctrl+,++ and search for `Cmake Configure Args`.
-    2. Press the `Add item` button and enter `-DAUI_BUILD_EXAMPLES=TRUE`.
-       ![](imgs/getting_started_vscode.png)
+    1. ++Ctrl+,++ `and search "Cmake Configure Args"`
+    2. Press button `Add item` and enter `-DAUI_BUILD_EXAMPLES=TRUE`
+        ![](imgs/getting_started_vscode.png)
 
 === ":octicons-terminal-16: Terminal"
 
