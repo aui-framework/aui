@@ -484,10 +484,9 @@ void PlatformAbstractionX11::windowSetSize(AWindow& window, glm::ivec2 size) {
 void PlatformAbstractionX11::windowSetGeometry(AWindow& window, int x, int y, int width, int height) {
     if (!nativeHandle(window))
         return;
-
-    XSetWindowAttributes attrs;
-    attrs.override_redirect = True;
-    XChangeWindowAttributes(PlatformAbstractionX11::ourDisplay, nativeHandle(window), CWOverrideRedirect, &attrs);
+    WindowStyle style = window.windowStyle();
+    bool isPopupMenu = (style == WindowStyle::DEFAULT) ||
+                 ((style & WindowStyle::SYS) == WindowStyle::SYS);
 
     XWindowChanges changes;
     changes.x = x;
@@ -496,7 +495,15 @@ void PlatformAbstractionX11::windowSetGeometry(AWindow& window, int x, int y, in
     changes.height = height;
     changes.stack_mode = Above;
 
-    XConfigureWindow(PlatformAbstractionX11::ourDisplay, nativeHandle(window), CWX | CWY | CWWidth | CWHeight | CWStackMode, &changes);
+    if (isPopupMenu) {
+        XSetWindowAttributes attrs;
+        attrs.override_redirect = True;
+        XChangeWindowAttributes(PlatformAbstractionX11::ourDisplay, nativeHandle(window),
+                                CWOverrideRedirect, &attrs);
+    }
+
+    XConfigureWindow(PlatformAbstractionX11::ourDisplay, nativeHandle(window),
+                     CWX | CWY | CWWidth | CWHeight | CWStackMode, &changes);
 
     XSync(PlatformAbstractionX11::ourDisplay, False);
 }
