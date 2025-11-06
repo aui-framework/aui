@@ -49,13 +49,13 @@ struct API_AUI_VIEWS ScrollArea {
         contract::In<unsigned> fullContentSize;
 
         /**
-         * @brief Callback invoked when the scrollbar's scroll value changes.
+         * @brief Callback to be invoked by scrollbar when its scroll value changes.
          */
         contract::Slot<unsigned> onScrollChange;
     };
 
     /**
-     * @brief Function type that creates a new scrollbar based on ScrollbarInitParams.
+     * @brief Function type that creates a new scrollbar based on `ScrollbarInitParams`.
      */
     using ScrollbarFactory = _<AView>(ScrollbarInitParams params);
 
@@ -149,24 +149,79 @@ struct API_AUI_VIEWS ScrollArea {
 
 
 /**
+ * ---
+ * title: Scroll Area
+ * icon: material/arrow-split-horizontal
+ * ---
+ *
  * @brief A scrollable container with vertical and horizontal scrollbars.
+ *
+ * ![](imgs/views/AScrollArea.png)
+ *
  * @ingroup views_containment
  * @details
- * AScrollArea should have expanding, or fixed size, or max size to be set in order to define it's sizing rules, as it's
- * size cannot be defined by it's contents for obvious reasons.
- *
- * FixedSize and Expanding stylesheet properties would work as expected. If neither of them is set, AScrollArea would
- * occupy size by minimum size of it's contents, as a AViewContainer would do. In such case, you may restrict maximum
- * size of AScrollArea with MaxSize property. AScrollArea will not exceed MaxSize, but also become actual scroll area,
- * involving displaying scroll bars and handling scroll events. This behaviour is similar to Text.
- *
- * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
- *
- * Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
+ * A scroll area is a UI component that lets users to view a large piece of content inside a smaller frame. The visible
+ * portion of the content can be moved (scrolled) using scrollbars, touch gestures, or mouse wheel.
  *
  * ## API surface
  *
  * <!-- aui:steal_documentation declarative::ScrollArea -->
+ *
+ * ## Basic usage
+ *
+ * By default, scroll area has [ass::Expanding], so it occupies as much space of the parent container as possible.
+ *
+ * <!-- aui:snippet examples/ui/scrollarea/src/main.cpp ScrollArea_example -->
+ *
+ * <figure markdown="span">
+ * ![](imgs/Screenshot_20251106_133733.png){ width="500" }
+ * <figcaption>Figure 1. Basic scroll area.</figcaption>
+ * </figure>
+ *
+ * ## Controlling scroll bar appearance
+ *
+ * By default, scrollbars are configured with `ass::ScrollbarAppearance::ON_DEMAND` behavior, which means they'd be
+ * visible only if the scroll area is scrollable.
+ *
+ * <figure markdown="span">
+ * ![](imgs/gfdfklgmkldg.webp){ width="500" }
+ * <figcaption>Figure 2. `ON_DEMAND` scroll bar appearance behavior.</figcaption>
+ * </figure>
+ *
+ * The scrollbar can be configured to be always visible with `ass::ScrollbarAppearance::ALWAYS`:
+ *
+ * <!-- aui:snippet examples/ui/scrollarea_scrollbar_appearance/src/main.cpp ScrollArea_example -->
+*
+ * <figure markdown="span">
+ * ![](imgs/fhsdthdchf.webp){ width="500" }
+ * <figcaption>Figure 3. `ALWAYS` scroll bar appearance behavior.</figcaption>
+ * </figure>
+ *
+ * The horizontal scrollbar can be adjusted similarly.
+ *
+ * ## ScrollArea sizing
+ *
+ * Scroll area can't rely on its contents to define its size. Therefore, AScrollArea requires [ass::Expanding], or
+ * [ass::FixedSize], or [ass::MaxSize] to be set.
+ *
+ * [ass::FixedSize] and [ass::Expanding] stylesheet properties would work as expected. If neither of them is set, AScrollArea would
+ * occupy size by minimum size of it's contents, as a AViewContainer would do. In such case, you may restrict maximum
+ * size of AScrollArea with [ass::MaxSize] property. AScrollArea will not exceed [ass::MaxSize], but also become actual scroll area,
+ * involving displaying scroll bars and handling scroll events. This behavior is similar to Text.
+ *
+ * Expanding is enabled by default. It can be disabled with `ass::Expanding(0)` property.
+ *
+ * Behavior of vertical and horizontal axes are independent from each other. This behavior is similar to Text.
+ *
+ * The following example demonstrates a scroll area with a maximum height of `200_dp`. The scroll area contains a text
+ * area that automatically expands vertically. When the text exceeds the maximum height, vertical scroll bars appear.
+ *
+ * <!-- aui:snippet examples/ui/scrollarea_max_size/src/main.cpp ScrollArea_example -->
+ *
+ * <figure markdown="span">
+ * ![](imgs/1324124124.webp){ width="500" }
+ * <figcaption>Figure 4. Scroll area with max height handles dynamic content.</figcaption>
+ * </figure>
  */
 class API_AUI_VIEWS AScrollArea: public AViewContainerBase {
 public:

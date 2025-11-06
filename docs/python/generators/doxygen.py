@@ -135,6 +135,15 @@ def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=se
                         print(f"    {line}", file=fos)
                     print(f"    ```", file=fos)
 
+    # nested struct - see declarative::ScrollArea
+    if hasattr(nested, 'types'):
+        if nested.types:
+            print('<dl class="aui-embed-doc-dl" markdown>', file=fos)
+            for v in nested.types:
+                print(f'`{v.generic_kind} {v.namespaced_name()}`\n', file=fos)
+                embed_doc(v, fos)
+            print('</dl>', file=fos)
+
     # enums - see APath::DefaultPath
     if hasattr(nested, 'enum_values'):
         print('<table markdown>', file=fos)
@@ -155,34 +164,44 @@ def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=se
 
         print('</table>', file=fos)
 
+    is_empty = True
     # nested struct - see AUpdater::InstallCmdline, AButton
     if hasattr(nested, 'fields'):
         if nested.fields:
+            is_empty = False
             print('<dl style="padding-left:1em" markdown>', file=fos)
             for v in nested.fields:
+                if v.visibility != 'public':
+                    continue
                 print(f'<dt markdown>`#!cpp {v.type_str} {v.name}`</dt>', file=fos)
                 print(f'<dd markdown>', file=fos)
                 for i in common.parse_doxygen(v.doc):
                     print(i[1], file=fos)
                 print('</dd>', file=fos)
             print('</dl>', file=fos)
-        else:
-            print('\n\n_Empty structure._', file=fos)
 
-    # nested struct - see AUpdater::InstallCmdline, AButton
-    if hasattr(nested, 'fields'):
-        if nested.fields:
+    # nested struct - see declarative::ScrollArea
+    if hasattr(nested, 'methods'):
+        if nested.methods:
             print('<dl style="padding-left:1em" markdown>', file=fos)
-            for v in nested.fields:
-                print(f'<dt markdown>`#!cpp {v.type_str} {v.name}`</dt>', file=fos)
+            for v in nested.methods:
+                if v.visibility != 'public':
+                    continue
+                if v.name == 'operator': # skip operator() for views API surface
+                    continue
+                print(f'<dt markdown>`#!cpp ', file=fos)
+                if hasattr(v, "template_clause") and v.template_clause:
+                    print(f'{v.template_clause} ', file=fos)
+                print(f'{" ".join(v.modifiers_before)} {v.return_type} {v.name}{_format_token_sequence([ i[1] for i in v.args])}`</dt>', file=fos)
                 print(f'<dd markdown>', file=fos)
                 for i in common.parse_doxygen(v.doc):
                     print(i[1], file=fos)
+                    print('\n', file=fos)
                 print('</dd>', file=fos)
             print('</dl>', file=fos)
-        else:
-            print('\n\n_Empty structure._', file=fos)
-    pass
+
+    if is_empty:
+        print('\n\n_Empty structure._', file=fos)
 
 
 def gen_pages():
