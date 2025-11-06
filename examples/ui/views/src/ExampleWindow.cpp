@@ -86,15 +86,14 @@ class AllViewsWindow : public AWindow {
 public:
     AllViewsWindow() : AWindow("All views", 300_dp, 500_dp, nullptr, WindowStyle::MODAL) {
         setContents(Centered {
-          AScrollArea::Builder()
-              .withContents(
-                  Vertical {
-                    Centered { _new<ALabel>("ALabel") },
-                    Centered { _new<AButton>("AButton") },
-                    Centered { _new<ATextField>() AUI_LET { it->setText("ATextField"); } },
-                  }
-                  << ".all_views_wrap")
-              .withExpanding() });
+              ScrollArea {
+                .content = Vertical {
+                  Centered { _new<ALabel>("ALabel") },
+                  Centered { _new<AButton>("AButton") },
+                  Centered { _new<ATextField>() AUI_LET { it->setText("ATextField"); } },
+                } << ".all_views_wrap"
+              }
+        });
     }
 };
 

@@ -17,6 +17,7 @@
 #include "AUI/View/AScrollArea.h"
 #include "AUI/View/AGridSplitter.h"
 #include "Spreadsheet.h"
+#include "AUI/View/AScrollArea.h"
 
 using namespace declarative;
 using namespace ass;
@@ -117,16 +118,26 @@ private:
     _<State> mState;
 };
 
+static _<AView> alwaysVisibleScrollbar(ScrollArea::ScrollbarInitParams params) {
+    return Scrollbar {
+        .direction = std::move(params.direction),
+        .scroll = std::move(params.scroll),
+        .viewportSize = std::move(params.viewportSize),
+        .fullContentSize = std::move(params.fullContentSize),
+        .scrollbarAppearance = ass::ScrollbarAppearance::ALWAYS,
+        .onScrollChange = std::move(params.onScrollChange),
+    };
+}
+
 class CellsWindow : public AWindow {
 public:
     CellsWindow() : AWindow("AUI - 7GUIs - Cells", 500_dp, 400_dp) {
         setContents(Centered {
-          AScrollArea::Builder()
-                  .withContents(Horizontal { _new<CellsView>(_new<State>()) })
-                  .build() AUI_WITH_STYLE {
-                Expanding(),
-                ScrollbarAppearance(ScrollbarAppearance::ALWAYS, ScrollbarAppearance::ALWAYS),
-              },
+            ScrollArea {
+                .verticalScrollbar = alwaysVisibleScrollbar,
+                .horizontalScrollbar = alwaysVisibleScrollbar,
+                .content = Horizontal { _new<CellsView>(_new<State>()) }
+            },
         } AUI_WITH_STYLE { Padding(0) });
     }
 };

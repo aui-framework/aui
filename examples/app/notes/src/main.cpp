@@ -86,19 +86,20 @@ _<AView> noteEditor(const _<Note>& note) {
     if (note == nullptr) {
         return Centered { Label { "No note selected" } };
     }
-    return AScrollArea::Builder().withContents(
-        Vertical {
-          _new<TitleTextArea>("Untitled") AUI_LET {
-                  it->setCustomStyle({ FontSize { 14_pt }, Expanding { 1, 0 } });
-                  AObject::biConnect(note->title, it->text());
-                  if (note->content.raw.empty()) {
-                      it->focus();
-                  }
-              },
-          _new<ATextArea>("Text") AUI_WITH_STYLE { Expanding() } && note->content,
+    return ScrollArea {
+        .content = Vertical {
+            _new<TitleTextArea>("Untitled") AUI_LET {
+                it->setCustomStyle({ FontSize { 14_pt }, Expanding { 1, 0 } });
+                AObject::biConnect(note->title, it->text());
+                if (note->content.raw.empty()) {
+                    it->focus();
+                }
+            },
+            _new<ATextArea>("Text") AUI_WITH_STYLE { Expanding() } && note->content,
         } AUI_WITH_STYLE {
-          Padding { 8_dp, 16_dp },
-        });
+            Padding { 8_dp, 16_dp },
+        },
+    };
 }
 /// [noteEditor]
 

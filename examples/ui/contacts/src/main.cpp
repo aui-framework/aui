@@ -39,27 +39,26 @@ public:
     ContactsWindow() : AWindow("AUI Contacts", 600_dp, 300_dp) {
         setContents(
             Horizontal {
-              AScrollArea::Builder()
-                      .withContents(
-                          Vertical {
-                            SpacerFixed(8_dp),
-                            _new<ATextField>() && mSearchQuery,
-                            SpacerFixed(8_dp),
-                            AText::fromString(predefined::DISCLAIMER) AUI_WITH_STYLE { ATextAlign::CENTER },
-                            SpacerFixed(8_dp),
-                            experimental::Dynamic {
-                                .content = AUI_REACT(mSearchQuery->empty() ? indexedList() : searchQueryList()),
-                            },
-                            Label { AUI_REACT("{} contact(s)"_format(mContactCount)) } AUI_LET {
-                                AObject::connect(AUI_REACT(ass::PropertyList{
-                                    FontSize { 10_pt },
-                                    ATextAlign::CENTER,
-                                    Margin { 8_dp },
-                                    mSearchQuery->empty() ? Visibility::VISIBLE : Visibility::GONE,
-                                }), AUI_SLOT(it)::setCustomStyle);
-                            },
-                          } AUI_WITH_STYLE { Padding(0, 8_dp) })
-                      .build() AUI_WITH_STYLE { Expanding(0, 1), MinSize(200_dp) },
+              ScrollArea {
+                  .content = Vertical {
+                      SpacerFixed(8_dp),
+                      _new<ATextField>() && mSearchQuery,
+                      SpacerFixed(8_dp),
+                      AText::fromString(predefined::DISCLAIMER) AUI_WITH_STYLE { ATextAlign::CENTER },
+                      SpacerFixed(8_dp),
+                      experimental::Dynamic {
+                          .content = AUI_REACT(mSearchQuery->empty() ? indexedList() : searchQueryList()),
+                      },
+                      Label { AUI_REACT("{} contact(s)"_format(mContactCount)) } AUI_LET {
+                          AObject::connect(AUI_REACT(ass::PropertyList{
+                              FontSize { 10_pt },
+                              ATextAlign::CENTER,
+                              Margin { 8_dp },
+                              mSearchQuery->empty() ? Visibility::VISIBLE : Visibility::GONE,
+                          }), AUI_SLOT(it)::setCustomStyle);
+                      },
+                  } AUI_WITH_STYLE { Padding(0, 8_dp) },
+              } AUI_WITH_STYLE { Expanding(0, 1), MinSize(200_dp) },
 
               experimental::Dynamic {
                   .content = AUI_REACT(mSelectedContact != nullptr ? contactDetails(mSelectedContact) : nullptr),
