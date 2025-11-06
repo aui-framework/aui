@@ -25,9 +25,12 @@ public:
     }
 };
 
-AScrollAreaViewport::AScrollAreaViewport() {
+AScrollAreaViewport::AScrollAreaViewport(_<declarative::ScrollAreaViewport::State> state): mState(std::move(state)) {
     addAssName("AScrollAreaViewport");
     addView(mInner = _new<Inner>());
+    connect(mState->scroll, [this](glm::uvec2 v) { mInner->setPosition(-glm::ivec2(v)); });
+    connect(size(), mState->viewportSize);
+    connect(mInner->size(), mState->fullContentSize);
 }
 
 AScrollAreaViewport::~AScrollAreaViewport() {
@@ -38,7 +41,7 @@ void AScrollAreaViewport::setContents(_<AView> content) {
     mInner->setPosition({0, 0});
     ALayoutInflater::inflate(mInner, content);
     mContents = std::move(content);
-    updateContentsScroll();
+    mState->scroll.notify();
 }
 
 void AScrollAreaViewport::applyGeometryToChildren() {
@@ -57,8 +60,9 @@ void AScrollAreaViewport::applyGeometryToChildren() {
         IRenderViewToTexture::disableForView(*mInner);
     }
 }
-void AScrollAreaViewport::updateContentsScroll() {
-    mInner->setPosition(-glm::ivec2(mScroll));
-    emit mScrollChanged(mScroll);
-    redraw();
+
+_<AView> declarative::ScrollAreaViewport::operator()() {
+    auto s = _new<AScrollAreaViewport>(std::move(state));
+    s->setContents(std::move(content));
+    return s;
 }

@@ -94,7 +94,7 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
           Vertical {
             Slider {
               .value = AUI_REACT(*scalingParams),
-              .onValueChanged = [scalingParams, targetWindow](aui::float_within_0_1 newValue) {
+              .onValueChange = [scalingParams, targetWindow](aui::float_within_0_1 newValue) {
                   newValue = glm::round(newValue * 6) / 6.f;
                   *scalingParams = newValue;
                   targetWindow->setScalingParams({

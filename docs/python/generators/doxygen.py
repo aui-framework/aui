@@ -168,6 +168,20 @@ def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=se
             print('</dl>', file=fos)
         else:
             print('\n\n_Empty structure._', file=fos)
+
+    # nested struct - see AUpdater::InstallCmdline, AButton
+    if hasattr(nested, 'fields'):
+        if nested.fields:
+            print('<dl style="padding-left:1em" markdown>', file=fos)
+            for v in nested.fields:
+                print(f'<dt markdown>`#!cpp {v.type_str} {v.name}`</dt>', file=fos)
+                print(f'<dd markdown>', file=fos)
+                for i in common.parse_doxygen(v.doc):
+                    print(i[1], file=fos)
+                print('</dd>', file=fos)
+            print('</dl>', file=fos)
+        else:
+            print('\n\n_Empty structure._', file=fos)
     pass
 
 

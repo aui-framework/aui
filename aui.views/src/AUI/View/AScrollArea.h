@@ -15,7 +15,137 @@
 #include "AViewContainer.h"
 #include "AScrollAreaViewport.h"
 #include "AScrollbar.h"
-#include "glm/fwd.hpp"
+
+
+namespace declarative {
+
+/**
+ * <!-- aui:no_dedicated_page -->
+ */
+struct API_AUI_VIEWS ScrollArea {
+
+    /**
+     * @brief A struct passed to scrollbar factory.
+     */
+    struct ScrollbarInitParams {
+        /**
+         * @brief Scrollbar orientation.
+         */
+        ALayoutDirection direction;
+
+        /**
+         * @brief Current scroll position of the scrollbar.
+         */
+        contract::In<unsigned> scroll;
+
+        /**
+         * @brief Size of the viewport in the scrollbar's orientation.
+         */
+        contract::In<unsigned> viewportSize;
+
+        /**
+         * @brief Total size of the content in the scrollbar's orientation.
+         */
+        contract::In<unsigned> fullContentSize;
+
+        /**
+         * @brief Callback invoked when the scrollbar's scroll value changes.
+         */
+        contract::Slot<unsigned> onScrollChange;
+    };
+
+    /**
+     * @brief Function type that creates a new scrollbar based on ScrollbarInitParams.
+     */
+    using ScrollbarFactory = _<AView>(ScrollbarInitParams params);
+
+    /**
+    * @brief Constructs parameters for a vertical scrollbar based on the current viewport state.
+    * @return ScrollbarInitParams configured for vertical scrolling.
+    * @details
+    * This function is used to generate the initialization parameters required to create a vertical scrollbar
+    * that is synchronized with the current state of the scroll area viewport. The result of this function is passed
+    * to `verticalScrollbar` factory to create the actual scrollbar instance. Hence, it can be used to create external
+    * scrollbars that are linked to the scroll area.
+    */
+    static ScrollbarInitParams getVerticalScrollbarParams(const _<declarative::ScrollAreaViewport::State>& state);
+
+    /**
+     * @brief Constructs parameters for a horizontal scrollbar based on the current viewport state.
+     * @return ScrollbarInitParams configured for horizontal scrolling.
+     * @details
+     * This function is used to generate the initialization parameters required to create a horizontal scrollbar
+     * that is synchronized with the current state of the scroll area viewport. The result of this function is passed
+     * to `horizontalScrollbar` factory to create the actual scrollbar instance. Hence, it can be used to create
+     * external scrollbars that are linked to the scroll area.
+     */
+    static ScrollbarInitParams getHorizontalScrollbarParams(const _<declarative::ScrollAreaViewport::State>& state);
+
+    /**
+     * @brief Current viewport state used by the scroll area.
+     * @details
+     * This state object holds the scroll position, viewport size, and full content size of the scroll area. It can be
+     * used to control the scroll area programmatically or to link external scrollbars to the scroll area.
+     */
+    _<declarative::ScrollAreaViewport::State> state = _new<declarative::ScrollAreaViewport::State>();
+
+    /**
+     * @brief Factory for creating the vertical scrollbar. Defaults to `defaultScrollbar`.
+     * @details
+     * This factory function is called to create the vertical scrollbar for the scroll area. It can be used to customize
+     * the appearance and behavior of the vertical scrollbar, up to completely replacing it with a custom
+     * implementation.
+     *
+     * If set to `nullptr`, no vertical scrollbar will be created. The user can still add an external scrollbar and
+     * control the scroll area through the `state` property. See `getVerticalScrollbarParams`.
+     */
+    std::function<ScrollbarFactory> verticalScrollbar = defaultScrollbar;
+
+    /**
+     * @brief Factory for creating the horizontal scrollbar. Defaults to `defaultScrollbar`.
+     * @details
+     * This factory function is called to create the horizontal scrollbar for the scroll area. It can be used to
+     * customize the appearance and behavior of the horizontal scrollbar, up to completely replacing it with a custom
+     * implementation.
+     *
+     * If set to `nullptr`, no horizontal scrollbar will be created. The user can still add an external scrollbar and
+     * control the scroll area through the `state` property. See `getHorizontalScrollbarParams`.
+     */
+    std::function<ScrollbarFactory> horizontalScrollbar = defaultScrollbar;
+
+    /**
+     * @brief Default scrollbar factory function.
+     * @param params Initialization parameters for the scrollbar (see `getVerticalScrollbarParams` and `getHorizontalScrollbarParams`).
+     * @return A new instance of AScrollbar configured with the provided parameters.
+     * @details
+     * <!-- aui:snippet aui.views/src/AUI/View/AScrollArea.h defaultScrollbar -->
+     */
+    /// [defaultScrollbar]
+    static _<AView> defaultScrollbar(ScrollbarInitParams params) {
+        return Scrollbar {
+            .direction = std::move(params.direction),
+            .scroll = std::move(params.scroll),
+            .viewportSize = std::move(params.viewportSize),
+            .fullContentSize = std::move(params.fullContentSize),
+            .onScrollChange = std::move(params.onScrollChange),
+        };
+    }
+    /// [defaultScrollbar]
+
+    /**
+     * @brief Determines whether AScrollArea can be scrolled with mouse wheel or can be scrolled with touch only.
+     */
+    contract::In<bool> wheelScrollable = true;
+
+    /**
+     * @brief Content view displayed inside the scroll area.
+     */
+    _<AView> content;
+
+    _<AView> operator()();
+};
+}
+
 
 
 /**
@@ -33,13 +163,15 @@
  * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
  *
  * Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
+ *
+ * ## API surface
+ *
+ * <!-- aui:steal_documentation declarative::ScrollArea -->
  */
 class API_AUI_VIEWS AScrollArea: public AViewContainerBase {
 public:
-    class Builder;
-
-public:
     AScrollArea();
+    explicit AScrollArea(declarative::ScrollArea&& builder);
 
     void setSize(glm::ivec2 size) override;
     void setContents(_<AView> content) {
@@ -91,6 +223,16 @@ public:
 
     void onScroll(const AScrollEvent& event) override;
 
+
+    /**
+     * @brief Set scrollbar appearance
+     * @details
+     * !!! failure "Deprecated"
+     *
+     *     Left for compatibility with [retained UI](retained_immediate_ui.md).
+     *
+     * Sets the appearance mode for both vertical and horizontal scrollbars.
+     */
     void setScrollbarAppearance(ass::ScrollbarAppearance scrollbarAppearance) {
         AUI_NULLSAFE(mHorizontalScrollbar)->setAppearance(scrollbarAppearance.getHorizontal());
         AUI_NULLSAFE(mVerticalScrollbar)->setAppearance(scrollbarAppearance.getVertical());
@@ -102,6 +244,10 @@ public:
      * @param nearestBorder if true, the scroll is performed up to the nearest border of scroll area, and if the target
      *        is already fully visible, then scrollTo does not take effect. If false, the scroll is performed up to the
      *        top border of the target view.
+     * @details
+     * !!! failure "Deprecated"
+     *
+     *     Left for compatibility with [retained UI](retained_immediate_ui.md).
      */
     void scrollTo(const _<AView>& target, bool nearestBorder = true) {
         if (!target) {
@@ -117,6 +263,10 @@ public:
      * @param nearestBorder if true, the scroll is performed up to the nearest border of scroll area, and if the target
      *        is already fully visible, then scrollTo does not take effect. If false, the scroll is performed up to the
      *        top border of the target view.
+     * @details
+     * !!! failure "Deprecated"
+     *
+     *     Left for compatibility with [retained UI](retained_immediate_ui.md).
      */
     void scrollTo(ARect<int> target, bool nearestBorder = true);
 
@@ -127,16 +277,24 @@ public:
         mIsWheelScrollable = value;
     }
 
+    /**
+     * @brief Builder for AScrollArea.
+     * @details
+     * !!! failure "Deprecated"
+     *
+     *     Left for compatibility with [retained UI](retained_immediate_ui.md).
+     */
     class Builder {
     friend class AScrollArea;
     private:
+        _<declarative::ScrollAreaViewport::State> mState = _new<declarative::ScrollAreaViewport::State>();
         _<AScrollbar> mExternalVerticalScrollbar;
         _<AScrollbar> mExternalHorizontalScrollbar;
         _<AView> mContents;
         bool mExpanding = false;
 
     public:
-        Builder() = default;
+        explicit Builder(_<declarative::ScrollAreaViewport::State> state = _new<declarative::ScrollAreaViewport::State>()): mState(std::move(state)) {}
 
         Builder& withExternalVerticalScrollbar(_<AScrollbar> externalVerticalScrollbar) {
             mExternalVerticalScrollbar = std::move(externalVerticalScrollbar);
@@ -170,36 +328,62 @@ public:
         }
     };
 
+    /**
+     * @brief Get contents
+     * @details
+     * !!! failure "Deprecated"
+     *
+     *     Left for compatibility with [retained UI](retained_immediate_ui.md).
+     */
     [[nodiscard]]
     const _<AView>& contents() const noexcept {
         return mInner->contents();
     }
 
+    /**
+     * @brief Get vertical scrollbar
+     * @details
+     * !!! failure "Deprecated"
+     *
+     *     Left for compatibility with [retained UI](retained_immediate_ui.md).
+     */
     [[nodiscard]]
     const _<AScrollbar>& verticalScrollbar() const noexcept {
         return mVerticalScrollbar;
     }
 
+    /**
+     * @brief Get horizontal scrollbar
+     * @details
+     * !!! failure "Deprecated"
+     *
+     *     Left for compatibility with [retained UI](retained_immediate_ui.md).
+     */
     [[nodiscard]]
     const _<AScrollbar>& horizontalScrollbar() const noexcept {
         return mHorizontalScrollbar;
     }
-    
+
     [[nodiscard]]
     glm::uvec2 scroll() const noexcept {
         return mInner->scroll();
     }
+    
 protected:
     explicit AScrollArea(const Builder& builder);
 
 private:
     _<AScrollAreaViewport> mInner;
+
+    // legacy fields. on declarative-based constructor, these fields are null
     _<AScrollbar> mVerticalScrollbar;
     _<AScrollbar> mHorizontalScrollbar;
+
+    // if declarative-based constructor is used, the scroll is updated thru this field.
+    _<declarative::ScrollAreaViewport::State> mState;
 
     /**
      * @brief Determines whether AScrollArea can be scrolled with mouse wheel or can be scrolled with touch only.
      */
     bool mIsWheelScrollable = true;
 };
-

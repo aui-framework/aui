@@ -59,10 +59,16 @@ public:
 
     int getMinimumHeight() override;
 
+    /**
+     * @see [LayoutSpacing](ass::LayoutSpacing)
+     */
     void setSpacing(int spacing) override;
 
+    /**
+     * @see [LayoutSpacing](ass::LayoutSpacing)
+     */
     [[nodiscard]]
-    int getSpacing() const { return mSpacing; }
+    int getSpacing() const override { return mSpacing; }
 
     ALayoutDirection getLayoutDirection() override;
 };

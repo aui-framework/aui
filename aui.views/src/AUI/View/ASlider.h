@@ -77,7 +77,7 @@ struct API_AUI_VIEWS Slider {
      * implementation expects the consumer to update the `value`
      * contract inside this slot.
      */
-    contract::Slot<aui::float_within_0_1> onValueChanged;
+    contract::Slot<aui::float_within_0_1> onValueChange;
 
     /**
      * @brief View representing the slider track.

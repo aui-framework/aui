@@ -111,7 +111,7 @@ public:
      * @details
      * !!! failure "Deprecated"
      *
-     *     Left for compatibility.
+     *     Left for compatibility with [retained UI](retained_immediate_ui.md).
      *
      * This setter would override any of existing content within button.
      */
@@ -125,7 +125,7 @@ public:
      *
      * !!! failure "Deprecated"
      *
-     *     Left for compatibility.
+     *     Left for compatibility with [retained UI](retained_immediate_ui.md).
      *
      * This setter would override any of existing content within button.
      */

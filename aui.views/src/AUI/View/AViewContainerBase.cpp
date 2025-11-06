@@ -18,6 +18,7 @@
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/AMetric.h"
 #include "AUI/Logging/ALogger.h"
+#include "AUI/Util/Breakpoint.h"
 #include "glm/gtc/quaternion.hpp"
 #include <AUI/Traits/iterators.h>
 
@@ -343,6 +344,9 @@ void AViewContainerBase::onMouseLeave() {
 }
 
 int AViewContainerBase::getContentMinimumWidth() {
+    if (getAssNames().contains("DevtoolsTest")) {
+        AUI_BREAKPOINT();
+    }
     if (mLayout) {
         return (glm::max)(mLayout->getMinimumWidth(), AView::getContentMinimumWidth());
     }

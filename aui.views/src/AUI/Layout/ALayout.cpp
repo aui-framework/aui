@@ -13,4 +13,10 @@
 
 void ALayout::setSpacing(int spacing) {}
 
+int ALayout::getSpacing() const {
+    return 0;
+}
+
 ALayoutDirection ALayout::getLayoutDirection() { return ALayoutDirection::NONE; }
+
+

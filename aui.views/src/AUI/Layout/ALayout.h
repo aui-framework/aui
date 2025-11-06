@@ -389,7 +389,16 @@ public:
 
     /**
      * @brief Layout spacing.
+     * @see [LayoutSpacing](ass::LayoutSpacing)
      * @param spacing spacing in px.
      */
     virtual void setSpacing(int spacing);
+
+    /**
+     * @brief Layout spacing .
+     * @see [LayoutSpacing](ass::LayoutSpacing)
+     * @return spacing spacing in px.
+     *
+     */
+    virtual int getSpacing() const;
 };
