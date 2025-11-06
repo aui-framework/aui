@@ -74,7 +74,7 @@ _<AView> myLazyList(_<State> state) {
 
 AUI_ENTRY {
     auto window = _new<AWindow>("Infinite Lazy List", 200_dp, 300_dp);
-    window->setContents(Stacked { AScrollArea::Builder().withContents(myLazyList(_new<State>())) });
+    window->setContents(Stacked { ScrollArea { .content = myLazyList(_new<State>()) } });
     window->show();
 
     return 0;

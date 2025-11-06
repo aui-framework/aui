@@ -27,7 +27,7 @@ using namespace ass;
 
 static auto headerWithContents(_<AView> content) {
     auto result = Stacked {
-        AScrollArea::Builder().withContents(content).build() AUI_WITH_STYLE {
+        ScrollArea { .content = content } AUI_WITH_STYLE {
               Expanding(),
               Padding { 80_dp, 0, 0 },
             } AUI_LET { it->setExtraStylesheet(

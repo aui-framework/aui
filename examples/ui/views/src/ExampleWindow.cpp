@@ -204,8 +204,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
 
     addView(tabView = _new<ATabView>() AUI_LET {
         it->addTab(
-            AScrollArea::Builder().withContents(std::conditional_t<
-                                                aui::platform::current::is_mobile(), Vertical, Horizontal> {
+            ScrollArea { .content = std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {
               Vertical {
                 // buttons
                 GroupBox {
@@ -466,7 +465,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       Vertical {
                             Slider {
                               .value = AUI_REACT(*progressBarState),
-                              .onValueChanged = [=](aui::float_within_0_1 v) { *progressBarState = v; },
+                              .onValueChange = [=](aui::float_within_0_1 v) { *progressBarState = v; },
                             },
                       },
                     },
@@ -495,8 +494,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<ANumberPicker>(),
                     _new<ADoubleNumberPicker>(),
                     Label { "Text area" },
-                    AScrollArea::Builder()
-                            .withContents(_new<ATextArea>(
+                    ScrollArea {
+                      .content = _new<ATextArea>(
                                 "AUI Framework - Declarative UI toolkit for modern C++20\n"
                                 "Copyright (C) 2020-2025 Alex2772 and Contributors\n"
                                 "\n"
@@ -504,49 +503,51 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                 "\n"
                                 "This Source Code Form is subject to the terms of the Mozilla "
                                 "Public License, v. 2.0. If a copy of the MPL was not distributed with this "
-                                "file, You can obtain one at http://mozilla.org/MPL/2.0/."))
-                            .build()
-                        << ".input-field" AUI_LET { it->setExpanding(); },
+                                "file, You can obtain one at http://mozilla.org/MPL/2.0/.")
+                      } << ".input-field" AUI_LET { it->setExpanding(); },
                   } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
                 } AUI_WITH_STYLE { Expanding {} },
               } AUI_WITH_STYLE { LayoutSpacing { 4_dp } }
-            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } }),
-            "Common");
+            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } }
+            }, "Common");
 
 #if !AUI_PLATFORM_EMSCRIPTEN
         mWavAudio = IAudioPlayer::fromUrl(":sound/sound1.wav");
         mOggAudio = IAudioPlayer::fromUrl(":sound/sound1.ogg");
 
         it->addTab(
-            AScrollArea::Builder().withContents(std::conditional_t<
-                                                aui::platform::current::is_mobile(), Vertical, Horizontal> {
-              Horizontal {
-                Vertical {
-                  _new<ALabel>("Play music using AUI!"),
-                  _new<AButton>("Play .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::play),
-                  _new<AButton>("Stop .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::stop),
-                  _new<AButton>("Pause .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::pause),
-                } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-                Vertical {
-                  _new<ALabel>("Play music using AUI!"),
-                  _new<AButton>("Play .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::play),
-                  _new<AButton>("Stop .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::stop),
-                  _new<AButton>("Pause .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::pause),
-                } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-                Vertical {
-                  _new<AButton>("Button produces sound when clicked") AUI_WITH_STYLE {
-                        ass::on_state::Activated {
-                          ass::Sound { IAudioPlayer::fromUrl(":sound/click.ogg") },
-                        },
-                      },
-                } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-              } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-            }),
+            ScrollArea {
+              .content =
+                  std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> {
+                    Horizontal {
+                      Vertical {
+                        _new<ALabel>("Play music using AUI!"),
+                        _new<AButton>("Play .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::play),
+                        _new<AButton>("Stop .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::stop),
+                        _new<AButton>("Pause .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::pause),
+                      } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                      Vertical {
+                        _new<ALabel>("Play music using AUI!"),
+                        _new<AButton>("Play .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::play),
+                        _new<AButton>("Stop .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::stop),
+                        _new<AButton>("Pause .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::pause),
+                      } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                      Vertical {
+                        _new<AButton>("Button produces sound when clicked") AUI_WITH_STYLE {
+                              ass::on_state::Activated {
+                                ass::Sound { IAudioPlayer::fromUrl(":sound/click.ogg") },
+                              },
+                            },
+                      } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                    } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                  },
+            },
             "Sounds");
 #endif
 
         it->addTab(
-            AScrollArea::Builder().withContents(
+            ScrollArea {
+                .content =
                 std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> { Horizontal {
                   Vertical {
                     _new<ALabel>("Gif support!"),
@@ -554,8 +555,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   },
                   Vertical {
                     _new<ALabel>("Animated WebP support!"),
-                    _new<ADrawableView>(AUrl(":img/anim.webp")) AUI_WITH_STYLE { FixedSize { 320_px, 240_px } } } } }),
-            "Images");
+                    _new<ADrawableView>(AUrl(":img/anim.webp")) AUI_WITH_STYLE { FixedSize { 320_px, 240_px } } } } }
+            }, "Images");
 
         it->addTab(
             Vertical {
@@ -594,8 +595,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
             "Splitters");
 
         it->addTab(
-            AScrollArea::Builder().withContents(
-                Vertical {
+            ScrollArea {
+                .content = Vertical {
                   ASplitter::Horizontal().withItems({
                     Vertical::Expanding {
                       _new<ALabel>("Default"),
@@ -632,7 +633,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       }
                       return Horizontal { v1, v2 };
                   }(),
-                } AUI_LET { it->setExpanding(); }),
+                } AUI_LET { it->setExpanding(); },
+            },
             "Text");
 
         it->addTab(
