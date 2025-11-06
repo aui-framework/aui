@@ -484,8 +484,28 @@ void PlatformAbstractionX11::windowSetSize(AWindow& window, glm::ivec2 size) {
 void PlatformAbstractionX11::windowSetGeometry(AWindow& window, int x, int y, int width, int height) {
     if (!nativeHandle(window))
         return;
-    XMoveWindow(PlatformAbstractionX11::ourDisplay, nativeHandle(window), x, y);
-    XResizeWindow(PlatformAbstractionX11::ourDisplay, nativeHandle(window), width, height);
+    WindowStyle style = window.windowStyle();
+    bool isPopupMenu = (style == WindowStyle::DEFAULT) ||
+                 ((style & WindowStyle::SYS) == WindowStyle::SYS);
+
+    XWindowChanges changes;
+    changes.x = x;
+    changes.y = y;
+    changes.width = width;
+    changes.height = height;
+    changes.stack_mode = Above;
+
+    if (isPopupMenu) {
+        XSetWindowAttributes attrs;
+        attrs.override_redirect = True;
+        XChangeWindowAttributes(PlatformAbstractionX11::ourDisplay, nativeHandle(window),
+                                CWOverrideRedirect, &attrs);
+    }
+
+    XConfigureWindow(PlatformAbstractionX11::ourDisplay, nativeHandle(window),
+                     CWX | CWY | CWWidth | CWHeight | CWStackMode, &changes);
+
+    XSync(PlatformAbstractionX11::ourDisplay, False);
 }
 
 void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image) {}
