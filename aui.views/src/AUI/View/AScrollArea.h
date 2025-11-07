@@ -204,12 +204,12 @@ struct API_AUI_VIEWS ScrollArea {
  * Scroll area can't rely on its contents to define its size. Therefore, AScrollArea requires [ass::Expanding], or
  * [ass::FixedSize], or [ass::MaxSize] to be set.
  *
- * [ass::FixedSize] and [ass::Expanding] stylesheet properties would work as expected. If neither of them is set, AScrollArea would
- * occupy size by minimum size of it's contents, as a AViewContainer would do. In such case, you may restrict maximum
- * size of AScrollArea with [ass::MaxSize] property. AScrollArea will not exceed [ass::MaxSize], but also become actual scroll area,
- * involving displaying scroll bars and handling scroll events. This behavior is similar to Text.
+ * [ass::FixedSize] and [ass::Expanding] stylesheet properties would work as expected. If neither of them is set,
+ * scroll area would occupy size by minimum size of its contents, as a AViewContainer would do. In such case, you may
+ * restrict maximum size of AScrollArea with [ass::MaxSize] property. Scroll area's frame will not exceed
+ * [ass::MaxSize]. Once content size overflows [ass::MaxSize], the scroll area becomes scrollable.
  *
- * Expanding is enabled by default. It can be disabled with `ass::Expanding(0)` property.
+ * Expanding is enabled by default. It can be disabled with `ass::Expanding{0}` property for both axes.
  *
  * Behavior of vertical and horizontal axes are independent from each other. This behavior is similar to Text.
  *
