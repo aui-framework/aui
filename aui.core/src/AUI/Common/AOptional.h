@@ -66,7 +66,7 @@ public:
         operator=(std::move(rhs));
     }
 
-    ~AOptional() {
+    constexpr ~AOptional() {
         if (mInitialized) ptrUnsafe()->~T();
     }
 
@@ -154,48 +154,48 @@ public:
     }
 
     [[nodiscard]]
-    T& value() {
+    constexpr T& value() {
         AUI_ASSERTX(mInitialized, "optional is empty");
         return reinterpret_cast<T&>(mStorage);
     }
 
     [[nodiscard]]
-    const T& value() const {
+    constexpr const T& value() const {
         AUI_ASSERTX(mInitialized, "optional is empty");
         return reinterpret_cast<const T&>(mStorage);
     }
 
     [[nodiscard]]
-    T* ptr() {
+    constexpr T* ptr() {
         return &value();
     }
 
     [[nodiscard]]
-    const T* ptr() const {
+    constexpr const T* ptr() const {
         return &value();
     }
 
     [[nodiscard]]
-    T* operator->() {
+    constexpr T* operator->() {
         return ptr();
     }
 
     [[nodiscard]]
-    const T* operator->() const {
+    constexpr const T* operator->() const {
         return ptr();
     }
 
     [[nodiscard]]
-    T& operator*() {
+    constexpr T& operator*() {
         return value();
     }
 
     [[nodiscard]]
-    const T& operator*() const {
+    constexpr const T& operator*() const {
         return value();
     }
 
-    void reset() noexcept {
+    constexpr void reset() noexcept {
         if (mInitialized) {
             ptrUnsafe()->~T();
             mInitialized = false;
@@ -205,7 +205,7 @@ public:
     /**
      * @brief value or exception
      */
-    T& valueOrException(const char* message = "empty optional") {
+    constexpr T& valueOrException(const char* message = "empty optional") {
         if (mInitialized) {
             return value();
         }
@@ -216,7 +216,7 @@ public:
     /**
      * @brief value or exception
      */
-    const T& valueOrException(const char* message = "empty optional") const {
+    constexpr const T& valueOrException(const char* message = "empty optional") const {
         if (mInitialized) {
             return value();
         }
@@ -231,7 +231,7 @@ public:
      * @return
      */
     template<typename F>
-    T valueOr(F&& alternative) const {
+    constexpr T valueOr(F&& alternative) const {
         if (mInitialized) {
             return value();
         }
@@ -255,18 +255,18 @@ public:
 
     template<typename U>
     [[nodiscard]]
-    bool operator==(const AOptional<U>& rhs) const noexcept {
+    constexpr bool operator==(const AOptional<U>& rhs) const noexcept {
         return (mInitialized == rhs.mInitialized) && (!mInitialized || value() == rhs.value());
     }
 
     template<typename U>
     [[nodiscard]]
-    bool operator==(const U& rhs) const noexcept {
+    constexpr bool operator==(const U& rhs) const noexcept {
         return mInitialized && value() == rhs;
     }
 
     [[nodiscard]]
-    bool operator==(const std::nullopt_t& rhs) const noexcept {
+    constexpr bool operator==(const std::nullopt_t& rhs) const noexcept {
         return !mInitialized;
     }
 
@@ -277,7 +277,7 @@ public:
      */
     template<aui::invocable<const T&> Mapper>
     [[nodiscard]]
-    auto map(Mapper&& mapper) const -> AOptional<decltype(std::invoke(std::forward<Mapper>(mapper), value()))> {
+    constexpr auto map(Mapper&& mapper) const -> AOptional<decltype(std::invoke(std::forward<Mapper>(mapper), value()))> {
         if (hasValue()) {
             return std::invoke(std::forward<Mapper>(mapper), value());
         }
@@ -289,12 +289,12 @@ private:
     bool mInitialized = false;
 
     [[nodiscard]]
-    T* ptrUnsafe() noexcept {
+    constexpr T* ptrUnsafe() noexcept {
         return &valueUnsafe();
     }
 
     [[nodiscard]]
-    T& valueUnsafe() noexcept {
+    constexpr T& valueUnsafe() noexcept {
         return reinterpret_cast<T&>(mStorage);
     }
 

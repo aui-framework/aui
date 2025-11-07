@@ -343,11 +343,11 @@ void AString::push_back(AChar c) noexcept {
 
 void AString::insert(size_type pos, AChar c) {
     auto utf8c = c.toUtf8();
-    bytes().insert(bytes().begin() + aui::utf8::detail::findUnicodePos(bytes(), pos).value_or(0), utf8c.begin(), utf8c.end());
+    bytes().insert(bytes().begin() + aui::utf8::detail::findUnicodePos(bytes(), pos).valueOr(0), utf8c.begin(), utf8c.end());
 }
 
 void AString::insert(size_type pos, AStringView str) {
-    bytes().insert(bytes().begin() + aui::utf8::detail::findUnicodePos(bytes(), pos).value_or(0), str.begin(), str.end());
+    bytes().insert(bytes().begin() + aui::utf8::detail::findUnicodePos(bytes(), pos).valueOr(0), str.begin(), str.end());
 }
 
 AByteBuffer AString::encode(AStringEncoding encoding) const {

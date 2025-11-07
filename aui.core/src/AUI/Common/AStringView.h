@@ -94,14 +94,14 @@ public:
     constexpr AStringView(std::string_view str) noexcept : super(str) {}
     constexpr explicit AStringView(const std::string& str) noexcept : super(str) {}
 
-    bool startsWith(AStringView prefix) const noexcept {
+    constexpr bool startsWith(AStringView prefix) const noexcept {
         if (prefix.size() > size()) {
             return false;
         }
         return substr(0, prefix.size()) == prefix; // NOLINT(*-use-starts-ends-with)
     }
 
-    bool endsWith(AStringView suffix) const noexcept {
+    constexpr bool endsWith(AStringView suffix) const noexcept {
         if (suffix.size() > size()) {
             return false;
         }
@@ -109,19 +109,22 @@ public:
     }
 
     [[nodiscard]]
-    bool empty() const noexcept {
+    constexpr bool empty() const noexcept {
         return super::empty();
     }
 
-    bool contains(char c) const noexcept;
+    constexpr bool contains(char c) const noexcept {
+        return bytes().find(c) != std::string_view::npos;
+    }
+
     bool contains(AChar c) const noexcept;
     bool contains(AStringView str) const noexcept;
 
-    bool operator==(AStringView other) const noexcept {
+    constexpr bool operator==(AStringView other) const noexcept {
         return bytes() == other.bytes();
     }
 
-    bool operator!=(AStringView other) const noexcept {
+    constexpr bool operator!=(AStringView other) const noexcept {
         return bytes() != other.bytes();
     }
 
@@ -164,7 +167,7 @@ public:
      * @return The character at the specified position.
      */
     [[nodiscard]]
-    AChar operator[](size_type i) const {
+    constexpr AChar operator[](size_type i) const {
         if (empty()) {
             return AChar();
         }
@@ -196,13 +199,35 @@ public:
      */
     std::u32string toUtf32() const;
 
-    std::string_view bytes() const noexcept {
+    constexpr std::string_view bytes() const noexcept {
         return *this;
     }
 
-    AStringView trimLeft(AChar symbol = ' ') const;
-    AStringView trimRight(AChar symbol = ' ') const;
-    AStringView trim(AChar symbol = ' ') const;
+    constexpr AStringView trimLeft(AChar symbol = ' ') const {
+        for (auto i = begin(); i != end(); ++i)
+        {
+            if (*i != symbol)
+            {
+                return AStringView(i.data(), end().data() - i.data());
+            }
+        }
+        return {};
+    }
+
+    constexpr AStringView trimRight(AChar symbol = ' ') const {
+        for (auto i = rbegin(); i != rend(); ++i)
+        {
+            if (*i != AChar(symbol))
+            {
+                return std::string_view(data(), i.base().data() - data());
+            }
+        }
+        return {};
+    }
+
+    constexpr AStringView trim(AChar symbol = ' ') const {
+        return trimLeft(symbol).trimRight(symbol);
+    }
 
     AString uppercase() const;
 
@@ -212,46 +237,46 @@ public:
 
     AStringVector split(AChar c) const;
 
-    iterator begin() const noexcept {
+    constexpr iterator begin() const noexcept {
         return AUtf8ConstIterator(data(), data(), data() + size(), 0);
     }
 
-    iterator end() const noexcept {
+    constexpr iterator end() const noexcept {
         return AUtf8ConstIterator(data(), data(), data() + size(), size());
     }
 
-    const_iterator cbegin() const noexcept {
+    constexpr const_iterator cbegin() const noexcept {
         return begin();
     }
 
-    const_iterator cend() const noexcept {
+    constexpr const_iterator cend() const noexcept {
         return end();
     }
 
-    reverse_iterator rbegin() const noexcept {
+    constexpr reverse_iterator rbegin() const noexcept {
         return AUtf8ConstReverseIterator(end());
     }
 
-    reverse_iterator rend() const noexcept {
+    constexpr reverse_iterator rend() const noexcept {
         return AUtf8ConstReverseIterator(begin());
     }
 
-    const_reverse_iterator crbegin() const noexcept {
+    constexpr const_reverse_iterator crbegin() const noexcept {
         return rbegin();
     }
 
-    const_reverse_iterator crend() const noexcept {
+    constexpr const_reverse_iterator crend() const noexcept {
         return rend();
     }
 
-    AChar first() const {
+    constexpr AChar first() const {
         if (empty()) {
             return AChar();
         }
         return *begin();
     }
 
-    AChar last() const {
+    constexpr AChar last() const {
         if (empty()) {
             return AChar();
         }
