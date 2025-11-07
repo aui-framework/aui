@@ -192,3 +192,25 @@ TEST_F(UIStyleTest, Merge) {
     By::type<View>().check(pixelColorAt({0.f, 0.5f}, AColor::BLACK)); // outside of cross
     By::type<View>().check(pixelColorAt({0.5f, 0.5f}, AColor::RED)); // within cross, overlayed by red
 }
+
+TEST_F(UIStyleTest, MultipleWithStyle) {
+    testing::InSequence s;
+    using namespace ass;
+
+
+    auto makeContainer = [](_<AView> view) {
+        return Centered {
+            std::move(view),
+        } AUI_OVERRIDE_STYLE {
+            BackgroundSolid { AColor::GREEN },
+        };
+    };
+
+    mWindow->setContents(Vertical {
+        makeContainer(Label {" "}) AUI_OVERRIDE_STYLE { Expanding() },
+    } AUI_OVERRIDE_STYLE {
+        BackgroundSolid { AColor::RED },
+    });
+
+    By::type<ALabel>().check(pixelColorAt({0.5f, 0.5f}, AColor::GREEN));
+}
