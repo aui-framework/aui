@@ -105,6 +105,17 @@ public:
         mImpl = Devastated {};
     }
 
+    [[nodiscard]]
+    const T& value() const {
+        return std::visit(aui::lambda_overloaded {
+            [](const Devastated&) -> const T& {
+                throw AException("an attempt to get value from contract::In after bindTo");
+            },
+            [](const Constant& c) -> const T& { return c.value; },
+            [](const ReactiveExpression& c) -> const T& { return *c.value; },
+        }, mImpl);
+    }
+
 private:
     std::variant<Devastated, Constant, ReactiveExpression> mImpl;
 };

@@ -10,6 +10,8 @@
  */
 
 /// [AListView_example]
+#include "AUI/View/AForEachUI.h"
+
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -22,13 +24,56 @@ static AVector<AString> OPTIONS = {
     "New York", "London", "Tokyo", "Paris", "Berlin", "Moscow", "Sydney", "Dubai", "Singapore", "Toronto",
 };
 
+namespace declarative {
+
+namespace ListViewDefaults {
+static _<AView> defaultBody(_<AView> content) {
+    return Centered {
+        std::move(content),
+    } AUI_WITH_STYLE {
+        BackgroundSolid { 0xffffff_rgb },
+        Border { 1_dp, 0x828790_rgb },
+        Padding { 2_dp },
+        MinSize { 50_dp },
+    };
+}
+
+static _<AView> defaultScrollArea(_<AView> content) {
+    return ScrollArea { .content = std::move(content) };
+}
+}
+
+template<typename T>
+struct ListView {
+    contract::In<AVector<T>> items;
+    contract::In<std::size_t> selectionId;
+    contract::Slot<std::size_t> onSelectionChange;
+
+    std::function<_<AView>(_<AView>)> body = ListViewDefaults::defaultBody;
+    std::function<_<AView>(_<AView>)> scrollArea = ListViewDefaults::defaultScrollArea;
+
+    _<AView> operator()() {
+        struct State {
+            contract::In<AVector<T>> items;
+        };
+        auto state = aui::ptr::manage_shared(new State {
+            .items = std::move(items),
+        });
+
+        return body(scrollArea(AUI_DECLARATIVE_FOR(i, state->items.value(), AVerticalLayout) {
+            return Label { "{}"_format(i) };
+        }));
+    }
+};
+}
+
 struct State {
     AProperty<std::size_t> selectedOption = 0;
 };
 
-_<AView> myDropdown(_<State> state) {
+_<AView> myListView(_<State> state) {
     return Vertical {
-        ListView {
+        ListView<AString> {
             .items = OPTIONS,
             .selectionId = AUI_REACT(state->selectedOption),
             .onSelectionChange = [state](std::size_t id) { state->selectedOption = id; },
@@ -37,11 +82,11 @@ _<AView> myDropdown(_<State> state) {
 }
 
 AUI_ENTRY {
-    auto window = _new<AWindow>("Dropdown list", 300_dp, 100_dp);
+    auto window = _new<AWindow>("List view", 300_dp, 100_dp);
     auto state = _new<State>();
     window->setContents(
         Vertical {
-            myDropdown(state),
+            myListView(state),
             Label { AUI_REACT("Selected option: {}"_format(OPTIONS.at(state->selectedOption))) },
         }
     );
