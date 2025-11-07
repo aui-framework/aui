@@ -28,8 +28,8 @@ public:
 
         setContents(
             Vertical {
-                mBigContent = _new<ALabel>("Content") AUI_WITH_STYLE { ass::MinSize{ {}, 300_dp }, Margin { 8_dp } },
-                mBottomLabel = _new<ALabel>("Bottom") AUI_WITH_STYLE { Margin { 8_dp } },
+                mBigContent = _new<ALabel>("Content") AUI_OVERRIDE_STYLE { ass::MinSize{ {}, 300_dp }, Margin { 8_dp } },
+                mBottomLabel = _new<ALabel>("Bottom") AUI_OVERRIDE_STYLE { Margin { 8_dp } },
             }
         );
         *this << ".container";
@@ -51,7 +51,7 @@ protected:
     public:
         TestWindow(): AWindow("Test window", 200_dp, 100_dp) {
             setContents(Vertical {
-                    mScrollArea = AScrollArea::Builder().withContents(mMockedContainer = _new<MockedViewContainer>()).withExpanding().build() AUI_WITH_STYLE {
+                    mScrollArea = AScrollArea::Builder().withContents(mMockedContainer = _new<MockedViewContainer>()).withExpanding().build() AUI_OVERRIDE_STYLE {
                         ass::MinSize(100_dp),
                     }
             });

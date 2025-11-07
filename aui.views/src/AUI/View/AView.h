@@ -856,7 +856,7 @@ public:
     }
 
     /**
-     * @brief Helper function for kAUI.h:AUI_WITH_STYLE
+     * @brief Helper function for kAUI.h:AUI_OVERRIDE_STYLE
      */
     void operator&(ass::PropertyListRecursive rule) {
         setCustomStyle(std::move(rule));

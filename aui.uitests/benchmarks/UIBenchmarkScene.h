@@ -88,13 +88,13 @@ static _<AView> uiBenchmarkScene() {
             Label { "Drag area" },
 
             _new<ADragArea>() AUI_LET {
-                    it AUI_WITH_STYLE {
+                    it AUI_OVERRIDE_STYLE {
                         MinSize { 100_dp },
                         Border { 1_px, 0x0_rgb },
                     };
                     it->addView(ADragArea::convertToDraggable(_new<AButton>("Drag me!"), false));
                 },
-          } AUI_WITH_STYLE { Expanding {} },
+          } AUI_OVERRIDE_STYLE { Expanding {} },
         },
         Vertical {
           GroupBox {

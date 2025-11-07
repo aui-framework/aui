@@ -71,6 +71,6 @@ void MyWindow::inflate() {
             .onCheckedChange = [this](bool v) { mChecked = v; },
             .content = Label { "Try check me" },
           },
-        } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
+        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
 }
 // [AHotCodeReload_example]

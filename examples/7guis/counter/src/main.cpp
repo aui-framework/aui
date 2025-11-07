@@ -25,7 +25,7 @@ public:
           Horizontal {
             Label { AUI_REACT("Count: {}"_format(mCounter)) },
             Button { Label { "Count" }, [this] { mCounter += 1; } },
-          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
         });
     }
 

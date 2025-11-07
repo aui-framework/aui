@@ -113,25 +113,25 @@
  * });
  * ```
  *
- * ## Using AUI_WITH_STYLE
+ * ## Using AUI_OVERRIDE_STYLE
  * The code below draws "Hello" label with red background and centered alignment, and "World" label with blue
- * background, using AUI_WITH_STYLE:
+ * background, using AUI_OVERRIDE_STYLE:
  *
  * ```cpp
  * using namespace ass;
  * setContents(Centered{
- *   Label { "Hello" } AUI_WITH_STYLE {
+ *   Label { "Hello" } AUI_OVERRIDE_STYLE {
  *     BackgroundSolid { AColor::RED },
  *     TextAlign::CENTER,
  *   },
- *   Label { "World" } AUI_WITH_STYLE {
+ *   Label { "World" } AUI_OVERRIDE_STYLE {
  *     BackgroundSolid { 0x0000ff_rgb },
  *   },
  * })
  * ```
  *
  * ## Using setCustomStyle
- * In case AUI_WITH_STYLE is not applicable, you may use setCustomStyle instead.
+ * In case AUI_OVERRIDE_STYLE is not applicable, you may use setCustomStyle instead.
  *
  * ```cpp
  * using namespace ass;

@@ -51,7 +51,7 @@ protected:
 TEST_F(UIOpenGLRendererTest, CheckRenderer) {
     EXPECT_TRUE(dynamic_cast<OpenGLRenderer*>(&AWindow::current()->getRenderingContext()->renderer()));
     mWindow->setContents(Centered {
-      _new<AView>() << ".test" AUI_WITH_STYLE {
+      _new<AView>() << ".test" AUI_OVERRIDE_STYLE {
         BackgroundSolid { AColor::RED },
         FixedSize { 32_dp },
       },

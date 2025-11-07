@@ -37,7 +37,7 @@ public:
                         it->setCustomStyle({ Expanding { 1, 0 } });
                     },
               },
-            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
             Label { AUI_REACT("{:.1f}s"_format(duration_cast<milliseconds>(*mElapsedTime).count() / 1000.f)) },
             Horizontal {
               Label { "Duration:" },
@@ -48,12 +48,12 @@ public:
                         mDuration =
                             high_resolution_clock::duration(long(float(MAX_DURATION.count()) * float(newValue)));
                     },
-              } AUI_WITH_STYLE { Expanding { 1, 0 } },
-            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-            _new<AButton>("Reset Timer") AUI_WITH_STYLE {
+              } AUI_OVERRIDE_STYLE { Expanding { 1, 0 } },
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+            _new<AButton>("Reset Timer") AUI_OVERRIDE_STYLE {
                   Expanding { 1, 0 },
                 } AUI_LET { connect(it->clicked, me::reset); },
-          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
         });
 
         connect(mTimer->fired, me::update);

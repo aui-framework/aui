@@ -123,11 +123,11 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(
       },
       ASplitter::Horizontal()
           .withItems({
-            mViewHierarchyTree = _new<ATreeView>() AUI_WITH_STYLE { MinSize { 300_dp }, Expanding {} },
+            mViewHierarchyTree = _new<ATreeView>() AUI_OVERRIDE_STYLE { MinSize { 300_dp }, Expanding {} },
             Centered { mViewPropertiesView = _new<ViewPropertiesView>(nullptr) },
           })
-          .withExpanding().build() AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-    } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
+          .withExpanding().build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
 
     auto model = _new<ViewHierarchyTreeModel>(aui::ptr::fake_shared(targetWindow));
     mViewHierarchyTree->setModel(model);

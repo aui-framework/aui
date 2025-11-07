@@ -11,7 +11,7 @@ MainWindow::MainWindow(): AWindow("Project template app", 300_dp, 200_dp) {
     setContents(
         Centered{
             Vertical{
-                Centered { Icon { ":img/logo.svg" } with_style { FixedSize(64_dp) } },
+                Centered { Icon { ":img/logo.svg" } AUI_OVERRIDE_STYLE { FixedSize(64_dp) } },
                 Centered { Label { "Hello world from AUI!" } },
                 _new<AButton>("Visit GitHub repo").connect(&AView::clicked, this, [] {
                     APlatform::openUrl("https://github.com/aui-framework/aui");

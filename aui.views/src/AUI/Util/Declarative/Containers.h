@@ -232,7 +232,7 @@ private:
         return factory() op std::forward<Rhs>(rhs);                                       \
     }
 
-AUI_DETAIL_BINARY_OP(&) // forwards AUI_WITH_STYLE
+AUI_DETAIL_BINARY_OP(&) // forwards AUI_OVERRIDE_STYLE
 AUI_DETAIL_BINARY_OP(^) // forwards let
 AUI_DETAIL_BINARY_OP(<<) // forwards stylesheet name assignment
 
