@@ -87,15 +87,6 @@ AStringView::size_type AStringView::length() const noexcept {
     return simdutf::count_utf8(super::data(), super::size());
 }
 
-AStringView
-AStringView::substr(AStringView::size_type pos, AStringView::size_type count) const noexcept {
-    auto it = begin();
-    for (; it != end() && pos > 0; ++it, --pos);
-    auto begin = it;
-    for (; it != end() && count > 0; ++it, --count);
-    return AStringView(begin.data(), it.data() - begin.data());
-}
-
 AString AStringView::uppercase() const {
     std::string buf{bytes()};
     {

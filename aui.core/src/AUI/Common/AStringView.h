@@ -151,7 +151,13 @@ public:
      * operates on top of UTF-8 code points. `pos` and `count` are interpreted as code points positions, not as byte.
      */
     [[nodiscard]]
-    AStringView substr(size_type pos = 0, size_type count = npos) const noexcept;
+    constexpr AStringView substr(size_type pos = 0, size_type count = npos) const noexcept {
+        auto it = begin();
+        for (; it != end() && pos > 0; ++it, --pos);
+        auto begin = it;
+        for (; it != end() && count > 0; ++it, --count);
+        return AStringView(begin.data(), it.data() - begin.data());
+    }
 
     /**
      * @brief Returns the number of bytes in the UTF-8 encoded string
