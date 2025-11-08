@@ -157,14 +157,6 @@ static _<AView> radioButtonsDemo() {
     };
 }
 
-namespace declarative {
-struct Xyilo {
-    _<AView> operator()() {
-        return Label {"Xyilo" };
-    }
-};
-}
-
 ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     allowDragNDrop();
 
@@ -216,7 +208,6 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
             AScrollArea::Builder().withContents(std::conditional_t<
                                                 aui::platform::current::is_mobile(), Vertical, Horizontal> {
               Vertical {
-                Xyilo{},
                 // buttons
                 GroupBox {
                   Label { "Buttons" },
