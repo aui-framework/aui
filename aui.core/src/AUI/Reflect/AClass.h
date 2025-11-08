@@ -66,24 +66,10 @@ public:
         auto s = name();
         auto p = s.rfind("::");
         if (p != AString::NPOS) {
-            return {s.bytes().begin() + p + 2, s.bytes().end()};
+            return {s.bytes().begin() + p + 2};
         }
         return s;
-    }
-
-    static AString toString(const T& t) {
-        return "<object of type " + name() + ">";
     }
 };
 
 static_assert(AClass<AString>::name() == "AString");
-
-template<>
-inline AString AClass<AString>::toString(const AString& t) {
-    return "\"" + t + "\"";
-}
-
-template<>
-inline AString AClass<int>::toString(const int& t) {
-    return AString::number(t);
-}
