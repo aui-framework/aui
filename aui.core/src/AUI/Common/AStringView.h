@@ -217,7 +217,7 @@ public:
     constexpr AStringView trimRight(AChar symbol = ' ') const {
         for (auto i = rbegin(); i != rend(); ++i)
         {
-            if (*i != AChar(symbol))
+            if (*i != symbol)
             {
                 return std::string_view(data(), i.base().data() - data());
             }
