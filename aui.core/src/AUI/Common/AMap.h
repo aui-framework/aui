@@ -124,13 +124,13 @@ public:
 	ValueType& at(const KeyType& key) {
 	    auto it = Parent::find(key);
 	    if (it == Parent::end())
-	        throw AException("no such element: " + AClass<KeyType>::toString(key));
+	        throw AException("no such element: {}"_format(key));
 	    return it->second;
 	}
 	const ValueType& at(const KeyType& key) const {
 	    auto it = Parent::find(key);
 	    if (it == Parent::end())
-	        throw AException("no such element: " + AClass<KeyType>::toString(key));
+	        throw AException("no such element: {}"_format(key));
 	    return it->second;
 	}
 

@@ -113,6 +113,12 @@ using _unique = std::unique_ptr<T, Deleter>;
 
 namespace aui {
 
+    /**
+     * @brief Allows to specialize an implicit conversion for `shared_ptr<T>` from `F`.
+     */
+    template <typename F>
+    struct implicit_shared_ptr_ctor;
+
     struct ptr {
         /**
          * @brief Creates unique_ptr from raw pointer and a deleter.
@@ -388,9 +394,10 @@ public:
      */
     _(const _weak<T>& v): std::shared_ptr<T>(v) {}
 
-    template <typename Factory>
-    requires aui::not_overloaded_lambda<Factory> && aui::factory<Factory, _<T>>
-    _(Factory&& factory): std::shared_ptr<T>(factory()) {}
+    template <typename F>
+    _(F&& f)
+        requires requires { aui::implicit_shared_ptr_ctor<F>{}; }
+      : std::shared_ptr<T>(aui::implicit_shared_ptr_ctor<F>{}(std::forward<F>(f))) {}
 
     _& operator=(const _& rhs) noexcept {
         std::shared_ptr<T>::operator=(rhs);

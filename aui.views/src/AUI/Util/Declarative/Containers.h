@@ -113,7 +113,7 @@ public:
                     auto asView = View(item);
                     mViews << std::move(asView);
                 } else if constexpr (isInvokable) {
-                    mViews << item();
+                    mViews << _(std::forward<Item>(item));
                 }
             },
             std::forward<Views>(views)...);
@@ -229,7 +229,8 @@ private:
 #define AUI_DETAIL_BINARY_OP(op)                                                          \
     template <typename Rhs>                                                               \
     auto operator op(aui::ui_building::LayoutItemViewFactory auto&& factory, Rhs&& rhs) { \
-        return factory() op std::forward<Rhs>(rhs);                                       \
+        using Result = std::decay_t<decltype(*factory())>;\
+        return _<Result>(factory) op std::forward<Rhs>(rhs); \
     }
 
 AUI_DETAIL_BINARY_OP(&) // forwards AUI_WITH_STYLE

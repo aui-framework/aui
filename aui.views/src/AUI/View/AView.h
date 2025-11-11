@@ -1278,3 +1278,14 @@ private:
 };
 
 API_AUI_VIEWS std::ostream& operator<<(std::ostream& os, const AView& view);
+
+template <typename Factory>
+requires aui::not_overloaded_lambda<Factory> && aui::factory<Factory, _<AView>>
+struct aui::implicit_shared_ptr_ctor<Factory> {
+    auto operator()(Factory&& factory) {
+        auto view = std::invoke(std::forward<Factory>(factory));
+        static constinit auto name = AClass<std::decay_t<Factory>>::name();
+        view->addAssName(name);
+        return view;
+    }
+};

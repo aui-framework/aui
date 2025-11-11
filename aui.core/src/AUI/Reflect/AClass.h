@@ -25,9 +25,9 @@ public:
     static_assert(!std::is_reference<T>::value, "====================> AClass: attempt to use AClass on a reference.");
 /// [ARROW_ERROR_MESSAGE_EXAMPLE]
 
-    static AString name() {
-#if AUI_COMPILER_MSVC
-        AString s = __FUNCSIG__;
+    static constexpr AStringView name() {
+#if AUI_COMPILER_MSVC || defined(__RESHARPER__)
+        AStringView s = __FUNCSIG__;
         auto openTag = s.find('<') + 1;
         auto closeTag = s.find('>');
         auto name = s.substr(openTag, closeTag - openTag);
@@ -35,53 +35,41 @@ public:
         if (name.endsWith(" &"))
             name = name.bytes().substr(0, name.bytes().size() - 2);
         return name;
-#elif AUI_COMPILER_CLANG
-        #if defined(__PRETTY_FUNCTION__) || defined(__GNUC__) || defined(__clang__)
-        AString s = __PRETTY_FUNCTION__;
+#elif AUI_COMPILER_CLANG || defined(_CLANGD)
+        #if defined(__PRETTY_FUNCTION__) || defined(__GNUC__) || defined(__clang__)  || defined(_CLANGD)
+        AStringView s = __PRETTY_FUNCTION__;
         #elif defined(__FUNCSIG__)
-        AString s = __FUNCSIG__;
+        AStringView s = __FUNCSIG__;
         #else
-        AString s = __FUNCTION__;
+        AStringView s = __FUNCTION__;
         #endif
         auto b = s.find("=") + 1;
         auto e = s.find("&", b);
         e = std::min(s.find("]", b), e);
-        auto result = AStringView(s.view().bytes().substr(b, e - b));
+        auto result = AStringView(s.bytes().substr(b, e - b));
         result = result.trim();
-        return AString(result);
+        return AStringView(result);
 #else
         #if defined(__PRETTY_FUNCTION__) || defined(__GNUC__) || defined(__clang__)
-            AString s = __PRETTY_FUNCTION__;
+            AStringView s = __PRETTY_FUNCTION__;
         #elif defined(__FUNCSIG__)
-            AString s = __FUNCSIG__;
+            AStringView s = __FUNCSIG__;
         #else
-            AString s = __FUNCTION__;
+            AStringView s = __FUNCTION__;
         #endif
         auto b = s.find("with T = ") + 9;
         return { s.bytes().begin() + b, s.bytes().end() - 1 };
 #endif
     }
 
-    static AString nameWithoutNamespace() {
+    static constexpr AStringView nameWithoutNamespace() {
         auto s = name();
         auto p = s.rfind("::");
         if (p != AString::NPOS) {
-            return {s.bytes().begin() + p + 2, s.bytes().end()};
+            return s.substr(p + 2);
         }
         return s;
     }
-
-    static AString toString(const T& t) {
-        return "<object of type " + name() + ">";
-    }
 };
 
-template<>
-inline AString AClass<AString>::toString(const AString& t) {
-    return "\"" + t + "\"";
-}
-
-template<>
-inline AString AClass<int>::toString(const int& t) {
-    return AString::number(t);
-}
+static_assert(AClass<AString>::name() == "AString");

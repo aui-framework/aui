@@ -19,10 +19,6 @@
 #include <AUI/Common/AByteBuffer.h>
 #include <simdutf.h>
 
-bool AStringView::contains(char c) const noexcept {
-    return contains(AChar(c));
-}
-
 bool AStringView::contains(AChar c) const noexcept {
     for (auto it = begin(); it != end(); ++it) {
         if (*it == c) {
@@ -89,15 +85,6 @@ std::u32string AStringView::toUtf32() const {
 
 AStringView::size_type AStringView::length() const noexcept {
     return simdutf::count_utf8(super::data(), super::size());
-}
-
-AStringView
-AStringView::substr(AStringView::size_type pos, AStringView::size_type count) const noexcept {
-    auto it = begin();
-    for (; it != end() && pos > 0; ++it, --pos);
-    auto begin = it;
-    for (; it != end() && count > 0; ++it, --count);
-    return AStringView(begin.data(), it.data() - begin.data());
 }
 
 AString AStringView::uppercase() const {
@@ -1056,32 +1043,6 @@ bool AStringView::toBool() const {
            (d[1] == 'r' || d[1] == 'R') &&
            (d[2] == 'u' || d[2] == 'U') &&
            (d[3] == 'e' || d[3] == 'E');
-}
-
-AStringView AStringView::trimLeft(AChar symbol) const {
-    for (auto i = begin(); i != end(); ++i)
-    {
-        if (*i != symbol)
-        {
-            return AStringView(i.data(), end().data() - i.data());
-        }
-    }
-    return {};
-}
-
-AStringView AStringView::trimRight(AChar symbol) const {
-    for (auto i = rbegin(); i != rend(); ++i)
-    {
-        if (*i != AChar(symbol))
-        {
-            return std::string_view(data(), i.base().data() - data());
-        }
-    }
-    return {};
-}
-
-AStringView AStringView::trim(AChar symbol) const {
-    return trimLeft(symbol).trimRight(symbol);
 }
 
 AStringVector AStringView::split(AChar c) const {
