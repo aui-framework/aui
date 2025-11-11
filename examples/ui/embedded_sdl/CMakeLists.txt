@@ -7,3 +7,9 @@ set(AUIB_SDL3_VALIDATE ${_SAVED_AUIB_SDL3_VALIDATE})
 
 aui_executable(aui.example.embedded_sdl)
 aui_link(aui.example.embedded_sdl PRIVATE aui::core aui::views)
+
+if (TARGET SDL3::SDL3-static)
+    aui_link(aui.example.embedded_sdl PRIVATE SDL3::SDL3-static)
+elseif (TARGET SDL3::SDL3-shared)
+    aui_link(aui.example.embedded_sdl PRIVATE SDL3::SDL3-shared)
+endif ()
