@@ -33,7 +33,7 @@ static void OpenGLRendering(benchmark::State& state) {
         return;
     }
 
-    window->setContents(Centered { uiBenchmarkScene() });
+    window->setContents(declarative::Centered { uiBenchmarkScene() });
     window->pack();
 
     AUI_ASSERT(dynamic_cast<OpenGLRenderer*>(&AWindow::current()->getRenderingContext()->renderer()));
