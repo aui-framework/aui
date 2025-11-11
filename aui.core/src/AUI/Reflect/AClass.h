@@ -25,7 +25,7 @@ public:
     static_assert(!std::is_reference<T>::value, "====================> AClass: attempt to use AClass on a reference.");
 /// [ARROW_ERROR_MESSAGE_EXAMPLE]
 
-    static consteval AStringView name() {
+    static constexpr AStringView name() {
 #if AUI_COMPILER_MSVC || defined(__RESHARPER__)
         AStringView s = __FUNCSIG__;
         auto openTag = s.find('<') + 1;
@@ -62,7 +62,7 @@ public:
 #endif
     }
 
-    static consteval AStringView nameWithoutNamespace() {
+    static constexpr AStringView nameWithoutNamespace() {
         auto s = name();
         auto p = s.rfind("::");
         if (p != AString::NPOS) {

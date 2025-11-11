@@ -1284,7 +1284,8 @@ requires aui::not_overloaded_lambda<Factory> && aui::factory<Factory, _<AView>>
 struct aui::implicit_shared_ptr_ctor<Factory> {
     auto operator()(Factory&& factory) {
         auto view = std::invoke(std::forward<Factory>(factory));
-        view->addAssName(AClass<std::decay_t<Factory>>::name());
+        static constinit auto name = AClass<std::decay_t<Factory>>::name();
+        view->addAssName(name);
         return view;
     }
 };
