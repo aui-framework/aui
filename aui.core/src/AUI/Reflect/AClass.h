@@ -66,7 +66,7 @@ public:
         auto s = name();
         auto p = s.rfind("::");
         if (p != AString::NPOS) {
-            return {s.bytes().begin() + p + 2};
+            return s.substr(p + 2);
         }
         return s;
     }
