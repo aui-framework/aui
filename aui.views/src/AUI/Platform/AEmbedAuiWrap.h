@@ -84,7 +84,7 @@ public:
     /**
      * @brief Handle char entered in UI.
      */
-    void onCharEntered(wchar_t c);
+    void onCharEntered(AChar c);
 
     /**
      * @brief Handle onScroll in UI.

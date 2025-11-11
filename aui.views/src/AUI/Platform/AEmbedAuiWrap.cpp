@@ -175,7 +175,7 @@ void AEmbedAuiWrap::onPointerMove(int x, int y) {
 }
 
 
-void AEmbedAuiWrap::onCharEntered(wchar_t c) {
+void AEmbedAuiWrap::onCharEntered(AChar c) {
     mContainer->makeCurrent();
     mContainer->onCharEntered(c);
 }
