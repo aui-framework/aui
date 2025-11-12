@@ -11,34 +11,68 @@
 
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/Entry.h>
-#include <AUI/Platform/AGLEmbedAuiWrap.h>
+#include <AUI/Platform/AGLEmbedContext.h>
 #include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/Util/Declarative/Containers.h>
 #include <SDL3/SDL.h>
 
-struct EmbedWindow {
+struct EmbedWindow : AGLEmbedContext {
     SDL_Window* sdl_window = nullptr;
     SDL_GLContext gl_context = nullptr;
     bool close = false;
 
-    ~EmbedWindow() {
+    ~EmbedWindow() override {
         SDL_GL_DestroyContext(gl_context);
         SDL_DestroyWindow(sdl_window);
     }
+
+    void init() {
+        int width = 0;
+        int height = 0;
+        SDL_GetWindowSizeInPixels(sdl_window, &width, &height);
+        setViewportSize(width, height);
+
+        setCustomDpiRatio(SDL_GetWindowDisplayScale(sdl_window));
+    }
+
+    void onNotifyProcessMessages() override {}
 };
+
+static auto sdlToAPointer(Uint8 button) -> APointerIndex {
+    switch (button) {
+        case SDL_BUTTON_LEFT:
+            return APointerIndex::button(AInput::LBUTTON);
+        case SDL_BUTTON_MIDDLE:
+            return APointerIndex::button(AInput::CBUTTON);
+        case SDL_BUTTON_RIGHT:
+            return APointerIndex::button(AInput::RBUTTON);
+        default:
+            return {};
+    }
+}
 
 void handleSDLEvent(SDL_Event* event, EmbedWindow& window) {
     switch (event->type) {
         case SDL_EVENT_QUIT:
             window.close = true;
             break;
-        case SDL_EVENT_WINDOW_RESIZED:
-            break;
-        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED:
-            break;
+        case SDL_EVENT_WINDOW_RESIZED: {
+            int width = 0;
+            int height = 0;
+            SDL_GetWindowSizeInPixels(window.sdl_window, &width, &height);
+            window.setViewportSize(width, height);
+        } break;
+        case SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED: {
+            int width = 0;
+            int height = 0;
+            SDL_GetWindowSizeInPixels(window.sdl_window, &width, &height);
+            window.setViewportSize(width, height);
+        } break;
         case SDL_EVENT_WINDOW_DISPLAY_CHANGED:
             break;
-        case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED:
-            break;
+        case SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED: {
+            window.setCustomDpiRatio(SDL_GetWindowDisplayScale(window.sdl_window));
+        } break;
         case SDL_EVENT_KEY_DOWN:
             break;
         case SDL_EVENT_KEY_UP:
@@ -46,16 +80,22 @@ void handleSDLEvent(SDL_Event* event, EmbedWindow& window) {
         case SDL_EVENT_TEXT_INPUT:
             break;
         case SDL_EVENT_MOUSE_MOTION:
+            window.onPointerMove(event->motion.x, event->motion.y);
             break;
         case SDL_EVENT_MOUSE_BUTTON_DOWN:
+            window.onPointerPressed(event->button.x, event->button.y, sdlToAPointer(event->button.button));
             break;
         case SDL_EVENT_MOUSE_BUTTON_UP:
+            window.onPointerReleased(event->button.x, event->button.y, sdlToAPointer(event->button.button));
             break;
         case SDL_EVENT_MOUSE_WHEEL:
+            window.onScroll(event->wheel.mouse_x, event->wheel.mouse_y, event->wheel.x, event->wheel.y);
             break;
         default: break;
     }
 }
+
+using namespace declarative;
 
 AUI_ENTRY {
     if (!SDL_Init(SDL_INIT_VIDEO)) {
@@ -83,10 +123,25 @@ AUI_ENTRY {
     }
     OpenGLRenderer renderer;
 
+    window.windowInit();
+    window.setContainer(Centered {
+        Label { "Hello, World!" }
+    });
+    window.init();
+
     while (!window.close) {
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             handleSDLEvent(&event, window);
+        }
+
+        if (window.requiresRedraw()) {
+            ARenderContext render_context {
+                .clippingRects = {},
+                .render = renderer,
+            };
+            window.render(render_context);
+            SDL_GL_SwapWindow(window.sdl_window);
         }
 
         const SDL_DisplayMode* dm = SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(window.sdl_window));

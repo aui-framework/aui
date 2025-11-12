@@ -13,27 +13,27 @@
 // Created by alex2 on 6/6/2021.
 //
 
+#include "AEmbedContext.h"
 
-#include "AEmbedAuiWrap.h"
-#include "ASurface.h"
-#include "glm/fwd.hpp"
+#include <glm/fwd.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
 #include <AUI/GL/State.h>
+#include <AUI/Platform/ASurface.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/Util/ALayoutInflater.h>
 
-class AEmbedAuiWrap::EmbedWindow: public ASurface {
-    friend class AEmbedAuiWrap;
+class AEmbedContext::EmbedWindow: public ASurface {
+    friend class AEmbedContext;
 private:
-    AEmbedAuiWrap* mTheWrap;
+    AEmbedContext* mTheWrap;
     bool mRequiresRedraw = false;
     bool mRequiresLayoutUpdate = false;
 
     unsigned mFrameMillis = 1;
 
 public:
-    EmbedWindow(AEmbedAuiWrap* theWrap): mTheWrap(theWrap) {
+    EmbedWindow(AEmbedContext* theWrap): mTheWrap(theWrap) {
         currentWindowStorage() = this;
     }
 
@@ -99,23 +99,23 @@ protected:
     }
 };
 
-void AEmbedAuiWrap::onScroll(int mouseX, int mouseY, int scrollX, int scrollY) {
+void AEmbedContext::onScroll(int mouseX, int mouseY, int scrollX, int scrollY) {
     mContainer->onScroll({
         .origin = { mouseX, mouseY },
         .delta = { scrollX, scrollY },
     });
 }
 
-AEmbedAuiWrap::AEmbedAuiWrap():
-        mEventLoopHandle(this)
+AEmbedContext::AEmbedContext():
+        mEventLoopHandle(this), mSize()
 {
 }
 
-void AEmbedAuiWrap::windowMakeCurrent() {
+void AEmbedContext::windowMakeCurrent() {
     mContainer->makeCurrent();
 }
 
-void AEmbedAuiWrap::windowRender() {
+void AEmbedContext::windowRender() {
     AThread::processMessages();
     auto& render = mContainer->getRenderingContext()->renderer();
     render.setWindow(mContainer.get());
@@ -129,7 +129,7 @@ void AEmbedAuiWrap::windowRender() {
     AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 
-void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
+void AEmbedContext::setContainer(const _<AViewContainer>& container) {
     ALayoutInflater::inflate(mContainer, container);
     mContainer->setPosition({0, 0});
     container->setPosition({0, 0});
@@ -138,7 +138,7 @@ void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
     mContainer->flagRedraw();
 }
 
-void AEmbedAuiWrap::setViewportSize(int width, int height) {
+void AEmbedContext::setViewportSize(int width, int height) {
     mContainer->makeCurrent();
     mSize = { width, height };
     AUI_NULLSAFE(mContainer->getRenderingContext())->beginResize(*mContainer);
@@ -148,7 +148,7 @@ void AEmbedAuiWrap::setViewportSize(int width, int height) {
 }
 
 
-void AEmbedAuiWrap::onPointerPressed(int x, int y, APointerIndex pointerIndex) {
+void AEmbedContext::onPointerPressed(int x, int y, APointerIndex pointerIndex) {
     mContainer->makeCurrent();
     AThread::processMessages();
     mContainer->onPointerPressed({
@@ -157,7 +157,7 @@ void AEmbedAuiWrap::onPointerPressed(int x, int y, APointerIndex pointerIndex) {
     });
 }
 
-void AEmbedAuiWrap::onPointerReleased(int x, int y, APointerIndex pointerIndex) {
+void AEmbedContext::onPointerReleased(int x, int y, APointerIndex pointerIndex) {
     mContainer->makeCurrent();
     mContainer->onPointerReleased({
         .position = glm::ivec2{x, y},
@@ -165,50 +165,50 @@ void AEmbedAuiWrap::onPointerReleased(int x, int y, APointerIndex pointerIndex) 
     });
 }
 
-bool AEmbedAuiWrap::isUIConsumesMouseAt(int x, int y) {
+bool AEmbedContext::isUIConsumesMouseAt(int x, int y) {
     return mContainer->consumesClick(glm::ivec2{ x, y });
 }
 
-void AEmbedAuiWrap::onPointerMove(int x, int y) {
+void AEmbedContext::onPointerMove(int x, int y) {
     mContainer->makeCurrent();
     mContainer->onPointerMove(glm::ivec2{ x, y }, {APointerIndex::button(AInput::LBUTTON)});
 }
 
 
-void AEmbedAuiWrap::onCharEntered(AChar c) {
+void AEmbedContext::onCharEntered(AChar c) {
     mContainer->makeCurrent();
     mContainer->onCharEntered(c);
 }
 
-void AEmbedAuiWrap::onKeyPressed(AInput::Key key) {
+void AEmbedContext::onKeyPressed(AInput::Key key) {
     mContainer->makeCurrent();
     mContainer->onKeyDown(key);
 }
 
-void AEmbedAuiWrap::onKeyReleased(AInput::Key key) {
+void AEmbedContext::onKeyReleased(AInput::Key key) {
     mContainer->makeCurrent();
     mContainer->onKeyUp(key);
 }
 
-void AEmbedAuiWrap::loop() {
+void AEmbedContext::loop() {
     // stub
 }
 
-void AEmbedAuiWrap::clearFocus() {
+void AEmbedContext::clearFocus() {
     mContainer->setFocusedView(nullptr);
 }
 
-ASurface* AEmbedAuiWrap::getWindow() {
+ASurface* AEmbedContext::getWindow() {
     return mContainer.get();
 }
 
-void AEmbedAuiWrap::windowInit(_unique<IRenderingContext> context) {
+void AEmbedContext::windowInit(_unique<IRenderingContext> context) {
     mContainer = _new<EmbedWindow>(this);
     mContainer->mRenderingContext = std::move(context);
     mContainer->setPosition({ 0, 0 });
 }
 
-void AEmbedAuiWrap::setCustomDpiRatio(float r) {
+void AEmbedContext::setCustomDpiRatio(float r) {
     if (mCustomDpiRatio) {
         if (*mCustomDpiRatio == r) {
             return;
@@ -217,10 +217,10 @@ void AEmbedAuiWrap::setCustomDpiRatio(float r) {
     mCustomDpiRatio = r;
     mContainer->updateDpi();
 }
-bool AEmbedAuiWrap::requiresRedraw() {
+bool AEmbedContext::requiresRedraw() {
     return mContainer->mRequiresRedraw;
 }
 
-void AEmbedAuiWrap::notifyProcessMessages() {
+void AEmbedContext::notifyProcessMessages() {
     onNotifyProcessMessages();
 }

@@ -13,11 +13,22 @@
 // Created by Alex2772 on 1/24/2022.
 //
 
-#include "AGLEmbedAuiWrap.h"
-#include "AUI/GL/State.h"
-#include "AUI/GL/OpenGLRenderer.h"
+#include "AGLEmbedContext.h"
 
-void AGLEmbedAuiWrap::render(ARenderContext context) {
+#include <AUI/GL/State.h>
+#include <AUI/GL/OpenGLRenderer.h>
+
+AGLEmbedContext::AGLEmbedContext() {
+#if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
+    //glewExperimental = true;
+    //auto r = glewInit();
+    //AUI_ASSERT(r == 0);
+#endif
+}
+
+AGLEmbedContext::~AGLEmbedContext() = default;
+
+void AGLEmbedContext::render(const ARenderContext& context) {
     windowMakeCurrent();
     AThread::processMessages();
 
@@ -42,17 +53,9 @@ void AGLEmbedAuiWrap::render(ARenderContext context) {
     resetGLState();
 }
 
-void AGLEmbedAuiWrap::resetGLState() {
+void AGLEmbedContext::resetGLState() {
     glBindTexture(GL_TEXTURE_2D, 0);
     if (glBindVertexArray) {
         glBindVertexArray(0);
     }
-}
-
-AGLEmbedAuiWrap::AGLEmbedAuiWrap() {
-#if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
-    //glewExperimental = true;
-    //auto r = glewInit();
-    //AUI_ASSERT(r == 0);
-#endif
 }

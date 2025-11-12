@@ -11,18 +11,18 @@
 
 #pragma once
 
-
-#include "AEmbedAuiWrap.h"
+#include <AUI/Platform/AEmbedContext.h>
 
 /**
  * @brief Embed AUI into OpenGL rendering context
  */
-class API_AUI_VIEWS AGLEmbedAuiWrap: public AEmbedAuiWrap {
+class API_AUI_VIEWS AGLEmbedContext: public AEmbedContext {
 public:
-    AGLEmbedAuiWrap();
-    void render(ARenderContext context);
-    void resetGLState();
+    AGLEmbedContext();
+    ~AGLEmbedContext() override;
 
+    void render(const ARenderContext& context);
+    void resetGLState();
 };
 
 

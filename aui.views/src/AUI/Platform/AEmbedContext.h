@@ -18,14 +18,14 @@
 
 
 #include <AUI/View/AViewContainer.h>
-#include "ASurface.h"
+#include <AUI/Platform/ASurface.h>
 
 /**
  * @brief Helper for applications with custom window initialization.
  * @details
  * This class is abstract; use [AGLEmbedAuiWrap] or [ASoftwareEmbedAuiWrap] instead.
  */
-class API_AUI_VIEWS AEmbedAuiWrap: public IEventLoop {
+class API_AUI_VIEWS AEmbedContext: public IEventLoop {
 private:
     IEventLoop::Handle mEventLoopHandle;
 
@@ -40,7 +40,7 @@ protected:
 
     virtual void onNotifyProcessMessages() = 0;
 public:
-    explicit AEmbedAuiWrap();
+    explicit AEmbedContext();
 
     void clearFocus();
 

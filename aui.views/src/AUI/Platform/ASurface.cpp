@@ -13,18 +13,17 @@
 // Created by alex2 on 6/9/2021.
 //
 
+#include "ASurface.h"
 #include <AUI/Traits/strings.h>
 #include "AUI/Event/APointerIndex.h"
 #include "AUI/Performance/APerformanceSection.h"
 #include "AUI/Render/ABrush.h"
 #include "AUI/Util/ARandom.h"
 #include "AUI/Platform/AWindow.h"
-#include "ASurface.h"
 #include <AUI/Action/AMenu.h>
 #include <AUI/Traits/memory.h>
 #include <AUI/Util/kAUI.h>
 #include <chrono>
-#include "APlatform.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/View/AViewContainer.h"
 #include "AUI/Util/Breakpoint.h"
