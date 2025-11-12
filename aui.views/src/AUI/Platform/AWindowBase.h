@@ -91,7 +91,7 @@ public:
      */
     virtual void blockUserInput(bool blockUserInput = true);
 
-    virtual ~AWindowBase();
+    ~AWindowBase() override;
 
 
     /**

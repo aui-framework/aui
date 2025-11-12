@@ -73,10 +73,8 @@ void OpenGLRenderingContextGtk::gtkRealize(GtkWidget* widget) {
     }
     bool is_desktop_gl = is_desktop_gl_fn();
 
-    if (is_desktop_gl) {
-        gladLoadGLLoader(aui::epoxy_fake::get_proc_address);
-    } else {
-        gladLoadGLES2Loader(aui::epoxy_fake::get_proc_address);
+    if (!OpenGLRenderer::loadGL(aui::epoxy_fake::get_proc_address, !is_desktop_gl)) {
+        throw AException("Failed to load GL");
     }
 
     auto acquired = contextScope();

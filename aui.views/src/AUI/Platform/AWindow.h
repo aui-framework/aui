@@ -53,7 +53,7 @@ public:
     AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
         windowNativePreInit(name, width, height, parent, ws);
     }
-    virtual ~AWindow();
+    ~AWindow() override;
 
     [[nodiscard]]
     unsigned frameMillis() const noexcept override {

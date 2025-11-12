@@ -220,6 +220,21 @@ inline void useAuislShader(AOptional<gl::Program>& out) {
 }
 }
 
+bool OpenGLRenderer::loadGL(GLLoadProc load_proc, bool es) {
+    return es ? gladLoadGLES2Loader((GLADloadproc)load_proc) :
+                gladLoadGLLoader((GLADloadproc)load_proc);
+}
+
+bool OpenGLRenderer::loadGL(GLLoadProc load_proc) {
+    auto* get_string_proc = reinterpret_cast<PFNGLGETSTRINGPROC>(load_proc("glGetString"));
+    if (get_string_proc == nullptr) return false;
+    const GLubyte* ret_string = get_string_proc(GL_VERSION);
+    if (!ret_string) return false;
+    std::string_view version(reinterpret_cast<const char*>(ret_string));
+    bool is_es = version.find("OpenGL ES") != std::string_view::npos;
+    return loadGL(load_proc, is_es);
+}
+
 OpenGLRenderer::OpenGLRenderer() {
     ALogger::info(LOG_TAG) << "GL_VERSION = " << ((const char*) glGetString(GL_VERSION));
     ALogger::info(LOG_TAG) << "GL_VENDOR = " << ((const char*) glGetString(GL_VENDOR));

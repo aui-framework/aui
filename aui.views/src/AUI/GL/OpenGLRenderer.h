@@ -34,6 +34,19 @@ public:
         }
     };
 
+    using GLLoadProc = void* (*) (const char* name);
+
+    /**
+     * @brief Manually specify is ES or not
+     */
+    static bool loadGL(GLLoadProc load_proc, bool es);
+
+    /**
+     * @brief Automatically detects ES or not
+     */
+    static bool loadGL(GLLoadProc load_proc);
+
+
 private:
     AOptional<gl::Program> mSolidShader;
     AOptional<gl::Program> mGradientShader;
