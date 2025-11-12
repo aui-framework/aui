@@ -20,7 +20,7 @@
  */
 class AFakeWindowInitializer: public IRenderingContext {
 public:
-    void init(const Init& init) override;
+    void init(const Init& init);
 
     ~AFakeWindowInitializer() override = default;
 

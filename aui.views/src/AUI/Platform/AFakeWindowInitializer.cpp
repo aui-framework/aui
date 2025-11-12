@@ -18,7 +18,6 @@
 
 
 void AFakeWindowInitializer::init(const IRenderingContext::Init& init) {
-    IRenderingContext::init(init);
 }
 
 void AFakeWindowInitializer::destroyNativeWindow(ASurface& window) {

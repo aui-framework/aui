@@ -20,7 +20,7 @@ public:
     using OpenGLRenderingContext::OpenGLRenderingContext;
 
     ~OpenGLRenderingContextX11() override = default;
-    void init(const Init& init) override;
+    void init(const Init& init);
     void destroyNativeWindow(ASurface& window) override;
     void beginPaint(ASurface& window) override;
     void endPaint(ASurface& window) override;

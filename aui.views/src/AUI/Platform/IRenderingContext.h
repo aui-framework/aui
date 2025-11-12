@@ -45,7 +45,7 @@ public:
 
         void setRenderingContext(_unique<IRenderingContext>&& context) const;
     };
-    virtual void init(const Init& init);
+
     virtual ~IRenderingContext() = default;
     virtual void destroyNativeWindow(ASurface& window) = 0;
 

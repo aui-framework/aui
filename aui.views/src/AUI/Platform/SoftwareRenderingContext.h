@@ -21,7 +21,7 @@ public:
 
 #if !AUI_PLATFORM_LINUX
     // to be implemented by IPlatformAbstraction
-    void init(const Init& init) override;
+    void init(const Init& init);
     void destroyNativeWindow(ASurface& window) override;
 #endif
 

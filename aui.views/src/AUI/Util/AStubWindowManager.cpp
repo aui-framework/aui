@@ -19,8 +19,7 @@
 namespace {
     class StubRenderingContext: public SoftwareRenderingContext {
     public:
-        void init(const Init& init) override {
-            IRenderingContext::init(init);
+        void init(const Init& init) {
             reallocate(init.window);
         }
 

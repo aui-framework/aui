@@ -17,7 +17,7 @@
 class SoftwareRenderingContextX11: public SoftwareRenderingContext, public RenderingContextX11 {
 public:
     ~SoftwareRenderingContextX11() override;
-    void init(const Init& init) override;
+    void init(const Init& init);
     void destroyNativeWindow(ASurface& window) override;
     void endPaint(ASurface& window) override;
 

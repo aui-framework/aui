@@ -21,7 +21,7 @@ public:
       : OpenGLRenderingContext(config), RenderingContextGtk(window) {}
 
     ~OpenGLRenderingContextGtk() override = default;
-    void init(const Init& init) override;
+    void init(const Init& init);
     void destroyNativeWindow(ASurface& window) override;
     void gtkRealize(aui::gtk4_fake::GtkWidget* widget) override;
     void gtkSnapshot(aui::gtk4_fake::GtkWidget* widget, aui::gtk4_fake::GtkSnapshot* snapshot) override;
