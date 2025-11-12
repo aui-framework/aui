@@ -37,7 +37,6 @@
 static constexpr auto LOG_TAG = "ASurface";
 
 ASurface::ASurface() {
-    mDpiRatio = APlatform::getDpiRatio();
 }
 
 ASurface::~ASurface() {
@@ -47,7 +46,7 @@ ASurface::~ASurface() {
 }
 
 float ASurface::fetchDpiFromSystem() const {
-    return APlatform::getDpiRatio();
+    return 1.0f;
 }
 
 void ASurface::updateDpi() {
