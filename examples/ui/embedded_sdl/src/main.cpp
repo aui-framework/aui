@@ -16,6 +16,35 @@
 #include <AUI/Util/Declarative/Containers.h>
 #include <SDL3/SDL.h>
 
+struct EmbedRenderingContext : IRenderingContext {
+    std::shared_ptr<OpenGLRenderer> m_renderer;
+
+    ~EmbedRenderingContext() override {
+    }
+
+    void destroyNativeWindow(ASurface& window) override {}
+
+    AImage makeScreenshot() override {
+        return {};
+    }
+
+    void beginPaint(ASurface& window) override {
+        m_renderer->beginPaint(window.getSize());
+    }
+    void endPaint(ASurface& window) override {
+        m_renderer->endPaint();
+    }
+
+    void beginResize(ASurface& window) override {
+    }
+    void endResize(ASurface& window) override {
+    }
+
+    IRenderer& renderer() override {
+        return *m_renderer;
+    }
+};
+
 struct EmbedWindow : AGLEmbedContext {
     SDL_Window* sdl_window = nullptr;
     SDL_GLContext gl_context = nullptr;
@@ -26,7 +55,9 @@ struct EmbedWindow : AGLEmbedContext {
         SDL_DestroyWindow(sdl_window);
     }
 
-    void init() {
+    void init(std::unique_ptr<EmbedRenderingContext>&& context) {
+        windowInit(std::move(context));
+
         int width = 0;
         int height = 0;
         SDL_GetWindowSizeInPixels(sdl_window, &width, &height);
@@ -121,13 +152,17 @@ AUI_ENTRY {
         ALogger::err("OpenGLRenderer") << "Failed to load GL";
         return 1;
     }
-    OpenGLRenderer renderer;
 
-    window.windowInit();
+    auto renderer = std::make_shared<OpenGLRenderer>();
+    {
+        auto rendering_context = std::make_unique<EmbedRenderingContext>();
+        rendering_context->m_renderer = renderer;
+        window.init(std::move(rendering_context));
+    }
+
     window.setContainer(Centered {
         Label { "Hello, World!" }
     });
-    window.init();
 
     while (!window.close) {
         SDL_Event event;
@@ -138,7 +173,7 @@ AUI_ENTRY {
         if (window.requiresRedraw()) {
             ARenderContext render_context {
                 .clippingRects = {},
-                .render = renderer,
+                .render = *renderer,
             };
             window.render(render_context);
             SDL_GL_SwapWindow(window.sdl_window);
