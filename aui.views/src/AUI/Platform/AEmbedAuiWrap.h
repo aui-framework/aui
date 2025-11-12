@@ -18,7 +18,7 @@
 
 
 #include <AUI/View/AViewContainer.h>
-#include "AWindowBase.h"
+#include "ASurface.h"
 
 /**
  * @brief Helper for applications with custom window initialization.
@@ -95,7 +95,7 @@ public:
     void onKeyPressed(AInput::Key key);
     void onKeyReleased(AInput::Key key);
 
-    AWindowBase* getWindow();
+    ASurface* getWindow();
 
     void loop() override;
 };

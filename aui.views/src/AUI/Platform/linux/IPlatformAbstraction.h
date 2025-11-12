@@ -97,7 +97,7 @@ public:
         AMessageBox::Button b) = 0;
 
     // some helper functions to pass through visibility.
-    static void setCurrentWindow(AWindowBase* window);
+    static void setCurrentWindow(ASurface* window);
 
     static bool& redrawFlag(AWindow& window) {
         return window.mRedrawFlag;

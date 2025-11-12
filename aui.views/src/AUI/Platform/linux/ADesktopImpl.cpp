@@ -32,7 +32,7 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
 }
 
 AFuture<APath>
-ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, const AVector<FileExtension>& extensions) {
+ADesktop::browseForFile(ASurface *parent, const APath &startingLocation, const AVector<FileExtension>& extensions) {
     AUI_NULLSAFE(parent)->blockUserInput();
     AUI_DEFER { AUI_NULLSAFE(parent)->blockUserInput(false); };
 
@@ -108,7 +108,7 @@ ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, cons
     return f;
 }
 
-AFuture<APath> ADesktop::browseForDir(AWindowBase *parent, const APath &startingLocation) {
+AFuture<APath> ADesktop::browseForDir(ASurface *parent, const APath &startingLocation) {
     AUI_NULLSAFE(parent)->blockUserInput();
 
     AMap<std::string, aui::dbus::Variant> options;

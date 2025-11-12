@@ -25,12 +25,12 @@ public:
 #if !AUI_PLATFORM_LINUX
     // to be implemented by IPlatformAbstraction
     void init(const Init& init) override;
-    void destroyNativeWindow(AWindowBase& window) override;
+    void destroyNativeWindow(ASurface& window) override;
 #endif
 
-    void beginPaint(AWindowBase& window) override;
+    void beginPaint(ASurface& window) override;
 
-    void endPaint(AWindowBase& window) override;
+    void endPaint(ASurface& window) override;
 
     ~CommonRenderingContext() override = default;
 

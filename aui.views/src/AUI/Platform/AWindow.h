@@ -17,7 +17,7 @@
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/ASignal.h"
 
-#include "AUI/Platform/AWindowBase.h"
+#include "AUI/Platform/ASurface.h"
 #include "AUI/Thread/IEventLoop.h"
 #include "AUI/Util/AMetric.h"
 #include "AWindowNativePtr.h"
@@ -41,7 +41,7 @@ class AWindowManager;
  * @brief Represents a window in the underlying windowing system.
  * @ingroup views
  */
-class API_AUI_VIEWS AWindow: public AWindowBase
+class API_AUI_VIEWS AWindow: public ASurface
 {
     friend class OpenGLRenderingContext;
     friend class IPlatformAbstraction;
@@ -177,7 +177,7 @@ public:
     /**
      * @return Current window for current thread.
      */
-    static AWindowBase* current();
+    static ASurface* current();
 
     /**
      * @brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.

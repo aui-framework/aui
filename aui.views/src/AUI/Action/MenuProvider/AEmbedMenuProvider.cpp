@@ -24,10 +24,10 @@ using namespace declarative;
 
 class AEmbedMenuProvider::MenuContainer: public AViewContainerBase {
 private:
-    AWindowBase* mWindow;
+    ASurface* mWindow;
     _<MenuContainer> mSubWindow;
 public:
-    MenuContainer(AWindowBase* window, const AVector<AMenuItem>& vector): mWindow(window)
+    MenuContainer(ASurface* window, const AVector<AMenuItem>& vector): mWindow(window)
     {
         addAssName(".menu");
         addAssName(".menu-background");

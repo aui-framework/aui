@@ -12,13 +12,13 @@
 #pragma once
 
 #include "gtk_types.h"
-#include "AUI/Platform/AWindowBase.h"
+#include "AUI/Platform/ASurface.h"
 #include "AUIWidget.h"
 
 class RenderingContextGtk {
 public:
     friend aui::gtk4_fake::GtkWidget* aui_widget_new(RenderingContextGtk& renderingContext);
-    explicit RenderingContextGtk(AWindowBase& window) : mWindow(window) {}
+    explicit RenderingContextGtk(ASurface& window) : mWindow(window) {}
     virtual ~RenderingContextGtk() = default;
 
     virtual void gtkRealize(aui::gtk4_fake::GtkWidget* widget) = 0;
@@ -26,11 +26,11 @@ public:
     virtual void gtkUnrealize(aui::gtk4_fake::GtkWidget* widget) = 0;
     virtual void gtkDoUnderContext(const std::function<void()>& callback);
 
-    AWindowBase& window() const { return mWindow; }
+    ASurface& window() const { return mWindow; }
     aui::gtk4_fake::GtkWidget* auiWidget() const { return mAUIWidget; }
 
 
 protected:
-    AWindowBase& mWindow;
+    ASurface& mWindow;
     aui::gtk4_fake::GtkWidget* mAUIWidget = nullptr;
 };

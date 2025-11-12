@@ -14,12 +14,12 @@
 
 #include <AUI/View/AViewContainer.h>
 
-class AWindowBase;
+class ASurface;
 
 class API_AUI_VIEWS AOverlappingSurface: public AViewContainer {
-    friend class AWindowBase;
+    friend class ASurface;
 private:
-    AWindowBase* mParentWindow;
+    ASurface* mParentWindow;
     bool mCloseOnClick;
 
 public:
@@ -36,7 +36,7 @@ public:
         mCloseOnClick = closeOnClick;
     }
 
-    AWindowBase* getParentWindow() const {
+    ASurface* getParentWindow() const {
         return mParentWindow;
     }
 

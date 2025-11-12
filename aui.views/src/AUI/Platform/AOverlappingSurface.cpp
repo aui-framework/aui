@@ -14,7 +14,7 @@
 //
 
 #include "AOverlappingSurface.h"
-#include "AWindowBase.h"
+#include "ASurface.h"
 
 
 void AOverlappingSurface::close() {

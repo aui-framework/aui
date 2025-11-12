@@ -18,7 +18,7 @@
 #include <AUI/Enum/WindowStyle.h>
 #include <AUI/Image/AImage.h>
 
-class AWindowBase;
+class ASurface;
 class AWindow;
 class IRenderer;
 
@@ -47,14 +47,14 @@ public:
     };
     virtual void init(const Init& init);
     virtual ~IRenderingContext() = default;
-    virtual void destroyNativeWindow(AWindowBase& window) = 0;
+    virtual void destroyNativeWindow(ASurface& window) = 0;
 
     virtual AImage makeScreenshot() = 0;
 
-    virtual void beginPaint(AWindowBase& window) = 0;
-    virtual void endPaint(AWindowBase& window) = 0;
-    virtual void beginResize(AWindowBase& window) = 0;
-    virtual void endResize(AWindowBase& window) = 0;
+    virtual void beginPaint(ASurface& window) = 0;
+    virtual void endPaint(ASurface& window) = 0;
+    virtual void beginResize(ASurface& window) = 0;
+    virtual void endResize(ASurface& window) = 0;
 
     virtual IRenderer& renderer() = 0;
 };

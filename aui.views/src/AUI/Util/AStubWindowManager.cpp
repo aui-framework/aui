@@ -26,15 +26,15 @@ namespace {
 
         ~StubRenderingContext() override = default;
 
-        void destroyNativeWindow(AWindowBase& window) override {
+        void destroyNativeWindow(ASurface& window) override {
 
         }
 
-        void beginPaint(AWindowBase& window) override {
+        void beginPaint(ASurface& window) override {
             std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
         }
 
-        void endPaint(AWindowBase& window) override {
+        void endPaint(ASurface& window) override {
 
         }
     };

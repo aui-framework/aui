@@ -196,9 +196,9 @@ void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
     mRenderer = ourRenderer();
 }
 
-void OpenGLRenderingContextX11::destroyNativeWindow(AWindowBase& window) { xDestroyNativeWindow(window); }
+void OpenGLRenderingContextX11::destroyNativeWindow(ASurface& window) { xDestroyNativeWindow(window); }
 
-void OpenGLRenderingContextX11::beginPaint(AWindowBase& window) {
+void OpenGLRenderingContextX11::beginPaint(ASurface& window) {
     // order is intentional
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         glXMakeCurrent(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(*w), ourContext);
@@ -206,14 +206,14 @@ void OpenGLRenderingContextX11::beginPaint(AWindowBase& window) {
     OpenGLRenderingContext::beginPaint(window);
 }
 
-void OpenGLRenderingContextX11::endPaint(AWindowBase& window) {
+void OpenGLRenderingContextX11::endPaint(ASurface& window) {
     OpenGLRenderingContext::endPaint(window);
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         glXSwapBuffers(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(*w));
     }
 }
 
-void OpenGLRenderingContextX11::beginResize(AWindowBase& window) {
+void OpenGLRenderingContextX11::beginResize(ASurface& window) {
     OpenGLRenderingContext::beginResize(window);
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         glXMakeCurrent(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(*w), ourContext);

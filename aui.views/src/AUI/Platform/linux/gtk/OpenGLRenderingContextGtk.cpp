@@ -56,7 +56,7 @@ OpenGLRenderingContextGtk::Texture::~Texture() {
 void OpenGLRenderingContextGtk::init(const IRenderingContext::Init& init) {
 }
 
-void OpenGLRenderingContextGtk::destroyNativeWindow(AWindowBase& window) {
+void OpenGLRenderingContextGtk::destroyNativeWindow(ASurface& window) {
     if (auto c = dynamic_cast<AWindow*>(&window)) {
         gtk_window_destroy(PlatformAbstractionGtk::nativeHandle(*c));
     }
@@ -250,10 +250,10 @@ void OpenGLRenderingContextGtk::allocateTexture(GtkWidget* widget) {
     }
 }
 
-void OpenGLRenderingContextGtk::beginResize(AWindowBase& window) {
+void OpenGLRenderingContextGtk::beginResize(ASurface& window) {
 
 }
-void OpenGLRenderingContextGtk::endResize(AWindowBase& window) {
+void OpenGLRenderingContextGtk::endResize(ASurface& window) {
 
 }
 

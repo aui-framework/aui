@@ -34,7 +34,7 @@ public:
 
 protected:
     void xInitNativeWindow(const IRenderingContext::Init& init, XSetWindowAttributes& swa, XVisualInfo* vi);
-    void xDestroyNativeWindow(AWindowBase& window);
+    void xDestroyNativeWindow(ASurface& window);
     Sync mXsyncRequestCounter;
     XIC mIC = nullptr;
 };

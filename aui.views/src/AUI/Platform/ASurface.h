@@ -30,7 +30,7 @@ namespace testing {
     class UITest;
 }
 
-class API_AUI_VIEWS AWindowBase: public AViewContainer {
+class API_AUI_VIEWS ASurface: public AViewContainer {
     friend class SoftwareRenderer;
     friend class IPlatformAbstraction;
     friend class testing::UITest;
@@ -39,7 +39,9 @@ class API_AUI_VIEWS AWindowBase: public AViewContainer {
 public:
     using BeforeFrameQueue = AMessageQueue<AFakeMutex, IRenderer&>;
 
-    AWindowBase();
+    ASurface();
+
+    ~ASurface() override;
 
     /**
      * @brief Profiling (debugging) settings for this window.
@@ -91,8 +93,6 @@ public:
      */
     virtual void blockUserInput(bool blockUserInput = true);
 
-    ~AWindowBase() override;
-
 
     /**
      * @brief Prevents click action on upcoming pointer release.
@@ -106,7 +106,7 @@ public:
     void preventClickOnPointerRelease();
 
     /**
-     * @see AWindowBase::preventClickOnPointerRelease
+     * @see ASurface::preventClickOnPointerRelease
      */
     [[nodiscard]]
     bool isPreventingClickOnPointerRelease() const noexcept {
@@ -416,12 +416,12 @@ protected:
     bool mIsFocused = true;
 
     /**
-     * @see AWindowBase::preventClickOnPointerRelease
+     * @see ASurface::preventClickOnPointerRelease
      */
     AOptional<bool> mPreventClickOnPointerRelease;
 
     /**
-     * @brief If true, AWindowBase::forceUpdateCursor takes no action.
+     * @brief If true, ASurface::forceUpdateCursor takes no action.
      */
     bool mForceUpdateCursorGuard = false;
 
@@ -433,10 +433,10 @@ protected:
 
     _unique<IRenderingContext> mRenderingContext;
 
-    static AWindowBase*& currentWindowStorage();
+    static ASurface*& currentWindowStorage();
 
     /**
-     * @see AWindowBase::createOverlappingSurface
+     * @see ASurface::createOverlappingSurface
      */
     virtual _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
     virtual void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) = 0;

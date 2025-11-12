@@ -14,25 +14,25 @@
 //
 
 #include "AFakeWindowInitializer.h"
-#include "AWindowBase.h"
+#include "ASurface.h"
 
 
 void AFakeWindowInitializer::init(const IRenderingContext::Init& init) {
     IRenderingContext::init(init);
 }
 
-void AFakeWindowInitializer::destroyNativeWindow(AWindowBase& window) {
+void AFakeWindowInitializer::destroyNativeWindow(ASurface& window) {
 
 }
 
-void AFakeWindowInitializer::beginPaint(AWindowBase& window) {
+void AFakeWindowInitializer::beginPaint(ASurface& window) {
 
 }
 
-void AFakeWindowInitializer::endPaint(AWindowBase& window) {
+void AFakeWindowInitializer::endPaint(ASurface& window) {
 
 }
 
-void AFakeWindowInitializer::beginResize(AWindowBase& window) {
+void AFakeWindowInitializer::beginResize(ASurface& window) {
 
 }

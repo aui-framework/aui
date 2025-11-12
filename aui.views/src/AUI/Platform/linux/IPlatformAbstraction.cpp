@@ -37,7 +37,7 @@ IPlatformAbstraction& IPlatformAbstraction::current() {
     return *value;
 }
 
-void IPlatformAbstraction::setCurrentWindow(AWindowBase* window) {
+void IPlatformAbstraction::setCurrentWindow(ASurface* window) {
     AWindow::currentWindowStorage() = window;
 }
 

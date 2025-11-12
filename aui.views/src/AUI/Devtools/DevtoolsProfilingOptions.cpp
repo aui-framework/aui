@@ -41,7 +41,7 @@ _<ALabel> header(AString title) {
 }
 }   // namespace
 
-DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
+DevtoolsProfilingOptions::DevtoolsProfilingOptions(ASurface* targetWindow) {
     auto scalingParams = _new<AProperty<aui::float_within_0_1>>(1.f / 3.f);
     setContents(Centered { AScrollArea::Builder().withContents(
         Vertical::Expanding {

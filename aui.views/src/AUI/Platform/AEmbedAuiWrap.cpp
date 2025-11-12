@@ -15,7 +15,7 @@
 
 
 #include "AEmbedAuiWrap.h"
-#include "AWindowBase.h"
+#include "ASurface.h"
 #include "glm/fwd.hpp"
 #include <glm/ext/matrix_clip_space.hpp>
 #include <AUI/GL/State.h>
@@ -23,7 +23,7 @@
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/Util/ALayoutInflater.h>
 
-class AEmbedAuiWrap::EmbedWindow: public AWindowBase {
+class AEmbedAuiWrap::EmbedWindow: public ASurface {
     friend class AEmbedAuiWrap;
 private:
     AEmbedAuiWrap* mTheWrap;
@@ -86,7 +86,7 @@ public:
     }
 
     void flagRedraw() override {
-        AWindowBase::flagRedraw();
+        ASurface::flagRedraw();
         mRequiresRedraw = true;
     }
 
@@ -95,7 +95,7 @@ protected:
         if (mTheWrap->mCustomDpiRatio) {
             return *mTheWrap->mCustomDpiRatio;
         }
-        return AWindowBase::fetchDpiFromSystem();
+        return ASurface::fetchDpiFromSystem();
     }
 };
 
@@ -198,7 +198,7 @@ void AEmbedAuiWrap::clearFocus() {
     mContainer->setFocusedView(nullptr);
 }
 
-AWindowBase* AEmbedAuiWrap::getWindow() {
+ASurface* AEmbedAuiWrap::getWindow() {
     return mContainer.get();
 }
 
