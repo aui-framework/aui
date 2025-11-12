@@ -23,7 +23,7 @@
 /**
  * @brief Helper for applications with custom window initialization.
  * @details
- * This class is abstract; use [AGLEmbedAuiWrap] or [ASoftwareEmbedAuiWrap] instead.
+ * This class is abstract; use [AGLEmbedContext] or [ASoftwareEmbedAuiWrap] instead.
  */
 class API_AUI_VIEWS AEmbedContext: public IEventLoop {
 private:
