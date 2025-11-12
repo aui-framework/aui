@@ -27,8 +27,6 @@ namespace aui::emscripten {
 }
 
 void CommonRenderingContext::init(const Init& init) {
-    IRenderingContext::init(init);
-
     glm::dvec2 s;
     emscripten_get_element_css_size("#canvas", &s.x, &s.y);
     aui::emscripten::applySize(&init.window, s);

@@ -88,8 +88,6 @@ void CommonRenderingContext::init(const Init& init) {
     RECT clientRect;
     GetClientRect(init.window.mHandle, &clientRect);
     init.window.mSize = {clientRect.right - clientRect.left, clientRect.bottom - clientRect.top};
-
-    IRenderingContext::init(init);
 }
 
 void CommonRenderingContext::destroyNativeWindow(ASurface& window) {

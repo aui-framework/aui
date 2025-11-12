@@ -20,7 +20,6 @@
 
 
 void CommonRenderingContext::init(const Init& init) {
-    IRenderingContext::init(init);
 }
 
 void CommonRenderingContext::destroyNativeWindow(ASurface& window) {

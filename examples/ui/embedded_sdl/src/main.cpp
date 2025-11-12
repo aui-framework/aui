@@ -14,6 +14,7 @@
 #include <AUI/Platform/AGLEmbedContext.h>
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/Util/Declarative/Containers.h>
+#include <AUI/View/AButton.h>
 #include <SDL3/SDL.h>
 
 struct EmbedRenderingContext : IRenderingContext {
@@ -29,7 +30,10 @@ struct EmbedRenderingContext : IRenderingContext {
     }
 
     void beginPaint(ASurface& window) override {
+        glBindFramebuffer(GL_FRAMEBUFFER, 0);
         m_renderer->beginPaint(window.getSize());
+        glClearColor(1, 1, 1, 1);
+        glClear(GL_COLOR_BUFFER_BIT);
     }
     void endPaint(ASurface& window) override {
         m_renderer->endPaint();
@@ -161,7 +165,15 @@ AUI_ENTRY {
     }
 
     window.setContainer(Centered {
-        Label { "Hello, World!" }
+        Vertical {
+            Label { "Hello, World!" },
+            Button {
+                .content = Label { "Click me" },
+                .onClick = [] {
+                    ALogger::info("Test") << "Hello world!";
+                }
+            }
+        }
     });
 
     while (!window.close) {
