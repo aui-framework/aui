@@ -44,6 +44,12 @@ This application creates a simple GUI window using SDL3 for window management an
 
 ## Input Handling
 
+### sdlToAInput()
+
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp sdlToAInput -->
+
+**Purpose:** Converts SDL3 key code constants to AUI's AInput::Key format.
+
 ### sdlToAPointer()
 
 <!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp sdlToAPointer -->
