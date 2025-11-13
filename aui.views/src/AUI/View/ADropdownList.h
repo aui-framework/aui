@@ -17,9 +17,14 @@
 
 
 #include "AButton.h"
+#include "AUI/Traits/any_range_view.h"
+
 #include <AUI/Model/IListModel.h>
 #include <AUI/Platform/AOverlappingSurface.h>
+#include <AUI/Util/Declarative/Containers.h>
 
+
+namespace declarative {
 /**
  * @brief A button with dropdown list.
  *
@@ -27,61 +32,20 @@
  *
  * @ingroup views_input
  */
-class API_AUI_VIEWS ADropdownList: public AButton {
-private:
-    _<IListModel<AString>> mModel;
-    int mSelectionId = 0;
-    bool mPopup = false;
-    _weak<AOverlappingSurface> mComboWindow;
+struct API_AUI_VIEWS DropdownList {
+    contract::In<AVector<AString>> items;
+    contract::In<std::size_t> selectionId;
+    contract::Slot<std::size_t> onSelectionChange;
+    std::function<_<AView>(_<AView>)> body = defaultBody;
+    std::function<_<AView>(contract::In<AString> text)> label = defaultLabel;
+    _<AView> icon = defaultIcon();
 
-protected:
-    virtual void updateText();
-    virtual void onComboBoxWindowCreated();
+    static _<AView> defaultBody(_<AView> content);
+    static _<AView> defaultLabel(contract::In<AString> text);
+    static _<AView> defaultIcon();
 
-    _<AViewContainer> comboWindow() {
-        return mComboWindow.lock();
-    }
-
-public:
-    explicit ADropdownList(const _<IListModel<AString>>& model);
-    ADropdownList();
-    ~ADropdownList() override;
-
-    /**
-     * @brief Selected id property.
-     */
-    auto selectionId() const {
-        return APropertyDef {
-            this,
-            &ADropdownList::getSelectionId,
-            &ADropdownList::setSelectionId,
-            selectionChanged,
-        };
-    }
-
-    void setModel(const _<IListModel<AString>>& model);
-    void render(ARenderContext context) override;
-
-    [[nodiscard]] int getSelectionId() const {
-        return mSelectionId;
-    }
-    int getSelectedId() const {
-        return mSelectionId;
-    }
-    void setSelectionId(int id);
-    int getContentMinimumWidth() override;
-
-    void onPointerReleased(const APointerReleasedEvent& event) override;
-
-    void destroyWindow();
-
-    [[nodiscard]]
-    const _<IListModel<AString>>& getModel() const {
-        return mModel;
-    }
-
-signals:
-    emits<int> selectionChanged;
+    _<AView> operator()();
 };
+}
 
 

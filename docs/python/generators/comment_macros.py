@@ -39,14 +39,14 @@ def handle_comment_macros(markdown: str, file: File):
         if type == "snippet":
             return fix_indentation(_snippet(args))
         if type == "steal_documentation":
-            return _steal_documentation(args)
+            return _steal_documentation(args, file=file)
         if type == "parse_tests":
             return parse_tests.parse_tests(Path(args))
         if type == "experimental":
             return _experimental(args)
         if type in [
             "index_alias",  # handled at autorefs stage
-            "<!-- aui:no_dedicated_page -->" # handled at doxygen stage
+            "no_dedicated_page" # handled at doxygen stage
         ]:
             return match.group(0)
         # Otherwise, raise an error
@@ -109,7 +109,7 @@ def _snippet(args: str):
 ```
 """
 
-def _steal_documentation(args: str):
+def _steal_documentation(args: str, file: File):
     i = [i for i in cpp_parser.index if isinstance(i, CppClass) and i.namespaced_name() == args]
     if not i:
         log.warning(f"Can't find class '{args}' in index")
@@ -122,7 +122,7 @@ def _steal_documentation(args: str):
         print(f'<!-- aui:index_alias {i.namespaced_name()} -->\n', file=fos)
         print(f'`{i.generic_kind} {i.namespaced_name()}`', file=fos)
         doxygen.embed_doc(i, fos)
-        return fos.getvalue()
+        return handle_comment_macros(fos.getvalue(), file=file)
 
 def _experimental(name):
     return """

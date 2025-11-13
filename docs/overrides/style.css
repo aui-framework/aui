@@ -525,3 +525,9 @@ th, td {
     color: #0039cb;
     text-decoration: underline;
 }
+
+.aui-embed-doc-dl {
+    margin-left: 1em;
+    padding-left: 1em;
+    border-left: .05rem solid var(--md-default-fg-color--lightest);
+}

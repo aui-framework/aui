@@ -352,13 +352,6 @@ AStylesheet::AStylesheet() {
         },
         /// [ARadioButton]
 
-        // ADropdownList
-        {
-            t<ADropdownList>() >> t<ALabel>(),
-            Expanding{},
-            ATextAlign::LEFT,
-        },
-
         // AListView
         {
             {t<AListView>(), t<ATreeView>()},
@@ -495,6 +488,7 @@ AStylesheet::AStylesheet() {
         {
             t<AScrollbar>(),
             Margin { 0, 0, 0, 2_px },
+            LayoutSpacing { 1_px },
         },
         {
             t<AScrollbarHandle>(),
@@ -507,7 +501,6 @@ AStylesheet::AStylesheet() {
 
             MinSize { 15_dp, 15_dp },
             BackgroundSolid { 0xcccccc_rgb },
-            Margin {1_px, 1_px },
         },
         {
             t<AScrollbar>::disabled() > t<AScrollbarHandle>(),

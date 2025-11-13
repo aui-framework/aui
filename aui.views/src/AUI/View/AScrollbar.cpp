@@ -21,6 +21,8 @@
 #include "AScrollbar.h"
 #include "ASpacerExpanding.h"
 
+#include <range/v3/numeric/accumulate.hpp>
+#include <range/v3/view/drop_last.hpp>
 
 using namespace std::chrono_literals;
 
@@ -138,6 +140,9 @@ void AScrollbar::updateScrollHandleSize() {
         case ALayoutDirection::NONE:
             break;
     }
+    scrollbarSpace -= ranges::accumulate(getViews(), 0, std::plus<>(), [spacing = getLayout()->getSpacing()](const _<AView>& view) {
+        return !!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE) ? spacing : 0;
+    });
     scrollbarSpace = glm::max(scrollbarSpace, 0);
 
     auto handleSize = mFullSize > 0 ? int(scrollbarSpace * mViewportSize / mFullSize) : 0;
@@ -157,7 +162,7 @@ void AScrollbar::setScroll(int scroll) {
 
         updateScrollHandleOffset(max);
 
-        emit scrolled(mCurrentScroll);
+        emit scrolled(static_cast<unsigned>(mCurrentScroll));
     }
     const bool scrolledToEnd = newScroll == max;
     if (mStickToEnd) {
@@ -190,7 +195,6 @@ void AScrollbar::updateScrollHandleOffset(int max) {
 
 void AScrollbar::onScroll(float& delta) {
     // scroll 3 lines of text
-    emit this->triggeredManually;
     auto prevScroll = this->getCurrentScroll();
     this->setScroll(mCurrentScroll + delta);
     auto newDelta = getCurrentScroll() - prevScroll;
@@ -211,13 +215,14 @@ void AScrollbar::scrollForward() {
     connect(buttonTimer()->fired, this, [&] {
         if (AInput::isKeyDown(AInput::LBUTTON)) {
             setScroll(mCurrentScroll + getButtonScrollSpeed());
+            emit scrolledByUser(mCurrentScroll);
         } else {
             buttonTimer()->stop();
             AObject::disconnect();
         }
     });
 
-    emit triggeredManually;
+    emit scrolledByUser(mCurrentScroll);
 }
 
 void AScrollbar::scrollBackward() {
@@ -226,13 +231,14 @@ void AScrollbar::scrollBackward() {
     connect(buttonTimer()->fired, this, [&] {
         if (AInput::isKeyDown(AInput::LBUTTON)) {
             setScroll(mCurrentScroll - getButtonScrollSpeed());
+            emit scrolledByUser(mCurrentScroll);
         } else {
             buttonTimer()->stop();
             AObject::disconnect();
         }
     });
 
-    emit triggeredManually;
+    emit scrolledByUser(mCurrentScroll);
 }
 
 void AScrollbar::onPointerPressed(const APointerPressedEvent& event) {
@@ -241,21 +247,27 @@ void AScrollbar::onPointerPressed(const APointerPressedEvent& event) {
 
 void AScrollbar::handleScrollbar(int s) {
     setScroll(mCurrentScroll + s * int(getMaxScroll()) / getAvailableSpaceForSpacer());
+    emit scrolledByUser(mCurrentScroll);
 }
 
 float AScrollbar::getAvailableSpaceForSpacer() {
+    int scrollbarSpace = 0;
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
-            return glm::max(0, getWidth() - (mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth() + mHandle->getTotalOccupiedWidth()));
+            scrollbarSpace = glm::max(0, getWidth() - (mBackwardButton->getTotalOccupiedWidth() + mForwardButton->getTotalOccupiedWidth() + mHandle->getTotalOccupiedWidth()));
 
         case ALayoutDirection::VERTICAL:
-            return glm::max(0, getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight() + mHandle->getTotalOccupiedHeight()));
+            scrollbarSpace = glm::max(0, getHeight() - (mBackwardButton->getTotalOccupiedHeight() + mForwardButton->getTotalOccupiedHeight() + mHandle->getTotalOccupiedHeight()));
 
         case ALayoutDirection::NONE:
             break;
     }
-    return 0;
+
+    scrollbarSpace -= ranges::accumulate(getViews() | ranges::views::drop_last(1), 0, std::plus<>(), [spacing = getLayout()->getSpacing()](const _<AView>& view) {
+        return !!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE) ? spacing : 0;
+    });
+    return scrollbarSpace;
 }
 
 void AScrollbarHandle::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
@@ -288,7 +300,7 @@ void AScrollbarHandle::onPointerPressed(const APointerPressedEvent& event) {
     }
 
     mDragging = true;
-    emit mScrollbar.triggeredManually;
+    emit mScrollbar.scrolledByUser(mScrollbar.getCurrentScroll());
 }
 
 void AScrollbarHandle::onPointerReleased(const APointerReleasedEvent& event) {
@@ -324,4 +336,18 @@ void AScrollbar::scrollToEnd() {
 
 void AScrollbar::onScroll(const AScrollEvent& event) {
     AViewContainerBase::onScroll(event);
+}
+
+_<AView> declarative::Scrollbar::operator()() {
+    auto s = _new<AScrollbar>(direction);
+    scroll.bindTo(ASlotDef{AUI_SLOT(s.get())::setScroll});
+    viewportSize.bindTo(ASlotDef{s.get(), [&s = *s](unsigned viewportSize) {
+        s.setScrollDimensions(viewportSize, s.fullSize());
+    }});
+    fullContentSize.bindTo(ASlotDef{s.get(), [&s = *s](unsigned fullContentSize) {
+        s.setScrollDimensions(s.viewportSize(), fullContentSize);
+    }});
+    scrollbarAppearance.bindTo(ASlotDef{AUI_SLOT(s.get())::setAppearance});
+    onScrollChange.bindTo(s->scrolledByUser);
+    return s;
 }

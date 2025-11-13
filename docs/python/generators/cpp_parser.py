@@ -485,6 +485,16 @@ def _scan():
 
 index = _scan()
 
+def find_entries_belonging_to_group(group_id: str):
+    for group_item in index:
+        if not hasattr(group_item, 'doc'):
+            continue
+        if not hasattr(group_item, 'name'):
+            continue
+        if f"@ingroup {group_id}" not in group_item.doc:
+            continue
+        yield group_item
+
 
 def test_parse_comment_lines():
     iterator = iter(Path('test_data/AString.h').read_text().splitlines())
@@ -1075,3 +1085,36 @@ public:
     """)]
     assert clazz[0].name == "Impl"
     assert clazz[0].doc == '@brief Test'
+
+
+def test_static_function():
+    clazz = [i for i in _parse("""
+    
+/**
+ * <!-- aui:no_dedicated_page -->
+ */
+struct API_AUI_VIEWS ScrollArea {
+
+    /**
+     * @brief A struct passed to scrollbar factory.
+     */
+    struct ScrollbarInitParams {
+        /**
+         * @brief Scrollbar orientation.
+         */
+        ALayoutDirection direction;
+    };
+
+    /**
+     * @brief Type
+     */
+    using ScrollbarFactory = _<AView>(ScrollbarInitParams params);
+
+    /**
+    * @brief Constructs
+    */
+    static ScrollbarInitParams getVerticalScrollbarParams(const _<declarative::ScrollAreaViewport::State>& state);
+};
+    """)]
+    assert clazz[0].name == "ScrollArea"
+    assert clazz[0].doc == '<!-- aui:no_dedicated_page -->'

@@ -51,7 +51,11 @@ void AWindow::doDrawWindow() {
     APerformanceSection s("AWindow::doDrawWindow");
     auto& renderer = mRenderingContext->renderer();
     renderer.setWindow(this);
-    render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } }, .render = renderer });
+    render({
+      .clippingRects = { ARect<int> { .p1 = glm::ivec2(0), .p2 = getSize() } },
+      .render = renderer,
+      .debugLayout = profiling().hasValue() && profiling()->showLayout.raw,
+    });
 }
 
 void AWindow::createDevtoolsWindow() {

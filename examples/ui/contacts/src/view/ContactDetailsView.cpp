@@ -68,29 +68,32 @@ ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(
     });
     connect(mEditorMode, [this] {
         setContents(Vertical::Expanding {
-          AScrollArea::Builder().withContents(Centered {
-            Vertical::Expanding {
-              Horizontal {
-                profilePhoto(mContact),
-                Centered::Expanding {
-                  presentation(mContact->displayName) AUI_WITH_STYLE { FontSize { 12_pt } },
+          ScrollArea {
+            .content =
+                Centered {
+                  Vertical::Expanding {
+                    Horizontal {
+                      profilePhoto(mContact),
+                      Centered::Expanding {
+                        presentation(mContact->displayName) AUI_WITH_STYLE { FontSize { 12_pt } },
+                      },
+                    } AUI_WITH_STYLE { Margin { 8_dp, {} }, LayoutSpacing { 4_dp } },
+                    row("Phone", mContact->phone),
+                    row("Address", mContact->address),
+                    row("Email", mContact->email),
+                    row("Homepage", mContact->homepage),
+                    Horizontal::Expanding {
+                      Vertical {
+                        Label { "Note" } AUI_WITH_STYLE { FixedSize { 100_dp, {} }, Opacity { 0.5f }, ATextAlign::RIGHT },
+                      },
+                      _new<ATextArea>() && mContact->note,
+                    } AUI_WITH_STYLE {
+                          MinSize { {}, 100_dp },
+                          LayoutSpacing { 4_dp },
+                        },
+                  } AUI_WITH_STYLE { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(8_dp), LayoutSpacing { 4_dp } },
                 },
-              } AUI_WITH_STYLE { Margin { 8_dp, {} }, LayoutSpacing { 4_dp } },
-              row("Phone", mContact->phone),
-              row("Address", mContact->address),
-              row("Email", mContact->email),
-              row("Homepage", mContact->homepage),
-              Horizontal::Expanding {
-                Vertical {
-                  Label { "Note" } AUI_WITH_STYLE { FixedSize { 100_dp, {} }, Opacity { 0.5f }, ATextAlign::RIGHT },
-                },
-                _new<ATextArea>() && mContact->note,
-              } AUI_WITH_STYLE {
-                    MinSize { {}, 100_dp },
-                    LayoutSpacing { 4_dp },
-                  },
-            } AUI_WITH_STYLE { MaxSize(EDITOR_CONTENT_MAX_WIDTH, {}), Padding(8_dp), LayoutSpacing { 4_dp } },
-          }),
+          },
           Centered {
             Horizontal::Expanding {
               SpacerExpanding(),

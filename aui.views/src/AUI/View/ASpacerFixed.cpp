@@ -12,27 +12,58 @@
 #include "ASpacerFixed.h"
 
 int ASpacerFixed::getContentMinimumWidth() {
-    if (auto parent = getParent()) {
-        if (const auto& layout = parent->getLayout()) {
-            if (layout->getLayoutDirection() == ALayoutDirection::HORIZONTAL) {
-                return int(mSpace.getValuePx());
-            }
-        }
+    if (getParentLayoutDirection() == ALayoutDirection::HORIZONTAL) {
+        return int(mSpace.getValuePx());
     }
     return 0;
 }
 
 int ASpacerFixed::getContentMinimumHeight() {
-    if (auto parent = getParent()) {
-        if (const auto& layout = parent->getLayout()) {
-            if (layout->getLayoutDirection() == ALayoutDirection::VERTICAL) {
-                return int(mSpace.getValuePx());
-            }
-        }
+    if (getParentLayoutDirection() == ALayoutDirection::VERTICAL) {
+        return int(mSpace.getValuePx());
     }
     return 0;
 }
 
-bool ASpacerFixed::consumesClick(const glm::ivec2& pos) {
-    return false;
+void ASpacerFixed::render(ARenderContext ctx) {
+    AView::render(ctx);
+
+    if (!ctx.debugLayout) {
+        return;
+    }
+
+    AStaticVector<std::pair<glm::vec2, glm::vec2>, 0x100> points;
+
+    auto parentLayoutDirection = getParentLayoutDirection();
+
+    if (parentLayoutDirection == ALayoutDirection::HORIZONTAL) {
+        points << std::make_pair(glm::vec2 { 0, 0 }, glm::ivec2{0, getSize().y });
+        points << std::make_pair(glm::vec2 { getSize().x - 1, 0 }, glm::ivec2{getSize().x - 1, getSize().y });
+        points << std::make_pair(glm::ivec2 { 0, getSize().y / 2.f }, glm::ivec2 { getSize().x, getSize().y / 2.f });
+    }
+
+    if (parentLayoutDirection == ALayoutDirection::VERTICAL) {
+        points << std::make_pair(glm::vec2 { 0, 0 }, glm::ivec2{getSize().x, 0 });
+        points << std::make_pair(glm::vec2 { 0, getSize().y - 1 }, glm::ivec2{getSize().x, getSize().y - 1 });
+        points << std::make_pair(glm::ivec2 { getSize().x / 2.f, 0 }, glm::ivec2 { getSize().x / 2.f, getSize().y });
+    }
+
+    ctx.render.lines(ASolidBrush { AColor::RED }, points);
+}
+
+ALayoutDirection ASpacerFixed::getParentLayoutDirection() const {
+    if (auto parent = getParent()) {
+        if (const auto& layout = parent->getLayout()) {
+            return layout->getLayoutDirection();
+        }
+    }
+    return ALayoutDirection::NONE;
+}
+
+bool ASpacerFixed::consumesClick(const glm::ivec2& pos) { return false; }
+
+_<AView> declarative::SpacerFixed::operator()() {
+    auto view = _new<ASpacerFixed>(0);
+    space.bindTo(ASlotDef { AUI_SLOT(view.get())::setSpace });
+    return view;
 }

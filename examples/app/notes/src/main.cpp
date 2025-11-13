@@ -86,19 +86,20 @@ _<AView> noteEditor(const _<Note>& note) {
     if (note == nullptr) {
         return Centered { Label { "No note selected" } };
     }
-    return AScrollArea::Builder().withContents(
-        Vertical {
-          _new<TitleTextArea>("Untitled") AUI_LET {
-                  it->setCustomStyle({ FontSize { 14_pt }, Expanding { 1, 0 } });
-                  AObject::biConnect(note->title, it->text());
-                  if (note->content.raw.empty()) {
-                      it->focus();
-                  }
-              },
-          _new<ATextArea>("Text") AUI_WITH_STYLE { Expanding() } && note->content,
+    return ScrollArea {
+        .content = Vertical {
+            _new<TitleTextArea>("Untitled") AUI_LET {
+                it->setCustomStyle({ FontSize { 14_pt }, Expanding { 1, 0 } });
+                AObject::biConnect(note->title, it->text());
+                if (note->content.raw.empty()) {
+                    it->focus();
+                }
+            },
+            _new<ATextArea>("Text") AUI_WITH_STYLE { Expanding() } && note->content,
         } AUI_WITH_STYLE {
-          Padding { 8_dp, 16_dp },
-        });
+            Padding { 8_dp, 16_dp },
+        },
+    };
 }
 /// [noteEditor]
 
@@ -133,9 +134,8 @@ public:
                         } AUI_WITH_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } },
                       },
                       /// [scrollarea]
-                      AScrollArea::Builder()
-                          .withContents(
-                          AUI_DECLARATIVE_FOR(note, *mNotes, AVerticalLayout) {
+                      ScrollArea {
+                          .content = AUI_DECLARATIVE_FOR(note, *mNotes, AVerticalLayout) {
                               observeChangesForDirty(note);
                               return notePreview(note) AUI_LET {
                                   connect(it->clicked, [this, note] { mCurrentNote = note; });
@@ -144,8 +144,8 @@ public:
                                       view.setAssName(".plain_bg", currentNote == note);
                                   };
                               };
-                          })
-                          .build(),
+                          },
+                      },
                       /// [scrollarea]
                     } AUI_WITH_STYLE { MinSize { 200_dp } },
 

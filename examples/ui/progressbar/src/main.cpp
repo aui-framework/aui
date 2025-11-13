@@ -31,7 +31,7 @@ _<AView> minimalProgress(_<State> state) {
 }
 
 AUI_ENTRY {
-    auto window = _new<AWindow>("Checkbox", 300_dp, 100_dp);
+    auto window = _new<AWindow>("Slider", 300_dp, 100_dp);
     auto state = _new<State>();
     window->setContents(
         Vertical {

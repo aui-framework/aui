@@ -48,21 +48,21 @@ public:
                 Label { "Filter prefix:" },
                 _new<ATextField>() AUI_WITH_STYLE { Expanding(1, 0) } && mFilterPrefix,
               } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-              AScrollArea::Builder().withExpanding().withContents(
-                  AUI_DECLARATIVE_FOR(i, *mUsers | FILTER_VIEW, AVerticalLayout) {
+                ScrollArea {
+                  .content = AUI_DECLARATIVE_FOR(i, *mUsers | FILTER_VIEW, AVerticalLayout) {
                     auto view = _new<ALabel>();
                     view & i->displayName;
                     connect(mSelectedUser, view, [this, &view = *view, i] {
-                        view.setAssName("selected", mSelectedUser == i);
+                      view.setAssName("selected", mSelectedUser == i);
                     });
                     connect(view->clicked, [this, i] {
-                        mSelectedUser = i;
-                        mEditedUser.name = i->name;
-                        mEditedUser.surname = i->surname;
+                      mSelectedUser = i;
+                      mEditedUser.name = i->name;
+                      mEditedUser.surname = i->surname;
                     });
                     return view;
                   }
-              ).build() AUI_WITH_STYLE { BackgroundSolid { AColor::WHITE } },
+                } AUI_WITH_STYLE { BackgroundSolid { AColor::WHITE } },
             } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
             Centered::Expanding {
               _form({
