@@ -17,6 +17,7 @@
 #include <AUI/View/AButton.h>
 #include <SDL3/SDL.h>
 
+/// [EmbedRenderingContext]
 struct EmbedRenderingContext : IRenderingContext {
     std::shared_ptr<OpenGLRenderer> m_renderer;
 
@@ -48,7 +49,9 @@ struct EmbedRenderingContext : IRenderingContext {
         return *m_renderer;
     }
 };
+/// [EmbedRenderingContext]
 
+/// [EmbedWindow]
 struct EmbedWindow : AGLEmbedContext {
     SDL_Window* sdl_window = nullptr;
     SDL_GLContext gl_context = nullptr;
@@ -72,7 +75,9 @@ struct EmbedWindow : AGLEmbedContext {
 
     void onNotifyProcessMessages() override {}
 };
+/// [EmbedWindow]
 
+/// [sdlToAPointer]
 static auto sdlToAPointer(Uint8 button) -> APointerIndex {
     switch (button) {
         case SDL_BUTTON_LEFT:
@@ -85,7 +90,9 @@ static auto sdlToAPointer(Uint8 button) -> APointerIndex {
             return {};
     }
 }
+/// [sdlToAPointer]
 
+/// [handleSDLEvent]
 void handleSDLEvent(SDL_Event* event, EmbedWindow& window) {
     switch (event->type) {
         case SDL_EVENT_QUIT:
@@ -129,29 +136,37 @@ void handleSDLEvent(SDL_Event* event, EmbedWindow& window) {
         default: break;
     }
 }
+/// [handleSDLEvent]
 
 using namespace declarative;
 
 AUI_ENTRY {
+    /// [SDL_Init]
     if (!SDL_Init(SDL_INIT_VIDEO)) {
         ALogger::err("SDL3") << SDL_GetError();
         return 1;
     }
+    /// [SDL_Init]
 
+    /// [CreateWindow]
     EmbedWindow window;
     window.sdl_window = SDL_CreateWindow("AUI + SDL3", 600, 400, SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
     if (!window.sdl_window) {
         ALogger::err("SDL3") << SDL_GetError();
         return 1;
     }
+    /// [CreateWindow]
 
+    /// [GLContext]
     window.gl_context = SDL_GL_CreateContext(window.sdl_window);
     if (!window.gl_context) {
         ALogger::err("SDL3") << SDL_GetError();
         return 1;
     }
     SDL_GL_MakeCurrent(window.sdl_window, window.gl_context);
+    /// [GLContext]
 
+    /// [RendererSetup]
     if (!OpenGLRenderer::loadGL((OpenGLRenderer::GLLoadProc)SDL_GL_GetProcAddress)) {
         ALogger::err("OpenGLRenderer") << "Failed to load GL";
         return 1;
@@ -163,7 +178,9 @@ AUI_ENTRY {
         rendering_context->m_renderer = renderer;
         window.init(std::move(rendering_context));
     }
+    /// [RendererSetup]
 
+    /// [UI]
     window.setContainer(Centered {
         Vertical {
             Label { "Hello, World!" },
@@ -175,13 +192,18 @@ AUI_ENTRY {
             }
         }
     });
+    /// [UI]
 
+    /// [MainLoop]
     while (!window.close) {
+        /// [EventProcessing]
         SDL_Event event;
         while (SDL_PollEvent(&event)) {
             handleSDLEvent(&event, window);
         }
+        /// [EventProcessing]
 
+        /// [Rendering]
         if (window.requiresRedraw()) {
             ARenderContext render_context {
                 .clippingRects = {},
@@ -190,11 +212,15 @@ AUI_ENTRY {
             window.render(render_context);
             SDL_GL_SwapWindow(window.sdl_window);
         }
+        /// [Rendering]
 
+        /// [FrameRateLimit]
         const SDL_DisplayMode* dm = SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(window.sdl_window));
         Sint32 refresh_ms = static_cast<Sint32>(1000.0f / dm->refresh_rate);
         SDL_Delay(refresh_ms);
+        /// [FrameRateLimit]
     }
+    /// [MainLoop]
 
     return 0;
 }

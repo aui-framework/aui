@@ -87,7 +87,7 @@ This application creates a simple GUI window using SDL3 for window management an
 
 ### Window Creation
 
-<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp SDL_CreateWindow -->
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp CreateWindow -->
 
 **Purpose:** Creates the main window with the following properties:
 - Title: "AUI + SDL3"
@@ -100,35 +100,28 @@ This application creates a simple GUI window using SDL3 for window management an
 
 ### OpenGL Context Setup
 
-<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp SDL_GL_MakeCurrent -->
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp GLContext -->
 
 **Purpose:** Creates an OpenGL context and makes it current for rendering operations. This is necessary before any OpenGL calls can be made.
 
 ---
 
-### OpenGL Loading
-
-<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp loadGL -->
-
-**Purpose:** Loads OpenGL function pointers using SDL's procedure address function. This is required because OpenGL functions must be loaded at runtime on most platforms.
-
----
-
 ### Renderer Setup
 
-<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp window.init -->
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp RendererSetup -->
 
 **Purpose:** Creates the rendering pipeline by:
-1. Instantiating the OpenGL renderer
-2. Creating the rendering context wrapper
-3. Linking them together
-4. Initializing the AUI window with this rendering setup
+1. Loads OpenGL function pointers using SDL's procedure address function.
+2. Instantiating the OpenGL renderer
+3. Creating the rendering context wrapper
+4. Linking them together
+5. Initializing the AUI window with this rendering setup
 
 ---
 
 ### UI Content Declaration
 
-<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp setContainer -->
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp UI -->
 
 **Purpose:** Defines the UI layout using AUI's declarative syntax:
 - **Centered**: Centers the content in the window
@@ -144,32 +137,11 @@ This is similar to modern declarative UI frameworks like SwiftUI or React.
 
 ## Main Event Loop
 
-```cpp
-while (!window.close) {
-    SDL_Event event;
-    while (SDL_PollEvent(&event)) {
-        handleSDLEvent(&event, window);
-    }
-    
-    if (window.requiresRedraw()) {
-        ARenderContext render_context {
-            .clippingRects = {},
-            .render = *renderer,
-        };
-        window.render(render_context);
-        SDL_GL_SwapWindow(window.sdl_window);
-    }
-    
-    const SDL_DisplayMode* dm = SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(window.sdl_window));
-    Sint32 refresh_ms = static_cast<Sint32>(1000.0f / dm->refresh_rate);
-    SDL_Delay(refresh_ms);
-}
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp MainLoop -->
 
 ### Event Processing
 
-<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp SDL_PollEvent -->
-<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp handleSDLEvent -->
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp EventProcessing -->
 
 **Purpose:** Polls and processes all pending SDL events (mouse, keyboard, window events) in the queue. Non-blocking - returns immediately if no events are available.
 
@@ -177,7 +149,7 @@ while (!window.close) {
 
 ### Rendering
 
-<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp requiresRedraw -->
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp Rendering -->
 
 **Purpose:** Conditionally renders the UI only when needed (dirty flag system):
 1. **requiresRedraw()**: Checks if the UI needs updating (e.g., after user interaction or animation)
@@ -189,7 +161,7 @@ while (!window.close) {
 
 ### Frame Rate Limiting
 
-<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp refresh_ms -->
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp FrameRateLimit -->
 
 **Purpose:** Limits the frame rate to match the display's refresh rate to:
 - Prevent unnecessary CPU/GPU usage
