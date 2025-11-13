@@ -26,10 +26,6 @@
 #include <AUI/Traits/callables.h>
 #include <variant>
 
-/**
-* @defgroup json aui::json
-* @brief aui::json is a json parser/writer.
-*/
 
 class AJson;
 namespace aui::impl {
@@ -325,3 +321,8 @@ public:
 
 #include <AUI/Json/Conversion.h>
 #include <AUI/Json/Serialization.h>
+
+/**
+* @defgroup json aui::json
+* @brief aui::json is a json parser/writer.
+*/

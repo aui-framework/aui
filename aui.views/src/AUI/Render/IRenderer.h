@@ -33,7 +33,8 @@ class ASurface;
 
 
 /**
- * Blending mode.
+ * @brief Blending mode.
+ * @details
  * <p><b>Terminology used in this documentation</b>:</p>
  * <dl>
  *   <dt><b><u>S</u>ource color</b> (S)</dt>
@@ -139,13 +140,43 @@ enum class Blending {
 };
 
 /**
- * @brief Base class for rendering.
+ * @brief Base class for renderer.
  * @ingroup views
  * @details
- * Renderer is shared between windows. It's expected to share resources (if any). Thus, it does not perform any platform
- * specific routines.
+ * The rendering engine provides graphics rendering capabilities for the AUI Framework's user interface system. It
+ * offers both hardware-accelerated (OpenGL) and software-based rendering backends. The engine handles drawing
+ * primitives, text rendering, visual effects, and maintains consistent rendering behavior across different platforms
+ * and hardware capabilities.
  *
- * @sa IRenderingContext
+ * The renderer is shared across windows and manages its own resources such as textures, but [each window has its own
+ * rendering context](awindow.md).
+ *
+ * ## Core Renderer Interface
+ *
+ * | Category | Key Methods | Purpose |
+ * |----------|--------------|---------|
+ * | Shape Drawing | `rectangle()`, `roundedRectangle()`, `rectangleBorder()` | Basic geometric shapes |
+ * | Line Drawing | `line()`, `lines()`, `points()` | Vector graphics primitives |
+ * | Text Rendering | `string()`, `prerenderString()`, `newMultiStringCanvas()` | Text output and caching |
+ * | Visual Effects | `boxShadow()`, `boxShadowInner()`, `squareSector()` | Advanced visual effects |
+ * | State Management | `setColor()`, `setTransform()`, `setBlending()` | Rendering context control |
+ * | Masking | `pushMaskBefore()`, `pushMaskAfter()`, `popMaskBefore()`, `popMaskAfter()` | Stencil-based clipping |
+ *
+ * The renderer maintains internal state including:
+ *   
+ * - Current color multiplier (mColor)
+ * - Transformation matrix (mTransform)
+ * - Target window (mWindow)
+ * - Stencil depth for masking (mStencilDepth)
+ * - Texture pool for resource management (mTexturePool)
+ *
+ * ## HiDPI (High‑DPI) support
+ *
+ * The framework uses logical units [dp](ametric.md) for layout and drawing.  All logical values are
+ * multiplied by the device pixel ratio (`APlatform::getDpiRatio()`) before they reach the
+ * renderer. The renderer works with physical pixels only (px).
+ * 
+ * This ensures that the UI appears consistent across displays with varying pixel densities.
  */
 class IRenderer: public aui::noncopyable {
 public:
@@ -504,6 +535,12 @@ public:
     /**
      * @brief Sets blending mode.
      * @param blending new blending mode
+     * @details
+     * **Blending Modes and Effects**
+     *
+     * The rendering engine supports multiple blending modes for advanced visual effects:
+     *
+     * <!-- aui:steal_documentation Blending -->
      */
     virtual void setBlending(Blending blending) = 0;
 
