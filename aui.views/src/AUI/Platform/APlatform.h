@@ -31,5 +31,5 @@ API_AUI_VIEWS AString getFontPath(const AString& font);
  * details about the failure.
  */
 API_AUI_VIEWS void openUrl(const AUrl& url);
-API_AUI_VIEWS float getDpiRatio();
-};   // namespace APlatform
+
+} // namespace APlatform

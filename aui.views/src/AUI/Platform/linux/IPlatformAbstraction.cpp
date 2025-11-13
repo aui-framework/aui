@@ -42,5 +42,5 @@ void IPlatformAbstraction::setCurrentWindow(ASurface* window) {
 }
 
 float IPlatformAbstraction::windowGetDpiRatio(AWindow& window) {
-    return platformGetDpiRatio();
+    return 1.0f;
 }

@@ -890,8 +890,8 @@ bool OpenGLRenderer::setupLineShader(const ABrush& brush, const ABorderStyle& st
           }, brush);
           float dashWidth = dashed.dashWidth.valueOr(1.f) * widthPx;
           float sumOfLengths = dashWidth + dashed.spaceBetweenDashes.valueOr(2.f) * widthPx;
-          dashWidth *= APlatform::getDpiRatio();
-          sumOfLengths *= APlatform::getDpiRatio();
+          dashWidth *= mRenderScale;
+          sumOfLengths *= mRenderScale;
           gl::Program::currentShader()->set(aui::ShaderUniforms::DIVIDER, sumOfLengths);
           gl::Program::currentShader()->set(aui::ShaderUniforms::THRESHOLD, dashWidth);
 
@@ -908,8 +908,7 @@ struct LineVertex {
 };
 }
 
-void
-OpenGLRenderer::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
+void OpenGLRenderer::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
     if (points.size() < 2) return;
     const auto widthPx = width.getValuePx();
     bool computeDistances = setupLineShader(brush, style, widthPx);

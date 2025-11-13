@@ -31,7 +31,6 @@ public:
     AString pasteFromClipboard() override;
     glm::ivec2 desktopGetMousePosition() override;
     void desktopSetMousePosition(glm::ivec2 pos) override;
-    float platformGetDpiRatio() override;
     AInput::Key inputFromNative(int k) override;
     int inputToNative(AInput::Key key) override;
     bool inputIsKeyDown(AInput::Key k) override;

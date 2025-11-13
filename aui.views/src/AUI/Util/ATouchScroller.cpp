@@ -110,6 +110,12 @@ AOptional<glm::ivec2> ATouchScroller::gatherKineticScrollValue() {
 }
 
 float ATouchScroller::deceleration() {
-    return BASE_DECELERATION * APlatform::getDpiRatio();
+    float scale;
+    if (AWindow::current()) {
+        scale = AWindow::current()->getDpiRatio();
+    } else {
+        scale = 1.0f;
+    }
+    return BASE_DECELERATION * scale;
 }
 

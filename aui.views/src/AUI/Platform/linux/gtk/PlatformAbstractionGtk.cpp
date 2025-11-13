@@ -78,9 +78,6 @@ void PlatformAbstractionGtk::copyToClipboard(const AString &text) {}
 AString PlatformAbstractionGtk::pasteFromClipboard() { return AString(); }
 glm::ivec2 PlatformAbstractionGtk::desktopGetMousePosition() { return glm::ivec2(); }
 void PlatformAbstractionGtk::desktopSetMousePosition(glm::ivec2 pos) {}
-float PlatformAbstractionGtk::platformGetDpiRatio() {
-    return 1.f;
-}
 void PlatformAbstractionGtk::windowSetStyle(AWindow &window, WindowStyle ws) {
     gtk_window_set_resizable(nativeHandle(window), !bool(ws & WindowStyle::NO_RESIZE));
     gtk_window_set_modal(nativeHandle(window), bool(ws & WindowStyle::NO_MINIMIZE_MAXIMIZE));

@@ -57,8 +57,6 @@ public:
     virtual glm::ivec2 desktopGetMousePosition() = 0;
     virtual void desktopSetMousePosition(glm::ivec2 pos) = 0;
 
-    virtual float platformGetDpiRatio() = 0;
-
     // INPUT
     virtual AInput::Key inputFromNative(int k) = 0;
     virtual int inputToNative(AInput::Key key) = 0;

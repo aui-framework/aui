@@ -64,7 +64,6 @@ public:
     // PLATFORM/DESKTOP
     glm::ivec2 desktopGetMousePosition() override;
     void desktopSetMousePosition(glm::ivec2 pos) override;
-    float platformGetDpiRatio() override;
 
 
     // WINDOW

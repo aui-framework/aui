@@ -584,6 +584,19 @@ public:
     }
 
     /**
+     * @brief Controls the rendering scale of images for display only.
+     * Does not affect the actual visual appearance or geometry of shapes.
+     * Only impacts the sharpness and clarity of rendered images on screen.
+     */
+    void setRenderScale(float render_scale) {
+        mRenderScale = render_scale;
+    }
+
+    float getRenderScale() const noexcept {
+        return mRenderScale;
+    }
+
+    /**
      * @brief Draws rectangular backdrop effects.
      * @param position rectangle position (px)
      * @param size rectangle size (px)
@@ -594,6 +607,7 @@ public:
     void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops);
 
 protected:
+    float mRenderScale = 1.0f;
     AColor mColor;
     glm::mat4 mTransform;
     ASurface* mWindow = nullptr;
