@@ -187,9 +187,10 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 |------------------------------|---------------|
 | MSVC 19+ (Visual Studio 20+) | Full          |
 | gcc (13+)                    | Full          |
-| MinGW (13+)                  | Won't compile |
-| Cross-compile MinGW          | Won't compile |
+| MinGW (13+)                  | Static only*  |
+| Cross-compile MinGW          | Static only*  |
 | clang                        | Full          |
+\* Use `-DBUILD_SHARED_LIBS=OFF`
 
 ## Used libraries
 - [libcurl](https://curl.se/) for http/https requests
