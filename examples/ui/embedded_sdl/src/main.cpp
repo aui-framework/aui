@@ -9,12 +9,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <AUI/Common/AUtf8.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AGLEmbedContext.h>
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/Util/Declarative/Containers.h>
 #include <AUI/View/AButton.h>
+#include <AUI/View/ATextField.h>
+#include <AUI/Thread/AEventLoop.h>
 #include <SDL3/SDL.h>
 
 /// [EmbedRenderingContext]
@@ -52,7 +55,7 @@ struct EmbedRenderingContext : IRenderingContext {
 /// [EmbedRenderingContext]
 
 /// [EmbedWindow]
-struct EmbedWindow : AGLEmbedContext {
+struct EmbedWindow : AGLEmbedContext, AObject {
     SDL_Window* sdl_window = nullptr;
     SDL_GLContext gl_context = nullptr;
     bool close = false;
@@ -71,6 +74,13 @@ struct EmbedWindow : AGLEmbedContext {
         setViewportSize(width, height);
 
         setCustomDpiRatio(SDL_GetWindowDisplayScale(sdl_window));
+
+        connect(getWindow()->touchscreenKeyboardShown, this, [this] {
+            SDL_StartTextInput(sdl_window);
+        });
+        connect(getWindow()->touchscreenKeyboardHidden, this, [this] {
+            SDL_StopTextInput(sdl_window);
+        });
     }
 
     void onNotifyProcessMessages() override {}
@@ -116,11 +126,20 @@ void handleSDLEvent(SDL_Event* event, EmbedWindow& window) {
             window.setCustomDpiRatio(SDL_GetWindowDisplayScale(window.sdl_window));
         } break;
         case SDL_EVENT_KEY_DOWN:
+            //window.onKeyPressed();
             break;
         case SDL_EVENT_KEY_UP:
+            //window.onKeyReleased();
             break;
-        case SDL_EVENT_TEXT_INPUT:
-            break;
+        case SDL_EVENT_TEXT_INPUT: {
+            std::string_view text(event->text.text);
+            AUtf8ConstIterator it(text.data(), text.begin(), text.end(), 0);
+            AUtf8ConstIterator it_end(text.data(), text.begin(), text.end(), text.size());
+            for (; it != it_end; ++it) {
+                AChar ch = *it;
+                window.onCharEntered(ch);
+            }
+        } break;
         case SDL_EVENT_MOUSE_MOTION:
             window.onPointerMove(event->motion.x, event->motion.y);
             break;
@@ -184,6 +203,7 @@ AUI_ENTRY {
     window.setContainer(Centered {
         Vertical {
             Label { "Hello, World!" },
+            _new<ATextField>(),
             Button {
                 .content = Label { "Click me" },
                 .onClick = [] {
@@ -201,6 +221,7 @@ AUI_ENTRY {
         while (SDL_PollEvent(&event)) {
             handleSDLEvent(&event, window);
         }
+        AThread::processMessages();
         /// [EventProcessing]
 
         /// [Rendering]

@@ -95,7 +95,7 @@ protected:
         if (mTheWrap->mCustomDpiRatio) {
             return *mTheWrap->mCustomDpiRatio;
         }
-        return ASurface::fetchDpiFromSystem();
+        return 1.0f;
     }
 };
 
