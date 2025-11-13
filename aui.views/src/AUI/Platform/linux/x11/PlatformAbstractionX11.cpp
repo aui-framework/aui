@@ -485,8 +485,7 @@ void PlatformAbstractionX11::windowSetGeometry(AWindow& window, int x, int y, in
     if (!nativeHandle(window))
         return;
     WindowStyle style = window.windowStyle();
-    bool isPopupMenu = (style == WindowStyle::DEFAULT) ||
-                 ((style & WindowStyle::SYS) == WindowStyle::SYS);
+    bool isPopupMenu = (style & WindowStyle::SYS) == WindowStyle::SYS;
 
     XWindowChanges changes;
     changes.x = x;
