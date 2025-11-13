@@ -40,6 +40,43 @@ class AWindowManager;
 /**
  * @brief Represents a window in the underlying windowing system.
  * @ingroup views
+ * @details
+ * This document covers AUI's window management system, which provides cross‑platform
+ * window creation, lifecycle management, and event handling. The system abstracts
+ * native windowing APIs across Windows, Linux, macOS, Android, and iOS platforms
+ * while maintaining a unified interface for application developers.
+ *
+ * `AWindow` is the concrete implementation of a UI surface that is backed by a native
+ * window. It inherits from `ASurface` – the generic surface API that can be used by other windowing API implementations
+ * (i.e., SDL3 or a game engine).
+ *
+ * `AWindow` owns an `IRenderingContext` instance. The context bridges the window to
+ * the shared `IRenderer` – the actual rendering engine. The renderer performs all
+ * drawing primitives and is shared across all windows. The context handles
+ * platform‑specific tasks such as buffer swapping, resizing, and screenshot capture.
+ *
+ * ```mermaid
+ * graph TD
+ * %%{init: {'theme': 'default'}}%%
+ * classDef platformSpec fill:none,stroke:#888,stroke-width:2,stroke-dasharray:5,5;
+ *
+ * %% Sub‑graph definition (use an ID without spaces)
+ * subgraph PlatformSpecifics
+ *     AWindow1(AWindow) -->|has| IRenderingContext1(IRenderingContext)
+ *     AWindow2(AWindow) -->|has| IRenderingContext2(IRenderingContext)
+ *     AWindow3(AWindow) -->|has| IRenderingContext3(IRenderingContext)
+ * end
+ *
+ * %% Apply the class to the sub‑graph
+ * class PlatformSpecifics platformSpec
+ *
+ * %% Connections to the renderer
+ * IRenderingContext1 -->|uses| IRenderer
+ * IRenderingContext2 -->|uses| IRenderer
+ * IRenderingContext3 -->|uses| IRenderer
+ * ```
+ *
+ * For more details on the rendering, see [Rendering Engine](irenderer.md).
  */
 class API_AUI_VIEWS AWindow: public ASurface
 {

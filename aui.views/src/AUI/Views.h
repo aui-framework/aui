@@ -25,6 +25,7 @@
 /**
  * @defgroup views aui::views
  * @brief Graphical User Interface library.
- * @details AUI's flagman module which provides modern declarative ways to create graphical user interfaces.
+ * @details
+ * AUI's flagman module which provides modern declarative ways to create graphical user interfaces.
  */
 
