@@ -12,9 +12,7 @@ This application creates a simple GUI window using SDL3 for window management an
 
 ### EmbedRenderingContext
 
-```cpp
-struct EmbedRenderingContext : IRenderingContext
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp struct EmbedRenderingContext -->
 
 **Purpose:** This structure acts as a bridge between AUI's rendering system and the SDL3/OpenGL environment.
 
@@ -28,9 +26,7 @@ struct EmbedRenderingContext : IRenderingContext
 
 ### EmbedWindow
 
-```cpp
-struct EmbedWindow : AGLEmbedContext
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp struct EmbedWindow -->
 
 **Purpose:** Represents the main application window and manages the connection between SDL3 and AUI Framework.
 
@@ -49,9 +45,7 @@ struct EmbedWindow : AGLEmbedContext
 
 ### sdlToAPointer()
 
-```cpp
-static auto sdlToAPointer(Uint8 button) -> APointerIndex
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp sdlToAPointer -->
 
 **Purpose:** Converts SDL3 mouse button constants to AUI's pointer index format.
 
@@ -64,9 +58,7 @@ static auto sdlToAPointer(Uint8 button) -> APointerIndex
 
 ### handleSDLEvent()
 
-```cpp
-void handleSDLEvent(SDL_Event* event, EmbedWindow& window)
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp handleSDLEvent -->
 
 **Purpose:** Central event dispatcher that processes all SDL events and forwards them to the AUI window.
 
@@ -86,12 +78,7 @@ void handleSDLEvent(SDL_Event* event, EmbedWindow& window)
 
 ### SDL3 Initialization
 
-```cpp
-if (!SDL_Init(SDL_INIT_VIDEO)) {
-    ALogger::err("SDL3") << SDL_GetError();
-    return 1;
-}
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp SDL_Init -->
 
 **Purpose:** Initializes SDL3's video subsystem. This must be called before any other SDL functions. If initialization fails, the error is logged and the application exits.
 
@@ -99,10 +86,7 @@ if (!SDL_Init(SDL_INIT_VIDEO)) {
 
 ### Window Creation
 
-```cpp
-window.sdl_window = SDL_CreateWindow("AUI + SDL3", 600, 400, 
-    SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE | SDL_WINDOW_HIGH_PIXEL_DENSITY);
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp SDL_CreateWindow -->
 
 **Purpose:** Creates the main window with the following properties:
 - Title: "AUI + SDL3"
@@ -115,10 +99,7 @@ window.sdl_window = SDL_CreateWindow("AUI + SDL3", 600, 400,
 
 ### OpenGL Context Setup
 
-```cpp
-window.gl_context = SDL_GL_CreateContext(window.sdl_window);
-SDL_GL_MakeCurrent(window.sdl_window, window.gl_context);
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp SDL_GL_MakeCurrent -->
 
 **Purpose:** Creates an OpenGL context and makes it current for rendering operations. This is necessary before any OpenGL calls can be made.
 
@@ -134,12 +115,7 @@ SDL_GL_MakeCurrent(window.sdl_window, window.gl_context);
 
 ### Renderer Setup
 
-```cpp
-auto renderer = std::make_shared<OpenGLRenderer>();
-auto rendering_context = std::make_unique<EmbedRenderingContext>();
-rendering_context->m_renderer = renderer;
-window.init(std::move(rendering_context));
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp window.init -->
 
 **Purpose:** Creates the rendering pipeline by:
 1. Instantiating the OpenGL renderer
@@ -191,11 +167,8 @@ while (!window.close) {
 
 ### Event Processing
 
-```cpp
-while (SDL_PollEvent(&event)) {
-    handleSDLEvent(&event, window);
-}
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp SDL_PollEvent -->
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp handleSDLEvent -->
 
 **Purpose:** Polls and processes all pending SDL events (mouse, keyboard, window events) in the queue. Non-blocking - returns immediately if no events are available.
 
@@ -215,11 +188,7 @@ while (SDL_PollEvent(&event)) {
 
 ### Frame Rate Limiting
 
-```cpp
-const SDL_DisplayMode* dm = SDL_GetCurrentDisplayMode(SDL_GetDisplayForWindow(window.sdl_window));
-Sint32 refresh_ms = static_cast<Sint32>(1000.0f / dm->refresh_rate);
-SDL_Delay(refresh_ms);
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp refresh_ms -->
 
 **Purpose:** Limits the frame rate to match the display's refresh rate to:
 - Prevent unnecessary CPU/GPU usage
