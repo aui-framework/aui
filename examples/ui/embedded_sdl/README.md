@@ -126,12 +126,7 @@ SDL_GL_MakeCurrent(window.sdl_window, window.gl_context);
 
 ### OpenGL Loading
 
-```cpp
-if (!OpenGLRenderer::loadGL((OpenGLRenderer::GLLoadProc)SDL_GL_GetProcAddress)) {
-    ALogger::err("OpenGLRenderer") << "Failed to load GL";
-    return 1;
-}
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp loadGL -->
 
 **Purpose:** Loads OpenGL function pointers using SDL's procedure address function. This is required because OpenGL functions must be loaded at runtime on most platforms.
 
@@ -156,19 +151,7 @@ window.init(std::move(rendering_context));
 
 ### UI Content Declaration
 
-```cpp
-window.setContainer(Centered {
-    Vertical {
-        Label { "Hello, World!" },
-        Button {
-            .content = Label { "Click me" },
-            .onClick = [] {
-                ALogger::info("Test") << "Hello world!";
-            }
-        }
-    }
-});
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp setContainer -->
 
 **Purpose:** Defines the UI layout using AUI's declarative syntax:
 - **Centered**: Centers the content in the window
@@ -220,16 +203,7 @@ while (SDL_PollEvent(&event)) {
 
 ### Rendering
 
-```cpp
-if (window.requiresRedraw()) {
-    ARenderContext render_context {
-        .clippingRects = {},
-        .render = *renderer,
-    };
-    window.render(render_context);
-    SDL_GL_SwapWindow(window.sdl_window);
-}
-```
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp requiresRedraw -->
 
 **Purpose:** Conditionally renders the UI only when needed (dirty flag system):
 1. **requiresRedraw()**: Checks if the UI needs updating (e.g., after user interaction or animation)
