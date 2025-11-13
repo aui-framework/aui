@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -9,12 +9,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <AUI/Platform/APlatform.h>
-#include <AUI/Common/AString.h>
-#include <AUI/IO/APath.h>
-#include <AUI/Util/kAUI.h>
-#include <AUI/Platform/android/OSAndroid.h>
+//
+// Created by nelonn on 11/13/25.
+//
 
-void APlatform::openUrl(const AUrl &url) {
-    com::github::aui::android::Platform::openUrl(url.full());
+#pragma once
+
+namespace aui::detail {
+
+auto getMainScreenScale() -> float;
+
 }

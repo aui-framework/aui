@@ -86,7 +86,7 @@ void AWindow::flagRedraw() {
 }
 
 float AWindow::fetchDpiFromSystem() const {
-    return APlatform::getDpiRatio();
+    return com::github::aui::android::Platform::getDpiRatio();
 }
 
 

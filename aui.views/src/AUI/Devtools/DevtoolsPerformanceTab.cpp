@@ -213,7 +213,8 @@ namespace {
 
         [[nodiscard]]
         unsigned plotScale() const {
-            return unsigned(APlatform::getDpiRatio() * 2.f);
+            // TODO: maybe dpi here
+            return 2;
         }
 
         static int timeToY(high_resolution_clock::duration t) {

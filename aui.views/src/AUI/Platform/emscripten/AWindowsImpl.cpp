@@ -87,7 +87,7 @@ void AWindow::flagRedraw() {
 }
 
 float AWindow::fetchDpiFromSystem() const {
-    return APlatform::getDpiRatio();
+    return emscripten_get_device_pixel_ratio();
 }
 
 

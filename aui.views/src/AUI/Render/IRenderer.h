@@ -173,7 +173,7 @@ enum class Blending {
  * ## HiDPI (High‑DPI) support
  *
  * The framework uses logical units [dp](ametric.md) for layout and drawing.  All logical values are
- * multiplied by the device pixel ratio (`APlatform::getDpiRatio()`) before they reach the
+ * multiplied by the window pixel ratio before they reach the
  * renderer. The renderer works with physical pixels only (px).
  * 
  * This ensures that the UI appears consistent across displays with varying pixel densities.
