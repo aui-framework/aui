@@ -354,7 +354,12 @@ float AWindow::fetchDpiFromSystem() const {
         if (GetDpiForWindow) {
             return GetDpiForWindow(mHandle) / 96.f;
         } else {
-            return APlatform::getDpiRatio();
+            typedef UINT(WINAPI* GetDpiForSystem_t)();
+            static auto GetDpiForSystem = (GetDpiForSystem_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForSystem");
+            if (GetDpiForSystem) {
+                return GetDpiForSystem() / 96.f;
+            }
+            return 1.f;
         }
     }
     return 1.f;
