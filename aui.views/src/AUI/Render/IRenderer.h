@@ -67,6 +67,7 @@ class ASurface;
  *   <dt><b>Color-based</b></dt>
  *   <dd>Color-based blending mode is a blending mode that does not use the alpha component in it's formula.</dd>
  * </dl>
+ * <!-- aui:no_dedicated_page -->
  */
 enum class Blending {
     /**
