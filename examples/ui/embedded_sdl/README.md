@@ -1,5 +1,6 @@
 # AUI + SDL3 Example
 
+<!-- aui:example ui -->
 This code demonstrates how to integrate the AUI Framework with SDL3 to create a window with OpenGL rendering. 
 
 ## Overview
