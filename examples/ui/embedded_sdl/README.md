@@ -13,7 +13,7 @@ This application creates a simple GUI window using SDL3 for window management an
 
 ### EmbedRenderingContext
 
-<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp struct EmbedRenderingContext -->
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp EmbedRenderingContext -->
 
 **Purpose:** This structure acts as a bridge between AUI's rendering system and the SDL3/OpenGL environment.
 
@@ -27,7 +27,7 @@ This application creates a simple GUI window using SDL3 for window management an
 
 ### EmbedWindow
 
-<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp struct EmbedWindow -->
+<!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp EmbedWindow -->
 
 **Purpose:** Represents the main application window and manages the connection between SDL3 and AUI Framework.
 
