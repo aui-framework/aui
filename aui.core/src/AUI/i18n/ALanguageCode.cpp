@@ -13,17 +13,21 @@
 // Created by alex2 on 07.11.2020.
 //
 
-#include <AUI/Common/AException.h>
 #include "ALanguageCode.h"
+
+#include <AUI/Common/AException.h>
 
 ALanguageCode::ALanguageCode(const AString& str) {
     auto& ascii = str.bytes();
-    if (str.length() != str.sizeBytes() || str.sizeBytes() != 5 || ascii[2] != '-' || islower(ascii[2]) || islower(ascii[3])) {
-        throw AException("invalid language code: " + str);
+    if (str.sizeBytes() != 5) {
+        throw AException("invalid language code length: " + str);
     }
-    mGroup[0] = ascii[0];
-    mGroup[1] = ascii[1];
-    mSubGroup[0] = ascii[3];
-    mSubGroup[1] = ascii[4];
+    if (ascii[2] != '-' && ascii[2] != '_') {
+        throw AException("invalid language code format: " + str);
+    }
+    mGroup[0] = tolower(ascii[0]);
+    mGroup[1] = tolower(ascii[1]);
+    mSubGroup[0] = toupper(ascii[3]);
+    mSubGroup[1] = toupper(ascii[4]);
 }
 
