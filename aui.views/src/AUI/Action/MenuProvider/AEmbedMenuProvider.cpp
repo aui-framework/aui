@@ -20,15 +20,20 @@
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "AEmbedMenuProvider.h"
+
 using namespace declarative;
+using namespace std::chrono_literals;
 
 class AEmbedMenuProvider::MenuContainer: public AViewContainerBase {
 private:
     _<MenuContainer> mSubWindow;
     _weak<AOverlappingSurface> mSurface;
+    _<ATimer> mSublistOnHoverDisplayDelay;
     glm::ivec2 mOriginPosition;
 public:
     MenuContainer(const AVector<AMenuItem>& vector, glm::ivec2 originPosition = {}) : mOriginPosition(originPosition) {
+        mSublistOnHoverDisplayDelay = _new<ATimer>(200ms);
+
         addAssName(".menu");
         addAssName(".menu-background");
         setLayout(std::make_unique<AVerticalLayout>());
@@ -49,6 +54,9 @@ public:
 
                     if (i.enabled) {
                         connect(view->mouseEnter, [&] {
+                            mSublistOnHoverDisplayDelay->fired.clearAllOutgoingConnections();
+                            mSublistOnHoverDisplayDelay->stop();
+
                             if (mSubWindow) {
                                 mSubWindow->close();
                             }
@@ -73,24 +81,33 @@ public:
                     auto items = i.subItems;
                     if (i.enabled) {
                         connect(view->mouseEnter, [&, view, items] {
+                            mSublistOnHoverDisplayDelay->fired.clearAllOutgoingConnections();
+                            mSublistOnHoverDisplayDelay->stop();
+
                             if (mSubWindow) {
                                 mSubWindow->close();
                             }
 
-                            auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinimumSize().x, 0);
-                            mSubWindow = _new<MenuContainer>(items, pos);
+                            connect(mSublistOnHoverDisplayDelay->fired, [this, view, items] {
+                                auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinimumSize().x, 0);
+                                mSubWindow = _new<MenuContainer>(items, pos);
 
-                            ASurface* window = nullptr;
-                            if (auto s = mSurface.lock()) {
-                                window = s->getParentWindow();
-                            } else {
-                                window = AWindow::current();
-                            }
+                                ASurface* window = nullptr;
+                                if (auto s = mSurface.lock()) {
+                                    window = s->getParentWindow();
+                                } else {
+                                    window = AWindow::current();
+                                }
 
-                            auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize());
-                            surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
-                            surfaceContainer->addView(mSubWindow);
-                            mSubWindow->setSurface(surfaceContainer);
+                                auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize());
+                                surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
+                                surfaceContainer->addView(mSubWindow);
+                                mSubWindow->setSurface(surfaceContainer);
+
+                                mSublistOnHoverDisplayDelay->stop();
+                            });
+
+                            mSublistOnHoverDisplayDelay->start();
                         });
                     } else {
                         view->disable();
