@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -9,10 +9,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "AUI/Platform/AMessageBox.h"
+#include "Clipboard.h"
 
+#import <UIKit/UIKit.h>
 
-AMessageBox::ResultButton AMessageBox::show(AWindow *parent, const AString &title, const AString &message, Icon icon, Button b) {
-    // TODO apple
-    return AMessageBox::ResultButton::INVALID;
+void setClipboardTextIOS(const AString& text) {
+    @autoreleasepool {
+        [UIPasteboard generalPasteboard].string = [NSString stringWithUTF8String:text.c_str()];
+    }
 }

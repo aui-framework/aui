@@ -19,6 +19,8 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/AWindow.h>
 
+namespace aui {
+
 void PlatformWin32::setClipboardText(const AString& text) {
     auto wString = aui::win32::toWchar(text);
     const size_t len = (text.length() + 1) * sizeof(wchar_t);
@@ -105,3 +107,5 @@ AMessageBox::ResultButton PlatformWin32::messageBoxShow(
     }
     return ResultButton::INVALID;
 }
+
+} // namespace aui

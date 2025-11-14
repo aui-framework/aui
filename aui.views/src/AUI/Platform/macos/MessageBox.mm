@@ -9,17 +9,15 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <AUI/Platform/AMessageBox.h>
-#include <AUI/Platform/AWindow.h>
-#include <AUI/i18n/AI18n.h>
+#include "MessageBox.h"
 
+#include <AUI/i18n/AI18n.h>
 #include <AppKit/AppKit.h>
 
 #undef YES
 #undef NO
 
-AMessageBox::ResultButton
-AMessageBox::show(AWindow *parent, const AString &title, const AString &message, Icon icon, Button b) {
+ResultButton aui::showMessageBox(AWindow* parent, const AString& title, const AString& message, Icon icon, Button b) {
     @autoreleasepool {
         NSAlert *alert = [[NSAlert alloc] init];
         [alert setMessageText:[NSString stringWithUTF8String:title.c_str()]];

@@ -19,9 +19,9 @@
 
 namespace aui {
 
-class API_AUI_VIEWS PlatformWin32 : public APlatform {
+class API_AUI_VIEWS PlatformAndroid : public APlatform {
 public:
-    ~PlatformWin32() override = default;
+    ~PlatformAndroid() override = default;
 
     void setClipboardText(const AString& text) override;
     AString getClipboardText() override;

@@ -10,25 +10,15 @@
  */
 
 //
-// Created by alex2 on 26.11.2020.
+// Created by nelonn on 11/14/25.
 //
 
-#include "AUI/Platform/AClipboard.h"
-#include "AUI/Platform/AWindow.h"
-#include "AUI/Platform/AWindowManager.h"
+#pragma once
 
+#include <AUI/Common/AString.h>
 
-void AClipboard::copyToClipboard(const AString &text) {
-    // stub
+namespace aui {
+
+void setClipboardTextIOS(const AString& text);
+
 }
-
-bool AClipboard::isEmpty() {
-    // stub
-    return false;
-}
-
-AString AClipboard::pasteFromClipboard() {
-    // stub
-    return AString();
-}
-

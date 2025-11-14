@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -9,8 +9,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "AUI/Platform/AMessageBox.h"
+//
+// Created by nelonn on 11/14/25.
+//
 
-AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b) {
-    return AMessageBox::ResultButton::INVALID;
+#pragma once
+
+#include <AUI/Platform/AMessageBox.h>
+#include <AUI/Platform/AWindow.h>
+
+namespace aui {
+
+using namespace AMessageBox;
+
+ResultButton showMessageBox(AWindow* parent, const AString& title, const AString& message, Icon icon, Button b);
+
 }

@@ -17,8 +17,16 @@
 
 #if AUI_PLATFORM_LINUX
 #include <AUI/Platform/linux/IPlatformAbstraction.h>
+#elif AUI_PLATFORM_MACOS
+#include <AUI/Platform/macos/Platform.h>
 #elif AUI_PLATFORM_WINDOWS
 #include <AUI/Platform/win32/Platform.h>
+#elif AUI_PLATFORM_IOS
+#include <AUI/Platform/ios/Platform.h>
+#elif AUI_PLATFORM_ANDROID
+#include <AUI/Platform/android/Platform.h>
+#elifAUI_PLATFORM_EMSCRIPTEN
+#include <AUI/Platform/emscripten/Platform.h>
 #endif
 
 std::unique_ptr<APlatform>& APlatform::currentImpl() {
@@ -35,10 +43,19 @@ APlatform& APlatform::current() {
     if (!impl) {
 #if AUI_PLATFORM_LINUX
         impl = IPlatformAbstraction::create();
+#elif AUI_PLATFORM_MACOS
+        impl = std::make_unique<aui::PlatformMacOS>();
 #elif AUI_PLATFORM_WINDOWS
-        impl = std::make_unique<PlatformWin32>();
+        impl = std::make_unique<aui::PlatformWin32>();
+#elif AUI_PLATFORM_IOS
+        impl = std::make_unique<aui::PlatformIOS>();
+#elif AUI_PLATFORM_ANDROID
+        impl = std::make_unique<aui::PlatformAndroid>();
+#elif AUI_PLATFORM_EMSCRIPTEN
+        impl = std::make_unique<aui::PlatformWeb>();
+#else
+        throw AException("You must initialize APlatform");
 #endif
-        // TODO(Nelonn): initialize for other systems
     }
     return *impl;
 }
