@@ -42,6 +42,7 @@ class IPlatformAbstraction : public APlatform {
 public:
     static std::unique_ptr<IPlatformAbstraction> create();
     static IPlatformAbstraction& current();
+    static IPlatformAbstraction* currentSafe();
 
     IPlatformAbstraction();
     ~IPlatformAbstraction() override = default;

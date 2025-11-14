@@ -38,6 +38,11 @@ IPlatformAbstraction& IPlatformAbstraction::current() {
     return *native_platform;
 }
 
+IPlatformAbstraction* IPlatformAbstraction::currentSafe() {
+    APlatform& platform = APlatform::current();
+    return dynamic_cast<IPlatformAbstraction*>(&platform);
+}
+
 IPlatformAbstraction::IPlatformAbstraction() {
     auto e = std::getenv("XDG_CURRENT_DESKTOP");
     ALogger::info(LOG_TAG) << "Desktop Environment: " << (e ? e : "none");

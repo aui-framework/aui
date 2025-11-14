@@ -12,6 +12,7 @@
 #include <AUI/Common/AUtf8.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/Entry.h>
+#include <AUI/Platform/APlatform.h>
 #include <AUI/Platform/AGLEmbedContext.h>
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/Util/Declarative/Containers.h>
@@ -164,6 +165,22 @@ static auto sdlToAPointer(Uint8 button) -> APointerIndex {
     }
 }
 /// [sdlToAPointer]
+
+class APlatformSDL : public APlatform {
+public:
+    ~APlatformSDL() override = default;
+
+    void copyToClipboard(const AString& text) override {
+        SDL_SetClipboardText(text.c_str());
+    }
+    AString pasteFromClipboard() override {
+        return SDL_GetClipboardText();
+    }
+
+    AMessageBox::ResultButton messageBoxShow(
+        AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon,
+        AMessageBox::Button b) override {}
+};
 
 /// [EmbedRenderingContext]
 struct EmbedRenderingContext : IRenderingContext {
@@ -330,6 +347,10 @@ AUI_ENTRY {
     }
     SDL_GL_MakeCurrent(window.sdl_window, window.gl_context);
     /// [GLContext]
+
+    /// [APlatformInit]
+    APlatform::init(std::make_unique<APlatformSDL>());
+    /// [APlatformInit]
 
     /// [RendererSetup]
     if (!OpenGLRenderer::loadGL((OpenGLRenderer::GLLoadProc)SDL_GL_GetProcAddress)) {
