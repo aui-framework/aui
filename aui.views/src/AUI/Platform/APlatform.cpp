@@ -17,6 +17,8 @@
 
 #if AUI_PLATFORM_LINUX
 #include <AUI/Platform/linux/IPlatformAbstraction.h>
+#elif AUI_PLATFORM_WINDOWS
+#include <AUI/Platform/win32/Platform.h>
 #endif
 
 std::unique_ptr<APlatform>& APlatform::currentImpl() {
@@ -33,6 +35,8 @@ APlatform& APlatform::current() {
     if (!impl) {
 #if AUI_PLATFORM_LINUX
         impl = IPlatformAbstraction::create();
+#elif AUI_PLATFORM_WINDOWS
+        impl = std::make_unique<PlatformWin32>();
 #endif
         // TODO(Nelonn): initialize for other systems
     }

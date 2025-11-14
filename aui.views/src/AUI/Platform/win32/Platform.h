@@ -13,12 +13,18 @@
 // Created by nelonn on 11/14/25.
 //
 
-#include "AMessageBox.h"
+#pragma once
 
 #include <AUI/Platform/APlatform.h>
 
-namespace AMessageBox {
-ResultButton show(AWindow* parent, const AString& title, const AString& message, Icon icon, Button b) {
-    return APlatform::current().messageBoxShow(parent, title, message, icon, b);
-}
-}
+class API_AUI_VIEWS PlatformWin32 : public APlatform {
+public:
+    ~PlatformWin32() override = default;
+
+    void setClipboardText(const AString& text) override;
+    AString getClipboardText() override;
+
+    AMessageBox::ResultButton messageBoxShow(
+        AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon,
+        AMessageBox::Button b) override;
+};
