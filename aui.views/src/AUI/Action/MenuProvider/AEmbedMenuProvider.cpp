@@ -24,11 +24,11 @@ using namespace declarative;
 
 class AEmbedMenuProvider::MenuContainer: public AViewContainerBase {
 private:
-    ASurface* mWindow;
     _<MenuContainer> mSubWindow;
+    _weak<AOverlappingSurface> mSurface;
+    glm::ivec2 mOriginPosition;
 public:
-    MenuContainer(ASurface* window, const AVector<AMenuItem>& vector): mWindow(window)
-    {
+    MenuContainer(const AVector<AMenuItem>& vector, glm::ivec2 originPosition = {}) : mOriginPosition(originPosition) {
         addAssName(".menu");
         addAssName(".menu-background");
         setLayout(std::make_unique<AVerticalLayout>());
@@ -77,10 +77,20 @@ public:
                                 mSubWindow->close();
                             }
 
-                            mSubWindow = _new<MenuContainer>(mWindow, items);
-                            auto pos = (view->getPositionInWindow() + glm::ivec2{view->getWidth(), 0});
-                            mSubWindow->setGeometry(pos.x, pos.y, mSubWindow->getMinimumWidth(), mSubWindow->getMinimumHeight());
-                            mWindow->addViewCustomLayout(mSubWindow);
+                            auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinimumSize().x, 0);
+                            mSubWindow = _new<MenuContainer>(items, pos);
+
+                            ASurface* window = nullptr;
+                            if (auto s = mSurface.lock()) {
+                                window = s->getParentWindow();
+                            } else {
+                                window = AWindow::current();
+                            }
+
+                            auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize());
+                            surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
+                            surfaceContainer->addView(mSubWindow);
+                            mSubWindow->setSurface(surfaceContainer);
                         });
                     } else {
                         view->disable();
@@ -96,30 +106,40 @@ public:
         }
     }
 
+    ~MenuContainer() override {
+        close();
+    }
 
     void close() {
-        mWindow->removeView(this);
+        if (auto s = mSurface.lock()) {
+            s->close();
+        }
         if (mSubWindow) {
             mSubWindow->close();
         }
     }
 
+    void setSurface(const _<AOverlappingSurface>& surface) { mSurface = surface; }
 };
 
 void AEmbedMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     closeMenu();
-    mWindow = _new<MenuContainer>(AWindow::current(), vector);
     auto mousePos = AWindow::current()->getMousePos();
-    mWindow->setGeometry(mousePos.x, mousePos.y, mWindow->getMinimumWidth(), mWindow->getMinimumHeight());
+    mMenuContainer = _new<MenuContainer>(vector, mousePos);
+
+    auto surfaceContainer = AWindow::current()->createOverlappingSurface(mousePos, mMenuContainer->getMinimumSize());
+    surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
+    surfaceContainer->addView(mMenuContainer);
+    mMenuContainer->setSurface(surfaceContainer);
 }
 
 void AEmbedMenuProvider::closeMenu() {
     if (isOpen()) {
-        mWindow->close();
-        mWindow = nullptr;
+        mMenuContainer->close();
+        mMenuContainer = nullptr;
     }
 }
 
 bool AEmbedMenuProvider::isOpen() {
-    return mWindow != nullptr;
+    return mMenuContainer != nullptr;
 }

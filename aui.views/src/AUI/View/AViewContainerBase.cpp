@@ -282,7 +282,7 @@ void AViewContainerBase::removeView(AView* view) {
     } else {
         mViews.erase(it);
     }
-    view->onViewGraphSubtreeChanged();
+    //view->onViewGraphSubtreeChanged(); // use after free
     invalidateCaches();
     emit childrenChanged;
 }
