@@ -142,6 +142,10 @@ public:
         : data_(nullptr), begin_(nullptr), end_(nullptr),
           byte_pos_(0) {}
 
+    constexpr explicit AUtf8ConstIterator(std::string_view str, size_t pos = 0) noexcept
+        : data_(str.data()), begin_(str.data()), end_(str.data() + str.size()),
+          byte_pos_(pos) {}
+
     constexpr AUtf8ConstIterator(const char* data, const char* begin, const char* end, size_t pos) noexcept
         : data_(data), begin_(begin), end_(end),
           byte_pos_(pos) {}

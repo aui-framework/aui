@@ -15,7 +15,7 @@
 #include "AUI/Image/AImage.h"
 
 namespace Util {
-    class SimpleTexturePacker : public ::Util::TexturePacker<AImage> {
+    class API_AUI_VIEWS SimpleTexturePacker : public ::Util::TexturePacker<AImage> {
     private:
         AOptional<AImage> mImage;
     public:

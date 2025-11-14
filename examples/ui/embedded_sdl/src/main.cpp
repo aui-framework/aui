@@ -180,6 +180,7 @@ struct EmbedRenderingContext : IRenderingContext {
 
     void beginPaint(ASurface& window) override {
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
+        glViewport(0, 0, window.getSize().x, window.getSize().y);
         m_renderer->beginPaint(window.getSize());
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT);
@@ -263,10 +264,10 @@ void handleSDLEvent(SDL_Event* event, EmbedWindow& window) {
             break;
         case SDL_EVENT_TEXT_INPUT: {
             std::string_view text(event->text.text);
-            AUtf8ConstIterator it(text.data(), text.begin(), text.end(), 0);
-            AUtf8ConstIterator it_end(text.data(), text.begin(), text.end(), text.size());
+            AUtf8ConstIterator it(text);
+            AUtf8ConstIterator it_end(text, text.size());
             for (; it != it_end; ++it) {
-                AChar ch = *it;
+                const AChar ch = *it;
                 window.onCharEntered(ch);
             }
         } break;
