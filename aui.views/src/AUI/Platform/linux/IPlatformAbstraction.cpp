@@ -14,27 +14,33 @@
 
 static constexpr auto LOG_TAG = "IPlatformAbstraction";
 
-IPlatformAbstraction::IPlatformAbstraction() {
-    auto e = std::getenv("XDG_CURRENT_DESKTOP");
-    ALogger::info(LOG_TAG) << "Desktop Environment: " << (e ? e : "none");
+std::unique_ptr<IPlatformAbstraction> IPlatformAbstraction::create() {
+    for (const auto& option : APlatformAbstractionOptions::get().initializationOrder) {
+        auto name = option.target_type().name();
+        try {
+            auto value = option();
+            value->init();
+            ALogger::info(LOG_TAG) << "Using \"" << name << "\"";
+            return value;
+        } catch (const AException& e) {
+            ALogger::info(LOG_TAG) << "\"" << name << "\" failed to initialize: " << e.getMessage();
+        }
+    }
+    throw AException("can't find a suitable platform abstraction (maybe check AUI_PA environment variable?)");
 }
 
 IPlatformAbstraction& IPlatformAbstraction::current() {
-    static auto value = []() -> _unique<IPlatformAbstraction> {
-        for (const auto& option : APlatformAbstractionOptions::get().initializationOrder) {
-            auto name = option.target_type().name();
-            try {
-                auto value = option();
-                value->init();
-                ALogger::info(LOG_TAG) << "Using \"" << name << "\"";
-                return value;
-            } catch (const AException& e) {
-                ALogger::info(LOG_TAG) << "\"" << name << "\" failed to initialize: " << e.getMessage();
-            }
-        }
-        throw AException("can't find a suitable platform abstraction (maybe check AUI_PA environment variable?)");
-    }();
-    return *value;
+    APlatform& platform = APlatform::current();
+    auto* native_platform = dynamic_cast<IPlatformAbstraction*>(&platform);
+    if (!native_platform) {
+        throw AException("Since the current platform is not AUI's native implementation, some system methods are unavailable.");
+    }
+    return *native_platform;
+}
+
+IPlatformAbstraction::IPlatformAbstraction() {
+    auto e = std::getenv("XDG_CURRENT_DESKTOP");
+    ALogger::info(LOG_TAG) << "Desktop Environment: " << (e ? e : "none");
 }
 
 void IPlatformAbstraction::setCurrentWindow(ASurface* window) {

@@ -15,6 +15,10 @@
 
 #include "APlatform.h"
 
+#if AUI_PLATFORM_LINUX
+#include <AUI/Platform/linux/IPlatformAbstraction.h>
+#endif
+
 std::unique_ptr<APlatform>& APlatform::currentImpl() {
     static std::unique_ptr<APlatform> impl{};
     return impl;
@@ -27,7 +31,7 @@ void APlatform::init(std::unique_ptr<APlatform>&& platform) {
 APlatform& APlatform::current() {
     auto& impl = currentImpl();
     if (!impl) {
-        // TODO: lazy initialize default one
+        impl = IPlatformAbstraction::create();
     }
     return *impl;
 }

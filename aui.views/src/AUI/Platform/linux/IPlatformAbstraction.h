@@ -1,7 +1,9 @@
 #pragma once
 
-#include "AUI/Platform/AWindow.h"
-#include "AUI/Platform/AMessageBox.h"
+#include <AUI/Platform/APlatform.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/Platform/AMessageBox.h>
+
 /**
  * @brief Platform Abstraction Layer
  * @details
@@ -36,22 +38,19 @@
  * implementations based on a list of signatures (`*.sigs`) that need to be exported from the dynamically loaded
  * libraries. This allows the framework to call functions within the loaded library without requiring explicit linking.
  */
-class IPlatformAbstraction {
+class IPlatformAbstraction : public APlatform {
 public:
-    IPlatformAbstraction();
+    static std::unique_ptr<IPlatformAbstraction> create();
     static IPlatformAbstraction& current();
-    virtual ~IPlatformAbstraction() = default;
+
+    IPlatformAbstraction();
+    ~IPlatformAbstraction() override = default;
 
     virtual void init() = 0;
 
     // CURSOR
     virtual _<ACursor::Custom> createCustomCursor(AImageView image) = 0;
     virtual void applyNativeCursor(const ACursor& cursor, AWindow* pWindow) = 0;
-
-    // CLIPBOARD
-    virtual void copyToClipboard(const AString& text) = 0;
-    virtual AString pasteFromClipboard() = 0;
-
 
     // DESKTOP
     virtual glm::ivec2 desktopGetMousePosition() = 0;
@@ -88,11 +87,6 @@ public:
     virtual void windowAnnounceMinMaxSize(AWindow& window) = 0;
     virtual void windowManagerInitNativeWindow(const IRenderingContext::Init& init) = 0;
     virtual float windowGetDpiRatio(AWindow& window);
-
-    // MESSAGE BOXES
-    virtual AMessageBox::ResultButton messageBoxShow(
-        AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon,
-        AMessageBox::Button b) = 0;
 
     // some helper functions to pass through visibility.
     static void setCurrentWindow(ASurface* window);
