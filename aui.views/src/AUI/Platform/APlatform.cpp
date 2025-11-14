@@ -31,7 +31,10 @@ void APlatform::init(std::unique_ptr<APlatform>&& platform) {
 APlatform& APlatform::current() {
     auto& impl = currentImpl();
     if (!impl) {
+#if AUI_PLATFORM_LINUX
         impl = IPlatformAbstraction::create();
+#endif
+        // TODO(Nelonn): initialize for other systems
     }
     return *impl;
 }

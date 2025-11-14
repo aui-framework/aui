@@ -74,8 +74,8 @@ PlatformAbstractionGtk::~PlatformAbstractionGtk() {
 
 _<ACursor::Custom> PlatformAbstractionGtk::createCustomCursor(AImageView image) { return _<ACursor::Custom>(); }
 void PlatformAbstractionGtk::applyNativeCursor(const ACursor &cursor, AWindow *pWindow) {}
-void PlatformAbstractionGtk::copyToClipboard(const AString &text) {}
-AString PlatformAbstractionGtk::pasteFromClipboard() { return AString(); }
+void PlatformAbstractionGtk::setClipboardText(const AString &text) {}
+AString PlatformAbstractionGtk::getClipboardText() { return AString(); }
 glm::ivec2 PlatformAbstractionGtk::desktopGetMousePosition() { return glm::ivec2(); }
 void PlatformAbstractionGtk::desktopSetMousePosition(glm::ivec2 pos) {}
 void PlatformAbstractionGtk::windowSetStyle(AWindow &window, WindowStyle ws) {

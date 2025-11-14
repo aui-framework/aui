@@ -292,7 +292,7 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     return surface;
 }
 
-void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
+void AWindow::closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) {
     if (auto c = dynamic_cast<AWindow*>(surface->getParent())) {
         c->close();
     }

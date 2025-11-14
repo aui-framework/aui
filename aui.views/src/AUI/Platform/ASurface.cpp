@@ -194,11 +194,11 @@ void ASurface::focusNextView() {
 
 void ASurface::closeOverlappingSurfacesOnClick() {
     // creating copy because of comodification
-    AVector<AOverlappingSurface*> surfacesToClose;
+    AVector<_<AOverlappingSurface>> surfacesToClose;
     surfacesToClose.reserve(mOverlappingSurfaces.size());
     for (auto& surface : mOverlappingSurfaces) {
         if (surface->isCloseOnClick()) {
-            surfacesToClose << surface.get();
+            surfacesToClose << surface;
         }
     }
     for (auto& surface : surfacesToClose) {

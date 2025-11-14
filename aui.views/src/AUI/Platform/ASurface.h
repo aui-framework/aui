@@ -290,8 +290,8 @@ public:
         mOverlappingSurfaces << tmp;
         return tmp;
     }
-    void closeOverlappingSurface(AOverlappingSurface* surface) {
-        if (mOverlappingSurfaces.erase(aui::ptr::fake_shared(surface)) > 0) {
+    void closeOverlappingSurface(const _<AOverlappingSurface>& surface) {
+        if (mOverlappingSurfaces.erase(surface) > 0) {
             closeOverlappingSurfaceImpl(surface);
         }
     }
@@ -439,7 +439,7 @@ protected:
      * @see ASurface::createOverlappingSurface
      */
     virtual _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
-    virtual void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) = 0;
+    virtual void closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) = 0;
 
     virtual void createDevtoolsWindow();
 

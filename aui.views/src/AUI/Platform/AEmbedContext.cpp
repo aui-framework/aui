@@ -76,7 +76,7 @@ public:
         return container;
     }
 
-    void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) override {
+    void closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) override {
         removeView(surface);
     }
 

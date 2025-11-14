@@ -10,13 +10,15 @@
  */
 
 //
-// Created by Alex2772 on 11/13/2021.
+// Created by nelonn on 11/14/25.
 //
 
-#include "AOverlappingSurface.h"
-#include "ASurface.h"
+#include "AMessageBox.h"
 
+#include <AUI/Platform/APlatform.h>
 
-void AOverlappingSurface::close() {
-    mParentWindow->closeOverlappingSurface(std::static_pointer_cast<AOverlappingSurface>(shared_from_this()));
+namespace AMessageBox {
+ResultButton show(AWindow* parent, const AString& title, const AString& message, Icon icon, Button b) {
+    APlatform::current().messageBoxShow(parent, title, message, icon, b);
+}
 }

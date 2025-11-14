@@ -240,7 +240,7 @@ public:
 
     _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override;
 
-    void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) override;
+    void closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) override;
     virtual void onCloseButtonClicked();
 
     void forceUpdateCursor() override;

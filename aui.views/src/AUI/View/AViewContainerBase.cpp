@@ -261,32 +261,6 @@ void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::const_iterato
     emit childrenChanged;
 }
 
-void AViewContainerBase::removeView(AView* view) {
-    std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
-    if (!lock) {
-        throw AException("can't use removeView when render/applyGeometryToChildren is in progress; please enqueue such operation");
-    }
-    if (view->mParent == this) {
-        view->mParent = nullptr;
-    }
-    auto it = std::find_if(mViews.begin(), mViews.end(), [&](const _<AView>& item) { return item.get() == view; });
-    if (it == mViews.end()) {
-        view->onViewGraphSubtreeChanged();
-        return;
-    }
-    if (mLayout) {
-        auto sharedPtr = *it;
-        auto index = std::distance(mViews.begin(), it);
-        mViews.erase(it);
-        mLayout->removeView(sharedPtr, index);
-    } else {
-        mViews.erase(it);
-    }
-    //view->onViewGraphSubtreeChanged(); // use after free
-    invalidateCaches();
-    emit childrenChanged;
-}
-
 void AViewContainerBase::removeView(size_t index) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {

@@ -53,8 +53,8 @@ public:
     _<ACursor::Custom> createCustomCursor(AImageView image) override;
 
     // CLIPBOARD
-    void copyToClipboard(const AString& text) override;
-    AString pasteFromClipboard() override;
+    void setClipboardText(const AString& text) override;
+    AString getClipboardText() override;
 
     // INPUT
     AInput::Key inputFromNative(int k) override;

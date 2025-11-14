@@ -14,7 +14,7 @@ namespace {
 std::string gClipboardText;
 }
 
-void PlatformAbstractionX11::copyToClipboard(const AString& text) {
+void PlatformAbstractionX11::setClipboardText(const AString& text) {
     auto basicWindow = AWindow::current();
     auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
     if (!auiWindow)
@@ -25,7 +25,7 @@ void PlatformAbstractionX11::copyToClipboard(const AString& text) {
         CurrentTime);
 }
 
-AString PlatformAbstractionX11::pasteFromClipboard() {
+AString PlatformAbstractionX11::getClipboardText() {
     auto owner = XGetSelectionOwner(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard);
     if (owner == None)
     {
