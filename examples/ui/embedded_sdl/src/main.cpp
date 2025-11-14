@@ -271,15 +271,30 @@ void handleSDLEvent(SDL_Event* event, EmbedWindow& window) {
                 window.onCharEntered(ch);
             }
         } break;
-        case SDL_EVENT_MOUSE_MOTION:
+        case SDL_EVENT_MOUSE_MOTION: {
+#if AUI_PLATFORM_LINUX
+            float display_scale = SDL_GetWindowDisplayScale(window.sdl_window);
+            window.onPointerMove(event->motion.x * display_scale, event->motion.y * display_scale);
+#else
             window.onPointerMove(event->motion.x, event->motion.y);
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_DOWN:
+#endif
+        } break;
+        case SDL_EVENT_MOUSE_BUTTON_DOWN: {
+#if AUI_PLATFORM_LINUX
+            float display_scale = SDL_GetWindowDisplayScale(window.sdl_window);
+            window.onPointerPressed(event->button.x * display_scale, event->button.y * display_scale, sdlToAPointer(event->button.button));
+#else
             window.onPointerPressed(event->button.x, event->button.y, sdlToAPointer(event->button.button));
-            break;
-        case SDL_EVENT_MOUSE_BUTTON_UP:
-            window.onPointerReleased(event->button.x, event->button.y, sdlToAPointer(event->button.button));
-            break;
+#endif
+        } break;
+        case SDL_EVENT_MOUSE_BUTTON_UP: {
+#if AUI_PLATFORM_LINUX
+            float display_scale = SDL_GetWindowDisplayScale(window.sdl_window);
+            window.onPointerReleased(event->button.x * display_scale, event->button.y * display_scale, sdlToAPointer(event->button.button));
+#else
+            window.onPointerPressed(event->button.x, event->button.y, sdlToAPointer(event->button.button));
+#endif
+        } break;
         case SDL_EVENT_MOUSE_WHEEL:
             window.onScroll(event->wheel.mouse_x, event->wheel.mouse_y, event->wheel.x, event->wheel.y);
             break;
