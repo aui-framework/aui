@@ -25,7 +25,7 @@
 #include <AUI/Platform/ios/Platform.h>
 #elif AUI_PLATFORM_ANDROID
 #include <AUI/Platform/android/Platform.h>
-#elifAUI_PLATFORM_EMSCRIPTEN
+#elif AUI_PLATFORM_EMSCRIPTEN
 #include <AUI/Platform/emscripten/Platform.h>
 #endif
 

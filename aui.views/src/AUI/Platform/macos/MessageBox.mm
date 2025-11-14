@@ -17,6 +17,8 @@
 #undef YES
 #undef NO
 
+using namespace AMessageBox;
+
 ResultButton aui::showMessageBox(AWindow* parent, const AString& title, const AString& message, Icon icon, Button b) {
     @autoreleasepool {
         NSAlert *alert = [[NSAlert alloc] init];
