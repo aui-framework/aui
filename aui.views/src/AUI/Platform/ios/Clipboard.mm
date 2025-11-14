@@ -13,7 +13,7 @@
 
 #import <UIKit/UIKit.h>
 
-void setClipboardTextIOS(const AString& text) {
+void aui::setClipboardTextIOS(const AString& text) {
     @autoreleasepool {
         [UIPasteboard generalPasteboard].string = [NSString stringWithUTF8String:text.c_str()];
     }
