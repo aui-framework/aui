@@ -170,10 +170,10 @@ class APlatformSDL : public APlatform {
 public:
     ~APlatformSDL() override = default;
 
-    void copyToClipboard(const AString& text) override {
+    void setClipboardText(const AString& text) override {
         SDL_SetClipboardText(text.c_str());
     }
-    AString pasteFromClipboard() override {
+    AString getClipboardText() override {
         return SDL_GetClipboardText();
     }
 

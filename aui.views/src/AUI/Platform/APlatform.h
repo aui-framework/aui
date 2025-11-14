@@ -45,8 +45,8 @@ public:
 
     virtual ~APlatform() = default;
 
-    virtual void copyToClipboard(const AString& text) = 0;
-    virtual AString pasteFromClipboard() = 0;
+    virtual void setClipboardText(const AString& text) = 0;
+    virtual AString getClipboardText() = 0;
 
     virtual AMessageBox::ResultButton messageBoxShow(
         AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon,

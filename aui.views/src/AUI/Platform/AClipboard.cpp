@@ -22,9 +22,9 @@ bool AClipboard::isEmpty() {
 }
 
 void AClipboard::copyToClipboard(const AString& text) {
-    APlatform::current().copyToClipboard(text);
+    APlatform::current().setClipboardText(text);
 }
 
 AString AClipboard::pasteFromClipboard() {
-    return APlatform::current().pasteFromClipboard();
+    return APlatform::current().getClipboardText();
 }
