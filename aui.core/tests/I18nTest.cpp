@@ -20,20 +20,20 @@
 #include <AUI/i18n/ALanguageCode.h>
 
 TEST(I18n, LanguageCode) {
-        ASSERT_THROW(ALanguageCode("en_US"), AException);
-        ASSERT_THROW(ALanguageCode("en-us"), AException);
-        ASSERT_THROW(ALanguageCode("en-UdS"), AException);
-        ASSERT_THROW(ALanguageCode("end-US"), AException);
-        ASSERT_THROW(ALanguageCode(""), AException);
-        ASSERT_THROW(ALanguageCode("fweo,fwoepmo"), AException);
-        ASSERT_THROW(ALanguageCode("fweo,-"), AException);
-        ASSERT_THROW(ALanguageCode("-afs"), AException);
+    ASSERT_THROW(ALanguageCode("en-UdS"), AException);
+    ASSERT_THROW(ALanguageCode("end-US"), AException);
+    ASSERT_THROW(ALanguageCode(""), AException);
+    ASSERT_THROW(ALanguageCode("fweo,fwoepmo"), AException);
+    ASSERT_THROW(ALanguageCode("fweo,-"), AException);
+    ASSERT_THROW(ALanguageCode("-afs"), AException);
 
-        ASSERT_NO_THROW(ALanguageCode("en-US"));
+    ASSERT_NO_THROW(ALanguageCode("en_US"));
+    ASSERT_NO_THROW(ALanguageCode("en-us"));
+    ASSERT_NO_THROW(ALanguageCode("en-US"));
 
-        ALanguageCode c("ru-UA");
+    ALanguageCode c("ru-UA");
 
-        ASSERT_EQ(c.toString(), "ru-UA");
-        ASSERT_EQ(c.getGroup(), "ru");
-        ASSERT_EQ(c.getSubGroup(), "UA");
+    ASSERT_EQ(c.toString(), "ru-UA");
+    ASSERT_EQ(c.getGroup(), "ru");
+    ASSERT_EQ(c.getSubGroup(), "UA");
 }
