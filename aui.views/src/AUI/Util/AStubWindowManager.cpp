@@ -16,6 +16,10 @@
 #include <AUI/Platform/SoftwareRenderingContext.h>
 #include "AStubWindowManager.h"
 
+static aui::lazy<AStubWindowManager::Config> gStubWindowManagerConfig = [] {
+    return AStubWindowManager::Config{};
+};
+
 class StubRenderingContext: public SoftwareRenderingContext {
 public:
     StubRenderingContext(AStubWindowManager& parent): mParent(parent) {}
@@ -38,7 +42,7 @@ public:
     void endPaint(AWindowBase& window) override {}
 
     IRenderer& renderer() override {
-        return *mParent.mConfig.renderer;
+        return *gStubWindowManagerConfig->renderer;
     }
 
 private:
@@ -52,28 +56,16 @@ void AStubWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
 }
 
 void AStubWindowManager::drawFrame() {
-    auto wm = dynamic_cast<AStubWindowManager*>(&AWindow::getWindowManager());
-    AUI_ASSERTX(wm != nullptr, "AStubWindowManager is excepted to be used when calling AStubWindowManager::drawFrame(); call uitest::setup()");
-    wm->drawFrameImpl();
-}
-
-void AStubWindowManager::drawFrameImpl() {
-    for (auto& w : getWindows()) {
-        if (mConfig.layout) {
-            w->getRenderingContext()->beginResize(*w);
-            w->pack();
-            w->getRenderingContext()->endResize(*w);
-        }
-        if (mConfig.paint) {
-            w->redraw();
-        }
+    for (auto& w : AWindow::getWindowManager().getWindows()) {
+        w->getRenderingContext()->beginResize(*w);
+        w->pack();
+        w->getRenderingContext()->endResize(*w);
+        w->redraw();
     }
 }
 
 void AStubWindowManager::setConfig(Config config) {
-    auto wm = dynamic_cast<AStubWindowManager*>(&AWindow::getWindowManager());
-    AUI_ASSERTX(wm != nullptr, "AStubWindowManager is excepted to be used when calling AStubWindowManager::setConfig(); call uitest::setup()");
-    wm->mConfig = std::move(config);
+    gStubWindowManagerConfig = std::move(config);
 }
 
 AImage AStubWindowManager::makeScreenshot(aui::no_escape<AWindow> window) {

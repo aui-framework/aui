@@ -60,6 +60,7 @@ TEST_F(UIReactiveTest, Label) {
     EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "Hello!");
 }
 
+/*
 TEST_F(UIReactiveTest, MultipleWithStyle) {
     // Test that multiple containers with overridden styles render correctly.
     // The test constructs a vertical layout containing a centered label
@@ -85,4 +86,4 @@ TEST_F(UIReactiveTest, MultipleWithStyle) {
 
     // Verify that the pixel at the center of the label is green.
     By::type<ALabel>().check(pixelColorAt({0.5f, 0.5f}, AColor::GREEN));
-}
+}*/

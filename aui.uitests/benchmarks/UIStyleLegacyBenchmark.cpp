@@ -81,7 +81,7 @@ protected:
 
 }   // namespace
 
-static void StyleLegacy(benchmark::State& state) {
+static void UIStyleLegacy(benchmark::State& state) {
     // https://github.com/aui-framework/aui/issues/572
     //
     // This benchmark implements old animation approach based on manually calling setCustomStyle each frame.
@@ -118,4 +118,4 @@ static void StyleLegacy(benchmark::State& state) {
     }
 }
 
-BENCHMARK(StyleLegacy);
+BENCHMARK(UIStyleLegacy);
