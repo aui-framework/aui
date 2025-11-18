@@ -45,7 +45,7 @@ public:
                             SpacerFixed(8_dp),
                             _new<ATextField>() && mSearchQuery,
                             SpacerFixed(8_dp),
-                            AText::fromString(predefined::DISCLAIMER) AUI_WITH_STYLE { ATextAlign::CENTER },
+                            AText::fromString(predefined::DISCLAIMER) AUI_OVERRIDE_STYLE { ATextAlign::CENTER },
                             SpacerFixed(8_dp),
                             experimental::Dynamic {
                                 .content = AUI_REACT(mSearchQuery->empty() ? indexedList() : searchQueryList()),
@@ -58,13 +58,13 @@ public:
                                     mSearchQuery->empty() ? Visibility::VISIBLE : Visibility::GONE,
                                 }), AUI_SLOT(it)::setCustomStyle);
                             },
-                          } AUI_WITH_STYLE { Padding(0, 8_dp) })
-                      .build() AUI_WITH_STYLE { Expanding(0, 1), MinSize(200_dp) },
+                          } AUI_OVERRIDE_STYLE { Padding(0, 8_dp) })
+                      .build() AUI_OVERRIDE_STYLE { Expanding(0, 1), MinSize(200_dp) },
 
               experimental::Dynamic {
                   .content = AUI_REACT(mSelectedContact != nullptr ? contactDetails(mSelectedContact) : nullptr),
-              } AUI_WITH_STYLE { Expanding(), MinSize(300_dp), BackgroundSolid { AColor::WHITE } },
-            } AUI_WITH_STYLE {
+              } AUI_OVERRIDE_STYLE { Expanding(), MinSize(300_dp), BackgroundSolid { AColor::WHITE } },
+            } AUI_OVERRIDE_STYLE {
               Padding(0),
             });
     }
@@ -100,7 +100,7 @@ private:
             auto firstLetter = groupLetter(firstContact->displayName);
             ALogger::info("Test") << "Computing view for group " << AString(1, firstLetter);
             return Vertical {
-                Label { firstLetter } AUI_WITH_STYLE {
+                Label { firstLetter } AUI_OVERRIDE_STYLE {
                                         Opacity(0.5f),
                                         Padding { 12_dp, 0, 4_dp },
                                         Margin { 0 },
@@ -131,7 +131,7 @@ private:
 
     _<AView> contactPreview(const _<Contact>& contact) {
         return Vertical {
-            Label { AUI_REACT(contact->displayName) } AUI_WITH_STYLE { Padding { 8_dp, 0 }, Margin { 0 }, ATextOverflow::ELLIPSIS },
+            Label { AUI_REACT(contact->displayName) } AUI_OVERRIDE_STYLE { Padding { 8_dp, 0 }, Margin { 0 }, ATextOverflow::ELLIPSIS },
             common_views::divider(),
         } AUI_LET {
             connect(it->clicked, [this, contact] { mSelectedContact = contact; });

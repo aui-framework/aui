@@ -132,7 +132,7 @@ AUI_ENTRY {
                   AMessageBox::show(window.get(), "You've booked the flight", msg);
               },
         } AUI_LET { AObject::connect(AUI_REACT(state->isValid()), AUI_SLOT(it)::setEnabled); },
-      } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+      } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
     });
 
     window->show();

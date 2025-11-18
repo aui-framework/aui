@@ -219,7 +219,7 @@ public:
                 },
               },
               _new<CircleDrawArea>(aui::ptr::fake_shared(&mState)),
-            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
     }
 
 private:

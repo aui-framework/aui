@@ -273,7 +273,7 @@ using decode_type_t = typename decode_type<T>::type;
  * using namespace ass;
  * ...
  * setContents(Centered {
- *   _new<ALabel>("Red text!") AUI_WITH_STYLE { TextColor { AColor::RED } },
+ *   _new<ALabel>("Red text!") AUI_OVERRIDE_STYLE { TextColor { AColor::RED } },
  * });
  * ```
  *
@@ -283,11 +283,11 @@ using decode_type_t = typename decode_type<T>::type;
  * using namespace ass;
  * ...
  * setContents(Centered {
- *   Label { "Red text!" } AUI_WITH_STYLE { TextColor { AColor::RED } },
+ *   Label { "Red text!" } AUI_OVERRIDE_STYLE { TextColor { AColor::RED } },
  * });
  * ```
  */
-#define AUI_WITH_STYLE &ass::PropertyListRecursive
+#define AUI_OVERRIDE_STYLE &ass::PropertyListRecursive
 
 /**
  * @brief Executes following {} block asynchronously in the [global](AThreadPool::global()) thread pool. Unlike

@@ -48,7 +48,7 @@ protected:
         public:
             TestWindow() {
                 setContents(Centered {
-                        _new<ATextField>() AUI_WITH_STYLE { FixedSize { 300_dp, {} } } AUI_LET {
+                        _new<ATextField>() AUI_OVERRIDE_STYLE { FixedSize { 300_dp, {} } } AUI_LET {
                             it->setText("hello world!");
                         }
                 });

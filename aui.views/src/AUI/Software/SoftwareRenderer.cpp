@@ -546,9 +546,7 @@ _<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 pos
     return c.finalize();
 }
 
-_unique<ITexture> SoftwareRenderer::createNewTexture() {
-    return std::make_unique<SoftwareTexture>();
-}
+_unique<ITexture> SoftwareRenderer::createNewTexture() { return std::make_unique<SoftwareTexture>(); }
 
 _<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style) {
     return _new<SoftwareMultiStringCanvas>(this, style);
