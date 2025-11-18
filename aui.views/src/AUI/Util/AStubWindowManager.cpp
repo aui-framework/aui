@@ -24,11 +24,13 @@ class StubRenderingContext: public SoftwareRenderingContext {
 public:
     StubRenderingContext(AStubWindowManager& parent): mParent(parent) {}
 
+    void init(const Init& init)
 #if !AUI_PLATFORM_LINUX
-    void init(const Init& init) override {
+    override
+#endif
+    {
         reallocate(init.window);
     }
-#endif
 
     ~StubRenderingContext() override = default;
 
