@@ -26,6 +26,7 @@ GLXContext OpenGLRenderingContextX11::ourContext = nullptr;
 void* AUI_GLX_HANDLE = nullptr;
 
 void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
+    PlatformAbstractionX11::ensureXLibInitialized();
     static XSetWindowAttributes swa;
     static XVisualInfo* vi;
     if (ourContext == nullptr) {
