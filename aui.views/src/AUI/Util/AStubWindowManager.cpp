@@ -24,21 +24,23 @@ class StubRenderingContext: public SoftwareRenderingContext {
 public:
     StubRenderingContext(AStubWindowManager& parent): mParent(parent) {}
 
+#if !AUI_PLATFORM_LINUX
     void init(const Init& init) override {
         reallocate(init.window);
     }
+#endif
 
     ~StubRenderingContext() override = default;
 
-    void destroyNativeWindow(AWindowBase& window) override {
+    void destroyNativeWindow(ASurface& window) override {
 
     }
 
-    void beginPaint(AWindowBase& window) override {
+    void beginPaint(ASurface& window) override {
         std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
     }
 
-    void endPaint(AWindowBase& window) override {}
+    void endPaint(ASurface& window) override {}
 
     IRenderer& renderer() override {
         return *gStubWindowManagerConfig->renderer;
