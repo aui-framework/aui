@@ -43,6 +43,7 @@
 #undef max
 #undef min
 
+static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
 
 ASurface* AView::getWindow() const
 {
@@ -200,9 +201,32 @@ static void walkToParentStack(AView* view, aui::invocable<AView*> auto&& callbac
 
 void AView::invalidateAllStyles()
 {
-    static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
     auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusMargin() : glm::ivec2(DEFINITELY_INVALID_SIZE);
     AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
+
+    auto collectRules = [this](const AStylesheet& sh) {
+        for (const auto& r : sh.getRules()) {
+            if (r.getSelector().isPossiblyApplicable(this)) {
+                mAssHelper->mPossiblyApplicableRules << r;
+                r.getSelector().setupConnections(this, mAssHelper);
+            }
+        }
+    };
+
+    collectRules(AStylesheet::global());
+
+    walkToParentStack(this, [&](AView* v) {
+        if (!v->mExtraStylesheet) {
+            return;
+        }
+        collectRules(*v->mExtraStylesheet);
+    });
+
+    invalidateStateStylesImpl(prevMinSize);
+}
+
+void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
+    if (!mAssHelper) return;
     mCursor.reset();
     mOverflow = AOverflow::VISIBLE;
     mMargin = {};
@@ -212,30 +236,6 @@ void AView::invalidateAllStyles()
     mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     mOpacity = 1;
     mTextColor = AColor::BLACK;
-
-    auto applyStylesheet = [this](const AStylesheet& sh) {
-        for (const auto& r : sh.getRules()) {
-            if (r.getSelector().isPossiblyApplicable(this)) {
-                mAssHelper->mPossiblyApplicableRules << r;
-                r.getSelector().setupConnections(this, mAssHelper);
-            }
-        }
-    };
-
-    applyStylesheet(AStylesheet::global());
-
-    walkToParentStack(this, [&](AView* v) {
-        if (!v->mExtraStylesheet) {
-            return;
-        }
-        applyStylesheet(*v->mExtraStylesheet);
-    });
-
-    invalidateStateStylesImpl(prevMinSize);
-}
-
-void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
-    if (!mAssHelper) return;
     aui::zero(mAss);
     mAssHelper->state.backgroundCropping.size.reset();
     mAssHelper->state.backgroundCropping.offset.reset();
@@ -672,7 +672,12 @@ ALayoutDirection AView::parentLayoutDirection() const noexcept {
 void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     AUI_ASSERT_UI_THREAD_ONLY();
     mCustomStyleRule = std::move(rule);
-    invalidateAssHelper();
+    if (mAssHelper == nullptr) {
+        return;
+    }
+    auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusMargin() : glm::ivec2(DEFINITELY_INVALID_SIZE);
+    AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
+    invalidateStateStylesImpl(prevMinSize);
 }
 
 

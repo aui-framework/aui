@@ -194,15 +194,15 @@ public:
                       };
                       connect(it->clicked, [&] { mCells.isRunning = !mCells.isRunning; });
                   },
-            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
           },
           Centered {
-            _new<CellsView>(aui::ptr::fake_shared(&mCells)) AUI_WITH_STYLE {
+            _new<CellsView>(aui::ptr::fake_shared(&mCells)) AUI_OVERRIDE_STYLE {
                   Expanding(),
                   BackgroundSolid(AColor::BLACK),
                 },
           },
-        } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
+        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
     }
 
 private:

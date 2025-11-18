@@ -65,7 +65,7 @@ public:
             using namespace declarative;
             auto c = _new<ABasicListEditor>();
             auto list = _new<AListView>(mModel);
-            list AUI_WITH_STYLE { ass::MinSize { 200_dp, {} } };
+            list AUI_OVERRIDE_STYLE { ass::MinSize { 200_dp, {} } };
 
             auto modifyButton = mModifyCallback ? _new<AButton>("Modify...").connect(&AView::clicked, c, [callback = mModifyCallback, list] {
                 callback(list->getSelectionModel().first());

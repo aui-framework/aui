@@ -29,7 +29,7 @@ MinesweeperWindow::MinesweeperWindow() : AWindow("Minesweeper", 100_dp, 100_dp) 
       _container<AStackedLayout>(
           { // also assign ".frame" ASS class in place
             mGrid = _new<AViewContainer>() << ".frame" }),
-    } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
 
     beginGame(10, 10, 20);
 }

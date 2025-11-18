@@ -22,7 +22,7 @@ using namespace declarative;
 namespace {
 _<AView> coloredRect(AColor c) {
     return Centered {
-        _new<AView>() AUI_WITH_STYLE {
+        _new<AView>() AUI_OVERRIDE_STYLE {
           BackgroundSolid { c },
           FixedSize { 10_pt },
         }
@@ -37,7 +37,7 @@ _<AView> makeLink(AString text, AUrl destination) {
 }
 
 _<ALabel> header(AString title) {
-    return Label { std::move(title) } AUI_WITH_STYLE { FontSize{16_pt}, Padding{0}, Margin { 4_dp, 24_dp, 8_dp } };
+    return Label { std::move(title) } AUI_OVERRIDE_STYLE { FontSize{16_pt}, Padding{0}, Margin { 4_dp, 24_dp, 8_dp } };
 }
 }   // namespace
 
@@ -138,7 +138,7 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(ASurface* targetWindow) {
               { "Displays a horizontal line indicating the text baseline. When multiple text views are placed in a row, "
                 "their baselines should align for proper visual appearance." }),
         }
-        << ".items" AUI_WITH_STYLE {
+        << ".items" AUI_OVERRIDE_STYLE {
                       MaxSize { 700_dp, {} },
                     }) });
     setExtraStylesheet(

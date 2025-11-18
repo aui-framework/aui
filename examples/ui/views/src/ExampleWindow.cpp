@@ -100,7 +100,7 @@ public:
 
 /// [label_coloring]
 static _<AView> link(const AString& url) {
-    return Label { url } AUI_WITH_STYLE {
+    return Label { url } AUI_OVERRIDE_STYLE {
                TextColor { AColor::BLUE },
                BorderBottom { 1_px, AColor::BLUE },
                ACursor::POINTER,
@@ -176,8 +176,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     });
 
     addView(Horizontal {
-      _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) AUI_WITH_STYLE { FixedSize { 32_dp } },
-      AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") AUI_WITH_STYLE {
+      _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) AUI_OVERRIDE_STYLE { FixedSize { 32_dp } },
+      AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") AUI_OVERRIDE_STYLE {
             Expanding(1, 0),
           },
       Horizontal {} AUI_LET {
@@ -185,7 +185,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   auto drawable = IDrawable::fromUrl(
                       "https://raster.shields.io/github/stars/aui-framework/aui?style=raster&logo=github");
                   AUI_UI_THREAD {
-                      auto view = Icon { drawable } AUI_WITH_STYLE {
+                      auto view = Icon { drawable } AUI_OVERRIDE_STYLE {
                           FixedSize { 80_dp, 20_dp },
                           BackgroundImage { {}, {}, {}, Sizing::COVER },
                           Margin { 4_dp },
@@ -232,7 +232,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                         AMessageBox::show(this, "Title", "Message");
                       },
                     },
-                  } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                  } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                 },
 
                 // checkboxes
@@ -260,20 +260,20 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       "Dropdown list 6",
                     })),
                     _new<ADropdownList>(AListModel<AString>::make({ "Disabled dropdown" })) AUI_LET { it->setDisabled(); },
-                  } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                  } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                 },
                 GroupBox {
                   Label { "Drag area" },
 
                   _new<ADragArea>() AUI_LET {
-                          it AUI_WITH_STYLE {
+                          it AUI_OVERRIDE_STYLE {
                               MinSize { 100_dp },
                               Border { 1_px, 0x0_rgb },
                           };
                           it->addView(ADragArea::convertToDraggable(_new<AButton>("Drag me!"), false));
                       },
-                } AUI_WITH_STYLE { Expanding {} },
-              } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                } AUI_OVERRIDE_STYLE { Expanding {} },
+              } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
               Vertical {
 #if AUI_PLATFORM_WIN || AUI_PLATFORM_LINUX || AUI_PLATFORM_MACOS
                 GroupBox {
@@ -312,7 +312,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                      for (auto& w : mWindows) w->close();
                                      mWindows.clear();
                                  }),
-                  } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                  } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                 },
 #endif
 
@@ -370,7 +370,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                          ALogger::info("Example") << "Successfully caught access violation: " << e;
                                      }
                                  }),
-                  } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                  } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                 },
 
                 // list view
@@ -383,9 +383,9 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                           Horizontal {
                             _new<AButton>("Add").connect(&AButton::clicked, AUI_SLOT(model)::addItem),
                             _new<AButton>("Remove").connect(&AButton::clicked, AUI_SLOT(model)::removeItem),
-                          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                           _new<AListView>(model)
-                      } AUI_WITH_STYLE { LayoutSpacing { 4_dp } };
+                      } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } };
                   }(),
                 },
 
@@ -416,13 +416,13 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                     }
                                 }),
                             _new<ASpacerExpanding>(),
-                          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                           AUI_DECLARATIVE_FOR(i, *state->colors, AWordWrappingLayout) {
                               return Horizontal {
-                                  _new<ALabel>(i.toString()) AUI_WITH_STYLE {
+                                  _new<ALabel>(i.toString()) AUI_OVERRIDE_STYLE {
                                       TextColor { i.readableBlackOrWhite() },
                                   }
-                              } AUI_WITH_STYLE {
+                              } AUI_OVERRIDE_STYLE {
                                   BackgroundSolid { i },
                                   BorderRadius { 6_pt },
                                   Margin { 2_dp, 4_dp },
@@ -453,8 +453,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                               },
                             }));
                   }(),
-                } AUI_WITH_STYLE { Expanding {} },
-              } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                } AUI_OVERRIDE_STYLE { Expanding {} },
+              } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
               Vertical::Expanding {
                 // fields
                 GroupBox {
@@ -471,7 +471,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                             },
                       },
                     },
-                  } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                  } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                 },
                 GroupBox {
                   Label { "Scaling factor" },
@@ -508,10 +508,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                 "file, You can obtain one at http://mozilla.org/MPL/2.0/."))
                             .build()
                         << ".input-field" AUI_LET { it->setExpanding(); },
-                  } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-                } AUI_WITH_STYLE { Expanding {} },
-              } AUI_WITH_STYLE { LayoutSpacing { 4_dp } }
-            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } }),
+                  } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                } AUI_OVERRIDE_STYLE { Expanding {} },
+              } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } }
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } }),
             "Common");
 
 #if !AUI_PLATFORM_EMSCRIPTEN
@@ -527,21 +527,21 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   _new<AButton>("Play .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::play),
                   _new<AButton>("Stop .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::stop),
                   _new<AButton>("Pause .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::pause),
-                } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                 Vertical {
                   _new<ALabel>("Play music using AUI!"),
                   _new<AButton>("Play .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::play),
                   _new<AButton>("Stop .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::stop),
                   _new<AButton>("Pause .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::pause),
-                } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                 Vertical {
-                  _new<AButton>("Button produces sound when clicked") AUI_WITH_STYLE {
+                  _new<AButton>("Button produces sound when clicked") AUI_OVERRIDE_STYLE {
                         ass::on_state::Activated {
                           ass::Sound { IAudioPlayer::fromUrl(":sound/click.ogg") },
                         },
                       },
-                } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-              } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+              } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
             }),
             "Sounds");
 #endif
@@ -551,11 +551,11 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 std::conditional_t<aui::platform::current::is_mobile(), Vertical, Horizontal> { Horizontal {
                   Vertical {
                     _new<ALabel>("Gif support!"),
-                    _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) AUI_WITH_STYLE { FixedSize { 100_dp } },   // gif from https://tenor.com/view/cat-gif-26024730
+                    _new<ADrawableView>(IDrawable::fromUrl(":img/gf.gif")) AUI_OVERRIDE_STYLE { FixedSize { 100_dp } },   // gif from https://tenor.com/view/cat-gif-26024730
                   },
                   Vertical {
                     _new<ALabel>("Animated WebP support!"),
-                    _new<ADrawableView>(AUrl(":img/anim.webp")) AUI_WITH_STYLE { FixedSize { 320_px, 240_px } } } } }),
+                    _new<ADrawableView>(AUrl(":img/anim.webp")) AUI_OVERRIDE_STYLE { FixedSize { 320_px, 240_px } } } } }),
             "Images");
 
         it->addTab(
@@ -567,7 +567,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 _new<AButton>("Three"),
                 _new<AButton>("Four"),
                 _new<AButton>("Five"),
-              }).build() AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+              }).build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
               ASplitter::Horizontal().withItems({
                 _new<AButton>("One"),
                 _new<AButton>("Two"),
@@ -575,12 +575,12 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 SpacerExpanding(),
                 _new<AButton>("Four"),
                 _new<AButton>("Five"),
-              }).build() AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+              }).build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
               _new<ALabel>("Vertical splitter"),
               ASplitter::Vertical()
                       .withItems({ _new<AButton>("One"), _new<AButton>("Two"), _new<AButton>("Three"),
                                    _new<AButton>("Four"), _new<AButton>("Five") })
-                      .build() AUI_WITH_STYLE { LayoutSpacing { 4_dp }, Expanding{} },
+                      .build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Expanding{} },
               _new<ALabel>("Grid splitter"),
               AGridSplitter::Builder()
                       .withItems(AVector<AVector<_<AView>>>::generate(
@@ -590,8 +590,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                   return _new<AButton>("{}x{}"_format(x, y));
                               });
                           }))
-                      .build() AUI_WITH_STYLE { LayoutSpacing { 4_dp }, Expanding{} },
-            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                      .build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Expanding{} },
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
             "Splitters");
 
         it->addTab(
@@ -606,8 +606,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                           "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
                           "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
                           "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
-                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") AUI_WITH_STYLE { ATextAlign::JUSTIFY },
-                    } AUI_WITH_STYLE { MinSize { 200_dp } },
+                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") AUI_OVERRIDE_STYLE { ATextAlign::JUSTIFY },
+                    } AUI_OVERRIDE_STYLE { MinSize { 200_dp } },
                     Vertical::Expanding {
                       _new<ALabel>("Word breaking"),
                       AText::fromString(
@@ -618,18 +618,18 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                           "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
                           "proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
                           { WordBreak::BREAK_ALL }),
-                    } AUI_WITH_STYLE { MinSize { 200_dp } },
-                  }).build() AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                    } AUI_OVERRIDE_STYLE { MinSize { 200_dp } },
+                  }).build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                   [] {
                       _<AViewContainer> v1 = Vertical {};
                       _<AViewContainer> v2 = Vertical {};
                       for (int i = 0; i <= 9; ++i) {
                           v1->addView(Horizontal {
                             _new<ALabel>("{} px"_format(i + 6)),
-                            _new<ALabel>("Hello! [] .~123`") AUI_WITH_STYLE { FontSize { AMetric(i + 6, AMetric::T_PX) } } });
+                            _new<ALabel>("Hello! [] .~123`") AUI_OVERRIDE_STYLE { FontSize { AMetric(i + 6, AMetric::T_PX) } } });
                           v2->addView(Horizontal {
                             _new<ALabel>("{} px"_format(i + 16)),
-                            _new<ALabel>("Hello! [] .~123`") AUI_WITH_STYLE { FontSize { AMetric(i + 16, AMetric::T_PX) } } });
+                            _new<ALabel>("Hello! [] .~123`") AUI_OVERRIDE_STYLE { FontSize { AMetric(i + 16, AMetric::T_PX) } } });
                       }
                       return Horizontal { v1, v2 };
                   }(),
@@ -645,7 +645,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       });
 
                       _<AView> blackRect = Stacked {
-                          Stacked { _new<AButton>("Hi") } AUI_WITH_STYLE {
+                          Stacked { _new<AButton>("Hi") } AUI_OVERRIDE_STYLE {
                             FixedSize { 200_dp, 100_dp },
                             BackgroundSolid { AColor::BLACK },
                             TextColor { AColor::WHITE },
@@ -672,17 +672,17 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
               Horizontal {
                 Centered {
                   Vertical {
-                    Label { "Custom cursor" } AUI_WITH_STYLE {
+                    Label { "Custom cursor" } AUI_OVERRIDE_STYLE {
                           ACursor { ":img/logo.svg", 64 },
                         },
                     link("https://github.com/aui-framework/aui"),
                   },
                 },
                 Stacked {
-                  Icon { ":img/logo.svg" } AUI_WITH_STYLE { FixedSize(32_dp) },
+                  Icon { ":img/logo.svg" } AUI_OVERRIDE_STYLE { FixedSize(32_dp) },
                   Centered {
-                    Label { "Blur" } AUI_WITH_STYLE { Margin { 1_dp, 16_dp } },
-                  } AUI_WITH_STYLE {
+                    Label { "Blur" } AUI_OVERRIDE_STYLE { Margin { 1_dp, 16_dp } },
+                  } AUI_OVERRIDE_STYLE {
                         Expanding(1, 0),
                         Backdrop { Backdrop::GaussianBlur { 9_dp } },
                         BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
@@ -710,7 +710,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
               it << "#copyright";
               it->setEnabled(false);
           },
-    } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
 }
 
 void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
@@ -722,7 +722,7 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
 
     auto surface = createOverlappingSurface({ 0, 0 }, { 100, 100 }, false);
     _<AViewContainer> popup = Vertical {
-        Label { "Drop event" } AUI_WITH_STYLE {
+        Label { "Drop event" } AUI_OVERRIDE_STYLE {
               FontSize { 18_pt },
               ATextAlign::CENTER,
             },
@@ -730,12 +730,12 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
             if (auto u = event.data.urls()) {
                 auto url = u->first();
                 if (auto icon = ADesktop::iconOfFile(url.path())) {
-                    return Centered { _new<ADrawableView>(icon) AUI_WITH_STYLE { FixedSize { 64_dp } } };
+                    return Centered { _new<ADrawableView>(icon) AUI_OVERRIDE_STYLE { FixedSize { 64_dp } } };
                 }
             }
             return nullptr;
         }(),
-        AText::fromString("Caught drop event. See the logger output for contents.") AUI_WITH_STYLE { ATextAlign::CENTER, MinSize { 100_dp, 40_dp } },
+        AText::fromString("Caught drop event. See the logger output for contents.") AUI_OVERRIDE_STYLE { ATextAlign::CENTER, MinSize { 100_dp, 40_dp } },
         Centered { Button { Label { "OK" }, [surface] { surface->close(); } } },
     };
     ALayoutInflater::inflate(surface, popup);
