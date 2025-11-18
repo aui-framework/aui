@@ -22,10 +22,12 @@
 
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/GL/State.h>
+#include <EGL/egl.h>
 
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
+    gladLoadGLES2Loader(reinterpret_cast<GLADloadproc>(eglGetProcAddress));
     mRenderer = ourRenderer();
 }
 
