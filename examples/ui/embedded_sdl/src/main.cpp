@@ -239,6 +239,14 @@ struct EmbedWindow : AGLEmbedContext, AObject {
         setCustomDpiRatio(SDL_GetWindowDisplayScale(sdl_window));
 
         connect(getWindow()->touchscreenKeyboardShown, this, [this] {
+            glm::ivec2 pos = getWindow()->getFocusedView()->getPositionInWindow();
+            glm::ivec2 size = getWindow()->getFocusedView()->getSize();
+            SDL_Rect rect;
+            rect.x = pos.x;
+            rect.y = pos.y;
+            rect.w = size.x;
+            rect.h = size.y;
+            SDL_SetTextInputArea(sdl_window, &rect, 0);
             SDL_StartTextInput(sdl_window);
         });
         connect(getWindow()->touchscreenKeyboardHidden, this, [this] {
