@@ -26,7 +26,7 @@ public:
 
     void init(const Init& init)
 #if !AUI_PLATFORM_LINUX
-    override
+      override
 #endif
     {
         reallocate(init.window);
