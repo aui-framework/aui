@@ -36,10 +36,10 @@ public:
                 it->focus();
             },
             Label { "°C" },
-            Label { "=" } AUI_WITH_STYLE { Margin { {}, 16_dp } },
+            Label { "=" } AUI_OVERRIDE_STYLE { Margin { {}, 16_dp } },
             myPicker() AUI_LET { biConnect(it->value(), mFahrenheit); },
             Label { "°F" },
-          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
         });
 
         connect(mFahrenheit.changed, [&] { mCelsius = (*mFahrenheit - 32.f) * (5.f / 9.f); });

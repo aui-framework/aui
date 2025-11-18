@@ -29,6 +29,60 @@
 #include "AUI/View/AScrollArea.h"
 #include "AUI/View/ATextArea.h"
 
+static _<AView> radioButtonsDemo() {
+    using namespace declarative;
+    using namespace ass;
+    auto selection = _new<AProperty<int>>(0);
+    return Vertical {
+        RadioButton {
+            AUI_REACT(*selection == 0),
+            [selection] { *selection = 0; },
+            Label { "Radiobutton 1" },
+          },
+          RadioButton {
+              AUI_REACT(*selection == 1),
+              [selection] { *selection = 1; },
+              Label { "Radiobutton 2" },
+            },
+            RadioButton {
+                AUI_REACT(*selection == 2),
+                [selection] { *selection = 2; },
+                Label { "Radiobutton 3" },
+              },
+              RadioButton {
+                  AUI_REACT(*selection == 3),
+                  [selection] { *selection = 3; },
+                  Label { "Radiobutton 4" },
+                } AUI_LET { it->disable(); },
+            };
+}
+
+
+static _<AView> checkBoxesDemo() {
+    using namespace declarative;
+    using namespace ass;
+    struct State {
+        AProperty<bool> checked1 = false, checked2 = true;
+    };
+    auto state = _new<State>();
+    return Vertical {
+        CheckBox {
+            AUI_REACT(state->checked1),
+            [state](bool checked) { state->checked1 = checked; },
+            Label { "Unchecked checkbox" },
+          },
+          CheckBox {
+              AUI_REACT(state->checked2),
+              [state](bool checked) { state->checked2 = checked; },
+              Label { "Checked checkbox" },
+            },
+            CheckBox {
+                AUI_REACT(false),
+                Label { "Disabled checkbox" },
+              } AUI_LET { it->disable(); },
+          };
+}
+
 static _<AView> uiBenchmarkScene() {
     using namespace declarative;
     using namespace ass;
@@ -50,23 +104,14 @@ static _<AView> uiBenchmarkScene() {
 
           // checkboxes
           GroupBox {
-            CheckBoxWrapper { Label { "Checkboxes" } } AUI_LET { it->checked() = true; },
-            Vertical {
-              CheckBoxWrapper { Label { "Unchecked checkbox" } },
-              CheckBoxWrapper { Label { "Checked checkbox" } } AUI_LET { it->checked() = true; },
-              CheckBoxWrapper { Label { "Disabled checkbox" } } AUI_LET { it->setDisabled(); },
-            },
+             Label { "Checkboxes" },
+              checkBoxesDemo(),
           },
 
           // radiobuttons
           GroupBox {
             Label { "Radiobuttons" },
-            RadioGroup {
-              RadioButton { "Radiobutton 1" } AUI_LET { it->checked() = true; },
-              RadioButton { "Radiobutton 2" },
-              RadioButton { "Radiobutton 3" },
-              RadioButton { "Disabled radiobutton" } AUI_LET { it->disable(); },
-            },
+              radioButtonsDemo(),
           },
 
           // comboboxes
@@ -88,13 +133,13 @@ static _<AView> uiBenchmarkScene() {
             Label { "Drag area" },
 
             _new<ADragArea>() AUI_LET {
-                    it AUI_WITH_STYLE {
+                    it AUI_OVERRIDE_STYLE {
                         MinSize { 100_dp },
                         Border { 1_px, 0x0_rgb },
                     };
                     it->addView(ADragArea::convertToDraggable(_new<AButton>("Drag me!"), false));
                 },
-          } AUI_WITH_STYLE { Expanding {} },
+          } AUI_OVERRIDE_STYLE { Expanding {} },
         },
         Vertical {
           GroupBox {
@@ -127,12 +172,6 @@ static _<AView> uiBenchmarkScene() {
             Vertical {
               _new<AProgressBar>(),
               _new<ACircleProgressBar>(),
-              GroupBox {
-                Label { "Slider" },
-                Vertical {
-                  _new<ASlider>(),
-                },
-              },
             },
           },
           GroupBox {

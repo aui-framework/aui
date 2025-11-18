@@ -46,8 +46,8 @@ public:
             Vertical::Expanding {
               Horizontal {
                 Label { "Filter prefix:" },
-                _new<ATextField>() AUI_WITH_STYLE { Expanding(1, 0) } && mFilterPrefix,
-              } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+                _new<ATextField>() AUI_OVERRIDE_STYLE { Expanding(1, 0) } && mFilterPrefix,
+              } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
               AScrollArea::Builder().withExpanding().withContents(
                   AUI_DECLARATIVE_FOR(i, *mUsers | FILTER_VIEW, AVerticalLayout) {
                     auto view = _new<ALabel>();
@@ -62,21 +62,21 @@ public:
                     });
                     return view;
                   }
-              ).build() AUI_WITH_STYLE { BackgroundSolid { AColor::WHITE } },
-            } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+              ).build() AUI_OVERRIDE_STYLE { BackgroundSolid { AColor::WHITE } },
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
             Centered::Expanding {
               _form({
                 { "Name:", _new<ATextField>() && mEditedUser.name },
                 { "Surname:", _new<ATextField>() && mEditedUser.surname },
-              }) AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+              }) AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
             },
-          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
           Horizontal {
             Button { Label { "Create" }, {me::createClicked} } & mCreateEnabled > &AView::setEnabled,
             Button { Label { "Update" }, {me::updateClicked} } & mUpdateEnabled > &AView::setEnabled,
             Button { Label { "Delete" }, {me::deleteClicked} } & mDeleteEnabled > &AView::setEnabled,
-          } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-        } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
+          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
     }
 
 private:

@@ -69,11 +69,11 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
     auto addressStr = "{}"_format((void*) targetView.get());
     _<AViewContainer> dst = Vertical {
-        _new<ALabel>(Devtools::prettyViewName(targetView.get())) AUI_WITH_STYLE { FontSize { 14_pt } },
+        _new<ALabel>(Devtools::prettyViewName(targetView.get())) AUI_OVERRIDE_STYLE { FontSize { 14_pt } },
         Horizontal {
           Label { addressStr },
           Button { Label { "Copy" }, [addressStr] { AClipboard::copyToClipboard(addressStr); } },
-        } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
 
         Label { AUI_REACT("Min size = {}px"_format(targetView->getMinimumSize())) },
         Label { AUI_REACT("Size = {}px"_format(targetView->size())) },
@@ -116,7 +116,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 
         Label { "view's custom style" },
         Label { "{" } << ".declaration_br",
-    } AUI_WITH_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } };
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } };
 
     displayApplicableRule(dst, applicableDeclarations, &targetView->getCustomAss());
 
@@ -150,14 +150,14 @@ void ViewPropertiesView::displayApplicableRule(
     const ass::PropertyList* rule) {
     for (const auto& decl : rule->declarations()) {
         applicableDeclarations.push_front(decl.get());
-        dst->addView(_new<ALabel>(IStringable::toString(decl)) AUI_WITH_STYLE { Opacity { 0.7f } });
+        dst->addView(_new<ALabel>(IStringable::toString(decl)) AUI_OVERRIDE_STYLE { Opacity { 0.7f } });
     }
     dst->addView(Horizontal {
       _new<ALabel>("},") << ".declaration_br",
     });
     dst->addView(
         _new<AHDividerView>()
-            AUI_WITH_STYLE { BackgroundSolid { 0x505050_rgb }, Margin { 5_dp, 0 }, MinSize { {}, 10_dp } });
+            AUI_OVERRIDE_STYLE { BackgroundSolid { 0x505050_rgb }, Margin { 5_dp, 0 }, MinSize { {}, 10_dp } });
 }
 
 void ViewPropertiesView::requestTargetUpdate() {

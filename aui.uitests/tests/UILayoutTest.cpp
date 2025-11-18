@@ -60,7 +60,7 @@ TEST_F(UILayoutTest, SmallCorner1) {
         }
     };
 
-    auto cornerLabel = _new<View>("26") AUI_WITH_STYLE {
+    auto cornerLabel = _new<View>("26") AUI_OVERRIDE_STYLE {
         ATextAlign::RIGHT,
         FontSize { 8_dp },
         LineHeight { 9.68 },
@@ -71,13 +71,13 @@ TEST_F(UILayoutTest, SmallCorner1) {
     };
     _<AView> box =
         Horizontal {
-            SpacerExpanding() AUI_WITH_STYLE { MinSize(0) },
+            SpacerExpanding() AUI_OVERRIDE_STYLE { MinSize(0) },
             Vertical {
-              SpacerExpanding() AUI_WITH_STYLE { MinSize(0) },
+              SpacerExpanding() AUI_OVERRIDE_STYLE { MinSize(0) },
               cornerLabel,
-            } AUI_WITH_STYLE { MinSize(0) }
+            } AUI_OVERRIDE_STYLE { MinSize(0) }
         }
-        << "Box" AUI_WITH_STYLE {
+        << "Box" AUI_OVERRIDE_STYLE {
                FixedSize(22_dp),
                BackgroundSolid(0xffffff_rgb),
            };
@@ -91,8 +91,8 @@ TEST_F(UILayoutTest, SmallCorner1) {
 
 TEST_F(UILayoutTest, LayoutSpacing1) {
     inflate(Horizontal::Expanding {
-      Button { Label { "1" } } AUI_WITH_STYLE { Expanding {} },
-    } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
+      Button { Label { "1" } } AUI_OVERRIDE_STYLE { Expanding {} },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
     auto b = By::type<AButton>().one();
 
     // checks the buttons margins are perfectly equal
@@ -101,29 +101,29 @@ TEST_F(UILayoutTest, LayoutSpacing1) {
 }
 TEST_F(UILayoutTest, LayoutSpacing2) {
     inflate(Horizontal::Expanding {
-      Button { Label { "1" } } AUI_WITH_STYLE { Expanding {} },
-      Button { Label { "2" } } AUI_WITH_STYLE { Expanding {} },
-    } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
+      Button { Label { "1" } } AUI_OVERRIDE_STYLE { Expanding {} },
+      Button { Label { "2" } } AUI_OVERRIDE_STYLE { Expanding {} },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
 
     By::type<AButton>().check(sameWidth(), "widths of the buttons are not equal");
 }
 
 TEST_F(UILayoutTest, LayoutSpacing3) {
     inflate(Horizontal::Expanding {
-      Button { Label { "1" } } AUI_WITH_STYLE { Expanding {} },
-      Button { Label { "2" } } AUI_WITH_STYLE { Expanding {} },
-      Button { Label { "3" } } AUI_WITH_STYLE { Expanding {} },
-      Button { Label { "4" } } AUI_WITH_STYLE { Expanding {} },
-    } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
+      Button { Label { "1" } } AUI_OVERRIDE_STYLE { Expanding {} },
+      Button { Label { "2" } } AUI_OVERRIDE_STYLE { Expanding {} },
+      Button { Label { "3" } } AUI_OVERRIDE_STYLE { Expanding {} },
+      Button { Label { "4" } } AUI_OVERRIDE_STYLE { Expanding {} },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
 
     By::type<AButton>().check(sameWidth(), "widths of the buttons are not equal");
 }
 
 TEST_F(UILayoutTest, LayoutSpacing4) {
     inflate(Vertical::Expanding {
-        Button { Label { "1" } } AUI_WITH_STYLE {},
-        Button { Label { "2" } } AUI_WITH_STYLE { Expanding {} },
-    } AUI_WITH_STYLE { LayoutSpacing { -8_dp }, FixedSize(200_dp, {}) });
+        Button { Label { "1" } } AUI_OVERRIDE_STYLE {},
+        Button { Label { "2" } } AUI_OVERRIDE_STYLE { Expanding {} },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { -8_dp }, FixedSize(200_dp, {}) });
 
     uitest::frame();
     auto i = By::type<AButton>().toVector();
@@ -138,10 +138,10 @@ TEST_F(UILayoutTest, LayoutSpacing5) {
             Vertical {
                 Label { "Test" },
             }
-        } AUI_WITH_STYLE { Expanding {} };
+        } AUI_OVERRIDE_STYLE { Expanding {} };
     inflate(Centered::Expanding {
             groupBox
-    } AUI_WITH_STYLE { FixedSize(200_dp, {}) });
+    } AUI_OVERRIDE_STYLE { FixedSize(200_dp, {}) });
 
     uitest::frame();
     auto title = groupBox->getViews()[0];
@@ -151,9 +151,9 @@ TEST_F(UILayoutTest, LayoutSpacing5) {
 
 TEST_F(UILayoutTest, ExpandingWithMinSize1) {
     inflate(Horizontal::Expanding {
-      _new<AView>() << ".expanding_minsize" AUI_WITH_STYLE { Expanding {}, MinSize { 200_dp, {} } },
-      _new<AView>() << ".expanding" AUI_WITH_STYLE { Expanding {} },
-    } AUI_WITH_STYLE { FixedSize(300_dp, {}) });
+      _new<AView>() << ".expanding_minsize" AUI_OVERRIDE_STYLE { Expanding {}, MinSize { 200_dp, {} } },
+      _new<AView>() << ".expanding" AUI_OVERRIDE_STYLE { Expanding {} },
+    } AUI_OVERRIDE_STYLE { FixedSize(300_dp, {}) });
 
     By::name(".expanding_minsize").check(width(200_dp), "width of .expanding_minsize is invalid");
     By::name(".expanding").check(width(100_dp), "width of .expanding is invalid");
@@ -161,9 +161,9 @@ TEST_F(UILayoutTest, ExpandingWithMinSize1) {
 
 TEST_F(UILayoutTest, ExpandingWithMinSize2) {
     inflate(Horizontal::Expanding {
-      _new<AView>() << ".expanding" AUI_WITH_STYLE { Expanding {} },
-      _new<AView>() << ".expanding_minsize" AUI_WITH_STYLE { Expanding {}, MinSize { 200_dp, {} } },
-    } AUI_WITH_STYLE { FixedSize(300_dp, {}) });
+      _new<AView>() << ".expanding" AUI_OVERRIDE_STYLE { Expanding {} },
+      _new<AView>() << ".expanding_minsize" AUI_OVERRIDE_STYLE { Expanding {}, MinSize { 200_dp, {} } },
+    } AUI_OVERRIDE_STYLE { FixedSize(300_dp, {}) });
 
     By::name(".expanding_minsize").check(width(200_dp), "width of .expanding_minsize is invalid");
     By::name(".expanding").check(width(100_dp), "width of .expanding is invalid");
@@ -171,9 +171,9 @@ TEST_F(UILayoutTest, ExpandingWithMinSize2) {
 
 TEST_F(UILayoutTest, ExpandingWithMaxSize1) {
     inflate(Horizontal::Expanding {
-        _new<AView>() << ".expanding_maxsize" AUI_WITH_STYLE { Expanding {}, MaxSize { 100_dp, {} } },
-        _new<AView>() << ".expanding" AUI_WITH_STYLE { Expanding {} },
-    } AUI_WITH_STYLE { FixedSize(300_dp, {}) });
+        _new<AView>() << ".expanding_maxsize" AUI_OVERRIDE_STYLE { Expanding {}, MaxSize { 100_dp, {} } },
+        _new<AView>() << ".expanding" AUI_OVERRIDE_STYLE { Expanding {} },
+    } AUI_OVERRIDE_STYLE { FixedSize(300_dp, {}) });
 
     By::name(".expanding_maxsize").check(width(100_dp), "width of .expanding_maxsize is invalid");
     By::name(".expanding").check(width(200_dp), "width of .expanding is invalid");
@@ -181,9 +181,9 @@ TEST_F(UILayoutTest, ExpandingWithMaxSize1) {
 
 TEST_F(UILayoutTest, ExpandingWithMaxSize2) {
     inflate(Horizontal::Expanding {
-        _new<AView>() << ".expanding" AUI_WITH_STYLE { Expanding {} },
-        _new<AView>() << ".expanding_maxsize" AUI_WITH_STYLE { Expanding {}, MaxSize { 100_dp, {} } },
-    } AUI_WITH_STYLE { FixedSize(300_dp, {}) });
+        _new<AView>() << ".expanding" AUI_OVERRIDE_STYLE { Expanding {} },
+        _new<AView>() << ".expanding_maxsize" AUI_OVERRIDE_STYLE { Expanding {}, MaxSize { 100_dp, {} } },
+    } AUI_OVERRIDE_STYLE { FixedSize(300_dp, {}) });
 
     By::name(".expanding_maxsize").check(width(100_dp), "width of .expanding_maxsize is invalid");
     By::name(".expanding").check(width(200_dp), "width of .expanding is invalid");

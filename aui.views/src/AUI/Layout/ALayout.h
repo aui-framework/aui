@@ -169,7 +169,7 @@ class AViewContainer;
  *       ```cpp
  *       setContents(
  *         Stacked {
- *           _new<AView>() AUI_WITH_STYLE { BackgroundSolid(0xff0000_rgb), Expanding() },
+ *           _new<AView>() AUI_OVERRIDE_STYLE { BackgroundSolid(0xff0000_rgb), Expanding() },
  *           Label { "Test" },
  *         }
  *       );
@@ -225,7 +225,7 @@ class AViewContainer;
  *                  // alias to it->setExpanding(2) ^^^^^^
  *           },
  *           _new<AButton>("Down"),
- *         } AUI_WITH_STYLE { MinSize { 300_dp, {} } },
+ *         } AUI_OVERRIDE_STYLE { MinSize { 300_dp, {} } },
  *       );
  *       ```
  *     </td>
@@ -251,7 +251,7 @@ class AViewContainer;
  *               _new<AButton>("Right"),
  *           },
  *           _new<AButton>("Down"),
- *         } AUI_WITH_STYLE { MinSize { 300_dp, {} } },
+ *         } AUI_OVERRIDE_STYLE { MinSize { 300_dp, {} } },
  *       );
  *       ```
  *     </td>

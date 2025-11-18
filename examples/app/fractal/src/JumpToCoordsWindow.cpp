@@ -39,7 +39,7 @@ JumpToCoordsWindow::JumpToCoordsWindow(_<FractalView> fractalView, AWindow* pare
         { "Re="_as, re },
         { "Im="_as, im },
         { "Scale="_as, scale },
-      }) AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
+      }) AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
       Horizontal {
         SpacerExpanding {},
         _new<AButton>("Jump").connect(
@@ -56,8 +56,8 @@ JumpToCoordsWindow::JumpToCoordsWindow(_<FractalView> fractalView, AWindow* pare
                 }
             }) AUI_LET { it->setDefault(); },
         _new<AButton>("Cancel").connect(&AButton::clicked, me::close),
-      } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-    } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
+      } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
 
     pack();
 }

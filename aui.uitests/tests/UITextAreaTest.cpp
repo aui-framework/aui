@@ -55,7 +55,7 @@ protected:
         uitest::frame();
     }
 
-    _<ATextArea> mTextArea = _new<ATextArea>() AUI_WITH_STYLE { FixedSize { 300_dp, {} }, LineHeight { 1.f } } AUI_LET {
+    _<ATextArea> mTextArea = _new<ATextArea>() AUI_OVERRIDE_STYLE { FixedSize { 300_dp, {} }, LineHeight { 1.f } } AUI_LET {
         it->setText("hello world!\nsecond line");
     };
 

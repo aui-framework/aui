@@ -90,7 +90,7 @@ void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
         auto parentWindow = getWindow();
         if (!parentWindow) return;
 
-        auto list = _new<AListView>(mModel) AUI_WITH_STYLE { ass::Margin { 0 }, ass::Expanding{}, ass::MinSize {  AMetric(getWidth(), AMetric::T_PX), 0, } };
+        auto list = _new<AListView>(mModel) AUI_OVERRIDE_STYLE { ass::Margin { 0 }, ass::Expanding{}, ass::MinSize {  AMetric(getWidth(), AMetric::T_PX), 0, } };
         list << ".combobox_list";
         int listHeight = list->getContentFullHeight() + list->getMinimumHeight() + 2; // bias
         auto comboBoxPos = getPositionInWindow();

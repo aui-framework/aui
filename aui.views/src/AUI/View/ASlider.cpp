@@ -76,7 +76,7 @@ private:
 
 /// [defaultTrack]
 _<AView> Slider::defaultTrack(const contract::In<aui::float_within_0_1>& value) {
-    return ProgressBar { .progress = value } AUI_WITH_STYLE {
+    return ProgressBar { .progress = value } AUI_OVERRIDE_STYLE {
         FixedSize { {}, 4_dp },
         MinSize { 150_dp, {} },
     };
@@ -85,7 +85,7 @@ _<AView> Slider::defaultTrack(const contract::In<aui::float_within_0_1>& value) 
 
 /// [defaultHandle]
 _<AView> Slider::defaultHandle() {
-    return _new<AView>() AUI_WITH_STYLE {
+    return _new<AView>() AUI_OVERRIDE_STYLE {
         BackgroundSolid { AStylesheet::getOsThemeColor() },
         FixedSize { 8_dp },
         BorderRadius { 4_dp },
@@ -100,6 +100,6 @@ API_AUI_VIEWS _<AView> Slider::operator()() {
     track->setExpanding({1, 0});
     return Stacked {
         std::move(track),
-        std::move(handleWrapper) AUI_WITH_STYLE { Expanding{} },
+        std::move(handleWrapper) AUI_OVERRIDE_STYLE { Expanding{} },
     };
 }

@@ -66,14 +66,14 @@ _<AView> notePreview(const _<Note>& note) {
     return Vertical {
         Label {
           .text = AUI_REACT(stringOneLinePreview(note->title)),
-        } AUI_WITH_STYLE { FontSize { 10_pt }, ATextOverflow::ELLIPSIS },
+        } AUI_OVERRIDE_STYLE { FontSize { 10_pt }, ATextOverflow::ELLIPSIS },
         Label {
           .text = AUI_REACT(stringOneLinePreview(note->content)),
-        } AUI_WITH_STYLE {
+        } AUI_OVERRIDE_STYLE {
               ATextOverflow::ELLIPSIS,
               Opacity { 0.7f },
             },
-    } AUI_WITH_STYLE {
+    } AUI_OVERRIDE_STYLE {
         Padding { 4_dp, 8_dp },
         BorderRadius { 8_dp },
         Margin { 4_dp, 8_dp },
@@ -95,8 +95,8 @@ _<AView> noteEditor(const _<Note>& note) {
                       it->focus();
                   }
               },
-          _new<ATextArea>("Text") AUI_WITH_STYLE { Expanding() } && note->content,
-        } AUI_WITH_STYLE {
+          _new<ATextArea>("Text") AUI_OVERRIDE_STYLE { Expanding() } && note->content,
+        } AUI_OVERRIDE_STYLE {
           Padding { 8_dp, 16_dp },
         });
 }
@@ -130,7 +130,7 @@ public:
                               mDirty > &AView::setEnabled,
                           Button { Horizontal { Icon { ":img/new.svg" }, SpacerFixed { 2_dp }, Label { "New Note" } },
                                    { me::newNote } },
-                        } AUI_WITH_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } },
+                        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } },
                       },
                       /// [scrollarea]
                       AScrollArea::Builder()
@@ -147,7 +147,7 @@ public:
                           })
                           .build(),
                       /// [scrollarea]
-                    } AUI_WITH_STYLE { MinSize { 200_dp } },
+                    } AUI_OVERRIDE_STYLE { MinSize { 200_dp } },
 
                     Vertical::Expanding {
                       Centered {
@@ -158,10 +158,10 @@ public:
                             connect(AUI_REACT(mCurrentNote != nullptr), AUI_SLOT(it)::setEnabled);
                         },
                       },
-                      experimental::Dynamic { AUI_REACT(noteEditor(mCurrentNote)) } AUI_WITH_STYLE { Expanding() },
-                    } << ".plain_bg" AUI_WITH_STYLE { MinSize { 200_dp } },
+                      experimental::Dynamic { AUI_REACT(noteEditor(mCurrentNote)) } AUI_OVERRIDE_STYLE { Expanding() },
+                    } << ".plain_bg" AUI_OVERRIDE_STYLE { MinSize { 200_dp } },
                   })
-                  .build() AUI_WITH_STYLE { Expanding() },
+                  .build() AUI_OVERRIDE_STYLE { Expanding() },
         });
 
         if (mNotes->empty()) {

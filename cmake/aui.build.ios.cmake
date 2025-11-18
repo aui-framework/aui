@@ -27,7 +27,7 @@ function(_aui_ios_app)
     endif()
     add_custom_target(${APP_TARGET}.app
             COMMAND ${CMAKE_COMMAND} -S ${_xcode_project_dir}/../ -B ${_xcode_project_dir} -GXcode -DCMAKE_TOOLCHAIN_FILE=${AUI_BUILD_AUI_ROOT}/cmake/toolchains/arm64-ios.cmake
-            COMMAND ${CMAKE_COMMAND} --build ${_xcode_project_dir} -t ${APP_TARGET} -- ${_extra_args}
+            # COMMAND ${CMAKE_COMMAND} --build ${_xcode_project_dir} -t ${APP_TARGET} -- ${_extra_args}
             )
     get_property(_forwardable_vars GLOBAL PROPERTY AUIB_FORWARDABLE_VARS)
     unset(ALL_CMAKE_ARGS)

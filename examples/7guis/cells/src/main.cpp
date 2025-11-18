@@ -27,7 +27,7 @@ struct State {
 };
 
 static _<AView> labelTitle(AString s) {
-    return _new<ALabel>(std::move(s)) AUI_WITH_STYLE {
+    return _new<ALabel>(std::move(s)) AUI_OVERRIDE_STYLE {
         Opacity { 0.5f },
         ATextAlign::CENTER,
     };
@@ -51,7 +51,7 @@ private:
                 std::visit(
                     aui::lambda_overloaded {
                       [](std::nullopt_t) -> _<AView> { return _new<AView>(); },
-                      [](double v) -> _<AView> { return Label { "{}"_format(v) } AUI_WITH_STYLE { ATextAlign::RIGHT }; },
+                      [](double v) -> _<AView> { return Label { "{}"_format(v) } AUI_OVERRIDE_STYLE { ATextAlign::RIGHT }; },
                       [](const AString& v) -> _<AView> { return Label { "{}"_format(v) }; },
                       [](const formula::Range& v) -> _<AView> { return Label { "#RANGE?" }; },
                     },
@@ -64,7 +64,7 @@ private:
         mState->currentExpression = mCell.expression;
         ALayoutInflater::inflate(
             this,
-            _new<ATextField>() AUI_WITH_STYLE {
+            _new<ATextField>() AUI_OVERRIDE_STYLE {
                   MinSize { 0 },
                   Margin { 0 },
                   BorderRadius { 0 },
@@ -97,12 +97,12 @@ public:
 
                         views[0][0] = _new<AView>();   // blank
                         for (unsigned i = 0; i < mState->spreadsheet.size().x; ++i) {
-                            views[0][i + 1] = Centered{ labelTitle(Cell::columnName(i)) } AUI_WITH_STYLE { Expanding(1, 0) };
+                            views[0][i + 1] = Centered{ labelTitle(Cell::columnName(i)) } AUI_OVERRIDE_STYLE { Expanding(1, 0) };
                         }
                         for (unsigned row = 0; row < mState->spreadsheet.size().y; ++row) {
                             views[row + 1][0] = labelTitle("{}"_format(Cell::rowName(row)));
                             for (unsigned column = 0; column < mState->spreadsheet.size().x; ++column) {
-                                views[row + 1][column + 1] = _new<CellView>(mState, mState->spreadsheet[{ column, row }]) AUI_WITH_STYLE {
+                                views[row + 1][column + 1] = _new<CellView>(mState, mState->spreadsheet[{ column, row }]) AUI_OVERRIDE_STYLE {
                                     BackgroundSolid { AColor::WHITE },
                                     MinSize { {}, 20_dp },
                                 };
@@ -110,7 +110,7 @@ public:
                         }
                         return views;
                     }())
-                    .build() AUI_WITH_STYLE { Expanding(), LayoutSpacing { 1_dp }, MinSize { 80_dp * float(mState->spreadsheet.size().x), {} } });
+                    .build() AUI_OVERRIDE_STYLE { Expanding(), LayoutSpacing { 1_dp }, MinSize { 80_dp * float(mState->spreadsheet.size().x), {} } });
     }
 
 private:
@@ -123,11 +123,11 @@ public:
         setContents(Centered {
           AScrollArea::Builder()
                   .withContents(Horizontal { _new<CellsView>(_new<State>()) })
-                  .build() AUI_WITH_STYLE {
+                  .build() AUI_OVERRIDE_STYLE {
                 Expanding(),
                 ScrollbarAppearance(ScrollbarAppearance::ALWAYS, ScrollbarAppearance::ALWAYS),
               },
-        } AUI_WITH_STYLE { Padding(0) });
+        } AUI_OVERRIDE_STYLE { Padding(0) });
     }
 };
 

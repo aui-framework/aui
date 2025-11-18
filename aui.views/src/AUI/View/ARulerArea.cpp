@@ -37,7 +37,7 @@ public:
 
 ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) {
 
-    auto wrapper = _new<WrapperContainer>(mWrappedView) << ".arulerarea-content" AUI_WITH_STYLE { Expanding { 2, 2 } };
+    auto wrapper = _new<WrapperContainer>(mWrappedView) << ".arulerarea-content" AUI_OVERRIDE_STYLE { Expanding { 2, 2 } };
 
     setContents(
         Horizontal {
@@ -46,11 +46,11 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
                     _new<ALabel>("dp") << ".arulerarea-unit",
                     mHorizontalRuler = _new<ARulerView>(ALayoutDirection::HORIZONTAL),
                     mVerticalRuler = _new<ARulerView>(ALayoutDirection::VERTICAL),
-                    wrapper AUI_WITH_STYLE {AOverflow::HIDDEN },
-                }, 2, 2) AUI_WITH_STYLE { Expanding { 2, 2 } },
+                    wrapper AUI_OVERRIDE_STYLE {AOverflow::HIDDEN },
+                }, 2, 2) AUI_OVERRIDE_STYLE { Expanding { 2, 2 } },
                 _new<AScrollbar>(ALayoutDirection::HORIZONTAL),
 
-            } AUI_WITH_STYLE { Expanding { 2, 2 } },
+            } AUI_OVERRIDE_STYLE { Expanding { 2, 2 } },
             _new<AScrollbar>(),
         }
     );

@@ -64,8 +64,8 @@ FractalWindow::FractalWindow() : AWindow("Mandelbrot set") {
                 it->setMax(1000);
                 it->setValue(350);
             },
-      } AUI_WITH_STYLE { LayoutSpacing { 4_dp } },
-    } AUI_WITH_STYLE { LayoutSpacing { 4_dp } });
+      } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
 
     fractal->focus();
 }

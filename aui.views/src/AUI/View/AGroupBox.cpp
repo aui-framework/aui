@@ -63,7 +63,7 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
                                  Vertical::Expanding {
                                      mContent AUI_LET { it->setExpanding(); }
                                  }  << ".agroupbox-inner"
-                             } AUI_WITH_STYLE {
+                             } AUI_OVERRIDE_STYLE {
                                      Expanding {},
                                      AOverflow::HIDDEN, // forces to call drawStencilMask
                              }) AUI_LET {

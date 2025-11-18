@@ -97,7 +97,7 @@ TEST_F(UIDeclarativeForTest, Example) {
             AUI_DECLARATIVE_FOR(user, users, AVerticalLayout) {
                 return Label { fmt::format("{}", user) };
             }
-        ).build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
+        ).build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 200_dp } },
     });
     uitest::frame();
     EXPECT_TRUE(By::text("Foo").one());
@@ -120,7 +120,7 @@ TEST_F(UIDeclarativeForTest, Performance) {
                   mTestObserver.onViewCreated("");
                   return Label { "Item {}"_format(i) };
               })
-              .build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
+              .build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 200_dp } },
     });
     // A static range like in the example above will not blow up the machine because AForEachUI is wrapped with a
     // [AScrollArea], thus it is not required to evaluate the whole range, which is infinite in our case.
@@ -200,7 +200,7 @@ TEST_F(UIDeclarativeForTest, Constant_global_data2) {
                 AUI_DECLARATIVE_FOR(i, COLORS, AVerticalLayout) {
                   return Label { "{}"_format(i) };
                 })
-            .build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
+            .build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 200_dp } },
     });
     // AUI_DOCS_CODE_END
 
@@ -225,7 +225,7 @@ TEST_F(UIDeclarativeForTest, Infinite_ranges_and_views) { // HEADER_H3
             AUI_DECLARATIVE_FOR(i, ranges::views::ints, AVerticalLayout) {
                 return Label { "{}"_format(i) };
             }
-        ).build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
+        ).build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 200_dp } },
     });
     // AUI_DOCS_CODE_END
 
@@ -248,7 +248,7 @@ TEST_F(UIDeclarativeForTest, Transferring_ownership_by_copying) { // HEADER_H3
             AUI_DECLARATIVE_FOR(i, items, AVerticalLayout) {
                return Label { i };
             }
-        ).build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
+        ).build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 200_dp } },
     });
     // AUI_DOCS_CODE_END
 
@@ -337,7 +337,7 @@ TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H3
                   AUI_DECLARATIVE_FOR(i, *mColors, AVerticalLayout) {
                     return Label { "{}"_format(i) };
                   }
-                ).build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
+                ).build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 200_dp } },
             });
         }
     private:
@@ -418,7 +418,7 @@ TEST_F(UIDeclarativeForTest, DynamicPerformance) {
                       return std::hash<AString>{}(k);
                   });
               })
-              .build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
+              .build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 200_dp } },
     });
     // AUI_DOCS_CODE_END
     saveScreenshot("1");
@@ -465,7 +465,7 @@ TEST_F(UIDeclarativeForTest, IntBasic2) {
       AScrollArea::Builder()
               .withContents(
               AUI_DECLARATIVE_FOR(i, mInts, AVerticalLayout) { return Label { "{}"_format(i) }; })
-              .build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
+              .build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 200_dp } },
     });
 
     validateOrder();
@@ -481,11 +481,11 @@ TEST_F(UIDeclarativeForTest, IntGrouping) {
                   group, mInts | ranges::views::chunk_by([](int l, int r) { return l / 10 == r / 10; }),
                   AVerticalLayout) {
                   return Vertical {
-                      Label { "Group {}"_format(*ranges::begin(group) / 10 * 10) } AUI_WITH_STYLE { FontSize{10_pt} },
+                      Label { "Group {}"_format(*ranges::begin(group) / 10 * 10) } AUI_OVERRIDE_STYLE { FontSize{10_pt} },
                       AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) { return Label { "{}"_format(i) }; }
                   };
               })
-              .build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
+              .build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 200_dp } },
     });
 
     validateOrder();
@@ -521,7 +521,7 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
                       auto groupName = "Group {}"_format(*ranges::begin(group) / 10 * 10);
                       mTestObserver.onViewCreated(groupName);
                       return Vertical {
-                          Label { groupName } AUI_WITH_STYLE { FontSize{10_pt} },
+                          Label { groupName } AUI_OVERRIDE_STYLE { FontSize{10_pt} },
                           /* single item foreach */
                           AUI_DECLARATIVE_FOR(i, group, AVerticalLayout) {
                               /* single item data to view transformer callback, aka item's view callback */
@@ -539,7 +539,7 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
                           return aui::hash_range(ranges::begin(rng), ranges::end(rng));;
                       });
                   })
-              .build() AUI_WITH_STYLE { FixedSize { 150_dp, 300_dp } },
+              .build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 300_dp } },
     });
     // AUI_DOCS_CODE_END
     //
