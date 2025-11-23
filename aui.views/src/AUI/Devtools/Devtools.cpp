@@ -41,7 +41,7 @@ AString Devtools::prettyViewName(AView* view) {
     }
     auto filter = [](const AString& name) { return !name.contains("::detail::"); };
     if (auto rng = view->getAssNames() | ranges::view::filter(filter); !ranges::empty(rng)) {
-        name = ranges::back(rng);
+        name += " " + ranges::back(rng);
     }
     return name;
 }
