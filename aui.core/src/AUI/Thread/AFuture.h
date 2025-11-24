@@ -39,7 +39,17 @@ class AInvocationTargetException: public AException {
 public:
     AInvocationTargetException(const AString& message = {}, std::exception_ptr causedBy = std::current_exception()):
         AException(message, std::move(causedBy), AStacktrace::capture(3)) {}
-
+    AString getMessage() const noexcept override {
+        try {
+            std::rethrow_exception(causedBy());
+        } catch (const AException& e) {
+            return AException::getMessage() + ": " + e.getMessage();
+        } catch (const std::exception& e) {
+            return AException::getMessage() + ": " + e.what();
+        } catch (...) {
+            return AException::getMessage();
+        }
+    }
 
     ~AInvocationTargetException() noexcept override = default;
 };
