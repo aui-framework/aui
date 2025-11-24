@@ -149,14 +149,14 @@ private:
     struct stat stat() const;
 #endif
 
-    APathView(std::string_view str);
-    APathView(AStringView str);
 
 public:
     APathView();
     APathView(const APathView& other);
     APathView(APathView&& other) noexcept;
     APathView(const APath& path);
+    APathView(std::string_view str);
+    APathView(AStringView str);
 
     /**
      * Creates a file.
