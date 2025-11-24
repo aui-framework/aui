@@ -65,7 +65,7 @@ public:
      */
     template <
         typename U = T, std::enable_if_t<std::is_constructible_v<T, U> && std::is_convertible_v<U&&, T>, bool> = true>
-    constexpr AOptional(U&& rhs) noexcept : mInitialized(true) {
+    constexpr AOptional(U&& rhs) noexcept(std::is_nothrow_constructible_v<T, U&&>) : mInitialized(true) {
         new (ptrUnsafe()) T(std::forward<U>(rhs));
     }
 
@@ -75,25 +75,36 @@ public:
      */
     template <
         typename U = T, std::enable_if_t<std::is_constructible_v<T, U> && !std::is_convertible_v<U&&, T>, bool> = true>
-    explicit constexpr AOptional(U&& rhs) noexcept : mInitialized(true) {
+    explicit constexpr AOptional(U&& rhs) noexcept(std::is_nothrow_constructible_v<T, U&&>) : mInitialized(true) {
         new (ptrUnsafe()) T(std::forward<U>(rhs));
     }
 
     /**
      * @brief Copy constructor.
      */
-    constexpr AOptional(const AOptional& rhs) { operator=(rhs); }
+    constexpr AOptional(const AOptional& rhs) noexcept(std::is_nothrow_copy_constructible_v<T>) {
+        if (rhs) {
+            new (ptrUnsafe()) T(*rhs);
+            mInitialized = true;
+        }
+    }
 
     /**
      * @brief Move constructor.
      */
-    constexpr AOptional(AOptional&& rhs) noexcept { operator=(std::move(rhs)); }
+    constexpr AOptional(AOptional&& rhs) noexcept(std::is_nothrow_move_constructible_v<T>) {
+        if (rhs) {
+            new (ptrUnsafe()) T(std::move(*rhs));
+            mInitialized = true;
+            rhs.reset();
+        }
+    }
 
     /**
      * @brief Converting copy constructor.
      */
     template <typename U>
-    constexpr AOptional(const AOptional<U>& rhs) {
+    constexpr AOptional(const AOptional<U>& rhs) noexcept(std::is_nothrow_constructible_v<T, const U&>) {
         operator=(rhs);
     }
 
@@ -144,14 +155,14 @@ public:
     }
 
     template<typename U = T, typename std::enable_if_t<std::is_convertible_v<U&&, T>, bool> = true>
-    constexpr AOptional<T>& operator=(U&& rhs) noexcept {
+    constexpr AOptional<T>& operator=(U&& rhs) noexcept(std::is_nothrow_constructible_v<T, U&&>) {
         reset();
         new (ptrUnsafe()) T(std::forward<U>(rhs));
         mInitialized = true;
         return *this;
     }
 
-    constexpr AOptional<T>& operator=(const AOptional& rhs) noexcept {
+    constexpr AOptional<T>& operator=(const AOptional& rhs) noexcept(std::is_nothrow_copy_constructible_v<T>) {
         if (rhs) {
             operator=(rhs.value());
         } else {
@@ -160,7 +171,7 @@ public:
         return *this;
     }
 
-    constexpr AOptional<T>& operator=(AOptional&& rhs) noexcept {
+    constexpr AOptional<T>& operator=(AOptional&& rhs) noexcept(std::is_nothrow_move_constructible_v<T>) {
         if (rhs) {
             operator=(std::move(rhs.value()));
             rhs.reset();
@@ -171,7 +182,7 @@ public:
     }
 
     template<typename U>
-    constexpr AOptional<T>& operator=(const AOptional<U>& rhs) noexcept {
+    constexpr AOptional<T>& operator=(const AOptional<U>& rhs) noexcept(std::is_nothrow_constructible_v<T, const U&>) {
         if (rhs) {
             operator=(rhs.value());
         } else {
@@ -328,9 +339,11 @@ public:
             return std::forward<F>(alternative);
         } else if constexpr(isInvocable) {
             if constexpr (std::is_same_v<std::invoke_result_t<F>, void>) {
+                // if F returns void, we expect that used throws an exception in the lambda.
                 alternative();
-                AUI_ASSERT_NO_CONDITION("should not have reached here");
-                throw std::runtime_error("should not have reached here"); // stub exception
+                AUI_ASSERT_NO_CONDITION("valueOr lambda returns void; either return a value or throw an exception");
+                // stub exception
+                throw std::runtime_error("valueOr lambda returns void; either return a value or throw an exception");
             } else {
                 return alternative();
             }
