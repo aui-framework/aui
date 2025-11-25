@@ -69,3 +69,30 @@ void AFileOutputStream::open(bool append) {
         aui::impl::lastErrorToException("AFileOutputStream: could not open {}"_format(mPath));
     }
 }
+
+void AFileOutputStream::seek(std::streamoff offset, ASeekDir seekDir) {
+    if (!mFile) {
+        throw AIOException("Seek attempt on closed file: " + mPath);
+    }
+    int whence;
+    switch (seekDir) {
+        case ASeekDir::BEGIN: whence = SEEK_SET; break;
+        case ASeekDir::CURRENT: whence = SEEK_CUR; break;
+        case ASeekDir::END: whence = SEEK_END; break;
+        default: throw AIOException("Invalid seek direction");
+    }
+    if (fseek(mFile, static_cast<long>(offset), whence) != 0) {
+        aui::impl::unix_based::lastErrorToException(mPath);
+    }
+}
+
+std::streampos AFileOutputStream::tell() noexcept {
+    if (!mFile) return 0;
+    long pos = ftell(mFile);
+    return static_cast<std::streampos>(pos);
+}
+
+bool AFileOutputStream::isEof() {
+    if (!mFile) return true;
+    return feof(mFile) != 0;
+}
