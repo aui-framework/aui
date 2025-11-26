@@ -712,7 +712,7 @@ public:
      * @return The character at the specified position.
      */
     [[nodiscard]]
-    AChar operator[](size_type i) const {
+    const AChar operator[](size_type i) const {
         return view()[i];
     }
 
