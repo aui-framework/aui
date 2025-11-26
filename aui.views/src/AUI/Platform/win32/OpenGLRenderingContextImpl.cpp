@@ -84,11 +84,10 @@ void OpenGLRenderingContext::init(const Init& init) {
         DescribePixelFormat(fakeWindow.mDC, iPixelFormat, sizeof(pfd), &pfd);
         SetPixelFormat(fakeWindow.mDC, iPixelFormat, &pfd);
 
-        gladLoadWGL(fakeWindow.mDC);
-
         // context initialization
         ourHrc = wglCreateContext(fakeWindow.mDC);
         makeCurrent(fakeWindow.mDC);
+        gladLoadWGL(fakeWindow.mDC);
 
         ALogger::info(LOG_TAG) << ("Initialized temporary context");
 

@@ -185,11 +185,10 @@ void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
     for (auto& wordEntry: mWordEntries) {
         canvas->addString(wordEntry.getPosition() + ascender, wordEntry.getWord());
     }
-    AString str(1, ' ');
     for (auto& charEntry: mCharEntries) {
         auto c = charEntry.getChar();
         if (c != ' ') {
-            str.first() = c;
+            AString str(1, c);
             canvas->addString(charEntry.getPosition() + ascender, str);
         }
     }

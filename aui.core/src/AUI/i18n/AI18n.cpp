@@ -99,7 +99,7 @@ ALanguageCode AI18n::userLanguage() {
     if (len == 0) {
         aui::impl::lastErrorToException("could not get user language");
     }
-    return AString(reinterpret_cast<const char16_t*>(resultU16.data()), len);
+    return AString(reinterpret_cast<const char16_t*>(resultU16.data()), len - 1);
 }
 
 #else

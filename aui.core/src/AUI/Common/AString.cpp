@@ -397,9 +397,9 @@ AString& AString::append(AChar c) {
 
 AString& AString::replaceAll(char from, char to) {
     if (empty()) return *this;
-    for (auto it = begin(); it != end(); ++it) {
-        if (*it == from) {
-            *it = to;
+    for (auto& i : bytes()) {
+        if (i == from) {
+            i = to;
         }
     }
     return *this;

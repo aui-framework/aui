@@ -17,6 +17,23 @@
 #include <AUI/Common/detail/property.h>
 #include <AUI/Common/React.h>
 
+namespace aui::react {
+
+/**
+ * @brief Reactive expression produced by AUI_REACT macro.
+ */
+template <aui::invocable F>
+struct Expression {
+    F expression;
+};
+
+template <aui::invocable F>
+Expression<F> makeExpression(F&& f) {
+    return Expression<F>{ std::forward<F>(f) };
+}
+
+}   // namespace aui::react
+
 /**
  * @brief Readonly property that holds a value computed by an expression.
  * @ingroup property-system
@@ -58,6 +75,9 @@ struct APropertyPrecomputed final : aui::react::DependencyObserver {
           aui::react::DependencyObserverScope r(this);
           return expression();
       }) {}
+
+    template <typename F>
+    APropertyPrecomputed(aui::react::Expression<F>&& expression): APropertyPrecomputed(std::forward<F>(expression.expression)) {}
 
     APropertyPrecomputed(const APropertyPrecomputed&) = delete;
     APropertyPrecomputed(APropertyPrecomputed&&) noexcept = delete;
@@ -116,22 +136,6 @@ APropertyPrecomputed(Factory&& f) -> APropertyPrecomputed<std::decay_t<std::invo
 
 static_assert(APropertyReadable<APropertyPrecomputed<int>>, "APropertyPrecomputed must be a APropertyReadable");
 
-namespace aui::react {
-
-/**
- * @brief Reactive expression produced by AUI_REACT macro.
- */
-template <aui::invocable F>
-struct Expression {
-    F expression;
-};
-
-template <aui::invocable F>
-Expression<F> makeExpression(F&& f) {
-    return Expression<F>{ std::forward<F>(f) };
-}
-
-}   // namespace aui::react
 
 template <typename Expr>
 struct aui::detail::ConnectionSourceTraits<aui::react::Expression<Expr>> {

@@ -310,8 +310,7 @@ public:
      * @return same path but without <code>dir</code>
      */
     AString relativelyTo(APathView dir) const {
-        view().relativelyTo(dir);
-        return *this;
+        return view().relativelyTo(dir);
     }
 
     /**

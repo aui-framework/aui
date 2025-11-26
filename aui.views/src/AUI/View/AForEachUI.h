@@ -62,6 +62,7 @@ public:
     AForEachUIBase() {}
     ~AForEachUIBase() override = default;
     void setPosition(glm::ivec2 position) override;
+    void setSize(glm::ivec2 size) override;
 
 protected:
     struct Cache {
@@ -104,6 +105,9 @@ private:
     void inflate(aui::for_each_ui::detail::InflateOpts opts = {});
     glm::ivec2 calculateOffsetWithinViewportSlidingSurface();
     glm::ivec2 axisMask();
+
+    _<AScrollAreaViewport> findViewport();
+    void ensureViewport();
 
 };
 

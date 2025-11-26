@@ -74,7 +74,7 @@ AStylesheet::AStylesheet() {
 #if AUI_PLATFORM_IOS
             Padding { 24_dp, 4_dp, 4_dp }, // TODO temporary fix
 #else
-            Padding { 4_dp },
+            Padding { 8_dp },
 #endif
         },
 
