@@ -105,6 +105,9 @@ private:
     glm::ivec2 calculateOffsetWithinViewportSlidingSurface();
     glm::ivec2 axisMask();
 
+    _<AScrollAreaViewport> findViewport();
+    void ensureViewport();
+
 };
 
 namespace aui::detail {

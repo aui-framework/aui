@@ -195,7 +195,7 @@ public:
      * `/home/user -> /home`
      * @return path to parent folder
      */
-    [[nodiscard]] APath parent() const;
+    [[nodiscard]] APathView parent() const;
 
     /**
      * @brief Path of the child element. Relevant only for folders.
