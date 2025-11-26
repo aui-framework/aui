@@ -22,7 +22,7 @@ struct API_AUI_CORE FileEntry : aui::noncopyable {
     /**
      * @brief file path inside ZIP.
      */
-    std::string_view name;
+    AStringView name;
 
     /**
      * @brief Opens the zip entry for read.
