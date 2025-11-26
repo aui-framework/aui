@@ -16,9 +16,20 @@
 namespace aui::archive {
 
 /**
+ * @brief General archive file info.
+ */
+struct ArchiveInfo {
+    std::size_t numberOfFiles;
+};
+
+/**
  * @brief Zip file entry.
  */
 struct API_AUI_CORE FileEntry : aui::noncopyable {
+    explicit FileEntry(ArchiveInfo& archiveInfo) : archiveInfo(archiveInfo) {}
+
+    ArchiveInfo& archiveInfo;
+
     /**
      * @brief file path inside ZIP.
      */

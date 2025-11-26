@@ -57,6 +57,11 @@ void aui::archive::zip::read(aui::no_escape<ISeekableInputStream> stream, const 
     if (auto err = unzGetGlobalInfo64(unzipHandle, &info)) {
         throw AZLibException("unzGetGlobalInfo failed: {}"_format(err));
     }
+
+    ArchiveInfo archiveInfo {
+        .numberOfFiles = info.number_entry,
+    };
+
     for (size_t i = info.number_entry; i > 0; i--) {
         char filename[0x400];
 
@@ -69,7 +74,7 @@ void aui::archive::zip::read(aui::no_escape<ISeekableInputStream> stream, const 
 
         class ZipFileEntry: public FileEntry, public IInputStream {
         public:
-            explicit ZipFileEntry(unzFile handle) : mHandle(handle) {}
+            explicit ZipFileEntry(unzFile handle, ArchiveInfo& archiveInfo) : FileEntry(archiveInfo), mHandle(handle) {}
 
             ~ZipFileEntry() override {
                 if (mFileOpened) {
@@ -92,7 +97,7 @@ void aui::archive::zip::read(aui::no_escape<ISeekableInputStream> stream, const 
         private:
             unzFile mHandle;
             mutable bool mFileOpened = false;
-        } ze(unzipHandle);
+        } ze(unzipHandle, archiveInfo);
         ze.name = filename;
 
         visitor(ze);
