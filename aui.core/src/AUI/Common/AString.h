@@ -456,11 +456,6 @@ public:
         return *this;
     }
 
-    AString& operator+=(char c) noexcept
-    {
-        append(c);
-        return *this;
-    }
 
     AString& operator+=(AChar c) noexcept
     {

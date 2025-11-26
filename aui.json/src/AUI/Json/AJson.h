@@ -153,7 +153,7 @@ public:
 
     [[nodiscard]]
     bool isNumber() const noexcept {
-        return isInt() || is<double>();
+        return isInt() || is<double>() || is<int64_t>();
     }
 
     [[nodiscard]]
@@ -187,6 +187,14 @@ public:
     }
 
     [[nodiscard]]
+    AOptional<int> asIntOpt() const noexcept {
+        if (isInt()) {
+            return asInt();
+        }
+        return std::nullopt;
+    }
+
+    [[nodiscard]]
     int64_t asLongInt() const {
         return std::visit(aui::lambda_overloaded{
             [](auto&& e) -> std::int64_t {
@@ -199,6 +207,15 @@ public:
                 return v;
             },
         }, (super)const_cast<AJson&>(*this));
+    }
+
+
+    [[nodiscard]]
+    AOptional<int64_t> asLongIntOpt() const noexcept {
+        if (isLongInt()) {
+            return asLongInt();
+        }
+        return std::nullopt;
     }
 
     [[nodiscard]]
@@ -220,8 +237,24 @@ public:
     }
 
     [[nodiscard]]
+    AOptional<double> asNumberOpt() const noexcept {
+        if (isNumber()) {
+            return asNumber();
+        }
+        return std::nullopt;
+    }
+
+    [[nodiscard]]
     bool asBool() const {
         return as<bool>();
+    }
+
+    [[nodiscard]]
+    AOptional<bool> asBoolOpt() const noexcept {
+        if (isBool()) {
+            return asBool();
+        }
+        return std::nullopt;
     }
 
     [[nodiscard]]
@@ -230,8 +263,24 @@ public:
     }
 
     [[nodiscard]]
+    AOptional<AStringView> asStringOpt() const noexcept {
+        if (isString()) {
+            return asString();
+        }
+        return std::nullopt;
+    }
+
+    [[nodiscard]]
     const aui::impl::JsonArray& asArray() const {
         return as<aui::impl::JsonArray>();
+    }
+
+    [[nodiscard]]
+    AOptional<const aui::impl::JsonArray&> asArrayOpt() const noexcept {
+        if (isArray()) {
+            return asArray();
+        }
+        return std::nullopt;
     }
 
     [[nodiscard]]
@@ -239,11 +288,19 @@ public:
         return as<aui::impl::JsonObject>();
     }
 
+    [[nodiscard]]
+    AOptional<const aui::impl::JsonObject&> asObjectOpt() const noexcept {
+        if (isObject()) {
+            return asObject();
+        }
+        return std::nullopt;
+    }
 
     [[nodiscard]]
     aui::impl::JsonArray& asArray() {
         return as<aui::impl::JsonArray>();
     }
+
 
     [[nodiscard]]
     aui::impl::JsonObject& asObject() {
@@ -252,11 +309,11 @@ public:
 
     [[nodiscard]]
     bool contains(const AString& mapKey) const {
-        return as<Object>().contains(mapKey);
+        return as<Object>().contains(mapKey) != nullptr;
     }
 
     [[nodiscard]]
-    AOptional<AJson> containsOpt(const AString& mapKey) const {
+    AOptional<const AJson&> containsOpt(const AString& mapKey) const {
         if (auto c = as<Object>().contains(mapKey)) {
             return c->second;
         }
