@@ -136,6 +136,34 @@ void AForEachUIBase::setPosition(glm::ivec2 position) {
     inflate();
 }
 
+void AForEachUIBase::setSize(glm::ivec2 size) {
+    auto prevSize = getSize();
+    AViewContainerBase::setSize(size);
+    if (!getLayout()) {
+        return;
+    }
+    if (!mViewport.lock()) {
+        return;
+    }
+    int diff = [&] {
+        switch (getLayout()->getLayoutDirection()) {
+            case ALayoutDirection::HORIZONTAL:
+                return prevSize.x - size.x;
+
+            case ALayoutDirection::VERTICAL:
+                return prevSize.y - size.y;
+
+            case ALayoutDirection::NONE:
+                break;
+        }
+        return 0;
+    }();
+    if (diff == 0) {
+        return;
+    }
+    inflate({ .backward = diff < 0, .forward = diff > 0 });
+}
+
 void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
     AUI_ASSERT(opts.forward || opts.backward);
 
