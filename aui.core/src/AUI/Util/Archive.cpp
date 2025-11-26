@@ -59,7 +59,7 @@ void aui::archive::zip::read(aui::no_escape<ISeekableInputStream> stream, const 
     }
 
     ArchiveInfo archiveInfo {
-        .numberOfFiles = info.number_entry,
+        .numberOfFiles = static_cast<std::size_t>(info.number_entry),
     };
 
     for (size_t i = info.number_entry; i > 0; i--) {

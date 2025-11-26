@@ -422,6 +422,10 @@ public:
     }
 
     constexpr AOptional& operator=(const AOptional& rhs) noexcept {
+        if (&rhs == this) {
+            return *this;
+        }
+
         if (rhs) {
             mPtr = std::addressof(rhs.value());
         } else {

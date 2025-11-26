@@ -44,12 +44,12 @@ public:
 
 	const ValueType& operator[](KeyType&& k) const
 	{
-		return Parent::at(std::move(k));
+		return at(std::move(k));
 	}
 
 	const ValueType& operator[](const KeyType& k) const
 	{
-		return Parent::at(k);
+		return at(k);
 	}
 
 	// ================
