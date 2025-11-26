@@ -136,11 +136,11 @@ Writer::Writer(_unique<ISeekableOutputStream> to): mZipFile(std::move(to)) {
         .zseek_file = [](voidpf opaque, voidpf stream, uLong offset, int origin) -> long {
             static_cast<ISeekableOutputStream*>(opaque)->seek(offset, [&] {
                 switch (origin) {
+                    default:
                     case ZLIB_FILEFUNC_SEEK_SET: return ASeekDir::BEGIN;
                     case ZLIB_FILEFUNC_SEEK_CUR: return ASeekDir::CURRENT;
                     case ZLIB_FILEFUNC_SEEK_END: return ASeekDir::END;
                 }
-                return ASeekDir::BEGIN;
             }());
             return 0;
         },
@@ -169,7 +169,7 @@ void Writer::openFileInZip(const APath& filename, const std::function<void(IOutp
         zipCloseFileInZip(mHandle);
     };
     struct ZipFileEntry: IOutputStream {
-        unzFile handle;
+        zipFile handle;
 
         ZipFileEntry() = default;
         ~ZipFileEntry() override = default;

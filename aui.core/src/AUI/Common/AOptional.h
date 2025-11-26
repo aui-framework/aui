@@ -112,7 +112,9 @@ public:
      * @brief Converting move constructor.
      */
     template <typename U>
-    constexpr AOptional(AOptional<U>&& rhs) noexcept {
+    constexpr AOptional(AOptional<U>&& rhs) noexcept(
+        std::is_nothrow_constructible_v<T, U&&> && std::is_nothrow_destructible_v<T> &&
+        std::is_nothrow_destructible_v<U>) {
         operator=(std::move(rhs));
     }
 
