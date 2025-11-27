@@ -113,10 +113,6 @@ public:
         return super::empty();
     }
 
-    constexpr bool contains(char c) const noexcept {
-        return bytes().find(c) != std::string_view::npos;
-    }
-
     bool contains(AChar c) const noexcept;
     bool contains(AStringView str) const noexcept;
 

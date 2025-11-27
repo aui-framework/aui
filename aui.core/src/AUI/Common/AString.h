@@ -502,10 +502,6 @@ public:
      */
     void resizeToNullTerminator();
 
-    bool contains(char c) const noexcept {
-        return view().contains(c);
-    }
-
     bool contains(AChar c) const noexcept {
         return view().contains(c);
     }
