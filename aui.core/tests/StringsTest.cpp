@@ -96,13 +96,38 @@ TEST(Strings, ReplaceAll8) {
 
 TEST(Strings, ReplaceAll9) {
     EXPECT_EQ("Ку🤡Ку"_as.replaceAll(U'🤡', U'👽'), "Ку👽Ку");
-}
-
-TEST(Strings, ReplaceAll10) {
     EXPECT_EQ("Ку🤡Ку"_as.replacedAll(U'🤡', U'👽'), "Ку👽Ку");
 }
 
-TEST(Strings, Clown) {
+TEST(Strings, RemoveAll1) {
+    EXPECT_EQ("Ку🤡Ку"_as.removeAll(U'🤡'), "КуКу");
+    EXPECT_EQ("Ку🤡Ку"_as.removedAll(U'🤡'), "КуКу");
+}
+
+TEST(Strings, Contains) {
+    EXPECT_EQ("Ку🤡Ку"_as.contains(U'🤡'), true);
+    EXPECT_EQ("Ку🤡Ку"_as.contains(U'👽'), false);
+    EXPECT_EQ("Ru letter: а"_as.contains(U'a'), false);
+    EXPECT_EQ("En letter: a"_as.contains(U'a'), true);
+}
+
+TEST(Strings, StartsWith) {
+    EXPECT_EQ("Ку🤡Ку"_as.startsWith(U'К'), true);
+    EXPECT_EQ("Ку🤡Ку"_as.startsWith("Ку"), true); // russian letters
+
+    EXPECT_EQ("Ку🤡Ку"_as.startsWith(U'K'), false);
+    EXPECT_EQ("Ку🤡Ку"_as.startsWith("Ky"), false); // english letters
+}
+
+TEST(Strings, EndsWith) {
+    EXPECT_EQ("Ку🤡Ку"_as.endsWith(U'у'), true);
+    EXPECT_EQ("Ку🤡Ку"_as.endsWith("Ку"), true); // russian letters
+
+    EXPECT_EQ("Ку🤡Ку"_as.endsWith(U'y'), false);
+    EXPECT_EQ("Ку🤡Ку"_as.endsWith("Ky"), false); // english letters
+}
+
+TEST(Strings, ClownUnicode) {
     EXPECT_EQ("🤡"_as, "🤡");
     EXPECT_EQ("🤡"_as.toStdString(), "🤡");
 }
