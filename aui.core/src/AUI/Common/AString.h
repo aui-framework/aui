@@ -480,7 +480,7 @@ public:
 
     AStringVector split(AChar c) const;
 
-    AString& replaceAll(char from, char to);
+    AString& replaceAll(AChar from, AChar to);
 
     AString& replaceAll(AStringView from, AStringView to);
 

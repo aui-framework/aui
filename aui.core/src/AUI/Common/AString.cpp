@@ -395,11 +395,11 @@ AString& AString::append(AChar c) {
 }
 
 
-AString& AString::replaceAll(char from, char to) {
+AString& AString::replaceAll(AChar from, AChar to) {
     if (empty()) return *this;
-    for (auto& i : bytes()) {
-        if (i == from) {
-            i = to;
+    for (auto it = begin(); it != end(); ++it) {
+        if (*it == from) {
+            *it = to;
         }
     }
     return *this;
