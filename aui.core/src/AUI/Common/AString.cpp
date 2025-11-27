@@ -80,7 +80,7 @@ AUtf8MutableIterator::AUtf8MutableIterator() noexcept
 AUtf8MutableIterator::AUtf8MutableIterator(AString* str, size_t pos) noexcept
     : string_(str), byte_pos_(pos) {}
 
-AChar AUtf8MutableIterator::operator*() const noexcept {
+const AChar AUtf8MutableIterator::operator*() const noexcept {
     if (!string_ || byte_pos_ >= string_->size()) {
         return AChar();
     }
@@ -399,7 +399,7 @@ AString& AString::replaceAll(AChar from, AChar to) {
     if (empty()) return *this;
     for (auto it = begin(); it != end(); ++it) {
         if (*it == from) {
-            *it = to;
+            it = to;
         }
     }
     return *this;

@@ -53,7 +53,7 @@ public:
     /**
      * @brief Dereference operator - returns current character
      */
-    AChar operator*() const noexcept;
+    const AChar operator*() const noexcept;
 
     /**
      * @brief Assignment operator - replaces current character

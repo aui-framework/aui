@@ -94,6 +94,14 @@ TEST(Strings, ReplaceAll8) {
     EXPECT_EQ("abcdef"_as.replaceAll("bcd", ""), "aef");
 }
 
+TEST(Strings, ReplaceAll9) {
+    EXPECT_EQ("Ку🤡Ку"_as.replaceAll(U'🤡', U'👽'), "Ку👽Ку");
+}
+
+TEST(Strings, ReplaceAll10) {
+    EXPECT_EQ("Ку🤡Ку"_as.replacedAll(U'🤡', U'👽'), "Ку👽Ку");
+}
+
 TEST(Strings, Clown) {
     EXPECT_EQ("🤡"_as, "🤡");
     EXPECT_EQ("🤡"_as.toStdString(), "🤡");
