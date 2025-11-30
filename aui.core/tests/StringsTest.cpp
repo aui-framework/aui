@@ -95,11 +95,16 @@ TEST(Strings, ReplaceAll8) {
 }
 
 TEST(Strings, ReplaceAll9) {
+    EXPECT_EQ("КуGКу"_as.replaceAll('G', U'🤡'), "Ку🤡Ку");
+    EXPECT_EQ("КуGКу"_as.replacedAll('G', U'🤡'), "Ку🤡Ку");
+}
+
+TEST(Strings, ReplaceAll10) {
     EXPECT_EQ("Ку🤡Ку"_as.replaceAll(U'🤡', 'G'), "КуGКу");
     EXPECT_EQ("Ку🤡Ку"_as.replacedAll(U'🤡', 'G'), "КуGКу");
 }
 
-TEST(Strings, ReplaceAll10) {
+TEST(Strings, ReplaceAll11) {
     EXPECT_EQ("Ку🤡Ку"_as.replaceAll(U'🤡', U'👽'), "Ку👽Ку");
     EXPECT_EQ("Ку🤡Ку"_as.replacedAll(U'🤡', U'👽'), "Ку👽Ку");
 }
