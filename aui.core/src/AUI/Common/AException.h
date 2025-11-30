@@ -100,14 +100,11 @@ public:
     AException() : mStacktrace(AStacktrace::capture(2)) {}
     AException(AStacktrace stacktrace) : mStacktrace(std::move(stacktrace)) {}
 
-    AException(const AString& message) : AException() { mMessage = message.toStdString(); }
-
     AException(const AException& exception) = default;
     AException(AException&& exception) noexcept = default;
 
     AException(const AString& message, std::exception_ptr causedBy = std::current_exception(), AStacktrace stacktrace = AStacktrace::capture(2))
-      : mStacktrace(std::move(stacktrace)), mCausedBy(std::move(causedBy)) { // NOLINT(*-throw-keyword-missing)
-        mMessage = message.toStdString();
+      : mMessage(message.toStdString()), mStacktrace(std::move(stacktrace)), mCausedBy(std::move(causedBy)) { // NOLINT(*-throw-keyword-missing)
     }
 
     virtual AString getMessage() const noexcept { return mMessage ? mMessage->c_str() : "<no message>"; }
