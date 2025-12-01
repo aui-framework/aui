@@ -22,8 +22,76 @@
  * @brief Abstract AUI exception.
  * @ingroup core
  * @details
- * Unlike std::exception, AException is capable to capture stack traces and efficiently output them to std::ostream.
- * Also exception nesting is possible (via causedBy()).
+ * AException is the base exception type in AUI. It extends `std::exception` with automatic
+ * [stack trace capture](astacktrace.md), lazy message formatting, and exception nesting (causal chains).
+ *
+ * At the point of throwing, [stack trace](astacktrace.md) does not resolve symbol names and source lines. These are
+ * resolved when exception is printed.
+ *
+ * ```cpp title="main.cpp"
+ * static constexpr auto LOG_TAG = "MyApp";
+ *
+ * int main() {
+ *   try {
+ *      throw AException("test");
+ *   } catch (const AException& e) {
+ *      ALogger::info(LOG_TAG) << "Operation failed: " << e;
+ *   }
+ * }
+ * ```
+ *
+ * ``` title="Possible output"
+ * Operation failed: test
+ * - 0x00000000700000f0 main at main.cpp:5
+ * ```
+ *
+ * Exceptions are chained automatically with `std::current_exception()`. This means you can `throw` another exception in
+ * `catch` block to populate the error message since callers tend to have wider context. If `AException` has a nested
+ * exception, it will be printed as well.
+ *
+ * ```cpp title="main.cpp"
+ * static constexpr auto LOG_TAG = "MyApp";
+ *
+ * int safeDiv(int a, int b) {
+ *    if (b == 0) {
+ *        throw AException("divider is zero");
+ *    }
+ *    return a / b;
+ * }
+ *
+ * int readData(AStringView path) {
+ *    try {
+ *        AFileInputStream fis(path);
+ *        int a, b;
+ *        fis >> a >> b;
+ *        return safeDiv(a, b);
+ *    } catch (const AException&) {
+ *        // add file path information. the original exception will
+ *        // be carried by the new one.
+ *        throw AException("can't read file \"{}\""_format(path));
+ *    }
+ * }
+ *
+ * int main() {
+ *    try {
+ *       auto data = readData("data.bin");
+ *       // ...
+ *    } catch (const AException& e) {
+ *       ALogger::err(LOG_TAG) << "Operation failed: " << e;
+ *    }
+ * }
+ * ```
+ *
+ * ``` title="Possible output"
+ * Operation failed: can't read file "data.bin"
+ * - 0x0000000070000f00 readData at main.cpp:19
+ * - 0x00000000700000f0 main at main.cpp:25
+ * Caused by: divider is zero
+ * - 0x0000000070001000 safeDiv at main.cpp:5
+ * - 0x0000000070000f00 readData at main.cpp:15
+ * - 0x00000000700000f0 main at main.cpp:25
+ * ```
+ *
  */
 class API_AUI_CORE AException : public std::exception {
     mutable AOptional<std::string> mMessage;
@@ -32,14 +100,11 @@ public:
     AException() : mStacktrace(AStacktrace::capture(2)) {}
     AException(AStacktrace stacktrace) : mStacktrace(std::move(stacktrace)) {}
 
-    AException(const AString& message) : AException() { mMessage = message.toStdString(); }
-
     AException(const AException& exception) = default;
     AException(AException&& exception) noexcept = default;
 
-    AException(const AString& message, std::exception_ptr causedBy, AStacktrace stacktrace = AStacktrace::capture(2))
-      : mStacktrace(std::move(stacktrace)), mCausedBy(std::move(causedBy)) { // NOLINT(*-throw-keyword-missing)
-        mMessage = message.toStdString();
+    AException(const AString& message, std::exception_ptr causedBy = std::current_exception(), AStacktrace stacktrace = AStacktrace::capture(2))
+      : mMessage(message.toStdString()), mStacktrace(std::move(stacktrace)), mCausedBy(std::move(causedBy)) { // NOLINT(*-throw-keyword-missing)
     }
 
     virtual AString getMessage() const noexcept { return mMessage ? mMessage->c_str() : "<no message>"; }
@@ -61,7 +126,7 @@ public:
 
 private:
     AStacktrace mStacktrace;
-    std::exception_ptr mCausedBy;
+    std::exception_ptr mCausedBy = std::current_exception();
 };
 
 inline std::ostream& operator<<(std::ostream& o, const AException& e) noexcept {
