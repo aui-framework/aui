@@ -181,15 +181,3 @@ This is similar to modern declarative UI frameworks like SwiftUI or React.
 3. Sleeps the thread for that duration
 
 **Example:** For a 60Hz display: 1000ms / 60 = ~16.67ms delay per frame
-
----
-
-## Summary
-
-This code demonstrates a complete integration pattern between SDL3 (for windowing and input) and AUI Framework (for UI rendering and layout). The architecture separates concerns cleanly:
-
-- **SDL3** handles: Window creation, OpenGL context, input events, display management
-- **AUI Framework** handles: UI layout, rendering abstraction, event routing to UI components
-- **Bridge layer** (EmbedRenderingContext, EmbedWindow): Connects the two systems
-
-The result is a maintainable, cross-platform GUI application with hardware-accelerated rendering and modern declarative UI code.
