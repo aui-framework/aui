@@ -9,7 +9,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-/// [OpenGL_example]
 #include "AUI/GL/State.h"
 #include "AUI/Platform/ARenderingContextOptions.h"
 
@@ -160,4 +159,3 @@ AUI_ENTRY {
     window->show();
     return 0;
 }
-/// [OpenGL_example]

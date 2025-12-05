@@ -46,6 +46,13 @@ Desktop-specific examples.
 
 {{% examples("desktop") %}}
 
+## Custom Windowing Toolkits
+
+Examples demonstrating how to integrate AUI with various windowing APIs and systems. These examples show how to embed
+AUI within existing applications using different window creation backends.
+
+{{% examples("custom_windowing_toolkits") %}}
+
 ## 7GUIs
 
 [7GUIs](https://7guis.github.io/7guis/) is a GUI toolkit benchmark that defines seven tasks representing typical
@@ -53,3 +60,4 @@ challenges in GUI programming. In addition, 7GUIs provide a recommended set of e
 implementations of these tasks can be compared side by side. AUI project provides its own implementations.
 
 {{% examples("7guis") %}}
+
