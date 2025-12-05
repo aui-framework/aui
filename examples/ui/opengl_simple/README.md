@@ -1,7 +1,10 @@
 # OpenGL Example
 
-This example demonstrates how to integrate custom OpenGL rendering with AUI Framework. It shows a simple triangle
-rendered using OpenGL ES 2.0 shaders while maintaining compatibility with AUI's rendering system.
+<!-- aui:example ui -->
+Demonstrates how to integrate custom OpenGL rendering with AUI Framework.
+
+It shows a simple triangle rendered using OpenGL ES 2.0 shaders while maintaining compatibility with AUI's rendering
+system.
 
 ## Features
 
