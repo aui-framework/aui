@@ -87,23 +87,18 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
     };
 
     AUI_NULLSAFE(mViewport.lock())->scroll().changed.clearAllOutgoingConnectionsWith(this);
-    auto viewport = [&]() -> _<AScrollAreaViewport> {
-        for (auto p = getParent(); p != nullptr; p = p->getParent()) {
-            try {
-                if (auto viewport = _cast<AScrollAreaViewport>(p->shared_from_this())) {
-                    return viewport;
-                }
-            } catch (const std::bad_weak_ptr&) {
-                return nullptr;
-            }
-        }
-        return nullptr;
-    }();
+    auto viewport = findViewport();
     if (!viewport) {
         mViewport.reset();
         return;
     }
+
     connect(viewport->scroll().changed, [this](glm::uvec2 scroll) {
+        static ASpinlockMutex ignoreScrollUpdates;
+        auto lock = aui::ptr::manage_shared(new std::unique_lock(ignoreScrollUpdates, std::try_to_lock));
+        if (!lock->owns_lock()) {
+            return;
+        }
         const auto diffVec = glm::ivec2(scroll) - mLastInflatedScroll.valueOr(glm::ivec2 { 0 });
         const auto diff = diffVec.x + diffVec.y;
         if (glm::abs(diff) < INFLATE_THRESHOLD_PX) {
@@ -111,7 +106,7 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
         }
         mLastInflatedScroll = glm::ivec2(scroll);
 
-        getThread()->enqueue([this, keepMeAlive = shared_from_this(), diff, viewport = mViewport.lock()] {
+        getThread()->enqueue([this, keepMeAlive = shared_from_this(), diff, viewport = mViewport.lock(), lock = std::move(lock)] {
             if (getParent() == nullptr) {
                 // lost parent before queue message was processed - no need to operate.
                 return;
@@ -141,6 +136,34 @@ void AForEachUIBase::setPosition(glm::ivec2 position) {
     inflate();
 }
 
+void AForEachUIBase::setSize(glm::ivec2 size) {
+    auto prevSize = getSize();
+    AViewContainerBase::setSize(size);
+    if (!getLayout()) {
+        return;
+    }
+    if (!mViewport.lock()) {
+        return;
+    }
+    int diff = [&] {
+        switch (getLayout()->getLayoutDirection()) {
+            case ALayoutDirection::HORIZONTAL:
+                return prevSize.x - size.x;
+
+            case ALayoutDirection::VERTICAL:
+                return prevSize.y - size.y;
+
+            case ALayoutDirection::NONE:
+                break;
+        }
+        return 0;
+    }();
+    if (diff == 0) {
+        return;
+    }
+    inflate({ .backward = diff < 0, .forward = diff > 0 });
+}
+
 void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
     AUI_ASSERT(opts.forward || opts.backward);
 
@@ -159,6 +182,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
         }
     };
 #endif
+    ensureViewport();
     const auto viewport = mViewport.lock();
 
     bool needsMinSizeUpdate = false;
@@ -313,4 +337,24 @@ glm::ivec2 AForEachUIBase::axisMask() {
         return glm::ivec2 { 1, 0 };
     }
     return glm::ivec2 { 0, 1 };
+}
+
+_<AScrollAreaViewport> AForEachUIBase::findViewport() {
+    for (auto p = getParent(); p != nullptr; p = p->getParent()) {
+        try {
+            if (auto viewport = _cast<AScrollAreaViewport>(p->shared_from_this())) {
+                return viewport;
+            }
+        } catch (const std::bad_weak_ptr&) {
+            return nullptr;
+        }
+    }
+    return nullptr;
+}
+
+void AForEachUIBase::ensureViewport() {
+    if (mViewport.lock()) {
+        return;
+    }
+    mViewport = findViewport();
 }

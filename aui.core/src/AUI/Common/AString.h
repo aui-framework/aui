@@ -53,7 +53,7 @@ public:
     /**
      * @brief Dereference operator - returns current character
      */
-    AChar operator*() const noexcept;
+    const AChar operator*() const noexcept;
 
     /**
      * @brief Assignment operator - replaces current character
@@ -456,11 +456,6 @@ public:
         return *this;
     }
 
-    AString& operator+=(char c) noexcept
-    {
-        append(c);
-        return *this;
-    }
 
     AString& operator+=(AChar c) noexcept
     {
@@ -485,7 +480,7 @@ public:
 
     AStringVector split(AChar c) const;
 
-    AString& replaceAll(char from, char to);
+    AString& replaceAll(AChar from, AChar to);
 
     AString& replaceAll(AStringView from, AStringView to);
 
@@ -506,10 +501,6 @@ public:
      * @sa shrink_to_fit
      */
     void resizeToNullTerminator();
-
-    bool contains(char c) const noexcept {
-        return view().contains(c);
-    }
 
     bool contains(AChar c) const noexcept {
         return view().contains(c);
@@ -712,7 +703,7 @@ public:
      * @return The character at the specified position.
      */
     [[nodiscard]]
-    AChar operator[](size_type i) const {
+    const AChar operator[](size_type i) const {
         return view()[i];
     }
 

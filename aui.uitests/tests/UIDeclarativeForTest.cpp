@@ -379,10 +379,7 @@ TEST_F(UIDeclarativeForTest, Reactive_lists) { // HEADER_H3
 }
 
 TEST_F(UIDeclarativeForTest, DynamicPerformance) {
-    struct State {
-        AProperty<AVector<AString>> items = AVector<AString> { "Hello", "World", "Test" };
-    };
-    auto state = _new<State>();
+
 
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
@@ -392,18 +389,72 @@ TEST_F(UIDeclarativeForTest, DynamicPerformance) {
     EXPECT_CALL(mTestObserver, onViewCreated("Test"_as));
     EXPECT_CALL(mTestObserver, onViewCreated("Bruh"_as));
 
+    // ## View caching { #AFOREACHUI_CACHING }
+    //
+    // By default, AForEachUI does not cache instantiated views. This means that every time the underlying model is
+    // changed, all views are destroyed and recreated. This is not efficient in many scenarios, especially when views are
+    // complex and model changes are small.
+    //
+    // To enable view caching, you need to provide a *key function* that generates a unique key for each item in the
+    // model. The key function is a lambda that takes an item and returns a `std::size_t` hash of the value.
+    //
+    // AUI_DOCS_CODE_BEGIN
+    struct State {
+        AProperty<AVector<AString>> items = AVector<AString> { "Hello", "World", "Test" };
+    };
+    auto state = _new<State>();
+
+    auto testObserver = &mTestObserver;
+
     mWindow->setContents(Vertical {
       AScrollArea::Builder()
               .withContents(
-              AUI_DECLARATIVE_FOR_EX(i, *state->items, AVerticalLayout, &) {
-                  mTestObserver.onViewCreated(i);
+              AUI_DECLARATIVE_FOR(i, *state->items, AVerticalLayout) {
+                  testObserver->onViewCreated(i); // HIDE
+                  ALogger::info("Test") << "Created view: " << i;
                   return Label { i };
+              } AUI_LET {
+                  it->setKeyFunction([](const AString& k) {
+                      return std::hash<AString>{}(k);
+                  });
               })
               .build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 200_dp } },
     });
+    // AUI_DOCS_CODE_END
+    saveScreenshot("1");
+    //
+    // <figure markdown="span">
+    // ![](imgs/UIDeclarativeForTest.DynamicPerformance_1.png){ width="500" }
+    // <figcaption>Basic view caching example.</figcaption>
+    // </figure>
+    //
+    //
+    // ``` title="Possible output"
+    // [07:09:06][][Test][INFO]: Created view: Hello
+    // [07:09:06][][Test][INFO]: Created view: World
+    // [07:09:06][][Test][INFO]: Created view: Test
+    // ```
 
     uitest::frame();
+    //
+    // Upon adding a new item to the model, only the new item's view is created. The existing views are reused from
+    // the cache.
+    // AUI_DOCS_CODE_BEGIN
     state->items.writeScope()->push_back("Bruh");
+    // AUI_DOCS_CODE_END
+    //
+    // If we were not using view caching, all views would be recreated:
+    // ``` title="Possible output without view caching"
+    // [07:09:06][][Test][INFO]: Created view: Hello
+    // [07:09:06][][Test][INFO]: Created view: World
+    // [07:09:06][][Test][INFO]: Created view: Test
+    // [07:09:10][][Test][INFO]: Created view: Hello
+    // [07:09:10][][Test][INFO]: Created view: World
+    // [07:09:10][][Test][INFO]: Created view: Test
+    // [07:09:10][][Test][INFO]: Created view: Bruh
+    // ```
+    //
+
     uitest::frame();
     EXPECT_EQ(cache<AForEachUI<AString>>().size(), 0);
 }
@@ -446,6 +497,12 @@ TEST_F(UIDeclarativeForTest, IntGrouping) {
 TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     ::testing::GTEST_FLAG(throw_on_failure) = true;
 
+    //
+    // ### Advanced grouping with caching
+    //
+    // In this example, we demonstrate a more advanced use case of AForEachUI with nested grouping and view caching.
+    // 
+    // AUI_DOCS_CODE_BEGIN
     struct State {
         AProperty<AVector<int>> ints = AVector<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12 };
     };
@@ -471,11 +528,49 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
                               auto str = "{}"_format(i);
                               mTestObserver.onViewCreated(str);
                               return Label { std::move(str) };
+                          } AUI_LET {
+                              it->setKeyFunction([](int k) {
+                                  return k;
+                              });
                           }
                       };
+                  } AUI_LET {
+                      it->setKeyFunction([](const auto& rng) {
+                          return aui::hash_range(ranges::begin(rng), ranges::end(rng));;
+                      });
                   })
               .build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 300_dp } },
     });
+    // AUI_DOCS_CODE_END
+    //
+    // In this example, we have a nested AForEachUI structure, where the outer AForEachUI iterates over groups of
+    // integers, and the inner AForEachUI iterates over individual integers within each group.
+    //
+    // <figure markdown="span">
+    // ![](imgs/UIDeclarativeForTest.IntGroupingDynamic1_1.png){ width="500" }
+    // <figcaption>Advanced grouping example.</figcaption>
+    // </figure>
+    //
+    // In addition to user-provided `setKeyFunction` outcome, the key is strengthened with byte-level hash of the item
+    // by the framework. This is required to enforce uniqueness of `ranges::view::chunk` which stores iterator pair to
+    // a generic container.
+    //
+    // ??? "More about byte-level hashing"
+    //
+    //     The goal is to avoid incorrect cache hits (reusing a view for the “wrong” element or group), especially for
+    //     tricky range types like `ranges::views::chunk` that store iterator pairs and are sensitive to container
+    //     mutations.
+    //
+    //     The subrange object (e.g., from `ranges::views::chunk`) contains iterators pointing to the original
+    //     container. If the container is modified (elements added/removed), these iterators may become invalid or
+    //     shifted. Since cached view captures the non-owning subrange object by value, iterating over it later may lead
+    //     to unexpected results.
+    //
+    //     The raw byte-level hash helps to identify underlying iterator changes that may not be reflected in
+    //     user-provided keys, preventing reuse of the stale cached views.
+    //
+    //     The hash enforced by the framework can be customized by specializing `aui::for_each_ui::defaultKey<T>`.
+    // 
 
     EXPECT_CALL(mTestObserver, onViewCreated("Group 0"_as));
     EXPECT_CALL(mTestObserver, onViewCreated("1"_as));
@@ -502,7 +597,14 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     /* Also, depending on used container's iterator implementation, other groups might be evaluated as well. In our
      * case, we are using AVector, whose iterator is an offset from beginning. Since the offset has changed due to
      * removal, the iterator is considered dirty. This might not be the case for containers whose items are stored in
-     * heap, i.e., `std::list`. */
+     * heap, i.e., `std::list`.
+     *
+     * We need to be especially careful with this. Since we are using ranges::view::chunk in our example, it stores
+     * iterator pair to std::vector. Iterators of std::vector MUST BE invalidated since we have changed the container.
+     *
+     * Given that, we expect "Group 10" to be reevaluated, despite user-provided setKeyFunction outcome would give equal
+     * hashes both before and after removal.
+     */
     EXPECT_CALL(mTestObserver, onViewCreated("Group 10"_as));
     {
         state->ints.writeScope()->removeAll(2);

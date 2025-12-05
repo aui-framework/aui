@@ -149,14 +149,14 @@ private:
     struct stat stat() const;
 #endif
 
-    APathView(std::string_view str);
-    APathView(AStringView str);
 
 public:
     APathView();
     APathView(const APathView& other);
     APathView(APathView&& other) noexcept;
     APathView(const APath& path);
+    APathView(std::string_view str);
+    APathView(AStringView str);
 
     /**
      * Creates a file.
@@ -195,7 +195,7 @@ public:
      * `/home/user -> /home`
      * @return path to parent folder
      */
-    [[nodiscard]] APath parent() const;
+    [[nodiscard]] APathView parent() const;
 
     /**
      * @brief Path of the child element. Relevant only for folders.

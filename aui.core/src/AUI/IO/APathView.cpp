@@ -68,7 +68,7 @@ APathView::APathView(std::string_view str) : super(str) {}
 
 APathView::APathView(AStringView str) : super(str.bytes()) {}
 
-APath APathView::parent() const {
+APathView APathView::parent() const {
     auto c = ensureNonSlashEnding().rfind('/');
     if (c != NPOS) {
         return substr(0, c);
