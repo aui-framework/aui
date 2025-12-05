@@ -98,23 +98,19 @@ public:
         if (prefix.size() > size()) {
             return false;
         }
-        return substr(0, prefix.size()) == prefix; // NOLINT(*-use-starts-ends-with)
+        return bytes().substr(0, prefix.size()) == prefix.bytes(); // NOLINT(*-use-starts-ends-with)
     }
 
     constexpr bool endsWith(AStringView suffix) const noexcept {
         if (suffix.size() > size()) {
             return false;
         }
-        return substr(size() - suffix.size()) == suffix;
+        return bytes().substr(size() - suffix.size()) == suffix.bytes();
     }
 
     [[nodiscard]]
     constexpr bool empty() const noexcept {
         return super::empty();
-    }
-
-    constexpr bool contains(char c) const noexcept {
-        return bytes().find(c) != std::string_view::npos;
     }
 
     bool contains(AChar c) const noexcept;

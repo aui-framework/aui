@@ -157,11 +157,13 @@ void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overf
         return;
     }
     if (mTextOverflow == ATextOverflow::ELLIPSIS) {
-        *firstOverflowedIt = ELLIPSIS;
+        firstOverflowedIt = ELLIPSIS;
         firstOverflowedIt++;
     }
 
-    std::fill(firstOverflowedIt, end, ' ');
+    for (auto it = firstOverflowedIt; it != end; ++it) {
+        it = ' ';
+    }
 }
 
 void AAbstractLabel::processTextOverflow(AString& text) {
