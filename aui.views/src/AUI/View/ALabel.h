@@ -12,6 +12,7 @@
 #pragma once
 
 #include "AAbstractLabel.h"
+#include <AUI/Util/Declarative/Modifier.h>
 #include <AUI/Util/Declarative/Contracts.h>
 
 /**
@@ -71,10 +72,12 @@ struct Label {
      * @brief Text to display.
      */
     AOptional<contract::In<AString>> text;
+    contract::In<Modifier> modifier = Modifier{};
 
     _<ALabel> operator()() {
         auto label = _new<ALabel>();
         AUI_NULLSAFE(text)->bindTo(label->text().assignment());
+        modifier.bindTo(ASlotDef{AUI_SLOT(label.get())::applyModifier});
         return label;
     }
 };

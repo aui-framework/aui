@@ -680,6 +680,9 @@ void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     invalidateStateStylesImpl(prevMinSize);
 }
 
+void AView::applyModifier(ass::Modifier modifier) {
+
+}
 
 bool AView::hasIndirectParent(const _<AView>& v) {
     for (auto p = getParent(); p != nullptr; p = p->getParent()) {
