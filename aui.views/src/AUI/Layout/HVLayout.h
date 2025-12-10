@@ -137,7 +137,7 @@ struct HVLayout {
                 int expanding = getAxisValue(view->getExpanding());
                 int viewMinSize = getAxisValue(view->getMinimumSize());
                 long long viewEndPos =
-                    posOurAxis +
+                    viewPosOurAxis * FIXED_POINT_DENOMINATOR +
                     glm::clamp(
                         FIXED_POINT_DENOMINATOR * availableSpaceForExpandingViews * expanding / sum,
                         FIXED_POINT_DENOMINATOR * viewMinSize, FIXED_POINT_DENOMINATOR * getAxisValue(viewMaxSize));
