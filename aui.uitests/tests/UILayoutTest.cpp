@@ -408,7 +408,7 @@ TEST_F(UILayoutTest, Margin6) {
         Margin { 10_dp, 10_dp, 20_dp, 5_dp },
     };
 
-    EXPECT_CALL(*mock, setGeometry(5, 10, 85, 70)).Times(2);
+    EXPECT_CALL(*mock, setGeometry(5, 10, 80, 70)).Times(2);
 
     inflate(
         Horizontal {
