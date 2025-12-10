@@ -19,6 +19,7 @@
 #include "AUI/Test/UI/By.h"
 #include "AUI/Util/ALayoutInflater.h"
 #include "AUI/View/AGroupBox.h"
+#include "AUI/View/ASpacerFixed.h"
 
 using namespace declarative;
 
@@ -99,6 +100,7 @@ TEST_F(UILayoutTest, LayoutSpacing1) {
     auto parent = b->getParent();
     EXPECT_EQ((parent->getSize() - b->getSize()) / 2, b->getPosition());
 }
+
 TEST_F(UILayoutTest, LayoutSpacing2) {
     inflate(Horizontal::Expanding {
       Button { Label { "1" } } AUI_OVERRIDE_STYLE { Expanding {} },
@@ -236,4 +238,199 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
 
     // extra layout update that should call LabelMock::getContentMinimumWidth one more time
     l1->getWindow()->applyGeometryToChildrenIfNecessary();
+}
+
+namespace {
+
+class ViewGeometryMock : public AView {
+public:
+    MOCK_METHOD(void, setGeometry, (int x, int y, int width, int height), (override));
+};
+
+}
+
+TEST_F(UILayoutTest, Padding1) {
+    auto mock = _new<ViewGeometryMock>();
+    mock->setExpanding();
+
+    EXPECT_CALL(*mock, setGeometry(10, 10, 80, 80)).Times(2);
+
+    inflate(Centered {
+        mock
+    } AUI_OVERRIDE_STYLE { FixedSize(100_dp), Padding { 10_dp } });
+
+    AUI_REPEAT(10) {
+        uitest::frame();
+    }
+}
+
+TEST_F(UILayoutTest, Padding2) {
+    auto mock = _new<ViewGeometryMock>();
+    mock->setExpanding();
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 90, 80)).Times(2);
+
+    inflate(Centered {
+        mock
+    } AUI_OVERRIDE_STYLE { FixedSize(100_dp), Padding { 10_dp, 5_dp } });
+
+    AUI_REPEAT(10) {
+        uitest::frame();
+    }
+}
+
+TEST_F(UILayoutTest, Padding3) {
+    auto mock = _new<ViewGeometryMock>();
+    mock->setExpanding();
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 90, 70)).Times(2);
+
+    inflate(Centered { mock } AUI_OVERRIDE_STYLE { FixedSize(100_dp), Padding { 10_dp, 5_dp, 20_dp } });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Padding4) {
+    auto mock = _new<ViewGeometryMock>();
+    mock->setExpanding();
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 85, 70)).Times(2);
+
+    inflate(Centered { mock } AUI_OVERRIDE_STYLE { FixedSize(100_dp), Padding { 10_dp, 10_dp, 20_dp, 5_dp } });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Padding5) {
+    auto mock = _new<ViewGeometryMock>();
+    mock->setExpanding();
+
+    EXPECT_CALL(*mock, setGeometry(10, 10, 80, 70)).Times(2);
+
+    inflate(Horizontal {
+        SpacerFixed { 5_dp },
+        mock,
+    } AUI_OVERRIDE_STYLE { FixedSize(100_dp), Padding { 10_dp, 10_dp, 20_dp, 5_dp } });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Padding6) {
+    auto mock = _new<ViewGeometryMock>();
+    mock->setExpanding();
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 80, 70)).Times(2);
+
+    inflate(Horizontal {
+        mock,
+        SpacerFixed { 5_dp },
+    } AUI_OVERRIDE_STYLE { FixedSize(100_dp), Padding { 10_dp, 10_dp, 20_dp, 5_dp } });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Margin1) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(10, 10, 80, 80)).Times(2);
+
+    inflate(Centered {
+        mock
+    } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    AUI_REPEAT(10) {
+        uitest::frame();
+    }
+}
+
+TEST_F(UILayoutTest, Margin2) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp, 5_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 90, 80)).Times(2);
+
+    inflate(Centered { mock } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Margin3) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp, 5_dp, 20_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 90, 70)).Times(2);
+
+    inflate(Centered { mock } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Margin4) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp, 5_dp, 20_dp, 10_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(10, 10, 85, 70)).Times(2);
+
+    inflate(Centered { mock } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Margin5) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp, 10_dp, 20_dp, 5_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(10, 10, 80, 70)).Times(2);
+
+    inflate(
+        Horizontal {
+          SpacerFixed { 5_dp },
+          mock,
+        } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Margin6) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp, 10_dp, 20_dp, 5_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 85, 70)).Times(2);
+
+    inflate(
+        Horizontal {
+          mock,
+          SpacerFixed { 5_dp },
+        } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Margin7) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp, 10_dp, 20_dp, 5_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(20, 10, 70, 70)).Times(2);
+
+    inflate(
+        Horizontal {
+          SpacerFixed { 5_dp } AUI_OVERRIDE_STYLE { Margin { 5_dp } },
+          mock,
+        } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    AUI_REPEAT(10) { uitest::frame(); }
 }
