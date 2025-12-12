@@ -18,10 +18,14 @@
  */
 template <typename T = uint32_t>
 class ABitField {
+    static_assert(!std::is_reference_v<T>, "====================> ABitField: attempt to wrap a reference.");
+    static_assert(!std::is_pointer_v<T>, "====================> ABitField: attempt to wrap a pointer. (seriously? go outside touch grass)");
 private:
     T mStorage;
 
 public:
+    using Underlying = std::conditional_t<std::is_enum_v<T>, std::underlying_type_t<T>, T>;
+
     ABitField(T storage = static_cast<T>(0)) : mStorage(storage) {}
 
     operator T() {
@@ -42,7 +46,7 @@ public:
      * @return this
      */
     ABitField& operator<<(T flag) {
-        reinterpret_cast<std::underlying_type_t<T>&>(mStorage) |= static_cast<std::underlying_type_t<T>>(flag);
+        reinterpret_cast<Underlying&>(mStorage) |= static_cast<Underlying>(flag);
         return *this;
     }
 
@@ -52,7 +56,7 @@ public:
      * @return this
      */
     ABitField& operator>>(T flag) {
-        reinterpret_cast<std::underlying_type_t<T>&>(mStorage) &= ~static_cast<std::underlying_type_t<T>>(flag);
+        reinterpret_cast<Underlying&>(mStorage) &= ~static_cast<Underlying>(flag);
         return *this;
     }
 
@@ -62,10 +66,10 @@ public:
      * @return true if flag was set
      */
     bool checkAndSet(T flag) {
-        if (!!(static_cast<std::underlying_type_t<T>>(mStorage) &
-               static_cast<std::underlying_type_t<T>>(flag))) {
-            reinterpret_cast<std::underlying_type_t<T>&>(mStorage) &=
-                ~static_cast<std::underlying_type_t<T>>(flag);
+        if (!!(static_cast<Underlying>(mStorage) &
+               static_cast<Underlying>(flag))) {
+            reinterpret_cast<Underlying&>(mStorage) &=
+                ~static_cast<Underlying>(flag);
             return true;
         }
         return false;
@@ -78,11 +82,11 @@ public:
      */
     bool checkAndReset(T flag)
     {
-        if (static_cast<std::underlying_type_t<T>>(mStorage) &
-            static_cast<std::underlying_type_t<T>>(flag)) {
+        if (static_cast<Underlying>(mStorage) &
+            static_cast<Underlying>(flag)) {
             return false;
         }
-        reinterpret_cast<std::underlying_type_t<T>&>(mStorage) |= static_cast<std::underlying_type_t<T>>(flag);
+        reinterpret_cast<Underlying&>(mStorage) |= static_cast<Underlying>(flag);
         return true;
     }
 
@@ -94,9 +98,9 @@ public:
      * This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
      */
     bool test(T flags) const {
-        return (static_cast<std::underlying_type_t<T>>(mStorage) &
-                static_cast<std::underlying_type_t<T>>(flags)) ==
-               static_cast<std::underlying_type_t<T>>(flags);
+        return (static_cast<Underlying>(mStorage) &
+                static_cast<Underlying>(flags)) ==
+               static_cast<Underlying>(flags);
     }
     /**
      * @brief Determines whether flag (or one of the flags flags) set or not.
@@ -107,8 +111,8 @@ public:
      */
     bool testAny(T flags) const {
         return bool(
-            static_cast<std::underlying_type_t<T>>(mStorage) &
-            static_cast<std::underlying_type_t<T>>(flags));
+            static_cast<Underlying>(mStorage) &
+            static_cast<Underlying>(flags));
     }
 
     /**
@@ -124,11 +128,11 @@ public:
 
     void set(T flag, bool value) {
         if (value) {
-            reinterpret_cast<std::underlying_type_t<T>&>(mStorage) |=
-                static_cast<std::underlying_type_t<T>>(flag);
+            reinterpret_cast<Underlying&>(mStorage) |=
+                static_cast<Underlying>(flag);
         } else {
-            reinterpret_cast<std::underlying_type_t<T>&>(mStorage) &=
-                ~static_cast<std::underlying_type_t<T>>(flag);
+            reinterpret_cast<Underlying&>(mStorage) &=
+                ~static_cast<Underlying>(flag);
         }
     }
 };
