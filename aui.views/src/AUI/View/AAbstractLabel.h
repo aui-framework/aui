@@ -141,7 +141,8 @@ private:
     Iterator findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int overflowingWidth);
 
     template<class Iterator>
-    void processTextOverflow(Iterator begin, Iterator end, int overflowingWidth);
+    [[nodiscard]]
+    Iterator processTextOverflow(Iterator begin, Iterator end, int overflowingWidth);
 
 };
 

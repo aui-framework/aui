@@ -149,19 +149,18 @@ Iterator AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
 }
 
 template<class Iterator>
-void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
+Iterator AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
     static constexpr char32_t ELLIPSIS = U'…';
     auto firstOverflowedIt = findFirstOverflowedIndex(
         begin, end, overflowingWidth - (mTextOverflow == ATextOverflow::ELLIPSIS ? getFontStyle().getWidth({&ELLIPSIS, 1}) : 0));
     if (firstOverflowedIt == end) {
-        return;
+        return end;
     }
     if (mTextOverflow == ATextOverflow::ELLIPSIS) {
         *firstOverflowedIt = ELLIPSIS;
-        firstOverflowedIt++;
+        ++firstOverflowedIt;
     }
-
-    std::fill(firstOverflowedIt, end, ' ');
+    return firstOverflowedIt;
 }
 
 void AAbstractLabel::processTextOverflow(AString& text) {
@@ -181,7 +180,8 @@ void AAbstractLabel::processTextOverflow(AString& text) {
     if (!mIsTextTooLarge)
         return;
 
-    processTextOverflow(text.begin(), text.end(), overflowingWidth);
+    auto it = processTextOverflow(text.begin(), text.end(), overflowingWidth);
+    text.erase(it, text.end());
 }
 
 void AAbstractLabel::doPrerender(IRenderer& render) {

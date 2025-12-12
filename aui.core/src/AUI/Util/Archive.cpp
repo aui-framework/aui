@@ -22,25 +22,37 @@ void aui::archive::zip::read(aui::no_escape<ISeekableInputStream> stream, const 
     zlib_filefunc_def funcs = {
         .zopen_file = [](voidpf opaque, const char* filename, int mode) -> voidpf { return opaque; },
         .zread_file = [](voidpf opaque, voidpf stream, void* buf, uLong size) -> uLong {
-            return static_cast<ISeekableInputStream*>(opaque)->read(static_cast<char*>(buf), size);
+            try {
+                return static_cast<ISeekableInputStream*>(opaque)->read(static_cast<char*>(buf), size);
+            } catch (...) {
+                return -1;
+            }
         },
         .zwrite_file = [](voidpf opaque, voidpf stream, const void* buf, uLong size) -> uLong { return 0; },
         .ztell_file = [](voidpf opaque, voidpf stream) -> long {
-            return static_cast<ISeekableInputStream*>(opaque)->tell();
+            try {
+                return static_cast<ISeekableInputStream*>(opaque)->tell();
+            } catch (...) {
+                return -1;
+            }
         },
         .zseek_file = [](voidpf opaque, voidpf stream, uLong offset, int origin) -> long {
-            static_cast<ISeekableInputStream*>(opaque)->seek(offset, [&] {
-                switch (origin) {
-                    case ZLIB_FILEFUNC_SEEK_SET:
-                    default:
-                        return ASeekDir::BEGIN;
-                    case ZLIB_FILEFUNC_SEEK_CUR:
-                        return ASeekDir::CURRENT;
-                    case ZLIB_FILEFUNC_SEEK_END:
-                        return ASeekDir::END;
-                }
-            }());
-            return 0;
+            try {
+                static_cast<ISeekableInputStream*>(opaque)->seek(offset, [&] {
+                    switch (origin) {
+                        case ZLIB_FILEFUNC_SEEK_SET:
+                        default:
+                            return ASeekDir::BEGIN;
+                        case ZLIB_FILEFUNC_SEEK_CUR:
+                            return ASeekDir::CURRENT;
+                        case ZLIB_FILEFUNC_SEEK_END:
+                            return ASeekDir::END;
+                    }
+                }());
+                return 0;
+            } catch (...) {
+                return -1;
+            }
         },
         .zclose_file = [](voidpf opaque, voidpf stream) -> int { return 0; },
         .zerror_file = [](voidpf opaque, voidpf stream) -> int { return 0; },
@@ -125,24 +137,39 @@ namespace aui::archive::zip {
 Writer::Writer(_unique<ISeekableOutputStream> to): mZipFile(std::move(to)) {
     zlib_filefunc_def funcs = {
         .zopen_file = [](voidpf opaque, const char* filename, int mode) -> voidpf { return opaque; },
-        .zread_file =  nullptr,
+        .zread_file = nullptr,
         .zwrite_file = [](voidpf opaque, voidpf stream, const void* buf, uLong size) -> uLong {
-            static_cast<ISeekableOutputStream*>(opaque)->write(static_cast<const char*>(buf), size);
-            return size;
+            try {
+                static_cast<ISeekableOutputStream*>(opaque)->write(static_cast<const char*>(buf), size);
+                return size;
+            } catch (...) {
+                return -1;
+            }
         },
         .ztell_file = [](voidpf opaque, voidpf stream) -> long {
-            return static_cast<ISeekableOutputStream*>(opaque)->tell();
+            try {
+                return static_cast<ISeekableOutputStream*>(opaque)->tell();
+            } catch (...) {
+                return -1;
+            }
         },
         .zseek_file = [](voidpf opaque, voidpf stream, uLong offset, int origin) -> long {
-            static_cast<ISeekableOutputStream*>(opaque)->seek(offset, [&] {
-                switch (origin) {
-                    default:
-                    case ZLIB_FILEFUNC_SEEK_SET: return ASeekDir::BEGIN;
-                    case ZLIB_FILEFUNC_SEEK_CUR: return ASeekDir::CURRENT;
-                    case ZLIB_FILEFUNC_SEEK_END: return ASeekDir::END;
-                }
-            }());
-            return 0;
+            try {
+                static_cast<ISeekableOutputStream*>(opaque)->seek(offset, [&] {
+                    switch (origin) {
+                        default:
+                        case ZLIB_FILEFUNC_SEEK_SET:
+                            return ASeekDir::BEGIN;
+                        case ZLIB_FILEFUNC_SEEK_CUR:
+                            return ASeekDir::CURRENT;
+                        case ZLIB_FILEFUNC_SEEK_END:
+                            return ASeekDir::END;
+                    }
+                }());
+                return 0;
+            } catch (...) {
+                return -1;
+            }
         },
         .zclose_file = [](voidpf opaque, voidpf stream) -> int { return 0; },
         .zerror_file = [](voidpf opaque, voidpf stream) -> int { return 0; },

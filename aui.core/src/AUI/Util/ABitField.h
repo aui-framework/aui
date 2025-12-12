@@ -42,7 +42,7 @@ public:
      * @return this
      */
     ABitField& operator<<(T flag) {
-        mStorage |= flag;
+        reinterpret_cast<std::underlying_type_t<T>&>(mStorage) |= static_cast<std::underlying_type_t<T>>(flag);
         return *this;
     }
 
@@ -52,7 +52,7 @@ public:
      * @return this
      */
     ABitField& operator>>(T flag) {
-        mStorage &= ~flag;
+        reinterpret_cast<std::underlying_type_t<T>&>(mStorage) &= ~static_cast<std::underlying_type_t<T>>(flag);
         return *this;
     }
 
@@ -62,8 +62,10 @@ public:
      * @return true if flag was set
      */
     bool checkAndSet(T flag) {
-        if (!!(mStorage & flag)) {
-            mStorage &= ~flag;
+        if (!!(static_cast<std::underlying_type_t<T>>(mStorage) &
+               static_cast<std::underlying_type_t<T>>(flag))) {
+            reinterpret_cast<std::underlying_type_t<T>&>(mStorage) &=
+                ~static_cast<std::underlying_type_t<T>>(flag);
             return true;
         }
         return false;
@@ -76,11 +78,11 @@ public:
      */
     bool checkAndReset(T flag)
     {
-        if (mStorage & flag)
-        {
+        if (static_cast<std::underlying_type_t<T>>(mStorage) &
+            static_cast<std::underlying_type_t<T>>(flag)) {
             return false;
         }
-        mStorage |= flag;
+        reinterpret_cast<std::underlying_type_t<T>&>(mStorage) |= static_cast<std::underlying_type_t<T>>(flag);
         return true;
     }
 
@@ -92,7 +94,9 @@ public:
      * This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
      */
     bool test(T flags) const {
-        return (mStorage & flags) == flags;
+        return (static_cast<std::underlying_type_t<T>>(mStorage) &
+                static_cast<std::underlying_type_t<T>>(flags)) ==
+               static_cast<std::underlying_type_t<T>>(flags);
     }
     /**
      * @brief Determines whether flag (or one of the flags flags) set or not.
@@ -102,7 +106,9 @@ public:
      * This function supports multiple flags (i.e <code>check(FLAG1 | FLAG2)</code>).
      */
     bool testAny(T flags) const {
-        return bool(mStorage & flags);
+        return bool(
+            static_cast<std::underlying_type_t<T>>(mStorage) &
+            static_cast<std::underlying_type_t<T>>(flags));
     }
 
     /**
@@ -118,9 +124,11 @@ public:
 
     void set(T flag, bool value) {
         if (value) {
-            mStorage |= flag;
+            reinterpret_cast<std::underlying_type_t<T>&>(mStorage) |=
+                static_cast<std::underlying_type_t<T>>(flag);
         } else {
-            mStorage &= ~flag;
+            reinterpret_cast<std::underlying_type_t<T>&>(mStorage) &=
+                ~static_cast<std::underlying_type_t<T>>(flag);
         }
     }
 };
