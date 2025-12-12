@@ -66,10 +66,8 @@ public:
      * @return true if flag was set
      */
     bool checkAndSet(T flag) {
-        if (!!(static_cast<Underlying>(mStorage) &
-               static_cast<Underlying>(flag))) {
-            reinterpret_cast<Underlying&>(mStorage) &=
-                ~static_cast<Underlying>(flag);
+        if (static_cast<Underlying>(mStorage) & static_cast<Underlying>(flag)) {
+            reinterpret_cast<Underlying&>(mStorage) &= ~static_cast<Underlying>(flag);
             return true;
         }
         return false;
