@@ -655,6 +655,8 @@ endfunction(aui_deploy_library)
 function(_auib_collect_srcs _out dir)
     file(GLOB_RECURSE SRCS
             ${dir}/*.cpp
+            ${dir}/*.cxx
+            ${dir}/*.cc
             ${dir}/*.c
             ${dir}/*.mm
             ${dir}/*.m)
@@ -669,8 +671,17 @@ function(auib_add_srcs TARGET DIR)
 endfunction()
 
 function(aui_executable AUI_MODULE_NAME)
-    _auib_collect_srcs(SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+    set(_src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+    if (NOT EXISTS ${_src_dir})
+        message(FATAL_ERROR "aui_executable can't find \"${_src_dir}\" directory")
+    endif ()
+    _auib_collect_srcs(SRCS ${_src_dir})
     _auib_collect_srcs(SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/)
+
+    list(LENGTH SRCS SRCS_COUNT)
+    if (SRCS_COUNT LESS_EQUAL 0)
+        message(FATAL_ERROR "aui_executable can't find source files in \"${_src_dir}\", i.e., \"${_src_dir}main.cpp\"")
+    endif ()
 
     set(options WIN32_SUBSYSTEM_CONSOLE)
     set(oneValueArgs COMPILE_ASSETS EXPORT)
