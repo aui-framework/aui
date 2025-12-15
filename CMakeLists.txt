@@ -86,6 +86,7 @@ include(cmake/aui.build.cmake)
 
 set(AUI_BUILD_EXAMPLES false CACHE BOOL "Build AUI examples")
 auib_mark_var_forwardable(AUI_BUILD_EXAMPLES)
+auib_mark_var_forwardable(AUI_TOOLBOX_EXE)
 auib_mark_var_forwardable(AUI_IOS_CODE_SIGNING_REQUIRED)
 
 function(define_aui_component AUI_COMPONENT_NAME)

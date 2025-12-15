@@ -146,7 +146,7 @@ public:
         : data_(data), begin_(begin), end_(end),
           byte_pos_(pos) {}
 
-    constexpr AChar operator*() const noexcept {
+    constexpr const AChar operator*() const noexcept {
         size_t temp_pos = byte_pos_;
         return aui::utf8::detail::decodeUtf8At(data_, temp_pos, end_ - begin_);
     }
