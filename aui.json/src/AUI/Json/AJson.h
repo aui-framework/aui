@@ -263,7 +263,7 @@ public:
     }
 
     [[nodiscard]]
-    AOptional<AStringView> asStringOpt() const noexcept {
+    AOptional<AString> asStringOpt() const noexcept {
         if (isString()) {
             return asString();
         }
