@@ -13,6 +13,7 @@
 
 #include "AUI/Image/IAnimatedImageFactory.h"
 #include <webp/mux_types.h>
+#include <chrono>
 
 struct WebPAnimDecoder;
 

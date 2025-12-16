@@ -12,8 +12,8 @@
 #pragma once
 #pragma warning(disable: 4251)
 
-#include "AUI/api.h"
-#include "AUI/Util/Assert.h"
+#include <AUI/api.h>
+#include <AUI/Util/Assert.h>
 
 #if AUI_ENABLE_DEATH_TESTS
 #define AUI_EXPECT_DEATH(statement, matcher) EXPECT_DEATH(statement, matcher)

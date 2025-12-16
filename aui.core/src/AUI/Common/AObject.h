@@ -11,9 +11,9 @@
 
 #pragma once
 
-#include "AObjectBase.h"
-#include "React.h"
-#include "AUI/Traits/types.h"
+#include <AUI/Common/AObjectBase.h>
+#include <AUI/Common/React.h>
+#include <AUI/Traits/types.h>
 
 namespace aui::detail {
 template <typename Object, typename Lambda>

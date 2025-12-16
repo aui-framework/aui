@@ -18,6 +18,7 @@
 
 #include "IInputStream.h"
 #include "IOutputStream.h"
+#include <AUI/Thread/AConditionVariable.h>
 
 /**
  * @brief A thread safe buffer that converts an IInputStream to IOutputStream (and otherwise).
