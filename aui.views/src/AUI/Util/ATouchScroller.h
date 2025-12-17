@@ -11,13 +11,14 @@
 
 #pragma once
 
+#include <chrono>
 
-#include "AUI/Common/AObject.h"
-#include "AUI/Event/APointerPressedEvent.h"
-#include "AUI/Event/APointerReleasedEvent.h"
-#include "AMetric.h"
-#include "AUI/Event/AScrollEvent.h"
-#include "AUI/Animator/Curves/bezier.h"
+#include <AUI/Common/AObject.h>
+#include <AUI/Event/APointerPressedEvent.h>
+#include <AUI/Event/APointerReleasedEvent.h>
+#include <AUI/Event/AScrollEvent.h>
+#include <AUI/Util/AMetric.h>
+#include <AUI/Animator/Curves/bezier.h>
 
 /**
  * @brief Utility object that helps with touchscreen scroll events.

@@ -159,7 +159,7 @@ namespace aui {
 // AObject-related concepts
 class AString;
 class AAbstractSignal;
-class AAbstractThread;
+class API_AUI_CORE AAbstractThread;
 class API_AUI_CORE AObjectBase;
 
 template <typename T>

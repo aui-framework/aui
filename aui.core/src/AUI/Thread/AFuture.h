@@ -11,27 +11,29 @@
 
 #pragma once
 
+#include <atomic>
+#include <functional>
+#include <optional>
 #include <exception>
 #include <thread>
 #include <utility>
-#include "AUI/Traits/concepts.h"
-#include "AUI/Util/ABitField.h"
 #if AUI_COROUTINES
 #include <coroutine>
 #endif
 
-#include <atomic>
-#include <functional>
-#include <optional>
-#include "AConditionVariable.h"
-#include "AMutex.h"
+#include <AUI/Common/AException.h>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/Reflect/AReflect.h>
+#include <AUI/Thread/AConditionVariable.h>
+#include <AUI/Thread/AMutex.h>
+#include <AUI/Thread/AThread.h>
+#include <AUI/Thread/AThreadPool.h>
+#include <AUI/Traits/concepts.h>
+#include <AUI/Util/ABitField.h>
 
-class AThreadPool;
+class API_AUI_CORE AThreadPool;
 
 
 class AInvocationTargetException: public AException {
@@ -897,10 +899,6 @@ public:
         return *this;
     }
 };
-
-
-#include <AUI/Thread/AThreadPool.h>
-#include <AUI/Common/AException.h>
 
 template <typename Value>
 void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapper<Inner>>& innerWeak,

@@ -10,15 +10,16 @@
  */
 
 #pragma once
+
 #include <thread>
 #include <utility>
-#include "AUI/Common/ADeque.h"
-#include "AMutex.h"
-#include "AUI/Common/SharedPtrTypes.h"
-#include "AUI/Common/AString.h"
-#include "AUI/Util/AMessageQueue.h"
-#include <AUI/Platform/AStacktrace.h>
 #include <functional>
+#include <AUI/Common/SharedPtrTypes.h>
+#include <AUI/Common/AString.h>
+#include <AUI/Common/AObject.h>
+#include <AUI/Platform/AStacktrace.h>
+#include <AUI/Thread/AMutex.h>
+#include <AUI/Util/AMessageQueue.h>
 
 class IEventLoop;
 class AString;
@@ -163,8 +164,6 @@ private:
     static _<AAbstractThread>& threadStorage();
 };
 
-#include "AUI/Common/AObject.h"
-
 /**
  * @brief Represents a user-defined thread.
  * @ingroup core
@@ -205,7 +204,7 @@ private:
 public:
     AThread(std::function<void()> functor);
 
-    virtual ~AThread();
+    ~AThread() override;
 
     void detach();
 
@@ -269,5 +268,3 @@ public:
      */
     void join();
 };
-
-#include "AConditionVariable.h"
