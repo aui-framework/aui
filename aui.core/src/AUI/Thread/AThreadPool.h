@@ -23,7 +23,6 @@
 #include <AUI/Common/AException.h>
 #include <AUI/Thread/AThread.h>
 #include <AUI/Traits/concepts.h>
-#include <AUI/Thread/AFuture.h>
 
 template <typename T>
 class AFuture;

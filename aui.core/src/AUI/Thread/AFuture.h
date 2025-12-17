@@ -26,6 +26,8 @@
 #include <AUI/Thread/AConditionVariable.h>
 #include <AUI/Thread/AMutex.h>
 #include <AUI/Thread/AThread.h>
+#include <AUI/Thread/AThreadPool.h>
+#include <AUI/Common/AException.h>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AException.h>
@@ -897,10 +899,6 @@ public:
         return *this;
     }
 };
-
-
-#include <AUI/Thread/AThreadPool.h>
-#include <AUI/Common/AException.h>
 
 template <typename Value>
 void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapper<Inner>>& innerWeak,
