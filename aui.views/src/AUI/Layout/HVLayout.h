@@ -153,7 +153,7 @@ struct HVLayout {
                     getAxisValue(glm::ivec2 { viewSizePerpAxis, viewSizeOurAxis }));
 
                 if (getAxisValue(view->getSize()) == viewSizeOurAxis) {
-                    posOurAxis = viewEndPos + (spacing + getAxisValue(margins.rightBottom())) * FIXED_POINT_DENOMINATOR;
+                    posOurAxis = viewEndPos + (spacing + getAxisValue(margins.occupiedSize())) * FIXED_POINT_DENOMINATOR;
                 } else {
                     // view has rejected the size we have provided, and we should adopt.
                     // unfortunately, we lose the fractional part of the size.
