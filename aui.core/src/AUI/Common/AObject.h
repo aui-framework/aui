@@ -16,9 +16,8 @@
 #include <AUI/Traits/types.h>
 
 namespace aui::detail {
-template <typename Object, typename Lambda>
+template <typename Object, aui::not_overloaded_lambda Lambda>
 Lambda&& makeLambda(Object*, Lambda&& lambda)
-    requires requires { std::is_class_v<Lambda>; }
 {
     return std::forward<Lambda>(lambda);
 }
