@@ -127,11 +127,6 @@ void UpdateDarkModeForHWND(HWND hwnd) {
             }
         }
     }
-
-    DWM_WINDOW_CORNER_PREFERENCE border = DWMWCP_DEFAULT;
-    DwmSetWindowAttribute(hwnd, DWMWA_WINDOW_CORNER_PREFERENCE, &border, sizeof(border));
-    COLORREF corner = DWMWA_COLOR_DEFAULT;
-    DwmSetWindowAttribute(hwnd, DWMWA_BORDER_COLOR, &corner, sizeof(corner));
 }
 
 }
