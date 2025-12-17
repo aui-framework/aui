@@ -13,6 +13,8 @@
 // Created by Nelonn on 12/17/2025.
 //
 
+// Credit: SDL3
+
 #include "Theme.h"
 
 #include <dwmapi.h>
