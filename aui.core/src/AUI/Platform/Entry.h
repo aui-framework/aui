@@ -73,7 +73,7 @@ AUI_EXPORT int aui_entry(const AStringVector& args)
     int main(int argc, char** argv) {                               \
         return aui_main(argc, argv, aui_entry);\
     } \
-    int __stdcall WinMain( \
+    int WINAPI WinMain( \
         HINSTANCE hInstance, \
         HINSTANCE hPrevInstance, \
         LPSTR     lpCmdLine, \
