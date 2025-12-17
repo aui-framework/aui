@@ -21,17 +21,17 @@
 #include <coroutine>
 #endif
 
-#include <AUI/Traits/concepts.h>
-#include <AUI/Util/ABitField.h>
-#include <AUI/Thread/AConditionVariable.h>
-#include <AUI/Thread/AMutex.h>
-#include <AUI/Thread/AThread.h>
-#include <AUI/Thread/AThreadPool.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Logging/ALogger.h>
+#include <AUI/Thread/AConditionVariable.h>
+#include <AUI/Thread/AMutex.h>
+#include <AUI/Thread/AThread.h>
+#include <AUI/Thread/AThreadPool.h>
+#include <AUI/Traits/concepts.h>
+#include <AUI/Util/ABitField.h>
 
 class API_AUI_CORE AThreadPool;
 

@@ -17,12 +17,12 @@
 #include <condition_variable>
 #include <glm/glm.hpp>
 
-#include <AUI/Core.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/AQueue.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Thread/AThread.h>
 #include <AUI/Traits/concepts.h>
+#include <AUI/Core.h>
 
 template <typename T>
 class AFuture;
@@ -278,5 +278,3 @@ auto AThreadPool::parallel(Iterator begin, Iterator end, Functor&& functor) {
 
     return futureSet;
 }
-
-#include <AUI/Reflect/AReflect.h>
