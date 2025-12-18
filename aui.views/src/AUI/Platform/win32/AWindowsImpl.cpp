@@ -49,6 +49,7 @@
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/win32/AComBase.h>
+#include <AUI/Platform/win32/Theme.h>
 
 LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
@@ -245,6 +246,13 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             auto prevDpi = getDpiRatio();
             updateDpi();
             setSize({getWidth() * getDpiRatio() / prevDpi, getHeight() * getDpiRatio() / prevDpi});
+            return 0;
+        }
+
+        case WM_SETTINGCHANGE: {
+            if (wParam == 0 && lParam != 0 && wcscmp(reinterpret_cast<wchar_t*>(lParam), L"ImmersiveColorSet") == 0) {
+                aui::UpdateDarkModeForHWND(hwnd);
+            }
             return 0;
         }
 
