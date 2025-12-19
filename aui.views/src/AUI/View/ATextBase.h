@@ -306,6 +306,10 @@ protected:
         mPrerenderedString = nullptr;
     }
 
+    void markMinContentSizeInvalid() override {
+        AViewContainerBase::markMinContentSizeInvalid();
+        mPrerenderedString = nullptr;
+    }
 
 protected:
     WordWrappingEngine mEngine;
