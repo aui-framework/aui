@@ -26,9 +26,7 @@
 #include "AUI/Platform/AMessageBox.h"
 #include "AUI/View/ASpacerFixed.h"
 #include "AUI/View/Dynamic.h"
-
 #include <AUI/View/AForEachUI.h>
-#include <AUI/Util/AWordWrappingEngineImpl.h>
 
 static constexpr auto LOG_TAG = "Notes";
 

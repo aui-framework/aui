@@ -158,7 +158,7 @@ struct non_null : non_null_lateinit<T> {
 };
 
 /**
- * @brief A funcntion contract that does not allow escaping, allowing to accept lvalue ref, rvalue ref, shared_ptr and
+ * @brief A function contract that does not allow escaping, allowing to accept lvalue ref, rvalue ref, shared_ptr and
  * etc without overhead
  *
  * @details

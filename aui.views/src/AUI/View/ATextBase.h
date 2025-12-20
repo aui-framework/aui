@@ -13,15 +13,15 @@
 
 
 #include <AUI/Util/AWordWrappingEngine.h>
-#include "AViewContainer.h"
-#include "AUI/Font/IFontView.h"
-#include <initializer_list>
-#include <variant>
+#include <AUI/View/AViewContainer.h>
+#include <AUI/Font/IFontView.h>
 #include <AUI/Enum/WordBreak.h>
 #include <AUI/Enum/VerticalAlign.h>
+#include <initializer_list>
+#include <variant>
 
 namespace aui::detail {
-    class TextBaseEntry: public AWordWrappingEngineBase::Entry {
+    class TextBaseEntry: public AWordWrappingEngine::Entry {
     public:
         virtual size_t getCharacterCount() = 0;
         virtual glm::ivec2 getPosByIndex(size_t characterIndex) = 0;
@@ -188,13 +188,9 @@ namespace aui::detail {
     };
 }
 
-/**
- * @brief Base class for AText without public APIs.
- */
-template<typename WordWrappingEngine = AWordWrappingEngine<>>
 class API_AUI_VIEWS ATextBase: public AViewContainerBase, public IFontView {
 public:
-    using Entries = typename WordWrappingEngine::Entries;
+    using Entries = AWordWrappingEngine::Entries;
 
     ATextBase() = default;
     ~ATextBase() override = default;
@@ -312,7 +308,7 @@ protected:
     }
 
 protected:
-    WordWrappingEngine mEngine;
+    AWordWrappingEngine mEngine;
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
 
     _<IRenderer::IPrerenderedString> mPrerenderedString;

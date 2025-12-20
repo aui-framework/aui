@@ -12,9 +12,9 @@
 #pragma once
 
 #include <AUI/View/AView.h>
-#include "AWordWrappingEngine.h"
+#include <AUI/Util/AWordWrappingEngine.h>
 
-class API_AUI_VIEWS AViewEntry final: public AWordWrappingEngineBase::Entry {
+class API_AUI_VIEWS AViewEntry final: public AWordWrappingEngine::Entry {
 private:
     _<AView> mView;
 
