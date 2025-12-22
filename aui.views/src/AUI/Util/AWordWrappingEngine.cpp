@@ -9,19 +9,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#pragma once
+//
+// Created by nelonn on 12/20/25.
+//
+
+#include "AWordWrappingEngine.h"
 
 #include <range/v3/all.hpp>
-#include "AWordWrappingEngine.h"
-#include "AUI/Util/AFraction.h"
+#include <AUI/Util/AFraction.h>
 
-template<typename Container>
-void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, const glm::ivec2& size) {
+void AWordWrappingEngine::performLayout(const glm::ivec2& offset, const glm::ivec2& size) {
     if (mEntries.empty()) {
         mHeight = 0;
         return;
     }
-
 
     struct StandardEntry {
         aui::no_escape<Entry> entry;
@@ -241,5 +242,5 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
         return ranges::max(r | ranges::views::transform([](const FloatingEntry& e) { return e.position.y + e.remainingHeight; }));
     }();
 
-    mHeight = std::max(currentY + int(float(currentRowHeight) * mLineHeight), floatingMax) - offset.y;
+    mHeight = std::max(currentY + static_cast<int>(static_cast<float>(currentRowHeight) * mLineHeight), floatingMax) - offset.y;
 }

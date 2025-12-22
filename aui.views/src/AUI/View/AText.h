@@ -11,8 +11,7 @@
 
 #pragma once
 
-
-#include "ATextBase.h"
+#include <AUI/View/ATextBase.h>
 
 /**
  * @brief HTML-capable text container.
@@ -33,7 +32,7 @@
  *
  * <!-- aui:snippet aui.views/src/AUI/Devtools/DevtoolsProfilingOptions.cpp fromItems -->
  */
-class API_AUI_VIEWS AText : public ATextBase<AWordWrappingEngine<>> {
+class API_AUI_VIEWS AText : public ATextBase {
 public:
     friend class UIText; // testing
     friend class UIText_Contents_Test; // testing

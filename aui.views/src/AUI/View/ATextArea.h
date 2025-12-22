@@ -13,14 +13,12 @@
 // Created by alex2 on 5/22/2021.
 //
 
-
 #pragma once
 
-
-#include "AViewContainer.h"
-#include "AAbstractTextField.h"
-#include "AScrollbar.h"
-#include "ATextBase.h"
+#include <AUI/View/AViewContainer.h>
+#include <AUI/View/AAbstractTextField.h>
+#include <AUI/View/AScrollbar.h>
+#include <AUI/View/ATextBase.h>
 
 class API_AUI_VIEWS AScrollArea;
 

@@ -18,9 +18,9 @@
 #include <AUI/Enum/ATextAlign.h>
 #include <AUI/Enum/AFloat.h>
 
-class AWordWrappingEngineBase {
+class API_AUI_VIEWS AWordWrappingEngine {
 public:
-    class Entry {
+    class API_AUI_VIEWS Entry {
     public:
         virtual ~Entry() = default;
 
@@ -48,12 +48,19 @@ public:
         }
     };
 
-protected:
+    using Container = AVector<_<Entry>>;
+    using Entries = Container;
+
+private:
+    Container mEntries;
     float mLineHeight = 1.f;
     ATextAlign mTextAlign = ATextAlign::LEFT;
     AOptional<int> mHeight;
 
 public:
+
+    void performLayout(const glm::ivec2& offset, const glm::ivec2& size);
+
     void setLineHeight(float lineHeight) {
         mLineHeight = lineHeight;
     }
@@ -62,20 +69,10 @@ public:
         mTextAlign = textAlign;
     }
 
-
     [[nodiscard]]
     AOptional<int> height() const {
         return mHeight;
     }
-};
-
-template<typename Container = AVector<_<AWordWrappingEngineBase::Entry>>>
-class AWordWrappingEngine: public AWordWrappingEngineBase {
-public:
-    using Entries = Container;
-
-    // include AWordWrappingEngineImpl.h for implementation
-    void performLayout(const glm::ivec2& offset, const glm::ivec2& size);
 
     void setEntries(Container entries) {
         mEntries = std::move(entries);
@@ -86,14 +83,10 @@ public:
         return mEntries;
     }
 
-
     [[nodiscard]]
     const Container& entries() const {
         return mEntries;
     }
-
-private:
-    Container mEntries;
 };
 
 
