@@ -283,10 +283,12 @@ private:
             if (!value) {
                 return;
             }
-            std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
-            // this destructor can be called in ASignal destructor, so it's worth to reset the sender as well.
-            value->sender = nullptr;
-            value->unlinkInReceiverSideOnly(lock);
+            {
+                std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
+                // this destructor can be called in ASignal destructor, so it's worth to reset the sender as well.
+                value->sender = nullptr;
+                value->unlinkInReceiverSideOnly(lock);
+            }
             value = nullptr;
         }
     };
