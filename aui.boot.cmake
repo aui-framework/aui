@@ -934,7 +934,9 @@ function(auib_import AUI_MODULE_NAME URL)
                         AUIB_TRACE_BUILD_SYSTEM
                         AUIB_SKIP_REPOSITORY_WAIT
                         AUIB_CACHE_DIR
+                        CMAKE_C_COMPILER
                         CMAKE_C_FLAGS
+                        CMAKE_CXX_COMPILER
                         CMAKE_CXX_FLAGS
                         CMAKE_GENERATOR_PLATFORM
                         CMAKE_GENERATOR_TOOLSET

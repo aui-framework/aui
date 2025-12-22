@@ -87,7 +87,7 @@ void AWindow::flagRedraw() {
 }
 
 float AWindow::fetchDpiFromSystem() const {
-    return APlatform::getDpiRatio();
+    return emscripten_get_device_pixel_ratio();
 }
 
 
@@ -123,7 +123,7 @@ void AWindowManager::notifyProcessMessages() {
 
 
 namespace aui::emscripten {
-    void applySize(AWindowBase* window, glm::dvec2 size) {
+    void applySize(ASurface* window, glm::dvec2 size) {
         auto s = glm::ivec2(size * emscripten_get_device_pixel_ratio());
         ALogger::info("Emscripten") << "px size: " << s;
         emscripten_set_canvas_element_size("#canvas", s.x, s.y);

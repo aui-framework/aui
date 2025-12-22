@@ -17,17 +17,17 @@
 
 class OpenGLRenderingContextGtk: public OpenGLRenderingContext, public RenderingContextGtk {
 public:
-    OpenGLRenderingContextGtk(const ARenderingContextOptions::OpenGL& config, AWindowBase& window)
+    OpenGLRenderingContextGtk(const ARenderingContextOptions::OpenGL& config, ASurface& window)
       : OpenGLRenderingContext(config), RenderingContextGtk(window) {}
 
     ~OpenGLRenderingContextGtk() override = default;
-    void init(const Init& init) override;
-    void destroyNativeWindow(AWindowBase& window) override;
+    void init(const Init& init);
+    void destroyNativeWindow(ASurface& window) override;
     void gtkRealize(aui::gtk4_fake::GtkWidget* widget) override;
     void gtkSnapshot(aui::gtk4_fake::GtkWidget* widget, aui::gtk4_fake::GtkSnapshot* snapshot) override;
     void gtkUnrealize(aui::gtk4_fake::GtkWidget* widget) override;
-    void beginResize(AWindowBase& window) override;
-    void endResize(AWindowBase& window) override;
+    void beginResize(ASurface& window) override;
+    void endResize(ASurface& window) override;
 
     auto contextScope() {
         using namespace aui::gtk4_fake;

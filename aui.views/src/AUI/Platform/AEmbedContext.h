@@ -18,14 +18,14 @@
 
 
 #include <AUI/View/AViewContainer.h>
-#include "AWindowBase.h"
+#include <AUI/Platform/ASurface.h>
 
 /**
  * @brief Helper for applications with custom window initialization.
  * @details
- * This class is abstract; use [AGLEmbedAuiWrap] or [ASoftwareEmbedAuiWrap] instead.
+ * This class is abstract; use [AGLEmbedContext] or [ASoftwareEmbedAuiWrap] instead.
  */
-class API_AUI_VIEWS AEmbedAuiWrap: public IEventLoop {
+class API_AUI_VIEWS AEmbedContext: public IEventLoop {
 private:
     IEventLoop::Handle mEventLoopHandle;
 
@@ -40,7 +40,7 @@ protected:
 
     virtual void onNotifyProcessMessages() = 0;
 public:
-    explicit AEmbedAuiWrap();
+    explicit AEmbedContext();
 
     void clearFocus();
 
@@ -84,7 +84,7 @@ public:
     /**
      * @brief Handle char entered in UI.
      */
-    void onCharEntered(wchar_t c);
+    void onCharEntered(AChar c);
 
     /**
      * @brief Handle onScroll in UI.
@@ -95,7 +95,7 @@ public:
     void onKeyPressed(AInput::Key key);
     void onKeyReleased(AInput::Key key);
 
-    AWindowBase* getWindow();
+    ASurface* getWindow();
 
     void loop() override;
 };

@@ -19,9 +19,9 @@
 #include "AUI/Render/IRenderer.h"
 #include "AUI/GL/RenderTarget/TextureRenderTarget.h"
 
-class OpenGLRenderer final: public IRenderer {
-friend class OpenGLPrerenderedString;
-friend class OpenGLMultiStringCanvas;
+class API_AUI_VIEWS OpenGLRenderer final: public IRenderer {
+    friend class OpenGLPrerenderedString;
+    friend class OpenGLMultiStringCanvas;
 public:
     struct FontEntryData: aui::noncopyable {
         Util::SimpleTexturePacker texturePacker;
@@ -33,6 +33,19 @@ public:
             texture.setupNearest();
         }
     };
+
+    using GLLoadProc = void* (*) (const char* name);
+
+    /**
+     * @brief Manually specify is ES or not
+     */
+    static bool loadGL(GLLoadProc load_proc, bool es);
+
+    /**
+     * @brief Automatically detects ES or not
+     */
+    static bool loadGL(GLLoadProc load_proc);
+
 
 private:
     AOptional<gl::Program> mSolidShader;

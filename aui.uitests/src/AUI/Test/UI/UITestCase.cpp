@@ -102,7 +102,7 @@ void testing::UITest::SetUp() {
     }
     Test::SetUp();
     uitest::setup();
-    AWindowBase::currentWindowStorage() = nullptr;
+    ASurface::currentWindowStorage() = nullptr;
 }
 
 void testing::UITest::TearDown() {

@@ -307,8 +307,6 @@ void PlatformAbstractionX11::windowQuit(AWindow& window) {
     }
 }
 
-float PlatformAbstractionX11::windowFetchDpiFromSystem(AWindow& window) { return APlatform::getDpiRatio(); }
-
 void PlatformAbstractionX11::windowRestore(AWindow& window) {
     if (PlatformAbstractionX11::ourAtoms.netWmState && PlatformAbstractionX11::ourAtoms.netWmStateMaximizedVert &&
         PlatformAbstractionX11::ourAtoms.netWmStateMaximizedHorz) {

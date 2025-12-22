@@ -9,22 +9,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 26.11.2020.
-//
+#pragma once
 
-#include "AUI/Platform/AClipboard.h"
-#include "AUI/Platform/AWindow.h"
-#include "AUI/Platform/AWindowManager.h"
-// TODO apple
-void AClipboard::copyToClipboard(const AString &text) {
+#include <AUI/Platform/AEmbedContext.h>
 
-}
+/**
+ * @brief Embed AUI into OpenGL rendering context
+ */
+class API_AUI_VIEWS AGLEmbedContext: public AEmbedContext {
+public:
+    AGLEmbedContext();
+    ~AGLEmbedContext() override;
 
-bool AClipboard::isEmpty() {
-    return false;
-}
+    void render(const ARenderContext& context);
+    void resetGLState();
+};
 
-AString AClipboard::pasteFromClipboard() {
-    return AString();
-}
+

@@ -171,7 +171,7 @@ TEST_F(UIStyleTest, Merge) {
 
     mWindow->setExtraStylesheet(AStylesheet {
       {
-        t<AWindowBase>(),
+        t<ASurface>(),
         BackgroundSolid { AColor::BLACK },
       },
       {

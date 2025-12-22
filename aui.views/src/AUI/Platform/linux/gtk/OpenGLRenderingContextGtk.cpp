@@ -56,7 +56,7 @@ OpenGLRenderingContextGtk::Texture::~Texture() {
 void OpenGLRenderingContextGtk::init(const IRenderingContext::Init& init) {
 }
 
-void OpenGLRenderingContextGtk::destroyNativeWindow(AWindowBase& window) {
+void OpenGLRenderingContextGtk::destroyNativeWindow(ASurface& window) {
     if (auto c = dynamic_cast<AWindow*>(&window)) {
         gtk_window_destroy(PlatformAbstractionGtk::nativeHandle(*c));
     }
@@ -73,10 +73,8 @@ void OpenGLRenderingContextGtk::gtkRealize(GtkWidget* widget) {
     }
     bool is_desktop_gl = is_desktop_gl_fn();
 
-    if (is_desktop_gl) {
-        gladLoadGLLoader(aui::epoxy_fake::get_proc_address);
-    } else {
-        gladLoadGLES2Loader(aui::epoxy_fake::get_proc_address);
+    if (!OpenGLRenderer::loadGL(aui::epoxy_fake::get_proc_address, !is_desktop_gl)) {
+        throw AException("Failed to load GL");
     }
 
     auto acquired = contextScope();
@@ -252,10 +250,10 @@ void OpenGLRenderingContextGtk::allocateTexture(GtkWidget* widget) {
     }
 }
 
-void OpenGLRenderingContextGtk::beginResize(AWindowBase& window) {
+void OpenGLRenderingContextGtk::beginResize(ASurface& window) {
 
 }
-void OpenGLRenderingContextGtk::endResize(AWindowBase& window) {
+void OpenGLRenderingContextGtk::endResize(ASurface& window) {
 
 }
 

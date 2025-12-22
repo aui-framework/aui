@@ -13,24 +13,24 @@
 
 
 #include "IRenderingContext.h"
-#include "AWindowBase.h"
+#include "ASurface.h"
 
 /**
  * Fake window initializer which does not create any window. Applicable in UI tests
  */
 class AFakeWindowInitializer: public IRenderingContext {
 public:
-    void init(const Init& init) override;
+    void init(const Init& init);
 
     ~AFakeWindowInitializer() override = default;
 
-    void beginPaint(AWindowBase& window) override;
+    void beginPaint(ASurface& window) override;
 
-    void endPaint(AWindowBase& window) override;
+    void endPaint(ASurface& window) override;
 
-    void beginResize(AWindowBase& window) override;
+    void beginResize(ASurface& window) override;
 
-    void destroyNativeWindow(AWindowBase& window) override;
+    void destroyNativeWindow(ASurface& window) override;
 };
 
 

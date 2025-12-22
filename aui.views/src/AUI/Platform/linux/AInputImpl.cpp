@@ -10,16 +10,19 @@
  */
 
 #include <AUI/Platform/AInput.h>
-#include "IPlatformAbstraction.h"
+#include <AUI/Platform/linux/IPlatformAbstraction.h>
 
 AInput::Key AInput::fromNative(int k) {
-    return IPlatformAbstraction::current().inputFromNative(k);
+    auto* platform = IPlatformAbstraction::currentSafe();
+    return platform ? platform->inputFromNative(k) : AInput::UNKNOWN;
 }
 
 int AInput::toNative(Key key) {
-    return IPlatformAbstraction::current().inputToNative(key);
+    auto* platform = IPlatformAbstraction::currentSafe();
+    return platform ? platform->inputToNative(key) : 0;
 }
 
 bool AInput::native::isKeyDown(Key k) {
-    return IPlatformAbstraction::current().inputIsKeyDown(k);
+    auto* platform = IPlatformAbstraction::currentSafe();
+    return platform ? platform->inputIsKeyDown(k) : false;
 }

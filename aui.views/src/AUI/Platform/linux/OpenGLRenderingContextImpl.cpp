@@ -27,22 +27,22 @@
 
 OpenGLRenderingContext::~OpenGLRenderingContext() {}
 
-void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
+void OpenGLRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
     beginFramebuffer(window.getSize());
     mRenderer->beginPaint(window.getSize());
 }
 
-void OpenGLRenderingContext::endPaint(AWindowBase& window) {
+void OpenGLRenderingContext::endPaint(ASurface& window) {
     CommonRenderingContext::endPaint(window);
     endFramebuffer();
     mRenderer->endPaint();
 }
 
-void OpenGLRenderingContext::beginResize(AWindowBase& window) {
+void OpenGLRenderingContext::beginResize(ASurface& window) {
 }
 
-void OpenGLRenderingContext::endResize(AWindowBase& window) {
+void OpenGLRenderingContext::endResize(ASurface& window) {
 
 }
 

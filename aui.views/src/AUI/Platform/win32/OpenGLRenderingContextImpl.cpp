@@ -218,12 +218,12 @@ void OpenGLRenderingContext::init(const Init& init) {
     glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(AWindowBase& window) {
+void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
     CommonRenderingContext::destroyNativeWindow(window);
     makeCurrent(nullptr);
 }
 
-void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
+void OpenGLRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
 
     makeCurrent(mSmoothResize ? mPainterDC : mWindowDC);
@@ -231,15 +231,15 @@ void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
     mRenderer->beginPaint(window.getSize());
 }
 
-void OpenGLRenderingContext::beginResize(AWindowBase& window) {
+void OpenGLRenderingContext::beginResize(ASurface& window) {
     makeCurrent(mWindowDC);
 }
 
-void OpenGLRenderingContext::endResize(AWindowBase& window) {
+void OpenGLRenderingContext::endResize(ASurface& window) {
 
 }
 
-void OpenGLRenderingContext::endPaint(AWindowBase& window) {
+void OpenGLRenderingContext::endPaint(ASurface& window) {
     endFramebuffer();
     mRenderer->endPaint();
     SwapBuffers(mSmoothResize ? mPainterDC : mWindowDC);

@@ -30,7 +30,7 @@ namespace testing {
     class UITest;
 }
 
-class API_AUI_VIEWS AWindowBase: public AViewContainer {
+class API_AUI_VIEWS ASurface: public AViewContainer {
     friend class SoftwareRenderer;
     friend class IPlatformAbstraction;
     friend class testing::UITest;
@@ -39,7 +39,9 @@ class API_AUI_VIEWS AWindowBase: public AViewContainer {
 public:
     using BeforeFrameQueue = AMessageQueue<AFakeMutex, IRenderer&>;
 
-    AWindowBase();
+    ASurface();
+
+    ~ASurface() override;
 
     /**
      * @brief Profiling (debugging) settings for this window.
@@ -91,8 +93,6 @@ public:
      */
     virtual void blockUserInput(bool blockUserInput = true);
 
-    virtual ~AWindowBase();
-
 
     /**
      * @brief Prevents click action on upcoming pointer release.
@@ -106,7 +106,7 @@ public:
     void preventClickOnPointerRelease();
 
     /**
-     * @see AWindowBase::preventClickOnPointerRelease
+     * @see ASurface::preventClickOnPointerRelease
      */
     [[nodiscard]]
     bool isPreventingClickOnPointerRelease() const noexcept {
@@ -223,8 +223,8 @@ public:
      * @param position position where does the surface should be created. It's not exact the top left corner of the
      *        surface but a hint (i.e. if the surface does not fit)
      * @param size size
-     * @param closeOnClick when true, overlapped surface is automatically closed when mouse clicked. It's usable for
-     *        dropdown and context menus.
+     * @param closeOnClick when true, overlapped surface is automatically closed when mouse clicked anywhere. It's usable for tooltips.
+     * Do not use that for context menus or other.
      * @return a new surface.
      * @details
      * ```cpp
@@ -246,7 +246,7 @@ public:
      */
     _<AOverlappingSurface> createOverlappingSurface(const glm::ivec2& position,
                                                     const glm::ivec2& size,
-                                                    bool closeOnClick = true) {
+                                                    bool closeOnClick = false) {
         return createOverlappingSurface([&](unsigned attempt) -> AOptional<glm::ivec2> {
             switch (attempt) {
                 case 0: return position;
@@ -290,8 +290,8 @@ public:
         mOverlappingSurfaces << tmp;
         return tmp;
     }
-    void closeOverlappingSurface(AOverlappingSurface* surface) {
-        if (mOverlappingSurfaces.erase(aui::ptr::fake_shared(surface)) > 0) {
+    void closeOverlappingSurface(const _<AOverlappingSurface>& surface) {
+        if (mOverlappingSurfaces.erase(surface) > 0) {
             closeOverlappingSurfaceImpl(surface);
         }
     }
@@ -416,12 +416,12 @@ protected:
     bool mIsFocused = true;
 
     /**
-     * @see AWindowBase::preventClickOnPointerRelease
+     * @see ASurface::preventClickOnPointerRelease
      */
     AOptional<bool> mPreventClickOnPointerRelease;
 
     /**
-     * @brief If true, AWindowBase::forceUpdateCursor takes no action.
+     * @brief If true, ASurface::forceUpdateCursor takes no action.
      */
     bool mForceUpdateCursorGuard = false;
 
@@ -433,13 +433,13 @@ protected:
 
     _unique<IRenderingContext> mRenderingContext;
 
-    static AWindowBase*& currentWindowStorage();
+    static ASurface*& currentWindowStorage();
 
     /**
-     * @see AWindowBase::createOverlappingSurface
+     * @see ASurface::createOverlappingSurface
      */
     virtual _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
-    virtual void closeOverlappingSurfaceImpl(AOverlappingSurface* surface) = 0;
+    virtual void closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) = 0;
 
     virtual void createDevtoolsWindow();
 

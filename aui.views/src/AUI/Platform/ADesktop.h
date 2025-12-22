@@ -19,7 +19,7 @@
 
 class ACursor;
 
-class AWindowBase;
+class ASurface;
 
 /**
  * @brief Desktop-specific functions.
@@ -46,7 +46,7 @@ API_AUI_VIEWS void playSystemSound(ADesktop::SystemSound s);
 
 /**
  * @brief Opens native browse for directory dialog.
- * @param parent parent window which is put in the AWindowBase::blockUserInput state while the dialog is active. Can be
+ * @param parent parent window which is put in the ASurface::blockUserInput state while the dialog is active. Can be
  *               nullptr.
  * @param startingLocation path where the file browser dialog opened initially. Can be empty.
  * @return AFuture returning selected path. If user cancelled the operation, the returned path is empty.
@@ -54,11 +54,11 @@ API_AUI_VIEWS void playSystemSound(ADesktop::SystemSound s);
  * The future is returned instead of the regular path due to platform limitations on Windows. Never try to call
  * blocking getter since it would cause deadlock. Use AFuture::onSuccess callback instead.
  */
-API_AUI_VIEWS AFuture<APath> browseForDir(AWindowBase* parent, const APath& startingLocation = {});
+API_AUI_VIEWS AFuture<APath> browseForDir(ASurface* parent, const APath& startingLocation = {});
 
 /**
  * @brief Opens native browse for file dialog.
- * @param parent parent window which is put in the AWindowBase::blockUserInput state while the dialog is active. Can be
+ * @param parent parent window which is put in the ASurface::blockUserInput state while the dialog is active. Can be
  *               nullptr.
  * @param startingLocation path where the file browser dialog opened initially. Can be empty.
  * @param extensions extensions.
@@ -68,7 +68,7 @@ API_AUI_VIEWS AFuture<APath> browseForDir(AWindowBase* parent, const APath& star
  * blocking getter since it would cause deadlock. Use AFuture::onSuccess callback instead.
  */
 API_AUI_VIEWS AFuture<APath> browseForFile(
-    AWindowBase* parent, const APath& startingLocation = {},
+    ASurface* parent, const APath& startingLocation = {},
     const AVector<FileExtension>& extensions = { { "All", "*" } });
 
 API_AUI_VIEWS _<IDrawable> iconOfFile(const APath& file);

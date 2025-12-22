@@ -166,7 +166,7 @@ void AWindow::onFocusAcquired() {
 }
 
 void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-    AWindowBase::onPointerMove(pos, event);
+    ASurface::onPointerMove(pos, event);
     if (UITestState::isTesting()) {
         return;
     }
@@ -175,14 +175,14 @@ void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
 
 void AWindow::onFocusLost() {
     mIsFocused = false;
-    AWindowBase::onFocusLost();
+    ASurface::onFocusLost();
     if (AMenu::isOpen()) {
         AMenu::close();
     }
 }
 
 void AWindow::onKeyDown(AInput::Key key) {
-    AWindowBase::onKeyDown(key);
+    ASurface::onKeyDown(key);
     if (mFocusNextViewOnTab && key == AInput::Key::TAB) {
         focusNextView();
     }
@@ -193,7 +193,7 @@ void AWindow::onKeyRepeat(AInput::Key key) {
         v->onKeyRepeat(key);
 }
 
-AWindowBase* AWindow::current() {
+ASurface* AWindow::current() {
     return currentWindowStorage();
 }
 
@@ -292,7 +292,7 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     return surface;
 }
 
-void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
+void AWindow::closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) {
     if (auto c = dynamic_cast<AWindow*>(surface->getParent())) {
         c->close();
     }
@@ -302,7 +302,7 @@ void AWindow::forceUpdateCursor() {
     if (mForceUpdateCursorGuard) {
         return;
     }
-    AWindowBase::forceUpdateCursor();
+    ASurface::forceUpdateCursor();
     if (!mCursor) {
         mCursor = ACursor::DEFAULT;
     }

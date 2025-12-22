@@ -20,15 +20,14 @@
 
 
 void CommonRenderingContext::init(const Init& init) {
-    IRenderingContext::init(init);
 }
 
-void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
+void CommonRenderingContext::destroyNativeWindow(ASurface& window) {
 
 }
 
-void CommonRenderingContext::beginPaint(AWindowBase& window) {
+void CommonRenderingContext::beginPaint(ASurface& window) {
 }
 
-void CommonRenderingContext::endPaint(AWindowBase& window) {
+void CommonRenderingContext::endPaint(ASurface& window) {
 }

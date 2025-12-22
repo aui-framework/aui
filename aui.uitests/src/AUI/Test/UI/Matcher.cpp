@@ -40,7 +40,7 @@ void UIMatcher::processContainer(Container& destination, const _<AViewContainerB
 ASet<_<AView>> UIMatcher::toSet() const {
     ASet<_<AView>> result;
 
-    for (auto& window : AWindowBase::getWindowManager().getWindows()) {
+    for (auto& window : ASurface::getWindowManager().getWindows()) {
         processContainer(result, window);
     }
     return result;
@@ -49,7 +49,7 @@ ASet<_<AView>> UIMatcher::toSet() const {
 AVector<_<AView>> UIMatcher::toVector() const {
     AVector<_<AView>> result;
 
-    for (auto& window : AWindowBase::getWindowManager().getWindows()) {
+    for (auto& window : ASurface::getWindowManager().getWindows()) {
         processContainer(result, window);
     }
     return result;

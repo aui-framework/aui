@@ -9,20 +9,19 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+//
+// Created by nelonn on 11/14/25.
+//
+
 #pragma once
 
+#include <AUI/Platform/AMessageBox.h>
+#include <AUI/Platform/AWindow.h>
 
-#include "AEmbedAuiWrap.h"
+namespace aui {
 
-/**
- * @brief Embed AUI into OpenGL rendering context
- */
-class API_AUI_VIEWS AGLEmbedAuiWrap: public AEmbedAuiWrap {
-public:
-    AGLEmbedAuiWrap();
-    void render(ARenderContext context);
-    void resetGLState();
+using namespace AMessageBox;
 
-};
+ResultButton showMessageBox(AWindow* parent, const AString& title, const AString& message, Icon icon, Button b);
 
-
+}

@@ -386,11 +386,6 @@ protected:
     void removeView(const _<AView>& view);
 
     /**
-     * @brief Remove view from the container.
-     */
-    void removeView(AView* view);
-
-    /**
      * @brief Remove view from the container at specified index.
      */
     void removeView(size_t index);

@@ -28,7 +28,7 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/AWindowManager.h>
 #include <AUI/Platform/ADesktop.h>
-#include <AUI/Platform/AWindowBase.h>
+#include <AUI/Platform/ASurface.h>
 #include <AUI/Platform/ACustomWindow.h>
 
 #include <chrono>
@@ -362,7 +362,12 @@ float AWindow::fetchDpiFromSystem() const {
         if (GetDpiForWindow) {
             return GetDpiForWindow(mHandle) / 96.f;
         } else {
-            return APlatform::getDpiRatio();
+            typedef UINT(WINAPI* GetDpiForSystem_t)();
+            static auto GetDpiForSystem = (GetDpiForSystem_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForSystem");
+            if (GetDpiForSystem) {
+                return GetDpiForSystem() / 96.f;
+            }
+            return 1.f;
         }
     }
     return 1.f;
@@ -514,7 +519,7 @@ void AWindow::blockUserInput(bool blockUserInput) {
 void AWindow::allowDragNDrop() {
     class DropTarget: public AComBase<DropTarget, IDropTarget> {
     public:
-        DropTarget(AWindowBase* window) : mWindow(window) {}
+        DropTarget(ASurface* window) : mWindow(window) {}
 
         HRESULT __stdcall DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
             auto effect = DROPEFFECT_NONE;
@@ -549,7 +554,7 @@ void AWindow::allowDragNDrop() {
 
     private:
         AMimedData mMimed;
-        AWindowBase* mWindow;
+        ASurface* mWindow;
         DWORD mOleEffect;
     };
     Ole::inst();
@@ -559,11 +564,11 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::showTouchscreenKeyboardImpl() {
-    AWindowBase::showTouchscreenKeyboardImpl();
+    ASurface::showTouchscreenKeyboardImpl();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
-    AWindowBase::hideTouchscreenKeyboardImpl();
+    ASurface::hideTouchscreenKeyboardImpl();
 }
 
 void AWindow::moveToCenter() {

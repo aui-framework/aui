@@ -40,7 +40,7 @@
 #include <AUI/GL/Vbo.h>
 #include <AUI/GL/State.h>
 #include <AUI/GL/RenderTarget/RenderbufferRenderTarget.h>
-#include <AUI/Platform/AWindowBase.h>
+#include <AUI/Platform/ASurface.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUISL/Generated/basic.vsh.glsl120.h>
 #include <AUISL/Generated/basic_uv.vsh.glsl120.h>
@@ -218,6 +218,21 @@ inline void useAuislShader(AOptional<gl::Program>& out) {
     Fragment::setup(out->handle());
     out->compile();
 }
+}
+
+bool OpenGLRenderer::loadGL(GLLoadProc load_proc, bool es) {
+    return es ? gladLoadGLES2Loader((GLADloadproc)load_proc) :
+                gladLoadGLLoader((GLADloadproc)load_proc);
+}
+
+bool OpenGLRenderer::loadGL(GLLoadProc load_proc) {
+    auto* get_string_proc = reinterpret_cast<PFNGLGETSTRINGPROC>(load_proc("glGetString"));
+    if (get_string_proc == nullptr) return false;
+    const GLubyte* ret_string = get_string_proc(GL_VERSION);
+    if (!ret_string) return false;
+    std::string_view version(reinterpret_cast<const char*>(ret_string));
+    bool is_es = version.find("OpenGL ES") != std::string_view::npos;
+    return loadGL(load_proc, is_es);
 }
 
 OpenGLRenderer::OpenGLRenderer() {
@@ -875,8 +890,8 @@ bool OpenGLRenderer::setupLineShader(const ABrush& brush, const ABorderStyle& st
           }, brush);
           float dashWidth = dashed.dashWidth.valueOr(1.f) * widthPx;
           float sumOfLengths = dashWidth + dashed.spaceBetweenDashes.valueOr(2.f) * widthPx;
-          dashWidth *= APlatform::getDpiRatio();
-          sumOfLengths *= APlatform::getDpiRatio();
+          dashWidth *= mRenderScale;
+          sumOfLengths *= mRenderScale;
           gl::Program::currentShader()->set(aui::ShaderUniforms::DIVIDER, sumOfLengths);
           gl::Program::currentShader()->set(aui::ShaderUniforms::THRESHOLD, dashWidth);
 
@@ -893,8 +908,7 @@ struct LineVertex {
 };
 }
 
-void
-OpenGLRenderer::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
+void OpenGLRenderer::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
     if (points.size() < 2) return;
     const auto widthPx = width.getValuePx();
     bool computeDistances = setupLineShader(brush, style, widthPx);

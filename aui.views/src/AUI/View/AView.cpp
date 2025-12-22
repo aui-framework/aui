@@ -45,7 +45,7 @@
 
 static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
 
-AWindowBase* AView::getWindow() const
+ASurface* AView::getWindow() const
 {
 
     AView* parent = nullptr;
@@ -54,7 +54,7 @@ AWindowBase* AView::getWindow() const
         parent = target;
     }
 
-    return dynamic_cast<AWindowBase*>(parent);
+    return dynamic_cast<ASurface*>(parent);
 }
 
 AView::AView()
@@ -709,7 +709,7 @@ void AView::onClickPrevented() {
 
 void AView::setCursor(AOptional<ACursor> cursor) {
     mCursor = std::move(cursor);
-    if (mParent) { // AWindowBase does not have parent
+    if (mParent) { // ASurface does not have parent
         AWindow::current()->forceUpdateCursor();
     }
 }
