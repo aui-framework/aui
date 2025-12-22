@@ -289,6 +289,9 @@ private:
                 value->sender = nullptr;
                 value->unlinkInReceiverSideOnly(lock);
             }
+            // releasing lock before value = nullptr.
+            // destroying `value` object could trigger a cascade of destructions, leading to a re-entrant lock
+            // attempt on a non-recursive mutex.
             value = nullptr;
         }
     };
