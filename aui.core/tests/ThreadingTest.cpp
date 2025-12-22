@@ -183,7 +183,8 @@ TEST(Threading, PararellWithResult) {
         for (auto& v : result) {
             accumulator += *v;
         }
-        if (accumulator != 5 * i) ADD_FAILURE() << "invalid supplyValue";
+        auto expected = i * 5;
+        if (accumulator != expected) ADD_FAILURE() << "invalid supplyValue: iteration " << i << ", expected = " << expected << ", actual = " << accumulator;
     }
 }
 

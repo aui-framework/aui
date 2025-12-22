@@ -295,4 +295,8 @@ int AInput::toNative(AInput::Key w) {
     return KEY_TO_NATIVE[w];
 }
 
-bool AInput::native::isKeyDown(AInput::Key k) { return false; }
+bool gKeyStates[AInput::KEYCOUNT+1]{};
+
+bool AInput::native::isKeyDown(AInput::Key k) {
+    return gKeyStates[k];
+}
