@@ -821,7 +821,8 @@ file(
         ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
-auib_import(aui.toolbox https://github.com/aui-framework/aui
+auib_import(aui https://github.com/aui-framework/aui
+            COMPONENTS core toolbox image
             VERSION ${AUI_VERSION})
 _aui_check_toolbox()
 ]])
