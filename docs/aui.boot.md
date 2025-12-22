@@ -453,7 +453,7 @@ Disables aui.boot. All calls to `auib_import` are forwarded to `find_package`.
 
 Disables "Waiting for repository".
 
-This flag is unsafe because one aui.boot process might interfere work of another aui.boot process.
+This flag is unsafe because one aui.boot process might interfere with the work of another aui.boot process.
 
 The following flags are recommended to be set to true as well:
 
