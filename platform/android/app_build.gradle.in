@@ -4,7 +4,7 @@ plugins {
 }
 
 android {
-    compileSdk 31
+    compileSdk 34
 
     namespace "@APP_ANDROID_PACKAGE@"
 
@@ -19,7 +19,7 @@ android {
     defaultConfig {
         applicationId "@APP_ANDROID_PACKAGE@"
         minSdk 24
-        targetSdk 31
+        targetSdk 34
         versionCode 1
         versionName "@APP_VERSION@"
 
@@ -27,11 +27,14 @@ android {
 
         externalNativeBuild {
             cmake {
+                arguments /* "-DAUIB_AUI_AS=TRUE", */ "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
+            }
+            cmake {
                 targets "@APP_TARGET@"
             }
         }
     }
-    ndkVersion '25.2.9519653'
+    ndkVersion '27.0.12077973'
 
     kotlinOptions {
         jvmTarget = '1.8'
