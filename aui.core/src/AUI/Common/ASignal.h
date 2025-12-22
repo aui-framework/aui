@@ -129,6 +129,10 @@ public:
         return !mOutgoingConnections.empty();
     }
 
+    [[nodiscard]] const auto& outgoingConnections() const noexcept {
+        return mOutgoingConnections;
+    }
+
     [[nodiscard]] bool hasOutgoingConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override {
         return std::any_of(
             mOutgoingConnections.begin(), mOutgoingConnections.end(),
