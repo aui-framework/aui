@@ -250,6 +250,11 @@ install(FILES
         DESTINATION ".")
 # [configure_file_example]
 
+configure_file(cmake/aui.toolbox-config.cmake.in ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox-config.cmake @ONLY)
+install(FILES
+        ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox-config.cmake
+        DESTINATION ".")
+
 install(DIRECTORY cmake/
         DESTINATION cmake)
 

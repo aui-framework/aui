@@ -1,0 +1,25 @@
+# SPDX-License-Identifier: MPL-2.0
+#
+# This Source Code Form is subject to the terms of the Mozilla Public
+# License, v. 2.0. If a copy of the MPL was not distributed with this
+# file, You can obtain one at http://mozilla.org/MPL/2.0/.
+
+# AUI configuration file
+
+get_filename_component(SELF_DIR "${CMAKE_CURRENT_LIST_FILE}" PATH)
+
+set(AUI_BUILD_AUI_ROOT ${SELF_DIR} CACHE PATH "")
+include(${SELF_DIR}/cmake/aui.build.cmake)
+
+
+@AUI_CONFIG_VARS@
+@AUIB_DEPS@
+
+set(${CMAKE_FIND_PACKAGE_NAME}_FOUND TRUE)
+
+if (UNIX AND NOT APPLE)
+    auib_use_system_libs_begin()
+    find_package(Threads REQUIRED)
+    auib_use_system_libs_end()
+endif()
+
