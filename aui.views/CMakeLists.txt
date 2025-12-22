@@ -28,18 +28,15 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
 
     if (AUI_PLATFORM_LINUX)
         auib_use_system_libs_begin()
+        find_package(Threads REQUIRED)
         find_package(PkgConfig REQUIRED)
-
-        pkg_check_modules(DBUS REQUIRED IMPORTED_TARGET dbus-1)
         pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
         pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0)
-
         auib_use_system_libs_end()
 
         aui_link(aui.views PRIVATE
                 X11::X11 X11::Xrandr X11::Xcursor X11::Xi
                 Fontconfig::Fontconfig
-                PkgConfig::DBUS
                 PkgConfig::GLIB
                 PkgConfig::GIO
         )
