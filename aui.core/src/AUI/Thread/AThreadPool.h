@@ -11,17 +11,18 @@
 
 #pragma once
 
-#include <AUI/Core.h>
 #include <cassert>
 #include <atomic>
+#include <utility>
+#include <condition_variable>
+#include <glm/glm.hpp>
 
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/AQueue.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Thread/AThread.h>
-#include <glm/glm.hpp>
-#include <utility>
-#include "AUI/Traits/concepts.h"
+#include <AUI/Traits/concepts.h>
+#include <AUI/Core.h>
 
 template <typename T>
 class AFuture;
@@ -169,8 +170,6 @@ public:
     class TryLaterException {};
 };
 
-#include <AUI/Thread/AFuture.h>
-
 /**
  * @brief Manages multiple futures.
  * @ingroup core
@@ -279,5 +278,3 @@ auto AThreadPool::parallel(Iterator begin, Iterator end, Functor&& functor) {
 
     return futureSet;
 }
-
-#include <AUI/Reflect/AReflect.h>

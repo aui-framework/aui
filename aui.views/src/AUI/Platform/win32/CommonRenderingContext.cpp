@@ -13,10 +13,11 @@
 // Created by Alex2772 on 12/9/2021.
 //
 
-#include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
-#include "AUI/Platform/ARenderingContextOptions.h"
+#include <AUI/Platform/win32/Theme.h>
+#include <AUI/Platform/CommonRenderingContext.h>
+#include <AUI/Platform/ARenderingContextOptions.h>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto window = reinterpret_cast<AWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
@@ -73,6 +74,8 @@ void CommonRenderingContext::init(const Init& init) {
                              GetSystemMetrics(SM_CXSCREEN) / 2 - init.width / 2,
                              GetSystemMetrics(SM_CYSCREEN) / 2 - init.height / 2, init.width, init.height,
                              init.parent != nullptr ? init.parent->mHandle : nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+
+    aui::UpdateDarkModeForHWND(window.mHandle);
 
     mWindowDC = GetDC(window.mHandle);
 

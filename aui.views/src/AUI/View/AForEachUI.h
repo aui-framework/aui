@@ -370,8 +370,8 @@ aui::for_each_ui::detail::ViewsSharedCache AForEachUI<T>::VIEWS_SHARED_CACHE {};
 
 namespace aui::detail {
 
-template <typename Layout, aui::invocable RangeFactory>
-auto makeForEach(RangeFactory&& rangeFactory)
+template < aui::invocable RangeFactory>
+auto makeForEach(RangeFactory&& rangeFactory, _unique<ALayout> layout)
     requires requires {
         { rangeFactory() } -> ranges::range;
     }
@@ -420,15 +420,15 @@ auto makeForEach(RangeFactory&& rangeFactory)
     using T = std::decay_t<ImmediateValueType>;
 
     auto result = _new<AForEachUI<T>>(std::forward<RangeFactory>(rangeFactory));
-    result->setLayout(std::make_unique<Layout>());
+    result->setLayout(std::move(layout));
     return result;
 }
 }   // namespace aui::detail
 
 #define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)      \
-    aui::detail::makeForEach<layout>([=]() -> decltype(auto) { \
+    aui::detail::makeForEach([=]() -> decltype(auto) { \
         return (model);                                        \
-    }) - [__VA_ARGS__](const auto& value) -> _<AView>
+    }, std::make_unique<layout>()) - [__VA_ARGS__](const auto& value) -> _<AView>
 
 /**
  * @brief ranged-for-loop style wrapped for [AForEachUI].
