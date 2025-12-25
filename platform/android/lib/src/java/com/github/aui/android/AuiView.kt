@@ -61,11 +61,11 @@ class AuiView(context: Context) : GLSurfaceView(context) {
             override fun onScroll(
                 e1: MotionEvent?,
                 e2: MotionEvent?,
-                distanceX: Float,
-                distanceY: Float
+                distanceX: Float
             ): Boolean {
                 return true
             }
+
 
             override fun onShowPress(motionEvent: MotionEvent) {}
             override fun onSingleTapUp(motionEvent: MotionEvent): Boolean {
@@ -78,8 +78,7 @@ class AuiView(context: Context) : GLSurfaceView(context) {
             override fun onFling(
                 start: MotionEvent,
                 current: MotionEvent,
-                velX: Float,
-                velY: Float
+                velX: Float
             ): Boolean {
                 return false
             }
