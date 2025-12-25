@@ -31,6 +31,8 @@
 #include "AUI/Util/AFieldSignalEmitter.h"
 #include "AUI/Render/ARenderContext.h"
 #include "AUI/Util/IBackgroundEffect.h"
+#include "AUI/Util/Declarative/Modifier.h"
+
 #include <AUI/ASS/PropertyListRecursive.h>
 #include <AUI/Enum/AOverflow.h>
 #include <AUI/Enum/Visibility.h>
@@ -773,6 +775,7 @@ public:
     }
 
     void setCustomStyle(ass::PropertyListRecursive rule);
+    void applyModifier(ass::Modifier modifier);
 
     void ensureAssUpdated();
 

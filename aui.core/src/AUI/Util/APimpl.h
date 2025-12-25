@@ -111,3 +111,6 @@ namespace aui {
         std::aligned_storage_t<storageSize, storageAlignment> mStorage;
     };
 }
+
+template<typename T, std::size_t storageSize, std::size_t storageAlignment = 8>
+using APimpl = aui::fast_pimpl<T, storageSize, storageAlignment>;
