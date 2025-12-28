@@ -60,7 +60,7 @@ jobs:
        with:
          submodules: true
      - uses: actions/setup-java@v1
-       with: { java-version: '11' }
+       with: { java-version: '17' }
 
      - name: Install Linux dependencies (build-android)
        uses: awalsh128/cache-apt-pkgs-action@9f7a885e33ff6f8166b600e3e74a981ec11b92c3
