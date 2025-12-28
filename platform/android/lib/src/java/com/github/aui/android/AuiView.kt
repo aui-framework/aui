@@ -67,7 +67,6 @@ class AuiView(context: Context) : GLSurfaceView(context) {
                 return true
             }
 
-
             override fun onShowPress(motionEvent: MotionEvent) {}
             override fun onSingleTapUp(motionEvent: MotionEvent): Boolean {
                 return false

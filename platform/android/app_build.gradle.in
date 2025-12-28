@@ -28,8 +28,6 @@ android {
         externalNativeBuild {
             cmake {
                 arguments /* "-DAUIB_AUI_AS=TRUE", */ "-DANDROID_SUPPORT_FLEXIBLE_PAGE_SIZES=ON"
-            }
-            cmake {
                 targets "@APP_TARGET@"
             }
         }
