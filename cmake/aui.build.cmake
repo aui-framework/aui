@@ -814,7 +814,7 @@ cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
 set(CMAKE_CXX_STANDARD 20)
 set(BUILD_SHARED_LIBS FALSE)
-set(AUI_VERSION c2922f01895f8fd9913ce99397b84d32e7630b30)
+set(AUI_VERSION 377d530a608dc906dbd55d63fee7ceb40150149a)
 file(
         DOWNLOAD
         https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
@@ -846,7 +846,7 @@ _aui_check_toolbox()
                   AUIB_FORCE_PRECOMPILED)
         list(APPEND _forwarded_args "-D${_name}=${${_name}}")
     endforeach()
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=ON ${_forwarded_args}
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=ON -DAUIB_ISOLATE_SOURCE_DIRS=ON ${_forwarded_args}
                     WORKING_DIRECTORY ${_workdir}/b
                     RESULT_VARIABLE _r
                     OUTPUT_FILE ${_build_log}
