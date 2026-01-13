@@ -14,7 +14,12 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
     else()
         auib_import(Freetype https://github.com/freetype/freetype/archive/refs/tags/VER-2-14-1.zip ARCHIVE
                     CONFIG_ONLY
-                    CMAKE_ARGS -DFT_DISABLE_BZIP2=ON -DFT_DISABLE_PNG=ON -DFT_DISABLE_HARFBUZZ=ON -DFT_DISABLE_BROTLI=ON
+                    CMAKE_ARGS
+                      -DFT_DISABLE_BZIP2=ON
+                      -DFT_DISABLE_PNG=ON
+                      -DFT_DISABLE_HARFBUZZ=ON
+                      -DFT_DISABLE_BROTLI=ON
+                      -DCMAKE_POLICY_VERSION_MINIMUM=3.5
         )
     endif()
 
