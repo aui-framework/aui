@@ -33,7 +33,7 @@
 #include <AUI/Traits/concepts.h>
 #include <AUI/Util/ABitField.h>
 
-class API_AUI_CORE AThreadPool;
+class AThreadPool;
 
 
 class AInvocationTargetException: public AException {

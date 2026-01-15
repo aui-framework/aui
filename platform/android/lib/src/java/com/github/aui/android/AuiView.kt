@@ -60,7 +60,7 @@ class AuiView(context: Context) : GLSurfaceView(context) {
 
             override fun onScroll(
                 e1: MotionEvent?,
-                e2: MotionEvent?,
+                e2: MotionEvent,
                 distanceX: Float,
                 distanceY: Float
             ): Boolean {
@@ -76,7 +76,7 @@ class AuiView(context: Context) : GLSurfaceView(context) {
                 handleLongPress(event.x.toInt(), event.y.toInt())
             }
             override fun onFling(
-                start: MotionEvent,
+                start: MotionEvent?,
                 current: MotionEvent,
                 velX: Float,
                 velY: Float
