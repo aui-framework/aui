@@ -41,12 +41,12 @@ TEST_F(UIReactiveTest, Label) {
     // Test that a reactive label updates its text when the bound property changes.
     // The test creates a simple state object with a reactive string property
     // and binds it to a label using the AUI_REACT macro. It then verifies
-    // the initial rendered text and the updated text after changing the
+    // the initially rendered text and the updated text after changing the
     // property.
     using namespace ass;
 
     struct State {
-        AProperty<AString> name;
+        AProperty<AString> name = "Test";
     };
     auto state = _new<State>();
 
@@ -54,7 +54,7 @@ TEST_F(UIReactiveTest, Label) {
         Label { AUI_REACT("{}!"_format(state->name)) }
     });
 
-    // Initially, the property is empty, so the label should display "!".
+    // Initially, the property equals to "Test", so the label should display "Test!".
     EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "!");
     // Update the property; the label should automatically reflect the new value.
     state->name = "Hello";
