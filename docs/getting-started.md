@@ -76,7 +76,7 @@
          
         If you use :simple-clion: **CLion**:
 
-        1. ++ctrl+shift+s++, navigate to "Build, Execution, Deployment" > "Toolchains".
+        1. ++ctrl+alt+s++, navigate to "Build, Execution, Deployment" > "Toolchains".
         2. Press `+`.
         3. Choose Visual Studio. CLion should pick up it automatically.
         
