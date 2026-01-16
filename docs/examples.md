@@ -7,20 +7,40 @@ through to complete application assembly.
 ## Building the Examples
 
 To build these examples, simply clone [AUI repository](https://github.com/aui-framework/aui) and configure CMake with
-`-DAUI_BUILD_EXAMPLES=TRUE`:
+`-DAUI_BUILD_EXAMPLES=TRUE`.
 
-```bash
-git clone https://github.com/aui-framework/aui
-cd aui
-mkdir build
-cd build
-cmake .. -DAUI_BUILD_EXAMPLES=TRUE -GNinja
-cmake --build . --parallel
-cd bin
+=== ":simple-clion: CLion"
 
-# launch any program
-./aui.example.views
-```
+     1. Open Settings: ++ctrl+shift+s++.
+     2. Go to `Build, Execution, Deployment` > `CMake`.
+     3. Add `-DAUI_BUILD_EXAMPLES=TRUE` to `CMake options`.
+    
+    ![](imgs/Screenshot_20260116_091639.png)
+
+=== ":material-microsoft-visual-studio-code: VS Code"
+
+    1. Open Settings: ++ctrl+comma++.
+    2. Search for `CMake Configure Args`.
+    3. Press button `Add item`
+    4. Enter `-DAUI_BUILD_EXAMPLES=TRUE`.
+       
+    ![](imgs/getting_started_vscode.png)
+
+
+=== ":octicons-terminal-16: Terminal"
+
+    ```bash
+    git clone https://github.com/aui-framework/aui
+    cd aui
+    mkdir build
+    cd build
+    cmake .. -DAUI_BUILD_EXAMPLES=TRUE -GNinja
+    cmake --build . --parallel
+    cd bin
+
+    # launch any program
+    ./aui.example.views
+    ```
 
 Some of these examples are located outside <!-- aui:example-file-count 0 --> AUI's build tree; such examples should be
 compiled as regular CMake projects.

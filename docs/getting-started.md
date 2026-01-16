@@ -37,9 +37,12 @@
         
         ![](imgs/Screenshot_20250824_154056.png)
     
-    !!! success "Install msvc"
+    !!! success "Install MSVC compiler"
         
-        :simple-clion: CLion comes with MinGW by default. **MinGW is not supported**!
+        :simple-clion: **CLion** comes with MinGW by default. It works okayish, but we recommend using de-facto standard
+        compiler for Windows instead.
+
+        :material-microsoft-visual-studio-code: **VS Code** does not come with any compiler by default.
         
         You are not forced to use Visual Studio IDE, you can use whatever IDE you want. We just want the compiler part.
         
@@ -64,9 +67,14 @@
         
         Don't forget to reboot!
 
-    !!! success "Configure CLion to use MSVC instead of MinGW"
+    !!! success "Configure CLion to use MSVC compiler instead of MinGW"
+
+        While you can use MinGW for your AUI project, it is recommended to use commonly accepted compiler for Windows.
+
+        If you use :material-microsoft-visual-studio-code: **VS Code**, it will pick up the correct compiler
+        automatically.
          
-        If you use :simple-clion: CLion:
+        If you use :simple-clion: **CLion**:
 
         1. ++ctrl+shift+s++, navigate to "Build, Execution, Deployment" > "Toolchains".
         2. Press `+`.
@@ -240,17 +248,11 @@ to free you from dependency management and focus you right to development of you
 
 === ":material-microsoft-visual-studio-code: VS Code"
   
-    1. ++f1++ `>CMake: Configure`.
+    1. ++f1++ `>CMake: Configure`. If it asks for a toolchain, choose `Unspecified`.
     2. Choose CMake logo in the left panel (where the extensions tab live).
     3. Right click on project's target > `Set Build target` and `Set Launch/Debug target`.
        ![](imgs/Screenshot_2025-08-23_05.21.07.png)
     4. ++f1++ `>CMake: Debug`.
-
-        For building examples:
-
-    1. `Ctrl + ,` and search `"Cmake Configure Args"`.
-    2. Press button `Add item` and enter `-DAUI_BUILD_EXAMPLES=TRUE`.
-        ![](imgs/getting_started_vscode.png)
 
 === ":octicons-terminal-16: Terminal"
 
