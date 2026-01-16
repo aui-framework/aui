@@ -11,7 +11,7 @@ To build these examples, simply clone [AUI repository](https://github.com/aui-fr
 
 === ":simple-clion: CLion"
 
-     1. Open Settings: ++ctrl+shift+s++.
+     1. Open Settings: ++ctrl+alt+s++.
      2. Go to `Build, Execution, Deployment` > `CMake`.
      3. Add `-DAUI_BUILD_EXAMPLES=TRUE` to `CMake options`.
     
