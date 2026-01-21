@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AUI/Common/AStaticVector.h"
+
 #include <list>
 #include <span>
 
@@ -40,7 +42,7 @@ public:
 
 private:
     ASpinlockMutex mConcurrentAccessCheck;
-    AVector<_<IAudioPlayer>> mPlayers;
+    AStaticVector<_<IAudioPlayer>, MAX_PLAYER_COUNT> mPlayers;
     std::vector<float> mMixBuffer;
     std::vector<float> mReadBuffer;
 };
