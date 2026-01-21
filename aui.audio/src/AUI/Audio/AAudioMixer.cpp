@@ -5,12 +5,21 @@
 #include "AUI/Logging/ALogger.h"
 #include "Platform/RequestedAudioFormat.h"
 #include "Util.h"
+#include "AUI/Util/kAUI.h"
 
 void AAudioMixer::addSoundSource(aui::non_null<_<IAudioPlayer>> s) {
 #if AUI_DEBUG
     std::unique_lock lock(mConcurrentAccessCheck, std::try_to_lock);
     AUI_ASSERTX(lock.owns_lock(), "concurrent access to AAudioMixer is not allowed");
 #endif
+    if (mPlayers.size() >= MAX_PLAYER_COUNT) {
+        AUI_DO_ONCE {
+            ALogger::warn("AAudioMixer") << "Maximum number of concurrent audio players reached. Subsequent "
+            "players will be ignored. This message will only appear once.";
+        }
+        s->onFinished();
+        return;
+    }
     mPlayers.push_back(std::move(s.value));
 }
 
