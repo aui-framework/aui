@@ -641,7 +641,7 @@ Here's how exactly it is computed:
 
 <!-- aui:snippet aui.boot.cmake BUILD_SPECIFIER -->
 
-### ~/.aui/repo
+### ~/.aui/repo { #AUIB_REPO_DIR }
 
 Contains dependencies source code (if any), downloaded by `auib_import`.
 
