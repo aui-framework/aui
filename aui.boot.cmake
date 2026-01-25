@@ -705,7 +705,7 @@ function(auib_import AUI_MODULE_NAME URL)
         set(DEP_BINARY_DIR "${DEP_AS_DIR}/build/${BUILD_SPECIFIER}")
         set(DEP_FETCHED_FLAG ${DEP_AS_DIR}/FETCHED)
     else()
-        set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
+        set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src/${TAG_OR_HASH}")
         set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
         set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
     endif()
@@ -838,6 +838,7 @@ function(auib_import AUI_MODULE_NAME URL)
                                 GIT_PROGRESS TRUE # show progress of download
                                 USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                                 USES_TERMINAL_UPDATE TRUE # show progress in ninja generator
+                                GIT_SHALLOW TRUE # clone just the specified commit
                                 ${SOURCE_BINARY_DIRS_ARG}
                         )
                     else()
@@ -848,6 +849,7 @@ function(auib_import AUI_MODULE_NAME URL)
                                 GIT_PROGRESS TRUE # show progress of download
                                 USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                                 USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
+                                GIT_SHALLOW TRUE # clone just the specified commit
                                 ${SOURCE_BINARY_DIRS_ARG}
                         )
 
