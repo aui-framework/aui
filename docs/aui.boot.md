@@ -645,10 +645,12 @@ Here's how exactly it is computed:
 
 Contains dependencies source code (if any), downloaded by `auib_import`.
 
-- `~/.aui/repo/<PackageName>/src` - source code of `<PackageName>`. If it is a git repository, AUI.Boot will try to
-  checkout a specific version first instead of cloning the whole repo again.
-- `~/.aui/repo/<PackageName>/src/FETCHED` - indicates the latest download is successful.
-- `~/.aui/repo/<PackageName>/build` - `<PackageName>` build directory. Cleaned up after a successful installation.
+- `~/.aui/repo/<PackageName>/src/<VERSION_OR_HASH>` - source code of `<PackageName>` for the specific version/hash.
+  If it is a git repository, AUI.Boot will try to checkout that specific version first instead of cloning the whole repo
+  again.
+- `~/.aui/repo/<PackageName>/src/<VERSION_OR_HASH>/FETCHED` - indicates the latest download is successful.
+- `~/.aui/repo/<PackageName>/build/<BUILD_SPECIFIER>` - `<PackageName>` build directory for that build configuration.
+  Cleaned up after a successful installation.
 
 If the dependency imported as a [subdirectory](#AUIB_ADD_SUBDIRECTORY), these paths are used instead:
 
