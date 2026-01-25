@@ -453,17 +453,6 @@ Disables aui.boot. All calls to `auib_import` are forwarded to `find_package`.
 
 Disables "Waiting for repository".
 
-This flag is unsafe because one aui.boot process might interfere with the work of another aui.boot process.
-
-The following flags are recommended to be set to true as well:
-
-- `AUIB_ISOLATE_SOURCE_DIRS`
-
-### AUIB_ISOLATE_SOURCE_DIRS (=FALSE|TRUE)
-
-By default, aui.boot will reuse the same [repository directory](#AUIB_REPO_DIR) for all dependencies. This flag adds
-unique suffix to each source directory.
-
 ### AUIB_NO_PRECOMPILED (=FALSE|TRUE)  { #AUIB_NO_PRECOMPILED }
 
 Disables precompiled binaries, building all dependencies locally. You may want to set up [CI_CACHING].
@@ -652,7 +641,7 @@ Here's how exactly it is computed:
 
 <!-- aui:snippet aui.boot.cmake BUILD_SPECIFIER -->
 
-### ~/.aui/repo { #AUIB_REPO_DIR }
+### ~/.aui/repo
 
 Contains dependencies source code (if any), downloaded by `auib_import`.
 
