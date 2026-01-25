@@ -15,7 +15,8 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
         # Freetype 2.14.1 fails to build with recent CMake versions due to policy issues.
         # Setting CMAKE_POLICY_VERSION_MINIMUM to 3.5 is a workaround.
         # See also: https://github.com/aui-framework/aui/pull/687
-        auib_import(Freetype https://github.com/freetype/freetype/archive/refs/tags/VER-2-14-1.zip ARCHIVE
+        auib_import(Freetype https://github.com/freetype/freetype
+                    VERSION VER-2-14-1
                     CONFIG_ONLY
                     CMAKE_ARGS
                       -DFT_DISABLE_BZIP2=ON
