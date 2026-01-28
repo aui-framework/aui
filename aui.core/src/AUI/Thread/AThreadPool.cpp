@@ -70,7 +70,7 @@ bool AThreadPool::Worker::processQueue(std::unique_lock<std::mutex>& mutex, AQue
         } catch (const AThread::Interrupted&) {
         } catch (const TryLaterException&) {
             mutex.lock();
-            mTP.mQueueTryLater.push(func);
+            mTP.mQueueTryLater.push(std::move(func));
             return true;
         }
         resetInterruptFlag();
