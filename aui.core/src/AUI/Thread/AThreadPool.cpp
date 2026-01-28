@@ -68,12 +68,12 @@ bool AThreadPool::Worker::processQueue(std::unique_lock<std::mutex>& mutex, AQue
         } catch (const AException& e) {
             ALogger::err("uncaught exception in thread pool: " + e.getMessage());
         } catch (const AThread::Interrupted&) {
-            // AThread::current()->resetInterruptFlag();
         } catch (const TryLaterException&) {
             mutex.lock();
             mTP.mQueueTryLater.push(func);
             return true;
         }
+        resetInterruptFlag();
         mutex.lock();
         return true;
     }
