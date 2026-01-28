@@ -42,6 +42,9 @@ public:
     AInvocationTargetException(const AString& message = {}, std::exception_ptr causedBy = std::current_exception()):
         AException(message, std::move(causedBy), AStacktrace::capture(3)) {}
     AString getMessage() const noexcept override {
+        if (causedBy() == nullptr) {
+            return AException::getMessage();
+        }
         try {
             std::rethrow_exception(causedBy());
         } catch (const AException& e) {
