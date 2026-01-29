@@ -697,17 +697,12 @@ function(auib_import AUI_MODULE_NAME URL)
         _auib_update_imported_targets_list()
     endif()
 
+    # the AUI_MODULE_NAME-TAG_OR_HASH is used to hint IDEs (i.e. CLion) about actual project name
+    set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}")
+    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER}")
+    set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
     if (DEP_ADD_SUBDIRECTORY)
-        set(DEP_AS_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}")
-
-        # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project name
-        set(DEP_SOURCE_DIR "${DEP_AS_DIR}/${AUI_MODULE_NAME_LOWER}")
-        set(DEP_BINARY_DIR "${DEP_AS_DIR}/build/${BUILD_SPECIFIER}")
-        set(DEP_FETCHED_FLAG ${DEP_AS_DIR}/FETCHED)
-    else()
-        set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src/${TAG_OR_HASH}")
-        set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
-        set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
+        set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER}-as")
     endif()
 
     # invalidate all previous values.
