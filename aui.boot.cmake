@@ -697,22 +697,12 @@ function(auib_import AUI_MODULE_NAME URL)
         _auib_update_imported_targets_list()
     endif()
 
+    # the AUI_MODULE_NAME-TAG_OR_HASH is used to hint IDEs (i.e. CLion) about actual project name
+    set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}")
+    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER}")
+    set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
     if (DEP_ADD_SUBDIRECTORY)
-        set(DEP_AS_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}")
-
-        # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project name
-        set(DEP_SOURCE_DIR "${DEP_AS_DIR}/${AUI_MODULE_NAME_LOWER}")
-        set(DEP_BINARY_DIR "${DEP_AS_DIR}/build/${BUILD_SPECIFIER}")
-        set(DEP_FETCHED_FLAG ${DEP_AS_DIR}/FETCHED)
-    else()
-        if (AUIB_ISOLATE_SOURCE_DIRS)
-            set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}/src")
-            set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}/build/${BUILD_SPECIFIER}")
-        else()
-            set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
-            set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
-        endif()
-        set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
+        set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER}-as")
     endif()
 
     # invalidate all previous values.
@@ -843,6 +833,7 @@ function(auib_import AUI_MODULE_NAME URL)
                                 GIT_PROGRESS TRUE # show progress of download
                                 USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                                 USES_TERMINAL_UPDATE TRUE # show progress in ninja generator
+                                GIT_SHALLOW TRUE # clone just the specified commit
                                 ${SOURCE_BINARY_DIRS_ARG}
                         )
                     else()
@@ -853,6 +844,7 @@ function(auib_import AUI_MODULE_NAME URL)
                                 GIT_PROGRESS TRUE # show progress of download
                                 USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                                 USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
+                                GIT_SHALLOW TRUE # clone just the specified commit
                                 ${SOURCE_BINARY_DIRS_ARG}
                         )
 
