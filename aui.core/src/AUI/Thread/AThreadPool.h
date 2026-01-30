@@ -21,6 +21,7 @@
 #include <AUI/Common/AQueue.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Thread/AThread.h>
+#include <AUI/Thread/AFutureWait.h>
 #include <AUI/Traits/concepts.h>
 #include <AUI/Core.h>
 
@@ -192,10 +193,10 @@ public:
      * @brief Wait for the result of every AFuture.
      * @deprecated use onAllComplete instead.
      */
-    void waitForAll() {
+    void waitForAll(AFutureWait flags = AFutureWait::DEFAULT) {
         // wait from the end to avoid idling (see AFuture::wait for details)
         for (const AFuture<T>& v : aui::reverse_iterator_wrap(*this)) {
-            v.operator*();
+            v.wait(flags);
         }
     }
 
