@@ -280,6 +280,30 @@ OpenGLRenderer::OpenGLRenderer() {
     }
 }
 
+void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
+    for (auto& cmd : cmds) {
+        std::visit(aui::lambda_overloaded{
+            [&](const CmdRectangle& c) { renderRectangle(c.brush, c.position, c.size); },
+            [&](const CmdRoundedRectangle& c) { renderRoundedRectangle(c.brush, c.position, c.size, c.radius); },
+            [&](const CmdRectangleBorder& c) { renderRectangleBorder(c.brush, c.position, c.size, c.lineWidth); },
+            [&](const CmdRoundedRectangleBorder& c) { renderRoundedRectangleBorder(c.brush, c.position, c.size, c.radius, c.borderWidth); },
+            [&](const CmdBoxShadow& c) { renderBoxShadow(c.position, c.size, c.blurRadius, c.color); },
+            [&](const CmdBoxShadowInner& c) { renderBoxShadowInner(c.position, c.size, c.blurRadius, c.spreadRadius, c.borderRadius, c.color, c.offset); },
+            [&](const CmdString& c) { renderString(c.position, c.string, c.fs); },
+            [&](const CmdLines& c) { renderLines(c.brush, c.points, c.style, c.width); },
+            [&](const CmdPoints& c) { renderPoints(c.brush, c.points, c.size); },
+            [&](const CmdLinesPairs& c) { renderLines(c.brush, c.points, c.style, c.width); },
+            [&](const CmdSquareSector& c) { renderSquareSector(c.brush, c.position, c.size, c.begin, c.end); },
+            [&](const CmdPushMask&) { renderPushMaskBefore(); },
+            [&](const CmdPopMask&) { renderPopMaskBefore(); },
+            [&](const CmdSetBlending& c) { renderSetBlending(c.blending); },
+            [&](const CmdSetWindow& c) { mWindow = c.window; },
+            [&](const CmdNewRenderViewToTexture&){ /* handled elsewhere */ }
+        }, cmd);
+    }
+}
+
+
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
     return glm::ortho(0.0f, static_cast<float>(mWindow->getWidth()),
                       static_cast<float>(mWindow->getHeight()), 0.0f,
@@ -305,7 +329,7 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
         };
 }
 
-void OpenGLRenderer::rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
+void OpenGLRenderer::renderRectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
     std::visit(aui::lambda_overloaded{
         GradientShaderHelper(*this, *mGradientShader, mGradientTexture),
         TexturedShaderHelper(*this, *mTexturedShader, mRectangleVao),
@@ -335,7 +359,7 @@ void OpenGLRenderer::identityUv() {
     mRectangleVao.insertIfKeyMismatches(1, AArrayView(uvs), "identityUv");
 }
 
-void OpenGLRenderer::roundedRectangle(const ABrush& brush,
+void OpenGLRenderer::renderRoundedRectangle(const ABrush& brush,
                                       glm::vec2 position,
                                       glm::vec2 size,
                                       float radius) {
@@ -352,7 +376,7 @@ void OpenGLRenderer::roundedRectangle(const ABrush& brush,
     drawRectImpl(position, size);
 }
 
-void OpenGLRenderer::rectangleBorder(const ABrush& brush,
+void OpenGLRenderer::renderRectangleBorder(const ABrush& brush,
                                      glm::vec2 position,
                                      glm::vec2 size,
                                      float lineWidth) {
@@ -392,7 +416,7 @@ void OpenGLRenderer::rectangleBorder(const ABrush& brush,
     mRectangleVao.drawElements(GL_LINES);
 }
 
-void OpenGLRenderer::roundedRectangleBorder(const ABrush& brush,
+void OpenGLRenderer::renderRoundedRectangleBorder(const ABrush& brush,
                                             glm::vec2 position,
                                             glm::vec2 size,
                                             float radius,
@@ -415,7 +439,7 @@ void OpenGLRenderer::roundedRectangleBorder(const ABrush& brush,
     drawRectImpl(position, size);
 }
 
-void OpenGLRenderer::boxShadow(glm::vec2 position,
+void OpenGLRenderer::renderBoxShadow(glm::vec2 position,
                                glm::vec2 size,
                                float blurRadius,
                                const AColor& color) {
@@ -452,7 +476,7 @@ void OpenGLRenderer::boxShadow(glm::vec2 position,
     mRectangleVao.drawElements();
 }
 
-void OpenGLRenderer::boxShadowInner(glm::vec2 position,
+void OpenGLRenderer::renderBoxShadowInner(glm::vec2 position,
                                     glm::vec2 size,
                                     float blurRadius,
                                     float spreadRadius,
@@ -489,13 +513,13 @@ void OpenGLRenderer::boxShadowInner(glm::vec2 position,
     mRectangleVao.drawElements();
 }
 
-void OpenGLRenderer::string(glm::vec2 position,
+void OpenGLRenderer::renderString(glm::vec2 position,
                             const AString& string,
                             const AFontStyle& fs) {
     prerenderString(position, string, fs)->draw();
 }
 
-void OpenGLRenderer::setBlending(Blending blending) {
+void OpenGLRenderer::renderSetBlending(Blending blending) {
     if (glBlendFuncSeparate) {
         switch (blending) {
             case Blending::NORMAL: {
@@ -828,27 +852,27 @@ bool OpenGLRenderer::isVaoAvailable() const noexcept {
     return glBindVertexArray != nullptr;
 }
 
-void OpenGLRenderer::pushMaskBefore() {
+void OpenGLRenderer::renderPushMaskBefore() {
     glStencilFunc(GL_ALWAYS, 0, 0xff);
     glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
     glStencilMask(0xff);
     glColorMask(false, false, false, false);
 }
 
-void OpenGLRenderer::pushMaskAfter() {
+void OpenGLRenderer::renderPushMaskAfter() {
     glColorMask(true, true, true, true);
     glStencilMask(0x00);
     glStencilFunc(GL_EQUAL, ++mStencilDepth, 0xff);
 }
 
-void OpenGLRenderer::popMaskBefore() {
+void OpenGLRenderer::renderPopMaskBefore() {
     glStencilFunc(GL_ALWAYS, 0, 0xff);
     glStencilOp(GL_KEEP, GL_DECR, GL_DECR);
     glStencilMask(0xff);
     glColorMask(false, false, false, false);
 }
 
-void OpenGLRenderer::popMaskAfter() {
+void OpenGLRenderer::renderPopMaskAfter() {
     glColorMask(true, true, true, true);
     glStencilMask(0x00);
     glStencilFunc(GL_EQUAL, --mStencilDepth, 0xff);
@@ -894,7 +918,7 @@ struct LineVertex {
 }
 
 void
-OpenGLRenderer::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
+OpenGLRenderer::renderLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
     if (points.size() < 2) return;
     const auto widthPx = width.getValuePx();
     bool computeDistances = setupLineShader(brush, style, widthPx);
@@ -920,7 +944,7 @@ OpenGLRenderer::lines(const ABrush& brush, AArrayView<glm::vec2> points, const A
     mRectangleVao.drawArrays(GL_LINE_STRIP, points.size());
 }
 
-void OpenGLRenderer::lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points,
+void OpenGLRenderer::renderLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points,
                            const ABorderStyle& style, AMetric width) {
     const auto widthPx = width.getValuePx();
     bool computeDistances = setupLineShader(brush, style, widthPx);
@@ -949,7 +973,7 @@ void OpenGLRenderer::lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, 
     mRectangleVao.drawArrays(GL_LINES, positions.size());
 }
 
-void OpenGLRenderer::points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) {
+void OpenGLRenderer::renderPoints(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) {
     if (points.size() == 0) {
         return;
     }
@@ -979,7 +1003,7 @@ void OpenGLRenderer::points(const ABrush& brush, AArrayView<glm::vec2> points, A
 #endif
 }
 
-void OpenGLRenderer::squareSector(const ABrush& brush,
+void OpenGLRenderer::renderSquareSector(const ABrush& brush,
                                   const glm::vec2& position,
                                   const glm::vec2& size,
                                   AAngleRadians begin,
