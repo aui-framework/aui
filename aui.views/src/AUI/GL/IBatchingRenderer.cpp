@@ -14,15 +14,15 @@
 #include "IBatchingRenderer.h"
 
 void IBatchingRenderer::rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
-    mCmds.emplace_back(CmdRectangle{
-        .brush = std::move(brush),
-        .position = position,
-        .size = size,
+    enqueueCommand(CmdRectangle {
+      .brush = std::move(brush),
+      .position = position,
+      .size = size,
     });
 }
 
 void IBatchingRenderer::roundedRectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius) {
-    mCmds.emplace_back(CmdRoundedRectangle{
+    enqueueCommand(CmdRoundedRectangle{
         .brush = brush,
         .position = position,
         .size = size,
@@ -31,7 +31,7 @@ void IBatchingRenderer::roundedRectangle(const ABrush& brush, glm::vec2 position
 }
 
 void IBatchingRenderer::rectangleBorder(const ABrush& brush, glm::vec2 position, glm::vec2 size, float lineWidth) {
-    mCmds.emplace_back(CmdRectangleBorder{
+    enqueueCommand(CmdRectangleBorder{
         .brush = brush,
         .position = position,
         .size = size,
@@ -40,7 +40,7 @@ void IBatchingRenderer::rectangleBorder(const ABrush& brush, glm::vec2 position,
 }
 
 void IBatchingRenderer::roundedRectangleBorder(const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius, int borderWidth) {
-    mCmds.emplace_back(CmdRoundedRectangleBorder{
+    enqueueCommand(CmdRoundedRectangleBorder{
         .brush = brush,
         .position = position,
         .size = size,
@@ -50,7 +50,7 @@ void IBatchingRenderer::roundedRectangleBorder(const ABrush& brush, glm::vec2 po
 }
 
 void IBatchingRenderer::boxShadow(glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) {
-    mCmds.emplace_back(CmdBoxShadow{
+    enqueueCommand(CmdBoxShadow{
         .position = position,
         .size = size,
         .blurRadius = blurRadius,
@@ -59,7 +59,7 @@ void IBatchingRenderer::boxShadow(glm::vec2 position, glm::vec2 size, float blur
 }
 
 void IBatchingRenderer::boxShadowInner(glm::vec2 position, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius, const AColor& color, glm::vec2 offset) {
-    mCmds.emplace_back(CmdBoxShadowInner{
+    enqueueCommand(CmdBoxShadowInner{
         .position = position,
         .size = size,
         .blurRadius = blurRadius,
@@ -71,7 +71,7 @@ void IBatchingRenderer::boxShadowInner(glm::vec2 position, glm::vec2 size, float
 }
 
 void IBatchingRenderer::string(glm::vec2 position, const AString& string, const AFontStyle& fs) {
-    mCmds.emplace_back(CmdString{
+    enqueueCommand(CmdString{
         .position = position,
         .string = string,
         .fs = fs,
@@ -80,7 +80,7 @@ void IBatchingRenderer::string(glm::vec2 position, const AString& string, const 
 
 
 void IBatchingRenderer::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
-    mCmds.emplace_back(CmdLines{
+    enqueueCommand(CmdLines{
         .brush = brush,
         .points = points,
         .style = style,
@@ -89,7 +89,7 @@ void IBatchingRenderer::lines(const ABrush& brush, AArrayView<glm::vec2> points,
 }
 
 void IBatchingRenderer::points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) {
-    mCmds.emplace_back(CmdPoints{
+    enqueueCommand(CmdPoints{
         .brush = brush,
         .points = points,
         .size = size,
@@ -97,7 +97,7 @@ void IBatchingRenderer::points(const ABrush& brush, AArrayView<glm::vec2> points
 }
 
 void IBatchingRenderer::lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) {
-    mCmds.emplace_back(CmdLinesPairs{
+    enqueueCommand(CmdLinesPairs{
         .brush = brush,
         .points = points,
         .style = style,
@@ -106,7 +106,7 @@ void IBatchingRenderer::lines(const ABrush& brush, AArrayView<std::pair<glm::vec
 }
 
 void IBatchingRenderer::squareSector(const ABrush& brush, const glm::vec2& position, const glm::vec2& size, AAngleRadians begin, AAngleRadians end) {
-    mCmds.emplace_back(CmdSquareSector{
+    enqueueCommand(CmdSquareSector{
         .brush = brush,
         .position = position,
         .size = size,
@@ -116,27 +116,23 @@ void IBatchingRenderer::squareSector(const ABrush& brush, const glm::vec2& posit
 }
 
 void IBatchingRenderer::pushMaskBefore() {
-    mCmds.emplace_back(CmdPushMask{});
+    enqueueCommand(CmdPushMaskBefore{});
 }
 
 void IBatchingRenderer::pushMaskAfter() {
-    mCmds.emplace_back(CmdPushMask{});
+    enqueueCommand(CmdPushMaskAfter{});
 }
 
 void IBatchingRenderer::popMaskBefore() {
-    mCmds.emplace_back(CmdPopMask{});
+    enqueueCommand(CmdPopMaskBefore{});
 }
 
 void IBatchingRenderer::popMaskAfter() {
-    mCmds.emplace_back(CmdPopMask{});
+    enqueueCommand(CmdPopMaskAfter{});
 }
 
 void IBatchingRenderer::setBlending(Blending blending) {
-    mCmds.emplace_back(CmdSetBlending{.blending = blending});
-}
-
-void IBatchingRenderer::setWindow(AWindowBase* window) {
-    mCmds.emplace_back(CmdSetWindow{.window = window});
+    enqueueCommand(CmdSetBlending{.blending = blending});
 }
 
 void IBatchingRenderer::flush() {

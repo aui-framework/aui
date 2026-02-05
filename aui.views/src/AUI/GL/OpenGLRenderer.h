@@ -99,14 +99,12 @@ private:
 
     static std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position, glm::vec2 size);
 
-    void uploadToShaderCommon();
-
     FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 
     /**
      * @return true, if the caller should compute distances
      */
-    bool setupLineShader(const ABrush& brush, const ABorderStyle& style, float widthPx);
+    bool setupLineShader(const Cmd& cmd, const ABrush& brush, const ABorderStyle& style, float widthPx);
 
 
     /**
@@ -133,18 +131,18 @@ private:
 
 private:
     // Helper methods that perform the actual rendering for each command.
-    void renderRectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size);
-    void renderRoundedRectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius);
-    void renderRectangleBorder(const ABrush& brush, glm::vec2 position, glm::vec2 size, float lineWidth);
-    void renderRoundedRectangleBorder(const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius, int borderWidth);
-    void renderBoxShadow(glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color);
-    void renderBoxShadowInner(glm::vec2 position, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius, const AColor& color, glm::vec2 offset);
-    void renderString(glm::vec2 position, const AString& string, const AFontStyle& fs);
-    void renderLines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width);
-    void renderLines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width);
-    void renderPoints(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size);
-    void renderLinesPairs(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width);
-    void renderSquareSector(const ABrush& brush, const glm::vec2& position, const glm::vec2& size, AAngleRadians begin, AAngleRadians end);
+    void renderRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size);
+    void renderRoundedRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius);
+    void renderRectangleBorder(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, float lineWidth);
+    void renderRoundedRectangleBorder(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius, int borderWidth);
+    void renderBoxShadow(const Cmd& cmd, glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color);
+    void renderBoxShadowInner(const Cmd& cmd, glm::vec2 position, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius, const AColor& color, glm::vec2 offset);
+    void renderString(const Cmd& cmd, glm::vec2 position, const AString& string, const AFontStyle& fs);
+    void renderLines(const Cmd& cmd, const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width);
+    void renderLines(const Cmd& cmd, const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width);
+    void renderPoints(const Cmd& cmd, const ABrush& brush, AArrayView<glm::vec2> points, AMetric size);
+    void renderLinesPairs(const Cmd& cmd, const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width);
+    void renderSquareSector(const Cmd& cmd, const ABrush& brush, const glm::vec2& position, const glm::vec2& size, AAngleRadians begin, AAngleRadians end);
     void renderPushMaskBefore();
     void renderPopMaskBefore();
     void renderPushMaskAfter();
