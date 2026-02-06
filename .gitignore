@@ -158,7 +158,6 @@ AutoTest.Net/
 
 # Installshield output folder
 [Ee]xpress/
-
 # DocProject is a documentation generator add-in
 DocProject/buildhelp/
 DocProject/Help/*.HxT
@@ -358,3 +357,6 @@ install.json
 
 # mkdocs output
 site/
+
+# clangd compile commands
+compile_commands.json
