@@ -227,7 +227,7 @@ endif()
 
 set(AUIB_CACHE_DIR ${_tmp} CACHE PATH "Path to AUI.Boot cache")
 message(STATUS "AUI.Boot cache: ${AUIB_CACHE_DIR}")
-message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_TRIPLET}")
+message(STATUS "AUI.Boot target triplet: ${AUI_TARGET_TRIPLET}")
 
 
 
