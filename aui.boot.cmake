@@ -211,7 +211,7 @@ else()
 endif()
 
 set(AUI_TARGET_ARCH_NAME "${_aui_target_arch}")
-set(AUI_TARGET_ABI "${_aui_target_arch}-${_aui_target_os}-${_aui_target_abi}-${_aui_target_compiler}"
+set(AUI_TARGET_TRIPLET "${_aui_target_arch}-${_aui_target_os}-${_aui_target_abi}-${_aui_target_compiler}"
         CACHE INTERNAL "ARCH-OS-ABI-COMPILER")
 
 # checking if custom cache dir is set for the system
@@ -227,7 +227,7 @@ endif()
 
 set(AUIB_CACHE_DIR ${_tmp} CACHE PATH "Path to AUI.Boot cache")
 message(STATUS "AUI.Boot cache: ${AUIB_CACHE_DIR}")
-message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_ABI}")
+message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_TRIPLET}")
 
 
 
@@ -402,7 +402,7 @@ function(_auib_precompiled_archive_name _output_var _project_name)
     else()
         set(SHARED_OR_STATIC static)
     endif()
-    set(_tmp "${_project_name}-${AUI_TARGET_ABI}-${SHARED_OR_STATIC}-${CMAKE_BUILD_TYPE}")
+    set(_tmp "${_project_name}-${AUI_TARGET_TRIPLET}-${SHARED_OR_STATIC}-${CMAKE_BUILD_TYPE}")
     string(TOLOWER ${_tmp} _tmp)
     set(${_output_var} ${_tmp} PARENT_SCOPE)
 endfunction()
@@ -699,7 +699,7 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
 
     # [[BUILD_SPECIFIER]]
-    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_GENERATOR}/${AUIB_IMPORT_CMAKE_ARGS}")
+    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_TRIPLET}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_GENERATOR}/${AUIB_IMPORT_CMAKE_ARGS}")
     string(REPLACE ";" " " BUILD_SPECIFIER "${BUILD_SPECIFIER}")
 
     # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
