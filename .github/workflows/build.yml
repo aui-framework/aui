@@ -211,6 +211,13 @@ jobs:
             arch: x86_64
             generator: "Ninja"
 
+          - os: windows-11-arm
+            compiler: "Default"
+            build_type: RelWithDebInfo
+            shared_or_static: static
+            arch: arm64
+            generator: "Ninja"
+
     steps:
       - uses: actions/checkout@v6
         with:
