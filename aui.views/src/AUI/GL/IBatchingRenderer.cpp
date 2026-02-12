@@ -116,23 +116,18 @@ void IBatchingRenderer::squareSector(const ABrush& brush, const glm::vec2& posit
 }
 
 void IBatchingRenderer::pushMaskBefore() {
-    enqueueCommand(CmdPushMaskBefore{});
 }
 
 void IBatchingRenderer::pushMaskAfter() {
-    enqueueCommand(CmdPushMaskAfter{});
 }
 
 void IBatchingRenderer::popMaskBefore() {
-    enqueueCommand(CmdPopMaskBefore{});
 }
 
 void IBatchingRenderer::popMaskAfter() {
-    enqueueCommand(CmdPopMaskAfter{});
 }
 
 void IBatchingRenderer::setBlending(Blending blending) {
-    enqueueCommand(CmdSetBlending{.blending = blending});
 }
 
 void IBatchingRenderer::flush() {

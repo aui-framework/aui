@@ -13,6 +13,7 @@
 // Created by Alex2772 on 11/19/2021.
 //
 
+#include <algorithm>
 #include <range/v3/view.hpp>
 #include "OpenGLRenderer.h"
 #include "AUI/Common/AException.h"
@@ -20,12 +21,14 @@
 #include "AUI/GL/Framebuffer.h"
 #include "AUI/GL/GLDebug.h"
 #include "AUI/GL/GLEnums.h"
+#include "AUI/GL/IBatchingRenderer.h"
 #include "AUI/GL/Program.h"
 #include "AUI/GL/Texture2D.h"
 #include "AUI/GL/Vao.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABorderStyle.h"
+#include "AUI/Render/ABrush.h"
 #include "AUI/Render/Brush/Gradient.h"
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Util/AAngleRadians.h"
@@ -62,6 +65,7 @@
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/GL/RenderTarget/TextureRenderTarget.h>
 #include <range/v3/algorithm/min_element.hpp>
+#include <variant>
 
 static constexpr auto LOG_TAG = "OpenGLRenderer";
 
@@ -239,7 +243,34 @@ OpenGLRenderer::OpenGLRenderer() {
     }
 }
 
+static int getBrushIndex(const IBatchingRenderer::Cmd& cmd) {
+    int result = -1;
+
+    std::visit(aui::lambda_overloaded {
+        [&](const IBatchingRenderer::CmdRectangle& arg) { result = arg.brush.index(); },
+        [&](const IBatchingRenderer::CmdRoundedRectangle& arg) { result = arg.brush.index(); },
+        [&](const IBatchingRenderer::CmdRectangleBorder& arg) { result = arg.brush.index(); },
+        [&](const IBatchingRenderer::CmdRoundedRectangleBorder& arg) { result = arg.brush.index(); },
+        [&](const IBatchingRenderer::CmdLines& arg) { result = arg.brush.index(); },
+        [&](const IBatchingRenderer::CmdPoints& arg) { result = arg.brush.index(); },
+        [&](const IBatchingRenderer::CmdLinesPairs& arg) { result = arg.brush.index(); },
+        [&](const IBatchingRenderer::CmdSquareSector& arg) { result = arg.brush.index(); },
+        [&](const IBatchingRenderer::CmdSetWindow& arg) { result = -2; },
+        [&](const auto& arg) { },
+    }, cmd.arg);
+
+    return result;
+}
+
 void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
+    std::sort(cmds.begin(), cmds.end(), [](const Cmd& cmdA, const Cmd& cmdB) {
+        if (cmdA.arg.index() != cmdB.arg.index()) {
+            return cmdA.arg.index() > cmdB.arg.index();
+        }
+
+        return getBrushIndex(cmdA) > getBrushIndex(cmdB);
+    });
+
     for (auto& cmd : cmds) {
         std::visit(aui::lambda_overloaded{
             [&](const CmdRectangle& c) { renderRectangle(cmd, c.brush, c.position, c.size); },
@@ -253,11 +284,6 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
             [&](const CmdPoints& c) { renderPoints(cmd, c.brush, c.points, c.size); },
             [&](const CmdLinesPairs& c) { renderLines(cmd, c.brush, c.points, c.style, c.width); },
             [&](const CmdSquareSector& c) { renderSquareSector(cmd, c.brush, c.position, c.size, c.begin, c.end); },
-            [&](const CmdPushMaskBefore&) { renderPushMaskBefore(); },
-            [&](const CmdPopMaskBefore&) { renderPopMaskBefore(); },
-            [&](const CmdPushMaskAfter&) { renderPushMaskAfter(); },
-            [&](const CmdPopMaskAfter&) { renderPopMaskAfter(); },
-            [&](const CmdSetBlending& c) { renderSetBlending(c.blending); },
             [&](const CmdSetWindow& c) { mWindow = c.window; },
             [&](const CmdNewRenderViewToTexture&){ /* handled elsewhere */ }
         }, cmd.arg);

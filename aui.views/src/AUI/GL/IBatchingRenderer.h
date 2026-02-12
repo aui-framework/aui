@@ -13,7 +13,7 @@
 
 class IBatchingRenderer : public IRenderer {
 public:
-       struct CmdRectangle {
+    struct CmdRectangle {
         ABrush brush;
         glm::vec2 position;
         glm::vec2 size;
@@ -81,13 +81,6 @@ public:
         AAngleRadians begin;
         AAngleRadians end;
     };
-    struct CmdPushMaskBefore {};
-    struct CmdPushMaskAfter {};
-    struct CmdPopMaskBefore {};
-    struct CmdPopMaskAfter {};
-    struct CmdSetBlending {
-        Blending blending;
-    };
     struct CmdNewRenderViewToTexture {};
     struct CmdSetWindow {
         AWindowBase* window;
@@ -97,8 +90,8 @@ public:
         AColor color;
         using Arg = std::variant<
             CmdRectangle, CmdRoundedRectangle, CmdRectangleBorder, CmdRoundedRectangleBorder, CmdBoxShadow,
-            CmdBoxShadowInner, CmdString, CmdLines, CmdPoints, CmdLinesPairs, CmdSquareSector, CmdPushMaskBefore, CmdPushMaskAfter, CmdPopMaskBefore, CmdPopMaskAfter,
-            CmdSetBlending, CmdNewRenderViewToTexture, CmdSetWindow>;
+            CmdBoxShadowInner, CmdString, CmdLines, CmdPoints, CmdLinesPairs, CmdSquareSector,
+            CmdNewRenderViewToTexture, CmdSetWindow>;
         Arg arg;
     };
 
