@@ -14,6 +14,8 @@
 //
 
 #include <algorithm>
+#include <format>
+#include <range/v3/iterator/operations.hpp>
 #include <range/v3/view.hpp>
 #include "OpenGLRenderer.h"
 #include "AUI/Common/AException.h"
@@ -64,6 +66,7 @@
 #include <glm/gtx/matrix_transform_2d.hpp>
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/GL/RenderTarget/TextureRenderTarget.h>
+#include <sys/types.h>
 #include <range/v3/algorithm/min_element.hpp>
 #include <variant>
 
@@ -243,19 +246,20 @@ OpenGLRenderer::OpenGLRenderer() {
     }
 }
 
-static int getBrushIndex(const IBatchingRenderer::Cmd& cmd) {
-    int result = -1;
+static unsigned int getBrushIndex(const IBatchingRenderer::Cmd& cmd) {
+    unsigned int result = 1;
+    const int offset = 3;
 
     std::visit(aui::lambda_overloaded {
-        [&](const IBatchingRenderer::CmdRectangle& arg) { result = arg.brush.index(); },
-        [&](const IBatchingRenderer::CmdRoundedRectangle& arg) { result = arg.brush.index(); },
-        [&](const IBatchingRenderer::CmdRectangleBorder& arg) { result = arg.brush.index(); },
-        [&](const IBatchingRenderer::CmdRoundedRectangleBorder& arg) { result = arg.brush.index(); },
-        [&](const IBatchingRenderer::CmdLines& arg) { result = arg.brush.index(); },
-        [&](const IBatchingRenderer::CmdPoints& arg) { result = arg.brush.index(); },
-        [&](const IBatchingRenderer::CmdLinesPairs& arg) { result = arg.brush.index(); },
-        [&](const IBatchingRenderer::CmdSquareSector& arg) { result = arg.brush.index(); },
-        [&](const IBatchingRenderer::CmdSetWindow& arg) { result = -2; },
+        [&](const IBatchingRenderer::CmdRectangle& arg) { result = arg.brush.index() + offset; },
+        [&](const IBatchingRenderer::CmdRoundedRectangle& arg) { result = arg.brush.index() + offset; },
+        [&](const IBatchingRenderer::CmdRectangleBorder& arg) { result = arg.brush.index() + offset; },
+        [&](const IBatchingRenderer::CmdRoundedRectangleBorder& arg) { result = arg.brush.index() + offset; },
+        [&](const IBatchingRenderer::CmdLines& arg) { result = arg.brush.index() + offset; },
+        [&](const IBatchingRenderer::CmdPoints& arg) { result = arg.brush.index() + offset; },
+        [&](const IBatchingRenderer::CmdLinesPairs& arg) { result = arg.brush.index() + offset; },
+        [&](const IBatchingRenderer::CmdSquareSector& arg) { result = arg.brush.index() + offset; },
+        [&](const IBatchingRenderer::CmdSetWindow& arg) { result = offset - 1; },
         [&](const auto& arg) { },
     }, cmd.arg);
 
@@ -263,14 +267,17 @@ static int getBrushIndex(const IBatchingRenderer::Cmd& cmd) {
 }
 
 void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
+    for (auto& cmd : cmds) {
+        cmd.batchId = {
+            .cmdId = static_cast<unsigned int>(cmd.arg.index()),
+            .brushId = getBrushIndex(cmd)
+        };
+    }
     std::sort(cmds.begin(), cmds.end(), [](const Cmd& cmdA, const Cmd& cmdB) {
-        if (cmdA.arg.index() != cmdB.arg.index()) {
-            return cmdA.arg.index() > cmdB.arg.index();
-        }
-
-        return getBrushIndex(cmdA) > getBrushIndex(cmdB);
+        return cmdA.batchId.value > cmdB.batchId.value;
     });
 
+    u_int16_t currentBatchId;
     for (auto& cmd : cmds) {
         std::visit(aui::lambda_overloaded{
             [&](const CmdRectangle& c) { renderRectangle(cmd, c.brush, c.position, c.size); },
@@ -287,6 +294,18 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
             [&](const CmdSetWindow& c) { mWindow = c.window; },
             [&](const CmdNewRenderViewToTexture&){ /* handled elsewhere */ }
         }, cmd.arg);
+
+        u_int16_t nextId = cmd.batchId.value + 1; // + 1 so 0 ID cmd 0 ID brush != NULL
+        if (!currentBatchId) {
+            currentBatchId = nextId;
+            continue;
+        }
+        // TODO: don't draw for non drawing commands like set window
+        if (currentBatchId == nextId)
+            continue;
+mRectangleVao.drawElements();
+        // TODO: Add drawArrays for points and lines support
+        currentBatchId = nextId;
     }
 }
 
@@ -334,8 +353,6 @@ void OpenGLRenderer::drawRectImpl(glm::vec2 position, glm::vec2 size) {
     mRectangleVao.bind();
 
     mRectangleVao.insert(0, AArrayView(getVerticesForRect(position, size)), "drawRectImpl");
-
-    mRectangleVao.drawElements();
 }
 
 void OpenGLRenderer::identityUv() {
@@ -403,7 +420,6 @@ void OpenGLRenderer::renderRectangleBorder(const Cmd& cmd, const ABrush& brush,
                          }), "rectangleBorder");
 
     glLineWidth(lineWidth);
-    mRectangleVao.drawElements(GL_LINES);
 }
 
 void OpenGLRenderer::renderRoundedRectangleBorder(const Cmd& cmd, const ABrush& brush,
@@ -463,8 +479,6 @@ void OpenGLRenderer::renderBoxShadow(const Cmd& cmd, glm::vec2 position,
         {w, y},
     };
     mRectangleVao.insert(0, AArrayView(uvs), "boxShadow");
-
-    mRectangleVao.drawElements();
 }
 
 void OpenGLRenderer::renderBoxShadowInner(const Cmd& cmd, glm::vec2 position,
@@ -500,8 +514,6 @@ void OpenGLRenderer::renderBoxShadowInner(const Cmd& cmd, glm::vec2 position,
         {w, y},
     };
     mRectangleVao.insert(0, AArrayView(uvs), "boxShadowInner");
-
-    mRectangleVao.drawElements();
 }
 
 void OpenGLRenderer::renderString(const Cmd& cmd, glm::vec2 position,

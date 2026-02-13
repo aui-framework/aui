@@ -9,6 +9,7 @@
 
 #pragma once
 
+#include <sys/types.h>
 #include "AUI/Render/IRenderer.h"
 
 class IBatchingRenderer : public IRenderer {
@@ -85,6 +86,13 @@ public:
     struct CmdSetWindow {
         AWindowBase* window;
     };
+    union BatchId {
+        struct {
+            unsigned int cmdId : 8;
+            unsigned int brushId : 8;
+        };
+        u_int16_t value;
+    };
     struct Cmd {
         glm::mat4 transform;
         AColor color;
@@ -93,6 +101,8 @@ public:
             CmdBoxShadowInner, CmdString, CmdLines, CmdPoints, CmdLinesPairs, CmdSquareSector,
             CmdNewRenderViewToTexture, CmdSetWindow>;
         Arg arg;
+        int zIndex;
+        BatchId batchId;
     };
 
     ~IBatchingRenderer() override = default;
@@ -127,6 +137,7 @@ protected:
             .transform = getTransform(),
             .color = getColor(),
             .arg = std::move(arg),
+            .zIndex = static_cast<int>(mCmds.size())
         });
     }
 
