@@ -142,7 +142,7 @@ else()
     set(AUI_COMPILER_MSVC 0 CACHE INTERNAL "Compiler")
 endif()
 
-if (CMAKE_GENERATOR_PLATFORM MATCHES "(arm64)|(ARM64)" OR CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64|arm64)")
+if (CMAKE_GENERATOR_PLATFORM MATCHES "(arm64)|(ARM64)" OR CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64|arm64|ARM64)")
     set(AUI_ARCH_X86_64 0 CACHE INTERNAL "Arch")
     set(AUI_ARCH_X86 0 CACHE INTERNAL "Arch")
     set(AUI_ARCH_ARM_64 1 CACHE INTERNAL "Arch")
@@ -164,6 +164,11 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)|(i.86)")
         set(AUI_ARCH_ARM_64 0 CACHE INTERNAL "Arch")
         set(AUI_ARCH_ARM_V7 0 CACHE INTERNAL "Arch")
     endif()
+else ()
+    set(AUI_ARCH_X86_64 0 CACHE INTERNAL "Arch")
+    set(AUI_ARCH_X86 0 CACHE INTERNAL "Arch")
+    set(AUI_ARCH_ARM_64 0 CACHE INTERNAL "Arch")
+    set(AUI_ARCH_ARM_V7 0 CACHE INTERNAL "Arch")
 endif()
 
 set(AUI_EXCLUDE_PLATFORMS ${AUI_EXCLUDE_PLATFORMS} CACHE INTERNAL "")
@@ -846,7 +851,7 @@ _aui_check_toolbox()
                   AUIB_FORCE_PRECOMPILED)
         list(APPEND _forwarded_args "-D${_name}=${${_name}}")
     endforeach()
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=ON -DAUIB_ISOLATE_SOURCE_DIRS=ON ${_forwarded_args}
+    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=ON ${_forwarded_args}
                     WORKING_DIRECTORY ${_workdir}/b
                     RESULT_VARIABLE _r
                     OUTPUT_FILE ${_build_log}

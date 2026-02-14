@@ -1,5 +1,7 @@
 #pragma once
 
+#include "AUI/Common/AStaticVector.h"
+
 #include <list>
 #include <span>
 
@@ -15,6 +17,8 @@ class API_AUI_AUDIO IAudioPlayer;
  */
 class API_AUI_AUDIO AAudioMixer {
 public:
+    static constexpr auto MAX_PLAYER_COUNT = 100;
+
     /**
      * @brief Add new sound source for mixing
      * @param s New sound source
@@ -38,7 +42,7 @@ public:
 
 private:
     ASpinlockMutex mConcurrentAccessCheck;
-    std::list<_<IAudioPlayer>> mPlayers;
+    AStaticVector<_<IAudioPlayer>, MAX_PLAYER_COUNT> mPlayers;
     std::vector<float> mMixBuffer;
     std::vector<float> mReadBuffer;
 };

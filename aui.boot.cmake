@@ -160,28 +160,59 @@ if (NOT CMAKE_C_COMPILER_ID)
     message(FATAL_ERROR "CMAKE_C_COMPILER_ID is not set.\nnote: Please include aui.boot AFTER project() call.")
 endif()
 
-if (ANDROID_ABI)
-    set(AUI_TARGET_ARCH_NAME "android-${ANDROID_ABI}")
-    set(AUI_TARGET_ABI "${AUI_TARGET_ARCH_NAME}" CACHE INTERNAL "COMPILER-PROCESSOR pair")
-elseif (IOS)
-    set(AUI_TARGET_ARCH_NAME "ios-${CMAKE_SYSTEM_PROCESSOR}")
-    set(AUI_TARGET_ABI "${AUI_TARGET_ARCH_NAME}" CACHE INTERNAL "COMPILER-PROCESSOR pair")
+if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
+    if (CMAKE_SIZEOF_VOID_P EQUAL 8)
+        set(_aui_target_arch "x86_64")
+    elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
+        set(_aui_target_arch "x86")
+    endif()
 else()
-    if (NOT CMAKE_SYSTEM_PROCESSOR)
-        message(FATAL_ERROR "CMAKE_SYSTEM_PROCESSOR is not set")
-    endif()
-    if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
-        if(CMAKE_SIZEOF_VOID_P EQUAL 8)
-            set(AUI_TARGET_ARCH_NAME "x86_64")
-        elseif(CMAKE_SIZEOF_VOID_P EQUAL 4)
-            set(AUI_TARGET_ARCH_NAME "x86")
-        endif()
-    else ()
-        set(AUI_TARGET_ARCH_NAME ${CMAKE_SYSTEM_PROCESSOR})
-    endif()
-    string(TOLOWER "${CMAKE_C_COMPILER_ID}-${AUI_TARGET_ARCH_NAME}" _tmp)
-    set(AUI_TARGET_ABI "${_tmp}" CACHE INTERNAL "COMPILER-PROCESSOR pair")
+    string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _aui_target_arch)
 endif()
+
+if (ANDROID)
+    set(_aui_target_os "android")
+elseif (IOS)
+    set(_aui_target_os "ios")
+elseif (LINUX)
+    set(_aui_target_os "linux")
+elseif (APPLE)
+    set(_aui_target_os "macos")
+elseif (WIN32)
+    set(_aui_target_os "windows")
+else()
+    string(TOLOWER "${CMAKE_SYSTEM_NAME}" _aui_target_os)
+endif()
+
+if (ANDROID)
+    set(_aui_target_abi "android")
+elseif (IOS)
+    set(_aui_target_abi "apple")
+elseif (WIN32)
+    if (MSVC)
+        set(_aui_target_abi "msvc")
+    else()
+        set(_aui_target_abi "gnu")
+    endif()
+elseif (APPLE)
+    set(_aui_target_abi "apple")
+else()
+    set(_aui_target_abi "gnu")
+endif()
+
+if (CMAKE_C_COMPILER_ID STREQUAL "Clang")
+    set(_aui_target_compiler "clang")
+elseif (CMAKE_C_COMPILER_ID STREQUAL "GNU")
+    set(_aui_target_compiler "gcc")
+elseif (MSVC)
+    set(_aui_target_compiler "msvc")
+else()
+    string(TOLOWER "${CMAKE_C_COMPILER_ID}" _aui_target_compiler)
+endif()
+
+set(AUI_TARGET_ARCH_NAME "${_aui_target_arch}")
+set(AUI_TARGET_TRIPLET "${_aui_target_arch}-${_aui_target_os}-${_aui_target_abi}-${_aui_target_compiler}"
+        CACHE INTERNAL "ARCH-OS-ABI-COMPILER")
 
 # checking if custom cache dir is set for the system
 if(DEFINED ENV{AUIB_CACHE_DIR})
@@ -196,7 +227,7 @@ endif()
 
 set(AUIB_CACHE_DIR ${_tmp} CACHE PATH "Path to AUI.Boot cache")
 message(STATUS "AUI.Boot cache: ${AUIB_CACHE_DIR}")
-message(STATUS "AUI.Boot target ABI: ${AUI_TARGET_ABI}")
+message(STATUS "AUI.Boot target triplet: ${AUI_TARGET_TRIPLET}")
 
 
 
@@ -371,7 +402,7 @@ function(_auib_precompiled_archive_name _output_var _project_name)
     else()
         set(SHARED_OR_STATIC static)
     endif()
-    set(_tmp "${_project_name}_${CMAKE_SYSTEM_NAME}-${AUI_TARGET_ABI}-${SHARED_OR_STATIC}-${CMAKE_BUILD_TYPE}")
+    set(_tmp "${_project_name}-${AUI_TARGET_TRIPLET}-${SHARED_OR_STATIC}-${CMAKE_BUILD_TYPE}")
     string(TOLOWER ${_tmp} _tmp)
     set(${_output_var} ${_tmp} PARENT_SCOPE)
 endfunction()
@@ -668,7 +699,7 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
 
     # [[BUILD_SPECIFIER]]
-    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_ABI}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_GENERATOR}/${AUIB_IMPORT_CMAKE_ARGS}")
+    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_TRIPLET}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_GENERATOR}/${AUIB_IMPORT_CMAKE_ARGS}")
     string(REPLACE ";" " " BUILD_SPECIFIER "${BUILD_SPECIFIER}")
 
     # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
@@ -697,22 +728,12 @@ function(auib_import AUI_MODULE_NAME URL)
         _auib_update_imported_targets_list()
     endif()
 
+    # the AUI_MODULE_NAME-TAG_OR_HASH is used to hint IDEs (i.e. CLion) about actual project name
+    set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}")
+    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER}")
+    set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
     if (DEP_ADD_SUBDIRECTORY)
-        set(DEP_AS_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}")
-
-        # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project name
-        set(DEP_SOURCE_DIR "${DEP_AS_DIR}/${AUI_MODULE_NAME_LOWER}")
-        set(DEP_BINARY_DIR "${DEP_AS_DIR}/build/${BUILD_SPECIFIER}")
-        set(DEP_FETCHED_FLAG ${DEP_AS_DIR}/FETCHED)
-    else()
-        if (AUIB_ISOLATE_SOURCE_DIRS)
-            set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}/src")
-            set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}/build/${BUILD_SPECIFIER}")
-        else()
-            set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
-            set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
-        endif()
-        set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
+        set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER}-as")
     endif()
 
     # invalidate all previous values.
@@ -843,6 +864,7 @@ function(auib_import AUI_MODULE_NAME URL)
                                 GIT_PROGRESS TRUE # show progress of download
                                 USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                                 USES_TERMINAL_UPDATE TRUE # show progress in ninja generator
+                                GIT_SHALLOW TRUE # clone just the specified commit
                                 ${SOURCE_BINARY_DIRS_ARG}
                         )
                     else()
@@ -853,6 +875,7 @@ function(auib_import AUI_MODULE_NAME URL)
                                 GIT_PROGRESS TRUE # show progress of download
                                 USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
                                 USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
+                                GIT_SHALLOW TRUE # clone just the specified commit
                                 ${SOURCE_BINARY_DIRS_ARG}
                         )
 

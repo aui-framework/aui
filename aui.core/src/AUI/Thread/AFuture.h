@@ -30,6 +30,7 @@
 #include <AUI/Thread/AMutex.h>
 #include <AUI/Thread/AThread.h>
 #include <AUI/Thread/AThreadPool.h>
+#include <AUI/Thread/AFutureWait.h>
 #include <AUI/Traits/concepts.h>
 #include <AUI/Util/ABitField.h>
 
@@ -42,6 +43,9 @@ public:
     AInvocationTargetException(const AString& message = {}, std::exception_ptr causedBy = std::current_exception()):
         AException(message, std::move(causedBy), AStacktrace::capture(3)) {}
     AString getMessage() const noexcept override {
+        if (causedBy() == nullptr) {
+            return AException::getMessage();
+        }
         try {
             std::rethrow_exception(causedBy());
         } catch (const AException& e) {
@@ -55,23 +59,6 @@ public:
 
     ~AInvocationTargetException() noexcept override = default;
 };
-
-
-/**
- * Controls <code>AFuture::wait</code> behaviour.
- * @see AFuture::wait
- */
-AUI_ENUM_FLAG(AFutureWait) {
-    JUST_WAIT = 0b00,
-    ALLOW_STACKFUL_COROUTINES = 0b10,
-
-    /**
-     * @brief Use work stealing.
-     */
-    ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP = 0b01,
-    DEFAULT = ALLOW_STACKFUL_COROUTINES | ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP,
-};
-
 
 namespace aui::impl::future {
     /**
@@ -193,7 +180,7 @@ namespace aui::impl::future {
                 return false;
             }
 
-            void wait(const _weak<CancellationWrapper<Inner>>& innerWeak, ABitField<AFutureWait> flags = AFutureWait::DEFAULT) noexcept;
+            void wait(const _weak<CancellationWrapper<Inner>>& innerWeak, ABitField<AFutureWait> flags = AFutureWait::DEFAULT);
 
             void cancel() noexcept {
                 std::unique_lock lock(mutex);
@@ -474,6 +461,10 @@ namespace aui::impl::future {
          * @details
          * The task will be executed inside wait() function if the threadpool have not taken the task to execute
          * yet. This behaviour can be disabled by <code>AFutureWait::JUST_WAIT</code> flag.
+         *
+         * Exceptions captured from AFuture's task are not propagated. This function contains
+         * `AThread::interruptionPoint()`: if `wait`'s caller's thread is interrupted, this function throws an
+         * `AThread::Interrupted` exception.
          */
         void wait(AFutureWait flags = AFutureWait::DEFAULT) const {
             (*mInner)->wait(mInner, flags);
@@ -493,7 +484,6 @@ namespace aui::impl::future {
 
             (*mInner)->wait(mInner, flags);
 
-            AThread::interruptionPoint();
             if ((*mInner)->exception) {
                 throw *(*mInner)->exception;
             }
@@ -902,7 +892,7 @@ public:
 
 template <typename Value>
 void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapper<Inner>>& innerWeak,
-                                                   ABitField<AFutureWait> flags) noexcept {
+                                                   ABitField<AFutureWait> flags) {
     if (hasResult()) return; // cheap check
     std::unique_lock lock(mutex);
     try {
@@ -944,6 +934,7 @@ void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapp
     } catch (const AThread::Interrupted& e) {
         e.needRethrow();
     }
+    AThread::interruptionPoint();
 }
 
 #if AUI_COROUTINES
