@@ -248,8 +248,8 @@ OpenGLRenderer::OpenGLRenderer() {
 }
 
 static unsigned char getBrushIndex(const IBatchingRenderer::Cmd& cmd) {
-    unsigned int result = 1;
-    const int offset = 3;
+    unsigned char result = 1;
+    const char offset = 3;
 
     std::visit(aui::lambda_overloaded {
         [&](const IBatchingRenderer::CmdRectangle& arg) { result = arg.brush.index() + offset; },
