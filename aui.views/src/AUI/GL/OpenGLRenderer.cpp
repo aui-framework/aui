@@ -14,6 +14,7 @@
 //
 
 #include <algorithm>
+#include <cstdint>
 #include <format>
 #include <range/v3/iterator/operations.hpp>
 #include <range/v3/view.hpp>
@@ -246,7 +247,7 @@ OpenGLRenderer::OpenGLRenderer() {
     }
 }
 
-static unsigned int getBrushIndex(const IBatchingRenderer::Cmd& cmd) {
+static unsigned char getBrushIndex(const IBatchingRenderer::Cmd& cmd) {
     unsigned int result = 1;
     const int offset = 3;
 
@@ -269,7 +270,7 @@ static unsigned int getBrushIndex(const IBatchingRenderer::Cmd& cmd) {
 void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
     for (auto& cmd : cmds) {
         cmd.batchId = {
-            .cmdId = static_cast<unsigned int>(cmd.arg.index()),
+            .cmdId = static_cast<unsigned char>(cmd.arg.index()),
             .brushId = getBrushIndex(cmd)
         };
     }
@@ -277,7 +278,7 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
         return cmdA.batchId.value > cmdB.batchId.value;
     });
 
-    u_int16_t currentBatchId;
+    uint16_t currentBatchId;
     for (auto& cmd : cmds) {
         std::visit(aui::lambda_overloaded{
             [&](const CmdRectangle& c) { renderRectangle(cmd, c.brush, c.position, c.size); },

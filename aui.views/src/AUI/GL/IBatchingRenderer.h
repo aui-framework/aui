@@ -9,7 +9,7 @@
 
 #pragma once
 
-#include <sys/types.h>
+#include <cstdint>
 #include "AUI/Render/IRenderer.h"
 
 class IBatchingRenderer : public IRenderer {
@@ -88,10 +88,10 @@ public:
     };
     union BatchId {
         struct {
-            unsigned int cmdId : 8;
-            unsigned int brushId : 8;
+            unsigned char cmdId : 8;
+            unsigned char brushId : 8;
         };
-        u_int16_t value;
+        uint16_t value;
     };
     struct Cmd {
         glm::mat4 transform;
