@@ -681,7 +681,9 @@ void AView::setCustomStyle(ass::PropertyListRecursive rule) {
 }
 
 void AView::applyModifier(ass::Modifier modifier) {
-
+    for (const auto& i : modifier.elements()) {
+        i(*this);
+    }
 }
 
 bool AView::hasIndirectParent(const _<AView>& v) {

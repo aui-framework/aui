@@ -55,7 +55,7 @@ TEST_F(UIReactiveTest, Label) {
     });
 
     // Initially, the property equals to "Test", so the label should display "Test!".
-    EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "!");
+    EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "Test!");
     // Update the property; the label should automatically reflect the new value.
     state->name = "Hello";
     EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "Hello!");
@@ -87,17 +87,9 @@ TEST_F(UIReactiveTest, Test2) {
       Label { AUI_REACT("{}"_format(*state->option)) },
       Label {
         .text = "Test",
-        .modifier =
-            Modifier {
-              ::TextColor { .color = state->option ? AColor::RED : AColor::GREEN },
-            },
+        .modifier = AUI_REACT(Modifier {} | ::TextColor { .color = state->option ? AColor::RED : AColor::GREEN }),
       },
-        Label {
-          .text = "Test",
-        } AUI_LET {
-
-        },
-      });
+    });
 
     // Initially, the property is empty, so the label should display "!".
     EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "!");
