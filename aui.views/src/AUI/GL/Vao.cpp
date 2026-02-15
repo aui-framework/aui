@@ -64,6 +64,7 @@ void gl::Vao::insertIfKeyMismatches(
 goAhead:
     insert(index, data, dataSize, vertexSize, dataType, key);
 }
+
 void gl::Vao::insert(
     GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType, const char* key) {
     bind();
@@ -134,7 +135,7 @@ void gl::Vao::drawElements(GLenum type) {
     glDrawElements(type, mIndicesCount, mIndicesType, 0);
 }
 
-void gl::Vao::indices(AArrayView<uint32_t> data) {
+void gl::Vao::indices(std::span<uint32_t> data) {
     bind();
     GLenum drawType = GL_DYNAMIC_DRAW;
     if (mIndicesBuffer == 0) {
@@ -144,11 +145,11 @@ void gl::Vao::indices(AArrayView<uint32_t> data) {
     }
     mIndicesCount = static_cast<GLsizei>(data.size());
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndicesBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.sizeInBytes(), data.data(), drawType);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.size_bytes(), data.data(), drawType);
     mIndicesType = GL_UNSIGNED_INT;
 }
 
-void gl::Vao::indices(AArrayView<uint16_t> data) {
+void gl::Vao::indices(std::span<uint16_t> data) {
     bind();
     GLenum drawType = GL_DYNAMIC_DRAW;
     if (mIndicesBuffer == 0) {
@@ -158,6 +159,6 @@ void gl::Vao::indices(AArrayView<uint16_t> data) {
     }
     mIndicesCount = static_cast<GLsizei>(data.size());
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndicesBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.sizeInBytes(), data.data(), drawType);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.size_bytes(), data.data(), drawType);
     mIndicesType = GL_UNSIGNED_SHORT;
 }

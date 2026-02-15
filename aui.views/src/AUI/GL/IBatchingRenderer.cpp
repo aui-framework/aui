@@ -15,9 +15,10 @@
 
 void IBatchingRenderer::rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
     enqueueCommand(CmdRectangle {
-      .brush = std::move(brush),
-      .position = position,
-      .size = size,
+        .brush = std::move(brush),
+        .position = position,
+        .size = size,
+        .zIndex = static_cast<int>(mCmds.size()) + 1
     });
 }
 
@@ -27,6 +28,7 @@ void IBatchingRenderer::roundedRectangle(const ABrush& brush, glm::vec2 position
         .position = position,
         .size = size,
         .radius = radius,
+        .zIndex = static_cast<int>(mCmds.size()) + 1
     });
 }
 
@@ -36,6 +38,7 @@ void IBatchingRenderer::rectangleBorder(const ABrush& brush, glm::vec2 position,
         .position = position,
         .size = size,
         .lineWidth = lineWidth,
+        .zIndex = static_cast<int>(mCmds.size()) + 1
     });
 }
 
@@ -46,6 +49,7 @@ void IBatchingRenderer::roundedRectangleBorder(const ABrush& brush, glm::vec2 po
         .size = size,
         .radius = radius,
         .borderWidth = borderWidth,
+        .zIndex = static_cast<int>(mCmds.size()) + 1
     });
 }
 
@@ -55,6 +59,7 @@ void IBatchingRenderer::boxShadow(glm::vec2 position, glm::vec2 size, float blur
         .size = size,
         .blurRadius = blurRadius,
         .color = color,
+        .zIndex = static_cast<int>(mCmds.size()) + 1
     });
 }
 
@@ -67,6 +72,7 @@ void IBatchingRenderer::boxShadowInner(glm::vec2 position, glm::vec2 size, float
         .borderRadius = borderRadius,
         .color = color,
         .offset = offset,
+        .zIndex = static_cast<int>(mCmds.size()) + 1
     });
 }
 
@@ -116,18 +122,23 @@ void IBatchingRenderer::squareSector(const ABrush& brush, const glm::vec2& posit
 }
 
 void IBatchingRenderer::pushMaskBefore() {
+    // TODO: move to cmds
 }
 
 void IBatchingRenderer::pushMaskAfter() {
+    // TODO: move to cmds
 }
 
 void IBatchingRenderer::popMaskBefore() {
+    // TODO: move to cmds
 }
 
 void IBatchingRenderer::popMaskAfter() {
+    // TODO: move to cmds
 }
 
 void IBatchingRenderer::setBlending(Blending blending) {
+    // TODO: move to cmds
 }
 
 void IBatchingRenderer::flush() {

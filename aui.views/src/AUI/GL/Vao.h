@@ -14,7 +14,6 @@
 #include "AUI/GL/gl.h"
 #include <glm/glm.hpp>
 #include "AUI/Common/AVector.h"
-#include "AUI/Util/AArrayView.h"
 #include "AUI/Views.h"
 
 namespace gl {
@@ -53,12 +52,12 @@ public:
      * @param data vertex data
      * @param key see gl::Vao::Buffer::lastModifierKey
      */
-    template <typename T>
-    void insert(GLuint index, AArrayView<T> data, const char* key) {
+    template <typename T, size_t size>
+    void insert(GLuint index, std::span<T, size> data, const char* key) {
         if constexpr (std::is_same_v<T, GLuint>) {
-            insertInteger(index, (const char*) data.data(), data.sizeInBytes(), 1, GL_UNSIGNED_INT);
+            insertInteger(index, (const char*) data.data(), data.size_bytes(), 1, GL_UNSIGNED_INT);
         } else {
-            insert(index, (const char*) data.data(), data.sizeInBytes(), sizeof(T) / sizeof(float), GL_FLOAT, key);
+            insert(index, (const char*) data.data(), data.size_bytes(), sizeof(T) / sizeof(float), GL_FLOAT, key);
         }
     }
 
@@ -68,23 +67,23 @@ public:
      * @param data vertex data
      * @param key see gl::Vao::Buffer::lastModifierKey
      */
-    template <typename T>
-    void insertIfKeyMismatches(GLuint index, AArrayView<T> data, const char* key) {
+    template <typename T, size_t size>
+    void insertIfKeyMismatches(GLuint index, std::span<T, size> data, const char* key) {
         insertIfKeyMismatches(
-            index, (const char*) data.data(), data.sizeInBytes(), sizeof(T) / sizeof(float), GL_FLOAT, key);
+            index, (const char*) data.data(), data.size_bytes(), sizeof(T) / sizeof(float), GL_FLOAT, key);
     }
 
     /**
      * @brief Uploads VBO indices
      * @param data indices
      */
-    void indices(AArrayView<uint32_t> data);
+    void indices(std::span<uint32_t> data);
 
     /**
      * @brief Uploads VBO indices
      * @param data indices
      */
-    void indices(AArrayView<uint16_t> data);
+    void indices(std::span<uint16_t> data);
 
     void drawArrays(GLenum type, GLsizei count);
 

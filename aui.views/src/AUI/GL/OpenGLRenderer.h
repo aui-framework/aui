@@ -12,12 +12,15 @@
 #pragma once
 
 
+#include <iterator>
+#include <vector>
 #include "AUI/GL/Program.h"
 #include "AUI/GL/Framebuffer.h"
 #include "AUI/GL/Vao.h"
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/GL/RenderTarget/TextureRenderTarget.h"
 #include "IBatchingRenderer.h"
+#include "glm/fwd.hpp"
 
 class OpenGLRenderer final: public IBatchingRenderer {
 friend class OpenGLPrerenderedString;
@@ -65,6 +68,11 @@ private:
     AOptional<gl::Program> mSymbolShaderSubPixel;
     AOptional<gl::Program> mSquareSectorShader;
     AOptional<gl::Program> mLineSolidDashedShader;
+    static inline constexpr size_t MAX_BATCH_ELEMENTS = 250;
+    static inline constexpr size_t BATCH_VERTEX_AMOUNT = MAX_BATCH_ELEMENTS * 4;
+    static const size_t mQuadVertexCount = 4;
+    std::array<glm::vec2, BATCH_VERTEX_AMOUNT> mBatchVerticies;
+    std::array<glm::vec2, BATCH_VERTEX_AMOUNT>::iterator mCurrentBatchVertex;
     gl::Vao mRectangleVao;
     gl::Vao mBorderVao;
     gl::Texture2D mGradientTexture;
@@ -98,6 +106,7 @@ private:
 
 
     static std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position, glm::vec2 size);
+    void appendBatchVerticiesForRect(const glm::vec2 position, const glm::vec2 size, const int zIndex);
 
     FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 
@@ -126,17 +135,17 @@ private:
      */
     FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
 
-    void drawRectImpl(glm::vec2 position, glm::vec2 size);
+    void drawRectImpl(const glm::vec2 position, const glm::vec2 size, const int zIndex);
 
 
 private:
     // Helper methods that perform the actual rendering for each command.
-    void renderRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size);
-    void renderRoundedRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius);
-    void renderRectangleBorder(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, float lineWidth);
-    void renderRoundedRectangleBorder(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius, int borderWidth);
-    void renderBoxShadow(const Cmd& cmd, glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color);
-    void renderBoxShadowInner(const Cmd& cmd, glm::vec2 position, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius, const AColor& color, glm::vec2 offset);
+    void renderRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, const int zIndex);
+    void renderRoundedRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius, const int zIndex);
+    void renderRectangleBorder(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, float lineWidth, const int zIndex);
+    void renderRoundedRectangleBorder(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius, int borderWidth, const int zIndex);
+    void renderBoxShadow(const Cmd& cmd, glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color, const int zIndex);
+    void renderBoxShadowInner(const Cmd& cmd, glm::vec2 position, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius, const AColor& color, glm::vec2 offset, const int zIndex);
     void renderString(const Cmd& cmd, glm::vec2 position, const AString& string, const AFontStyle& fs);
     void renderLines(const Cmd& cmd, const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width);
     void renderLines(const Cmd& cmd, const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width);

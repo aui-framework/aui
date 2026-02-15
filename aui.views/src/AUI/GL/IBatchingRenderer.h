@@ -18,18 +18,21 @@ public:
         ABrush brush;
         glm::vec2 position;
         glm::vec2 size;
+        int zIndex;
     };
     struct CmdRoundedRectangle {
         ABrush brush;
         glm::vec2 position;
         glm::vec2 size;
         float radius;
+        int zIndex;
     };
     struct CmdRectangleBorder {
         ABrush brush;
         glm::vec2 position;
         glm::vec2 size;
         float lineWidth;
+        int zIndex;
     };
     struct CmdRoundedRectangleBorder {
         ABrush brush;
@@ -37,12 +40,14 @@ public:
         glm::vec2 size;
         float radius;
         int borderWidth;
+        int zIndex;
     };
     struct CmdBoxShadow {
         glm::vec2 position;
         glm::vec2 size;
         float blurRadius;
         AColor color;
+        int zIndex;
     };
     struct CmdBoxShadowInner {
         glm::vec2 position;
@@ -52,6 +57,7 @@ public:
         float borderRadius;
         AColor color;
         glm::vec2 offset;
+        int zIndex;
     };
     struct CmdString {
         glm::vec2 position;
