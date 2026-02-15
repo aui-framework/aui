@@ -307,7 +307,7 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
             continue;
         }
         // TODO: don't draw for non drawing commands like set window
-        breakBatch = breakBatch or (currentBatchId != nextId);
+        breakBatch = currentBatchId != nextId;
         if (not breakBatch)
             continue;
 
