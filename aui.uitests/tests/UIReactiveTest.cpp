@@ -71,7 +71,7 @@ struct TextColor {
 
 TEST_F(UIReactiveTest, Test2) {
     // Test that a reactive label updates its text when the bound property changes.
-    // The test creates a simple state object with a reactive string property
+    // The test creates a simple state object with a reactive bool property
     // and binds it to a label using the AUI_REACT macro. It then verifies
     // the initial rendered text and the updated text after changing the
     // property.
@@ -83,18 +83,20 @@ TEST_F(UIReactiveTest, Test2) {
     auto state = _new<State>();
 
     mWindow->setContents(Vertical {
-      CheckBox { .checked = AUI_REACT(state->option), .onCheckedChange = [state](bool v) { state->option = v; } },
-      Label { AUI_REACT("{}"_format(*state->option)) },
       Label {
         .text = "Test",
-        .modifier = AUI_REACT(Modifier {} | ::TextColor { .color = state->option ? AColor::RED : AColor::GREEN }),
+        .modifier = AUI_REACT(Modifier {} | ::TextColor { state->option ? AColor::GREEN : AColor::RED }),
       },
     });
 
-    // Initially, the property is empty, so the label should display "!".
-    EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "!");
+    // Initially, the property equals to `false`, so the label should be red.
+    uitest::frame();
+    EXPECT_EQ(_cast<ALabel>(By::type<ALabel>().one())->textColor(), AColor::RED);
+
     // Update the property; the label should automatically reflect the new value.
-    EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "Hello!");
+    state->option = true;
+    uitest::frame();
+    EXPECT_EQ(_cast<ALabel>(By::type<ALabel>().one())->textColor(), AColor::GREEN);
 }
 
 /*

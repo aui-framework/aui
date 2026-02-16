@@ -286,6 +286,11 @@ using decode_type_t = typename decode_type<T>::type;
  *   Label { "Red text!" } AUI_OVERRIDE_STYLE { TextColor { AColor::RED } },
  * });
  * ```
+ *
+ * Former names:
+ * 
+ * - `AUI_WITH_STYLE`
+ * - `with_style`
  */
 #define AUI_OVERRIDE_STYLE &ass::PropertyListRecursive
 
