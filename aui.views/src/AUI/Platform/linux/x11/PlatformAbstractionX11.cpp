@@ -513,11 +513,19 @@ void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image)
 
     PlatformAbstractionX11::ourAtoms.netWmIcon = XInternAtom(PlatformAbstractionX11::ourDisplay, "_NET_WM_ICON", False);
     PlatformAbstractionX11::ourAtoms.cardinal = XInternAtom(PlatformAbstractionX11::ourDisplay, "_CARDINAL", False);
-    /*
-    XChangeProperty(PlatformAbstractionX11::ourDisplay, nativeHandle(window), net_wm_icon, cardinal, 32,
-        PropModeReplace,
-    );
-    //*/
+
+    long icon_data[32*32 + 2];
+    icon_data[0] = 32;
+    icon_data[1] = 32;
+
+    for (int i = 2; i <32*32+2; i++) {
+        icon_data[i] = 0xFFFFFFFF;
+    }
+    XChangeProperty(PlatformAbstractionX11::ourDisplay, nativeHandle(window),ourAtoms.netWmIcon, XA_CARDINAL,32,
+            PropModeReplace,
+            (unsigned char*)icon_data,
+            32*32+2);
+    XFlush(PlatformAbstractionX11::ourDisplay);
 }
 
 void PlatformAbstractionX11::windowHide(AWindow& window) {
