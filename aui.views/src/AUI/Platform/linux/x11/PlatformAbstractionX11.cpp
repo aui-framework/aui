@@ -514,17 +514,32 @@ void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image)
     PlatformAbstractionX11::ourAtoms.netWmIcon = XInternAtom(PlatformAbstractionX11::ourDisplay, "_NET_WM_ICON", False);
     PlatformAbstractionX11::ourAtoms.cardinal = XInternAtom(PlatformAbstractionX11::ourDisplay, "_CARDINAL", False);
 
-    long icon_data[32*32 + 2];
-    icon_data[0] = 32;
-    icon_data[1] = 32;
+    auto conv = [&](glm::uvec2 pos) {
+        const auto col = image.get(pos);
+        if (col!=AColor::GRAY)
+            ALogger::info("color") << "another color:" << col;
+        uint8_t A = (uint8_t)(col.a * 255.0f);
+        uint8_t R = (uint8_t)(col.r * 255.0f);
+        uint8_t G = (uint8_t)(col.g * 255.0f);
+        uint8_t B = (uint8_t)(col.b * 255.0f);
 
-    for (int i = 2; i <32*32+2; i++) {
-        icon_data[i] = 0xFFFFFFFF;
+        return ((long)A << 24) | ((long)R << 16) | ((long)G << 8) | (long)B;
+    };
+
+    long icon_data[image.width()*image.height() + 2];
+    icon_data[0] = image.width();
+    icon_data[1] = image.height();
+
+    for (size_t x=0;x<image.width();x++) {
+        for (size_t y=0;y<image.height();y++) {
+            icon_data[y*image.width()+x+2] = conv(glm::uvec2(x,y));
+        }
     }
+
     XChangeProperty(PlatformAbstractionX11::ourDisplay, nativeHandle(window),ourAtoms.netWmIcon, XA_CARDINAL,32,
             PropModeReplace,
             (unsigned char*)icon_data,
-            32*32+2);
+            image.width()*image.height()+2);
     XFlush(PlatformAbstractionX11::ourDisplay);
 }
 
