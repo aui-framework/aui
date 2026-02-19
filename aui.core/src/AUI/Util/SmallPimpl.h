@@ -71,8 +71,6 @@ private:
      * @brief Handles upcasted pointers. Implemented and stored in getControlBlock().
      */
     struct ControlBlock {
-        virtual ~ControlBlock() = default;
-
         /**
          * @brief Translates upcasted pointer (T*) `ptr` to `Interface*`.
          * @param ptr object of type T.
@@ -219,7 +217,7 @@ public:
         static_assert(!std::is_abstract_v<T>, "T must not be an abstract type");
         static_assert(std::is_constructible_v<T, Args...>, "T must be constructible from args");
 
-        const auto& controlBlock = getControlBlock<std::decay_t<T>>();
+        const auto& controlBlock = CONTROL_BLOCK_IMPL<std::decay_t<T>>;
 
         if constexpr (isStackConstructible<T>()) {
             mStorage.template emplace<StackAllocated>(controlBlock, std::in_place_type<T>, std::forward<Args>(args)...);
@@ -283,46 +281,46 @@ private:
     Storage mStorage = Empty {};
 
     template <aui::derived_from<Interface> T>
-    static const ControlBlock& getControlBlock() {
-        static struct ControlBlockImpl final : ControlBlock {
-            Interface* asInterface(void* ptr) const override { return static_cast<T*>(ptr); }
+    struct ControlBlockImpl final : ControlBlock {
+        Interface* asInterface(void* ptr) const override { return static_cast<T*>(ptr); }
 
-            void copyInplace(void* dst, void* src) const override {
-                const auto& srcT = *static_cast<const T*>(src);
-                if constexpr (std::is_copy_constructible_v<T>) {
-                    new (dst) T(srcT);
-                } else {
-                    throw AException(
-                        "small_pimpl: attempt to make a copy or move of small_pimpl: {} is not copy constructible"_format(
-                            AReflect::name(static_cast<const T*>(src))));
-                }
+        void copyInplace(void* dst, void* src) const override {
+            const auto& srcT = *static_cast<const T*>(src);
+            if constexpr (std::is_copy_constructible_v<T>) {
+                new (dst) T(srcT);
+            } else {
+                throw AException(
+                    "small_pimpl: attempt to make a copy or move of small_pimpl: {} is not copy constructible"_format(
+                        AReflect::name(static_cast<const T*>(src))));
             }
+        }
 
-            std::tuple<std::unique_ptr<Interface>, void* /* upcastedPtr */> copy(void* src) const override {
-                const auto& srcT = *static_cast<const T*>(src);
-                if constexpr (std::is_copy_constructible_v<T>) {
-                    auto copy = std::make_unique<T>(srcT);
-                    auto* upcastedPtr = copy.get();
-                    return { std::move(copy), upcastedPtr };
-                } else {
-                    throw AException(
-                        "small_pimpl: attempt to make a copy or move of small_pimpl: {} is not copy constructible"_format(
-                            AReflect::name(static_cast<const T*>(src))));
-                }
+        std::tuple<std::unique_ptr<Interface>, void* /* upcastedPtr */> copy(void* src) const override {
+            const auto& srcT = *static_cast<const T*>(src);
+            if constexpr (std::is_copy_constructible_v<T>) {
+                auto copy = std::make_unique<T>(srcT);
+                auto* upcastedPtr = copy.get();
+                return { std::move(copy), upcastedPtr };
+            } else {
+                throw AException(
+                    "small_pimpl: attempt to make a copy or move of small_pimpl: {} is not copy constructible"_format(
+                        AReflect::name(static_cast<const T*>(src))));
             }
+        }
 
-            void moveInplace(void* dst, void* src) const override {
-                auto& srcT = *static_cast<T*>(src);
-                if constexpr (std::is_move_constructible_v<T>) {
-                    new (dst) T(std::move(srcT));
-                } else {
-                    copyInplace(dst, src);
-                }
+        void moveInplace(void* dst, void* src) const override {
+            auto& srcT = *static_cast<T*>(src);
+            if constexpr (std::is_move_constructible_v<T>) {
+                new (dst) T(std::move(srcT));
+            } else {
+                copyInplace(dst, src);
             }
+        }
 
-        } impl;
-        return impl;
-    }
+    };
+
+    template<typename T>
+    static constexpr ControlBlockImpl<T> CONTROL_BLOCK_IMPL{};
 
     template <typename T>
     static consteval bool isStackConstructible() {
