@@ -133,7 +133,7 @@ private:
 
         [[nodiscard]]
         Interface* ptr() const noexcept {
-            return controlBlock.asInterface(const_cast<void*>(static_cast<const void*>(&buffer)));
+            return controlBlock.asInterface(upcastedPtr());
         }
 
         [[nodiscard]]
@@ -142,8 +142,8 @@ private:
         }
 
         [[nodiscard]]
-        void* upcastedPtr() const {
-            return ptr();
+        void* upcastedPtr() const noexcept {
+            return const_cast<void*>(static_cast<const void*>(&buffer));
         }
     };
 
@@ -176,7 +176,7 @@ private:
         ~HeapAllocated() = default;   // no need to call dtor ourselves, unique_ptr does it for us
 
         [[nodiscard]]
-        Interface* ptr() noexcept {
+        Interface* ptr() const noexcept {
             return value.get();
         }
 
@@ -186,8 +186,8 @@ private:
         }
 
         [[nodiscard]]
-        void* upcastedPtr() {
-            return upcastedPtr;
+        void* upcastedPtr() const noexcept {
+            return upcastedPtrValue;
         }
     };
 

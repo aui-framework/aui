@@ -115,6 +115,8 @@ static_assert(sizeof(big::Mock) > SMALL_SIZE);
 static_assert(sizeof(big::CopyOnly) > SMALL_SIZE);
 static_assert(sizeof(big::MoveOnly) > SMALL_SIZE);
 
+using MyPimpl = aui::small_pimpl<MyInterface, SMALL_SIZE>;
+
 // Test fixture template that will be instantiated with each mock type.
 template <typename T>
 class SmallPimpl : public testing::Test {};
@@ -127,7 +129,7 @@ TYPED_TEST_SUITE(SmallPimpl, TestTypes);
 TYPED_TEST(SmallPimpl, AllocationDecision) {
     using MockInterface = TypeParam::Mock; // either small::Mock or big::Mock
 
-    aui::small_pimpl<MyInterface, SMALL_SIZE> pimpl{std::in_place_type<MockInterface>};
+    MyPimpl pimpl{std::in_place_type<MockInterface>};
     EXPECT_EQ(pimpl.isOnHeap(), TypeParam::EXPECT_HEAP_ALLOCATED);
 }
 
@@ -136,7 +138,7 @@ TYPED_TEST(SmallPimpl, AllocationDecision) {
 TYPED_TEST(SmallPimpl, MockTestInvocation) {
     using MockInterface = TypeParam::Mock; // either small::Mock or big::Mock
 
-    aui::small_pimpl<MyInterface, SMALL_SIZE> pimpl{std::in_place_type<MockInterface>};
+    MyPimpl pimpl{std::in_place_type<MockInterface>};
     {
         auto* mock = dynamic_cast<MockInterface*>(pimpl.ptr());
         ASSERT_NE(mock, nullptr);
@@ -151,7 +153,7 @@ TYPED_TEST(SmallPimpl, Destructor) {
     using MockInterface = TypeParam::Mock; // either small::Mock or big::Mock
 
     {
-        aui::small_pimpl<MyInterface, SMALL_SIZE> pimpl{std::in_place_type<MockInterface>};
+        MyPimpl pimpl{std::in_place_type<MockInterface>};
         destructorCalled = false;
     }
     EXPECT_TRUE(destructorCalled);
@@ -161,10 +163,10 @@ TYPED_TEST(SmallPimpl, Copy) {
     using CopyOnly = TypeParam::CopyOnly; // either small::CopyOnly or big::CopyOnly
 
     {
-        aui::small_pimpl<MyInterface, SMALL_SIZE> pimpl1{std::in_place_type<CopyOnly>};
+        MyPimpl pimpl1{std::in_place_type<CopyOnly>};
         pimpl1->field = 42;
         {
-            aui::small_pimpl<MyInterface, SMALL_SIZE> pimpl2{pimpl1};
+            MyPimpl pimpl2{pimpl1};
             EXPECT_EQ(pimpl2->field, 42);
             destructorCalled = false;
         }
@@ -178,11 +180,11 @@ TYPED_TEST(SmallPimpl, Move) {
     using MoveOnly = TypeParam::MoveOnly; // either small::MoveOnly or big::MoveOnly
 
     {
-        aui::small_pimpl<MyInterface, SMALL_SIZE> pimpl1{std::in_place_type<MoveOnly>};
+        MyPimpl pimpl1{std::in_place_type<MoveOnly>};
         pimpl1->field = 42;
         {
-            EXPECT_ANY_THROW((aui::small_pimpl<MyInterface, SMALL_SIZE>){pimpl1});
-            aui::small_pimpl<MyInterface, SMALL_SIZE> pimpl2{std::move(pimpl1)};
+            EXPECT_ANY_THROW(MyPimpl{pimpl1});
+            MyPimpl pimpl2{std::move(pimpl1)};
             EXPECT_EQ(pimpl2->field, 42);
             destructorCalled = false;
         }
