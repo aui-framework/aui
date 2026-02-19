@@ -6,7 +6,7 @@
 			"label": "build",
 			"command": "build",
 			"targets": [
-				"all"
+				"all", "Tests"
 			],
 			"preset": "__defaultBuildPreset__",
 			"group": "build",
