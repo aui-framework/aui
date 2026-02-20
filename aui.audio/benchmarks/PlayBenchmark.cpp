@@ -13,7 +13,7 @@ public:
     size_t read(char* dst, size_t size) override {
         auto span = std::span(reinterpret_cast<int16_t*>(dst), size / sizeof(int16_t));
         for (auto& s : span) {
-            s = std::sin(mTime += 0.03f) * 1000;
+            s = std::sin(mTime += 0.03f) * 10;
         }
         mTime = std::fmod(mTime, glm::pi<float>() * 2.f);
         return span.size_bytes();
