@@ -13,7 +13,7 @@
 
 TEST(ImageView, Stride) {
     APixelFormat pf = APixelFormat::RGBA_BYTE;
-    std::vector<uint32_t> some_bytes(100 * 100 * pf.bytesPerPixel());
+    std::vector<uint8_t> some_bytes(100 * 100 * pf.bytesPerPixel());
     AByteBufferView data(reinterpret_cast<const char*>(some_bytes.data()), some_bytes.size());
 
     AImageView view_big(data, 100 * pf.bytesPerPixel(), {100, 100}, pf);
