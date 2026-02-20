@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <fcntl.h>
+#include <vector>
 
 #include "PlatformAbstractionX11.h"
 #include "AUI/Platform/APlatform.h"
@@ -513,7 +514,7 @@ void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image)
     PlatformAbstractionX11::ourAtoms.netWmIcon = XInternAtom(PlatformAbstractionX11::ourDisplay, "_NET_WM_ICON", False);
     PlatformAbstractionX11::ourAtoms.cardinal = XInternAtom(PlatformAbstractionX11::ourDisplay, "_CARDINAL", False);
 
-    uint64_t icon_data[image.width()*image.height() + 2];
+    std::vector<uint64_t> icon_data(image.width()*image.height() + 2);
     icon_data[0] = image.width();
     icon_data[1] = image.height();
 
@@ -521,13 +522,13 @@ void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image)
     for (size_t y = 0; y < image.height(); y++) {
         for (size_t x = 0; x < image.width(); x++) {
             AColor col = image.get(glm::uvec2(x, y));
-            icon_data[idx++] = uint64_t(uint8_t(col.a * 255.0f)) << 24 | uint64_t(uint8_t(col.r * 255.0f)) << 16 | uint64_t(uint8_t(col.g * 255.0f)) << 8 | uint64_t(uint8_t(col.b * 255.0f));
+            icon_data[idx++] = static_cast<unsigned long>(uint8_t(col.a * 255.0f)) << 24 | static_cast<unsigned long>(uint8_t(col.r * 255.0f)) << 16 | static_cast<unsigned long>(uint8_t(col.g * 255.0f)) << 8 | static_cast<unsigned long>(uint8_t(col.b * 255.0f));
         }
     }
 
     XChangeProperty(PlatformAbstractionX11::ourDisplay, nativeHandle(window),ourAtoms.netWmIcon, XA_CARDINAL,32,
             PropModeReplace,
-            (unsigned char*)icon_data,
+            (unsigned char*)icon_data.data(),
             image.width()*image.height()+2);
     XFlush(PlatformAbstractionX11::ourDisplay);
 }
