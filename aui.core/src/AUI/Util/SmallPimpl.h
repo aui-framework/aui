@@ -98,46 +98,37 @@ private:
         virtual void moveInplace(void* dst, void* src) const = 0;
     };
 
-    struct Empty {
-        // stub container, needed just to avoid the requirement of initializing mStorage in constructor immediately.
-
-        Interface* ptr() noexcept { return nullptr; }
-
-        [[nodiscard]]
-        const ControlBlock& getControlBlock() const {
-            throw AException("small_pimpl is empty");
-        }
+    struct Common {
+        Interface* ptr{};
+        const ControlBlock* controlBlock{};
     };
 
-    struct StackAllocated {
-        const ControlBlock& controlBlock;
+    struct Empty: Common {
+        // stub container, needed just to avoid the requirement of initializing mStorage in constructor immediately.
+    };
+
+    struct StackAllocated: Common {
         alignas(Interface) unsigned char buffer[StackSize];
 
         template <typename T, typename... Args>
-        StackAllocated(const ControlBlock& controlBlock, std::in_place_type_t<T>, Args&&... args)
-          : controlBlock(controlBlock) {
-            new (&buffer) std::decay_t<T>(std::forward<Args>(args)...);
+        StackAllocated(const ControlBlock& controlBlock, std::in_place_type_t<T>, Args&&... args) {
+            this->ptr = new (&buffer) std::decay_t<T>(std::forward<Args>(args)...);
+            this->controlBlock = &controlBlock;
         }
 
-        StackAllocated(const StackAllocated& rhs) : controlBlock(rhs.controlBlock) {
-            controlBlock.copyInplace(upcastedPtr(), rhs.upcastedPtr());
+        StackAllocated(const StackAllocated& rhs) {
+            this->controlBlock = rhs.controlBlock;
+            this->controlBlock->copyInplace(upcastedPtr(), rhs.upcastedPtr());
+            this->ptr = this->controlBlock->asInterface(rhs.ptr);
         }
 
-        StackAllocated(StackAllocated&& rhs) noexcept : controlBlock(rhs.controlBlock) {
-            controlBlock.moveInplace(upcastedPtr(), rhs.upcastedPtr());
+        StackAllocated(StackAllocated&& rhs) noexcept {
+            this->controlBlock = rhs.controlBlock;
+            this->controlBlock->moveInplace(upcastedPtr(), rhs.upcastedPtr());
+            this->ptr = this->controlBlock->asInterface(rhs.ptr);
         }
 
-        ~StackAllocated() { ptr()->~Interface(); }
-
-        [[nodiscard]]
-        Interface* ptr() const noexcept {
-            return controlBlock.asInterface(upcastedPtr());
-        }
-
-        [[nodiscard]]
-        const ControlBlock& getControlBlock() const noexcept {
-            return controlBlock;
-        }
+        ~StackAllocated() { this->ptr->~Interface(); }
 
         [[nodiscard]]
         void* upcastedPtr() const noexcept {
@@ -145,43 +136,36 @@ private:
         }
     };
 
-    struct HeapAllocated {
-        const ControlBlock& controlBlock;
+    struct HeapAllocated: Common {
         std::unique_ptr<Interface> value {};
         void* upcastedPtrValue {};
 
         template <typename T, typename... Args>
-        HeapAllocated(const ControlBlock& controlBlock, std::in_place_type_t<T>, Args&&... args)
-          : controlBlock(controlBlock) {
+        HeapAllocated(const ControlBlock& controlBlock, std::in_place_type_t<T>, Args&&... args) {
+            this->controlBlock = &controlBlock;
             // don't mess up with the order and types: std::unique_ptr<T> IS NOT std::unique_ptr<Interface>
             // which are not required to be equal
             auto object = std::make_unique<T>(std::forward<Args>(args)...);
-            upcastedPtrValue = object.get();
+            upcastedPtrValue = this->ptr = object.get();
             value = std::move(object);
         }
 
-        HeapAllocated(const HeapAllocated& rhs) : controlBlock(rhs.controlBlock) {
-            auto [uniquePtr, upcastedPtr] = controlBlock.copy(rhs.upcastedPtrValue);
+        HeapAllocated(const HeapAllocated& rhs) {
+            this->controlBlock = rhs.controlBlock;
+            auto [uniquePtr, upcastedPtr] = this->controlBlock->copy(rhs.upcastedPtrValue);
             value = std::move(uniquePtr);
+            this->ptr = value.get();
             upcastedPtrValue = upcastedPtr;
         }
 
         HeapAllocated(HeapAllocated&& rhs) noexcept
-          : controlBlock(rhs.controlBlock)
-          , value(std::move(rhs.value))
-          , upcastedPtrValue(std::exchange(rhs.upcastedPtrValue, nullptr)) {}
+          : value(std::move(rhs.value))
+          , upcastedPtrValue(std::exchange(rhs.upcastedPtrValue, nullptr)) {
+            this->controlBlock = rhs.controlBlock;
+            this->ptr = value.get();
+        }
 
         ~HeapAllocated() = default;   // no need to call dtor ourselves, unique_ptr does it for us
-
-        [[nodiscard]]
-        Interface* ptr() const noexcept {
-            return value.get();
-        }
-
-        [[nodiscard]]
-        const ControlBlock& getControlBlock() const noexcept {
-            return controlBlock;
-        }
 
         [[nodiscard]]
         void* upcastedPtr() const noexcept {
@@ -256,15 +240,18 @@ public:
      * @brief Get the stored pointer to interface.
      */
     [[nodiscard]] Interface* ptr() noexcept {
-        return std::visit([](auto& p) { return p.ptr(); }, mStorage);
+        // std::visit dispatch is stripped down by compiler optimizations.
+        return std::visit([](Common& p) { return p.ptr; }, mStorage);
     }
 
     [[nodiscard]] const Interface* ptr() const noexcept {
-        return std::visit([](const auto& p) { return p.ptr(); }, mStorage);
+        // std::visit dispatch is stripped down by compiler optimizations.
+        return std::visit([](const Common& p) { return p.ptr; }, mStorage);
     }
 
     [[nodiscard]] const ControlBlock& controlBlock() const noexcept {
-        return std::visit([](const auto& p) -> decltype(auto) { return p.getControlBlock(); }, mStorage);
+        // std::visit dispatch is stripped down by compiler optimizations.
+        return std::visit([](const Common& p) -> decltype(auto) { return *p.controlBlock; }, mStorage);
     }
 
     [[nodiscard]]
