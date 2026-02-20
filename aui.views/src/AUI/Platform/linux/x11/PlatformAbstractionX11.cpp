@@ -521,7 +521,7 @@ void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image)
     for (size_t y = 0; y < image.height(); y++) {
         for (size_t x = 0; x < image.width(); x++) {
             AColor col = image.get(glm::uvec2(x, y));
-            icon_data[idx++] = uint64_t(col.a * 255.0f) << 24 | uint64_t(col.r * 255.0f) << 16 | uint64_t(col.g * 255.0f) << 8 | uint64_t(col.b * 255.0f);
+            icon_data[idx++] = uint64_t(uint8_t(col.a * 255.0f)) << 24 | uint64_t(uint8_t(col.r * 255.0f)) << 16 | uint64_t(uint8_t(col.g * 255.0f)) << 8 | uint64_t(uint8_t(col.b * 255.0f));
         }
     }
 
