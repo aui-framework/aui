@@ -513,23 +513,15 @@ void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image)
     PlatformAbstractionX11::ourAtoms.netWmIcon = XInternAtom(PlatformAbstractionX11::ourDisplay, "_NET_WM_ICON", False);
     PlatformAbstractionX11::ourAtoms.cardinal = XInternAtom(PlatformAbstractionX11::ourDisplay, "_CARDINAL", False);
 
-    auto conv = [&image](glm::uvec2 pos) {
-        const auto col = image.get(pos);
-        long a = col.a * 255.0f;
-        long r = col.r * 255.0f;
-        long g = col.g * 255.0f;
-        long b = col.b * 255.0f;
-
-        return (a << 24) | (r << 16) | (g << 8) | b;
-    };
-
-    long icon_data[image.width()*image.height() + 2];
+    uint64_t icon_data[image.width()*image.height() + 2];
     icon_data[0] = image.width();
     icon_data[1] = image.height();
 
-    for (size_t x=0;x<image.width();x++) {
-        for (size_t y=0;y<image.height();y++) {
-            icon_data[y*image.width()+x+2] = conv(glm::uvec2(x,y));
+    size_t idx = 2;
+    for (size_t y = 0; y < image.height(); y++) {
+        for (size_t x = 0; x < image.width(); x++) {
+            AColor col = image.get(glm::uvec2(x, y));
+            icon_data[idx++] = uint64_t(col.a * 255.0f) << 24 | uint64_t(col.r * 255.0f) << 16 | uint64_t(col.g * 255.0f) << 8 | uint64_t(col.b * 255.0f);
         }
     }
 
