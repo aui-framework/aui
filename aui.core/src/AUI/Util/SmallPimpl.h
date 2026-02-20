@@ -119,7 +119,7 @@ private:
         StackAllocated(const StackAllocated& rhs) {
             this->controlBlock = rhs.controlBlock;
             this->controlBlock->copyInplace(upcastedPtr(), rhs.upcastedPtr());
-            this->ptr = this->controlBlock->asInterface(rhs.ptr);
+            this->ptr = this->controlBlock->asInterface(upcastedPtr());
         }
 
         StackAllocated(StackAllocated&& rhs) noexcept {
