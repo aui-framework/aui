@@ -510,20 +510,17 @@ void PlatformAbstractionX11::windowSetGeometry(AWindow& window, int x, int y, in
 void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image) {
     if (!nativeHandle(window))
         return;
-
     PlatformAbstractionX11::ourAtoms.netWmIcon = XInternAtom(PlatformAbstractionX11::ourDisplay, "_NET_WM_ICON", False);
     PlatformAbstractionX11::ourAtoms.cardinal = XInternAtom(PlatformAbstractionX11::ourDisplay, "_CARDINAL", False);
 
-    auto conv = [&](glm::uvec2 pos) {
+    auto conv = [&image](glm::uvec2 pos) {
         const auto col = image.get(pos);
-        if (col!=AColor::GRAY)
-            ALogger::info("color") << "another color:" << col;
-        uint8_t A = (uint8_t)(col.a * 255.0f);
-        uint8_t R = (uint8_t)(col.r * 255.0f);
-        uint8_t G = (uint8_t)(col.g * 255.0f);
-        uint8_t B = (uint8_t)(col.b * 255.0f);
+        long a = col.a * 255.0f;
+        long r = col.r * 255.0f;
+        long g = col.g * 255.0f;
+        long b = col.b * 255.0f;
 
-        return ((long)A << 24) | ((long)R << 16) | ((long)G << 8) | (long)B;
+        return (a << 24) | (r << 16) | (g << 8) | b;
     };
 
     long icon_data[image.width()*image.height() + 2];
