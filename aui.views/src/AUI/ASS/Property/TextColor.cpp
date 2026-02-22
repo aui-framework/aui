@@ -30,3 +30,19 @@ void ass::legacy::Property<ass::TextColor>::applyFor(AView* view) {
         },
         mInfo.color));
 }
+
+ass::Modifier ass::operator|(Modifier thiz, const TextColor& value) {
+    return thiz.then([value](AView& view) {
+        view.setTextColor(std::visit(
+            aui::lambda_overloaded {
+              [](AColor c) { return c; },
+              [&](ass::inherit_t) {
+                  if (auto parent = view.getParent()) {
+                      return parent->textColor();
+                  }
+                  return AColor();
+              },
+            },
+            value.color));
+        });
+}

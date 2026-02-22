@@ -8,10 +8,8 @@
 // file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
 #pragma once
-#include "AUI/Common/AVector.h"
 
 #include <functional>
-#include <initializer_list>
 #include "AUI/Common/ASmallVector.h"
 #include <utility>
 
@@ -42,19 +40,18 @@ public:
 
     [[nodiscard]] const auto& elements() const { return mElements; }
 
+
+    /**
+     * @brief Concatenates this modifier with another.
+     * @details
+     * Returns a `Modifier` representing this modifier followed by `other` in sequence.
+     */
+    Modifier& then(Element element) {
+        mElements << std::move(element);
+        return *this;
+    }
+
 private:
-    friend Modifier operator|(Modifier lhs, aui::convertible_to<Modifier::Element> auto && rhs);
     ASmallVector<Element, 16> mElements;
 };
-
-/**
- * @brief Combines two modifiers.
- *
- * Defined as a free function so that it can be found by ADL when the left
- * operand is a `Modifier` and the right operand is also a `Modifier`.
- */
-inline Modifier operator|(Modifier lhs, aui::convertible_to<Modifier::Element> auto && rhs) {
-    lhs.mElements << rhs;
-    return lhs;
-}
 }

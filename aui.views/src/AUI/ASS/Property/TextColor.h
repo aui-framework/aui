@@ -47,4 +47,6 @@ namespace ass {
             }
         };
     }
-}
+
+    Modifier operator|(Modifier thiz, const TextColor& value);
+    }   // namespace ass

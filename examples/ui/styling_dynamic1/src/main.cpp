@@ -15,7 +15,6 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/ACheckBox.h>
 
-using namespace ass;
 using namespace declarative;
 
 struct State {
@@ -37,7 +36,7 @@ AUI_ENTRY {
       minimalCheckBox(AUI_PTR_ALIAS(state, checked)),
       Label {
         .text = "This label reflects checkbox state.",
-        .modifier = AUI_REACT(Modifier {} | ::TextColor { state->checked ? AColor::GREEN : AColor::RED }),
+        .modifier = AUI_REACT(Modifier {} | TextColor { state->checked ? AColor::GREEN : AColor::RED }),
       },
     });
     window->show();
