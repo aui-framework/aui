@@ -39,7 +39,7 @@ namespace ass {
         explicit Opacity(float opacity) : opacity(opacity) {}
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<Opacity>: IPropertyBase, IStringable {
         private:

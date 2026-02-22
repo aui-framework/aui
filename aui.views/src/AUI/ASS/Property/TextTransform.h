@@ -19,7 +19,7 @@
 #include <AUI/Enum/TextTransform.h> // defined here
 #include "IProperty.h"
 
-namespace ass::prop {
+namespace ass::legacy {
     template<>
     struct API_AUI_VIEWS Property<TextTransform>: IPropertyBase {
     private:

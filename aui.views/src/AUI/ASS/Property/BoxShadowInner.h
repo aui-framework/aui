@@ -57,7 +57,7 @@ namespace ass {
         BoxShadowInner(std::nullptr_t): color(0.f) {}
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<BoxShadowInner>: IPropertyBase {
         private:

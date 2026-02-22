@@ -17,7 +17,7 @@
 #include <AUI/View/AViewContainer.h>
 
 
-void ass::prop::Property<ass::LayoutSpacing>::applyFor(AView* view) {
+void ass::legacy::Property<ass::LayoutSpacing>::applyFor(AView* view) {
     auto container = dynamic_cast<AViewContainerBase*>(view);
     if (container) {
         if (const auto& l = container->getLayout()) {

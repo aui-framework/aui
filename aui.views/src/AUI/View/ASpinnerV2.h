@@ -54,7 +54,7 @@ private:
 };
 
 template<>
-struct API_AUI_VIEWS ass::prop::Property<ASpinnerV2::Configuration>: ass::prop::IPropertyBase {
+struct API_AUI_VIEWS ass::legacy::Property<ASpinnerV2::Configuration>: ass::legacy::IPropertyBase {
 public:
     Property(const ASpinnerV2::Configuration& configuration) : mConfiguration(configuration) {}
     ~Property() override = default;

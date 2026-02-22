@@ -29,7 +29,7 @@ namespace ass {
         AMetric radius;
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<BorderRadius>: IPropertyBase {
         private:

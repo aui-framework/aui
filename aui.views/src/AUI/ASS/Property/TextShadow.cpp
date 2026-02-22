@@ -17,7 +17,7 @@
 #include <AUI/View/AAbstractLabel.h>
 #include <AUI/Render/RenderHints.h>
 
-void ass::prop::Property<ass::TextShadow>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ass::TextShadow>::renderFor(AView* view, const ARenderContext& ctx) {
     if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
         RenderHints::PushColor c(ctx.render);
         ctx.render.setColor(mInfo.shadowColor);
@@ -29,6 +29,6 @@ void ass::prop::Property<ass::TextShadow>::renderFor(AView* view, const ARenderC
         }
     }
 }
-ass::prop::PropertySlot ass::prop::Property<ass::TextShadow>::getPropertySlot() const {
-    return ass::prop::PropertySlot::TEXT_SHADOW;
+ass::legacy::PropertySlot ass::legacy::Property<ass::TextShadow>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::TEXT_SHADOW;
 }

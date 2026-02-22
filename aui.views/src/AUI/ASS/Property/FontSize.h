@@ -28,7 +28,7 @@ namespace ass {
         AMetric size;
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<FontSize>: IPropertyBase {
         private:

@@ -39,7 +39,7 @@ namespace ass {
         static const BackgroundCropping H4_4;
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<BackgroundCropping>: IPropertyBase {
         private:

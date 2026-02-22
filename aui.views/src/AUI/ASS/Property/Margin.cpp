@@ -15,7 +15,7 @@
 
 #include "Margin.h"
 
-void ass::prop::Property<ass::Margin>::applyFor(AView* view) {
+void ass::legacy::Property<ass::Margin>::applyFor(AView* view) {
     auto margin = view->getMargin();
 
     mInfo.left.bindTo(margin.left);
@@ -26,7 +26,7 @@ void ass::prop::Property<ass::Margin>::applyFor(AView* view) {
     view->setMargin(margin);
 }
 
-void ass::prop::Property<ass::Margin>::updateInvalidPixelRect(ARect<int>& invalidRect) const {
+void ass::legacy::Property<ass::Margin>::updateInvalidPixelRect(ARect<int>& invalidRect) const {
     invalidRect.p1.x -= mInfo.left.orDefault(0).getValuePx();
     invalidRect.p1.y -= mInfo.top.orDefault(0).getValuePx();
     invalidRect.p2.x -= mInfo.right.orDefault(0).getValuePx();

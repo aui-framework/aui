@@ -32,7 +32,7 @@ namespace ass {
         BorderLeft(const AMetric &width, const AColor &color) : width(width), color(color) {}
     };
 
-    namespace prop {
+    namespace legacy {
 
         template<>
         struct API_AUI_VIEWS Property<BorderLeft> : IPropertyBase {

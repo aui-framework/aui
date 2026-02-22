@@ -12,6 +12,6 @@
 
 #include "Visibility.h"
 
-void ass::prop::Property<Visibility>::applyFor(AView* view) {
+void ass::legacy::Property<Visibility>::applyFor(AView* view) {
     view->setVisibility(mInfo);
 }

@@ -12,7 +12,7 @@
 #include <AUI/Render/RenderHints.h>
 #include "BorderRight.h"
 
-void ass::prop::Property<ass::BorderRight>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ass::BorderRight>::renderFor(AView* view, const ARenderContext& ctx) {
     RenderHints::PushColor x(ctx.render);
     int w = mInfo.width;
 
@@ -22,10 +22,10 @@ void ass::prop::Property<ass::BorderRight>::renderFor(AView* view, const ARender
 
 }
 
-bool ass::prop::Property<ass::BorderRight>::isNone() {
+bool ass::legacy::Property<ass::BorderRight>::isNone() {
     return mInfo.width <= 0.001f;
 }
 
-ass::prop::PropertySlot ass::prop::Property<ass::BorderRight>::getPropertySlot() const {
-    return ass::prop::PropertySlot::BORDER;
+ass::legacy::PropertySlot ass::legacy::Property<ass::BorderRight>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::BORDER;
 }

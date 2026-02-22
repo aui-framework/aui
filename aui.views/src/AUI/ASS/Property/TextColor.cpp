@@ -17,7 +17,7 @@
 #include "AUI/Font/IFontView.h"
 #include "AUI/View/AViewContainer.h"
 
-void ass::prop::Property<ass::TextColor>::applyFor(AView* view) {
+void ass::legacy::Property<ass::TextColor>::applyFor(AView* view) {
     view->setTextColor(std::visit(
         aui::lambda_overloaded {
           [](AColor c) { return c; },

@@ -115,7 +115,7 @@ void AView::drawStencilMask(ARenderContext ctx)
             break;
 
         case AOverflowMask::BACKGROUND_IMAGE_ALPHA:
-            if (auto s = mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
+            if (auto s = mAss[int(ass::legacy::PropertySlot::BACKGROUND_IMAGE)]) {
                 s->renderFor(this, ctx);
             }
             break;
@@ -152,8 +152,8 @@ void AView::render(ARenderContext ctx)
     ensureAssUpdated();
 
     // draw list
-    for (unsigned i = 0; i <= int(ass::prop::PropertySlot::SHADOW); ++i) {
-        if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
+    for (unsigned i = 0; i <= int(ass::legacy::PropertySlot::SHADOW); ++i) {
+        if (i == int(ass::legacy::PropertySlot::BACKGROUND_EFFECT)) continue;
         if (auto w = mAss[i]) {
             w->renderFor(this, ctx);
         }
@@ -168,9 +168,9 @@ void AView::render(ARenderContext ctx)
     }
 
     // draw list
-    for (unsigned i = unsigned(ass::prop::PropertySlot::SHADOW) + 1u; i < unsigned(ass::prop::PropertySlot::COUNT);
+    for (unsigned i = unsigned(ass::legacy::PropertySlot::SHADOW) + 1u; i < unsigned(ass::legacy::PropertySlot::COUNT);
          ++i) {
-        if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT))
+        if (i == int(ass::legacy::PropertySlot::BACKGROUND_EFFECT))
             continue;
         if (auto w = mAss[i]) {
             w->renderFor(this, ctx);
@@ -185,7 +185,7 @@ void AView::render(ARenderContext ctx)
         });
     }
 
-    if (auto w = mAss[int(ass::prop::PropertySlot::BACKGROUND_EFFECT)]) {
+    if (auto w = mAss[int(ass::legacy::PropertySlot::BACKGROUND_EFFECT)]) {
         w->renderFor(this, ctx);
     }
     mRedrawRequested = false;
@@ -645,7 +645,7 @@ bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGes
 void AView::applyAssRule(const ass::PropertyList& propertyList) {
     for (const auto& d : propertyList.declarations()) {
         auto slot = d->getPropertySlot();
-        if (slot != ass::prop::PropertySlot::NONE) {
+        if (slot != ass::legacy::PropertySlot::NONE) {
             mAss[int(slot)] = d->isNone() ? nullptr : d.get();
         }
         d->applyFor(this);

@@ -20,7 +20,7 @@
 
 
 
-void ass::prop::Property<ass::BackgroundCropping>::applyFor(AView* view) {
+void ass::legacy::Property<ass::BackgroundCropping>::applyFor(AView* view) {
     view->getAssHelper()->state.backgroundCropping = mInfo;
 }
 

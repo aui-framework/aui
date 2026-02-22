@@ -98,7 +98,7 @@ namespace ass {
         Backdrop(std::initializer_list<Any> effects): effects(std::move(effects)) {}
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<Backdrop>: IPropertyBase {
         private:

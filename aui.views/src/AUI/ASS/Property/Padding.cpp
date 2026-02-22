@@ -15,7 +15,7 @@
 
 #include "Padding.h"
 
-void ass::prop::Property<ass::Padding>::applyFor(AView* view) {
+void ass::legacy::Property<ass::Padding>::applyFor(AView* view) {
     auto padding = view->getPadding();
 
     mInfo.left.bindTo(padding.left);

@@ -1022,7 +1022,7 @@ protected:
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
      */
-    std::array<ass::prop::IPropertyBase*, int(ass::prop::PropertySlot::COUNT)> mAss;
+    std::array<ass::legacy::IPropertyBase*, int(ass::legacy::PropertySlot::COUNT)> mAss;
 
     /**
      * @brief Custom ASS Rules

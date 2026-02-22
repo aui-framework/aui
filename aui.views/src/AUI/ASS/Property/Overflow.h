@@ -17,7 +17,7 @@
 #include "IProperty.h"
 
 namespace ass {
-namespace prop {
+namespace legacy {
 template <>
 struct API_AUI_VIEWS Property<AOverflow> : IPropertyBase {
 private:

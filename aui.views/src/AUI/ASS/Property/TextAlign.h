@@ -20,7 +20,7 @@
 #include "IProperty.h"
 
 namespace ass {
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<ATextAlign>: IPropertyBase {
         private:

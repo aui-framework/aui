@@ -28,7 +28,7 @@ namespace ass {
         BorderRight(const AMetric &width, const AColor &color) : width(width), color(color) {}
     };
 
-    namespace prop {
+    namespace legacy {
 
         template<>
         struct API_AUI_VIEWS Property<BorderRight> : IPropertyBase {

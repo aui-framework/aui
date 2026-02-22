@@ -34,7 +34,7 @@ namespace ass {
         static LineHeight NORMAL;
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<LineHeight>: IPropertyBase {
         private:

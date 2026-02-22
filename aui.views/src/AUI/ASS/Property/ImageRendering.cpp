@@ -20,12 +20,12 @@
 
 
 
-void ass::prop::Property<ImageRendering>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ImageRendering>::renderFor(AView* view, const ARenderContext& ctx) {
     view->getAssHelper()->state.imageRendering = mInfo;
 }
 
-ass::prop::PropertySlot ass::prop::Property<ImageRendering>::getPropertySlot() const {
-    return ass::prop::PropertySlot::IMAGE_RENDERING;
+ass::legacy::PropertySlot ass::legacy::Property<ImageRendering>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::IMAGE_RENDERING;
 }
 
 

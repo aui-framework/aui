@@ -11,7 +11,7 @@
 
 #include "CustomProperty.h"
 
-void ass::prop::Property<ass::CustomProperty>::applyFor(AView* view) {
+void ass::legacy::Property<ass::CustomProperty>::applyFor(AView* view) {
     AUI_NULLSAFE(mInfo.onApplyFor)(view);
 }
 

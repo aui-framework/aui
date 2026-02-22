@@ -15,6 +15,6 @@
 
 #include "BorderRadius.h"
 
-void ass::prop::Property<ass::BorderRadius>::applyFor(AView* view) {
+void ass::legacy::Property<ass::BorderRadius>::applyFor(AView* view) {
     view->setBorderRadius(mInfo.radius);
 }

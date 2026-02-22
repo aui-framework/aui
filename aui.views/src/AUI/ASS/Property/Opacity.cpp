@@ -19,7 +19,7 @@
 
 
 
-void ass::prop::Property<ass::Opacity>::applyFor(AView* view) {
+void ass::legacy::Property<ass::Opacity>::applyFor(AView* view) {
     view->setOpacity(mInfo.opacity);
 }
 

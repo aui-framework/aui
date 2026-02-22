@@ -30,15 +30,6 @@ _<AView> minimalCheckBox(_<AProperty<bool>> state) {
     };
 }
 
-
-struct TextColor {
-    AColor color;
-
-    void operator()(AView& view) const {
-        view.setTextColor(color);
-    }
-};
-
 AUI_ENTRY {
     auto window = _new<AWindow>("Checkbox", 300_dp, 100_dp);
     auto state = _new<State>();
@@ -52,4 +43,7 @@ AUI_ENTRY {
     window->show();
     return 0;
 }
+
+
+
 /// [ACheckBox_example]

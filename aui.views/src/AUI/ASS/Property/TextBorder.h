@@ -28,7 +28,7 @@ namespace ass {
         AColor borderColor;
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<TextBorder>: IPropertyBase {
         private:

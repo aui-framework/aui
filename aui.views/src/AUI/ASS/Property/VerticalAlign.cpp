@@ -19,7 +19,7 @@
 #include "AUI/View/AText.h"
 #include "AUI/View/ATextArea.h"
 
-void ass::prop::Property<VerticalAlign>::applyFor(AView* view) {
+void ass::legacy::Property<VerticalAlign>::applyFor(AView* view) {
     if (auto v = dynamic_cast<AAbstractLabel*>(view)) {
         v->setVerticalAlign(mInfo);
         return;

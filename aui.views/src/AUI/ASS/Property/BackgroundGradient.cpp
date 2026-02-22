@@ -19,7 +19,7 @@
 
 
 
-void ass::prop::Property<ass::BackgroundGradient>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ass::BackgroundGradient>::renderFor(AView* view, const ARenderContext& ctx) {
     if (!mInfo.gradient) { return; }
     RenderHints::PushColor x(ctx.render);
 
@@ -31,8 +31,8 @@ void ass::prop::Property<ass::BackgroundGradient>::renderFor(AView* view, const 
     IPropertyBase::renderFor(view, ctx);
 }
 
-ass::prop::PropertySlot ass::prop::Property<ass::BackgroundGradient>::getPropertySlot() const {
-    return ass::prop::PropertySlot::BACKGROUND_SOLID;
+ass::legacy::PropertySlot ass::legacy::Property<ass::BackgroundGradient>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::BACKGROUND_SOLID;
 }
 
 

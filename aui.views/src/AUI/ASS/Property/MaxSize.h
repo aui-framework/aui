@@ -34,7 +34,7 @@ namespace ass {
         explicit MaxSize(const AMetric& side) : width(side), height(side) {}
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<MaxSize>: IPropertyBase, IStringable {
         private:

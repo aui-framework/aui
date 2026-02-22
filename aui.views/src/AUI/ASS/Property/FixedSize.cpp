@@ -16,7 +16,7 @@
 #include "FixedSize.h"
 
 
-void ass::prop::Property<ass::FixedSize>::applyFor(AView* view) {
+void ass::legacy::Property<ass::FixedSize>::applyFor(AView* view) {
     view->setFixedSize({
                                mInfo.width ? mInfo.width->getValuePx() : view->getFixedSize().x,
                                mInfo.height ? mInfo.height->getValuePx() : view->getFixedSize().y

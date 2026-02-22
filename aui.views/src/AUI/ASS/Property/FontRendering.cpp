@@ -16,7 +16,7 @@
 #include "FontRendering.h"
 #include "AUI/Font/IFontView.h"
 
-void ass::prop::Property<FontRendering>::applyFor(AView* view){
+void ass::legacy::Property<FontRendering>::applyFor(AView* view){
     auto fontView = dynamic_cast<IFontView*>(view);
     if (!fontView) {
         return;

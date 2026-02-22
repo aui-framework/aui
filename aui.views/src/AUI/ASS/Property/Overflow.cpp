@@ -16,11 +16,11 @@
 #include "Overflow.h"
 
 
-void ass::prop::Property<AOverflow>::applyFor(AView* view) {
+void ass::legacy::Property<AOverflow>::applyFor(AView* view) {
     view->setOverflow(mInfo);
 }
 
 
-void ass::prop::Property<AOverflowMask>::applyFor(AView* view) {
+void ass::legacy::Property<AOverflowMask>::applyFor(AView* view) {
     view->setOverflowMask(mInfo);
 }

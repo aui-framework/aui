@@ -140,7 +140,7 @@ struct BackgroundImage {
       : image(url), overlayColor(overlayColor), rep(rep), sizing(sizing), scale(scale), dpiMargin(dpiMargin) {}
 };
 
-namespace prop {
+namespace legacy {
 template <>
 struct API_AUI_VIEWS Property<BackgroundImage> : IPropertyBase, IStringable {
 private:

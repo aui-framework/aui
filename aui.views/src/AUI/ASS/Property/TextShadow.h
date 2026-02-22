@@ -30,7 +30,7 @@ namespace ass {
         AMetric offsetY = 1_dp;
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<TextShadow>: IPropertyBase {
         private:

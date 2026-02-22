@@ -17,6 +17,6 @@
 #include "TextAlign.h"
 
 
-void ass::prop::Property<ATextAlign>::applyFor(AView* view) {
+void ass::legacy::Property<ATextAlign>::applyFor(AView* view) {
     AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().align = mInfo;
 }

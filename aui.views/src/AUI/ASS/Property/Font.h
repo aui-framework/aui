@@ -28,7 +28,7 @@ namespace ass {
         AUrl url;
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<Font>: IPropertyBase {
         private:

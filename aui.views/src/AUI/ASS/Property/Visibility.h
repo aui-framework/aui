@@ -14,7 +14,7 @@
 #include "IProperty.h"
 #include <AUI/Enum/Visibility.h> // defined here
 
-namespace ass::prop {
+namespace ass::legacy {
     template<>
     struct API_AUI_VIEWS Property<Visibility>: IPropertyBase {
     private:

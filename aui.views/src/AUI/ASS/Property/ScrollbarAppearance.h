@@ -66,7 +66,7 @@ namespace ass {
         AxisValue mHorizontal = AxisValue::ON_DEMAND;
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<ScrollbarAppearance>: IPropertyBase {
         private:

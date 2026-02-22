@@ -17,6 +17,6 @@
 #include "ATextOverflow.h"
 
 
-void ass::prop::Property<ATextOverflow>::applyFor(AView* view) {
+void ass::legacy::Property<ATextOverflow>::applyFor(AView* view) {
     AUI_NULLSAFE(dynamic_cast<AAbstractLabel*>(view))->setTextOverflow(mInfo);
 }

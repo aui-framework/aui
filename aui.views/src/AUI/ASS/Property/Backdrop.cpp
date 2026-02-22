@@ -19,14 +19,14 @@
 #include "AUI/Render/IRenderer.h"
 #include "IProperty.h"
 
-void ass::prop::Property<ass::Backdrop>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ass::Backdrop>::renderFor(AView* view, const ARenderContext& ctx) {
     ctx.render.backdrops({}, view->getSize(), std::span<ass::Backdrop::Any>(mInfo.effects.data(), mInfo.effects.size()));
 }
 
-bool ass::prop::Property<ass::Backdrop>::isNone() { return mInfo.effects.empty(); }
+bool ass::legacy::Property<ass::Backdrop>::isNone() { return mInfo.effects.empty(); }
 
-ass::prop::PropertySlot ass::prop::Property<ass::Backdrop>::getPropertySlot() const {
-    return ass::prop::PropertySlot::BACKDROP;
+ass::legacy::PropertySlot ass::legacy::Property<ass::Backdrop>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::BACKDROP;
 }
 ass::Backdrop::GaussianBlurCustom ass::Backdrop::GaussianBlur::findOptimalParams() const {
     static constexpr auto MIN_OPTIMAL_DOWNSCALE = 1;

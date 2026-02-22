@@ -56,7 +56,7 @@ AOptional<system_clock::time_point> parseDate(AStringView s) {
 
 template<>
 struct std::common_type<ass::BackgroundSolid, std::nullptr_t> {
-    using type = _<ass::prop::IPropertyBase>;
+    using type = _<ass::legacy::IPropertyBase>;
 };
 
 auto dateTextField(_<DateTextFieldState> state) {

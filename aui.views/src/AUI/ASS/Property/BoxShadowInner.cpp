@@ -17,7 +17,7 @@
 #include "AUI/Render/IRenderer.h"
 
 
-void ass::prop::Property<ass::BoxShadowInner>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ass::BoxShadowInner>::renderFor(AView* view, const ARenderContext& ctx) {
     ctx.render.boxShadowInner({0, 0},
                              glm::vec2(view->getSize()),
                              mInfo.blurRadius,
@@ -27,10 +27,10 @@ void ass::prop::Property<ass::BoxShadowInner>::renderFor(AView* view, const ARen
                              {mInfo.offsetX.getValuePx(), mInfo.offsetY.getValuePx()});
 }
 
-ass::prop::PropertySlot ass::prop::Property<ass::BoxShadowInner>::getPropertySlot() const {
-    return ass::prop::PropertySlot::SHADOW_INNER;
+ass::legacy::PropertySlot ass::legacy::Property<ass::BoxShadowInner>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::SHADOW_INNER;
 }
 
-bool ass::prop::Property<ass::BoxShadowInner>::isNone() {
+bool ass::legacy::Property<ass::BoxShadowInner>::isNone() {
     return mInfo.color.isFullyTransparent();
 }
