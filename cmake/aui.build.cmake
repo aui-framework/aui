@@ -1554,6 +1554,7 @@ macro(aui_app)
         install(TARGETS ${APP_TARGET}
                 DESTINATION $<TARGET_PROPERTY:${APP_TARGET},AUI_INSTALL_RUNTIME_DIR>)
         get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
+        # Setup icon for x11
         if (APP_ICON)
             set(_icon_png ${_current_app_build_files}/app_icon.png)
             if (TARGET aui.toolbox)
