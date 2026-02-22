@@ -1554,6 +1554,18 @@ macro(aui_app)
         install(TARGETS ${APP_TARGET}
                 DESTINATION $<TARGET_PROPERTY:${APP_TARGET},AUI_INSTALL_RUNTIME_DIR>)
         get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
+        if (APP_ICON)
+            set(_icon_png ${_current_app_build_files}/app_icon.png)
+            if (TARGET aui.toolbox)
+                add_dependencies(${APP_TARGET} aui.toolbox)
+            endif()
+            add_custom_command(
+                OUTPUT ${_icon_png}
+                COMMAND ${AUI_TOOLBOX_EXE}
+                ARGS svg2png ${_icon_absolute} -r=512 -o=${_current_app_build_files} -p=icon
+            )
+            target_sources(${APP_TARGET} PRIVATE ${_icon_png})
+        endif()
         if (NOT APP_LINUX_DESKTOP)
             # generate desktop file
             set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_executable}\nType=Application\nTerminal=false\nCategories=Utility")
