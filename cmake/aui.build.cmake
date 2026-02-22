@@ -1563,7 +1563,7 @@ macro(aui_app)
             add_custom_command(
                 OUTPUT ${_icon_png}
                 COMMAND ${AUI_TOOLBOX_EXE}
-                ARGS svg2png ${_icon_absolute} -r=512 -o=${_current_app_build_files} -p=icon
+                ARGS svg2png ${_icon_absolute} -r=512 -o=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} -p=icon
             )
             target_sources(${APP_TARGET} PRIVATE ${_icon_png})
         endif()
