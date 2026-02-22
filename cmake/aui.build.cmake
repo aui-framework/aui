@@ -1556,16 +1556,17 @@ macro(aui_app)
         get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
         # Setup icon for x11
         if (APP_ICON)
-            set(_icon_png ${_current_app_build_files}/app_icon.png)
+            set(_icon_path ${_current_app_build_files})
+            set(_icon_png ${_icon_path}/app_icon.png)
             if (TARGET aui.toolbox)
                 add_dependencies(${APP_TARGET} aui.toolbox)
             endif()
             add_custom_command(
                 OUTPUT ${_icon_png}
                 COMMAND ${AUI_TOOLBOX_EXE}
-                ARGS svg2png ${_icon_absolute} -r=512 -o=${CMAKE_RUNTIME_OUTPUT_DIRECTORY} -p=icon
+                ARGS svg2png ${_icon_absolute} -r=512 -o=${_current_app_build_files} -p=icon
             )
-            target_sources(${APP_TARGET} PRIVATE ${_icon_png})
+            aui_compile_assets_add(${APP_TARGET} ${_icon_path}/icon_512x512.png DefaultApplicationIcon/icon.png)
         endif()
         if (NOT APP_LINUX_DESKTOP)
             # generate desktop file
