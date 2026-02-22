@@ -52,6 +52,9 @@ class API_AUI_VIEWS AWindow: public AWindowBase
 public:
     AWindow(const AString& name = "My window", int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
         windowNativePreInit(name, width, height, parent, ws);
+        #if AUI_PLATFORM_LINUX
+        init();
+        #endif
     }
     virtual ~AWindow();
 
@@ -296,6 +299,7 @@ private:
 #elif AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_LINUX
     bool mWasMaximized = false;
+    void init();
 #endif
 #ifdef AUI_PLATFORM_MACOS
     bool mRedrawFlag = false;
