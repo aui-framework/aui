@@ -158,9 +158,3 @@ void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
 void AWindow::applyGeometryToChildren() {
     AWindowBase::applyGeometryToChildren();
 }
-
-void AWindow::init() {
-    auto _icon = AImage::fromUrl(":DefaultApplicationIcon/icon.png");
-    if (_icon)
-        IPlatformAbstraction::current().windowSetIcon(*this,*_icon);
-}

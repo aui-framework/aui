@@ -247,6 +247,14 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     AUI_UI_THREAD {
         emit mSizeChanged(getSize());
     };
+
+#if AUI_PLATFORM_LINUX
+    // on linux, we have to manually provide an icon for the system.
+    // __aui/app.png is provided by aui_app cmake command.
+    if (auto _icon = AImage::fromUrl(":__aui/icon_512x512.png")) {
+        IPlatformAbstraction::current().windowSetIcon(*this,*_icon);
+    }
+#endif
 }
 
 _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
