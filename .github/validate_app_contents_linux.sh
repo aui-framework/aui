@@ -12,7 +12,7 @@
 for file in *; do if [[ ! $file =~ ^(bin|lib)$ ]]; then echo "Unexpected file: $file"; exit -1; fi; done
 for file in bin/*; do if [[ ! $file == bin/test_project ]]; then echo "Unexpected file: $file"; exit -1; fi; done
 for file in lib/*; do
-    if [[ ! $file =~ (\.so([\.0-9]+)?(\..+)?)$ ]]; then
+    if [[ ! $file =~ (\.so[\.0-9]*(zlib-ng)?|lib\/\*)$ ]]; then
         echo "Unexpected file: $file"
         exit -1
     fi
