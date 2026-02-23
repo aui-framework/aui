@@ -106,9 +106,8 @@ endfunction()
 if(AUIB_DISABLE)
     find_package(ZLIB REQUIRED)
 else()
-    auib_import(ZLIB https://github.com/zlib-ng/zlib-ng
-                VERSION d225a913909176588060c2d5eb1d58bacd11c8c8
-                CMAKE_ARGS -DZLIB_COMPAT=ON)
+    auib_import(ZLIB https://github.com/Nelonn/zlib-ng
+                VERSION b583a325937227d7834ae541cf88c1f273da113e)
 endif()
 
 # define all components
