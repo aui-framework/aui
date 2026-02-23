@@ -12,7 +12,9 @@ inter {
 }
 
 entry {
-    sl_position = uniform.transform * vec4(input.pos.xy, 0, 1)
+    vec4 position = uniform.transform * vec4(input.pos.xyz, 1)
+    position.z = input.pos.z
     inter.vertex = input.pos
     inter.uv = input.uv
+    sl_position = position
 }

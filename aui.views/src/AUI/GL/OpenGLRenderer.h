@@ -68,11 +68,11 @@ private:
     AOptional<gl::Program> mSymbolShaderSubPixel;
     AOptional<gl::Program> mSquareSectorShader;
     AOptional<gl::Program> mLineSolidDashedShader;
-    static inline constexpr size_t MAX_BATCH_ELEMENTS = 250;
-    static inline constexpr size_t BATCH_VERTEX_AMOUNT = MAX_BATCH_ELEMENTS * 4;
+    static constexpr size_t MAX_BATCH_ELEMENTS = 10000;
+    static constexpr size_t BATCH_VERTEX_COUNT = MAX_BATCH_ELEMENTS * 4;
     static const size_t mQuadVertexCount = 4;
-    std::array<glm::vec2, BATCH_VERTEX_AMOUNT> mBatchVerticies;
-    std::array<glm::vec2, BATCH_VERTEX_AMOUNT>::iterator mCurrentBatchVertex;
+    std::array<glm::vec3, BATCH_VERTEX_COUNT> mBatchVerticies;
+    std::array<glm::vec3, BATCH_VERTEX_COUNT>::iterator mCurrentBatchVertex;
     gl::Vao mRectangleVao;
     gl::Vao mBorderVao;
     gl::Texture2D mGradientTexture;

@@ -107,7 +107,6 @@ public:
             CmdBoxShadowInner, CmdString, CmdLines, CmdPoints, CmdLinesPairs, CmdSquareSector,
             CmdNewRenderViewToTexture, CmdSetWindow>;
         Arg arg;
-        int zIndex;
         BatchId batchId;
     };
 
@@ -143,7 +142,6 @@ protected:
             .transform = getTransform(),
             .color = getColor(),
             .arg = std::move(arg),
-            .zIndex = static_cast<int>(mCmds.size())
         });
     }
 

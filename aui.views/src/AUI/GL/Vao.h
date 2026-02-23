@@ -85,6 +85,8 @@ public:
      */
     void indices(std::span<uint16_t> data);
 
+    void indicesByCount(const size_t vertexCount);
+
     void drawArrays(GLenum type, GLsizei count);
 
     /**

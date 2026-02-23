@@ -239,12 +239,10 @@ OpenGLRenderer::OpenGLRenderer() {
         aui::sl_gen::line_solid_dashed::fsh::glsl120::Shader>(mLineSolidDashedShader);
 
     {
-        GLuint INDICES[] = {0, 1, 2, 2, 1, 3};
-        mRectangleVao.indices(std::span{INDICES});
+        mRectangleVao.indicesByCount(BATCH_VERTEX_COUNT);
     }
     {
-        GLuint INDICES[] = {0, 1, 2, 3, 4, 5, 6, 7};
-        mBorderVao.indices(std::span{INDICES});
+        mRectangleVao.indicesByCount(BATCH_VERTEX_COUNT);
     }
     mBatchVerticies.fill(glm::vec3{0});
     mCurrentBatchVertex = mBatchVerticies.begin();
@@ -284,32 +282,15 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
     uint16_t currentBatchId;
     bool breakBatch = false;
     for (auto& cmd : cmds) {
-        // TODO: add logic here so the batch breaks if BATCH_VERTEX_AMOUNT will be exceeded
-        std::visit(aui::lambda_overloaded{
-            [&](const CmdRectangle& c) { renderRectangle(cmd, c.brush, c.position, c.size, c.zIndex); },
-            [&](const CmdRoundedRectangle& c) { renderRoundedRectangle(cmd, c.brush, c.position, c.size, c.radius, c.zIndex); },
-            [&](const CmdRectangleBorder& c) { renderRectangleBorder(cmd, c.brush, c.position, c.size, c.lineWidth, c.zIndex); },
-            [&](const CmdRoundedRectangleBorder& c) { renderRoundedRectangleBorder(cmd, c.brush, c.position, c.size, c.radius, c.borderWidth, c.zIndex); },
-            [&](const CmdBoxShadow& c) { renderBoxShadow(cmd, c.position, c.size, c.blurRadius, c.color, c.zIndex); },
-            [&](const CmdBoxShadowInner& c) { renderBoxShadowInner(cmd, c.position, c.size, c.blurRadius, c.spreadRadius, c.borderRadius, c.color, c.offset, c.zIndex); },
-            [&](const CmdString& c) { renderString(cmd, c.position, c.string, c.fs); },
-            [&](const CmdLines& c) { renderLines(cmd, c.brush, c.points, c.style, c.width); },
-            [&](const CmdPoints& c) { renderPoints(cmd, c.brush, c.points, c.size); },
-            [&](const CmdLinesPairs& c) { renderLines(cmd, c.brush, c.points, c.style, c.width); },
-            [&](const CmdSquareSector& c) { renderSquareSector(cmd, c.brush, c.position, c.size, c.begin, c.end); },
-            [&](const CmdSetWindow& c) { mWindow = c.window; },
-            [&](const CmdNewRenderViewToTexture&){ /* handled elsewhere */ }
-        }, cmd.arg);
-
         u_int16_t nextId = cmd.batchId.value + 1; // + 1 so 0 ID cmd 0 ID brush != NULL
         if (!currentBatchId) {
             currentBatchId = nextId;
-            continue;
+            goto dispatching;
         }
         // TODO: don't draw for non drawing commands like set window
         breakBatch = currentBatchId != nextId;
         if (not breakBatch)
-            continue;
+            goto dispatching;
 
         mRectangleVao.insert(0, std::span{mBatchVerticies}, "Batch");
         mRectangleVao.drawElements();
@@ -317,6 +298,24 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
 
         std::ranges::fill(mBatchVerticies, glm::vec3(0));
         mCurrentBatchVertex = mBatchVerticies.begin();
+        // TODO: add logic here so the batch breaks if BATCH_VERTEX_AMOUNT will be exceeded
+
+dispatching:
+        std::visit(aui::lambda_overloaded{
+            [&](const CmdRectangle& c) { renderRectangle(cmd, c.brush, c.position, c.size, c.zIndex); },
+            [&](const CmdRoundedRectangle& c) { renderRoundedRectangle(cmd, c.brush, c.position, c.size, c.radius, c.zIndex); },
+            [&](const CmdRectangleBorder& c) { renderRectangleBorder(cmd, c.brush, c.position, c.size, c.lineWidth, c.zIndex); },
+            [&](const CmdRoundedRectangleBorder& c) { renderRoundedRectangleBorder(cmd, c.brush, c.position, c.size, c.radius, c.borderWidth, c.zIndex); },
+            [&](const CmdBoxShadow& c) { renderBoxShadow(cmd, c.position, c.size, c.blurRadius, c.color, c.zIndex); },
+            [&](const CmdBoxShadowInner& c) { renderBoxShadowInner(cmd, c.position, c.size, c.blurRadius, c.spreadRadius, c.borderRadius, c.color, c.offset, c.zIndex); },
+            [&](const CmdString& c) { /* renderString(cmd, c.position, c.string, c.fs); */ },
+            [&](const CmdLines& c) { renderLines(cmd, c.brush, c.points, c.style, c.width); },
+            [&](const CmdPoints& c) { renderPoints(cmd, c.brush, c.points, c.size); },
+            [&](const CmdLinesPairs& c) { renderLines(cmd, c.brush, c.points, c.style, c.width); },
+            [&](const CmdSquareSector& c) { renderSquareSector(cmd, c.brush, c.position, c.size, c.begin, c.end); },
+            [&](const CmdSetWindow& c) { mWindow = c.window; },
+            [&](const CmdNewRenderViewToTexture&){ /* handled elsewhere */ }
+        }, cmd.arg);
     }
 }
 
@@ -342,10 +341,12 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
         };
 }
 
+static constexpr size_t Z_DEPTH = 1000;
 void OpenGLRenderer::appendBatchVerticiesForRect(const glm::vec2 position, const glm::vec2 size, const int zIndex) {
     float x = position.x;
     float y = position.y;
-    float z = zIndex;
+    // TODO: remove this for release, transform in shader instead
+    float z = 1 - 2 * zIndex * (1. / Z_DEPTH);
     float w = x + size.x;
     float h = y + size.y;
 
@@ -363,10 +364,10 @@ void OpenGLRenderer::appendBatchVerticiesForRect(const glm::vec2 position, const
 void OpenGLRenderer::renderRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, const int zIndex) {
     std::visit(aui::lambda_overloaded{
         [&](const ALinearGradientBrush& brush) {
-            gradientBrush(cmd, brush, *this, *mGradientShader);
+            // gradientBrush(cmd, brush, *this, *mGradientShader);
         },
         [&](const ATexturedBrush& brush) {
-            texturedBrush(cmd, brush, *this, *mTexturedShader, mRectangleVao);
+            // texturedBrush(cmd, brush, *this, *mTexturedShader, mRectangleVao);
         },
         [&](const ASolidBrush& brush) {
             solidBrush(cmd, brush, *this, *mSolidShader);
@@ -505,14 +506,15 @@ void OpenGLRenderer::renderBoxShadow(const Cmd& cmd, glm::vec2 position,
     w += blurRadius;
     h += blurRadius;
 
-    const glm::vec2 uvs[] = {
-        {x, h},
-        {w, h},
-        {x, y},
-        {w, y},
-    };
+    // const glm::vec2 uvs[] = {
+    //     {x, h},
+    //     {w, h},
+    //     {x, y},
+    //     {w, y},
+    // };
 
-    mRectangleVao.insert(0, std::span{uvs}, "boxShadowInner");
+    // mRectangleVao.insert(0, std::span{uvs}, "boxShadowInner");
+    // drawRectImpl(glm::vec2{x, y}, glm::vec2{w, h}, zIndex);
 }
 
 void OpenGLRenderer::renderBoxShadowInner(const Cmd& cmd, glm::vec2 position,
@@ -542,14 +544,15 @@ void OpenGLRenderer::renderBoxShadowInner(const Cmd& cmd, glm::vec2 position,
     float w = x + size.x;
     float h = y + size.y;
 
-    const glm::vec2 uvs[] = {
-        {x, h},
-        {w, h},
-        {x, y},
-        {w, y},
-    };
+    // const glm::vec2 uvs[] = {
+    //     {x, h},
+    //     {w, h},
+    //     {x, y},
+    //     {w, y},
+    // };
 
-    mRectangleVao.insert(0, std::span{uvs}, "boxShadowInner");
+    // mRectangleVao.insert(0, std::span{uvs}, "boxShadowInner");
+    drawRectImpl(glm::vec2{x, y}, glm::vec2{w, h}, zIndex);
 }
 
 void OpenGLRenderer::renderString(const Cmd& cmd, glm::vec2 position,
@@ -1106,9 +1109,10 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     gl::State::useProgram(0);
 
 
-    glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glClearColor(0, 0, 0, 0);
+    glEnable(GL_DEPTH_TEST);
+    glDepthFunc(GL_LESS);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_BLEND);
     setBlending(Blending::NORMAL);
