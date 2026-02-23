@@ -59,7 +59,7 @@ class API_AUI_IMAGE AImageView {
 public:
     using Color = AColor;
 
-    AImageView() : mSize(0, 0) {}
+    AImageView() : mSize(0, 0), mStride(0) {}
 
     /**
      * @brief Constructs an image view with an explicit row stride.
@@ -184,9 +184,12 @@ public:
     const char& rawDataAt(glm::uvec2 position) const noexcept {
         AUI_ASSERT(width() != 0);
         AUI_ASSERT(height() != 0);
+        AUI_ASSERT(mStride != 0);
         AUI_ASSERT(position.x < width());
         AUI_ASSERT(position.y < height());
-        return mData.at<char>((position.y * mStride) + (position.x * bytesPerPixel()));
+        size_t index = (position.y * mStride) + (position.x * bytesPerPixel());
+        AUI_ASSERT(index < mData.size());
+        return mData.at<char>(index);
     }
 
     [[nodiscard]]

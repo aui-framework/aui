@@ -39,12 +39,14 @@ public:
     AImage(AByteBuffer buffer, glm::uvec2 size, APixelFormat format) : mOwnedBuffer(std::move(buffer)) {
         mSize = size;
         mFormat = format;
+        mStride = bytesPerPixel() * width();
         mData = mOwnedBuffer;
     }
 
     AImage(glm::uvec2 size, APixelFormat format) {
         mSize = size;
         mFormat = format;
+        mStride = bytesPerPixel() * width();
         allocate();
     }
 
