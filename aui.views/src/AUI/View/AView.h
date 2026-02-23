@@ -562,6 +562,7 @@ public:
 
     void setAnimator(const _<AAnimator>& animator);
     void getTransform(glm::mat4& transform) const;
+    const glm::mat4 getTransformCopy(glm::mat4 transform = glm::mat4{1.}) const;
 
     [[nodiscard]]
     int getExpandingHorizontal() const

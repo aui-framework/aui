@@ -83,7 +83,8 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
     glm::mat4 t(1.f);
     view->getTransform(t);
     contextOfTheView.render.setTransform(t);
-    contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
+    // TODO: this is incomatible with batching, move to vertex
+    // contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
     if (view->mRenderToTexture) [[unlikely]] { // view was prerendered to texture; see AView::markPixelDataInvalid
         view->mRenderToTexture->skipRedrawUntilTextureIsPresented = false;
         // Check invalidArea is not dirty; otherwise we would have to draw the views without render-to-texture

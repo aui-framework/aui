@@ -108,9 +108,10 @@ void AView::drawStencilMask(ARenderContext ctx)
                                      {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
                                      glm::max(mBorderRadius - std::min(mPadding.horizontal(), mPadding.vertical()), 0.f));
             } else {
-                ctx.render.rectangle(ASolidBrush{},
-                                     {mPadding.left, mPadding.top},
-                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+                // TODO: figure out why this is rendered opaque when batching
+                // ctx.render.rectangle(ASolidBrush{},
+                //                      {mPadding.left, mPadding.top},
+                //                      {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
             }
             break;
 
@@ -288,6 +289,11 @@ int AView::getMinimumHeight() {
 void AView::getTransform(glm::mat4& transform) const
 {
     transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
+}
+
+const glm::mat4 AView::getTransformCopy(glm::mat4 transform) const
+{
+    return glm::translate(transform, glm::vec3{ getPosition(), 0.f });
 }
 
 void AView::pack()

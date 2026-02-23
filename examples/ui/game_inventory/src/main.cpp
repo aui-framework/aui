@@ -58,11 +58,11 @@ _<AView> itemStackView(const _<AProperty<AOptional<ItemStack>>>& itemStack) {
             },
         Vertical::Expanding {
           SpacerExpanding {},
-          Label { AUI_REACT("{}"_format((*itemStack)->valueOr(ItemStack{}).count)) } AUI_OVERRIDE_STYLE {
-              ATextAlign::RIGHT,
-              TextColor { AColor::WHITE },
-              TextShadow { AColor::BLACK, 1_dp, 1_dp },
-          },
+          // Label { AUI_REACT("{}"_format((*itemStack)->valueOr(ItemStack{}).count)) } AUI_OVERRIDE_STYLE {
+          //     ATextAlign::RIGHT,
+          //     TextColor { AColor::WHITE },
+          //     TextShadow { AColor::BLACK, 1_dp, 1_dp },
+          // },
         },
     } AUI_OVERRIDE_STYLE {
         FixedSize { 32_dp },

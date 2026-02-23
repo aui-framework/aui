@@ -342,13 +342,12 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
 }
 
 static constexpr size_t Z_DEPTH = 1000;
-void OpenGLRenderer::appendBatchVerticiesForRect(const glm::vec2 position, const glm::vec2 size, const int zIndex) {
+void OpenGLRenderer::appendBatchVerticiesForRect(const glm::vec2 position, const glm::vec2 size, const int zIndex, const glm::mat4 transform) {
     float x = position.x;
     float y = position.y;
-    // TODO: remove this for release, transform in shader instead
-    float z = 1 - 2 * zIndex * (1. / Z_DEPTH);
     float w = x + size.x;
     float h = y + size.y;
+    float z = -1.f + zIndex * (1. / Z_DEPTH);
 
     std::array verticies {
         glm::vec3 { x, h, z },
@@ -357,8 +356,10 @@ void OpenGLRenderer::appendBatchVerticiesForRect(const glm::vec2 position, const
         glm::vec3 { w, y, z },
     };
 
-    std::ranges::copy(verticies, mCurrentBatchVertex);
-    mCurrentBatchVertex += mQuadVertexCount;
+    for (const auto& vertex : verticies) {
+        glm::vec4 vertexTransformed = transform * glm::vec4(vertex, 1.0f);
+        *mCurrentBatchVertex++ = glm::vec3(vertexTransformed);
+    }
 }
 
 void OpenGLRenderer::renderRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, const int zIndex) {
@@ -374,15 +375,14 @@ void OpenGLRenderer::renderRectangle(const Cmd& cmd, const ABrush& brush, glm::v
         },
         [](const ACustomShaderBrush& ) {},
     }, brush);
-    gl::Program::currentShader()->set(aui::ShaderUniforms::TRANSFORM, cmd.transform);
 
-    drawRectImpl(position, size, zIndex);
+    drawRectImpl(position, size, zIndex, cmd.transform);
 }
 
-void OpenGLRenderer::drawRectImpl(const glm::vec2 position, const glm::vec2 size, const int zIndex) {
+void OpenGLRenderer::drawRectImpl(const glm::vec2 position, const glm::vec2 size, const int zIndex, const glm::mat4 transform) {
     mRectangleVao.bind();
 
-    appendBatchVerticiesForRect(position, size, zIndex);
+    appendBatchVerticiesForRect(position, size, zIndex, transform);
 }
 
 void OpenGLRenderer::identityUv() {
@@ -410,7 +410,7 @@ void OpenGLRenderer::renderRoundedRectangle(const Cmd& cmd, const ABrush& brush,
     identityUv();
 
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-    drawRectImpl(position, size, zIndex);
+    drawRectImpl(position, size, zIndex, cmd.transform);
 }
 
 void OpenGLRenderer::renderRectangleBorder(const Cmd& cmd, const ABrush& brush,
@@ -425,7 +425,6 @@ void OpenGLRenderer::renderRectangleBorder(const Cmd& cmd, const ABrush& brush,
           [&](const ASolidBrush& brush) { solidBrush(cmd, brush, *this, *mSolidShader); },
           [](const ACustomShaderBrush& ) {},
     }, brush);
-    gl::Program::currentShader()->set(aui::ShaderUniforms::TRANSFORM, cmd.transform);
     identityUv();
 
     //rect.insert(0, getVerticesForRect(x + 0.25f + lineWidth * 0.5f, y + 0.25f + lineWidth * 0.5f, width - (0.25f + lineWidth * 0.5f), height - (0.75f + lineWidth * 0.5f)));
@@ -475,8 +474,7 @@ void OpenGLRenderer::renderRoundedRectangleBorder(const Cmd& cmd, const ABrush& 
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
     gl::Program::currentShader()->set(aui::ShaderUniforms::INNER_SIZE, 2.f * (radius - borderWidth) / innerSize);
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, size / innerSize);
-    gl::Program::currentShader()->set(aui::ShaderUniforms::TRANSFORM, cmd.transform);
-    drawRectImpl(position, size, zIndex);
+    drawRectImpl(position, size, zIndex, cmd.transform);
 }
 
 void OpenGLRenderer::renderBoxShadow(const Cmd& cmd, glm::vec2 position,
@@ -491,7 +489,6 @@ void OpenGLRenderer::renderBoxShadow(const Cmd& cmd, glm::vec2 position,
     mBoxShadowShader->set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, blurRadius / 2.f);
     mBoxShadowShader->set(aui::ShaderUniforms::SL_UNIFORM_LOWER, position + size);
     mBoxShadowShader->set(aui::ShaderUniforms::SL_UNIFORM_UPPER, position);
-    mBoxShadowShader->set(aui::ShaderUniforms::SL_UNIFORM_TRANSFORM, cmd.transform);
     mBoxShadowShader->set(aui::ShaderUniforms::COLOR, cmd.color * color);
 
     mRectangleVao.bind();
@@ -532,7 +529,6 @@ void OpenGLRenderer::renderBoxShadowInner(const Cmd& cmd, glm::vec2 position,
     mBoxShadowInnerShader->set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, blurRadius / 2.f);
     mBoxShadowInnerShader->set(aui::ShaderUniforms::SL_UNIFORM_LOWER, position + offset + size - spreadRadius);
     mBoxShadowInnerShader->set(aui::ShaderUniforms::SL_UNIFORM_UPPER, position + offset + spreadRadius);
-    mBoxShadowInnerShader->set(aui::ShaderUniforms::SL_UNIFORM_TRANSFORM, cmd.transform);
     mBoxShadowInnerShader->set(aui::ShaderUniforms::COLOR, cmd.color * color);
 
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * borderRadius / size);
@@ -552,7 +548,7 @@ void OpenGLRenderer::renderBoxShadowInner(const Cmd& cmd, glm::vec2 position,
     // };
 
     // mRectangleVao.insert(0, std::span{uvs}, "boxShadowInner");
-    drawRectImpl(glm::vec2{x, y}, glm::vec2{w, h}, zIndex);
+    drawRectImpl(glm::vec2{x, y}, glm::vec2{w, h}, zIndex, cmd.transform);
 }
 
 void OpenGLRenderer::renderString(const Cmd& cmd, glm::vec2 position,
@@ -1047,7 +1043,7 @@ void OpenGLRenderer::renderPoints(const Cmd& cmd, const ABrush& brush, AArrayVie
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS || AUI_PLATFORM_EMSCRIPTEN
     // TODO slow, use instancing instead
    for (auto point : points) {
-       drawRectImpl(point - glm::vec2(widthPx / 2), glm::vec2(widthPx));
+       drawRectImpl(point - glm::vec2(widthPx / 2), glm::vec2(widthPx), cmd.transform);
    }
 #else
     glPointSize(widthPx);
@@ -1088,7 +1084,7 @@ void OpenGLRenderer::renderSquareSector(const Cmd& cmd, const ABrush& brush,
     gl::Program::currentShader()->set(aui::ShaderUniforms::M2, m2);
 
     // TODO: replace 0 with zIndex
-    drawRectImpl(position, size, 0);
+    drawRectImpl(position, size, 0, cmd.transform);
 }
 
 
@@ -1487,8 +1483,8 @@ void main() {
                       identityUv();
 
                       glDisable(GL_BLEND);
-                      // TODO: replace 0 with zIndex
-                      drawRectImpl({}, size, 0);
+                      // TODO: replace 0 with zIndex and add transform, then uncomment
+                      // drawRectImpl({}, size, 0);
                       glEnable(GL_BLEND);
 
                       areaOfInterest = AreaOfInterest {
@@ -1582,8 +1578,8 @@ void main() {{
                       }
                       gl::Program::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
                       identityUv();
-                      // TODO: Replace 0 with zIndex
-                      drawRectImpl({}, sizeDownscaled, 0);
+                      // TODO: replace 0 with zIndex and add transform, then uncomment
+                      // drawRectImpl({}, sizeDownscaled, 0);
 
                       areaOfInterest.reset();   // release borrowed framebuffer before requesting another one
 
@@ -1607,8 +1603,8 @@ void main() {{
                               stepSize / 2.f);
                       }
                       gl::Program::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
-                      // TODO: replace 0 with zIndex
-                      drawRectImpl({}, sizeDownscaled, 0);
+                      // TODO: replace 0 with zIndex and add transform, then uncomment
+                      // drawRectImpl({}, sizeDownscaled, 0);
 
                       areaOfInterest = AreaOfInterest {
                           .framebuffer = std::move(offscreen2),
@@ -1642,8 +1638,8 @@ void main() {{
     texture.setupLinear();
 
     gl::Program::currentShader()->set(aui::ShaderUniforms::TRANSFORM, mTransform);
-    // TODO: replace 0 with zIndex
-    drawRectImpl(position, size, 0);
+    // TODO: replace 0 with zIndex and add transform, then uncomment
+    // drawRectImpl(position, size, 0);
 }
 
 OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize) {
