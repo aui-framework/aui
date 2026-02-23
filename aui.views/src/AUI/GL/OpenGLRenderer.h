@@ -68,7 +68,7 @@ private:
     AOptional<gl::Program> mSymbolShaderSubPixel;
     AOptional<gl::Program> mSquareSectorShader;
     AOptional<gl::Program> mLineSolidDashedShader;
-    static constexpr size_t MAX_BATCH_ELEMENTS = 10000;
+    static constexpr size_t MAX_BATCH_ELEMENTS = 1000;
     static constexpr size_t BATCH_VERTEX_COUNT = MAX_BATCH_ELEMENTS * 4;
     std::array<glm::vec3, BATCH_VERTEX_COUNT> mBatchVerticies;
     std::array<glm::vec3, BATCH_VERTEX_COUNT>::iterator mCurrentBatchVertex;

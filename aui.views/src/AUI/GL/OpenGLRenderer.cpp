@@ -342,7 +342,8 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
 }
 
 static constexpr size_t Z_DEPTH = 1000;
-void OpenGLRenderer::appendBatchVerticiesForRect(const glm::vec2 position, const glm::vec2 size, const int zIndex, const glm::mat4 transform) {
+void OpenGLRenderer::appendBatchVerticiesForRect(
+    const glm::vec2 position, const glm::vec2 size, const int zIndex, const glm::mat4 transform) {
     float x = position.x;
     float y = position.y;
     float w = x + size.x;
