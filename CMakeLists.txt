@@ -106,7 +106,7 @@ endfunction()
 if(AUIB_DISABLE)
     find_package(ZLIB REQUIRED)
 else()
-    auib_import(ZLIB https://github.com/Nelonn/zlib-ng
+    auib_import(ZLIB https://github.com/aui-framework/zlib-ng
                 VERSION b583a325937227d7834ae541cf88c1f273da113e)
 endif()
 
