@@ -501,6 +501,7 @@ function(_auib_find_git)
     auib_use_system_libs_begin()
     find_package(Git QUIET)
     set(GIT_EXECUTABLE ${GIT_EXECUTABLE} PARENT_SCOPE)
+    auib_use_system_libs_end()
 endfunction()
 
 function(_auib_postprocess_check_hardcoded_paths _cmake_file)
