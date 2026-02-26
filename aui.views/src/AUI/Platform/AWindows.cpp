@@ -250,7 +250,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
 #if AUI_PLATFORM_LINUX
     // on linux, we have to manually provide an icon for the system.
-    // __aui/app.png is provided by aui_app cmake command.
+    // __aui/icon_512x512.png is provided by aui_app cmake command.
     if (auto _icon = AImage::fromUrl(":__aui/icon_512x512.png")) {
         IPlatformAbstraction::current().windowSetIcon(*this,*_icon);
     }
