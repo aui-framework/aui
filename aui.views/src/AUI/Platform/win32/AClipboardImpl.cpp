@@ -20,9 +20,10 @@
 #include <Windows.h>
 
 void AClipboard::copyToClipboard(const AString& text) {
-    const size_t len = text.length() * 2 + 2;
+    const auto converted = text.toUtf16();
+    size_t len = (converted.length() + 1 /* null terminator included */) * sizeof(wchar_t);
     HGLOBAL hMem =  GlobalAlloc(GMEM_MOVEABLE, len);
-    memcpy(GlobalLock(hMem), text.data(), len);
+    memcpy(GlobalLock(hMem), converted.data(), len);
     GlobalUnlock(hMem);
     OpenClipboard(nullptr);
     EmptyClipboard();
