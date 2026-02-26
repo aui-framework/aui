@@ -100,6 +100,8 @@ void PlatformAbstractionX11::ensureXLibInitialized() {
             ourAtoms.targets = XInternAtom(d, "TARGETS", False);
             ourAtoms.netWmSyncRequest = XInternAtom(d, "_NET_WM_SYNC_REQUEST", False);
             ourAtoms.netWmSyncRequestCounter = XInternAtom(d, "_NET_WM_SYNC_REQUEST_COUNTER", False);
+            ourAtoms.netWmIcon = XInternAtom(ourDisplay, "_NET_WM_ICON", False);
+            ourAtoms.cardinal = XInternAtom(ourDisplay, "XA_CARDINAL", False);
         }
 
         ~DisplayInstance() {
@@ -511,8 +513,6 @@ void PlatformAbstractionX11::windowSetGeometry(AWindow& window, int x, int y, in
 void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image) {
     if (!nativeHandle(window))
         return;
-    PlatformAbstractionX11::ourAtoms.netWmIcon = XInternAtom(PlatformAbstractionX11::ourDisplay, "_NET_WM_ICON", False);
-    PlatformAbstractionX11::ourAtoms.cardinal = XInternAtom(PlatformAbstractionX11::ourDisplay, "XA_CARDINAL", False);
 
     std::vector<unsigned long> icon_data(image.width() * image.height() + 2);
     icon_data[0] = image.width();
