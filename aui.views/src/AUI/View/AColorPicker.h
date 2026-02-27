@@ -124,7 +124,7 @@ struct SlidersRGB {
         return Vertical {
             sliderFactory(color, onColorChanged, &AColor::r),
             sliderFactory(color, onColorChanged, &AColor::g),
-            sliderFactory(std::move(color), std::move(onColorChanged), &AColor::b),
+            sliderFactory(color, onColorChanged, &AColor::b),
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } };
     }
 
