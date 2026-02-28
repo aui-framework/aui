@@ -112,7 +112,7 @@ AUI_ENTRY {
     auto state = _new<State>();
 
     state->items =
-        ranges::view::iota(0, 128) | ranges::view::transform([&](int i) {
+        ranges::views::iota(0, 256) | ranges::views::transform([&](int i) {
             return aui::ptr::manage_shared(new State::Cell {
               .contents =
                   i <= 11 ? AOptional<ItemStack>({

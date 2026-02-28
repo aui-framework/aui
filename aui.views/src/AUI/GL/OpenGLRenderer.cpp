@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <format>
+#include <memory>
 #include <range/v3/iterator/operations.hpp>
 #include <range/v3/view.hpp>
 #include "OpenGLRenderer.h"
@@ -248,27 +249,26 @@ OpenGLRenderer::OpenGLRenderer() {
     mCurrentBatchVertex = mBatchVerticies.begin();
 }
 
-static unsigned char getBrushIndex(const IBatchingRenderer::Cmd& cmd) {
-    unsigned char result = 1;
-    const char offset = 3;
-
-    std::visit(aui::lambda_overloaded {
-        [&](const IBatchingRenderer::CmdRectangle& arg) { result = arg.brush.index() + offset; },
-        [&](const IBatchingRenderer::CmdRoundedRectangle& arg) { result = arg.brush.index() + offset; },
-        [&](const IBatchingRenderer::CmdRectangleBorder& arg) { result = arg.brush.index() + offset; },
-        [&](const IBatchingRenderer::CmdRoundedRectangleBorder& arg) { result = arg.brush.index() + offset; },
-        [&](const IBatchingRenderer::CmdLines& arg) { result = arg.brush.index() + offset; },
-        [&](const IBatchingRenderer::CmdPoints& arg) { result = arg.brush.index() + offset; },
-        [&](const IBatchingRenderer::CmdLinesPairs& arg) { result = arg.brush.index() + offset; },
-        [&](const IBatchingRenderer::CmdSquareSector& arg) { result = arg.brush.index() + offset; },
-        [&](const IBatchingRenderer::CmdSetWindow& arg) { result = offset - 1; },
-        [&](const auto& arg) { },
-    }, cmd.arg);
-
-    return result;
-}
-
 void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
+    auto getBrushIndex = [](Cmd& cmd) {
+        unsigned char result = 1;
+        const char offset = 3;
+
+        std::visit(aui::lambda_overloaded {
+            [&](const IBatchingRenderer::CmdRectangle& arg) { result = arg.brush.index() + offset; },
+            [&](const IBatchingRenderer::CmdRoundedRectangle& arg) { result = arg.brush.index() + offset; },
+            [&](const IBatchingRenderer::CmdRectangleBorder& arg) { result = arg.brush.index() + offset; },
+            [&](const IBatchingRenderer::CmdRoundedRectangleBorder& arg) { result = arg.brush.index() + offset; },
+            [&](const IBatchingRenderer::CmdLines& arg) { result = arg.brush.index() + offset; },
+            [&](const IBatchingRenderer::CmdPoints& arg) { result = arg.brush.index() + offset; },
+            [&](const IBatchingRenderer::CmdLinesPairs& arg) { result = arg.brush.index() + offset; },
+            [&](const IBatchingRenderer::CmdSquareSector& arg) { result = arg.brush.index() + offset; },
+            [&](const IBatchingRenderer::CmdSetWindow& arg) { result = offset - 1; },
+            [&](const auto& arg) { },
+        }, cmd.arg);
+
+        return result;
+    };
     for (auto& cmd : cmds) {
         cmd.batchId = {
             .cmdId = static_cast<unsigned char>(cmd.arg.index()),
@@ -279,28 +279,40 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
         return cmdA.batchId.value > cmdB.batchId.value;
     });
 
-    uint16_t currentBatchId;
+    auto &rectangleVao = mRectangleVao;
+    auto &batchVerticies = mBatchVerticies;
+    auto drawBatch = [&]() {
+        rectangleVao.insert(0, std::span{batchVerticies}, "Batch");
+        rectangleVao.drawElements();
+    };
+
+    uint16_t currentBatchId = 0;
     bool breakBatch = false;
-    for (auto& cmd : cmds) {
+    auto &currentBatchVertex = mCurrentBatchVertex;
+    auto dispatch = [&](Cmd& cmd) {
         u_int16_t nextId = cmd.batchId.value + 1; // + 1 so 0 ID cmd 0 ID brush != NULL
         if (!currentBatchId) {
             currentBatchId = nextId;
-            goto dispatching;
+            return;
         }
         // TODO: don't draw for non drawing commands like set window
-        breakBatch = currentBatchId != nextId;
-        if (not breakBatch)
-            goto dispatching;
-
-        mRectangleVao.insert(0, std::span{mBatchVerticies}, "Batch");
-        mRectangleVao.drawElements();
-        currentBatchId = nextId;
-
-        std::ranges::fill(mBatchVerticies, glm::vec3(0));
-        mCurrentBatchVertex = mBatchVerticies.begin();
+        if (currentBatchId != nextId) {
+            breakBatch = true;
+        }
         // TODO: add logic here so the batch breaks if BATCH_VERTEX_AMOUNT will be exceeded
 
-dispatching:
+        if (not breakBatch)
+            return;
+        drawBatch();
+        currentBatchId = nextId;
+        std::ranges::fill(batchVerticies, glm::vec3(0));
+        currentBatchVertex = batchVerticies.begin();
+        breakBatch =  false;
+    };
+
+    for (auto& cmd : cmds) {
+        dispatch(cmd);
+
         std::visit(aui::lambda_overloaded{
             [&](const CmdRectangle& c) { renderRectangle(cmd, c.brush, c.position, c.size, c.zIndex); },
             [&](const CmdRoundedRectangle& c) { renderRoundedRectangle(cmd, c.brush, c.position, c.size, c.radius, c.zIndex); },
@@ -308,7 +320,7 @@ dispatching:
             [&](const CmdRoundedRectangleBorder& c) { renderRoundedRectangleBorder(cmd, c.brush, c.position, c.size, c.radius, c.borderWidth, c.zIndex); },
             [&](const CmdBoxShadow& c) { renderBoxShadow(cmd, c.position, c.size, c.blurRadius, c.color, c.zIndex); },
             [&](const CmdBoxShadowInner& c) { renderBoxShadowInner(cmd, c.position, c.size, c.blurRadius, c.spreadRadius, c.borderRadius, c.color, c.offset, c.zIndex); },
-            [&](const CmdString& c) { /* renderString(cmd, c.position, c.string, c.fs); */ },
+            [&](const CmdString& c) { renderString(cmd, c.position, c.string, c.fs); },
             [&](const CmdLines& c) { renderLines(cmd, c.brush, c.points, c.style, c.width); },
             [&](const CmdPoints& c) { renderPoints(cmd, c.brush, c.points, c.size); },
             [&](const CmdLinesPairs& c) { renderLines(cmd, c.brush, c.points, c.style, c.width); },
@@ -317,6 +329,8 @@ dispatching:
             [&](const CmdNewRenderViewToTexture&){ /* handled elsewhere */ }
         }, cmd.arg);
     }
+    if (mCurrentBatchVertex != mBatchVerticies.begin())
+        drawBatch();
 }
 
 
