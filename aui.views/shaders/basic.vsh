@@ -3,5 +3,5 @@ input {
 }
 
 entry {
-    sl_position = vec4(input.pos, 1)
+    sl_position = vec4(input.pos.xyz, 1)
 }

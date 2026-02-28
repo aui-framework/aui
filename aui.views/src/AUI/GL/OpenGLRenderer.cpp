@@ -341,7 +341,7 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
         }, cmd.arg);
     }
     if (mCurrentBatchVertex != mBatchVerticies.begin())
-        drawBatch();
+        drawBatch("Batch");
 }
 
 
