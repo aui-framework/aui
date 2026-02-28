@@ -108,11 +108,11 @@ AUI_ENTRY {
       .flags = ARenderContextFlags::NO_VSYNC | ARenderContextFlags::NO_SMOOTH,
     });
 
-    auto window = _new<GameWindow>("Game inventory", 600_dp, 500_dp);
+    auto window = _new<GameWindow>("Game inventory", 1920_dp, 900_dp);
     auto state = _new<State>();
 
     state->items =
-        ranges::views::iota(0, 256) | ranges::views::transform([&](int i) {
+        ranges::views::iota(0, 512) | ranges::views::transform([&](int i) {
             return aui::ptr::manage_shared(new State::Cell {
               .contents =
                   i <= 11 ? AOptional<ItemStack>({
@@ -130,7 +130,6 @@ AUI_ENTRY {
             inventoryGrid(state),
           } AUI_OVERRIDE_STYLE {
                 Expanding {},
-                MaxSize { 700_dp, {} },
               },
         } AUI_OVERRIDE_STYLE { Padding { {}, 64_dp } });
     window->show();

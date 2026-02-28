@@ -92,12 +92,14 @@ public:
     struct CmdSetWindow {
         AWindowBase* window;
     };
+    using BatchId_t = uint16_t;
     union BatchId {
         struct {
             unsigned char cmdId : 8;
             unsigned char brushId : 8;
+            // uint16_t zIndex : 16;
         };
-        uint16_t value;
+        BatchId_t value;
     };
     struct Cmd {
         glm::mat4 transform;

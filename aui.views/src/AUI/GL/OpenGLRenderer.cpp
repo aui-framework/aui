@@ -251,46 +251,57 @@ OpenGLRenderer::OpenGLRenderer() {
 
 void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
     auto getBrushIndex = [](Cmd& cmd) {
-        unsigned char result = 1;
-        const char offset = 3;
+        unsigned char result;
+        const char OFFSET = 3;
 
         std::visit(aui::lambda_overloaded {
-            [&](const IBatchingRenderer::CmdRectangle& arg) { result = arg.brush.index() + offset; },
-            [&](const IBatchingRenderer::CmdRoundedRectangle& arg) { result = arg.brush.index() + offset; },
-            [&](const IBatchingRenderer::CmdRectangleBorder& arg) { result = arg.brush.index() + offset; },
-            [&](const IBatchingRenderer::CmdRoundedRectangleBorder& arg) { result = arg.brush.index() + offset; },
-            [&](const IBatchingRenderer::CmdLines& arg) { result = arg.brush.index() + offset; },
-            [&](const IBatchingRenderer::CmdPoints& arg) { result = arg.brush.index() + offset; },
-            [&](const IBatchingRenderer::CmdLinesPairs& arg) { result = arg.brush.index() + offset; },
-            [&](const IBatchingRenderer::CmdSquareSector& arg) { result = arg.brush.index() + offset; },
-            [&](const IBatchingRenderer::CmdSetWindow& arg) { result = offset - 1; },
-            [&](const auto& arg) { },
+            [&](const auto& arg) {
+                if constexpr (requires { arg.brush; }) {
+                    result = arg.brush.index() + OFFSET;
+                } else {
+                    result = OFFSET - 1;
+                }
+            }
         }, cmd.arg);
 
         return result;
     };
+    // TODO: Look into using z index as a batch key component to reduce overdraw
+    auto getZIndex = [](Cmd& cmd) -> uint16_t {
+        std::optional<int> result;
+
+        std::visit(aui::lambda_overloaded {
+            [&](const auto& arg) {
+                if constexpr (requires { arg.zIndex; }) {
+                    result = arg.zIndex;
+                }
+            }
+        }, cmd.arg);
+
+        return static_cast<uint16_t>(result.value_or(999));
+    };
     for (auto& cmd : cmds) {
         cmd.batchId = {
             .cmdId = static_cast<unsigned char>(cmd.arg.index()),
-            .brushId = getBrushIndex(cmd)
+            .brushId = getBrushIndex(cmd),
         };
     }
     std::ranges::sort(cmds, [](const Cmd& cmdA, const Cmd& cmdB) {
-        return cmdA.batchId.value > cmdB.batchId.value;
+        return cmdA.batchId.value < cmdB.batchId.value;
     });
 
     auto &rectangleVao = mRectangleVao;
     auto &batchVerticies = mBatchVerticies;
-    auto drawBatch = [&]() {
+    auto drawBatch = [&](const char *name) {
         rectangleVao.insert(0, std::span{batchVerticies}, "Batch");
         rectangleVao.drawElements();
     };
 
-    uint16_t currentBatchId = 0;
+    BatchId_t currentBatchId = 0;
     bool breakBatch = false;
     auto &currentBatchVertex = mCurrentBatchVertex;
     auto dispatch = [&](Cmd& cmd) {
-        u_int16_t nextId = cmd.batchId.value + 1; // + 1 so 0 ID cmd 0 ID brush != NULL
+        BatchId_t nextId = cmd.batchId.value + 1; // + 1 so 0 ID cmd 0 ID brush != NULL
         if (!currentBatchId) {
             currentBatchId = nextId;
             return;
@@ -303,7 +314,7 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
 
         if (not breakBatch)
             return;
-        drawBatch();
+        drawBatch("Batch");
         currentBatchId = nextId;
         std::ranges::fill(batchVerticies, glm::vec3(0));
         currentBatchVertex = batchVerticies.begin();
