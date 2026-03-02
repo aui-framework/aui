@@ -94,12 +94,12 @@ void gl::Vao::insert(
 
     mBuffers[index].lastModifierKey = key;
 
-    auto signature = uint32_t(vertexSize) ^ dataType;
-    if (newFlag || mBuffers[index].signature != signature) {
-        glEnableVertexAttribArray(index);
-        glVertexAttribPointer(index, vertexSize, dataType, GL_FALSE, 0, nullptr);
-        mBuffers[index].signature = signature;
-    }
+    // auto signature = uint32_t(vertexSize) ^ dataType;
+    // if (newFlag || mBuffers[index].signature != signature) {
+    //     glEnableVertexAttribArray(index);
+    //     glVertexAttribPointer(index, vertexSize, dataType, GL_FALSE, 0, nullptr);
+    //     mBuffers[index].signature = signature;
+    // }
 }
 
 void gl::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType) {

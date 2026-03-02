@@ -29,6 +29,7 @@
 #include "AUI/GL/Program.h"
 #include "AUI/GL/Texture2D.h"
 #include "AUI/GL/Vao.h"
+#include "AUI/GL/gl.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABorderStyle.h"
@@ -71,6 +72,8 @@
 #include <sys/types.h>
 #include <range/v3/algorithm/min_element.hpp>
 #include <span>
+#include <string>
+#include <string_view>
 #include <variant>
 
 static constexpr auto LOG_TAG = "OpenGLRenderer";
@@ -102,7 +105,6 @@ static constexpr auto UV_BIAS = 0.001f;
 namespace {
 
 void gradientBrush(const IBatchingRenderer::Cmd& cmd, const ALinearGradientBrush& brush, OpenGLRenderer& renderer, gl::Program& shader) {
-
     shader.use();
     shader.set(aui::ShaderUniforms::COLOR, cmd.color);
     aui::render::brush::gradient::Helper h(brush);
@@ -126,7 +128,8 @@ void gradientBrush(const IBatchingRenderer::Cmd& cmd, const ALinearGradientBrush
 
 void solidBrush(const IBatchingRenderer::Cmd& cmd, const ASolidBrush& brush, OpenGLRenderer& renderer, gl::Program& shader) {
     shader.use();
-    shader.set(aui::ShaderUniforms::COLOR, cmd.color * brush.solidColor);
+    ALogger::info("OpenGL") << "Brush color: " << cmd.color.toString();
+    renderer.appendColor(cmd.color * brush.solidColor);
 }
 
 void texturedBrush(const IBatchingRenderer::Cmd& cmd, const ATexturedBrush& brush, OpenGLRenderer& renderer, gl::Program& shader, gl::Vao& tempVao) {
@@ -187,6 +190,29 @@ inline void useAuislShader(AOptional<gl::Program>& out) {
     Fragment::setup(out->handle());
     out->compile();
 }
+
+// TODO: Add compile time shader loading like for SL shaders
+inline void useExternalShader(AOptional<gl::Program>& out, std::string_view vsPath, std::string_view fsPath) {
+    out.emplace();
+    ALogger::info("OpenGL") << std::format("Loading vertex shader {}", vsPath);
+    std::ifstream vsFile{ static_cast<std::string>(vsPath) };
+    if (!vsFile.is_open()) {
+        throw AException("Couldn't open vertex shader " + vsPath);
+    }
+    ALogger::info("OpenGL") << std::format("Loading fragment shader {}", vsPath);
+    std::ifstream fsFile{ static_cast<std::string>(fsPath) };
+    if (!fsFile.is_open()) {
+        throw AException("Couldn't open fragment shader" + fsPath);
+    }
+    std::stringstream vsBuffer;
+    vsBuffer << vsFile.rdbuf();
+    std::stringstream fsBuffer;
+    fsBuffer << fsFile.rdbuf();
+    out->loadVertexShader(vsBuffer.str(), gl::GLSLOptions{.custom=true});
+    out->loadFragmentShader(fsBuffer.str(), gl::GLSLOptions{.custom=true});
+    out->compile();
+}
+
 }
 
 OpenGLRenderer::OpenGLRenderer() {
@@ -207,37 +233,41 @@ OpenGLRenderer::OpenGLRenderer() {
     mGradientTexture.bind();
     mGradientTexture.setupLinear();
     mGradientTexture.setupClampToEdge();
+
     useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader,
         aui::sl_gen::rect_solid::fsh::glsl120::Shader>(mSolidShader);
+    // useExternalShader(mSolidShader, "aui.views/shaders/basic.vert", "aui.views/shaders/solid.frag");
+    // mSolidShader->bindAttribute(0, "pos");
+    // mSolidShader->bindAttribute(1, "color");
 
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-        aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
-
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-        aui::sl_gen::shadow_inner::fsh::glsl120::Shader>(mBoxShadowInnerShader);
-
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-        aui::sl_gen::rect_solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-        aui::sl_gen::border_rounded::fsh::glsl120::Shader>(mRoundedSolidShaderBorder);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-        aui::sl_gen::rect_gradient::fsh::glsl120::Shader>(mGradientShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-        aui::sl_gen::rect_gradient_rounded::fsh::glsl120::Shader>(mRoundedGradientShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-        aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-        aui::sl_gen::rect_unblend::fsh::glsl120::Shader>(mUnblendShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-        aui::sl_gen::square_sector::fsh::glsl120::Shader>(mSquareSectorShader);
-
-    useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
-        aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
-    useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
-        aui::sl_gen::symbol_sub::fsh::glsl120::Shader>(mSymbolShaderSubPixel);
-
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
-        aui::sl_gen::line_solid_dashed::fsh::glsl120::Shader>(mLineSolidDashedShader);
+    // useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+    //     aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
+    //
+    // useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+    //     aui::sl_gen::shadow_inner::fsh::glsl120::Shader>(mBoxShadowInnerShader);
+    //
+    // useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+    //     aui::sl_gen::rect_solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
+    // useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+    //     aui::sl_gen::border_rounded::fsh::glsl120::Shader>(mRoundedSolidShaderBorder);
+    // useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+    //     aui::sl_gen::rect_gradient::fsh::glsl120::Shader>(mGradientShader);
+    // useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+    //     aui::sl_gen::rect_gradient_rounded::fsh::glsl120::Shader>(mRoundedGradientShader);
+    // useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+    //     aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
+    // useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+    //     aui::sl_gen::rect_unblend::fsh::glsl120::Shader>(mUnblendShader);
+    // useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+    //     aui::sl_gen::square_sector::fsh::glsl120::Shader>(mSquareSectorShader);
+    //
+    // useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
+    //     aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
+    // useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader,
+    //     aui::sl_gen::symbol_sub::fsh::glsl120::Shader>(mSymbolShaderSubPixel);
+    //
+    // useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
+    //     aui::sl_gen::line_solid_dashed::fsh::glsl120::Shader>(mLineSolidDashedShader);
 
     {
         mRectangleVao.indicesByCount(BATCH_VERTEX_COUNT);
@@ -245,8 +275,8 @@ OpenGLRenderer::OpenGLRenderer() {
     {
         mRectangleVao.indicesByCount(BATCH_VERTEX_COUNT);
     }
-    mBatchVerticies.fill(glm::vec3{0});
-    mCurrentBatchVertex = mBatchVerticies.begin();
+    mBatchVertices.fill(glm::vec3{0});
+    mCurrentBatchVertex = mBatchVertices.begin();
 }
 
 void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
@@ -291,10 +321,15 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
     });
 
     auto &rectangleVao = mRectangleVao;
-    auto &batchVerticies = mBatchVerticies;
+    auto &batchVerticies = mBatchVertices;
     auto drawBatch = [&](const char *name) {
-        rectangleVao.insert(0, std::span{batchVerticies}, "Batch");
+        rectangleVao.insert(0, std::span{batchVerticies}, name);
         rectangleVao.drawElements();
+        // TODO: move this and make it more expandable
+        glEnableVertexAttribArray(0);
+        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 7, 0);
+        glEnableVertexAttribArray(1);
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 7, reinterpret_cast<float *>(3 * sizeof(float)));
     };
 
     BatchId_t currentBatchId = 0;
@@ -326,21 +361,22 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
 
         std::visit(aui::lambda_overloaded{
             [&](const CmdRectangle& c) { renderRectangle(cmd, c.brush, c.position, c.size, c.zIndex); },
-            [&](const CmdRoundedRectangle& c) { renderRoundedRectangle(cmd, c.brush, c.position, c.size, c.radius, c.zIndex); },
-            [&](const CmdRectangleBorder& c) { renderRectangleBorder(cmd, c.brush, c.position, c.size, c.lineWidth, c.zIndex); },
-            [&](const CmdRoundedRectangleBorder& c) { renderRoundedRectangleBorder(cmd, c.brush, c.position, c.size, c.radius, c.borderWidth, c.zIndex); },
-            [&](const CmdBoxShadow& c) { renderBoxShadow(cmd, c.position, c.size, c.blurRadius, c.color, c.zIndex); },
-            [&](const CmdBoxShadowInner& c) { renderBoxShadowInner(cmd, c.position, c.size, c.blurRadius, c.spreadRadius, c.borderRadius, c.color, c.offset, c.zIndex); },
-            [&](const CmdString& c) { renderString(cmd, c.position, c.string, c.fs); },
-            [&](const CmdLines& c) { renderLines(cmd, c.brush, c.points, c.style, c.width); },
-            [&](const CmdPoints& c) { renderPoints(cmd, c.brush, c.points, c.size); },
-            [&](const CmdLinesPairs& c) { renderLines(cmd, c.brush, c.points, c.style, c.width); },
-            [&](const CmdSquareSector& c) { renderSquareSector(cmd, c.brush, c.position, c.size, c.begin, c.end); },
-            [&](const CmdSetWindow& c) { mWindow = c.window; },
-            [&](const CmdNewRenderViewToTexture&){ /* handled elsewhere */ }
+            // [&](const CmdRoundedRectangle& c) { renderRoundedRectangle(cmd, c.brush, c.position, c.size, c.radius, c.zIndex); },
+            // [&](const CmdRectangleBorder& c) { renderRectangleBorder(cmd, c.brush, c.position, c.size, c.lineWidth, c.zIndex); },
+            // [&](const CmdRoundedRectangleBorder& c) { renderRoundedRectangleBorder(cmd, c.brush, c.position, c.size, c.radius, c.borderWidth, c.zIndex); },
+            // [&](const CmdBoxShadow& c) { renderBoxShadow(cmd, c.position, c.size, c.blurRadius, c.color, c.zIndex); },
+            // [&](const CmdBoxShadowInner& c) { renderBoxShadowInner(cmd, c.position, c.size, c.blurRadius, c.spreadRadius, c.borderRadius, c.color, c.offset, c.zIndex); },
+            // [&](const CmdString& c) { renderString(cmd, c.position, c.string, c.fs); },
+            // [&](const CmdLines& c) { renderLines(cmd, c.brush, c.points, c.style, c.width); },
+            // [&](const CmdPoints& c) { renderPoints(cmd, c.brush, c.points, c.size); },
+            // [&](const CmdLinesPairs& c) { renderLines(cmd, c.brush, c.points, c.style, c.width); },
+            // [&](const CmdSquareSector& c) { renderSquareSector(cmd, c.brush, c.position, c.size, c.begin, c.end); },
+            // [&](const CmdSetWindow& c) { mWindow = c.window; },
+            // [&](const CmdNewRenderViewToTexture&){ /* handled elsewhere */ },
+            [&](const auto &c){ }
         }, cmd.arg);
     }
-    if (mCurrentBatchVertex != mBatchVerticies.begin())
+    if (mCurrentBatchVertex != mBatchVertices.begin())
         drawBatch("Batch");
 }
 
@@ -366,9 +402,30 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
         };
 }
 
+void OpenGLRenderer::renderRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, const int zIndex) {
+    ALogger::info("OpenGL") << "Rendering rectangle";
+    appendRect(position, size, zIndex, cmd.transform);
+
+    std::visit(aui::lambda_overloaded{
+        [&](const ALinearGradientBrush& brush) {
+            // gradientBrush(cmd, brush, *this, *mGradientShader);
+        },
+        [&](const ATexturedBrush& brush) {
+            // texturedBrush(cmd, brush, *this, *mTexturedShader, mRectangleVao);
+        },
+        [&](const ASolidBrush& brush) {
+            solidBrush(cmd, brush, *this, *mSolidShader);
+        },
+        [](const ACustomShaderBrush& ) {},
+    }, brush);
+}
+
+void OpenGLRenderer::appendColor(const AColor color) {
+    *mCurrentBatchVertex++ = glm::vec4(color);
+}
+
 static constexpr size_t Z_DEPTH = 1000;
-void OpenGLRenderer::appendBatchVerticiesForRect(
-    const glm::vec2 position, const glm::vec2 size, const int zIndex, const glm::mat4 transform) {
+void OpenGLRenderer::appendRect(const glm::vec2 position, const glm::vec2 size, const int zIndex, const glm::mat4 transform) {
     float x = position.x;
     float y = position.y;
     float w = x + size.x;
@@ -388,29 +445,6 @@ void OpenGLRenderer::appendBatchVerticiesForRect(
     }
 }
 
-void OpenGLRenderer::renderRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, const int zIndex) {
-    std::visit(aui::lambda_overloaded{
-        [&](const ALinearGradientBrush& brush) {
-            // gradientBrush(cmd, brush, *this, *mGradientShader);
-        },
-        [&](const ATexturedBrush& brush) {
-            // texturedBrush(cmd, brush, *this, *mTexturedShader, mRectangleVao);
-        },
-        [&](const ASolidBrush& brush) {
-            solidBrush(cmd, brush, *this, *mSolidShader);
-        },
-        [](const ACustomShaderBrush& ) {},
-    }, brush);
-
-    drawRectImpl(position, size, zIndex, cmd.transform);
-}
-
-void OpenGLRenderer::drawRectImpl(const glm::vec2 position, const glm::vec2 size, const int zIndex, const glm::mat4 transform) {
-    mRectangleVao.bind();
-
-    appendBatchVerticiesForRect(position, size, zIndex, transform);
-}
-
 void OpenGLRenderer::identityUv() {
     const glm::vec2 uvs[] = {
         {0, 1},
@@ -426,6 +460,7 @@ void OpenGLRenderer::renderRoundedRectangle(const Cmd& cmd, const ABrush& brush,
                                       glm::vec2 size,
                                       float radius,
                                       const int zIndex) {
+    ALogger::info("OpenGL") << "Rendering rounded rectangle";
     std::visit(
         aui::lambda_overloaded {
           [&](const ALinearGradientBrush& brush) { gradientBrush(cmd, brush, *this, *mRoundedGradientShader); },
@@ -436,7 +471,7 @@ void OpenGLRenderer::renderRoundedRectangle(const Cmd& cmd, const ABrush& brush,
     identityUv();
 
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-    drawRectImpl(position, size, zIndex, cmd.transform);
+    appendRect(position, size, zIndex, cmd.transform);
 }
 
 void OpenGLRenderer::renderRectangleBorder(const Cmd& cmd, const ABrush& brush,
@@ -444,6 +479,7 @@ void OpenGLRenderer::renderRectangleBorder(const Cmd& cmd, const ABrush& brush,
                                      glm::vec2 size,
                                      float lineWidth,
                                      const int zIndex) {
+    ALogger::info("OpenGL") << "Rendering rectangle border";
     std::visit(
         aui::lambda_overloaded {
           [&](const ALinearGradientBrush& brush) { gradientBrush(cmd, brush, *this, *mGradientShader); },
@@ -485,6 +521,7 @@ void OpenGLRenderer::renderRoundedRectangleBorder(const Cmd& cmd, const ABrush& 
                                             float radius,
                                             int borderWidth,
                                             const int zIndex) {
+    ALogger::info("OpenGL") << "Rendering rounded rectangle border";
     std::visit(
         aui::lambda_overloaded {
           [&](const ALinearGradientBrush& brush) { gradientBrush(cmd, brush, *this, *mGradientShader); },
@@ -500,7 +537,7 @@ void OpenGLRenderer::renderRoundedRectangleBorder(const Cmd& cmd, const ABrush& 
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
     gl::Program::currentShader()->set(aui::ShaderUniforms::INNER_SIZE, 2.f * (radius - borderWidth) / innerSize);
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, size / innerSize);
-    drawRectImpl(position, size, zIndex, cmd.transform);
+    appendRect(position, size, zIndex, cmd.transform);
 }
 
 void OpenGLRenderer::renderBoxShadow(const Cmd& cmd, glm::vec2 position,
@@ -508,6 +545,7 @@ void OpenGLRenderer::renderBoxShadow(const Cmd& cmd, glm::vec2 position,
                                float blurRadius,
                                const AColor& color,
                                const int zIndex) {
+    ALogger::info("OpenGL") << "Rendering box shadow";
     AUI_ASSERTX(blurRadius >= 0.f,
                 "blurRadius is expected to be non negative, use boxShadowInner for inset shadows instead");
     identityUv();
@@ -548,6 +586,7 @@ void OpenGLRenderer::renderBoxShadowInner(const Cmd& cmd, glm::vec2 position,
                                     const AColor& color,
                                     glm::vec2 offset,
                                     const int zIndex) {
+    ALogger::info("OpenGL") << "Rendering inner shadow";
     AUI_ASSERTX(blurRadius >= 0.f, "blurRadius is expected to be non negative");
     blurRadius *= -1.f;
     identityUv();
@@ -574,7 +613,7 @@ void OpenGLRenderer::renderBoxShadowInner(const Cmd& cmd, glm::vec2 position,
     // };
 
     // mRectangleVao.insert(0, std::span{uvs}, "boxShadowInner");
-    drawRectImpl(glm::vec2{x, y}, glm::vec2{w, h}, zIndex, cmd.transform);
+    appendRect(glm::vec2{x, y}, glm::vec2{w, h}, zIndex, cmd.transform);
 }
 
 void OpenGLRenderer::renderString(const Cmd& cmd, glm::vec2 position,
@@ -1110,7 +1149,7 @@ void OpenGLRenderer::renderSquareSector(const Cmd& cmd, const ABrush& brush,
     gl::Program::currentShader()->set(aui::ShaderUniforms::M2, m2);
 
     // TODO: replace 0 with zIndex
-    drawRectImpl(position, size, 0, cmd.transform);
+    appendRect(position, size, 0, cmd.transform);
 }
 
 

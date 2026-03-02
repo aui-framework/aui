@@ -26,6 +26,8 @@ class OpenGLRenderer final: public IBatchingRenderer {
 friend class OpenGLPrerenderedString;
 friend class OpenGLMultiStringCanvas;
 public:
+    // TODO: Make this private, figure out how this should be accesible in brushes
+    void appendColor(const AColor color);
     struct FontEntryData: aui::noncopyable {
         Util::SimpleTexturePacker texturePacker;
         gl::Texture2D texture;
@@ -70,7 +72,7 @@ private:
     AOptional<gl::Program> mLineSolidDashedShader;
     static constexpr size_t MAX_BATCH_ELEMENTS = 1000;
     static constexpr size_t BATCH_VERTEX_COUNT = MAX_BATCH_ELEMENTS * 4;
-    std::array<glm::vec3, BATCH_VERTEX_COUNT> mBatchVerticies;
+    std::array<glm::vec3, BATCH_VERTEX_COUNT> mBatchVertices;
     std::array<glm::vec3, BATCH_VERTEX_COUNT>::iterator mCurrentBatchVertex;
     gl::Vao mRectangleVao;
     gl::Vao mBorderVao;
@@ -105,7 +107,6 @@ private:
 
 
     static std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position, glm::vec2 size);
-    void appendBatchVerticiesForRect(const glm::vec2 position, const glm::vec2 size, const int zIndex, const glm::mat4 transform);
 
     FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 
@@ -134,7 +135,7 @@ private:
      */
     FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
 
-    void drawRectImpl(const glm::vec2 position, const glm::vec2 size, const int zIndex, const glm::mat4 transform);
+    void appendRect(const glm::vec2 position, const glm::vec2 size, const int zIndex, const glm::mat4 transform);
 
 
 private:
