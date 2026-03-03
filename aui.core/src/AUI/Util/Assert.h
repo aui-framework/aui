@@ -99,7 +99,6 @@ namespace aui::assertion::detail {
  * @ingroup useful_macros
  * @details
  * Throws `AAssertionFailedException`.
- * applications.
  * @sa AUI_ASSERT
  *
  * ```cpp
