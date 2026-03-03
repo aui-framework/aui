@@ -25,15 +25,19 @@ namespace aui::assertion::detail {
 
 
 
-#if AUI_DEBUG
-#define AUI_IMPL_ASSERT(cond) assert(cond); ::aui::assertion::detail::checkArgs(cond)
-#define AUI_IMPL_ASSERTX(cond, what) assert((cond) && what); ::aui::assertion::detail::checkArgs(cond, what)
-#define AUI_IMPL_FAIL(what) assert(false && what); ::aui::assertion::detail::checkArgs(false, what)
-#else
+// design choice:
+// initially we used standard assert for debug builds and AAssertionFailedException for release builds.
+//
+// #define AUI_IMPL_ASSERT(cond) assert(cond); ::aui::assertion::detail::checkArgs(cond)
+// #define AUI_IMPL_ASSERTX(cond, what) assert((cond) && what); ::aui::assertion::detail::checkArgs(cond, what)
+// #define AUI_IMPL_FAIL(what) assert(false && what); ::aui::assertion::detail::checkArgs(false, what)
+//
+// `assert` provides close to zero of helpful info if a precompiled version of AUI was used. So we'll use exceptions
+// that at very least provide stack traces.
+
 #define AUI_IMPL_ASSERT(cond) if (!(cond)) ::aui::assertion::detail::triggerAssertion("assertion failed: " AUI_PP_STRINGIZE(cond))
 #define AUI_IMPL_ASSERTX(cond, what) if (!(cond)) ::aui::assertion::detail::triggerAssertion("assertion failed: " AUI_PP_STRINGIZE(cond) ": " what); ::aui::assertion::detail::checkArgs(cond, what)
 #define AUI_IMPL_FAIL(what) ::aui::assertion::detail::triggerAssertion(what); ::aui::assertion::detail::checkArgs(false, what)
-#endif
 
 /**
  * @brief Asserts that the passed condition evaluates to true.
@@ -51,6 +55,15 @@ namespace aui::assertion::detail {
  * AUI_ASSERT(v >= 0); // does not trigger
  * AUI_ASSERT(v != 4); // triggers
  * ```
+ *
+ * `AUI_ASSERT` appears in both debug and release builds on all platforms. To remove it from release builds, wrap with
+ * `#if AUI_DEBUG`.
+ *
+ * ```cpp
+ * #if AUI_DEBUG
+ * AUI_ASSERT(v > 0);
+ * #endif
+ * ```
  */
 #define AUI_ASSERT(condition) AUI_IMPL_ASSERT(condition)
 
@@ -60,15 +73,22 @@ namespace aui::assertion::detail {
  * @param what string literal which will be appended to the error message
  * @ingroup useful_macros
  * @details
- * If the condition evaluates to false, triggers default C++ assert behavior (that is, program termination) on debug
- * build or throws AAssertionFailedException on release builds, so it can be handled and reported properly in production
- * applications.
+ * If the condition evaluates to false, throws AAssertionFailedException, so it can be handled and reported properly.
  * @sa AUI_ASSERT
  *
  * ```cpp
  * int v = 2 + 2;
  * AUI_ASSERTX(v >= 0, "positive value expected"); // does not trigger
  * AUI_ASSERTX(v != 4, "4 is unacceptable value"); // triggers
+ * ```
+ *
+ * `AUI_ASSERT` appears in both debug and release builds on all platforms. To remove it from release builds, wrap with
+ * `#if AUI_DEBUG`.
+ *
+ * ```cpp
+ * #if AUI_DEBUG
+ * AUI_ASSERTX(v > 0, "v should be positive");
+ * #endif
  * ```
  */
 #define AUI_ASSERTX(condition, what) AUI_IMPL_ASSERTX(condition, what)
@@ -78,8 +98,7 @@ namespace aui::assertion::detail {
  * @param what string literal which will be appended to the error message
  * @ingroup useful_macros
  * @details
- * Triggers default C++ assert behavior (that is, program termination) on debug build or throws
- * AAssertionFailedException on release builds, so it can be handled and reported properly in production
+ * Throws `AAssertionFailedException`.
  * applications.
  * @sa AUI_ASSERT
  *
