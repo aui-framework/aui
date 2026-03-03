@@ -971,15 +971,8 @@ function(aui_compile_assets_add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
         get_target_property(TARGET_DIR ${AUI_MODULE_NAME} ARCHIVE_OUTPUT_DIRECTORY)
     endif()
 
-    if (NOT EXISTS ${FILE_PATH})
-        message(FATAL_ERROR "File ${FILE_PATH} does not exist! Is your path absolute?")
-    endif()
-
-    if (TARGET aui.toolbox AND NOT CMAKE_CROSSCOMPILING)
-        set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox>)
-    else()
-        set(AUI_TOOLBOX_EXE aui.toolbox)
-    endif()
+    _aui_check_toolbox()
+    message(STATUS "aui.toolbox: using ${AUI_TOOLBOX_EXE} to add assets for ${AUI_MODULE_NAME}")
 
     string(MD5 OUTPUT_PATH ${ASSET_PATH})
     set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
@@ -1554,6 +1547,19 @@ macro(aui_app)
         install(TARGETS ${APP_TARGET}
                 DESTINATION $<TARGET_PROPERTY:${APP_TARGET},AUI_INSTALL_RUNTIME_DIR>)
         get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
+        # Setup icon for x11
+        if (APP_ICON)
+            set(_ico "${_current_app_build_files}/app")
+            if (TARGET aui.toolbox)
+                add_dependencies(${APP_TARGET} aui.toolbox)
+            endif()
+            add_custom_command(
+                OUTPUT "${_ico}/icon_512x512.png"
+                COMMAND ${AUI_TOOLBOX_EXE}
+                ARGS svg2png ${_icon_absolute} -r=512 -o=${_ico} -p=icon
+            )
+            aui_compile_assets_add(${APP_TARGET} "${_ico}/icon_512x512.png" "__aui/icon_512x512.png")
+        endif()
         if (NOT APP_LINUX_DESKTOP)
             # generate desktop file
             set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_executable}\nType=Application\nTerminal=false\nCategories=Utility")
