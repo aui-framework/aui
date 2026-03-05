@@ -580,7 +580,7 @@ function(auib_import AUI_MODULE_NAME URL)
     set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
 
     set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY IMPORTED_FROM_CONFIG)
-    set(oneValueArgs VERSION CMAKE_WORKING_DIR PRECOMPILED_URL_PREFIX LINK)
+    set(oneValueArgs VERSION CMAKE_WORKING_DIR PRECOMPILED_URL_PREFIX LINK EXPECTED_BUILD_SPECIFIER)
 
     set(multiValueArgs CMAKE_ARGS COMPONENTS REQUIRES)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
@@ -682,6 +682,12 @@ function(auib_import AUI_MODULE_NAME URL)
     set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${BUILD_SPECIFIER_HASH}")
 
     file(WRITE ${DEP_INSTALL_PREFIX}/BUILD_SPECIFIER ${BUILD_SPECIFIER})
+
+    if (AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER)
+        if (NOT "${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}" STREQUAL "${BUILD_SPECIFIER}")
+            message(FATAL_ERROR "Internal error: expected to get \"${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}\" but got \"${BUILD_SPECIFIER}\"")
+        endif ()
+    endif()
 
     if (AUIB_IMPORT_PRECOMPILED_URL_PREFIX)
         if (EXISTS ${AUIB_IMPORT_PRECOMPILED_URL_PREFIX})
@@ -1173,7 +1179,7 @@ function(auib_import AUI_MODULE_NAME URL)
                 install(DIRECTORY ${DEP_INSTALL_PREFIX} DESTINATION "deps/${AUI_MODULE_NAME_LOWER}")
             endif()
         endif()
-        set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
+        set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} EXPECTED_BUILD_SPECIFIER "${BUILD_SPECIFIER}" IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
     endif()
     _auib_find_git()
     if (GIT_EXECUTABLE AND NOT AUIB_IMPORT_ARCHIVE)
