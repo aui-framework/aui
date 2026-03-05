@@ -9,6 +9,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include "AUI/ASS/Property/BackgroundSolid.h"
+#include "AUI/Common/AColor.h"
 #include "AUI/Platform/ARenderingContextOptions.h"
 #include "AUI/View/AForEachUI.h"
 #include "AUI/View/AScrollArea.h"
@@ -51,7 +53,8 @@ _<AView> itemStackView(const _<AProperty<AOptional<ItemStack>>>& itemStack) {
         _new<AView>() AUI_LET {
                 AObject::connect(
                     AUI_REACT(ass::PropertyListRecursive {
-                      BackgroundImage { (*itemStack) ->hasValue() ? ":texture/item/{}.png"_format((**itemStack)->id) : "" },
+                      // BackgroundImage { (*itemStack) ->hasValue() ? ":texture/item/{}.png"_format((**itemStack)->id) : "" },
+                      BackgroundSolid{ AColor{ 1.0, 1.0, 1.0}},
                       Expanding {},
                     }),
                     AUI_SLOT(it)::setCustomStyle);
@@ -126,7 +129,7 @@ AUI_ENTRY {
     window->setContents(
         Centered {
           Vertical {
-            Label { "Inventory" } AUI_OVERRIDE_STYLE { FontSize { 32_dp } },
+            // Label { "Inventory" } AUI_OVERRIDE_STYLE { FontSize { 32_dp } },
             inventoryGrid(state),
           } AUI_OVERRIDE_STYLE {
                 Expanding {},

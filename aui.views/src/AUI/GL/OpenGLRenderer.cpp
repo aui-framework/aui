@@ -30,7 +30,6 @@
 #include "AUI/GL/Texture2D.h"
 #include "AUI/GL/Vao.h"
 #include "AUI/GL/gl.h"
-#include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/ABrush.h"
@@ -128,7 +127,6 @@ void gradientBrush(const IBatchingRenderer::Cmd& cmd, const ALinearGradientBrush
 
 void solidBrush(const IBatchingRenderer::Cmd& cmd, const ASolidBrush& brush, OpenGLRenderer& renderer, gl::Program& shader) {
     shader.use();
-    ALogger::info("OpenGL") << "Brush color: " << cmd.color.toString();
     renderer.appendColor(cmd.color * brush.solidColor);
 }
 
@@ -199,7 +197,7 @@ inline void useExternalShader(AOptional<gl::Program>& out, std::string_view vsPa
     if (!vsFile.is_open()) {
         throw AException("Couldn't open vertex shader " + vsPath);
     }
-    ALogger::info("OpenGL") << std::format("Loading fragment shader {}", vsPath);
+    ALogger::info("OpenGL") << std::format("Loading fragment shader {}", fsPath);
     std::ifstream fsFile{ static_cast<std::string>(fsPath) };
     if (!fsFile.is_open()) {
         throw AException("Couldn't open fragment shader" + fsPath);
@@ -234,11 +232,11 @@ OpenGLRenderer::OpenGLRenderer() {
     mGradientTexture.setupLinear();
     mGradientTexture.setupClampToEdge();
 
-    useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader,
-        aui::sl_gen::rect_solid::fsh::glsl120::Shader>(mSolidShader);
-    // useExternalShader(mSolidShader, "aui.views/shaders/basic.vert", "aui.views/shaders/solid.frag");
-    // mSolidShader->bindAttribute(0, "pos");
-    // mSolidShader->bindAttribute(1, "color");
+    // useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader,
+    //     aui::sl_gen::rect_solid::fsh::glsl120::Shader>(mSolidShader);
+    useExternalShader(mSolidShader, "aui.views/shaders/basic.vert", "aui.views/shaders/solid.frag");
+    mSolidShader->bindAttribute(0, "pos");
+    mSolidShader->bindAttribute(1, "color");
 
     // useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader,
     //     aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
@@ -403,7 +401,6 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
 }
 
 void OpenGLRenderer::renderRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, const int zIndex) {
-    ALogger::info("OpenGL") << "Rendering rectangle";
     appendRect(position, size, zIndex, cmd.transform);
 
     std::visit(aui::lambda_overloaded{
@@ -460,7 +457,6 @@ void OpenGLRenderer::renderRoundedRectangle(const Cmd& cmd, const ABrush& brush,
                                       glm::vec2 size,
                                       float radius,
                                       const int zIndex) {
-    ALogger::info("OpenGL") << "Rendering rounded rectangle";
     std::visit(
         aui::lambda_overloaded {
           [&](const ALinearGradientBrush& brush) { gradientBrush(cmd, brush, *this, *mRoundedGradientShader); },
@@ -479,7 +475,6 @@ void OpenGLRenderer::renderRectangleBorder(const Cmd& cmd, const ABrush& brush,
                                      glm::vec2 size,
                                      float lineWidth,
                                      const int zIndex) {
-    ALogger::info("OpenGL") << "Rendering rectangle border";
     std::visit(
         aui::lambda_overloaded {
           [&](const ALinearGradientBrush& brush) { gradientBrush(cmd, brush, *this, *mGradientShader); },
@@ -521,7 +516,6 @@ void OpenGLRenderer::renderRoundedRectangleBorder(const Cmd& cmd, const ABrush& 
                                             float radius,
                                             int borderWidth,
                                             const int zIndex) {
-    ALogger::info("OpenGL") << "Rendering rounded rectangle border";
     std::visit(
         aui::lambda_overloaded {
           [&](const ALinearGradientBrush& brush) { gradientBrush(cmd, brush, *this, *mGradientShader); },
@@ -545,7 +539,6 @@ void OpenGLRenderer::renderBoxShadow(const Cmd& cmd, glm::vec2 position,
                                float blurRadius,
                                const AColor& color,
                                const int zIndex) {
-    ALogger::info("OpenGL") << "Rendering box shadow";
     AUI_ASSERTX(blurRadius >= 0.f,
                 "blurRadius is expected to be non negative, use boxShadowInner for inset shadows instead");
     identityUv();
@@ -586,7 +579,6 @@ void OpenGLRenderer::renderBoxShadowInner(const Cmd& cmd, glm::vec2 position,
                                     const AColor& color,
                                     glm::vec2 offset,
                                     const int zIndex) {
-    ALogger::info("OpenGL") << "Rendering inner shadow";
     AUI_ASSERTX(blurRadius >= 0.f, "blurRadius is expected to be non negative");
     blurRadius *= -1.f;
     identityUv();
