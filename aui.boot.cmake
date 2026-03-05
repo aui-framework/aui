@@ -346,10 +346,11 @@ function(_auib_validate_target_installation _target _dep_install_prefix)
                     "This effectively means that the library (and thus your project) is not portable. "
                     "PRECOMPILED-enabled packages must use target names instead of hardcoded paths."
                     "Possible solutions:\n"
-                    "1. -DAUIB_NO_PRECOMPILED=TRUE, or\n"
-                    "2. -DAUIB_${AUI_MODULE_NAME_UPPER}_VALIDATE=OFF (just silences the error), or\n"
-                    "3. configure ${AUI_MODULE_NAME} so it won't depend on ${_property_item}, or\n"
-                    "4. if ${_property_item} is a part of another library, import that library via auib_import as well. "
+                    "1. Clean CMake cache (build directory), or\n"
+                    "2. -DAUIB_NO_PRECOMPILED=TRUE, or\n"
+                    "3. -DAUIB_${AUI_MODULE_NAME_UPPER}_VALIDATE=OFF (just silences the error), or\n"
+                    "4. configure ${AUI_MODULE_NAME} so it won't depend on ${_property_item}, or\n"
+                    "5. if ${_property_item} is a part of another library, import that library via auib_import as well. "
                     "\n"
                     "Alternatively, you can populate AUIB_VALID_INSTALLATION_PATHS variable with valid installation path(s) "
                     "but you would probably encounter issues while deploying your app.")
@@ -672,13 +673,15 @@ function(auib_import AUI_MODULE_NAME URL)
     string(REPLACE ";" " " BUILD_SPECIFIER "${BUILD_SPECIFIER}")
 
     # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
-    string(MD5 BUILD_SPECIFIER ${BUILD_SPECIFIER})
+    string(MD5 BUILD_SPECIFIER_HASH ${BUILD_SPECIFIER})
     # [[BUILD_SPECIFIER]]
 
     # append module name to build specifier in order to distinguish modules in prefix/ dir
-    set(BUILD_SPECIFIER "${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER}")
+    set(BUILD_SPECIFIER_HASH "${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER_HASH}")
 
-    set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
+    set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${BUILD_SPECIFIER_HASH}")
+
+    file(WRITE ${DEP_INSTALL_PREFIX}/BUILD_SPECIFIER ${BUILD_SPECIFIER})
 
     if (AUIB_IMPORT_PRECOMPILED_URL_PREFIX)
         if (EXISTS ${AUIB_IMPORT_PRECOMPILED_URL_PREFIX})
@@ -702,15 +705,15 @@ function(auib_import AUI_MODULE_NAME URL)
 
         # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project name
         set(DEP_SOURCE_DIR "${DEP_AS_DIR}/${AUI_MODULE_NAME_LOWER}")
-        set(DEP_BINARY_DIR "${DEP_AS_DIR}/build/${BUILD_SPECIFIER}")
+        set(DEP_BINARY_DIR "${DEP_AS_DIR}/build/${BUILD_SPECIFIER_HASH}")
         set(DEP_FETCHED_FLAG ${DEP_AS_DIR}/FETCHED)
     else()
         if (AUIB_ISOLATE_SOURCE_DIRS)
             set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}/src")
-            set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}/build/${BUILD_SPECIFIER}")
+            set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}/build/${BUILD_SPECIFIER_HASH}")
         else()
             set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
-            set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER}")
+            set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER_HASH}")
         endif()
         set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
     endif()
@@ -1166,7 +1169,7 @@ function(auib_import AUI_MODULE_NAME URL)
         set(_precompiled_url "")
         if (EXISTS ${DEP_INSTALL_PREFIX})
             if (AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT)
-                set(_precompiled_url " PRECOMPILED_URL_PREFIX \${CMAKE_CURRENT_LIST_DIR}/deps/${BUILD_SPECIFIER}")
+                set(_precompiled_url " PRECOMPILED_URL_PREFIX \${CMAKE_CURRENT_LIST_DIR}/deps/${BUILD_SPECIFIER_HASH}")
                 install(DIRECTORY ${DEP_INSTALL_PREFIX} DESTINATION "deps/${AUI_MODULE_NAME_LOWER}")
             endif()
         endif()
