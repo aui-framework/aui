@@ -435,6 +435,25 @@ struct AJsonConv<T> {
     }
 };
 
+template<typename T>
+struct AJsonConv<AMap<AString, T>> {
+    static AJson toJson(const AMap<AString, T>& map) {
+        AJson::Object object;
+        for (const auto&[k, v] : map) {
+            object[k] = aui::to_json(v);
+        }
+        return std::move(object);
+    }
+    static void fromJson(const AJson& json, AMap<AString, T>& dst) {
+        auto& object = json.asObject();
+        dst.clear();
+
+        for (const auto&[k, v]: object) {
+            dst[k] = aui::from_json<T>(v);
+        }
+    }
+};
+
 
 template<typename T>
 struct AJsonConv<T, typename std::enable_if_t<std::is_enum_v<T>>> {

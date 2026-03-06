@@ -14,10 +14,19 @@
 //
 
 #include "JpgImageLoader.h"
+
+#include "stb_image_write.h"
+
 #include <AUI/Common/AByteBuffer.h>
 #include <stb_image.h>
 
 bool JpgImageLoader::matches(AByteBufferView buffer) {
     const uint8_t header[] = {0xff, 0xd8 };
     return memcmp(header, buffer.data(), sizeof(header)) == 0;
+}
+
+void JpgImageLoader::save(aui::no_escape<IOutputStream> outputStream, AImageView image) {
+    stbi_write_jpg_to_func([](void *context, void *data, int size) {
+        reinterpret_cast<IOutputStream*>(context)->write(reinterpret_cast<char*>(data), size);
+    }, reinterpret_cast<void*>(outputStream.ptr()), image.width(), image.height(), image.bytesPerPixel(), image.data(), image.width() * image.bytesPerPixel());
 }
