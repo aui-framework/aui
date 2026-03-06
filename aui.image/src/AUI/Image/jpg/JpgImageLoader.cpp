@@ -25,8 +25,8 @@ bool JpgImageLoader::matches(AByteBufferView buffer) {
     return memcmp(header, buffer.data(), sizeof(header)) == 0;
 }
 
-void JpgImageLoader::save(aui::no_escape<IOutputStream> outputStream, AImageView image) {
+void JpgImageLoader::save(aui::no_escape<IOutputStream> outputStream, AImageView image, int quality) {
     stbi_write_jpg_to_func([](void *context, void *data, int size) {
         reinterpret_cast<IOutputStream*>(context)->write(reinterpret_cast<char*>(data), size);
-    }, reinterpret_cast<void*>(outputStream.ptr()), image.width(), image.height(), image.bytesPerPixel(), image.data(), image.width() * image.bytesPerPixel());
+    }, reinterpret_cast<void*>(outputStream.ptr()), image.width(), image.height(), image.bytesPerPixel(), image.data(), quality);
 }

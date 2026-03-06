@@ -449,7 +449,7 @@ struct AJsonConv<AMap<AString, T>> {
         dst.clear();
 
         for (const auto&[k, v]: object) {
-            dst[k] = aui::from_json<T>(v);
+            dst.emplace(k, aui::from_json<T>(v));
         }
     }
 };
