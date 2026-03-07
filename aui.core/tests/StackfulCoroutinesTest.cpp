@@ -59,7 +59,7 @@ TEST(StackfulCoroutines, CoAwait) {
     future2.wait(AFutureWait::JUST_WAIT);
 }
 
-AFuture<int> longTaskException() {
+static AFuture<int> longTaskException() {
     return AUI_THREADPOOL -> int {
         AThread::sleep(10ms); // long tamssk
         throw AException("Whoops! Something bad happened");

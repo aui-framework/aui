@@ -1,7 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 
 option(AUI_CATCH_UNHANDLED "Catch segfault" ON)
-option(AUI_COROUTINES "Use C++20 coroutines" ON)
+
+set(_use_coroutines ON)
+if (AUI_COMPILER_CLANG)
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.0.0) # compiler crashes
+        set(_use_coroutines OFF)
+    endif ()
+endif()
+
+option(AUI_COROUTINES "Use C++20 coroutines" ${_use_coroutines})
 option(AUI_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 option(AUI_ENABLE_DEATH_TESTS "Enable GTest death tests" ON)
 
