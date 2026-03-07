@@ -265,8 +265,8 @@ jobs:
       - name: Setup Clang for macOS
         if: matrix.compiler == 'Clang' && runner.os == 'macOS'
         run: |
-          echo "CC=$(brew --prefix llvm)/bin/clang " >> $GITHUB_ENV
-          echo "CXX=$(brew --prefix llvm)/bin/clang++ " >> $GITHUB_ENV
+          echo "CC=$(brew --prefix llvm@20)/bin/clang " >> $GITHUB_ENV
+          echo "CXX=$(brew --prefix llvm@20)/bin/clang++ " >> $GITHUB_ENV
 
       - name: Setup AppleClang for macOS
         if: matrix.compiler == 'Default' && runner.os == 'macOS'
