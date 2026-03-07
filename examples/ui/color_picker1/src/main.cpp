@@ -40,8 +40,6 @@ public:
         });
     }
 
-private:
-    void onClick() { ALogger::info("Test") << "Hello world!"; }
 };
 
 AUI_ENTRY {
