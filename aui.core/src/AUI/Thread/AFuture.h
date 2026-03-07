@@ -578,7 +578,7 @@ namespace aui::impl::future {
  *     AFuture<int> longOperation();
  *     AFuture<int> myFunction() {
  *       int resultOfLongOperation = co_await longOperation();
- *       return resultOfLongOperation + 1;
+ *       co_return resultOfLongOperation + 1;
  *     }
  *     ```
  *

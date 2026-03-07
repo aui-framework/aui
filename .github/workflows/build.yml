@@ -255,18 +255,18 @@ jobs:
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
           sudo ./llvm.sh 20 all
-          echo "CC=clang-20" >> $GITHUB_ENV
-          echo "CXX=clang++-20" >> $GITHUB_ENV
+          echo "CC=clang" >> $GITHUB_ENV
+          echo "CXX=clang++" >> $GITHUB_ENV
 
       - name: Install MacOS dependencies
         if: runner.os == 'macOS'
         run: brew install cmake ninja llvm@18
 
-      - name: Setup Clang 18 for macOS
+      - name: Setup Clang for macOS
         if: matrix.compiler == 'Clang' && runner.os == 'macOS'
         run: |
-          echo "CC=$(brew --prefix llvm@18)/bin/clang " >> $GITHUB_ENV
-          echo "CXX=$(brew --prefix llvm@18)/bin/clang++ " >> $GITHUB_ENV
+          echo "CC=$(brew --prefix llvm)/bin/clang " >> $GITHUB_ENV
+          echo "CXX=$(brew --prefix llvm)/bin/clang++ " >> $GITHUB_ENV
 
       - name: Setup AppleClang for macOS
         if: matrix.compiler == 'Default' && runner.os == 'macOS'

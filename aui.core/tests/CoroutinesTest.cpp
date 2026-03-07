@@ -13,6 +13,9 @@
 
 #include <coroutine>
 #include "AUI/Common/AException.h"
+#include "AUI/Thread/AAsyncHolder.h"
+#include "AUI/Thread/AEventLoop.h"
+
 #include <gtest/gtest.h>
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Util/kAUI.h>
@@ -31,12 +34,20 @@ AFuture<int> longTask() {
 }
 
 TEST(Coroutines, CoAwait) {
-    auto future = []() -> AFuture<int> {
+    /// [co_await1]
+    AAsyncHolder async;
+    async << []() -> AFuture<> {
         auto v228 = co_await longTask();
-        co_return v228 + 322;
+        EXPECT_EQ(v228, 228);
+        co_return;
     }();
-    auto v = *future;
-    EXPECT_EQ(v, 228 + 322);
+
+    AEventLoop loop;
+    IEventLoop::Handle h(&loop);
+    while (async.size() > 0) {
+        loop.iteration();
+    }
+    /// [co_await1]
 }
 
 AFuture<int> longTaskException() {
@@ -47,11 +58,22 @@ AFuture<int> longTaskException() {
 }
 
 TEST(Coroutines, CoAwaitException) {
-    auto future = []() -> AFuture<int> {
-        auto v228 = co_await longTaskException();
-        co_return v228 + 322;
+    AAsyncHolder async;
+    auto future = []() -> AFuture<> {
+        try {
+            auto v228 = co_await longTaskException();
+        } catch (const AException& e) {
+            co_return;
+        }
+        GTEST_NONFATAL_FAILURE_("exception was not reported");
     }();
-    EXPECT_ANY_THROW(*future);
+
+
+    AEventLoop loop;
+    IEventLoop::Handle h(&loop);
+    while (async.size() > 0) {
+        loop.iteration();
+    }
 }
 
 #endif
