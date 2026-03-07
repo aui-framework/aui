@@ -4,7 +4,7 @@ option(AUI_CATCH_UNHANDLED "Catch segfault" ON)
 
 set(_use_coroutines ON)
 if (AUI_COMPILER_CLANG)
-    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 19.0.0) # compiler crashes
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 21.0.0) # compiler crashes
         set(_use_coroutines OFF)
     endif ()
 endif()
