@@ -1005,7 +1005,7 @@ function(auib_import AUI_MODULE_NAME URL)
                     endif()
                 endif()
 
-                message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+                message(STATUS "[AUI.Boot] Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
                 if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
                     file(TOUCH ${DEP_FETCHED_FLAG})
                 endif()
