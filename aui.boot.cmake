@@ -23,7 +23,7 @@ cmake_minimum_required(VERSION 3.22)
 
 find_program(GIT_EXECUTABLE NAMES git git.exe git.cmd git.bat)
 if (NOT GIT_EXECUTABLE)
-    message(FATAL_ERROR "[AUI.BOOT] Git not found! Please install Git and try again. https://git-scm.com/")
+    message(FATAL_ERROR "Git not found! Please install Git and try again. https://git-scm.com/")
 endif ()
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
@@ -565,7 +565,7 @@ function(_auib_git_clone _url _version _source_dir)
 
     _auib_find_git()
     if (NOT GIT_EXECUTABLE)
-        message(FATAL_ERROR "[AUI.BOOT] git executable not found.")
+        message(FATAL_ERROR "git executable not found.")
     endif()
 
     message(STATUS "[AUI.BOOT] Initializing empty repo in ${_source_dir}")
@@ -579,7 +579,7 @@ function(_auib_git_clone _url _version _source_dir)
             ERROR_QUIET
     )
     if (NOT _err EQUAL 0)
-        message(FATAL_ERROR "[AUI.BOOT] 'git init' failed (exit ${_err}) in ${_source_dir}")
+        message(FATAL_ERROR "'git init' failed (exit ${_err}) in ${_source_dir}")
     endif()
 
     execute_process(
@@ -590,7 +590,7 @@ function(_auib_git_clone _url _version _source_dir)
             ERROR_QUIET
     )
     if (NOT _err EQUAL 0)
-        message(FATAL_ERROR "[AUI.BOOT] 'git remote add origin ${_url}' failed (exit ${_err})")
+        message(FATAL_ERROR "'git remote add origin ${_url}' failed (exit ${_err})")
     endif()
 
     message(STATUS "[AUI.BOOT] Fetching ${_version} from ${_url}")
@@ -599,6 +599,7 @@ function(_auib_git_clone _url _version _source_dir)
             WORKING_DIRECTORY "${_source_dir}"
             RESULT_VARIABLE _err
             OUTPUT_QUIET
+            ERROR_QUIET
     )
     if (NOT _err EQUAL 0)
         message(STATUS "[AUI.BOOT] Shallow fetch failed, retrying without --depth (tag/hash may not be advertised)")
@@ -606,6 +607,8 @@ function(_auib_git_clone _url _version _source_dir)
                 COMMAND ${GIT_EXECUTABLE} fetch origin "${_version}"
                 WORKING_DIRECTORY "${_source_dir}"
                 RESULT_VARIABLE _err
+                OUTPUT_QUIET
+                ERROR_QUIET
         )
         if (NOT _err EQUAL 0)
             message(FATAL_ERROR "'git fetch origin ${_version}' failed (exit ${_err})")
@@ -621,6 +624,18 @@ function(_auib_git_clone _url _version _source_dir)
     )
     if (NOT _err EQUAL 0)
         message(FATAL_ERROR "'git reset --hard FETCH_HEAD' failed (exit ${_err})")
+    endif()
+
+    message(STATUS "[AUI.BOOT] Updating submodules in ${_source_dir}")
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive --depth 1
+            WORKING_DIRECTORY "${_source_dir}"
+            RESULT_VARIABLE _err
+            OUTPUT_QUIET
+            ERROR_VARIABLE _err_output
+    )
+    if (NOT _err EQUAL 0)
+        message(FATAL_ERROR "'git submodule update --init --recursive --depth 1' failed (exit ${_err}):\n${_err_output}")
     endif()
 
     message(STATUS "[AUI.BOOT] Successfully cloned ${_url} @ ${_version} -> ${_source_dir}")
@@ -951,7 +966,7 @@ function(auib_import AUI_MODULE_NAME URL)
                     _auib_git_clone("${URL}" "${_fetch_tag}" "${DEP_SOURCE_DIR}")
 
                     if (NOT _auib_git_clone_ok)
-                        message(FATAL_ERROR "[AUI.BOOT] Failed to clone ${AUI_MODULE_NAME} from ${URL} @ ${_fetch_tag}")
+                        message(FATAL_ERROR "Failed to clone ${AUI_MODULE_NAME} from ${URL} @ ${_fetch_tag}")
                     endif()
                 endif()
 
@@ -1011,7 +1026,7 @@ function(auib_import AUI_MODULE_NAME URL)
                     endif()
                 endforeach()
 
- 
+
                 # force msvc compiler to parallel build
                 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")                           # MSVC but exclude clang-cl
                     set_property(DIRECTORY APPEND PROPERTY COMPILE_OPTIONS "-MP")   # Parallel compilation
