@@ -568,18 +568,53 @@ function(_auib_git_clone _url _version _source_dir)
         message(FATAL_ERROR "git executable not found.")
     endif()
 
-    message(STATUS "[AUI.BOOT] Initializing empty repo in ${_source_dir}")
     file(MAKE_DIRECTORY "${_source_dir}")
 
     execute_process(
-            COMMAND ${GIT_EXECUTABLE} init
+            COMMAND ${GIT_EXECUTABLE} remote get-url origin
             WORKING_DIRECTORY "${_source_dir}"
             RESULT_VARIABLE _err
-            OUTPUT_QUIET
+            OUTPUT_VARIABLE _existing_remote
             ERROR_QUIET
+            OUTPUT_STRIP_TRAILING_WHITESPACE
     )
-    if (NOT _err EQUAL 0)
-        message(FATAL_ERROR "'git init' failed (exit ${_err}) in ${_source_dir}")
+
+    if (_err EQUAL 0 AND _existing_remote STREQUAL "${_url}")
+        message(STATUS "[AUI.BOOT] Reusing existing repo in ${_source_dir}")
+        execute_process(
+                COMMAND ${GIT_EXECUTABLE} remote remove origin
+                WORKING_DIRECTORY "${_source_dir}"
+                RESULT_VARIABLE _remove_err
+                OUTPUT_QUIET
+                ERROR_QUIET
+        )
+        if (NOT _remove_err EQUAL 0)
+            message(STATUS "[AUI.BOOT] 'git remote remove origin' failed, reinitializing ${_source_dir}")
+            file(REMOVE_RECURSE "${_source_dir}")
+            file(MAKE_DIRECTORY "${_source_dir}")
+            execute_process(
+                    COMMAND ${GIT_EXECUTABLE} init
+                    WORKING_DIRECTORY "${_source_dir}"
+                    RESULT_VARIABLE _err
+                    OUTPUT_QUIET
+                    ERROR_QUIET
+            )
+            if (NOT _err EQUAL 0)
+                message(FATAL_ERROR "'git init' failed (exit ${_err}) in ${_source_dir}")
+            endif()
+        endif()
+    else()
+        message(STATUS "[AUI.BOOT] Initializing empty repo in ${_source_dir}")
+        execute_process(
+                COMMAND ${GIT_EXECUTABLE} init
+                WORKING_DIRECTORY "${_source_dir}"
+                RESULT_VARIABLE _err
+                OUTPUT_QUIET
+                ERROR_QUIET
+        )
+        if (NOT _err EQUAL 0)
+            message(FATAL_ERROR "'git init' failed (exit ${_err}) in ${_source_dir}")
+        endif()
     endif()
 
     execute_process(
