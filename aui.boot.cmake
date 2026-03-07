@@ -932,32 +932,6 @@ function(auib_import AUI_MODULE_NAME URL)
             _auib_try_download_precompiled_binary()
         endif()
 
-        if (NOT _skip_compilation)
-            if (AUIB_FORCE_PRECOMPILED)
-                message(FATAL_ERROR "Can't find a precompiled package for ${AUI_MODULE_NAME}. (-DAUIB_FORCE_PRECOMPILED)")
-            endif()
-            set(_skip_fetch FALSE)
-            if (EXISTS "${DEP_SOURCE_DIR}/.git")
-                # let's try to checkout a local repository
-                _auib_find_git()
-                if(GIT_EXECUTABLE)
-                    execute_process(COMMAND ${GIT_EXECUTABLE} checkout -f ${AUIB_IMPORT_VERSION}
-                            WORKING_DIRECTORY ${DEP_SOURCE_DIR}
-                            RESULT_VARIABLE _errored
-                            OUTPUT_QUIET
-                            ERROR_QUIET)
-                    if (NOT _errored)
-                        message(STATUS "${DEP_SOURCE_DIR}: checkout'ed ${AUIB_IMPORT_VERSION}")
-                        set(_skip_fetch TRUE)
-                    endif()
-                endif()
-            endif()
-            if (NOT _skip_fetch)
-                file(REMOVE_RECURSE ${DEP_SOURCE_DIR})
-            endif()
-            file(REMOVE_RECURSE ${DEP_BINARY_DIR})
-        endif()
-
         # check for local existence
         if (EXISTS ${URL})
             get_filename_component(DEP_SOURCE_DIR ${URL} ABSOLUTE)
