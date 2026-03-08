@@ -90,25 +90,43 @@ static AJson read(ATokenizer& t) {
                     unexpectedToken(s);
                 }
 
-                case '\"':
+                case '\"': {
                     AString result = t.readStringUntilUnescaped('\"');
                     result.replaceAll("\\\\", "\\");
                     return result;
+                }
+
+                case '-': { // negative number?
+                    goto minus;
+                    break;
+                }
             }
 
-            if (isdigit(uint8_t(t.getLastCharacter())) || t.getLastCharacter() == '-') {
+            if (isdigit(uint8_t(t.getLastCharacter()))) {
+                minus:
                 bool isMinus = t.getLastCharacter() == '-';
                 t.reverseByte();
                 auto longInt = t.readLongInt();
-                if (t.readChar() == '.') {
+                auto c = t.readChar();
+                if (c == 'e' || c == 'E') {
+                    auto exponent = t.readLongInt();
+                    return static_cast<double>(longInt) * std::pow(10.0, exponent);
+                }
+                if (c == '.') {
                     // double
                     auto currentColumn = t.getColumn();
                     auto remainder = t.readLongInt();
                     auto digitCount = t.getColumn() - currentColumn;
-                    auto integer = double(longInt);
+                    auto integer = static_cast<double>(longInt);
                     double s = isMinus ? -1.0 : 1.0;
 
-                    return integer + double(remainder) / std::pow(10.0, digitCount - 1) * s;
+                    double value = integer + static_cast<double>(remainder) / std::pow(10.0, digitCount - 1) * s;
+                    if (t.getLastCharacter() == 'e' || t.getLastCharacter() == 'E') {
+                        t.readChar();
+                        auto exponent = t.readLongInt();
+                        value *= std::pow(10.0, exponent);
+                    }
+                    return value;
                 }
                 t.reverseByte();
                 int basicInt = longInt;
