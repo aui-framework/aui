@@ -1045,26 +1045,27 @@ bool AStringView::toBool() const {
            (d[3] == 'e' || d[3] == 'E');
 }
 
-AStringVector AStringView::split(AChar c) const {
+AStringVector AStringView::split(AStringView separator) const {
     if (empty()) {
         return {};
     }
-    auto utf8c = c.toUtf8();
-    if (utf8c.empty()) return {};
-    std::string separator_utf8(utf8c.begin(), utf8c.end());
     AStringVector result;
     result.reserve(length() / 10);
     for (size_type s = 0;;) {
-        auto next = super::find(separator_utf8, s);
+        auto next = super::find(separator.bytes(), s);
         if (next == npos) {
             result << substr(s);
             break;
         }
 
         result << substr(s, next - s);
-        s = next + separator_utf8.length();
+        s = next + separator.bytes().length();
     }
     return result;
+}
+
+AStringVector AStringView::split(AChar separator) const {
+    return split(AStringView(separator.toString()));
 }
 
 AString AStringView::removedAll(AChar c) {

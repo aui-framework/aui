@@ -575,8 +575,12 @@ void AString::erase(size_t u_pos, size_t u_count) {
     erase(begin() + u_pos, begin() + u_pos + u_count);
 }
 
-AStringVector AString::split(AChar c) const {
-    return view().split(c);
+AStringVector AString::split(AChar separator) const {
+    return view().split(separator);
+}
+
+AStringVector AString::split(AStringView separator) const {
+    return view().split(separator);
 }
 
 // NOLINTEND(cppcoreguidelines-avoid-magic-numbers,cppcoreguidelines-pro-bounds-pointer-arithmetic)

@@ -40,3 +40,8 @@ AStaticVector<char, 4> AChar::toUtf8() const noexcept {
     }
     return {}; // Invalid Unicode code point
 }
+
+std::string AChar::toString() const {
+    auto tmp = toUtf8();
+    return std::string(tmp.begin(), tmp.end());
+}
