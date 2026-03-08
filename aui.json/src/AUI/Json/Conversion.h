@@ -436,6 +436,28 @@ struct AJsonConv<T> {
 };
 
 template<typename T>
+struct AJsonConv<std::valarray<T>> {
+    static AJson toJson(const std::valarray<T>& v) {
+        AJson::Array array;
+        if constexpr (ranges::sized_range<T>) {
+            array.reserve(v.size());
+        }
+        for (const auto& elem : v) {
+            array << aui::to_json(elem);
+        }
+        return std::move(array);
+    }
+    static void fromJson(const AJson& json, std::valarray<T>& dst) {
+        auto& array = json.asArray();
+        dst.resize(array.size());
+        size_t i = 0;
+        for (const auto& elem : array) {
+            dst[i++] = aui::from_json<T>(elem);
+        }
+    }
+};
+
+template<typename T>
 struct AJsonConv<AMap<AString, T>> {
     static AJson toJson(const AMap<AString, T>& map) {
         AJson::Object object;
