@@ -1,6 +1,6 @@
 #
 # =====================================================================================================================
-# Copyright (c) 2021 Alex2772
+# Copyright (c) 2026 Alex2772
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
@@ -19,11 +19,11 @@
 # =====================================================================================================================
 #
 
-cmake_minimum_required(VERSION 3.24)
+cmake_minimum_required(VERSION 3.22)
 
 find_program(GIT_EXECUTABLE NAMES git git.exe git.cmd git.bat)
 if (NOT GIT_EXECUTABLE)
-    message(FATAL_ERROR "[AUI.BOOT/Git Check] Git not found! Please install Git and try again. https://git-scm.com/")
+    message(FATAL_ERROR "Git not found! Please install Git and try again. https://git-scm.com/")
 endif ()
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
@@ -560,6 +560,123 @@ function(_auib_postprocess)
 
 endfunction()
 
+function(_auib_git_clone _url _version _source_dir)
+    set(_auib_git_clone_ok FALSE PARENT_SCOPE)
+
+    _auib_find_git()
+    if (NOT GIT_EXECUTABLE)
+        message(FATAL_ERROR "git executable not found.")
+    endif()
+
+    file(MAKE_DIRECTORY "${_source_dir}")
+
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} remote get-url origin
+            WORKING_DIRECTORY "${_source_dir}"
+            RESULT_VARIABLE _err
+            OUTPUT_VARIABLE _existing_remote
+            ERROR_QUIET
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if (_err EQUAL 0 AND _existing_remote STREQUAL "${_url}")
+        message(STATUS "[AUI.BOOT] Reusing existing repo in ${_source_dir}")
+        execute_process(
+                COMMAND ${GIT_EXECUTABLE} remote remove origin
+                WORKING_DIRECTORY "${_source_dir}"
+                RESULT_VARIABLE _remove_err
+                OUTPUT_QUIET
+                ERROR_QUIET
+        )
+        if (NOT _remove_err EQUAL 0)
+            message(STATUS "[AUI.BOOT] 'git remote remove origin' failed, reinitializing ${_source_dir}")
+            file(REMOVE_RECURSE "${_source_dir}")
+            file(MAKE_DIRECTORY "${_source_dir}")
+            execute_process(
+                    COMMAND ${GIT_EXECUTABLE} init
+                    WORKING_DIRECTORY "${_source_dir}"
+                    RESULT_VARIABLE _err
+                    OUTPUT_QUIET
+                    ERROR_QUIET
+            )
+            if (NOT _err EQUAL 0)
+                message(FATAL_ERROR "'git init' failed (exit ${_err}) in ${_source_dir}")
+            endif()
+        endif()
+    else()
+        message(STATUS "[AUI.BOOT] Initializing empty repo in ${_source_dir}")
+        execute_process(
+                COMMAND ${GIT_EXECUTABLE} init
+                WORKING_DIRECTORY "${_source_dir}"
+                RESULT_VARIABLE _err
+                OUTPUT_QUIET
+                ERROR_QUIET
+        )
+        if (NOT _err EQUAL 0)
+            message(FATAL_ERROR "'git init' failed (exit ${_err}) in ${_source_dir}")
+        endif()
+    endif()
+
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} remote add origin "${_url}"
+            WORKING_DIRECTORY "${_source_dir}"
+            RESULT_VARIABLE _err
+            OUTPUT_QUIET
+            ERROR_QUIET
+    )
+    if (NOT _err EQUAL 0)
+        message(FATAL_ERROR "'git remote add origin ${_url}' failed (exit ${_err})")
+    endif()
+
+    message(STATUS "[AUI.BOOT] Fetching ${_version} from ${_url}")
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} fetch --depth 1 origin "${_version}"
+            WORKING_DIRECTORY "${_source_dir}"
+            RESULT_VARIABLE _err
+            OUTPUT_QUIET
+            ERROR_QUIET
+    )
+    if (NOT _err EQUAL 0)
+        message(STATUS "[AUI.BOOT] Shallow fetch failed, retrying without --depth (tag/hash may not be advertised)")
+        execute_process(
+                COMMAND ${GIT_EXECUTABLE} fetch origin "${_version}"
+                WORKING_DIRECTORY "${_source_dir}"
+                RESULT_VARIABLE _err
+                OUTPUT_QUIET
+                ERROR_QUIET
+        )
+        if (NOT _err EQUAL 0)
+            message(FATAL_ERROR "'git fetch origin ${_version}' failed (exit ${_err})")
+        endif()
+    endif()
+
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} reset --hard FETCH_HEAD
+            WORKING_DIRECTORY "${_source_dir}"
+            RESULT_VARIABLE _err
+            OUTPUT_QUIET
+            ERROR_QUIET
+    )
+    if (NOT _err EQUAL 0)
+        message(FATAL_ERROR "'git reset --hard FETCH_HEAD' failed (exit ${_err})")
+    endif()
+
+    message(STATUS "[AUI.BOOT] Updating submodules in ${_source_dir}")
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive --depth 1
+            WORKING_DIRECTORY "${_source_dir}"
+            RESULT_VARIABLE _err
+            OUTPUT_QUIET
+            ERROR_VARIABLE _err_output
+    )
+    if (NOT _err EQUAL 0)
+        message(FATAL_ERROR "'git submodule update --init --recursive --depth 1' failed (exit ${_err}):\n${_err_output}")
+    endif()
+
+    message(STATUS "[AUI.BOOT] Successfully cloned ${_url} @ ${_version} -> ${_source_dir}")
+    set(_auib_git_clone_ok TRUE PARENT_SCOPE)
+endfunction()
+
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
     list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
@@ -815,71 +932,33 @@ function(auib_import AUI_MODULE_NAME URL)
             _auib_try_download_precompiled_binary()
         endif()
 
-        if (NOT _skip_compilation)
-            if (AUIB_FORCE_PRECOMPILED)
-                message(FATAL_ERROR "Can't find a precompiled package for ${AUI_MODULE_NAME}. (-DAUIB_FORCE_PRECOMPILED)")
-            endif()
-            set(_skip_fetch FALSE)
-            if (EXISTS "${DEP_SOURCE_DIR}/.git")
-                # let's try to checkout a local repository
-                _auib_find_git()
-                if(GIT_EXECUTABLE)
-                    execute_process(COMMAND ${GIT_EXECUTABLE} checkout -f ${AUIB_IMPORT_VERSION}
-                            WORKING_DIRECTORY ${DEP_SOURCE_DIR}
-                            RESULT_VARIABLE _errored
-                            OUTPUT_QUIET
-                            ERROR_QUIET)
-                    if (NOT _errored)
-                        message(STATUS "${DEP_SOURCE_DIR}: checkout'ed ${AUIB_IMPORT_VERSION}")
-                        set(_skip_fetch TRUE)
-                    endif()
-                endif()
-            endif()
-            if (NOT _skip_fetch)
-                file(REMOVE_RECURSE ${DEP_SOURCE_DIR})
-            endif()
-            file(REMOVE_RECURSE ${DEP_BINARY_DIR})
-        endif()
-
         # check for local existence
         if (EXISTS ${URL})
             get_filename_component(DEP_SOURCE_DIR ${URL} ABSOLUTE)
             message(STATUS "Using local: ${DEP_SOURCE_DIR}")
         else()
             if (NOT _skip_compilation)
-
-                include(FetchContent)
-
                 if (AUIB_IMPORT_ARCHIVE)
-                    set(_import_type URL)
-                else()
-                    set(_import_type GIT_REPOSITORY)
-                endif()
-                if (NOT _skip_fetch)
+                    # Archives are not git repos - fall back to FetchContent for URL downloads.
+                    include(FetchContent)
                     if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.30.0)
-                        # deprecated "FetchContent_Populate(${AUI_MODULE_NAME}_FC)", using a "new" form instead
                         FetchContent_Populate(${AUI_MODULE_NAME}_FC
                                 PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
-                                ${_import_type} "${URL}"
-                                GIT_TAG ${AUIB_IMPORT_VERSION}
-                                GIT_PROGRESS TRUE # show progress of download
-                                USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
-                                USES_TERMINAL_UPDATE TRUE # show progress in ninja generator
-                                GIT_SHALLOW TRUE # clone just the specified commit
+                                URL "${URL}"
+                                GIT_PROGRESS TRUE
+                                USES_TERMINAL_DOWNLOAD TRUE
+                                USES_TERMINAL_UPDATE TRUE
                                 ${SOURCE_BINARY_DIRS_ARG}
                         )
                     else()
                         FetchContent_Declare(${AUI_MODULE_NAME}_FC
                                 PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
-                                ${_import_type} "${URL}"
-                                GIT_TAG ${AUIB_IMPORT_VERSION}
-                                GIT_PROGRESS TRUE # show progress of download
-                                USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
-                                USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
-                                GIT_SHALLOW TRUE # clone just the specified commit
+                                URL "${URL}"
+                                GIT_PROGRESS TRUE
+                                USES_TERMINAL_DOWNLOAD TRUE
+                                USES_TERMINAL_UPDATE TRUE
                                 ${SOURCE_BINARY_DIRS_ARG}
                         )
-
                         FetchContent_Populate(${AUI_MODULE_NAME}_FC)
                     endif()
 
@@ -887,11 +966,23 @@ function(auib_import AUI_MODULE_NAME URL)
                             BINARY_DIR DEP_BINARY_DIR
                             SOURCE_DIR DEP_SOURCE_DIR
                     )
-                    message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
-                    if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
-                        file(TOUCH ${DEP_FETCHED_FLAG})
+                else()
+                    set(_fetch_tag ${AUIB_IMPORT_VERSION})
+                    if (NOT _fetch_tag)
+                        set(_fetch_tag HEAD)
                     endif()
-                endif ()
+
+                    _auib_git_clone("${URL}" "${_fetch_tag}" "${DEP_SOURCE_DIR}")
+
+                    if (NOT _auib_git_clone_ok)
+                        message(FATAL_ERROR "Failed to clone ${AUI_MODULE_NAME} from ${URL} @ ${_fetch_tag}")
+                    endif()
+                endif()
+
+                message(STATUS "[AUI.Boot] Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+                if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
+                    file(TOUCH ${DEP_FETCHED_FLAG})
+                endif()
             endif()
         endif()
 
@@ -944,7 +1035,7 @@ function(auib_import AUI_MODULE_NAME URL)
                     endif()
                 endforeach()
 
- 
+
                 # force msvc compiler to parallel build
                 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")                           # MSVC but exclude clang-cl
                     set_property(DIRECTORY APPEND PROPERTY COMPILE_OPTIONS "-MP")   # Parallel compilation
@@ -1196,16 +1287,6 @@ function(auib_import AUI_MODULE_NAME URL)
         endif()
         set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
     endif()
-    _auib_find_git()
-    if (GIT_EXECUTABLE AND NOT AUIB_IMPORT_ARCHIVE)
-        execute_process(COMMAND ${GIT_EXECUTABLE} status
-                WORKING_DIRECTORY ${DEP_SOURCE_DIR}
-                OUTPUT_VARIABLE git_status
-        )
-        if(NOT git_status MATCHES "HEAD")
-            message(WARNING "${AUIB_IMPORT_NAME} You are staying on a branch or did not specify the version control, please specify a tag or hash VERSION!\nSee https://aui-framework.github.io/develop/md_docs_2AUI_01Boot.html#version")
-        endif ()
-    endif ()
 endfunction()
 
 
