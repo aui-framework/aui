@@ -18,6 +18,7 @@ void ass::prop::Property<ass::BorderRight>::renderFor(AView* view, const ARender
 
     ctx.render.rectangle(ASolidBrush{mInfo.color},
                          {view->getWidth() - w, 0},
+                         view->getZIndex(),
                          {w, view->getHeight()});
 
 }

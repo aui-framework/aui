@@ -33,6 +33,7 @@ void AViewProfiler::displayBoundsOn(AView& v, ARenderContext ctx) {
     {
         ctx.render.rectangle(ASolidBrush{0x7cb6c180u},
                              {v.getPadding().left, v.getPadding().top},
+                             v.getZIndex(),
                              {v.getWidth() - v.getPadding().horizontal(), v.getHeight() - v.getPadding().vertical()});
     }
 
@@ -40,6 +41,7 @@ void AViewProfiler::displayBoundsOn(AView& v, ARenderContext ctx) {
     {
         ctx.render.rectangle(ASolidBrush{0xbccf9180u},
                              {0, 0},
+                             v.getZIndex(),
                              v.getSize());
     }
 
@@ -47,6 +49,7 @@ void AViewProfiler::displayBoundsOn(AView& v, ARenderContext ctx) {
     {
         ctx.render.rectangle(ASolidBrush{0xffcca4a0u},
                              {-v.getMargin().left, -v.getMargin().top},
+                             v.getZIndex(),
                              {v.getWidth() + v.getMargin().horizontal(), v.getHeight() + v.getMargin().vertical()});
     }
 
@@ -69,6 +72,7 @@ void AViewProfiler::displayBoundsOn(AView& v, ARenderContext ctx) {
         {
             ctx.render.rectangle(ASolidBrush{0x00000070u},
                                  {x, y},
+                                 v.getZIndex(),
                                  {s->getWidth() + 4_dp, fs.size * 2.5 + 2_dp});
         }
         s->draw();

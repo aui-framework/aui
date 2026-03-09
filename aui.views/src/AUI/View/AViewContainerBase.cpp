@@ -75,7 +75,7 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
       if (showRedraw) [[unlikely]] {
           auto c = contextOfTheView.render.getColor();
           AUI_DEFER { contextOfTheView.render.setColorForced(c); };
-          contextOfTheView.render.rectangle(ASolidBrush{0x40ff00ff_argb}, view->getPosition(), view->getSize());
+          contextOfTheView.render.rectangle(ASolidBrush{0x40ff00ff_argb}, view->getPosition(), view->getZIndex(), view->getSize());
       }
     };
 
@@ -134,6 +134,7 @@ void AViewContainerBase::addViews(AVector<_<AView>> views) {
     }
     for (const auto& view: views) {
         view->mParent = this;
+        view->setZIndex(mZIndex + 1);
         view->mSkipUntilLayoutUpdate = true;
         AUI_NULLSAFE(mLayout)->addView(view);
         view->onViewGraphSubtreeChanged();
@@ -157,6 +158,7 @@ void AViewContainerBase::addView(const _<AView>& view) {
     view->mSkipUntilLayoutUpdate = true;
     mViews << view;
     view->mParent = this;
+    view->setZIndex(mZIndex + 1);
     AUI_NULLSAFE(mLayout)->addView(view);
     view->onViewGraphSubtreeChanged();
     invalidateCaches();
@@ -170,6 +172,7 @@ void AViewContainerBase::addViewCustomLayout(const _<AView>& view) {
     }
     mViews << view;
     view->mParent = this;
+    view->setZIndex(mZIndex + 1);
     view->setSize(view->getMinimumSize());
     view->mSkipUntilLayoutUpdate = true;
     AUI_NULLSAFE(mLayout)->addView(view);
@@ -187,6 +190,7 @@ void AViewContainerBase::addView(size_t index, const _<AView>& view) {
     mViews.insert(mViews.begin() + index, view);
     view->mParent = this;
     AUI_NULLSAFE(mLayout)->addView(view, index);
+    view->setZIndex(mZIndex + 1);
     view->onViewGraphSubtreeChanged();
     invalidateCaches();
     emit childrenChanged;
@@ -213,6 +217,7 @@ void AViewContainerBase::setLayoutImpl(_unique<ALayout> layout, std::unique_lock
         mViews = mLayout->getAllViews();
         for (const auto& v : mViews) {
             v->mParent = this;
+            v->setZIndex(mZIndex + 1);
             v->onViewGraphSubtreeChanged();
         }
     }

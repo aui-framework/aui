@@ -22,6 +22,7 @@ void ass::prop::Property<ass::BorderLeft>::renderFor(AView* view, const ARenderC
 
     ctx.render.rectangle(ASolidBrush{mInfo.color},
                          {0, 0},
+                         view->getZIndex(),
                          {w, view->getHeight()});
 
 }

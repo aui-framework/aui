@@ -40,7 +40,7 @@ public:
         /**
          * @brief Renderer used for window manager.
          */
-        _unique<IRenderer> renderer = std::make_unique<SoftwareRenderer>();
+       _unique<IRenderer> renderer = std::make_unique<SoftwareRenderer>();
     };
 
     static void setConfig(Config config);

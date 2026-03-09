@@ -73,18 +73,18 @@ namespace {
             ctx.render.rectangle(ATexturedBrush {
                 .texture = mTexture,
                 .imageRendering = ImageRendering::PIXELATED,
-            }, {0, 0}, mImage.size() * plotScale());
+            }, {0, 0}, mZIndex, mImage.size() * plotScale());
 
             if (!mSelectionMode) {
                 return;
             }
 
             if (mHoveredFrameIndex && !mSelectedFrameIndex) {
-                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, mZIndex, {plotScale(), getSize().y});
             }
 
             if (mSelectedFrameIndex) {
-                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, mZIndex, {plotScale(), getSize().y});
             }
         }
 
@@ -327,7 +327,7 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
         lastTimeUpdated = now;
 
         treeView->onPerformanceFrame(sections);
-    }); 
+    });
     connect(graphView->selectionChanged, AUI_SLOT(treeView)::onPerformanceFrame);
 
     connect(mState, [=](const State& state) {
@@ -384,7 +384,7 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
                 },
             },
         },
-    });  
+    });
 #else
     setContents(Centered {
         Label { "Please set -DAUI_PROFILING=TRUE in CMake configure." }

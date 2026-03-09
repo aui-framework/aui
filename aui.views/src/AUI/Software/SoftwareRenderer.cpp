@@ -181,6 +181,7 @@ glm::mat4 SoftwareRenderer::getProjectionMatrix() const {
 
 void SoftwareRenderer::rectangle(const ABrush& brush,
                                  glm::vec2 position,
+                                 zIndex_t zIndex,
                                  glm::vec2 size) {
     auto transformedPosition = glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f));
     auto end = transformedPosition + glm::ivec2(size);
@@ -198,6 +199,7 @@ void SoftwareRenderer::rectangle(const ABrush& brush,
 
 void SoftwareRenderer::roundedRectangle(const ABrush& brush,
                                         glm::vec2 position,
+                                        zIndex_t zIndex,
                                         glm::vec2 size,
                                         float radius) {
     RoundedRect r(int(radius), glm::ivec2(size), glm::ivec2(mTransform * glm::vec4(position, 1.f, 1.f)));
@@ -222,16 +224,18 @@ void SoftwareRenderer::roundedRectangle(const ABrush& brush,
 
 void SoftwareRenderer::rectangleBorder(const ABrush& brush,
                                        glm::vec2 position,
+                                       zIndex_t zIndex,
                                        glm::vec2 size,
                                        float lineWidth) {
-    rectangle(brush, position, {size.x, lineWidth});
-    rectangle(brush, position + glm::vec2{0, size.y - lineWidth}, {size.x, lineWidth});
-    rectangle(brush, position + glm::vec2{0, lineWidth}, {lineWidth, size.y - 2 * lineWidth});
-    rectangle(brush, position + glm::vec2{size.x - lineWidth, lineWidth}, {lineWidth, size.y - 2 * lineWidth});
+    rectangle(brush, position, 0, {size.x, lineWidth});
+    rectangle(brush, position + glm::vec2{0, size.y - lineWidth}, 0, {size.x, lineWidth});
+    rectangle(brush, position + glm::vec2{0, lineWidth}, 0, {lineWidth, size.y - 2 * lineWidth});
+    rectangle(brush, position + glm::vec2{size.x - lineWidth, lineWidth}, 0, {lineWidth, size.y - 2 * lineWidth});
 }
 
 void SoftwareRenderer::roundedRectangleBorder(const ABrush& brush,
                                               glm::vec2 position,
+                                              zIndex_t zIndex,
                                               glm::vec2 size,
                                               float radius,
                                               int borderWidth) {
@@ -268,6 +272,7 @@ void SoftwareRenderer::roundedRectangleBorder(const ABrush& brush,
 }
 
 void SoftwareRenderer::boxShadow(glm::vec2 position,
+                                 zIndex_t zIndex,
                                  glm::vec2 size,
                                  float blurRadius,
                                  const AColor& color) {
@@ -287,7 +292,7 @@ void SoftwareRenderer::boxShadow(glm::vec2 position,
         .sigma = blurRadius / 2.f,
     };
 
-    for (int y = 0; y < iSize.y; ++y) { 
+    for (int y = 0; y < iSize.y; ++y) {
         for (int x = 0; x < iSize.x; ++x) {
             const auto result = Shader::entry(Shader::Inter {
                 .vertex = glm::ivec4(iTransformedPos + glm::ivec2{x, y}, 0, 1),
@@ -303,6 +308,7 @@ void SoftwareRenderer::boxShadow(glm::vec2 position,
     }
 }
 void SoftwareRenderer::boxShadowInner(glm::vec2 position,
+                                      zIndex_t zIndex,
                                       glm::vec2 size,
                                       float blurRadius,
                                       float spreadRadius,
@@ -325,7 +331,7 @@ void SoftwareRenderer::boxShadowInner(glm::vec2 position,
         .sigma = blurRadius / 2.f,
     };
 
-    for (int y = 0; y < iSize.y; ++y) { 
+    for (int y = 0; y < iSize.y; ++y) {
         for (int x = 0; x < iSize.x; ++x) {
             const auto result = Shader::entry(Shader::Inter {
                 .vertex = glm::vec4(transformedPos + glm::vec2{x, y}, 0.f, 1.f),
@@ -401,7 +407,7 @@ public:
                     for (int y = 0; y < size.y; ++y) {
                         for (int x = 0; x < size.x; ++x) {
                             auto color = entry.image->get({x, y});
-                            
+
                             mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, AColor{ color.r, color.g, color.b, color.a * finalColor.a }, Blending::INVERSE_SRC);
                             mRenderer->putPixel(transformedPosition + glm::ivec2{ x, y }, color * finalColor, Blending::ADDITIVE);
                         }
@@ -565,7 +571,7 @@ void SoftwareRenderer::drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2,
     // TODO
     if (p1.x == p2.x || p1.y == p2.y) {
         auto begin = glm::min(p1, p2);
-        rectangle(brush, begin, glm::max(p1, p2) - begin + glm::vec2(1));
+        rectangle(brush, begin, 0, glm::max(p1, p2) - begin + glm::vec2(1));
         return;
     }
 }

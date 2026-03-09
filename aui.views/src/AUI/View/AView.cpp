@@ -105,12 +105,14 @@ void AView::drawStencilMask(ARenderContext ctx)
             if (mBorderRadius > 0) {
                 ctx.render.roundedRectangle(ASolidBrush{},
                                      {mPadding.left, mPadding.top},
+                                     mZIndex,
                                      {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
                                      glm::max(mBorderRadius - std::min(mPadding.horizontal(), mPadding.vertical()), 0.f));
             } else {
                 // TODO: figure out why this is rendered opaque when batching
                 // ctx.render.rectangle(ASolidBrush{},
                 //                      {mPadding.left, mPadding.top},
+                //                      mZIndex,
                 //                      {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
             }
             break;
@@ -511,6 +513,12 @@ void AView::setPosition(glm::ivec2 position) {
     mPosition = position;
     redraw();
     emit mPositionChanged(position);
+}
+void AView::setZIndex(zIndex_t zIndex) {
+    mSkipUntilLayoutUpdate = false;
+    mZIndex = zIndex;
+    redraw();
+    emit mZIndexChanged(zIndex);
 }
 void AView::setSize(glm::ivec2 size)
 {

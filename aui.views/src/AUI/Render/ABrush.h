@@ -24,6 +24,7 @@
 #include "AUI/Enum/ImageRendering.h"
 #include "AUI/Util/AAngleRadians.h"
 #include "AUI/Traits/values.h"
+#include "glm/fwd.hpp"
 
 
 /**
@@ -31,6 +32,7 @@
  */
 struct ASolidBrush {
     AColor solidColor = AColor::WHITE;
+    using Data = glm::vec4;
 };
 
 

@@ -42,7 +42,8 @@ void AAnimatedDrawable::draw(IRenderer& render, const IDrawable::Params& params)
             params.cropUvTopLeft,
             params.cropUvBottomRight,
             params.imageRendering,
-    }, params.offset, params.size);
+    // TODO: use actual z index here
+    }, params.offset, 0, params.size);
 }
 
 glm::ivec2 AAnimatedDrawable::getSizeHint() {

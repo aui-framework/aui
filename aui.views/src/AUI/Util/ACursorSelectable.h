@@ -18,6 +18,7 @@
 
 #include <AUI/Common/AString.h>
 #include <glm/glm.hpp>
+#include <limits>
 #include <AUI/Font/AFontStyle.h>
 #include <AUI/Render/ATextLayoutHelper.h>
 #include <AUI/Render/RenderHints.h>
@@ -139,7 +140,7 @@ protected:
 
         auto drawRects = [&] {
             for (auto r : rects) {
-                render.rectangle(ASolidBrush{}, r.p1, r.size());
+                render.rectangle(ASolidBrush{}, r.p1, std::numeric_limits<int16_t>::max(), r.size());
             }
         };
         {

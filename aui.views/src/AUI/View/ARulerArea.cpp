@@ -20,6 +20,7 @@
 #include "AScrollbar.h"
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/Declarative/Containers.h>
+#include <limits>
 
 using namespace ass;
 using namespace declarative;
@@ -105,9 +106,11 @@ void ARulerArea::render(ARenderContext ctx) {
         ctx.render.setBlending(Blending::INVERSE_DST);
         ctx.render.rectangle(ASolidBrush{},
                              {mMousePos.x, 0.f},
+                             std::numeric_limits<int16_t>::max(),
                              {1, mMousePos.y});
         ctx.render.rectangle(ASolidBrush{},
                              {0.f, mMousePos.y},
+                             std::numeric_limits<int16_t>::max(),
                              {mMousePos.x, 1});
 
 

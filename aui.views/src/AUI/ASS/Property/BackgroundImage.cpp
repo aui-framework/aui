@@ -252,7 +252,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
                 glm::translate(glm::mat4(1.f), glm::vec3 { glm::vec2(viewSize - imageSize) / 2.f, 0.f }));
 
             RenderHints::PushMask mask(ctx.render, [&] {
-                ctx.render.rectangle(ASolidBrush {}, { 0, 0 }, view->getSize());
+                ctx.render.rectangle(ASolidBrush {}, { 0, 0 }, view->getZIndex(), view->getSize());
             });
 
             drawableDrawWrapper(imageSize);
@@ -260,7 +260,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
         }
         case Sizing::NONE: {
             RenderHints::PushMask mask(ctx.render, [&] {
-                ctx.render.rectangle(ASolidBrush {}, { 0, 0 }, view->getSize());
+                ctx.render.rectangle(ASolidBrush {}, { 0, 0 }, view->getZIndex(), view->getSize());
             });
             glm::vec2 imageSize = glm::vec2(drawable->getSizeHint());
 

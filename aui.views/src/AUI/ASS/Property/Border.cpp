@@ -29,6 +29,7 @@ void ass::prop::Property<ass::Border>::renderFor(AView* view, const ARenderConte
         */
     ctx.render.roundedRectangleBorder(ASolidBrush{mInfo.color},
                                       {0, 0},
+                                      view->getZIndex(),
                                       view->getSize(),
                                       view->getBorderRadius(),
                                       mInfo.width);

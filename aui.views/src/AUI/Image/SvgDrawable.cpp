@@ -53,6 +53,8 @@ void AVectorDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
                                      .repeat = params.repeat,
                              },
                              params.offset,
+                             // TODO: replace with actual zindex
+                             0,
                              size);
     };
     for (auto& p : mRasterized) {

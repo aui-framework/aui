@@ -10,6 +10,7 @@
  */
 
 #include "AUI/ASS/Property/BackgroundSolid.h"
+#include "AUI/ASS/Property/Margin.h"
 #include "AUI/Common/AColor.h"
 #include "AUI/Platform/ARenderingContextOptions.h"
 #include "AUI/View/AForEachUI.h"
@@ -23,6 +24,7 @@
 #include <AUI/View/ACheckBox.h>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/iota.hpp>
+#include <glm/gtc/random.hpp>
 
 using namespace ass;
 using namespace declarative;
@@ -54,7 +56,7 @@ _<AView> itemStackView(const _<AProperty<AOptional<ItemStack>>>& itemStack) {
                 AObject::connect(
                     AUI_REACT(ass::PropertyListRecursive {
                       // BackgroundImage { (*itemStack) ->hasValue() ? ":texture/item/{}.png"_format((**itemStack)->id) : "" },
-                      BackgroundSolid{ AColor{ 1.0, 1.0, 1.0}},
+                      BackgroundSolid{ AColor{ "#FB1816" }},
                       Expanding {},
                     }),
                     AUI_SLOT(it)::setCustomStyle);
@@ -133,6 +135,7 @@ AUI_ENTRY {
             inventoryGrid(state),
           } AUI_OVERRIDE_STYLE {
                 Expanding {},
+                BackgroundSolid{ AColor{ "#2F3F59" }},
               },
         } AUI_OVERRIDE_STYLE { Padding { {}, 64_dp } });
     window->show();

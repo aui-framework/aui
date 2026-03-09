@@ -30,8 +30,6 @@
 class AColor;
 class AWindowBase;
 
-
-
 /**
  * Blending mode.
  * <p><b>Terminology used in this documentation</b>:</p>
@@ -255,6 +253,7 @@ public:
      */
     virtual void rectangle(const ABrush& brush,
                            glm::vec2 position,
+                           zIndex_t zIndex,
                            glm::vec2 size) = 0;
 
 
@@ -267,6 +266,7 @@ public:
      */
     virtual void roundedRectangle(const ABrush& brush,
                                   glm::vec2 position,
+                                  zIndex_t zIndex,
                                   glm::vec2 size,
                                   float radius) = 0;
 
@@ -279,6 +279,7 @@ public:
      */
     virtual void rectangleBorder(const ABrush& brush,
                                  glm::vec2 position,
+                                 zIndex_t zIndex,
                                  glm::vec2 size,
                                  float lineWidth = 1.f) = 0;
     /**
@@ -291,6 +292,7 @@ public:
      */
     virtual void roundedRectangleBorder(const ABrush& brush,
                                         glm::vec2 position,
+                                        zIndex_t zIndex,
                                         glm::vec2 size,
                                         float radius,
                                         int borderWidth) = 0;
@@ -304,6 +306,7 @@ public:
      * @param color shadow color
      */
     virtual void boxShadow(glm::vec2 position,
+                           zIndex_t zIndex,
                            glm::vec2 size,
                            float blurRadius,
                            const AColor& color) = 0;
@@ -320,6 +323,7 @@ public:
      *               of a simple rectangle position offset.
      */
     virtual void boxShadowInner(glm::vec2 position,
+                                zIndex_t zIndex,
                                 glm::vec2 size,
                                 float blurRadius,
                                 float spreadRadius,
@@ -425,7 +429,7 @@ public:
                               const glm::vec2& size,
                               AAngleRadians begin,
                               AAngleRadians end) = 0;
- 
+
     /**
      * @brief Sets the color which is multiplied with any brush.
      * @param color color

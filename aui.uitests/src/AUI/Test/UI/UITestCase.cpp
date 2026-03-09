@@ -48,6 +48,7 @@ public:
                 for (auto& v: matcher->toSet()) {
                     AWindow::current()->getRenderingContext()->renderer().rectangleBorder(ASolidBrush{0xaae00000_argb},
                                         v->getPositionInWindow() - glm::ivec2{1, 1},
+                                        v->getZIndex(),
                                         v->getSize() + glm::ivec2{2, 2});
                 }
             }

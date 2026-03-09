@@ -16,6 +16,7 @@
 #include <algorithm>
 #include <cstdint>
 #include <format>
+#include <limits>
 #include <memory>
 #include <range/v3/iterator/operations.hpp>
 #include <range/v3/view.hpp>
@@ -42,6 +43,7 @@
 #include "glm/fwd.hpp"
 #include "AUI/Util/GaussianKernel.h"
 #include "AUI/Traits/bit.h"
+#include "glm/gtc/type_ptr.hpp"
 #include <AUI/Traits/callables.h>
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/GL/Vbo.h>
@@ -123,11 +125,6 @@ void gradientBrush(const IBatchingRenderer::Cmd& cmd, const ALinearGradientBrush
     }
 
     renderer.identityUv();
-}
-
-void solidBrush(const IBatchingRenderer::Cmd& cmd, const ASolidBrush& brush, OpenGLRenderer& renderer, gl::Program& shader) {
-    shader.use();
-    renderer.appendColor(cmd.color * brush.solidColor);
 }
 
 void texturedBrush(const IBatchingRenderer::Cmd& cmd, const ATexturedBrush& brush, OpenGLRenderer& renderer, gl::Program& shader, gl::Vao& tempVao) {
@@ -213,6 +210,14 @@ inline void useExternalShader(AOptional<gl::Program>& out, std::string_view vsPa
 
 }
 
+ASolidBrush::Data OpenGLRenderer::solidBrush(const IBatchingRenderer::Cmd& cmd, const ASolidBrush& brush, OpenGLRenderer& renderer, gl::Program& shader) {
+    mBatchShader = &shader;
+    auto color = cmd.color * brush.solidColor;
+    color.a = 0.5;
+
+    return color;
+}
+
 OpenGLRenderer::OpenGLRenderer() {
     ALogger::info(LOG_TAG) << "GL_VERSION = " << ((const char*) glGetString(GL_VERSION));
     ALogger::info(LOG_TAG) << "GL_VENDOR = " << ((const char*) glGetString(GL_VENDOR));
@@ -268,17 +273,17 @@ OpenGLRenderer::OpenGLRenderer() {
     //     aui::sl_gen::line_solid_dashed::fsh::glsl120::Shader>(mLineSolidDashedShader);
 
     {
-        mRectangleVao.indicesByCount(BATCH_VERTEX_COUNT);
+        mRectangleVao.indicesByCount(BATCH_BUFFER_SIZE);
     }
     {
-        mRectangleVao.indicesByCount(BATCH_VERTEX_COUNT);
+        mRectangleVao.indicesByCount(BATCH_BUFFER_SIZE);
     }
-    mBatchVertices.fill(glm::vec3{0});
+    mBatchVertices.fill(0.f);
     mCurrentBatchVertex = mBatchVertices.begin();
 }
 
 void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
-    auto getBrushIndex = [](Cmd& cmd) {
+    auto getBrushId = [](Cmd& cmd) {
         unsigned char result;
         const char OFFSET = 3;
 
@@ -294,8 +299,7 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
 
         return result;
     };
-    // TODO: Look into using z index as a batch key component to reduce overdraw
-    auto getZIndex = [](Cmd& cmd) -> uint16_t {
+    auto getZIndex = [](Cmd& cmd) -> int16_t {
         std::optional<int> result;
 
         std::visit(aui::lambda_overloaded {
@@ -306,33 +310,41 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
             }
         }, cmd.arg);
 
-        return static_cast<uint16_t>(result.value_or(999));
+        return static_cast<uint16_t>(result.value_or(std::numeric_limits<int16_t>::max()));
     };
     for (auto& cmd : cmds) {
         cmd.batchId = {
+            .brushId = getBrushId(cmd),
             .cmdId = static_cast<unsigned char>(cmd.arg.index()),
-            .brushId = getBrushIndex(cmd),
+            .zIndex = getZIndex(cmd),
         };
     }
     std::ranges::sort(cmds, [](const Cmd& cmdA, const Cmd& cmdB) {
-        return cmdA.batchId.value < cmdB.batchId.value;
+        return cmdA.batchId.value > cmdB.batchId.value;
     });
 
+    // Defining references to required members to avoid passing this as upvalue
     auto &rectangleVao = mRectangleVao;
-    auto &batchVerticies = mBatchVertices;
+    auto &batchVertices = mBatchVertices;
+    auto &batchShader = mBatchShader;
+    auto &currentBatchVertex = mCurrentBatchVertex;
     auto drawBatch = [&](const char *name) {
-        rectangleVao.insert(0, std::span{batchVerticies}, name);
-        rectangleVao.drawElements();
+        if (batchShader == nullptr or currentBatchVertex == batchVertices.begin())
+            return;
+
+        batchShader->use();
+        rectangleVao.insert(0, std::span{batchVertices}, name);
         // TODO: move this and make it more expandable
         glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, sizeof(float) * 7, 0);
+        const size_t stride = sizeof(glm::vec4) * 2;
+        glVertexAttribPointer(0, 4, GL_FLOAT, GL_FALSE, stride, 0);
         glEnableVertexAttribArray(1);
-        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(float) * 7, reinterpret_cast<float *>(3 * sizeof(float)));
+        glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, stride, reinterpret_cast<float*>(sizeof(glm::vec4)));
+        rectangleVao.drawElements();
     };
 
     BatchId_t currentBatchId = 0;
     bool breakBatch = false;
-    auto &currentBatchVertex = mCurrentBatchVertex;
     auto dispatch = [&](Cmd& cmd) {
         BatchId_t nextId = cmd.batchId.value + 1; // + 1 so 0 ID cmd 0 ID brush != NULL
         if (!currentBatchId) {
@@ -349,9 +361,9 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
             return;
         drawBatch("Batch");
         currentBatchId = nextId;
-        std::ranges::fill(batchVerticies, glm::vec3(0));
-        currentBatchVertex = batchVerticies.begin();
-        breakBatch =  false;
+        std::ranges::fill(batchVertices, 0.f);
+        currentBatchVertex = batchVertices.begin();
+        breakBatch = false;
     };
 
     for (auto& cmd : cmds) {
@@ -400,9 +412,7 @@ std::array<glm::vec2, 4> OpenGLRenderer::getVerticesForRect(glm::vec2 position, 
         };
 }
 
-void OpenGLRenderer::renderRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, const int zIndex) {
-    appendRect(position, size, zIndex, cmd.transform);
-
+void OpenGLRenderer::renderRectangle(const Cmd& cmd, const ABrush& brush, glm::vec2 position, glm::vec2 size, const zIndex_t zIndex) {
     std::visit(aui::lambda_overloaded{
         [&](const ALinearGradientBrush& brush) {
             // gradientBrush(cmd, brush, *this, *mGradientShader);
@@ -411,35 +421,11 @@ void OpenGLRenderer::renderRectangle(const Cmd& cmd, const ABrush& brush, glm::v
             // texturedBrush(cmd, brush, *this, *mTexturedShader, mRectangleVao);
         },
         [&](const ASolidBrush& brush) {
-            solidBrush(cmd, brush, *this, *mSolidShader);
+            ASolidBrush::Data data = solidBrush(cmd, brush, *this, *mSolidShader);
+            appendRect(position, size, zIndex, cmd.transform, data);
         },
         [](const ACustomShaderBrush& ) {},
     }, brush);
-}
-
-void OpenGLRenderer::appendColor(const AColor color) {
-    *mCurrentBatchVertex++ = glm::vec4(color);
-}
-
-static constexpr size_t Z_DEPTH = 1000;
-void OpenGLRenderer::appendRect(const glm::vec2 position, const glm::vec2 size, const int zIndex, const glm::mat4 transform) {
-    float x = position.x;
-    float y = position.y;
-    float w = x + size.x;
-    float h = y + size.y;
-    float z = -1.f + zIndex * (1. / Z_DEPTH);
-
-    std::array verticies {
-        glm::vec3 { x, h, z },
-        glm::vec3 { w, h, z },
-        glm::vec3 { x, y, z },
-        glm::vec3 { w, y, z },
-    };
-
-    for (const auto& vertex : verticies) {
-        glm::vec4 vertexTransformed = transform * glm::vec4(vertex, 1.0f);
-        *mCurrentBatchVertex++ = glm::vec3(vertexTransformed);
-    }
 }
 
 void OpenGLRenderer::identityUv() {
@@ -456,7 +442,7 @@ void OpenGLRenderer::renderRoundedRectangle(const Cmd& cmd, const ABrush& brush,
                                       glm::vec2 position,
                                       glm::vec2 size,
                                       float radius,
-                                      const int zIndex) {
+                                      const zIndex_t zIndex) {
     std::visit(
         aui::lambda_overloaded {
           [&](const ALinearGradientBrush& brush) { gradientBrush(cmd, brush, *this, *mRoundedGradientShader); },
@@ -467,14 +453,14 @@ void OpenGLRenderer::renderRoundedRectangle(const Cmd& cmd, const ABrush& brush,
     identityUv();
 
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
-    appendRect(position, size, zIndex, cmd.transform);
+    // appendRect(position, size, zIndex, cmd.transform);
 }
 
 void OpenGLRenderer::renderRectangleBorder(const Cmd& cmd, const ABrush& brush,
                                      glm::vec2 position,
                                      glm::vec2 size,
                                      float lineWidth,
-                                     const int zIndex) {
+                                     const zIndex_t zIndex) {
     std::visit(
         aui::lambda_overloaded {
           [&](const ALinearGradientBrush& brush) { gradientBrush(cmd, brush, *this, *mGradientShader); },
@@ -515,7 +501,7 @@ void OpenGLRenderer::renderRoundedRectangleBorder(const Cmd& cmd, const ABrush& 
                                             glm::vec2 size,
                                             float radius,
                                             int borderWidth,
-                                            const int zIndex) {
+                                            const zIndex_t zIndex) {
     std::visit(
         aui::lambda_overloaded {
           [&](const ALinearGradientBrush& brush) { gradientBrush(cmd, brush, *this, *mGradientShader); },
@@ -531,14 +517,14 @@ void OpenGLRenderer::renderRoundedRectangleBorder(const Cmd& cmd, const ABrush& 
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_SIZE, 2.f * radius / size);
     gl::Program::currentShader()->set(aui::ShaderUniforms::INNER_SIZE, 2.f * (radius - borderWidth) / innerSize);
     gl::Program::currentShader()->set(aui::ShaderUniforms::OUTER_TO_INNER, size / innerSize);
-    appendRect(position, size, zIndex, cmd.transform);
+    // appendRect(position, size, zIndex, cmd.transform);
 }
 
 void OpenGLRenderer::renderBoxShadow(const Cmd& cmd, glm::vec2 position,
                                glm::vec2 size,
                                float blurRadius,
                                const AColor& color,
-                               const int zIndex) {
+                               const zIndex_t zIndex) {
     AUI_ASSERTX(blurRadius >= 0.f,
                 "blurRadius is expected to be non negative, use boxShadowInner for inset shadows instead");
     identityUv();
@@ -578,7 +564,7 @@ void OpenGLRenderer::renderBoxShadowInner(const Cmd& cmd, glm::vec2 position,
                                     float borderRadius,
                                     const AColor& color,
                                     glm::vec2 offset,
-                                    const int zIndex) {
+                                    const zIndex_t zIndex) {
     AUI_ASSERTX(blurRadius >= 0.f, "blurRadius is expected to be non negative");
     blurRadius *= -1.f;
     identityUv();
@@ -605,7 +591,7 @@ void OpenGLRenderer::renderBoxShadowInner(const Cmd& cmd, glm::vec2 position,
     // };
 
     // mRectangleVao.insert(0, std::span{uvs}, "boxShadowInner");
-    appendRect(glm::vec2{x, y}, glm::vec2{w, h}, zIndex, cmd.transform);
+    // appendRect(glm::vec2{x, y}, glm::vec2{w, h}, zIndex, cmd.transform);
 }
 
 void OpenGLRenderer::renderString(const Cmd& cmd, glm::vec2 position,
@@ -704,7 +690,7 @@ public:
 
         if (AWindow::current()->profiling()->showBaseline) {
             mRenderer->rectangle(
-                ASolidBrush { AColor::RED.transparentize(0.5f) }, { 0, 0 }, { mTextWidth, 1 });   // debug baseline
+                ASolidBrush { AColor::RED.transparentize(0.5f) }, { 0, 0 }, std::numeric_limits<int16_t>::max(), { mTextWidth, 1 });   // debug baseline
         }
 
         auto width = img->width();
@@ -1141,7 +1127,7 @@ void OpenGLRenderer::renderSquareSector(const Cmd& cmd, const ABrush& brush,
     gl::Program::currentShader()->set(aui::ShaderUniforms::M2, m2);
 
     // TODO: replace 0 with zIndex
-    appendRect(position, size, 0, cmd.transform);
+    // appendRect(position, size, 0, cmd.transform);
 }
 
 
@@ -1164,11 +1150,10 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
 
     glDisable(GL_CULL_FACE);
     glClearColor(0, 0, 0, 0);
-    glEnable(GL_DEPTH_TEST);
-    glDepthFunc(GL_LESS);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glEnable(GL_BLEND);
     setBlending(Blending::NORMAL);
+    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
     resetStencil();
 }

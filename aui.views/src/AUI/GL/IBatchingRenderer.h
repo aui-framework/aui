@@ -18,21 +18,21 @@ public:
         ABrush brush;
         glm::vec2 position;
         glm::vec2 size;
-        int zIndex;
+        zIndex_t zIndex;
     };
     struct CmdRoundedRectangle {
         ABrush brush;
         glm::vec2 position;
         glm::vec2 size;
         float radius;
-        int zIndex;
+        zIndex_t zIndex;
     };
     struct CmdRectangleBorder {
         ABrush brush;
         glm::vec2 position;
         glm::vec2 size;
         float lineWidth;
-        int zIndex;
+        zIndex_t zIndex;
     };
     struct CmdRoundedRectangleBorder {
         ABrush brush;
@@ -40,14 +40,14 @@ public:
         glm::vec2 size;
         float radius;
         int borderWidth;
-        int zIndex;
+        zIndex_t zIndex;
     };
     struct CmdBoxShadow {
         glm::vec2 position;
         glm::vec2 size;
         float blurRadius;
         AColor color;
-        int zIndex;
+        zIndex_t zIndex;
     };
     struct CmdBoxShadowInner {
         glm::vec2 position;
@@ -57,7 +57,7 @@ public:
         float borderRadius;
         AColor color;
         glm::vec2 offset;
-        int zIndex;
+        zIndex_t zIndex;
     };
     struct CmdString {
         glm::vec2 position;
@@ -92,14 +92,19 @@ public:
     struct CmdSetWindow {
         AWindowBase* window;
     };
-    using BatchId_t = uint16_t;
+    using BatchId_t = uint32_t;
     union BatchId {
-        struct {
-            unsigned char cmdId : 8;
-            unsigned char brushId : 8;
-            // uint16_t zIndex : 16;
-        };
         BatchId_t value;
+        struct {
+            unsigned char brushId : 8;
+            unsigned char cmdId : 8;
+            zIndex_t zIndex : 16;
+        };
+        // TODO: finish bit order fix
+        // static BatchId new(int16_t z, uint8_t cmd, uint8_t brush) {
+        //     return { static_cast<uint32_t>(z << 16) | static_cast<uint32_t>(cmd << 8) | static_cast<uint32_t>(brush) };
+        // }
+        // auto operator<=>(const BatchId&) const = default;
     };
     struct Cmd {
         glm::mat4 transform;
@@ -113,14 +118,14 @@ public:
     };
 
     ~IBatchingRenderer() override = default;
-    void rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) override;
-    void roundedRectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius) override;
-    void rectangleBorder(const ABrush& brush, glm::vec2 position, glm::vec2 size, float lineWidth) override;
+    void rectangle(const ABrush& brush, glm::vec2 position, zIndex_t zIndex, glm::vec2 size) override;
+    void roundedRectangle(const ABrush& brush, glm::vec2 position, zIndex_t zIndex, glm::vec2 size, float radius) override;
+    void rectangleBorder(const ABrush& brush, glm::vec2 position, zIndex_t zIndex, glm::vec2 size, float lineWidth) override;
     void roundedRectangleBorder(
-        const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius, int borderWidth) override;
-    void boxShadow(glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) override;
+        const ABrush& brush, glm::vec2 position, zIndex_t zIndex, glm::vec2 size, float radius, int borderWidth) override;
+    void boxShadow(glm::vec2 position, zIndex_t zIndex, glm::vec2 size, float blurRadius, const AColor& color) override;
     void boxShadowInner(
-        glm::vec2 position, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius,
+        glm::vec2 position, zIndex_t zIndex, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius,
         const AColor& color, glm::vec2 offset) override;
     void string(glm::vec2 position, const AString& string, const AFontStyle& fs) override;
     void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;

@@ -24,9 +24,9 @@ void ass::prop::Property<ass::BackgroundGradient>::renderFor(AView* view, const 
     RenderHints::PushColor x(ctx.render);
 
     if (view->getBorderRadius() > 0) {
-        ctx.render.roundedRectangle(ABrush(*mInfo.gradient), {0, 0}, view->getSize(), view->getBorderRadius());
+        ctx.render.roundedRectangle(ABrush(*mInfo.gradient), {0, 0}, view->getZIndex(), view->getSize(), view->getBorderRadius());
     } else  {
-        ctx.render.rectangle(ABrush(*mInfo.gradient), {0, 0}, view->getSize());
+        ctx.render.rectangle(ABrush(*mInfo.gradient), {0, 0}, view->getZIndex(), view->getSize());
     }
     IPropertyBase::renderFor(view, ctx);
 }

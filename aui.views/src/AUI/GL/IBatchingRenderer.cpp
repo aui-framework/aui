@@ -13,57 +13,57 @@
 
 #include "IBatchingRenderer.h"
 
-void IBatchingRenderer::rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
+void IBatchingRenderer::rectangle(const ABrush& brush, glm::vec2 position, zIndex_t zIndex, glm::vec2 size) {
     enqueueCommand(CmdRectangle {
         .brush = std::move(brush),
         .position = position,
         .size = size,
-        .zIndex = static_cast<int>(mCmds.size()) + 1
+        .zIndex = zIndex
     });
 }
 
-void IBatchingRenderer::roundedRectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius) {
+void IBatchingRenderer::roundedRectangle(const ABrush& brush, glm::vec2 position, zIndex_t zIndex, glm::vec2 size, float radius) {
     enqueueCommand(CmdRoundedRectangle{
         .brush = brush,
         .position = position,
         .size = size,
         .radius = radius,
-        .zIndex = static_cast<int>(mCmds.size()) + 1
+        .zIndex = zIndex
     });
 }
 
-void IBatchingRenderer::rectangleBorder(const ABrush& brush, glm::vec2 position, glm::vec2 size, float lineWidth) {
+void IBatchingRenderer::rectangleBorder(const ABrush& brush, glm::vec2 position, zIndex_t zIndex, glm::vec2 size, float lineWidth) {
     enqueueCommand(CmdRectangleBorder{
         .brush = brush,
         .position = position,
         .size = size,
         .lineWidth = lineWidth,
-        .zIndex = static_cast<int>(mCmds.size()) + 1
+        .zIndex = zIndex
     });
 }
 
-void IBatchingRenderer::roundedRectangleBorder(const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius, int borderWidth) {
+void IBatchingRenderer::roundedRectangleBorder(const ABrush& brush, glm::vec2 position, zIndex_t zIndex, glm::vec2 size, float radius, int borderWidth) {
     enqueueCommand(CmdRoundedRectangleBorder{
         .brush = brush,
         .position = position,
         .size = size,
         .radius = radius,
         .borderWidth = borderWidth,
-        .zIndex = static_cast<int>(mCmds.size()) + 1
+        .zIndex = zIndex
     });
 }
 
-void IBatchingRenderer::boxShadow(glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) {
+void IBatchingRenderer::boxShadow(glm::vec2 position, zIndex_t zIndex, glm::vec2 size, float blurRadius, const AColor& color) {
     enqueueCommand(CmdBoxShadow{
         .position = position,
         .size = size,
         .blurRadius = blurRadius,
         .color = color,
-        .zIndex = static_cast<int>(mCmds.size()) + 1
+        .zIndex = zIndex
     });
 }
 
-void IBatchingRenderer::boxShadowInner(glm::vec2 position, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius, const AColor& color, glm::vec2 offset) {
+void IBatchingRenderer::boxShadowInner(glm::vec2 position, zIndex_t zIndex, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius, const AColor& color, glm::vec2 offset) {
     enqueueCommand(CmdBoxShadowInner{
         .position = position,
         .size = size,
@@ -72,7 +72,7 @@ void IBatchingRenderer::boxShadowInner(glm::vec2 position, glm::vec2 size, float
         .borderRadius = borderRadius,
         .color = color,
         .offset = offset,
-        .zIndex = static_cast<int>(mCmds.size()) + 1
+        .zIndex = zIndex
     });
 }
 

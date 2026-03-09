@@ -128,7 +128,7 @@ public:
     void render(ARenderContext ctx) override {
         AView::render(ctx);
         if (mTexture) {
-            ctx.render.rectangle(ATexturedBrush { mTexture }, { 0, 0 }, float(SCALE) * glm::vec2(mCells->size()));
+            ctx.render.rectangle(ATexturedBrush { mTexture }, { 0, 0 }, mZIndex, float(SCALE) * glm::vec2(mCells->size()));
         }
         auto drawGrid = [&] {
             ASmallVector<std::pair<glm::vec2, glm::vec2>, 128 * 2> points;
