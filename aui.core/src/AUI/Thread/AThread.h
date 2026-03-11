@@ -25,6 +25,9 @@ class IEventLoop;
 class AString;
 class AConditionVariable;
 
+template<typename T = void>
+class AFuture;
+
 /**
  * @brief Represents an abstract thread which might be not created with AThread.
  * @ingroup core
@@ -224,8 +227,24 @@ public:
      *        Most operation systems guarantee that elasped time will be greater than specified.
      *        <code>AThread::interrupt()</code> is supported.
      * @param duration sleep duration.
+     * @details
+     * Blocking sleep.
      */
     static void sleep(std::chrono::milliseconds duration);
+
+    /**
+     * @brief Sleep for specified duration.
+     *        Most operation systems guarantee that elasped time will be greater than specified.
+     *        <code>AThread::interrupt()</code> is supported.
+     * @param duration sleep duration.
+     * @details
+     * Async sleep.
+     *
+     * ```cpp
+     * co_await AThread::asyncSleep(1s);
+     * ```
+     */
+    static AFuture<> asyncSleep(std::chrono::milliseconds duration);
 
     /**
      * @return current thread.

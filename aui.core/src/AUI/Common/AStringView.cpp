@@ -1054,11 +1054,11 @@ AStringVector AStringView::split(AStringView separator) const {
     for (size_type s = 0;;) {
         auto next = super::find(separator.bytes(), s);
         if (next == npos) {
-            result << substr(s);
+            result << super::substr(s);
             break;
         }
 
-        result << substr(s, next - s);
+        result << super::substr(s, next - s);
         s = next + separator.bytes().length();
     }
     return result;

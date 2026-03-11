@@ -621,7 +621,7 @@ namespace aui::impl::future {
  * AFuture may execute the task (if not default-constructed) on the caller thread instead of waiting. See AFuture::wait
  * for details.
  */
-template<typename T = void>
+template<typename T>
 class AFuture final: public aui::impl::future::Future<T> {
 private:
     using super = typename aui::impl::future::Future<T>;
