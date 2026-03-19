@@ -9,30 +9,16 @@
 * file, You can obtain one at http://mozilla.org/MPL/2.0/.
 */
 
-/// [AProgressBar_example]
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
-#include "AUI/View/AProgressBar.h"
 
 using namespace ass;
 using namespace declarative;
 
-struct State {
-    AProperty<aui::float_within_0_1> progress = 0.42f;
-};
-
-_<AView> minimalProgress(_<State> state) {
-    return Vertical {
-        ProgressBar {
-            .progress = AUI_REACT(state->progress),
-        },
-    };
-}
 
 AUI_ENTRY {
     auto window = _new<AWindow>("Checkbox", 300_dp, 100_dp);
-    auto state = _new<State>();
     window->setContents(
         Vertical {
             Centered {
@@ -74,5 +60,3 @@ AUI_ENTRY {
     window->show();
     return 0;
 }
-/// [AProgressBar_example]
-
