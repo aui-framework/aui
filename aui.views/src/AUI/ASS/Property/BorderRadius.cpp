@@ -16,5 +16,9 @@
 #include "BorderRadius.h"
 
 void ass::prop::Property<ass::BorderRadius>::applyFor(AView* view) {
-    view->setBorderRadius(mInfo.radius);
+    if (mInfo.radius.getUnit() == AMetric::T_PR) {
+        view->setBorderRadius((glm::min(view->getWidth(), view->getHeight()) * 2) * (mInfo.radius.getValuePx() * 0.01));
+    } else {
+        view->setBorderRadius(mInfo.radius.getValuePx());
+    }
 }

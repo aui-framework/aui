@@ -35,6 +35,7 @@ AMetric::AMetric(const AString& text)
             { "px", T_PX },
             { "em", T_DP },
             { "pt", T_PT },
+            { "pr", T_PR },
         };
 
         if (auto x = unitMapping.contains(unitName))
