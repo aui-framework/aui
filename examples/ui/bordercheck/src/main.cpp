@@ -22,22 +22,22 @@ AUI_ENTRY {
     window->setContents(
         Vertical {
             Centered {
-                _new<ALabel>("10%") AUI_OVERRIDE_STYLE {
-                    BorderRadius { 10_pr },
+                _new<ALabel>("25%") AUI_OVERRIDE_STYLE {
+                    BorderRadius { 25_pr },
                     FixedSize { 200_px , 40_px },
                     BackgroundSolid { 100_rgb },
                 },
 
-                _new<ALabel>("20%") AUI_OVERRIDE_STYLE {
+                _new<ALabel>("50%") AUI_OVERRIDE_STYLE {
                     Margin { 100_px, 0, 0, 0},
-                    BorderRadius { 20_pr },
+                    BorderRadius { 50_pr },
                     FixedSize { 200_px , 40_px },
                     BackgroundSolid { 150_rgb },
                 },
 
-                _new<ALabel>("50%") AUI_OVERRIDE_STYLE {
+                _new<ALabel>("75%") AUI_OVERRIDE_STYLE {
                     Margin { 200_px, 0, 0, 0},
-                    BorderRadius { 50_pr },
+                    BorderRadius { 75_pr },
                     FixedSize { 200_px , 40_px },
                     BackgroundSolid { 200_rgb },
                 },
@@ -50,7 +50,7 @@ AUI_ENTRY {
                 //Circle!
                 _new<ALabel>("") AUI_OVERRIDE_STYLE {
                     Margin { 400_px, 0, 0, 0},
-                    BorderRadius { 50_pr },
+                    BorderRadius { 100_pr },
                     FixedSize { 40_px },
                     BackgroundSolid { 5148_rgb },
                 }

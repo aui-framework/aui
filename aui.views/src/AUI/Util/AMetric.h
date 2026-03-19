@@ -144,12 +144,6 @@ public:
     [[nodiscard]] float getValuePx() const;
     [[nodiscard]] float getValueDp() const;
 
-    /**
-     * @brief Converts the metric to pixels, using the specified reference dimension for percentage values.
-     * @param referenceDimension The reference dimension to use for percentage calculations (T_PR unit).
-     * @return The value in pixels.
-     */
-    [[nodiscard]] float getValuePx(float referenceDimension) const;
 
     static float fromPxToMetric(float value, Unit unit);
 
