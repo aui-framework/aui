@@ -45,7 +45,7 @@ _<AImage> AImage::fromUrl(const AUrl& url) {
         #if AUI_BUILD_TESTS
         if (url.full()!="builtin://__aui/icon_512x512.png")
             ALogger::err("Could not load image: " + url.full() + ": " + e.getMessage());
-        #elif
+        #else
         ALogger::err("Could not load image: " + url.full() + ": " + e.getMessage());
         #endif
     }
