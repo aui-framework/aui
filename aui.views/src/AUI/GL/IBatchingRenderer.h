@@ -93,18 +93,13 @@ public:
         AWindowBase* window;
     };
     using BatchId_t = uint32_t;
-    union BatchId {
+    struct BatchId {
         BatchId_t value;
-        struct {
-            unsigned char brushId : 8;
-            unsigned char cmdId : 8;
-            zIndex_t zIndex : 16;
-        };
-        // TODO: finish bit order fix
-        // static BatchId new(int16_t z, uint8_t cmd, uint8_t brush) {
-        //     return { static_cast<uint32_t>(z << 16) | static_cast<uint32_t>(cmd << 8) | static_cast<uint32_t>(brush) };
-        // }
-        // auto operator<=>(const BatchId&) const = default;
+        BatchId() : value{std::numeric_limits<uint32_t>::max()} {};
+        BatchId(int16_t z, uint8_t cmd, uint8_t brush) {
+            value = static_cast<uint32_t>(z) << 16 | static_cast<uint32_t>(cmd << 8) | static_cast<uint32_t>(brush);
+        }
+        auto operator<=>(const BatchId&) const = default;
     };
     struct Cmd {
         glm::mat4 transform;
@@ -149,6 +144,7 @@ protected:
             .transform = getTransform(),
             .color = getColor(),
             .arg = std::move(arg),
+            .batchId = BatchId{}
         });
     }
 

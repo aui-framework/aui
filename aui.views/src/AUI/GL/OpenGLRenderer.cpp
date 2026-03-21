@@ -310,20 +310,19 @@ void OpenGLRenderer::handleCmds(std::vector<Cmd> cmds) {
             }
         }, cmd.arg);
 
-        return static_cast<uint16_t>(result.value_or(std::numeric_limits<int16_t>::max()));
+        return result.value_or(std::numeric_limits<int16_t>::max());
     };
     for (auto& cmd : cmds) {
-        cmd.batchId = {
-            .brushId = getBrushId(cmd),
-            .cmdId = static_cast<unsigned char>(cmd.arg.index()),
-            .zIndex = getZIndex(cmd),
+        cmd.batchId = BatchId {
+            getZIndex(cmd),
+            static_cast<unsigned char>(cmd.arg.index()),
+            getBrushId(cmd)
         };
     }
-    std::ranges::sort(cmds, [](const Cmd& cmdA, const Cmd& cmdB) {
+    std::ranges::stable_sort(cmds, [](const Cmd& cmdA, const Cmd& cmdB) {
         return cmdA.batchId.value > cmdB.batchId.value;
     });
 
-    // Defining references to required members to avoid passing this as upvalue
     auto &rectangleVao = mRectangleVao;
     auto &batchVertices = mBatchVertices;
     auto &batchShader = mBatchShader;
