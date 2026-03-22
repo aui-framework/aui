@@ -480,8 +480,32 @@ void AWindow::hide() {
     ShowWindow(mHandle, SW_HIDE);
 }
 
-void AWindow::setTaskbarProgress(float p) {
+
+void AWindow::setTaskbarProgress(aui::float_within_0_1 p) {
     if (!mHandle) return;
+
+    static ITaskbarList3* pTaskbar = nullptr;
+    if (!pTaskbar) {
+        HRESULT hr = CoCreateInstance(
+            CLSID_TaskbarList, nullptr,
+            CLSCTX_INPROC_SERVER,
+            IID_PPV_ARGS(&pTaskbar)
+        );
+        if (FAILED(hr)) return;
+        pTaskbar->HrInit();
+    }
+
+    if (p == 0.0f) {
+        pTaskbar->SetProgressState(mHandle, TBPF_NOPROGRESS);
+        return;
+    }
+    pTaskbar->SetProgressState(mHandle, TBPF_NORMAL);
+    pTaskbar->SetProgressValue(
+        mHandle,
+        static_cast<ULONGLONG>(p * 1000),
+        1000ULL
+    );
+
 }
 
 void AWindowManager::notifyProcessMessages() {
