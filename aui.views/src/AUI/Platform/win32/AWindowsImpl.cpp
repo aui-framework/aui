@@ -480,6 +480,9 @@ void AWindow::hide() {
     ShowWindow(mHandle, SW_HIDE);
 }
 
+void AWindow::setTaskbarProgress(float p) {
+    if (!mHandle) return;
+}
 
 void AWindowManager::notifyProcessMessages() {
     if (!mWindows.empty()) {
