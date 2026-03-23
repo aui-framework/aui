@@ -102,6 +102,8 @@ void PlatformAbstractionX11::ensureXLibInitialized() {
             ourAtoms.netWmSyncRequestCounter = XInternAtom(d, "_NET_WM_SYNC_REQUEST_COUNTER", False);
             ourAtoms.netWmIcon = XInternAtom(ourDisplay, "_NET_WM_ICON", False);
             ourAtoms.cardinal = XInternAtom(ourDisplay, "XA_CARDINAL", False);
+            ourAtoms.progressAtom = XInternAtom(ourDisplay, "_NET_WM_XAPP_PROGRESS", False);
+            ourAtoms.progressPulseAtom = XInternAtom(ourDisplay, "_NET_WM_XAPP_PROGRESS_PULSE", False);
         }
 
         ~DisplayInstance() {
@@ -541,9 +543,6 @@ void PlatformAbstractionX11::setTaskbarProgress(AWindow& window, aui::float_with
     if (!display)
         return;
 
-    // Intern the required atoms
-    Atom progressAtom = XInternAtom(display, "_NET_WM_XAPP_PROGRESS", False);
-    Atom progressPulseAtom = XInternAtom(display, "_NET_WM_XAPP_PROGRESS_PULSE", False);
 
     // Convert float [0.0, 1.0] to integer [0, 100]
     unsigned long progressValue = static_cast<unsigned long>(p * 100.0f + 0.5f);
@@ -552,7 +551,7 @@ void PlatformAbstractionX11::setTaskbarProgress(AWindow& window, aui::float_with
     XChangeProperty(
         display,
         PlatformAbstractionX11::ourDisplay,
-        progressAtom,
+        ourAtoms.progressAtom,
         XA_CARDINAL,
         32,
         PropModeReplace,
@@ -566,7 +565,7 @@ void PlatformAbstractionX11::setTaskbarProgress(AWindow& window, aui::float_with
     XChangeProperty(
         display,
         PlatformAbstractionX11::ourDisplay,
-        progressPulseAtom,
+        ourAtoms.progressPulseAtom,
         XA_CARDINAL,
         32,
         PropModeReplace,

@@ -46,6 +46,8 @@ public:
         Atom netWmSyncRequestCounter;
         Atom netWmIcon;
         Atom cardinal;
+        Atom progressAtom;
+        Atom progressPulseAtom;
     } ourAtoms;
 
     ~PlatformAbstractionX11() override = default;
