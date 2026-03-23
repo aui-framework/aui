@@ -103,11 +103,11 @@ void AView::drawStencilMask(ARenderContext ctx)
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
             if (mBorderRadius > 0) {
-                ctx.render.roundedRectangle(ASolidBrush{},
-                                     {mPadding.left, mPadding.top},
-                                     mZIndex,
-                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
-                                     glm::max(mBorderRadius - std::min(mPadding.horizontal(), mPadding.vertical()), 0.f));
+                // ctx.render.roundedRectangle(ASolidBrush{},
+                //                      {mPadding.left, mPadding.top},
+                //                      mZIndex,
+                //                      {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
+                //                      glm::max(mBorderRadius - std::min(mPadding.horizontal(), mPadding.vertical()), 0.f));
             } else {
                 // TODO: figure out why this is rendered opaque when batching
                 // ctx.render.rectangle(ASolidBrush{},

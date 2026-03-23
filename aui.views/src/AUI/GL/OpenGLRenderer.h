@@ -71,11 +71,10 @@ private:
     AOptional<gl::Program> mSymbolShaderSubPixel;
     AOptional<gl::Program> mSquareSectorShader;
     AOptional<gl::Program> mLineSolidDashedShader;
-    static constexpr size_t BATCH_BUFFER_SIZE = 20000;
+    static constexpr size_t BATCH_BUFFER_SIZE = 40000;
     std::array<float, BATCH_BUFFER_SIZE> mBatchVertices;
     std::array<float, BATCH_BUFFER_SIZE>::iterator mCurrentBatchVertex;
-    gl::Vao mRectangleVao;
-    gl::Vao mBorderVao;
+    gl::Vao mBatchVao;
     gl::Texture2D mGradientTexture;
     gl::Program* mBatchShader;
 
@@ -137,8 +136,9 @@ private:
     FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
 
     static constexpr size_t Z_DEPTH = 1000;
-    template<glm::length_t L>
-    void appendRect(const glm::vec2 position, const glm::vec2 size, const zIndex_t zIndex, const glm::mat4 transform, glm::vec<L, float>additionalData) {
+    template<typename T>
+    void appendRect(const glm::vec2 position, const glm::vec2 size, const zIndex_t zIndex, const glm::mat4 transform, T additionalData) {
+        static_assert(std::is_trivially_copyable_v<T>);
         float x = position.x;
         float y = position.y;
         float w = x + size.x;
@@ -159,13 +159,14 @@ private:
         }
     }
 
-    template<glm::length_t L>
-    void appendVertexData(glm::vec<L, float> data) {
-        std::memcpy(mCurrentBatchVertex, glm::value_ptr(data), sizeof(float) * L);
-        mCurrentBatchVertex += L;
+    template<typename T>
+    void appendVertexData(T data) {
+        std::memcpy(mCurrentBatchVertex, &data, sizeof(T));
+        mCurrentBatchVertex += sizeof(T) / sizeof(float);
     }
 
-    ASolidBrush::Data solidBrush(const IBatchingRenderer::Cmd& cmd, const ASolidBrush& brush, OpenGLRenderer& renderer, gl::Program& shader);
+    ASolidBrush::Data solidBrush(const IBatchingRenderer::Cmd& cmd, const ASolidBrush& brush, gl::Program& shader);
+    ALinearGradientBrush::Data gradientBrush(const IBatchingRenderer::Cmd& cmd, const ALinearGradientBrush& brush, gl::Program& shader);
 
 private:
     // Helper methods that perform the actual rendering for each command.

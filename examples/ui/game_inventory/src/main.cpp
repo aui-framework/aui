@@ -13,6 +13,7 @@
 #include "AUI/ASS/Property/Margin.h"
 #include "AUI/Common/AColor.h"
 #include "AUI/Platform/ARenderingContextOptions.h"
+#include "AUI/Util/AAngleRadians.h"
 #include "AUI/View/AForEachUI.h"
 #include "AUI/View/AScrollArea.h"
 #include "AUI/View/Dynamic.h"
@@ -56,7 +57,7 @@ _<AView> itemStackView(const _<AProperty<AOptional<ItemStack>>>& itemStack) {
                 AObject::connect(
                     AUI_REACT(ass::PropertyListRecursive {
                       // BackgroundImage { (*itemStack) ->hasValue() ? ":texture/item/{}.png"_format((**itemStack)->id) : "" },
-                      BackgroundSolid{ AColor{ "#FB1816" }},
+                      BackgroundGradient{ AColor{ "#FB181655" }, AColor{ "#1BF81655" }, 90_deg },
                       Expanding {},
                     }),
                     AUI_SLOT(it)::setCustomStyle);

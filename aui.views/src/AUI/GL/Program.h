@@ -17,6 +17,7 @@
 
 #include <AUI/Common/AString.h>
 #include <cstdint>
+#include <functional>
 #include <glm/glm.hpp>
 #include <optional>
 #include <variant>
@@ -43,6 +44,8 @@ struct GLSLOptions {
 
 class API_AUI_VIEWS Program: public aui::noncopyable {
 public:
+    using SetupCallback = void();
+
     class API_AUI_VIEWS Uniform {
     private:
         const char* mUniformString;
@@ -73,6 +76,7 @@ public:
     }
     void compile();
     void bindAttribute(uint32_t index, const AString& name);
+    void setSetupCallback(SetupCallback value);
     void use() const;
     ~Program();
     Program(const Program&) = delete;
@@ -113,6 +117,7 @@ private:
     uint32_t mVertex = 0;
     uint32_t mFragment = 0;
 
+    std::function<SetupCallback> mSetupCallback;
     class UniformState {
     public:
         enum Value { UNINITIALIZED = -2, DOES_NOT_EXIST = -1 };

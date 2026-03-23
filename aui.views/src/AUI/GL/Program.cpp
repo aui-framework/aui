@@ -112,12 +112,18 @@ void gl::Program::compile() {
 void gl::Program::use() const {
     gl::State::useProgram(mProgram);
     currentShader() = const_cast<gl::Program*>(this);
+    if (mSetupCallback)
+        mSetupCallback();
 }
 
 void gl::Program::bindAttribute(uint32_t index, const AString& name) {
     if (name.empty())
         return;
     glBindAttribLocation(mProgram, index, name.toStdString().c_str());
+}
+
+void gl::Program::setSetupCallback(SetupCallback value) {
+    mSetupCallback = value;
 }
 
 void gl::Program::set(const gl::Program::Uniform& uniform, glm::mat4 value) const {
