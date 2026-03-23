@@ -536,6 +536,47 @@ void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image)
 void PlatformAbstractionX11::setTaskbarProgress(AWindow& window, aui::float_within_0_1 p) {
     if (!nativeHandle(window))
         return;
+
+    Display* display = XOpenDisplay(nullptr);
+    if (!display)
+        return;
+
+    // Intern the required atoms
+    Atom progressAtom = XInternAtom(display, "_NET_WM_XAPP_PROGRESS", False);
+    Atom progressPulseAtom = XInternAtom(display, "_NET_WM_XAPP_PROGRESS_PULSE", False);
+
+    // Convert float [0.0, 1.0] to integer [0, 100]
+    unsigned long progressValue = static_cast<unsigned long>(p * 100.0f + 0.5f);
+
+    // Set _NET_WM_XAPP_PROGRESS (0–100)
+    XChangeProperty(
+        display,
+        PlatformAbstractionX11::ourDisplay,
+        progressAtom,
+        XA_CARDINAL,
+        32,
+        PropModeReplace,
+        reinterpret_cast<unsigned char*>(&progressValue),
+        1
+    );
+
+    // Set _NET_WM_XAPP_PROGRESS_PULSE to 0 (not pulsing, showing actual value)
+
+    unsigned long pulseValue = 0;
+    XChangeProperty(
+        display,
+        PlatformAbstractionX11::ourDisplay,
+        progressPulseAtom,
+        XA_CARDINAL,
+        32,
+        PropModeReplace,
+        reinterpret_cast<unsigned char*>(&pulseValue),
+        1
+    );
+
+
+    XFlush(display);
+    XCloseDisplay(display);
 }
 
 void PlatformAbstractionX11::windowHide(AWindow& window) {
