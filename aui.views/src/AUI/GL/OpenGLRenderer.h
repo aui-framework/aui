@@ -137,13 +137,13 @@ private:
 
     static constexpr size_t Z_DEPTH = 1000;
     template<typename T>
-    void appendRect(const glm::vec2 position, const glm::vec2 size, const zIndex_t zIndex, const glm::mat4 transform, T additionalData) {
+    void appendRect(const glm::vec2 position, const glm::vec2 size, const glm::mat4 transform, T additionalData) {
         static_assert(std::is_trivially_copyable_v<T>);
         float x = position.x;
         float y = position.y;
         float w = x + size.x;
         float h = y + size.y;
-        float z = -1.f + zIndex * (1. / Z_DEPTH);
+        float z = -1.f;
 
         std::array verticies {
             glm::vec3 { x, h, z },

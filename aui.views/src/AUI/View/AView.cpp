@@ -514,12 +514,13 @@ void AView::setPosition(glm::ivec2 position) {
     redraw();
     emit mPositionChanged(position);
 }
-void AView::setZIndex(zIndex_t zIndex) {
+void AView::setZIndex(const zIndex_t value) {
     mSkipUntilLayoutUpdate = false;
-    mZIndex = zIndex;
+    mZIndex = value;
     redraw();
-    emit mZIndexChanged(zIndex);
+    emit mZIndexChanged(value);
 }
+
 void AView::setSize(glm::ivec2 size)
 {
     mMarkedMinContentSizeInvalid = false;

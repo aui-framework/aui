@@ -360,3 +360,6 @@ site/
 
 # clangd compile commands
 compile_commands.json
+
+# gdb config
+.gdbinit

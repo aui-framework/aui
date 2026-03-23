@@ -636,6 +636,14 @@ void AViewContainerBase::setEnabled(bool enabled) {
     notifyParentEnabledStateChanged(enabled);
 }
 
+void AViewContainerBase::setZIndex(zIndex_t value) {
+    AView::setZIndex(value);
+
+    for (auto& child : mViews) {
+        child->setZIndex(value + 1);
+    }
+}
+
 void AViewContainerBase::notifyParentEnabledStateChanged(bool enabled) {
     enabled &= mDirectlyEnabled;
     AView::notifyParentEnabledStateChanged(enabled);

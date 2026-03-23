@@ -97,7 +97,7 @@ public:
         BatchId_t value;
         BatchId() : value{std::numeric_limits<uint32_t>::max()} {};
         BatchId(int16_t z, uint8_t cmd, uint8_t brush) {
-            value = static_cast<uint32_t>(z) << 16 | static_cast<uint32_t>(cmd << 8) | static_cast<uint32_t>(brush);
+            value = (static_cast<uint32_t>(z) << 16) | (static_cast<uint32_t>(cmd) << 8) | static_cast<uint32_t>(brush);
         }
         auto operator<=>(const BatchId&) const = default;
     };

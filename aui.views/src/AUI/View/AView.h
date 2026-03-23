@@ -592,7 +592,7 @@ public:
 
     virtual void setPosition(glm::ivec2 position);
 
-    void setZIndex(zIndex_t zIndex);
+    virtual void setZIndex(const zIndex_t value);
 
     /**
      * Set size ignoring all restrictions (i.e. min size, max size, fixed size, etc...). Used by AAnimator.
