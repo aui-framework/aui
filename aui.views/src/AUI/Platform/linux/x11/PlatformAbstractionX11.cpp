@@ -533,6 +533,11 @@ void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image)
     XFlush(PlatformAbstractionX11::ourDisplay);
 }
 
+void PlatformAbstractionX11::setTaskbarProgress(AWindow& window, aui::float_within_0_1 p) {
+    if (!nativeHandle(window))
+        return;
+}
+
 void PlatformAbstractionX11::windowHide(AWindow& window) {
     if (!nativeHandle(window))
         return;
