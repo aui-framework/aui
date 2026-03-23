@@ -24,6 +24,7 @@
 #include "AUI/Platform/ARenderingContextOptions.h"
 #include "OpenGLRenderingContextX11.h"
 #include "SoftwareRenderingContextX11.h"
+#include "AUI/Platform/linux/ADBus.h"
 
 aui::assert_not_used_when_null<Display*> PlatformAbstractionX11::ourDisplay = nullptr;
 Screen* PlatformAbstractionX11::ourScreen = nullptr;
@@ -540,7 +541,8 @@ void PlatformAbstractionX11::setTaskbarProgress(AWindow& window, aui::float_with
         return;
 
     if (std::string_view(std::getenv("XDG_CURRENT_DESKTOP")) == "KDE") {
-        ALogger::warn("KDE") << "NOT WORKING WITH KDE";
+        ALogger::warn("KDE") << "setTaskbarProgress() is not working on KDE";
+        return;
     }
 
     unsigned long progressValue = static_cast<unsigned long>(p * 100.0f + 0.5f);
