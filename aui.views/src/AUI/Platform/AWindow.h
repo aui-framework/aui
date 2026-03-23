@@ -147,7 +147,6 @@ public:
     void setPosition(glm::ivec2 position) override;
     void setSize(glm::ivec2 size) override;
     void setGeometry(int x, int y, int width, int height) override;
-    void setTaskbarProgress(aui::float_within_0_1 p);
 
 #if AUI_PLATFORM_LINUX
     void applyGeometryToChildren() override;
@@ -162,6 +161,16 @@ public:
     void setFocusNextViewOnTab(bool value) {
         mFocusNextViewOnTab = value;
     }
+
+    /**
+     * @brief Sets the progress indicator on the taskbar/dock.
+     * @param p progress value from 0.0 (no progress) to 1.0 (complete). 0.0 hides the indicator.
+     * @details
+     * On Windows, displays progress on the taskbar button.
+     * On macOS, displays progress on the dock icon.
+     * On Linux, works on desktop environments like GNOME/Cinnamon.
+     */
+    void setTaskbarProgress(aui::float_within_0_1 p);
 
     /**
      * @brief Wraps your AView to window.
