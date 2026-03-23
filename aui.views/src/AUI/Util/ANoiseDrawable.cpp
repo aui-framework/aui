@@ -33,7 +33,8 @@ void ANoiseDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
       .uv2 = glm::vec2(params.size) * glm::vec2(0.37390528174893522421f, 0.37577434667f),
       .imageRendering = ImageRendering::SMOOTH,
       .repeat = Repeat::X_Y,
-    }, params.offset, params.size);
+    // TODO: use actual z index here
+    }, params.offset, 0, params.size);
 }
 
 glm::ivec2 ANoiseDrawable::getSizeHint() { return {1, 1}; }

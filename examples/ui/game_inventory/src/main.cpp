@@ -9,7 +9,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include "AUI/ASS/Property/BackgroundSolid.h"
+#include "AUI/ASS/Property/Margin.h"
+#include "AUI/Common/AColor.h"
 #include "AUI/Platform/ARenderingContextOptions.h"
+#include "AUI/Util/AAngleRadians.h"
 #include "AUI/View/AForEachUI.h"
 #include "AUI/View/AScrollArea.h"
 #include "AUI/View/Dynamic.h"
@@ -21,6 +25,7 @@
 #include <AUI/View/ACheckBox.h>
 #include <range/v3/range/conversion.hpp>
 #include <range/v3/view/iota.hpp>
+#include <glm/gtc/random.hpp>
 
 using namespace ass;
 using namespace declarative;
@@ -51,18 +56,19 @@ _<AView> itemStackView(const _<AProperty<AOptional<ItemStack>>>& itemStack) {
         _new<AView>() AUI_LET {
                 AObject::connect(
                     AUI_REACT(ass::PropertyListRecursive {
-                      BackgroundImage { (*itemStack) ->hasValue() ? ":texture/item/{}.png"_format((**itemStack)->id) : "" },
+                      // BackgroundImage { (*itemStack) ->hasValue() ? ":texture/item/{}.png"_format((**itemStack)->id) : "" },
+                      BackgroundGradient{ AColor{ "#FB181655" }, AColor{ "#1BF81655" }, 90_deg },
                       Expanding {},
                     }),
                     AUI_SLOT(it)::setCustomStyle);
             },
         Vertical::Expanding {
           SpacerExpanding {},
-          Label { AUI_REACT("{}"_format((*itemStack)->valueOr(ItemStack{}).count)) } AUI_OVERRIDE_STYLE {
-              ATextAlign::RIGHT,
-              TextColor { AColor::WHITE },
-              TextShadow { AColor::BLACK, 1_dp, 1_dp },
-          },
+          // Label { AUI_REACT("{}"_format((*itemStack)->valueOr(ItemStack{}).count)) } AUI_OVERRIDE_STYLE {
+          //     ATextAlign::RIGHT,
+          //     TextColor { AColor::WHITE },
+          //     TextShadow { AColor::BLACK, 1_dp, 1_dp },
+          // },
         },
     } AUI_OVERRIDE_STYLE {
         FixedSize { 32_dp },
@@ -108,11 +114,11 @@ AUI_ENTRY {
       .flags = ARenderContextFlags::NO_VSYNC | ARenderContextFlags::NO_SMOOTH,
     });
 
-    auto window = _new<GameWindow>("Game inventory", 600_dp, 500_dp);
+    auto window = _new<GameWindow>("Game inventory", 1920_dp, 900_dp);
     auto state = _new<State>();
 
     state->items =
-        ranges::view::iota(0, 128) | ranges::view::transform([&](int i) {
+        ranges::views::iota(0, 512) | ranges::views::transform([&](int i) {
             return aui::ptr::manage_shared(new State::Cell {
               .contents =
                   i <= 11 ? AOptional<ItemStack>({
@@ -126,11 +132,11 @@ AUI_ENTRY {
     window->setContents(
         Centered {
           Vertical {
-            Label { "Inventory" } AUI_OVERRIDE_STYLE { FontSize { 32_dp } },
+            // Label { "Inventory" } AUI_OVERRIDE_STYLE { FontSize { 32_dp } },
             inventoryGrid(state),
           } AUI_OVERRIDE_STYLE {
                 Expanding {},
-                MaxSize { 700_dp, {} },
+                BackgroundSolid{ AColor{ "#2F3F59" }},
               },
         } AUI_OVERRIDE_STYLE { Padding { {}, 64_dp } });
     window->show();

@@ -94,11 +94,11 @@ public:
         for (const auto& circle : *mState->circles) {
             if (&circle == mHoveredCircle) {
                 ctx.render.roundedRectangle(
-                    ASolidBrush { AColor::GRAY }, circle.position - *circle.radius, glm::vec2(circle.radius * 2.f),
+                    ASolidBrush { AColor::GRAY }, circle.position - *circle.radius, mZIndex, glm::vec2(circle.radius * 2.f),
                     circle.radius);
             }
             ctx.render.roundedRectangleBorder(
-                ASolidBrush { AColor::BLACK }, circle.position - *circle.radius, glm::vec2(circle.radius * 2.f),
+                ASolidBrush { AColor::BLACK }, circle.position - *circle.radius, mZIndex, glm::vec2(circle.radius * 2.f),
                 circle.radius, 1);
         }
     }

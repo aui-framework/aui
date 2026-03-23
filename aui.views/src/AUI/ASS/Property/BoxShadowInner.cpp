@@ -19,6 +19,7 @@
 
 void ass::prop::Property<ass::BoxShadowInner>::renderFor(AView* view, const ARenderContext& ctx) {
     ctx.render.boxShadowInner({0, 0},
+                             view->getZIndex(),
                              glm::vec2(view->getSize()),
                              mInfo.blurRadius,
                              mInfo.spreadRadius,

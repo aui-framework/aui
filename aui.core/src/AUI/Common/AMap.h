@@ -12,7 +12,6 @@
 #pragma once
 #include <map>
 #include <unordered_map>
-#include "AUI/Core.h"
 #include "AException.h"
 #include <AUI/Common/AVector.h>
 #include <AUI/Traits/containers.h>
@@ -59,19 +58,19 @@ public:
 	private:
 		iterator mIterator;
 		bool mValid;
-		
+
 	public:
 		contains_iterator(const iterator& p, bool valid):
 			mIterator(p),
 			mValid(valid)
 		{
-			
+
 		}
         contains_iterator(const contains_iterator& c):
 			mIterator(c.mIterator),
 			mValid(c.mValid)
 		{
-			
+
 		}
 
 		operator bool() const noexcept {

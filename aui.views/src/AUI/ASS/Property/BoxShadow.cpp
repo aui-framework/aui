@@ -20,6 +20,7 @@
 void ass::prop::Property<ass::BoxShadow>::renderFor(AView* view, const ARenderContext& ctx) {
     ctx.render.boxShadow({mInfo.offsetX.getValuePx() - mInfo.spreadRadius.getValuePx(),
                        mInfo.offsetY.getValuePx() - mInfo.spreadRadius.getValuePx()},
+                       view->getZIndex(),
                       glm::vec2(view->getSize()) + mInfo.spreadRadius.getValuePx() * 2.f,
                        mInfo.blurRadius,
                        mInfo.color);

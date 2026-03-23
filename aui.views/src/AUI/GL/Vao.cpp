@@ -22,6 +22,8 @@
 
 #include "Vao.h"
 #include <cstdint>
+#include "AUI/GL/gl.h"
+#include "AUI/Util/Assert.h"
 #include "State.h"
 
 gl::Vao::Vao() {
@@ -64,6 +66,7 @@ void gl::Vao::insertIfKeyMismatches(
 goAhead:
     insert(index, data, dataSize, vertexSize, dataType, key);
 }
+
 void gl::Vao::insert(
     GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType, const char* key) {
     bind();
@@ -91,12 +94,12 @@ void gl::Vao::insert(
 
     mBuffers[index].lastModifierKey = key;
 
-    auto signature = uint32_t(vertexSize) ^ dataType;
-    if (newFlag || mBuffers[index].signature != signature) {
-        glEnableVertexAttribArray(index);
-        glVertexAttribPointer(index, vertexSize, dataType, GL_FALSE, 0, nullptr);
-        mBuffers[index].signature = signature;
-    }
+    // auto signature = uint32_t(vertexSize) ^ dataType;
+    // if (newFlag || mBuffers[index].signature != signature) {
+    //     glEnableVertexAttribArray(index);
+    //     glVertexAttribPointer(index, vertexSize, dataType, GL_FALSE, 0, nullptr);
+    //     mBuffers[index].signature = signature;
+    // }
 }
 
 void gl::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType) {
@@ -134,7 +137,7 @@ void gl::Vao::drawElements(GLenum type) {
     glDrawElements(type, mIndicesCount, mIndicesType, 0);
 }
 
-void gl::Vao::indices(AArrayView<uint32_t> data) {
+void gl::Vao::indices(std::span<uint32_t> data) {
     bind();
     GLenum drawType = GL_DYNAMIC_DRAW;
     if (mIndicesBuffer == 0) {
@@ -144,11 +147,33 @@ void gl::Vao::indices(AArrayView<uint32_t> data) {
     }
     mIndicesCount = static_cast<GLsizei>(data.size());
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndicesBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.sizeInBytes(), data.data(), drawType);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.size_bytes(), data.data(), drawType);
     mIndicesType = GL_UNSIGNED_INT;
 }
 
-void gl::Vao::indices(AArrayView<uint16_t> data) {
+static std::vector<unsigned short> generateQuadIndices(const size_t vertexCount) {
+    AUI_ASSERT(vertexCount % 4 == 0);
+
+    const size_t quadCount = vertexCount / 4;
+    std::vector<unsigned short> indices;
+    indices.reserve(quadCount * 6);
+
+    for (size_t quad = 0; quad < quadCount; ++quad) {
+        const unsigned short baseVertex = static_cast<unsigned short>(quad * 4);
+
+        indices.push_back(baseVertex + 0);
+        indices.push_back(baseVertex + 1);
+        indices.push_back(baseVertex + 2);
+
+        indices.push_back(baseVertex + 2);
+        indices.push_back(baseVertex + 1);
+        indices.push_back(baseVertex + 3);
+    }
+
+    return indices;
+}
+
+void gl::Vao::indicesByCount(const size_t vertexCount) {
     bind();
     GLenum drawType = GL_DYNAMIC_DRAW;
     if (mIndicesBuffer == 0) {
@@ -156,8 +181,10 @@ void gl::Vao::indices(AArrayView<uint16_t> data) {
         assert(mIndicesBuffer);
         drawType = GL_STATIC_DRAW;
     }
+    auto indices = std::move(generateQuadIndices(vertexCount));
+    auto data = std::span{indices};
     mIndicesCount = static_cast<GLsizei>(data.size());
     glBindBuffer(GL_ELEMENT_ARRAY_BUFFER, mIndicesBuffer);
-    glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.sizeInBytes(), data.data(), drawType);
+    glBufferData(GL_ELEMENT_ARRAY_BUFFER, data.size_bytes(), data.data(), drawType);
     mIndicesType = GL_UNSIGNED_SHORT;
 }

@@ -47,7 +47,8 @@ void AImageDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
             .uv2 = params.cropUvBottomRight,
             .imageRendering = params.imageRendering,
             .repeat = params.repeat,
-    }, params.offset, params.size);
+    // TODO: use actual z index here
+    }, params.offset, 0, params.size);
 }
 
 AImage AImageDrawable::rasterize(glm::ivec2 imageSize) {

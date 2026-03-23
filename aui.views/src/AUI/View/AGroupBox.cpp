@@ -35,6 +35,7 @@ namespace {
             AUI_REPEAT(2) { // render twice to definitely avoid stencil issues
                 ctx.render.rectangle(ASolidBrush{},
                                      d,
+                                     mZIndex,
                                      mTitle->getSize());
             }
         }

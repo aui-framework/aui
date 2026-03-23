@@ -116,6 +116,8 @@ public:
 
     void setEnabled(bool enabled = true) override;
 
+    void setZIndex(const zIndex_t value) override;
+
     auto begin() const {
         return mViews.cbegin();
     }

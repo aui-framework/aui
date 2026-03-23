@@ -144,10 +144,8 @@ AStylesheet::AStylesheet() {
             button::Default(t<AButton>()),
             FontRendering::ANTIALIASING,
             BackgroundGradient { ALinearGradientBrush{
-                    .colors = {
-                            {0.f, getOsThemeColorLighter()},
-                            {0.f, getOsThemeColor()},
-                    },
+                    .colorStart = getOsThemeColorLighter(),
+                    .colorEnd = getOsThemeColor()
             } },
             BoxShadow { 0, 1_dp, 3_dp, -1_dp, getOsThemeColor() },
             Border { nullptr },
@@ -164,10 +162,8 @@ AStylesheet::AStylesheet() {
         {
             button::Default(t<AButton>::hover()),
             BackgroundGradient { ALinearGradientBrush{
-                    .colors = {
-                            {0.f, getOsThemeColorLighter()},
-                            {1.f, getOsThemeColor()},
-                    },
+                    .colorStart = getOsThemeColorLighter(),
+                    .colorEnd = getOsThemeColor()
             } },
         },
         {

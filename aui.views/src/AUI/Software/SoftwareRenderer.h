@@ -107,30 +107,36 @@ public:
 
     void rectangle(const ABrush& brush,
                    glm::vec2 position,
+                   zIndex_t zIndex,
                    glm::vec2 size) override;
 
     void roundedRectangle(const ABrush& brush,
                           glm::vec2 position,
+                          zIndex_t zIndex,
                           glm::vec2 size,
                           float radius) override;
 
     void rectangleBorder(const ABrush& brush,
                          glm::vec2 position,
+                         zIndex_t zIndex,
                          glm::vec2 size,
                          float lineWidth) override;
 
     void roundedRectangleBorder(const ABrush& brush,
                                 glm::vec2 position,
+                                zIndex_t zIndex,
                                 glm::vec2 size,
                                 float radius,
                                 int borderWidth) override;
 
     void boxShadow(glm::vec2 position,
+                   zIndex_t zIndex,
                    glm::vec2 size,
                    float blurRadius,
                    const AColor& color) override;
-    
+
     void boxShadowInner(glm::vec2 position,
+                        zIndex_t zIndex,
                         glm::vec2 size,
                         float blurRadius,
                         float spreadRadius,

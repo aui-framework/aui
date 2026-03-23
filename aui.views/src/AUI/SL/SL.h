@@ -12,9 +12,7 @@
 #pragma once
 
 #include "AUI/Enum/ImageRendering.h"
-#include "AUI/Image/AImage.h"
 #include "glm/common.hpp"
-#include "glm/ext/quaternion_common.hpp"
 #include "glm/fwd.hpp"
 #include <glm/glm.hpp>
 #include <AUI/Render/ITexture.h>

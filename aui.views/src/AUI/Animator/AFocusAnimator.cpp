@@ -29,6 +29,7 @@ void AFocusAnimator::doAnimation(AView* view, float theta, IRenderer& render) {
         render.rectangleBorder(
                 ASolidBrush{{0, 0, 0, t}},
                 {-t * SIZE, -t * SIZE},
+                view->getZIndex(),
                 {t * SIZE * 2 + view->getWidth(), t * SIZE * 2 + view->getHeight()},
                 2.f);
     }

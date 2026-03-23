@@ -24,13 +24,16 @@
 #include "AUI/Enum/ImageRendering.h"
 #include "AUI/Util/AAngleRadians.h"
 #include "AUI/Traits/values.h"
+#include "glm/fwd.hpp"
 
 
 /**
  * The simplest brush which used single solid color to fill.
  */
 struct ASolidBrush {
-    AColor solidColor = AColor::WHITE;
+    AColor color = AColor::WHITE;
+
+    using Data = glm::vec4;
 };
 
 
@@ -46,12 +49,8 @@ struct ACustomShaderBrush {
  * Brush which produces linear gradient by rectangle.
  */
 struct ALinearGradientBrush {
-    struct ColorEntry {
-        aui::float_within_0_1 position;
-        AColor color;
-    };
-    AVector<ColorEntry> colors;
-
+    AColor colorStart;
+    AColor colorEnd;
     /**
      * @brief Clockwise gradient angle.
      * @details
@@ -60,6 +59,12 @@ struct ALinearGradientBrush {
      * direction.
      */
     AAngleRadians rotation = 180_deg;
+
+    using Data = struct {
+        AColor colorStart;
+        AColor colorEnd;
+        float rotation;
+    };
 };
 
 class ITexture;

@@ -23,11 +23,13 @@ void ass::prop::Property<ass::BackgroundSolid>::renderFor(AView* view, const ARe
     if (view->getBorderRadius() > 0) {
         ctx.render.roundedRectangle(brush,
                              {0, 0},
+                             view->getZIndex(),
                              view->getSize(),
                              view->getBorderRadius());
     } else  {
         ctx.render.rectangle(brush,
                              {0, 0},
+                             view->getZIndex(),
                              view->getSize());
 
     }

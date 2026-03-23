@@ -11,7 +11,6 @@
 
 #pragma once
 
-#include <algorithm>
 #include <string>
 #include <string_view>
 #include <iostream>
@@ -20,9 +19,7 @@
 #include <AUI/Common/ASet.h>
 #include <AUI/Common/AUtf8.h>
 #include <AUI/Common/AStringView.h>
-#include <optional>
 #include <span>
-#include <concepts>
 #include <fmt/core.h>
 #if AUI_PLATFORM_ANDROID
 #include <range/v3/all.hpp>
@@ -288,7 +285,7 @@ public:
     AString(AChar c);
 
     AString(size_type n, AChar c);
-    
+
     AString(size_type n, char32_t c) : AString(n, AChar(c)) {}
 
     AString(size_type n, char16_t c) : AString(n, AChar(c)) {}

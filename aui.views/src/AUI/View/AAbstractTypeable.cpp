@@ -310,7 +310,8 @@ void AAbstractTypeable::drawCursorImpl(IRenderer& renderer, glm::ivec2 position,
     }
     renderer.setBlending(Blending::INVERSE_DST);
     AUI_DEFER { renderer.setBlending(Blending::NORMAL); };
-    renderer.rectangle(ASolidBrush{}, position, {1, lineHeight});
+    // TODO: use actual z index here
+    renderer.rectangle(ASolidBrush{}, position, 0, {1, lineHeight});
 }
 
 void AAbstractTypeable::moveCursorLeft() {

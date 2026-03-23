@@ -48,6 +48,7 @@
 #include <AUI/Enum/AFloat.h>
 #include <AUI/Common/AProperty.h>
 
+using zIndex_t = int16_t;
 
 class AWindow;
 class AWindowBase;
@@ -207,6 +208,12 @@ public:
     glm::ivec2 getPosition() const noexcept
     {
         return mPosition;
+    }
+
+    [[nodiscard]]
+    zIndex_t getZIndex() const noexcept
+    {
+        return mZIndex;
     }
 
     /**
@@ -562,6 +569,7 @@ public:
 
     void setAnimator(const _<AAnimator>& animator);
     void getTransform(glm::mat4& transform) const;
+    const glm::mat4 getTransformCopy(glm::mat4 transform = glm::mat4{1.}) const;
 
     [[nodiscard]]
     int getExpandingHorizontal() const
@@ -583,6 +591,8 @@ public:
     }
 
     virtual void setPosition(glm::ivec2 position);
+
+    virtual void setZIndex(const zIndex_t value);
 
     /**
      * Set size ignoring all restrictions (i.e. min size, max size, fixed size, etc...). Used by AAnimator.
@@ -1040,6 +1050,10 @@ protected:
      * @brief Position changed.
      */
     emits<glm::ivec2> mPositionChanged;
+
+    zIndex_t mZIndex = 0;
+
+    emits<zIndex_t> mZIndexChanged;
 
     /**
      * @brief Size, including content area, border and padding.

@@ -29,7 +29,7 @@ class IRenderer;
  * View containers are also responsible to skip rendering of views that are outside of the clipping.
  *
  * ARenderContext is useful only for container views.
- * 
+ *
  * ARenderContext passed to the view (possibly AViewContainer) describes an axis aligned bounding box relative
  * to it's coordinate space (position).
  *

@@ -74,7 +74,7 @@ private:
         color = 0xff0000_rgb;
 
     paint:
-        ctx.render.rectangle(ASolidBrush { color }, { 0, 0 }, getSize());
+        ctx.render.rectangle(ASolidBrush { color }, { 0, 0 }, mZIndex, getSize());
     }
 };
 }   // namespace

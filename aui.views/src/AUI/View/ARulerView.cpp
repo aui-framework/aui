@@ -59,11 +59,13 @@ void ARulerView::render(ARenderContext ctx) {
             // large dashes
             ctx.render.rectangle(ASolidBrush{},
                                  {mOffsetPx + operator ""_dp(i * delayLarge), 0.f},
+                                 mZIndex,
                                  {1, totalHeight});
 
             // medium dashes
             ctx.render.rectangle(ASolidBrush{},
                                  {mOffsetPx + operator ""_dp(i * delayLarge + delayMedium), totalHeight / 2},
+                                 mZIndex,
                                  {1, totalHeight / 2});
 
 
@@ -72,12 +74,14 @@ void ARulerView::render(ARenderContext ctx) {
                 int smallDashOffset = j * delaySmall;
                 ctx.render.rectangle(ASolidBrush{},
                                      {mOffsetPx + operator ""_dp(i * delayLarge + smallDashOffset),
-                                      3 * totalHeight / 4},
+                                     3 * totalHeight / 4},
+                                     mZIndex,
                                      {1, totalHeight / 4});
 
                 ctx.render.rectangle(ASolidBrush{},
                                      {mOffsetPx + operator ""_dp(i * delayLarge + smallDashOffset + delayMedium),
-                                      3 * totalHeight / 4},
+                                     3 * totalHeight / 4},
+                                     mZIndex,
                                      {1, totalHeight / 4});
             }
         }

@@ -9,10 +9,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <limits>
 #include <range/v3/all.hpp>
 #include "IRenderer.h"
 
-void IRenderer::stub(glm::vec2 position, glm::vec2 size) { rectangle(ASolidBrush { 0xa0a0a0_rgb }, { 0, 0 }, size); }
+void IRenderer::stub(glm::vec2 position, glm::vec2 size) { rectangle(ASolidBrush { 0xa0a0a0_rgb }, { 0, 0 }, std::numeric_limits<int16_t>::max(), size); }
 
 void IRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops) {
     stub(position, size);
