@@ -539,18 +539,13 @@ void PlatformAbstractionX11::setTaskbarProgress(AWindow& window, aui::float_with
     if (!nativeHandle(window))
         return;
 
-    Display* display = XOpenDisplay(nullptr);
-    if (!display)
-        return;
-
-
     // Convert float [0.0, 1.0] to integer [0, 100]
     unsigned long progressValue = static_cast<unsigned long>(p * 100.0f + 0.5f);
 
     // Set _NET_WM_XAPP_PROGRESS (0–100)
     XChangeProperty(
-        display,
         PlatformAbstractionX11::ourDisplay,
+        nativeHandle(window),
         ourAtoms.progressAtom,
         XA_CARDINAL,
         32,
@@ -560,11 +555,10 @@ void PlatformAbstractionX11::setTaskbarProgress(AWindow& window, aui::float_with
     );
 
     // Set _NET_WM_XAPP_PROGRESS_PULSE to 0 (not pulsing, showing actual value)
-
     unsigned long pulseValue = 0;
     XChangeProperty(
-        display,
         PlatformAbstractionX11::ourDisplay,
+        nativeHandle(window),
         ourAtoms.progressPulseAtom,
         XA_CARDINAL,
         32,
@@ -573,9 +567,7 @@ void PlatformAbstractionX11::setTaskbarProgress(AWindow& window, aui::float_with
         1
     );
 
-
-    XFlush(display);
-    XCloseDisplay(display);
+    XFlush(PlatformAbstractionX11::ourDisplay);
 }
 
 void PlatformAbstractionX11::windowHide(AWindow& window) {
