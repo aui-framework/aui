@@ -539,6 +539,10 @@ void PlatformAbstractionX11::setTaskbarProgress(AWindow& window, aui::float_with
     if (!nativeHandle(window))
         return;
 
+    if (std::string_view(std::getenv("XDG_CURRENT_DESKTOP")) == "KDE") {
+        ALogger::warn("KDE") << "NOT WORKING WITH KDE";
+    }
+
     unsigned long progressValue = static_cast<unsigned long>(p * 100.0f + 0.5f);
 
     XChangeProperty( PlatformAbstractionX11::ourDisplay, nativeHandle(window), ourAtoms.progressAtom, XA_CARDINAL, 32,
