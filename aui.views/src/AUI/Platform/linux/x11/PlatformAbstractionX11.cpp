@@ -545,7 +545,7 @@ void PlatformAbstractionX11::setTaskbarProgress(AWindow& window, aui::float_with
         return;
     }
 
-    unsigned long progressValue = static_cast<unsigned long>(p * 100.0f + 0.5f);
+    unsigned long progressValue = static_cast<unsigned long>(std::lround(p * 100.0f));
 
     XChangeProperty( PlatformAbstractionX11::ourDisplay, nativeHandle(window), ourAtoms.progressAtom, XA_CARDINAL, 32,
         PropModeReplace,
