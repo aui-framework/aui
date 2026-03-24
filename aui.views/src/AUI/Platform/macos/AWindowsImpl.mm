@@ -160,16 +160,11 @@ void AWindow::setTaskbarProgress(aui::float_within_0_1 p) {
     if (!mHandle) return;
     
     NSDockTile* dockTile = [NSApp dockTile];
+
     if (p == 0.0f) {
         [dockTile setProgressIndicator:nil];
         [dockTile setProgress:-1.0];
     } else {
-        NSProgressIndicator* progressIndicator = [[NSProgressIndicator alloc] init];
-        [progressIndicator setIndeterminate:NO];
-        [progressIndicator setMinValue:0.0];
-        [progressIndicator setMaxValue:1.0];
-        [progressIndicator setDoubleValue:p];
-        [dockTile setProgressIndicator:progressIndicator];
         [dockTile setProgress:p];
     }
 }
