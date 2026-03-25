@@ -217,7 +217,7 @@ jobs:
             shared_or_static: static
             arch: x86_64
             generator: "Ninja"
-            additional_cmake_flags: '-DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreadedDebug'
+            additional_cmake_flags: '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebug'
 
           - os: windows-latest
             compiler: "Clang"
@@ -225,7 +225,7 @@ jobs:
             shared_or_static: static
             arch: x86_64
             generator: "Ninja"
-            additional_cmake_flags: '-DCMAKE_MSVC_RUNTIME_LIBRARY="MultiThreadedDebug'
+            additional_cmake_flags: '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebug'
 
           - os: windows-11-arm
             compiler: "Default"
