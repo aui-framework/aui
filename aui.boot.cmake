@@ -21,6 +21,13 @@
 
 cmake_minimum_required(VERSION 3.22)
 
+if(DEFINED CMAKE_TOOLCHAIN_FILE AND NOT IS_ABSOLUTE "${CMAKE_TOOLCHAIN_FILE}")
+    get_filename_component(CMAKE_TOOLCHAIN_FILE "${CMAKE_TOOLCHAIN_FILE}" ABSOLUTE BASE_DIR "${CMAKE_SOURCE_DIR}")
+    message(WARNING " CMAKE_TOOLCHAIN_FILE was given a relative path."
+            " Please use an absolute path instead."
+            " Overridden to: ${CMAKE_TOOLCHAIN_FILE}")
+endif()
+
 find_program(GIT_EXECUTABLE NAMES git git.exe git.cmd git.bat)
 if (NOT GIT_EXECUTABLE)
     message(FATAL_ERROR "Git not found! Please install Git and try again. https://git-scm.com/")
