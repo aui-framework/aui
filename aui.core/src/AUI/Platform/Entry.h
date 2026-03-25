@@ -54,7 +54,7 @@
  * Only the main thread is able to initialize graphics context.
  */
 
-#if defined(WIN32)
+#if defined(_WIN32)
 #include <windows.h>
 
 // fake the main function when tests module compiling
