@@ -265,21 +265,21 @@ jobs:
           execute_install_scripts: true
           version: 4.0
 
-      - name: Setup Clang 21 (Linux)
+      - name: Setup Clang 22 (Linux)
         if: matrix.compiler == 'Clang' && runner.os == 'Linux'
         run: |
           wget https://apt.llvm.org/llvm.sh
           chmod +x llvm.sh
-          sudo ./llvm.sh 21 all
-          echo "CC=clang-21" >> $GITHUB_ENV
-          echo "CXX=clang++-21" >> $GITHUB_ENV
+          sudo ./llvm.sh 22 all
+          echo "CC=clang-22" >> $GITHUB_ENV
+          echo "CXX=clang++-22" >> $GITHUB_ENV
 
-      - name: Setup Clang 21 (macOS)
+      - name: Setup Clang 22 (macOS)
         if: matrix.compiler == 'Clang' && runner.os == 'macOS'
         run: |
-          brew install cmake ninja llvm@21
-          echo "CC=$(brew --prefix llvm@21)/bin/clang " >> $GITHUB_ENV
-          echo "CXX=$(brew --prefix llvm@21)/bin/clang++ " >> $GITHUB_ENV
+          brew install cmake ninja llvm@22
+          echo "CC=$(brew --prefix llvm@22)/bin/clang " >> $GITHUB_ENV
+          echo "CXX=$(brew --prefix llvm@22)/bin/clang++ " >> $GITHUB_ENV
 
       - name: Setup AppleClang (macOS)
         if: matrix.compiler == 'Default' && runner.os == 'macOS'
