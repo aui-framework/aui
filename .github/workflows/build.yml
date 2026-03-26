@@ -169,38 +169,37 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [ubuntu-latest, macos-15, windows-latest]
-        compiler: ["Default", "Clang"]
+        os: [ubuntu-latest, ubuntu-24.04-arm, macos-15, windows-latest, windows-11-arm]
+        compiler: ["Clang"]
         build_type: [Debug, Release]
         shared_or_static: [shared, static]
-        arch: [x86_64]
         generator: ["Ninja"]
         exclude:
-          - os: macos-15
-            compiler: "Clang"
-          - os: windows-latest
-            compiler: "Clang"
+          - { os: windows-latest, compiler: "Clang" }
         include:
+          - os: ubuntu-latest
+            compiler: "GCC"
+
+          - os: ubuntu-24.04-arm
+            compiler: "GCC"
+
           - os: macos-15
-            compiler: "Clang"
-            build_type: RelWithDebInfo
-            shared_or_static: static
-            arch: x86_64
-            generator: "Ninja"
+            compiler: "AppleClang"
 
           - os: windows-latest
-            compiler: "Default"
+            compiler: "MSVC"
+
+          - os: windows-latest
+            compiler: "MSVC"
             build_type: RelWithDebInfo
             shared_or_static: shared
-            arch: x86_64
             generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
 
           - os: windows-latest
-            compiler: "Default"
+            compiler: "MSVC"
             build_type: RelWithDebInfo
             shared_or_static: static
-            arch: x86_64
             generator: "Visual Studio 17 2022"
             additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
 
@@ -208,14 +207,12 @@ jobs:
             compiler: "MinGW"
             build_type: RelWithDebInfo
             shared_or_static: static
-            arch: x86_64
             generator: "Ninja"
 
           - os: windows-latest
             compiler: "Clang"
             build_type: Debug
             shared_or_static: static
-            arch: x86_64
             generator: "Ninja"
             additional_cmake_flags: '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebug'
 
@@ -223,16 +220,11 @@ jobs:
             compiler: "Clang"
             build_type: RelWithDebInfo
             shared_or_static: static
-            arch: x86_64
             generator: "Ninja"
             additional_cmake_flags: '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebug'
 
           - os: windows-11-arm
-            compiler: "Default"
-            build_type: RelWithDebInfo
-            shared_or_static: static
-            arch: arm64
-            generator: "Ninja"
+            compiler: "MSVC"
 
     steps:
       - uses: actions/checkout@v6
@@ -282,7 +274,7 @@ jobs:
           echo "CXX=$(brew --prefix llvm@22)/bin/clang++ " >> $GITHUB_ENV
 
       - name: Setup AppleClang (macOS)
-        if: matrix.compiler == 'Default' && runner.os == 'macOS'
+        if: matrix.compiler == 'AppleClang' && runner.os == 'macOS'
         run: |
           echo "CC=/usr/bin/clang " >> $GITHUB_ENV
           echo "CXX=/usr/bin/clang++ " >> $GITHUB_ENV
@@ -295,7 +287,7 @@ jobs:
           echo "CXX=clang++" >> $env:GITHUB_ENV
 
       - name: Setup MSVC (Windows)
-        if: matrix.compiler == 'Default' && runner.os == 'Windows'
+        if: matrix.compiler == 'MSVC' && runner.os == 'Windows'
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
