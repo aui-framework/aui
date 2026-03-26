@@ -178,6 +178,7 @@ jobs:
           - { os: ubuntu-latest, compiler: "AppleClang" }
           - { os: ubuntu-latest, compiler: "MSVC" }
           - { os: ubuntu-24.04-arm, compiler: "AppleClang" }
+          - { os: ubuntu-24.04-arm, compiler: "GCC" }
           - { os: ubuntu-24.04-arm, compiler: "MSVC" }
           - { os: macos-15, compiler: "GCC" }
           - { os: macos-15, compiler: "MSVC" }
