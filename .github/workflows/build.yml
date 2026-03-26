@@ -314,9 +314,9 @@ jobs:
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} --target Tests
 
       - name: Run AUI tests (Windows)
-        if: matrix.generator == 'Visual Studio 17 2022'
-        working-directory: ${{github.workspace}}/build/bin/${{ matrix.build_type }}
-        run: ${{github.workspace}}/build/bin/${{ matrix.build_type }}/Tests.exe
+        if: runner.os == 'Windows' && matrix.generator == 'Ninja' && matrix.build_type != 'Release'
+        working-directory: ${{github.workspace}}/build/bin
+        run: ${{github.workspace}}/build/bin/Tests.exe
 
       - name: Run AUI tests (Linux)
         if: runner.os == 'Linux'
