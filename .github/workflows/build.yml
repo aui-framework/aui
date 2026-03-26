@@ -181,10 +181,12 @@ jobs:
           - { os: ubuntu-24.04-arm, compiler: "MSVC" }
           - { os: macos-15, compiler: "GCC" }
           - { os: macos-15, compiler: "MSVC" }
-          - { os: windows-latest, compiler: "GCC" }
           - { os: windows-latest, compiler: "Clang" }
-          - { os: windows-11-arm, compiler: "GCC" }
+          - { os: windows-latest, compiler: "AppleClang" }
+          - { os: windows-latest, compiler: "GCC" }
           - { os: windows-11-arm, compiler: "Clang" }
+          - { os: windows-11-arm, compiler: "AppleClang" }
+          - { os: windows-11-arm, compiler: "GCC" }
         include:
           - os: windows-latest
             compiler: "MSVC"
