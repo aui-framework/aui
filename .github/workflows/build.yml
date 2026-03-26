@@ -170,25 +170,22 @@ jobs:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, ubuntu-24.04-arm, macos-15, windows-latest, windows-11-arm]
-        compiler: ["Clang"]
+        compiler: ["Clang", "AppleClang", "GCC", "MSVC"]
         build_type: [Debug, Release]
         shared_or_static: [shared, static]
         generator: ["Ninja"]
         exclude:
+          - { os: ubuntu-latest, compiler: "AppleClang" }
+          - { os: ubuntu-latest, compiler: "MSVC" }
+          - { os: ubuntu-24.04-arm, compiler: "AppleClang" }
+          - { os: ubuntu-24.04-arm, compiler: "MSVC" }
+          - { os: macos-15, compiler: "GCC" }
+          - { os: macos-15, compiler: "MSVC" }
+          - { os: windows-latest, compiler: "GCC" }
           - { os: windows-latest, compiler: "Clang" }
+          - { os: windows-11-arm, compiler: "GCC" }
+          - { os: windows-11-arm, compiler: "Clang" }
         include:
-          - os: ubuntu-latest
-            compiler: "GCC"
-
-          - os: ubuntu-24.04-arm
-            compiler: "GCC"
-
-          - os: macos-15
-            compiler: "AppleClang"
-
-          - os: windows-latest
-            compiler: "MSVC"
-
           - os: windows-latest
             compiler: "MSVC"
             build_type: RelWithDebInfo
