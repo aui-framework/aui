@@ -945,6 +945,11 @@ function(aui_compile_assets AUI_MODULE_NAME)
 
     _aui_check_toolbox()
     message(STATUS "aui.toolbox: using ${AUI_TOOLBOX_EXE} to compile assets for ${AUI_MODULE_NAME}")
+    if (TARGET aui.toolbox)
+        set(_toolbox_dep aui.toolbox)
+    else()
+        set(_toolbox_dep ${AUI_TOOLBOX_EXE})
+    endif()
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})
         set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
@@ -953,7 +958,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
         add_custom_command(
                 OUTPUT ${OUTPUT_PATH}
                 COMMAND ${AUI_TOOLBOX_EXE} pack ${ASSETS_DIR} ${_in} ${_out}
-                DEPENDS ${SELF_DIR}/${ASSET_PATH}
+                DEPENDS ${SELF_DIR}/${ASSET_PATH} ${_toolbox_dep}
         )
         target_sources(${AUI_MODULE_NAME} PRIVATE ${OUTPUT_PATH})
     endforeach()
@@ -974,12 +979,18 @@ function(aui_compile_assets_add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
     _aui_check_toolbox()
     message(STATUS "aui.toolbox: using ${AUI_TOOLBOX_EXE} to add assets for ${AUI_MODULE_NAME}")
 
+    if (TARGET aui.toolbox)
+        set(_toolbox_dep aui.toolbox)
+    else ()
+        set(_toolbox_dep ${AUI_TOOLBOX_EXE})
+    endif()
+
     string(MD5 OUTPUT_PATH ${ASSET_PATH})
     set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
     add_custom_command(
             OUTPUT ${OUTPUT_PATH}
             COMMAND ${AUI_TOOLBOX_EXE} pack_manual ${FILE_PATH} ${ASSET_PATH} ${OUTPUT_PATH}
-            DEPENDS ${FILE_PATH}
+            DEPENDS ${FILE_PATH} ${_toolbox_dep}
     )
 
     target_sources(${AUI_MODULE_NAME} PRIVATE ${OUTPUT_PATH})
@@ -1259,12 +1270,17 @@ function(auisl_shader TARGET NAME)
 
     set(_targets software glsl120)
     _aui_check_toolbox()
+    if (TARGET aui.toolbox)
+        set(_toolbox_dep aui.toolbox)
+    else()
+        set(_toolbox_dep ${AUI_TOOLBOX_EXE})
+    endif()
     foreach(_target ${_targets})
         set(_output "${_compiled_shader_dir}/${NAME}.${_target}.cpp")
 
         add_custom_command(
                 OUTPUT ${_output}
-                DEPENDS ${_path}
+                DEPENDS ${_path} ${_toolbox_dep}
                 COMMAND ${AUI_TOOLBOX_EXE}
                 ARGS auisl ${_target} ${_path} ${_output}
         )
