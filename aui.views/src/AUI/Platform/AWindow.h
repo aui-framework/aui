@@ -168,7 +168,7 @@ public:
      * @details
      * On Windows, displays progress on the taskbar button.
      * On macOS, displays progress on the dock icon.
-     * On Linux, works on desktop environments like GNOME/Cinnamon.
+     * On Linux, works on desktop environments like GNOME/Cinnamon. (Unfortunately, it doesn’t work on KDE Plasma.)
      */
     void setTaskbarProgress(aui::float_within_0_1 p);
 

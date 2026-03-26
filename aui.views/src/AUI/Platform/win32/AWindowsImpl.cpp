@@ -9,12 +9,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-
+#include "AComPtr.h"
 #include "AUI/GL/gl.h"
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Render/IRenderer.h"
+#include <shobjidl_core.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 
@@ -484,7 +485,7 @@ void AWindow::hide() {
 void AWindow::setTaskbarProgress(aui::float_within_0_1 p) {
     if (!mHandle) return;
 
-    static ITaskbarList3* pTaskbar = nullptr;
+    static AComPtr<ITaskbarList3> pTaskbar;
     if (!pTaskbar) {
         HRESULT hr = CoCreateInstance(
             CLSID_TaskbarList, nullptr,
