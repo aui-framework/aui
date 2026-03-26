@@ -348,7 +348,7 @@ macro(_aui_import_google_benchmark)
                 find_package(benchmark REQUIRED CONFIG)
             else()
                 auib_import(benchmark https://github.com/google/benchmark
-                            VERSION v1.9.4
+                            VERSION 7e413be55370f0f4567761fe71ea8232d6871d06
                             CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
                             LINK STATIC)
             endif()
@@ -1195,6 +1195,8 @@ function(aui_module AUI_MODULE_NAME)
     if (_type STREQUAL "STATIC_LIBRARY")
         if (MSVC)
             target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:/WHOLEARCHIVE:$<TARGET_FILE:${AUI_MODULE_NAME}>>")
+        elseif (WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:-Wl,/WHOLEARCHIVE:$<TARGET_FILE:${AUI_MODULE_NAME}>>")
         elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
             if (APPLE)
                 target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:-Wl,-force_load,$<TARGET_FILE:${AUI_MODULE_NAME}>>")
