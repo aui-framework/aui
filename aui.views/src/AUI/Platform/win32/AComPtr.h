@@ -12,7 +12,7 @@
 #pragma once
 
 
-#include <cassert>
+#include <AUI/Util/Assert.h>
 
 /**
  * @brief Takes care of AddRef and Release() reference counting mechanism of COM objects.
@@ -36,7 +36,7 @@ public:
     }
 
     T** operator&() noexcept {
-        //AUI_ASSERTX(mValue == nullptr, "value already set");
+        AUI_ASSERTX(mValue == nullptr, "value already set");
         return &mValue;
     }
 
@@ -53,7 +53,7 @@ public:
 
     [[nodiscard]]
     T* value() const noexcept {
-        //AUI_ASSERT(mValue != nullptr);
+        AUI_ASSERT(mValue != nullptr);
         return mValue;
     }
 
