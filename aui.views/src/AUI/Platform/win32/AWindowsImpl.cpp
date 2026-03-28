@@ -15,7 +15,6 @@
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Render/IRenderer.h"
-#include <shobjidl_core.h>
 
 #include <glm/gtc/matrix_transform.hpp>
 
