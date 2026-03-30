@@ -158,7 +158,7 @@ void AWindow::hide() {
 
 void AWindow::setTaskbarProgress(aui::float_within_0_1 p) {
     if (!mHandle) return;
-    
+
     NSDockTile* dockTile = [NSApp dockTile];
 
     if (p == 0.0f) {
