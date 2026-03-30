@@ -157,16 +157,6 @@ void AWindow::hide() {
 }
 
 void AWindow::setTaskbarProgress(aui::float_within_0_1 p) {
-    if (!mHandle) return;
-
-    NSDockTile* dockTile = [NSApp dockTile];
-
-    if (p == 0.0f) {
-        [dockTile setProgressIndicator:nil];
-        [dockTile setProgress:-1.0];
-    } else {
-        [dockTile setProgress:p];
-    }
 }
 
 void AWindow::blockUserInput(bool blockUserInput) {
