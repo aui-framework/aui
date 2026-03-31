@@ -484,7 +484,7 @@ void AWindow::hide() {
 void AWindow::setTaskbarProgress(aui::float_within_0_1 p) {
     if (!mHandle) return;
 
-    static AComPtr<ITaskbarList3> pTaskbar;
+    AComPtr<ITaskbarList3> pTaskbar;
     if (!pTaskbar) {
         HRESULT hr = CoCreateInstance(
             CLSID_TaskbarList, nullptr,
