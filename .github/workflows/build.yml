@@ -164,7 +164,7 @@ jobs:
         run: ${{github.workspace}}/build/bin/Tests
 
   build-desktop:
-    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} ${{ matrix.compiler }}
+    name: ${{ matrix.os }} ${{ matrix.arch }} ${{ matrix.compiler }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
