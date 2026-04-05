@@ -369,13 +369,17 @@ jobs:
           execute_install_scripts: true
           version: 4.0
 
-      - name: Install macOS dependencies
+      - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: brew install ninja
 
-      - name: Install Windows dependencies
+      - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         run: choco install innosetup
+
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Download artifact
         uses: actions/download-artifact@v4
