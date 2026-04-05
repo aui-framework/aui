@@ -685,7 +685,7 @@ function(auib_import AUI_MODULE_NAME URL)
 
     if (AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER)
         if (NOT "${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}" STREQUAL "${BUILD_SPECIFIER}")
-            message(FATAL_ERROR "Internal error: expected to get \"${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}\" but got \"${BUILD_SPECIFIER}\"")
+            message(FATAL_ERROR "Build specifier mismatch. This can be caused by a stale cache. Expected: \"${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}\", got: \"${BUILD_SPECIFIER}\". Try cleaning the CMake cache.")
         endif ()
     endif()
 
