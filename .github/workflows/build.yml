@@ -330,6 +330,7 @@ jobs:
 
       - name: Upload
         uses: actions/upload-artifact@v4
+        if: matrix.generator != 'Visual Studio 17 2022'
         with:
           path: ${{github.workspace}}/build/*.tar.gz
           name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} ${{ matrix.compiler }}
@@ -353,13 +354,7 @@ jobs:
         build_type: [Debug, RelWithDebInfo]
         shared_or_static: [shared, static]
         arch: [x86_64]
-        include:
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
-            additional_cmake_flags: '-A x64'
-
-          - os: ubuntu-latest
-            generator: "Ninja"
+        generator: [Ninja]
 
     steps:
       - uses: actions/checkout@v6
