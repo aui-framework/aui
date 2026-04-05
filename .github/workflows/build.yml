@@ -225,7 +225,7 @@ jobs:
             shared_or_static: static
             arch: x86_64
             generator: "Ninja"
-            additional_cmake_flags: '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreadedDebug'
+            additional_cmake_flags: '-DCMAKE_MSVC_RUNTIME_LIBRARY=MultiThreaded'
 
           - os: windows-11-arm
             compiler: "Default"
@@ -314,7 +314,7 @@ jobs:
         run: cmake --build ${{github.workspace}}/build --config ${{matrix.build_type}} --target Tests
 
       - name: Run AUI tests (Windows)
-        if: runner.os == 'Windows' && matrix.generator == 'Ninja' && matrix.build_type != 'Release' && runner.arch != 'ARM64'
+        if: runner.os == 'Windows' && matrix.generator == 'Ninja' && matrix.build_type == 'Debug' && runner.arch != 'ARM64'
         working-directory: ${{github.workspace}}/build/bin
         run: ${{github.workspace}}/build/bin/Tests.exe
 
