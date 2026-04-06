@@ -348,7 +348,7 @@ macro(_aui_import_google_benchmark)
                 find_package(benchmark REQUIRED CONFIG)
             else()
                 auib_import(benchmark https://github.com/google/benchmark
-                            VERSION v1.9.4
+                            VERSION 7e413be55370f0f4567761fe71ea8232d6871d06
                             CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
                             LINK STATIC)
             endif()
@@ -945,6 +945,11 @@ function(aui_compile_assets AUI_MODULE_NAME)
 
     _aui_check_toolbox()
     message(STATUS "aui.toolbox: using ${AUI_TOOLBOX_EXE} to compile assets for ${AUI_MODULE_NAME}")
+    if (TARGET aui.toolbox)
+        set(_toolbox_dep aui.toolbox)
+    else()
+        set(_toolbox_dep ${AUI_TOOLBOX_EXE})
+    endif()
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})
         set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
@@ -953,7 +958,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
         add_custom_command(
                 OUTPUT ${OUTPUT_PATH}
                 COMMAND ${AUI_TOOLBOX_EXE} pack ${ASSETS_DIR} ${_in} ${_out}
-                DEPENDS ${SELF_DIR}/${ASSET_PATH}
+                DEPENDS ${SELF_DIR}/${ASSET_PATH} ${_toolbox_dep}
         )
         target_sources(${AUI_MODULE_NAME} PRIVATE ${OUTPUT_PATH})
     endforeach()
@@ -974,12 +979,18 @@ function(aui_compile_assets_add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
     _aui_check_toolbox()
     message(STATUS "aui.toolbox: using ${AUI_TOOLBOX_EXE} to add assets for ${AUI_MODULE_NAME}")
 
+    if (TARGET aui.toolbox)
+        set(_toolbox_dep aui.toolbox)
+    else ()
+        set(_toolbox_dep ${AUI_TOOLBOX_EXE})
+    endif()
+
     string(MD5 OUTPUT_PATH ${ASSET_PATH})
     set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
     add_custom_command(
             OUTPUT ${OUTPUT_PATH}
             COMMAND ${AUI_TOOLBOX_EXE} pack_manual ${FILE_PATH} ${ASSET_PATH} ${OUTPUT_PATH}
-            DEPENDS ${FILE_PATH}
+            DEPENDS ${FILE_PATH} ${_toolbox_dep}
     )
 
     target_sources(${AUI_MODULE_NAME} PRIVATE ${OUTPUT_PATH})
@@ -1195,6 +1206,8 @@ function(aui_module AUI_MODULE_NAME)
     if (_type STREQUAL "STATIC_LIBRARY")
         if (MSVC)
             target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:/WHOLEARCHIVE:$<TARGET_FILE:${AUI_MODULE_NAME}>>")
+        elseif (WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:-Wl,/WHOLEARCHIVE:$<TARGET_FILE:${AUI_MODULE_NAME}>>")
         elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
             if (APPLE)
                 target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:-Wl,-force_load,$<TARGET_FILE:${AUI_MODULE_NAME}>>")
@@ -1257,12 +1270,17 @@ function(auisl_shader TARGET NAME)
 
     set(_targets software glsl120)
     _aui_check_toolbox()
+    if (TARGET aui.toolbox)
+        set(_toolbox_dep aui.toolbox)
+    else()
+        set(_toolbox_dep ${AUI_TOOLBOX_EXE})
+    endif()
     foreach(_target ${_targets})
         set(_output "${_compiled_shader_dir}/${NAME}.${_target}.cpp")
 
         add_custom_command(
                 OUTPUT ${_output}
-                DEPENDS ${_path}
+                DEPENDS ${_path} ${_toolbox_dep}
                 COMMAND ${AUI_TOOLBOX_EXE}
                 ARGS auisl ${_target} ${_path} ${_output}
         )
