@@ -164,14 +164,14 @@ jobs:
         run: ${{github.workspace}}/build/bin/Tests
 
   build-desktop:
-    name: ${{ matrix.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} ${{ matrix.compiler }}
+    name: ${{ matrix.os }} ${{ matrix.arch }} ${{ matrix.compiler }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: false
       matrix:
         os: [ubuntu-latest, macos-15, windows-latest]
         compiler: ["Default", "Clang"]
-        build_type: [Debug, Release]
+        build_type: [Debug, RelWithDebInfo]
         shared_or_static: [shared, static]
         arch: [x86_64]
         generator: ["Ninja"]
@@ -330,6 +330,7 @@ jobs:
 
       - name: Upload
         uses: actions/upload-artifact@v4
+        if: matrix.generator != 'Visual Studio 17 2022'
         with:
           path: ${{github.workspace}}/build/*.tar.gz
           name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} ${{ matrix.compiler }}
@@ -350,16 +351,10 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest]
-        build_type: [Debug, Release]
+        build_type: [Debug, RelWithDebInfo]
         shared_or_static: [shared, static]
         arch: [x86_64]
-        include:
-          - os: windows-latest
-            generator: "Visual Studio 17 2022"
-            additional_cmake_flags: '-A x64'
-
-          - os: ubuntu-latest
-            generator: "Ninja"
+        generator: [Ninja]
 
     steps:
       - uses: actions/checkout@v6
@@ -374,13 +369,17 @@ jobs:
           execute_install_scripts: true
           version: 4.0
 
-      - name: Install macOS dependencies
+      - name: Install dependencies (macOS)
         if: runner.os == 'macOS'
         run: brew install ninja
 
-      - name: Install Windows dependencies
+      - name: Install dependencies (Windows)
         if: runner.os == 'Windows'
         run: choco install innosetup
+
+      - name: Setup MSVC (Windows)
+        if: runner.os == 'Windows'
+        uses: ilammy/msvc-dev-cmd@v1
 
       - name: Download artifact
         uses: actions/download-artifact@v4
@@ -452,7 +451,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest, windows-latest]
-        build_type: [Debug, Release]
+        build_type: [Debug, RelWithDebInfo]
         shared_or_static: [shared, static]
 
     steps:
@@ -514,7 +513,7 @@ jobs:
       fail-fast: false
       matrix:
         os: [windows-latest, ubuntu-latest]
-        build_type: [Debug, Release]
+        build_type: [Debug, RelWithDebInfo]
         shared_or_static: [shared, static]
     steps:
       - uses: actions/checkout@v6
