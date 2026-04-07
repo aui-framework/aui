@@ -604,7 +604,6 @@ function(_auib_git_clone _url _version _source_dir)
                     WORKING_DIRECTORY "${_source_dir}"
                     RESULT_VARIABLE _err
                     OUTPUT_QUIET
-                    ERROR_QUIET
             )
             if (NOT _err EQUAL 0)
                 message(FATAL_ERROR "'git init' failed (exit ${_err}) in ${_source_dir}")
@@ -617,7 +616,6 @@ function(_auib_git_clone _url _version _source_dir)
                 WORKING_DIRECTORY "${_source_dir}"
                 RESULT_VARIABLE _err
                 OUTPUT_QUIET
-                ERROR_QUIET
         )
         if (NOT _err EQUAL 0)
             message(FATAL_ERROR "'git init' failed (exit ${_err}) in ${_source_dir}")
@@ -629,7 +627,6 @@ function(_auib_git_clone _url _version _source_dir)
             WORKING_DIRECTORY "${_source_dir}"
             RESULT_VARIABLE _err
             OUTPUT_QUIET
-            ERROR_QUIET
     )
     if (NOT _err EQUAL 0)
         message(FATAL_ERROR "'git remote add origin ${_url}' failed (exit ${_err})")
@@ -650,7 +647,6 @@ function(_auib_git_clone _url _version _source_dir)
                 WORKING_DIRECTORY "${_source_dir}"
                 RESULT_VARIABLE _err
                 OUTPUT_QUIET
-                ERROR_QUIET
         )
         if (NOT _err EQUAL 0)
             message(FATAL_ERROR "'git fetch origin ${_version}' failed (exit ${_err})")
@@ -662,7 +658,6 @@ function(_auib_git_clone _url _version _source_dir)
             WORKING_DIRECTORY "${_source_dir}"
             RESULT_VARIABLE _err
             OUTPUT_QUIET
-            ERROR_QUIET
     )
     if (NOT _err EQUAL 0)
         message(FATAL_ERROR "'git reset --hard FETCH_HEAD' failed (exit ${_err})")

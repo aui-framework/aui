@@ -355,8 +355,7 @@ jobs:
         arch: [x86_64]
         include:
           - os: windows-latest
-            generator: "Visual Studio 17 2022"
-            additional_cmake_flags: '-A x64'
+            generator: "Ninja"
 
           - os: ubuntu-latest
             generator: "Ninja"
