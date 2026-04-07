@@ -62,10 +62,7 @@
 #define AUI_ENTRY \
     AUI_EXPORT int aui_entry(const AStringVector& args); \
     AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)); \
-    static int fake_main(int argc, char** argv) {                               \
-        return aui_main(argc, argv, aui_entry);\
-    }             \
-AUI_EXPORT int aui_entry(const AStringVector& args)
+[[maybe_unused]] static int _fake_aui_entry(const AStringVector& args)
 #else
     #define AUI_ENTRY \
     AUI_EXPORT int aui_entry(const AStringVector& args); \
@@ -105,10 +102,7 @@ JNI_OnLoad(JavaVM* vm, void* reserved) { \
 #define AUI_ENTRY \
     AUI_EXPORT static int aui_entry(const AStringVector& args); \
     AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)); \
-    static int fake_main(int argc, char** argv) {                               \
-        return aui_main(argc, argv, aui_entry);\
-    } \
-    AUI_EXPORT static int aui_entry(const AStringVector& args)
+[[maybe_unused]] static int _fake_aui_entry(const AStringVector& args)
 #else
 #define AUI_ENTRY \
     AUI_EXPORT int aui_entry(const AStringVector& args); \
