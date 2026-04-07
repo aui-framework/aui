@@ -585,7 +585,7 @@ function(_auib_git_clone _url _version _source_dir)
             OUTPUT_STRIP_TRAILING_WHITESPACE
     )
 
-    if (_err EQUAL 0 AND _existing_remote STREQUAL "${_url}")
+    if (_err EQUAL 0)
         message(STATUS "[AUI.BOOT] Reusing existing repo in ${_source_dir}")
         execute_process(
                 COMMAND ${GIT_EXECUTABLE} remote remove origin
