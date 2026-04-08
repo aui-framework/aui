@@ -826,10 +826,7 @@ function(auib_import AUI_MODULE_NAME URL)
     string(MD5 BUILD_SPECIFIER_HASH ${BUILD_SPECIFIER})
     # [[BUILD_SPECIFIER]]
 
-    # append module name to build specifier in order to distinguish modules in prefix/ dir
-    set(BUILD_SPECIFIER_HASH "${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER_HASH}")
-
-    set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${BUILD_SPECIFIER_HASH}")
+    set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER_HASH}")
 
     file(WRITE ${DEP_INSTALL_PREFIX}/BUILD_SPECIFIER ${BUILD_SPECIFIER})
 
@@ -858,25 +855,12 @@ function(auib_import AUI_MODULE_NAME URL)
 
     # the AUI_MODULE_NAME-TAG_OR_HASH is used to hint IDEs (i.e. CLion) about actual project name
     set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}")
-    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER}")
+    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER_HASH}")
     set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
     if (DEP_ADD_SUBDIRECTORY)
-        set(DEP_AS_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/as/${TAG_OR_HASH}")
-
-        # the AUI_MODULE_NAME is used to hint IDEs (i.e. CLion) about actual project name
-        set(DEP_SOURCE_DIR "${DEP_AS_DIR}/${AUI_MODULE_NAME_LOWER}")
-        set(DEP_BINARY_DIR "${DEP_AS_DIR}/builds/${BUILD_SPECIFIER_HASH}")
-        set(DEP_FETCHED_FLAG ${DEP_AS_DIR}/FETCHED)
-    else()
-        if (AUIB_ISOLATE_SOURCE_DIRS)
-            set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}/src")
-            set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}/build/${BUILD_SPECIFIER_HASH}")
-        else()
-            set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/src")
-            set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}/build/${BUILD_SPECIFIER_HASH}")
-        endif()
-        set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
+        set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER_HASH}-as")
     endif()
+    file(WRITE ${DEP_BINARY_DIR}/BUILD_SPECIFIER ${BUILD_SPECIFIER}) # save build specifier in build dir as well
 
     # invalidate all previous values.
     foreach(_v2 FOUND
@@ -1305,7 +1289,7 @@ function(auib_import AUI_MODULE_NAME URL)
         set(_precompiled_url "")
         if (EXISTS ${DEP_INSTALL_PREFIX})
             if (AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT)
-                set(_precompiled_url " PRECOMPILED_URL_PREFIX \${CMAKE_CURRENT_LIST_DIR}/deps/${BUILD_SPECIFIER_HASH}")
+                set(_precompiled_url " PRECOMPILED_URL_PREFIX \${CMAKE_CURRENT_LIST_DIR}/deps/${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER_HASH}")
                 install(DIRECTORY ${DEP_INSTALL_PREFIX} DESTINATION "deps/${AUI_MODULE_NAME_LOWER}")
             endif()
         endif()
