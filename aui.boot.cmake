@@ -1290,6 +1290,9 @@ function(auib_import AUI_MODULE_NAME URL)
         if (EXISTS ${DEP_INSTALL_PREFIX})
             if (AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT)
                 set(_precompiled_url " PRECOMPILED_URL_PREFIX \${CMAKE_CURRENT_LIST_DIR}/deps/${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER_HASH}")
+
+                # install will append ${BUILD_SPECIFIER_HASH} because ${DEP_INSTALL_PREFIX} name equals to ${BUILD_SPECIFIER_HASH}
+                # will be deps/zlib/abc1234/
                 install(DIRECTORY ${DEP_INSTALL_PREFIX} DESTINATION "deps/${AUI_MODULE_NAME_LOWER}")
             endif()
         endif()
