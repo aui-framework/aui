@@ -383,10 +383,11 @@ function(_auib_validate_target_installation _target _dep_install_prefix)
                     "This effectively means that the library (and thus your project) is not portable. "
                     "PRECOMPILED-enabled packages must use target names instead of hardcoded paths."
                     "Possible solutions:\n"
-                    "1. -DAUIB_NO_PRECOMPILED=TRUE, or\n"
-                    "2. -DAUIB_${AUI_MODULE_NAME_UPPER}_VALIDATE=OFF (just silences the error), or\n"
-                    "3. configure ${AUI_MODULE_NAME} so it won't depend on ${_property_item}, or\n"
-                    "4. if ${_property_item} is a part of another library, import that library via auib_import as well. "
+                    "1. Clean CMake cache (build directory), or\n"
+                    "2. -DAUIB_NO_PRECOMPILED=TRUE, or\n"
+                    "3. -DAUIB_${AUI_MODULE_NAME_UPPER}_VALIDATE=OFF (just silences the error), or\n"
+                    "4. configure ${AUI_MODULE_NAME} so it won't depend on ${_property_item}, or\n"
+                    "5. if ${_property_item} is a part of another library, import that library via auib_import as well. "
                     "\n"
                     "Alternatively, you can populate AUIB_VALID_INSTALLATION_PATHS variable with valid installation path(s) "
                     "but you would probably encounter issues while deploying your app.")
@@ -603,7 +604,6 @@ function(_auib_git_clone _url _version _source_dir)
                     WORKING_DIRECTORY "${_source_dir}"
                     RESULT_VARIABLE _err
                     OUTPUT_QUIET
-                    ERROR_QUIET
             )
             if (NOT _err EQUAL 0)
                 message(FATAL_ERROR "'git init' failed (exit ${_err}) in ${_source_dir}")
@@ -616,7 +616,6 @@ function(_auib_git_clone _url _version _source_dir)
                 WORKING_DIRECTORY "${_source_dir}"
                 RESULT_VARIABLE _err
                 OUTPUT_QUIET
-                ERROR_QUIET
         )
         if (NOT _err EQUAL 0)
             message(FATAL_ERROR "'git init' failed (exit ${_err}) in ${_source_dir}")
@@ -628,7 +627,6 @@ function(_auib_git_clone _url _version _source_dir)
             WORKING_DIRECTORY "${_source_dir}"
             RESULT_VARIABLE _err
             OUTPUT_QUIET
-            ERROR_QUIET
     )
     if (NOT _err EQUAL 0)
         message(FATAL_ERROR "'git remote add origin ${_url}' failed (exit ${_err})")
@@ -649,7 +647,6 @@ function(_auib_git_clone _url _version _source_dir)
                 WORKING_DIRECTORY "${_source_dir}"
                 RESULT_VARIABLE _err
                 OUTPUT_QUIET
-                ERROR_QUIET
         )
         if (NOT _err EQUAL 0)
             message(FATAL_ERROR "'git fetch origin ${_version}' failed (exit ${_err})")
@@ -661,7 +658,6 @@ function(_auib_git_clone _url _version _source_dir)
             WORKING_DIRECTORY "${_source_dir}"
             RESULT_VARIABLE _err
             OUTPUT_QUIET
-            ERROR_QUIET
     )
     if (NOT _err EQUAL 0)
         message(FATAL_ERROR "'git reset --hard FETCH_HEAD' failed (exit ${_err})")
@@ -734,7 +730,7 @@ function(auib_import AUI_MODULE_NAME URL)
     set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
 
     set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY IMPORTED_FROM_CONFIG)
-    set(oneValueArgs VERSION CMAKE_WORKING_DIR PRECOMPILED_URL_PREFIX LINK)
+    set(oneValueArgs VERSION CMAKE_WORKING_DIR PRECOMPILED_URL_PREFIX LINK EXPECTED_BUILD_SPECIFIER)
 
     set(multiValueArgs CMAKE_ARGS COMPONENTS REQUIRES)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
@@ -827,13 +823,18 @@ function(auib_import AUI_MODULE_NAME URL)
     string(REPLACE ";" " " BUILD_SPECIFIER "${BUILD_SPECIFIER}")
 
     # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
-    string(MD5 BUILD_SPECIFIER ${BUILD_SPECIFIER})
+    string(MD5 BUILD_SPECIFIER_HASH ${BUILD_SPECIFIER})
     # [[BUILD_SPECIFIER]]
 
-    # append module name to build specifier in order to distinguish modules in prefix/ dir
-    set(BUILD_SPECIFIER "${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER}")
+    set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER_HASH}")
 
-    set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
+    file(WRITE ${DEP_INSTALL_PREFIX}/BUILD_SPECIFIER ${BUILD_SPECIFIER})
+
+    if (AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER)
+        if (NOT "${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}" STREQUAL "${BUILD_SPECIFIER}")
+            message(FATAL_ERROR "Build specifier mismatch. This can be caused by a stale cache. Expected: \"${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}\", got: \"${BUILD_SPECIFIER}\". Try cleaning the CMake cache.")
+        endif ()
+    endif()
 
     if (AUIB_IMPORT_PRECOMPILED_URL_PREFIX)
         if (EXISTS ${AUIB_IMPORT_PRECOMPILED_URL_PREFIX})
@@ -854,11 +855,12 @@ function(auib_import AUI_MODULE_NAME URL)
 
     # the AUI_MODULE_NAME-TAG_OR_HASH is used to hint IDEs (i.e. CLion) about actual project name
     set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}")
-    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER}")
+    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER_HASH}")
     set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
     if (DEP_ADD_SUBDIRECTORY)
-        set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER}-as")
+        set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER_HASH}-as")
     endif()
+    file(WRITE ${DEP_BINARY_DIR}/BUILD_SPECIFIER ${BUILD_SPECIFIER}) # save build specifier in build dir as well
 
     # invalidate all previous values.
     foreach(_v2 FOUND
@@ -1287,11 +1289,14 @@ function(auib_import AUI_MODULE_NAME URL)
         set(_precompiled_url "")
         if (EXISTS ${DEP_INSTALL_PREFIX})
             if (AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT)
-                set(_precompiled_url " PRECOMPILED_URL_PREFIX \${CMAKE_CURRENT_LIST_DIR}/deps/${BUILD_SPECIFIER}")
+                set(_precompiled_url " PRECOMPILED_URL_PREFIX \${CMAKE_CURRENT_LIST_DIR}/deps/${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER_HASH}")
+
+                # install will append ${BUILD_SPECIFIER_HASH} because ${DEP_INSTALL_PREFIX} name equals to ${BUILD_SPECIFIER_HASH}
+                # will be deps/zlib/abc1234/
                 install(DIRECTORY ${DEP_INSTALL_PREFIX} DESTINATION "deps/${AUI_MODULE_NAME_LOWER}")
             endif()
         endif()
-        set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
+        set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} EXPECTED_BUILD_SPECIFIER \"${BUILD_SPECIFIER}\" IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
     endif()
 endfunction()
 
