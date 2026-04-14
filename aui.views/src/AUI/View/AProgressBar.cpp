@@ -14,6 +14,7 @@
 //
 
 #include "AProgressBar.h"
+#include <utility>
 
 AProgressBar::AProgressBar() : mInner(_new<Inner>()) {
     addView(mInner);
@@ -36,12 +37,19 @@ void AProgressBar::setSize(glm::ivec2 size) {
 void AProgressBar::updateInnerWidth() {
     mInner->setGeometry(mPadding.left,
                         mPadding.top,
-                        int(mValue * float(getContentWidth() - mPadding.horizontal())),
-                        getContentHeight() - mPadding.vertical());
+                        int(mValue * float(getContentWidth())),
+                        getContentHeight());
+}
+
+_<AView> declarative::ProgressBar::defaultInner() {
+    return _new<AProgressBar::Inner>();
 }
 
 _<AView> declarative::ProgressBar::operator()() {
     auto view = _new<AProgressBar>();
     progress.bindTo(view->value().assignment());
+    if (inner) {
+        view->setInnerView(std::move(inner));
+    }
     return view;
 }
