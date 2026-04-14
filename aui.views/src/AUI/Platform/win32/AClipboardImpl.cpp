@@ -19,10 +19,22 @@
 
 #include <Windows.h>
 
+static constexpr auto LOG_TAG = "AClipboard";
+
 void AClipboard::copyToClipboard(const AString& text) {
-    const size_t len = text.length() * 2 + 2;
+    const auto converted = text.toUtf16();
+    size_t len = (converted.length() + 1 /* null terminator included */) * sizeof(wchar_t);
     HGLOBAL hMem =  GlobalAlloc(GMEM_MOVEABLE, len);
-    memcpy(GlobalLock(hMem), text.data(), len);
+    if (hMem == nullptr) {
+        ALogger::err(LOG_TAG) << "copyToClipboard: GlobalAlloc failed";
+        return;
+    }
+    auto globalLock = GlobalLock(hMem);
+    if (globalLock == nullptr) {
+        ALogger::err(LOG_TAG) << "copyToClipboard: GlobalLock failed";
+        return;
+    }
+    memcpy(globalLock, converted.data(), len);
     GlobalUnlock(hMem);
     OpenClipboard(nullptr);
     EmptyClipboard();
