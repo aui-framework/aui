@@ -178,7 +178,7 @@ if(AUIB_DISABLE)
     find_package(range-v3 REQUIRED CONFIG)
 else()
     auib_import(fmt https://github.com/fmtlib/fmt
-                VERSION 11.2.0
+                VERSION 12.1.0
                 CMAKE_ARGS -DFMT_TEST=FALSE -DFMT_DOC=FALSE)
 
     auib_import(range-v3 https://github.com/ericniebler/range-v3
