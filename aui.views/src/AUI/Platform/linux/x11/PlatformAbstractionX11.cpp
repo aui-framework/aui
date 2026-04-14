@@ -12,6 +12,7 @@
 #include <unistd.h>
 #include <poll.h>
 #include <fcntl.h>
+#include <vector>
 
 #include "PlatformAbstractionX11.h"
 #include "AUI/Platform/APlatform.h"
@@ -99,6 +100,8 @@ void PlatformAbstractionX11::ensureXLibInitialized() {
             ourAtoms.targets = XInternAtom(d, "TARGETS", False);
             ourAtoms.netWmSyncRequest = XInternAtom(d, "_NET_WM_SYNC_REQUEST", False);
             ourAtoms.netWmSyncRequestCounter = XInternAtom(d, "_NET_WM_SYNC_REQUEST_COUNTER", False);
+            ourAtoms.netWmIcon = XInternAtom(ourDisplay, "_NET_WM_ICON", False);
+            ourAtoms.cardinal = XInternAtom(ourDisplay, "XA_CARDINAL", False);
         }
 
         ~DisplayInstance() {
@@ -507,7 +510,28 @@ void PlatformAbstractionX11::windowSetGeometry(AWindow& window, int x, int y, in
     XSync(PlatformAbstractionX11::ourDisplay, False);
 }
 
-void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image) {}
+void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image) {
+    if (!nativeHandle(window))
+        return;
+
+    std::vector<unsigned long> icon_data(image.width() * image.height() + 2);
+    icon_data[0] = image.width();
+    icon_data[1] = image.height();
+
+    size_t idx = 2;
+    for (size_t y = 0; y < image.height(); y++) {
+        for (size_t x = 0; x < image.width(); x++) {
+            AColor col = image.get(glm::uvec2(x, y));
+            icon_data[idx++] = static_cast<unsigned long>(uint8_t(col.a * 255.0f)) << 24 | static_cast<unsigned long>(uint8_t(col.r * 255.0f)) << 16 | static_cast<unsigned long>(uint8_t(col.g * 255.0f)) << 8 | static_cast<unsigned long>(uint8_t(col.b * 255.0f));
+        }
+    }
+
+    XChangeProperty(PlatformAbstractionX11::ourDisplay, nativeHandle(window),ourAtoms.netWmIcon, XA_CARDINAL,32,
+            PropModeReplace,
+            reinterpret_cast<unsigned char*>(icon_data.data()),
+            static_cast<int>(icon_data.size()));
+    XFlush(PlatformAbstractionX11::ourDisplay);
+}
 
 void PlatformAbstractionX11::windowHide(AWindow& window) {
     if (!nativeHandle(window))
