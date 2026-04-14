@@ -11,7 +11,10 @@
 
 #pragma once
 
+#include <valarray>
+
 #include <range/v3/range/concepts.hpp>
+
 #include <AUI/Json/AJson.h>
 #include <AUI/IO/APath.h>
 #include <AUI/Traits/parameter_pack.h>
