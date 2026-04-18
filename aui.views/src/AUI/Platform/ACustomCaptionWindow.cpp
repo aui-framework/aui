@@ -12,8 +12,8 @@
 #include "ACustomCaptionWindow.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 
-ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int height, bool stacked)
-  : ACustomWindow(name, width, height), CustomCaptionWindowImplCurrent() {
+ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int height, bool stacked, AWindow* parent)
+  : ACustomWindow(name, width, height, parent), CustomCaptionWindowImplCurrent() {
     initCustomCaption(name, stacked, this);
 
     connect(minimized, this, [&]() { updateMiddleButtonIcon(); });
