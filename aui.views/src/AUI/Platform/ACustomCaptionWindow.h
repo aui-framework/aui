@@ -64,7 +64,12 @@ class API_AUI_VIEWS ACustomCaptionWindow : public ACustomWindow, private CustomC
     friend class ACustomWindow;
 
 public:
-    ACustomCaptionWindow(const AString& name, int width, int height, bool stacked = false, AWindow* parent = nullptr);
+    ACustomCaptionWindow(const AString& name,
+                         int width,
+                         int height,
+                         bool stacked = false,
+                         AWindow* parent = nullptr,
+                         WindowStyle ws = WindowStyle::DEFAULT);
 
     ACustomCaptionWindow() : ACustomCaptionWindow("Custom Caption Window", 240, 124) {}
 
