@@ -14,9 +14,17 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/ASpacerExpanding.h>
 #include <AUI/Util/UIBuildingHelpers.h>
-#include "CustomCaptionWindowImplWin32.h"
 
+#if AUI_PLATFORM_WIN
+#include "win32/CustomCaptionWindowImplWin32.h"
 using CustomCaptionWindowImplCurrent = CustomCaptionWindowImplWin32;
+#elif AUI_PLATFORM_MACOS
+#include "macos/CustomCaptionWindowImplMacos.h"
+using CustomCaptionWindowImplCurrent = CustomCaptionWindowImplMacos;
+#else
+#include "linux/CustomCaptionWindowImplLinux.h"
+using CustomCaptionWindowImplCurrent = CustomCaptionWindowImplLinux;
+#endif
 
 
 /**
@@ -42,11 +50,19 @@ using CustomCaptionWindowImplCurrent = CustomCaptionWindowImplWin32;
  * - ".middle" for maximize button
  *
  *
- * @specificto{windows}
- * Since Windows does not provide APIs to the customize caption, AUI implements and renders caption by itself, including
- * window icon, title and buttons.
+ * Per-platform behavior:
+ *  - Windows: caption, title label, and the three system buttons are rendered by AUI. The
+ *    buttons participate in `WM_NCHITTEST` so Win11 snap-layout flyouts work and the OS
+ *    dispatches SC_MINIMIZE/SC_MAXIMIZE/SC_CLOSE natively. NC hover is reflected back to
+ *    the AUI buttons via the `.nc-hover` ASS class.
+ *  - macOS: the caption container leaves room for AppKit's native traffic lights on the
+ *    left; the `.minimize`/`.middle`/`.close` buttons are not created (the OS owns those).
+ *  - Linux/X11: all caption chrome is drawn by AUI (full CSD); dragging the caption
+ *    delegates to the window manager via the `_NET_WM_MOVERESIZE` EWMH client message.
  */
 class API_AUI_VIEWS ACustomCaptionWindow : public ACustomWindow, private CustomCaptionWindowImplCurrent {
+    friend class ACustomWindow;
+
 public:
     ACustomCaptionWindow(const AString& name, int width, int height, bool stacked = false);
 
