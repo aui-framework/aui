@@ -10,6 +10,9 @@
  */
 
 #include "CustomCaptionWindowImplLinux.h"
+#include "AUI/Platform/AWindow.h"
+#include "AUI/Enum/WindowStyle.h"
+#include "AUI/Enum/Visibility.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/ASS/Property/BackgroundImage.h>
 
@@ -56,6 +59,14 @@ void CustomCaptionWindowImplLinux::initCustomCaption(const AString& name, bool s
         to->addView(mContentContainer = _new<AViewContainer>());
     }
     mContentContainer->setExpanding({ 1, 1 });
+
+    // Hide the minimize/maximize buttons when the window style opts out of them.
+    if (auto* window = dynamic_cast<AWindow*>(to)) {
+        if (!!(window->windowStyle() & WindowStyle::NO_MINIMIZE_MAXIMIZE)) {
+            mMinimizeButton->setVisibility(Visibility::GONE);
+            mMiddleButton->setVisibility(Visibility::GONE);
+        }
+    }
 
     updateMiddleButtonIcon();
 }

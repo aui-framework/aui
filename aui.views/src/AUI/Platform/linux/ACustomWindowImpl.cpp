@@ -21,7 +21,7 @@
 
 ACustomWindow::ACustomWindow(const AString& name, int width, int height, AWindow* parent) :
         AWindow(name, width, height, parent) {
-    setWindowStyle(WindowStyle::NO_DECORATORS);
+    setWindowStyle(WindowStyle::NO_TITLEBAR);
 }
 
 void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {

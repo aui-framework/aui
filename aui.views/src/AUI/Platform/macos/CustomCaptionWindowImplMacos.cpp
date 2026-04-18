@@ -30,10 +30,6 @@ void CustomCaptionWindowImplMacos::initCustomCaption(const AString& name, bool s
     mCaptionContainer->addAssName(".window-title-content");
     caption->addView(mCaptionContainer);
 
-    if (auto* window = dynamic_cast<AWindow*>(to)) {
-        window->setWindowStyle(window->windowStyle() | WindowStyle::NO_TITLEBAR);
-    }
-
     if (stacked) {
         to->setLayout(std::make_unique<AStackedLayout>());
         to->addView(mContentContainer = _new<AViewContainer>());
