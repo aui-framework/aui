@@ -82,15 +82,18 @@ void AWindow::show() {
 void AWindow::setWindowStyle(WindowStyle ws) {
     mWindowStyle = ws;
     if (!mHandle) return;
-    if (!!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS))) {
+    const bool hideChrome = !!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS));
+    const bool customTitlebar = !!(ws & WindowStyle::NO_TITLEBAR);
+    if (hideChrome || customTitlebar) {
         auto s = static_cast<NSWindow*>(mHandle);
         [s setStyleMask:([s styleMask] | NSWindowStyleMaskFullSizeContentView)];
         [s setTitlebarAppearsTransparent:YES];
         [s setTitleVisibility:NSWindowTitleHidden];
         [s setMovableByWindowBackground:YES];
-        [[s standardWindowButton:NSWindowCloseButton] setHidden:YES];
-        [[s standardWindowButton:NSWindowMiniaturizeButton] setHidden:YES];
-        [[s standardWindowButton:NSWindowZoomButton] setHidden:YES];
+        const BOOL hideButtons = hideChrome ? YES : NO;
+        [[s standardWindowButton:NSWindowCloseButton] setHidden:hideButtons];
+        [[s standardWindowButton:NSWindowMiniaturizeButton] setHidden:hideButtons];
+        [[s standardWindowButton:NSWindowZoomButton] setHidden:hideButtons];
     }
 }
 
