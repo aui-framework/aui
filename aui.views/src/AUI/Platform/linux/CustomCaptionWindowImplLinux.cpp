@@ -9,27 +9,22 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 05.12.2020.
-//
-
-#include "CustomCaptionWindowImplWin32.h"
+#include "CustomCaptionWindowImplLinux.h"
 #include <AUI/Util/UIBuildingHelpers.h>
-#include <AUI/Common/Plugin.h>
 #include <AUI/ASS/Property/BackgroundImage.h>
 
-void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool stacked, AViewContainer* to) {
+void CustomCaptionWindowImplLinux::initCustomCaption(const AString& name, bool stacked, AViewContainer* to) {
     auto caption = _new<AViewContainer>();
     caption->setLayout(std::make_unique<AHorizontalLayout>());
     caption->addAssName(".window-title");
-    caption->setExpanding({1, 0});
+    caption->setExpanding({ 1, 0 });
 
     auto titleLabel = _new<ALabel>(name) << ".title";
     caption->addView(titleLabel);
 
     mCaptionContainer = _new<AViewContainer>();
     mCaptionContainer->setLayout(std::make_unique<AHorizontalLayout>());
-    mCaptionContainer->setExpanding({1, 0 });
+    mCaptionContainer->setExpanding({ 1, 0 });
     mCaptionContainer->addAssName(".window-title-content");
     caption->addView(mCaptionContainer);
 
@@ -41,7 +36,6 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
     mMiddleButton = _new<AButton>();
     mMiddleButton->addAssName(".middle");
     mMiddleButton->addAssName(".default");
-
     caption->addView(mMiddleButton);
 
     mCloseButton = _new<AButton>();
@@ -53,27 +47,27 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
         to->setLayout(std::make_unique<AStackedLayout>());
         to->addView(mContentContainer = _new<AViewContainer>());
         to->addView(declarative::Vertical {
-                                                    caption,
-                                                    _new<ASpacerExpanding>(),
-                                            } AUI_LET { it->setExpanding({1, 1}); });
+            caption,
+            _new<ASpacerExpanding>(),
+        } AUI_LET { it->setExpanding({ 1, 1 }); });
     } else {
         to->setLayout(std::make_unique<AVerticalLayout>());
         to->addView(caption);
         to->addView(mContentContainer = _new<AViewContainer>());
     }
-    mContentContainer->setExpanding({1, 1});
+    mContentContainer->setExpanding({ 1, 1 });
 
     updateMiddleButtonIcon();
 }
 
-void CustomCaptionWindowImplWin32::updateMiddleButtonIcon() {
+void CustomCaptionWindowImplLinux::updateMiddleButtonIcon() {
     if (isCustomCaptionMaximized()) {
         mMiddleButton->setCustomStyle({
-            ass::BackgroundImage {":uni/caption/restore.svg", {}, {}, ass::Sizing::CENTER }
+            ass::BackgroundImage { ":uni/caption/restore.svg", {}, {}, ass::Sizing::CENTER },
         });
     } else {
         mMiddleButton->setCustomStyle({
-            ass::BackgroundImage {":uni/caption/maximize.svg", {}, {}, ass::Sizing::CENTER }
+            ass::BackgroundImage { ":uni/caption/maximize.svg", {}, {}, ass::Sizing::CENTER },
         });
     }
 }

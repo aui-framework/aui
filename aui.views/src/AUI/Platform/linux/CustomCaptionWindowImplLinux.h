@@ -9,22 +9,26 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 05.12.2020.
-//
-
 #pragma once
 
 #include <AUI/View/AViewContainer.h>
 #include <AUI/View/AButton.h>
 
-class API_AUI_VIEWS CustomCaptionWindowImplWin32 {
+/**
+ * @brief Linux/X11 caption implementation — full client-side decorations.
+ *
+ * X11 Motif hints cannot reliably preserve individual system buttons across compositors, so
+ * we take the Electron/VS Code approach: draw all caption chrome ourselves. The three buttons
+ * (minimize, maximize/restore, close) are AUI widgets styled via ASS, and dragging the caption
+ * is wired to the `_NET_WM_MOVERESIZE` X11 client-message in ACustomWindowImpl.
+ */
+class API_AUI_VIEWS CustomCaptionWindowImplLinux {
 protected:
     _<AViewContainer> mCaptionContainer;
     _<AViewContainer> mContentContainer;
-    _<AButton> mMinimizeButton; // _
-    _<AButton> mMiddleButton; // []
-    _<AButton> mCloseButton; // X
+    _<AButton> mMinimizeButton;
+    _<AButton> mMiddleButton;
+    _<AButton> mCloseButton;
 
     void updateMiddleButtonIcon();
     void initCustomCaption(const AString& name, bool stacked, AViewContainer* to);
@@ -32,10 +36,6 @@ protected:
     virtual bool isCustomCaptionMaximized() = 0;
 
 public:
-    CustomCaptionWindowImplWin32() = default;
-
-    virtual ~CustomCaptionWindowImplWin32() = default;
-
+    CustomCaptionWindowImplLinux() = default;
+    virtual ~CustomCaptionWindowImplLinux() = default;
 };
-
-

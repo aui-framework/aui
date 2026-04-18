@@ -10,6 +10,8 @@
  */
 
 #include "AUI/Platform/ACustomWindow.h"
+#include "AUI/Platform/ACustomCaptionWindow.h"
+#include "AUI/Platform/win32/CustomCaptionWindowImplWin32.h"
 #include "AUI/Platform/ADesktop.h"
 #include <cstring>
 #include <AUI/View/AButton.h>
@@ -32,7 +34,9 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     {
         case WM_CREATE: {
             updateDpi();
-            const MARGINS shadow = {1, 1, 1, 1};
+            const int captionTop = GetSystemMetrics(SM_CYCAPTION) +
+                                   GetSystemMetrics(SM_CXPADDEDBORDER);
+            const MARGINS shadow = { 0, 0, captionTop, 0 };
             DwmExtendFrameIntoClientArea((HWND) getNativeHandle(), &shadow);
 
             // update window size
@@ -78,6 +82,17 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
 
         auto x = GET_X_LPARAM(lParam);
         auto y = GET_Y_LPARAM(lParam);
+
+        // Caption buttons win over the top resize border — otherwise the top 8px of a
+        // min/max/close button would be treated as HTTOP and start a resize drag instead
+        // of registering a button click.
+        if (auto* caption = dynamic_cast<ACustomCaptionWindow*>(this)) {
+            auto* impl = static_cast<CustomCaptionWindowImplWin32*>(caption);
+            const glm::ivec2 localPx { x - winrect.left, y - winrect.top };
+            if (auto hit = impl->hitTestCaptionButton(localPx.x, localPx.y)) {
+                return *hit;
+            }
+        }
 
         bool resizeWidth = !(mWindowStyle & WindowStyle::NO_RESIZE);//window->minimumWidth() != window->maximumWidth();
         bool resizeHeight = resizeWidth;//window->minimumHeight() != window->maximumHeight();
@@ -136,15 +151,69 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
             }
         }
 
-        //TODO: allow move?
         if (!result) {
-            if (isCaptionAt({x - winrect.left, y - winrect.top})) {
+            const glm::ivec2 localPx { x - winrect.left, y - winrect.top };
+            if (isCaptionAt(localPx)) {
                 result = HTCAPTION;
             }
         }
         if (result)
             return result;
     } //end case WM_NCHITTEST
+
+    case WM_NCMOUSEMOVE: {
+        if (auto* caption = dynamic_cast<ACustomCaptionWindow*>(this)) {
+            static_cast<CustomCaptionWindowImplWin32*>(caption)
+                ->updateCaptionButtonNcHover(static_cast<std::int32_t>(wParam));
+            // Register for WM_NCMOUSELEAVE so we can clear hover when cursor exits NC area.
+            TRACKMOUSEEVENT tme {};
+            tme.cbSize = sizeof(tme);
+            tme.hwndTrack = hwnd;
+            tme.dwFlags = TME_LEAVE | TME_NONCLIENT;
+            TrackMouseEvent(&tme);
+        }
+        break;
+    }
+
+    case WM_NCMOUSELEAVE: {
+        if (auto* caption = dynamic_cast<ACustomCaptionWindow*>(this)) {
+            static_cast<CustomCaptionWindowImplWin32*>(caption)->updateCaptionButtonNcHover(0);
+        }
+        break;
+    }
+
+    case WM_NCLBUTTONDOWN: {
+        switch (wParam) {
+            case HTMINBUTTON:
+            case HTMAXBUTTON:
+            case HTCLOSE:
+                return 0;
+        }
+        break;
+    }
+
+    case WM_NCLBUTTONUP: {
+        if (wParam == HTMINBUTTON || wParam == HTMAXBUTTON || wParam == HTCLOSE) {
+            if (auto* caption = dynamic_cast<ACustomCaptionWindow*>(this)) {
+                switch (wParam) {
+                    case HTMINBUTTON:
+                        caption->minimize();
+                        return 0;
+                    case HTMAXBUTTON:
+                        if (caption->isMaximized()) {
+                            caption->restore();
+                        } else {
+                            caption->maximize();
+                        }
+                        return 0;
+                    case HTCLOSE:
+                        caption->quit();
+                        return 0;
+                }
+            }
+        }
+        break;
+    }
 
     }
     return AWindow::winProc(hwnd, uMsg, wParam, lParam);
