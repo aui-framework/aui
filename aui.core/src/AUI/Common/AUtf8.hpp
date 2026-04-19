@@ -388,6 +388,7 @@ public:
 };
 
 class AStringView;
+class AString;
 
 /**
  * @brief UTF-8 View
@@ -422,29 +423,26 @@ public:
     bool isValidUtf8() const noexcept;
 
     /**
-     * @brief Unchecked access to the Unicode character at the specified index.
-     * @param i The index of the Unicode character (not byte offset).
-     * @return The character at the specified position.
-     */
-    [[nodiscard]]
-    constexpr AChar operator[](const size_type i) const {
-        if (empty()) {
-            return AChar();
-        }
-        return *(begin() + i);
-    }
-
-    /**
      * @brief Checked access to the Unicode character at the specified index.
      * @param i The index of the Unicode character (not byte offset).
      * @return The character at the specified position.
      */
     [[nodiscard]]
     constexpr AChar at(const size_type i) const {
-        if (empty()) {
+        if (i >= sizeBytes()) {
             return AChar();
         }
         return *(begin() + i);
+    }
+
+    /**
+     * @brief Unchecked access to the Unicode character at the specified index.
+     * @param i The index of the Unicode character (not byte offset).
+     * @return The character at the specified position.
+     */
+    [[nodiscard]]
+    constexpr AChar operator[](const size_type i) const {
+        return at(i);
     }
 
     constexpr bool empty() const noexcept {
@@ -520,7 +518,15 @@ public:
 
     bool startsWith(AChar prefix) const noexcept;
 
-    bool endsWith(AChar prefix) const noexcept;
+    bool endsWith(AChar suffix) const noexcept;
+
+    std::string_view bytes() const noexcept {
+        return str;
+    }
+
+    AString uppercase() const;
+
+    AString lowercase() const;
 
     constexpr const_iterator begin() const noexcept {
         return const_iterator(data(), data(), data() + sizeBytes(), 0);

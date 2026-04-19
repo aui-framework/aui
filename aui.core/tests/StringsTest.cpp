@@ -115,25 +115,25 @@ TEST(Strings, RemoveAll1) {
 }
 
 TEST(Strings, Contains) {
-    EXPECT_EQ("Ку🤡Ку"_as.contains(U'🤡'), true);
-    EXPECT_EQ("Ку🤡Ку"_as.contains(U'👽'), false);
-    EXPECT_EQ("Ru letter: а"_as.contains(U'a'), false);
-    EXPECT_EQ("En letter: a"_as.contains(U'a'), true);
+    EXPECT_EQ("Ку🤡Ку"_as.utf8().contains(U'🤡'), true);
+    EXPECT_EQ("Ку🤡Ку"_as.utf8().contains(U'👽'), false);
+    EXPECT_EQ("Ru letter: а"_as.utf8().contains(U'a'), false);
+    EXPECT_EQ("En letter: a"_as.utf8().contains(U'a'), true);
 }
 
 TEST(Strings, StartsWith) {
-    EXPECT_EQ("Ку🤡Ку"_as.startsWith(U'К'), true);
+    EXPECT_EQ("Ку🤡Ку"_as.utf8().startsWith(U'К'), true);
     EXPECT_EQ("Ку🤡Ку"_as.startsWith("Ку"), true); // russian letters
 
-    EXPECT_EQ("Ку🤡Ку"_as.startsWith(U'K'), false);
+    EXPECT_EQ("Ку🤡Ку"_as.utf8().startsWith(U'K'), false);
     EXPECT_EQ("Ку🤡Ку"_as.startsWith("Ky"), false); // english letters
 }
 
 TEST(Strings, EndsWith) {
-    EXPECT_EQ("Ку🤡Ку"_as.endsWith(U'у'), true);
+    EXPECT_EQ("Ку🤡Ку"_as.utf8().endsWith(U'у'), true);
     EXPECT_EQ("Ку🤡Ку"_as.endsWith("Ку"), true); // russian letters
 
-    EXPECT_EQ("Ку🤡Ку"_as.endsWith(U'y'), false);
+    EXPECT_EQ("Ку🤡Ку"_as.utf8().endsWith(U'y'), false);
     EXPECT_EQ("Ку🤡Ку"_as.endsWith("Ky"), false); // english letters
 }
 
@@ -165,16 +165,8 @@ TEST(Strings, Chinese) {
 TEST(Strings, Utf8Iterators) {
     AString str("Привет, 🤡, Как твои дела?");
 
-    EXPECT_EQ(*(str.begin() + 8), U'🤡');
-    EXPECT_EQ((str.begin() + 9) - (str.begin() + 7), 2);
-
-    (str.begin() + 8) = U'👽';
-    EXPECT_EQ(*(str.begin() + 8), U'👽');
-    EXPECT_EQ((str.begin() + 9) - (str.begin() + 7), 2);
-
-    (str.begin() + 8) = 'A';
-    EXPECT_EQ(*(str.begin() + 8), 'A');
-    EXPECT_EQ((str.begin() + 9) - (str.begin() + 7), 2);
+    EXPECT_EQ(*(str.utf8().begin() + 8), U'🤡');
+    EXPECT_EQ((str.utf8().begin() + 9) - (str.utf8().begin() + 7), 2);
 }
 
 TEST(Strings, UtfEncoding) {
