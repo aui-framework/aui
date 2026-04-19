@@ -85,8 +85,9 @@ void AWindow::setWindowStyle(WindowStyle ws) {
     const bool hideChrome = !!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS));
     const bool customTitlebar = !!(ws & WindowStyle::NO_TITLEBAR);
     const bool hideMinMax = !!(ws & WindowStyle::NO_MINIMIZE_MAXIMIZE);
+    const bool noResize = !!(ws & WindowStyle::NO_RESIZE);
+    auto s = static_cast<NSWindow*>(mHandle);
     if (hideChrome || customTitlebar) {
-        auto s = static_cast<NSWindow*>(mHandle);
         [s setStyleMask:([s styleMask] | NSWindowStyleMaskFullSizeContentView)];
         [s setTitlebarAppearsTransparent:YES];
         [s setTitleVisibility:NSWindowTitleHidden];
@@ -96,6 +97,14 @@ void AWindow::setWindowStyle(WindowStyle ws) {
         [[s standardWindowButton:NSWindowMiniaturizeButton] setHidden:(hideButtons || hideMinMax)];
         [[s standardWindowButton:NSWindowZoomButton] setHidden:(hideButtons || hideMinMax)];
     }
+
+    NSWindowStyleMask mask = [s styleMask];
+    if (noResize) {
+        mask &= ~NSWindowStyleMaskResizable;
+    } else {
+        mask |= NSWindowStyleMaskResizable;
+    }
+    [s setStyleMask:mask];
 }
 
 float AWindow::fetchDpiFromSystem() const {

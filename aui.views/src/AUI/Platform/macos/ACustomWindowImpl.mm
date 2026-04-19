@@ -45,7 +45,7 @@ void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
     if (mHandle && event.asButton == AInput::LBUTTON && shouldDragCaption(this, event.position)) {
         auto* ns = static_cast<NSWindow*>(mHandle);
         if (NSEvent* current = [NSApp currentEvent]) {
-            const bool canZoom = !(mWindowStyle & (WindowStyle::NO_RESIZE | WindowStyle::NO_MINIMIZE_MAXIMIZE));
+            const bool canZoom = !(mWindowStyle & WindowStyle::NO_RESIZE);
             if ([current clickCount] >= 2) {
                 if (canZoom) {
                     [ns performZoom:nil];
