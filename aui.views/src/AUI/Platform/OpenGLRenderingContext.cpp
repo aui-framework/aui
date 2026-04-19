@@ -51,6 +51,7 @@ void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
 }
 
 void OpenGLRenderingContext::endFramebuffer() {
+    mRenderer->flush();
 #if !AUI_PLATFORM_EMSCRIPTEN
     if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
         fb->bindForRead();
