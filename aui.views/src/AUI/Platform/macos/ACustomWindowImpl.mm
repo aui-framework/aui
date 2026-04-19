@@ -14,13 +14,48 @@
 #include <cstring>
 #include <AUI/View/AButton.h>
 
+#import <Cocoa/Cocoa.h>
+
 
 ACustomWindow::ACustomWindow(const AString& name, int width, int height, AWindow* parent) :
     AWindow(name, width, height, parent) {
     setWindowStyle(WindowStyle::NO_TITLEBAR);
 }
 
+namespace {
+// A click is a caption drag candidate when its deepest view sits inside a `.window-title`
+// ancestor and is not itself an interactive widget. This ignores mTitleHeight entirely,
+// which is brittle at HiDPI (literal 30px regardless of scale) and mismatches the actual
+// caption row height set by the impl.
+bool shouldDragCaption(ACustomWindow* self, const glm::ivec2& pos) {
+    auto v = self->getViewAtRecursive(pos);
+    if (!v) return false;
+    if (_cast<AButton>(v)) return false;
+    if (v->getAssNames().contains(".override-title-dragging")) return false;
+    for (AView* cur = v.get(); cur; cur = cur->getParent()) {
+        if (cur->getAssNames().contains(".window-title")) {
+            return true;
+        }
+    }
+    return false;
+}
+}
+
 void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
+    if (mHandle && event.asButton == AInput::LBUTTON && shouldDragCaption(this, event.position)) {
+        auto* ns = static_cast<NSWindow*>(mHandle);
+        if (NSEvent* current = [NSApp currentEvent]) {
+            const bool canZoom = !(mWindowStyle & (WindowStyle::NO_RESIZE | WindowStyle::NO_MINIMIZE_MAXIMIZE));
+            if ([current clickCount] >= 2) {
+                if (canZoom) {
+                    [ns performZoom:nil];
+                }
+                return;
+            }
+            [ns performWindowDragWithEvent:current];
+            return;
+        }
+    }
     AViewContainer::onPointerPressed(event);
 }
 
