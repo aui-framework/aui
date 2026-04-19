@@ -14,12 +14,12 @@
 //
 
 #include "AStringView.h"
-#include "AStaticVector.h"
 
+#include <AUI/Common/AStaticVector.h>
 #include <AUI/Common/AByteBuffer.h>
 #include <simdutf.h>
 
-bool AStringView::contains(AChar c) const noexcept {
+bool AStringView::contains(char c) const noexcept {
     for (auto it = begin(); it != end(); ++it) {
         if (*it == c) {
             return true;
@@ -81,10 +81,6 @@ std::u32string AStringView::toUtf32() const {
     encoded[words] = '\0';
     encoded.resize(size);
     return std::move(encoded);
-}
-
-AStringView::size_type AStringView::length() const noexcept {
-    return simdutf::count_utf8(super::data(), super::size());
 }
 
 AString AStringView::uppercase() const {

@@ -15,39 +15,10 @@
 
 #pragma once
 
-#include <AUI/Common/AUtf8.h>
+#include <AUI/Common/detail/util.hpp>
+#include <AUI/Common/AUtf8.hpp>
 #include <AUI/Traits/values.h>
 #include <fmt/format.h>
-
-template<typename OutT, typename InT>
-constexpr const OutT* pointer_cast(const InT* ptr) {
-    static_assert(sizeof(InT) == sizeof(OutT), "Size mismatch");
-    static_assert(alignof(InT) == alignof(OutT), "Alignment mismatch");
-
-    union Converter {
-        const InT* from;
-        const OutT* to;
-
-        constexpr Converter(const InT* p) : from(p) {}
-    };
-
-    return Converter(ptr).to;
-}
-
-template<typename OutT, typename InT>
-constexpr const OutT* pointer_cast(InT* ptr) {
-    static_assert(sizeof(InT) == sizeof(OutT), "Size mismatch");
-    static_assert(alignof(InT) == alignof(OutT), "Alignment mismatch");
-
-    union Converter {
-        InT* from;
-        OutT* to;
-
-        constexpr Converter(InT* p) : from(p) {}
-    };
-
-    return Converter(ptr).to;
-}
 
 class API_AUI_CORE AByteBuffer;
 class API_AUI_CORE AStringVector;
@@ -73,11 +44,6 @@ private:
 public:
     using bytes_type = super;
 
-    using iterator = AUtf8ConstIterator;
-    using const_iterator = AUtf8ConstIterator;
-    using reverse_iterator = AUtf8ConstReverseIterator;
-    using const_reverse_iterator = AUtf8ConstReverseIterator;
-
     auto constexpr static NPOS = super::npos;
 
     static constexpr auto TO_NUMBER_BASE_BIN = 2;
@@ -92,13 +58,24 @@ public:
     constexpr AStringView(const char8_t* utf8_str) noexcept : super(pointer_cast<char>(utf8_str)) {}
 
     constexpr AStringView(std::string_view str) noexcept : super(str) {}
+
     explicit AStringView(const std::string& str) noexcept : super(str) {}
+
+    constexpr bool startsWith(char prefix) const noexcept {
+        if (empty()) return false;
+        return at(0) == prefix;
+    }
 
     constexpr bool startsWith(AStringView prefix) const noexcept {
         if (prefix.size() > size()) {
             return false;
         }
         return bytes().substr(0, prefix.size()) == prefix.bytes(); // NOLINT(*-use-starts-ends-with)
+    }
+
+    constexpr bool endsWith(char prefix) const noexcept {
+        if (empty()) return false;
+        return at(sizeBytes() - 1) == prefix;
     }
 
     constexpr bool endsWith(AStringView suffix) const noexcept {
@@ -113,7 +90,7 @@ public:
         return super::empty();
     }
 
-    bool contains(AChar c) const noexcept;
+    bool contains(char c) const noexcept;
     bool contains(AStringView str) const noexcept;
 
     constexpr bool operator==(AStringView other) const noexcept {
@@ -148,11 +125,7 @@ public:
      */
     [[nodiscard]]
     constexpr AStringView substr(size_type pos = 0, size_type count = npos) const noexcept {
-        auto it = begin();
-        for (; it != end() && pos > 0; ++it, --pos);
-        auto begin = it;
-        for (; it != end() && count > 0; ++it, --count);
-        return AStringView(begin.data(), it.data() - begin.data());
+        return AStringView(super::substr(pos, count));
     }
 
     /**
@@ -162,26 +135,6 @@ public:
     size_type sizeBytes() const noexcept {
         return super::size();
     }
-
-    /**
-     * @brief Unchecked access to the UTF-8 character at the specified position.
-     * @param i The position of the character to return.
-     * @return The character at the specified position.
-     */
-    [[nodiscard]]
-    constexpr AChar operator[](size_type i) const {
-        if (empty()) {
-            return AChar();
-        }
-        return *(begin() + i);
-    }
-
-    /**
-     * @brief Returns the number of Unicode characters in the string
-     * @sa sizeBytes
-     */
-    [[nodiscard]]
-    size_type length() const noexcept;
 
     /**
      * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
@@ -206,22 +159,18 @@ public:
     }
 
     constexpr AStringView trimLeft(AChar symbol = ' ') const {
-        for (auto i = begin(); i != end(); ++i)
-        {
-            if (*i != symbol)
-            {
-                return AStringView(i.data(), end().data() - i.data());
+        for (auto i = begin(); i != end(); ++i) {
+            if (*i != symbol) {
+                return AStringView(&*i, static_cast<size_t>(end() - i));
             }
         }
         return {};
     }
 
     constexpr AStringView trimRight(AChar symbol = ' ') const {
-        for (auto i = rbegin(); i != rend(); ++i)
-        {
-            if (*i != symbol)
-            {
-                return std::string_view(data(), i.base().data() - data());
+        for (auto i = rbegin(); i != rend(); ++i) {
+            if (*i != symbol) {
+                return AStringView(data(), static_cast<size_t>(i.base() - begin()));
             }
         }
         return {};
@@ -238,38 +187,6 @@ public:
     AString removedAll(AChar c);
 
     AStringVector split(AChar c) const;
-
-    constexpr iterator begin() const noexcept {
-        return AUtf8ConstIterator(data(), data(), data() + size(), 0);
-    }
-
-    constexpr iterator end() const noexcept {
-        return AUtf8ConstIterator(data(), data(), data() + size(), size());
-    }
-
-    constexpr const_iterator cbegin() const noexcept {
-        return begin();
-    }
-
-    constexpr const_iterator cend() const noexcept {
-        return end();
-    }
-
-    constexpr reverse_iterator rbegin() const noexcept {
-        return AUtf8ConstReverseIterator(end());
-    }
-
-    constexpr reverse_iterator rend() const noexcept {
-        return AUtf8ConstReverseIterator(begin());
-    }
-
-    constexpr const_reverse_iterator crbegin() const noexcept {
-        return rbegin();
-    }
-
-    constexpr const_reverse_iterator crend() const noexcept {
-        return rend();
-    }
 
     constexpr AChar first() const {
         if (empty()) {
@@ -382,6 +299,10 @@ public:
 
     std::string toStdString() const {
         return std::string(bytes());
+    }
+
+    AUtf8View utf8() const noexcept {
+        return AUtf8View(bytes());
     }
 
 };
