@@ -316,6 +316,8 @@ public:
 
     AString& append(char c);
 
+    AString& append(AChar c);
+
     AString& append(AStringView c) {
         append(c.bytes());
         return *this;

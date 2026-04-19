@@ -189,6 +189,12 @@ AString& AString::append(char c) {
     return *this;
 }
 
+AString& AString::append(AChar c) {
+    auto utf8c = c.toUtf8();
+    super::append(utf8c.data(), utf8c.size());
+    return *this;
+}
+
 AString& AString::replaceAll(AChar from, AChar to) {
     if (empty()) return *this;
     return (*this = replacedAll(from, to));
