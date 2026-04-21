@@ -1330,6 +1330,205 @@ function(aui_enable_hotswap AUI_MODULE_NAME)
     target_sources(${AUI_MODULE_NAME} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/hotswap_enable.cpp)
 endfunction()
 
+macro(_git_remote_require_git)
+    if(NOT GIT_EXECUTABLE)
+        find_package(Git QUIET REQUIRED)
+    endif()
+    if(NOT GIT_EXECUTABLE)
+        message(FATAL_ERROR "[GitRemoteInfo] Git executable not found. "
+                "Install Git or set GIT_EXECUTABLE manually.")
+    endif()
+endmacro()
+
+function(aui_git_get_latest_tag out_var repo_url)
+    _git_remote_require_git()
+
+    # --- Parse optional arguments ---
+    set(options QUIET)
+    set(oneValueArgs PATTERN)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "" ${ARGN})
+
+    if(NOT ARG_PATTERN)
+        set(ARG_PATTERN "refs/tags/*")
+    endif()
+
+    if(NOT ARG_QUIET)
+        message(STATUS "[GitRemoteInfo] Querying tags from: ${repo_url}")
+    endif()
+
+    # git ls-remote --tags --sort=version:refname <url> <pattern>
+    # --sort may not be available on older Git; we fall back to plain listing.
+    execute_process(
+            COMMAND "${GIT_EXECUTABLE}" ls-remote --tags "${repo_url}" "${ARG_PATTERN}"
+            OUTPUT_VARIABLE _ls_output
+            ERROR_VARIABLE  _ls_error
+            RESULT_VARIABLE _ls_result
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if(NOT _ls_result EQUAL 0)
+        message(WARNING "[GitRemoteInfo] git ls-remote failed for ${repo_url}:\n${_ls_error}")
+        set(${out_var} "${out_var}-NOTFOUND" PARENT_SCOPE)
+        return()
+    endif()
+
+    if(_ls_output STREQUAL "")
+        if(NOT ARG_QUIET)
+            message(STATUS "[GitRemoteInfo] No tags found matching '${ARG_PATTERN}' in ${repo_url}")
+        endif()
+        set(${out_var} "${out_var}-NOTFOUND" PARENT_SCOPE)
+        return()
+    endif()
+
+    # Each line: "<sha>\trefs/tags/<name>"
+    # Peeled tags produce an extra line ending in "^{}" — skip those.
+    # We collect all plain tag names, sort them, and take the last one.
+    set(_tag_names "")
+    string(REPLACE "\n" ";" _lines "${_ls_output}")
+    foreach(_line IN LISTS _lines)
+        # Skip peeled tag entries (annotated tag objects)
+        if(_line MATCHES "\\^\\{\\}$")
+            continue()
+        endif()
+
+        # Extract the ref part after the tab
+        string(REGEX REPLACE "^[0-9a-f]+\t" "" _ref "${_line}")
+
+        # Strip the "refs/tags/" prefix to get the bare tag name
+        string(REPLACE "refs/tags/" "" _tag_name "${_ref}")
+
+        if(_tag_name)
+            list(APPEND _tag_names "${_tag_name}")
+        endif()
+    endforeach()
+
+    if(NOT _tag_names)
+        set(${out_var} "${out_var}-NOTFOUND" PARENT_SCOPE)
+        return()
+    endif()
+
+    # Sort using CMake's version-aware sort (requires CMake 3.18+).
+    # Falls back gracefully to lexicographic sort on older versions.
+    if(CMAKE_VERSION VERSION_GREATER_EQUAL "3.18")
+        list(SORT _tag_names COMPARE NATURAL ORDER ASCENDING)
+    else()
+        list(SORT _tag_names)
+    endif()
+
+    list(GET _tag_names -1 _latest_tag)
+
+    if(NOT ARG_QUIET)
+        message(STATUS "[GitRemoteInfo] Latest tag: ${_latest_tag}")
+    endif()
+
+    set(${out_var} "${_latest_tag}" PARENT_SCOPE)
+endfunction()
+
+function(aui_git_get_latest_commit out_var repo_url)
+    _git_remote_require_git()
+
+    set(options    QUIET SHORT)
+    set(oneValueArgs BRANCH)
+    cmake_parse_arguments(ARG "${options}" "${oneValueArgs}" "" ${ARGN})
+
+    if(ARG_BRANCH)
+        set(_ref "refs/heads/${ARG_BRANCH}")
+        set(_display_name "${ARG_BRANCH}")
+
+        if(NOT ARG_QUIET)
+            message(STATUS "[GitRemoteInfo] Querying HEAD of '${ARG_BRANCH}' from: ${repo_url}")
+        endif()
+
+        execute_process(
+                COMMAND "${GIT_EXECUTABLE}" ls-remote "${repo_url}" "${_ref}"
+                OUTPUT_VARIABLE _ls_output
+                ERROR_VARIABLE  _ls_error
+                RESULT_VARIABLE _ls_result
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        if(NOT _ls_result EQUAL 0)
+            message(WARNING "[GitRemoteInfo] git ls-remote failed for ${repo_url}:\n${_ls_error}")
+            set(${out_var} "${out_var}-NOTFOUND" PARENT_SCOPE)
+            return()
+        endif()
+
+        if(_ls_output STREQUAL "")
+            message(WARNING "[GitRemoteInfo] Branch '${ARG_BRANCH}' not found in ${repo_url}")
+            set(${out_var} "${out_var}-NOTFOUND" PARENT_SCOPE)
+            return()
+        endif()
+
+        # Output format: "<sha>\trefs/heads/<branch>"
+        string(REPLACE "\n" ";" _lines "${_ls_output}")
+        list(GET _lines 0 _first_line)
+        string(REGEX MATCH "^[0-9a-f]+" _commit_sha "${_first_line}")
+
+    else()
+
+        if(NOT ARG_QUIET)
+            message(STATUS "[GitRemoteInfo] Querying default branch HEAD from: ${repo_url}")
+        endif()
+
+        execute_process(
+                COMMAND "${GIT_EXECUTABLE}" ls-remote --symref "${repo_url}" HEAD
+                OUTPUT_VARIABLE _ls_output
+                ERROR_VARIABLE  _ls_error
+                RESULT_VARIABLE _ls_result
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+        )
+
+        if(NOT _ls_result EQUAL 0)
+            message(WARNING "[GitRemoteInfo] git ls-remote --symref failed for ${repo_url}:\n${_ls_error}")
+            set(${out_var} "${out_var}-NOTFOUND" PARENT_SCOPE)
+            return()
+        endif()
+
+        if(_ls_output STREQUAL "")
+            message(WARNING "[GitRemoteInfo] Empty response from ${repo_url}")
+            set(${out_var} "${out_var}-NOTFOUND" PARENT_SCOPE)
+            return()
+        endif()
+
+        string(REPLACE "\n" ";" _lines "${_ls_output}")
+
+        # Extract default branch name from the "ref: refs/heads/<name>\tHEAD" line
+        set(_display_name "HEAD")
+        foreach(_line IN LISTS _lines)
+            if(_line MATCHES "^ref: refs/heads/([^\t]+)\tHEAD")
+                set(_display_name "${CMAKE_MATCH_1}")
+                break()
+            endif()
+        endforeach()
+
+        # Extract SHA from the "<sha>\tHEAD" line
+        set(_commit_sha "")
+        foreach(_line IN LISTS _lines)
+            if(_line MATCHES "^([0-9a-f]+)\tHEAD$")
+                set(_commit_sha "${CMAKE_MATCH_1}")
+                break()
+            endif()
+        endforeach()
+
+    endif()
+
+    if(NOT _commit_sha)
+        message(WARNING "[GitRemoteInfo] Could not parse SHA from ls-remote output.")
+        set(${out_var} "${out_var}-NOTFOUND" PARENT_SCOPE)
+        return()
+    endif()
+
+    if(ARG_SHORT)
+        string(SUBSTRING "${_commit_sha}" 0 7 _commit_sha)
+    endif()
+
+    if(NOT ARG_QUIET)
+        message(STATUS "[GitRemoteInfo] Latest commit on '${_display_name}': ${_commit_sha}")
+    endif()
+
+    set(${out_var} "${_commit_sha}" PARENT_SCOPE)
+endfunction()
+
 macro(aui_app)
     _aui_find_root()
 
