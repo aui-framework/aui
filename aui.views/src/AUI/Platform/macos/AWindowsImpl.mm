@@ -82,11 +82,23 @@ void AWindow::show() {
 void AWindow::setWindowStyle(WindowStyle ws) {
     mWindowStyle = ws;
     if (!mHandle) return;
-    const bool hideChrome = !!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS));
+    auto s = static_cast<NSWindow*>(mHandle);
+
+    // SYS == popup (context menu, dropdown, tooltip)
+    if (!!(ws & WindowStyle::SYS)) {
+        [s setStyleMask:NSWindowStyleMaskBorderless];
+        [s setLevel:NSPopUpMenuWindowLevel];
+        [s setHidesOnDeactivate:YES];
+        [s setOpaque:NO];
+        [s setBackgroundColor:[NSColor clearColor]];
+        [s setHasShadow:YES];
+        return;
+    }
+
+    const bool hideChrome = !!(ws & WindowStyle::NO_DECORATORS);
     const bool customTitlebar = !!(ws & WindowStyle::NO_TITLEBAR);
     const bool hideMinMax = !!(ws & WindowStyle::NO_MINIMIZE_MAXIMIZE);
     const bool noResize = !!(ws & WindowStyle::NO_RESIZE);
-    auto s = static_cast<NSWindow*>(mHandle);
     if (hideChrome || customTitlebar) {
         [s setStyleMask:([s styleMask] | NSWindowStyleMaskFullSizeContentView)];
         [s setTitlebarAppearsTransparent:YES];
@@ -132,7 +144,18 @@ void AWindow::maximize() {
 }
 
 glm::ivec2 AWindow::getWindowPosition() const {
-    return {0, 0};
+    if (!mHandle) return {0, 0};
+    auto* s = static_cast<NSWindow*>(mHandle);
+    const NSRect frame = [s frame];
+    NSScreen* primary = [[NSScreen screens] firstObject];
+    if (!primary) return {0, 0};
+    const CGFloat primaryH = [primary frame].size.height;
+    const float dpi = float([s backingScaleFactor]);
+    // AppKit stores frames in points with bottom-left origin; AUI wants physical-pixel
+    // top-left origin relative to the primary display.
+    const int x = int(frame.origin.x * dpi);
+    const int y = int((primaryH - (frame.origin.y + frame.size.height)) * dpi);
+    return {x, y};
 }
 
 
@@ -155,6 +178,19 @@ void AWindow::setSize(glm::ivec2 size) {
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
     AViewContainer::setSize({width, height});
+    if (!mHandle) return;
+    auto* s = static_cast<NSWindow*>(mHandle);
+    NSScreen* primary = [[NSScreen screens] firstObject];
+    if (!primary) return;
+    const CGFloat primaryH = [primary frame].size.height;
+    const float dpi = getDpiRatio();
+    // Flip AUI top-left origin back to AppKit bottom-left for setFrame.
+    const NSRect frame = NSMakeRect(
+        x / dpi,
+        primaryH - (y + height) / dpi,
+        width / dpi,
+        height / dpi);
+    [s setFrame:frame display:YES];
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
