@@ -56,7 +56,7 @@ void ACustomWindow::onPointerPressed(const APointerPressedEvent& event) {
             return;
         }
     }
-    AViewContainer::onPointerPressed(event);
+    AWindow::onPointerPressed(event);
 }
 
 void ACustomWindow::onPointerReleased(const APointerReleasedEvent& event) {
