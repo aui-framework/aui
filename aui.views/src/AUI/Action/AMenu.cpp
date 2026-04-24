@@ -18,21 +18,52 @@
 #include <AUI/Action/MenuProvider/AEmbedMenuProvider.h>
 #include "AMenu.h"
 
+#if AUI_PLATFORM_MACOS
+#include "AUI/Platform/macos/MacOSMenuProvider.h"
+#elif AUI_PLATFORM_WIN
+#include "AUI/Platform/win32/Win32MenuProvider.h"
+#endif
+
+namespace {
+bool gUseSystemMenus = false;
+_<IMenuProvider> gOverrideProvider;
+_<IMenuProvider> gCachedProvider;
+
+void resetCache() { gCachedProvider.reset(); }
+}
+
 void AMenu::show(const AMenuModel& model) {
     provider()->createMenu(model);
 }
 
 _<IMenuProvider>& AMenu::provider() {
-    static _<IMenuProvider> provider = nullptr;
-    if (provider == nullptr) {
-        if (dynamic_cast<AWindow*>(AWindow::current())) {
-            provider = _new<AWindowMenuProvider>();
-        } else {
-            provider = _new<AEmbedMenuProvider>();
-        }
+    if (gCachedProvider) {
+        return gCachedProvider;
     }
 
-    return provider;
+    if (gOverrideProvider) {
+        gCachedProvider = gOverrideProvider;
+        return gCachedProvider;
+    }
+
+    if (!dynamic_cast<AWindow*>(AWindow::current())) {
+        gCachedProvider = _new<AEmbedMenuProvider>();
+        return gCachedProvider;
+    }
+
+    if (gUseSystemMenus) {
+#if AUI_PLATFORM_MACOS
+        gCachedProvider = _new<MacOSMenuProvider>();
+        return gCachedProvider;
+#elif AUI_PLATFORM_WIN
+        gCachedProvider = _new<Win32MenuProvider>();
+        return gCachedProvider;
+#endif
+        // No system-menu implementation on this platform — fall through to AUI-drawn.
+    }
+
+    gCachedProvider = _new<AWindowMenuProvider>();
+    return gCachedProvider;
 }
 
 void AMenu::close() {
@@ -41,4 +72,17 @@ void AMenu::close() {
 
 bool AMenu::isOpen() {
     return provider()->isOpen();
+}
+
+void AMenu::setUseSystemMenus(bool enabled) {
+    if (gUseSystemMenus == enabled) {
+        return;
+    }
+    gUseSystemMenus = enabled;
+    resetCache();
+}
+
+void AMenu::setGlobalProvider(_<IMenuProvider> provider) {
+    gOverrideProvider = std::move(provider);
+    resetCache();
 }
