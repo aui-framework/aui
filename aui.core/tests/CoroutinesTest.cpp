@@ -58,10 +58,22 @@ static AFuture<int> longTaskException() {
 }
 
 TEST(Coroutines, CoAwaitException) {
-    auto future = []() -> AFuture<int> {
-        auto v228 = co_await longTaskException();
-        co_return v228 + 322;
+    AAsyncHolder async;
+    auto future = []() -> AFuture<> {
+        try {
+            auto v228 = co_await longTaskException();
+        } catch (const AException& e) {
+            co_return;
+        }
+        GTEST_NONFATAL_FAILURE_("exception was not reported");
     }();
+
+
+    AEventLoop loop;
+    IEventLoop::Handle h(&loop);
+    while (async.size() > 0) {
+        loop.iteration();
+    }
 }
 
 #endif
