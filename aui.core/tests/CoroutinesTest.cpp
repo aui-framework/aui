@@ -59,7 +59,7 @@ static AFuture<int> longTaskException() {
 
 TEST(Coroutines, CoAwaitException) {
     AAsyncHolder async;
-    auto future = []() -> AFuture<> {
+    async << []() -> AFuture<> {
         try {
             auto v228 = co_await longTaskException();
         } catch (const AException& e) {
