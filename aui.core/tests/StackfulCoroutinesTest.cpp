@@ -24,7 +24,7 @@ using namespace std::chrono_literals;
 
 
 
-AFuture<int> longTask(high_resolution_clock::time_point* returnTimePoint, milliseconds duration) {
+static AFuture<int> longTask(high_resolution_clock::time_point* returnTimePoint, milliseconds duration) {
     return AUI_THREADPOOL {
         AThread::sleep(duration); // long tamssk
         *returnTimePoint = high_resolution_clock::now();

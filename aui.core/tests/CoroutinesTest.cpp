@@ -23,14 +23,14 @@ using namespace std::chrono_literals;
 
 
 
-AFuture<int> longTask() {
+static AFuture<int> longTask() {
     return AUI_THREADPOOL {
         AThread::sleep(10ms); // long tamssk
         return 228;
     };
 }
 
-AFuture<int> longTaskException() {
+static AFuture<int> longTaskException() {
     return AUI_THREADPOOL -> int {
         AThread::sleep(10ms); // long tamssk
         throw AException("Whoops! Something bad happened");
