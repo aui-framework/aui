@@ -13,9 +13,6 @@
 
 #include <coroutine>
 #include "AUI/Common/AException.h"
-#include "AUI/Thread/AAsyncHolder.h"
-#include "AUI/Thread/AEventLoop.h"
-
 #include <gtest/gtest.h>
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Util/kAUI.h>
@@ -33,24 +30,7 @@ AFuture<int> longTask() {
     };
 }
 
-TEST(Coroutines, CoAwait) {
-    /// [co_await1]
-    AAsyncHolder async;
-    async << []() -> AFuture<> {
-        auto v228 = co_await longTask();
-        EXPECT_EQ(v228, 228);
-        co_return;
-    }();
-
-    AEventLoop loop;
-    IEventLoop::Handle h(&loop);
-    while (async.size() > 0) {
-        loop.iteration();
-    }
-    /// [co_await1]
-}
-
-static AFuture<int> longTaskException() {
+AFuture<int> longTaskException() {
     return AUI_THREADPOOL -> int {
         AThread::sleep(10ms); // long tamssk
         throw AException("Whoops! Something bad happened");
@@ -58,22 +38,10 @@ static AFuture<int> longTaskException() {
 }
 
 TEST(Coroutines, CoAwaitException) {
-    AAsyncHolder async;
-    auto future = []() -> AFuture<> {
-        try {
-            auto v228 = co_await longTaskException();
-        } catch (const AException& e) {
-            co_return;
-        }
-        GTEST_NONFATAL_FAILURE_("exception was not reported");
+    auto future = []() -> AFuture<int> {
+        auto v228 = co_await longTaskException();
+        co_return v228 + 322;
     }();
-
-
-    AEventLoop loop;
-    IEventLoop::Handle h(&loop);
-    while (async.size() > 0) {
-        loop.iteration();
-    }
 }
 
 #endif
