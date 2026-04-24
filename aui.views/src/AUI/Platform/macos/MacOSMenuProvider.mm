@@ -47,11 +47,14 @@ namespace {
 
 namespace {
 
+// Returns an autoreleased NSString so it can be used inline in +alloc/-init calls
+// (the receiving AppKit method will copy/retain as needed, and we don't leak +1).
 NSString* toNs(const AString& s) {
     const std::string utf8 = s.toStdString();
-    return [[NSString alloc] initWithBytes:utf8.data()
-                                    length:utf8.size()
-                                  encoding:NSUTF8StringEncoding];
+    NSString* str = [[NSString alloc] initWithBytes:utf8.data()
+                                             length:utf8.size()
+                                           encoding:NSUTF8StringEncoding];
+    return [str autorelease];
 }
 
 // Convert an AShortcut into an NSMenuItem keyEquivalent + modifierMask pair.
@@ -59,12 +62,18 @@ NSString* toNs(const AString& s) {
 // idiomatic menu display. This is best-effort — more exotic keys fall through as
 // no key equivalent (the menu still works via the stored onAction callback).
 void applyShortcut(NSMenuItem* item, const AShortcut& shortcut) {
-    const AString& display = shortcut.toString();
+    if (shortcut.empty()) return;
+    const AString display = static_cast<AString>(shortcut);
     if (display.empty()) return;
 
     // Parse the last character as the key (common pattern: "Ctrl+Shift+S" → 'S').
     const auto plus = display.rfind('+');
-    const AString keyPart = (plus == AString::NPOS) ? display : display.substr(plus + 1);
+    AString keyPart;
+    if (plus == AString::NPOS) {
+        keyPart = display;
+    } else {
+        keyPart = display.substr(plus + 1);
+    }
     if (keyPart.empty()) return;
 
     NSString* keyNs = toNs(keyPart.lowercase());
@@ -103,56 +112,68 @@ NSImage* drawableToNSImage(const _<IDrawable>& drawable) {
                      bytesPerRow:bytesPerRow
                     bitsPerPixel:32];
     if (!rep) return nil;
-    if (int(buf.size()) < bytesPerRow * h) return nil;
+    if (int(buf.size()) < bytesPerRow * h) {
+        [rep release];
+        return nil;
+    }
     std::memcpy([rep bitmapData], buf.data(), bytesPerRow * h);
 
-    NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize(16, 16)];
-    [image addRepresentation:rep];
+    NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize(16, 16)];   // +1, caller owns
+    [image addRepresentation:rep];                                        // rep now +2 (image retains)
+    [rep release];                                                        // back to +1 owned by image
     [image setTemplate:NO];
     return image;
 }
 
 NSMenu* buildMenu(const AVector<AMenuItem>& items, NSMutableArray* keepAlive) {
-    NSMenu* menu = [[NSMenu alloc] init];
+    NSMenu* menu = [[NSMenu alloc] init];   // +1, caller owns
     [menu setAutoenablesItems:NO];
 
     for (const auto& item : items) {
         switch (item.type) {
             case AMenu::SEPARATOR: {
+                // `separatorItem` returns an autoreleased object; addItem retains.
                 [menu addItem:[NSMenuItem separatorItem]];
                 break;
             }
             case AMenu::SUBLIST: {
                 NSMenuItem* mi = [[NSMenuItem alloc] initWithTitle:toNs(item.name)
                                                             action:nil
-                                                     keyEquivalent:@""];
-                [mi setSubmenu:buildMenu(item.subItems, keepAlive)];
+                                                     keyEquivalent:@""];   // +1
+                NSMenu* sub = buildMenu(item.subItems, keepAlive);        // +1
+                [mi setSubmenu:sub];                                      // retain
+                [sub release];                                            // back to +1 owned by mi
                 [mi setEnabled:item.enabled];
                 if (NSImage* icon = drawableToNSImage(item.icon)) {
                     [mi setImage:icon];
+                    [icon release];                                       // setImage retains
                 }
-                [menu addItem:mi];
+                [menu addItem:mi];                                        // retain
+                [mi release];                                             // back to +1 owned by menu
                 break;
             }
             case AMenu::SINGLE: {
-                AUIMenuTarget* tgt = [[AUIMenuTarget alloc] initWithCallback:item.onAction];
-                [keepAlive addObject:tgt];
+                AUIMenuTarget* tgt = [[AUIMenuTarget alloc] initWithCallback:item.onAction]; // +1
+                [keepAlive addObject:tgt];                                                    // retain
+                [tgt release];                                                                // +1 owned by keepAlive
 
                 NSMenuItem* mi = [[NSMenuItem alloc] initWithTitle:toNs(item.name)
                                                             action:@selector(invoke:)
-                                                     keyEquivalent:@""];
+                                                     keyEquivalent:@""];   // +1
                 [mi setTarget:tgt];
                 [mi setEnabled:item.enabled];
                 applyShortcut(mi, item.shortcut);
                 if (NSImage* icon = drawableToNSImage(item.icon)) {
                     [mi setImage:icon];
+                    [icon release];
                 }
                 [menu addItem:mi];
+                [mi release];
                 break;
             }
         }
     }
-    return menu;
+    return menu;   // caller owns (+1)
 }
 
 }   // namespace
@@ -169,9 +190,11 @@ void MacOSMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     NSMutableArray* keepAlive = [[NSMutableArray alloc] init];
     NSMenu* menu = buildMenu(vector, keepAlive);
 
-    // Retain both objects across the modal tracking loop; release after popUp returns.
-    mTrampolines = (__bridge_retained void*) keepAlive;
-    mCurrentMenu = (__bridge_retained void*) menu;
+    // Non-ARC: the alloc/init above leaves both objects at retain count 1. Store as
+    // raw void* (no bridge casts — ARC is off in this translation unit) and manually
+    // release after the modal tracking loop returns.
+    mTrampolines = (void*) keepAlive;
+    mCurrentMenu = (void*) menu;
 
     mOpen = true;
     const NSPoint loc = [NSEvent mouseLocation];   // screen coords (bottom-left origin)
@@ -179,18 +202,18 @@ void MacOSMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     mOpen = false;
 
     if (mCurrentMenu) {
-        CFRelease(mCurrentMenu);
+        [(id) mCurrentMenu release];
         mCurrentMenu = nullptr;
     }
     if (mTrampolines) {
-        CFRelease(mTrampolines);
+        [(id) mTrampolines release];
         mTrampolines = nullptr;
     }
 }
 
 void MacOSMenuProvider::closeMenu() {
     if (!mCurrentMenu) return;
-    NSMenu* menu = (__bridge NSMenu*) mCurrentMenu;
+    NSMenu* menu = (NSMenu*) mCurrentMenu;
     [menu cancelTracking];
     // `popUpMenuPositioningItem` is modal; cancelTracking unblocks it and the release
     // happens on the return path from createMenu.
