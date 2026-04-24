@@ -47,16 +47,6 @@ AUI_ENUM_FLAG(WindowStyle)
 
     /**
     * @brief Hides the OS-drawn title bar while keeping the system minimize/maximize/close controls.
-    *
-    * Per-platform behavior:
-    *  - macOS: title bar becomes transparent and the title text is hidden; the traffic-light
-    *    buttons remain visible, positioned by AppKit. The window keeps its system-managed
-    *    rounded corners and shadow.
-    *  - Windows: the caption area is collapsed via WM_NCCALCSIZE, and DwmExtendFrameIntoClientArea
-    *    is used so DWM continues to paint the min/max/close glyphs over the client area. The
-    *    application is responsible for reserving space for the buttons and providing a drag
-    *    region via WM_NCHITTEST (HTCAPTION).
-    *  - Linux/X11: not yet implemented — behaves like NO_DECORATORS.
     */
     NO_TITLEBAR = 0x10,
 
