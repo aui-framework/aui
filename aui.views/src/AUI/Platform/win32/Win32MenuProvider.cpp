@@ -116,10 +116,12 @@ void appendItem(HMENU parent, const AMenuItem& item, MenuResources& res) {
 
             // Win32 auto-right-aligns anything after a tab character.
             std::wstring label = toWide(item.name);
-            const AString shortcutText = item.shortcut.toString();
-            if (!shortcutText.empty()) {
-                label.push_back(L'\t');
-                label += toWide(shortcutText);
+            if (!item.shortcut.empty()) {
+                const AString shortcutText = static_cast<AString>(item.shortcut);
+                if (!shortcutText.empty()) {
+                    label.push_back(L'\t');
+                    label += toWide(shortcutText);
+                }
             }
 
             UINT flags = MF_STRING;
@@ -167,8 +169,10 @@ void Win32MenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     GetCursorPos(&pt);
 
     HWND hwnd = nullptr;
-    if (auto* win = AWindow::current()) {
-        hwnd = win->nativeHandle();
+    if (auto* base = AWindow::current()) {
+        if (auto* win = dynamic_cast<AWindow*>(base)) {
+            hwnd = win->getNativeHandle();
+        }
     }
 
     mOpen = true;
