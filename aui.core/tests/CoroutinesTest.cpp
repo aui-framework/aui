@@ -13,6 +13,9 @@
 
 #include <coroutine>
 #include "AUI/Common/AException.h"
+#include "AUI/Thread/AAsyncHolder.h"
+#include "AUI/Thread/AEventLoop.h"
+
 #include <gtest/gtest.h>
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Util/kAUI.h>
@@ -28,6 +31,23 @@ static AFuture<int> longTask() {
         AThread::sleep(10ms); // long tamssk
         return 228;
     };
+}
+
+TEST(Coroutines, CoAwait) {
+    /// [co_await1]
+    AAsyncHolder async;
+    async << []() -> AFuture<> {
+        auto v228 = co_await longTask();
+        EXPECT_EQ(v228, 228);
+        co_return;
+    }();
+
+    AEventLoop loop;
+    IEventLoop::Handle h(&loop);
+    while (async.size() > 0) {
+        loop.iteration();
+    }
+    /// [co_await1]
 }
 
 static AFuture<int> longTaskException() {
