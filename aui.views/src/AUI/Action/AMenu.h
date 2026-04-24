@@ -69,14 +69,5 @@ struct AMenuItem {
     std::function<void()> onAction;
     AVector<AMenuItem> subItems;
     bool enabled = true;
-
-    /**
-     * @brief Optional icon shown to the left of the menu item label.
-     * @details
-     * Honoured by native providers (NSMenu / HMENU) when `AMenu::setUseSystemMenus(true)`
-     * and by the AUI-drawn provider. On macOS the drawable is rasterised to 16pt, on
-     * Windows to 16×16 physical pixels.
-     */
     _<IDrawable> icon;
 };
-
