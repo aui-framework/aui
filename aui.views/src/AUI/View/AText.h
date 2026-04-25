@@ -54,6 +54,7 @@ public:
     void setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags = {});
 
     void setHtml(const AString& html, const Flags& flags = {});
+    void setMarkdown(const AString& md, const Flags& flags = {});
 
     void setString(const AString& string, const Flags& flags = {});
 
@@ -76,6 +77,12 @@ public:
     static _<AText> fromString(const AString& string, const Flags& flags = {}) {
         auto v = aui::ptr::manage_shared(new AText());
         v->setString(string, flags);
+        return v;
+    }
+
+    static _<AText> fromMarkdown(const AString& string, const Flags& flags = {}) {
+        auto v = aui::ptr::manage_shared(new AText());
+        v->setMarkdown(string, flags);
         return v;
     }
 
