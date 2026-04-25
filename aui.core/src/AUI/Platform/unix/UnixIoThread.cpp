@@ -98,6 +98,15 @@ void UnixIoThread::unregisterCallback(int fd) noexcept {
     });
 }
 
+AFuture<ABitField<UnixPollEvent>> UnixIoThread::waitForEvent(int fd, ABitField<UnixPollEvent> flags) {
+    AFuture<ABitField<UnixPollEvent>> future;
+    registerCallback(fd, flags, [this, future, fd](ABitField<UnixPollEvent> event) {
+         unregisterCallback(fd);
+         future.supplyValue(event);
+    });
+    return future;
+}
+
 UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     AThread::setName("AUI IO");
     UnixIoEventLoop loop(*this);

@@ -237,7 +237,8 @@ public:
 
     AString removedAll(AChar c);
 
-    AStringVector split(AChar c) const;
+    AStringVector split(AStringView separator) const;
+    AStringVector split(AChar separator) const;
 
     constexpr iterator begin() const noexcept {
         return AUtf8ConstIterator(data(), data(), data() + size(), 0);

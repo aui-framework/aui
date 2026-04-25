@@ -12,6 +12,7 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
 
 template <typename StoredType, std::size_t MaxSize>
 class AStaticVector;
@@ -84,6 +85,7 @@ public:
     }
 
     AStaticVector<char, 4> toUtf8() const noexcept;
+    std::string toString() const;
 
     constexpr char32_t codepoint() const noexcept {
         return mValue;
