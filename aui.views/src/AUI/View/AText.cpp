@@ -11,6 +11,11 @@
 
 #include <AUI/Util/AWordWrappingEngineImpl.h>
 #include "AText.h"
+
+#include "ALabel.h"
+#include "AUI/IO/AByteBufferInputStream.h"
+#include "AUI/Util/ATokenizer.h"
+
 #include <AUI/Xml/AXml.h>
 #include <AUI/IO/AStringStream.h>
 #include <AUI/Util/AViewEntry.h>
@@ -173,6 +178,107 @@ void AText::setHtml(const AString& html, const Flags& flags) {
 
     mParsedFlags = parsedFlags;
     mEngine.setEntries(std::move(entityVisitor.entries));
+}
+
+void AText::setMarkdown(const AString& md, const Flags& flags) {
+    clearContent();
+    auto parsedFlags = parseFlags(flags);
+    Entries entries;
+    ATokenizer tokenizer(_new<AByteBufferInputStream>(AByteBufferView(md.data(), md.sizeBytes())));
+    std::string lastWord;
+    bool rightAfterNewLine = true;
+    bool italic = false;
+    bool bold = false;
+    int headerLevel = 0;
+
+    auto handleWord = [&] {
+        if (lastWord.empty()) {
+            return;
+        }
+        auto label = _new<ALabel>(std::exchange(lastWord, {}));
+        label->getFontStyle().italic = italic;
+        label->getFontStyle().bold = bold;
+        label->setCustomStyle({
+          ass::FontSize { [&] {
+              // TODO: hardcoded: need to provide a way to adjust these
+              switch (headerLevel) {
+                  default:
+                  case 0:
+                      return 10_pt;
+                  case 1:
+                      return 24_pt;
+                  case 2:
+                      return 18_pt;
+                  case 3:
+                      return 16_pt;
+                  case 4:
+                      return 14_pt;
+                  case 5:
+                      return 12_pt;
+              }
+          }() },
+        });
+        mViewsContainer->addView(label);
+        entries << _new<AViewEntry>(std::move(label));
+    };
+    try {
+        for (;;) {
+            std::function<void()> doAfterWord; // lol dirty
+            switch (auto c = tokenizer.readChar()) {
+                case '*':
+                    doAfterWord = [&] {
+                        if (tokenizer.readChar() == '*') {
+                            bold = !bold;
+                        } else {
+                            tokenizer.reverseByte();
+                            italic = !italic;
+                        }
+                    };
+                    break;
+
+                case ' ':
+                case '\t':
+                    if (rightAfterNewLine) {
+                        continue; // skip dangling whitespaces
+                    }
+                    doAfterWord = [&] {
+                        entries << aui::ptr::fake_shared(&mWhitespaceEntry);
+                        // auto dot = _new<ALabel>("\u00b7") AUI_OVERRIDE_STYLE { ass::Opacity { 0.8f} };
+                        // mViewsContainer->addView(dot);
+                        // entries << _new<AViewEntry>(std::move(dot));
+                    };
+                    break;
+                case '\n':
+                    doAfterWord = [&] {
+                        rightAfterNewLine = true;
+                        entries << aui::ptr::fake_shared(&mNextLineEntry);
+                        headerLevel = 0;
+                    };
+                    break;
+
+                case '#':
+                    if (rightAfterNewLine) {
+                        // treat this as header only if we have started from a fresh line.
+                        doAfterWord = [&] {
+                            headerLevel++;
+                        };
+                        break;
+                    }
+                    [[fallthrough]];
+
+                default:
+                    rightAfterNewLine = false;
+                    lastWord += c;
+                    continue;
+            }
+
+            handleWord();
+            AUI_NULLSAFE(doAfterWord)();
+        }
+    } catch (const AEOFException& e) {}
+    handleWord();
+    mEngine.setEntries(std::move(entries));
+    mParsedFlags = parsedFlags;
 }
 
 void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {

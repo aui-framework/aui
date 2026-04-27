@@ -354,7 +354,8 @@ public:
         return view().lowercase();
     }
 
-    AStringVector split(AChar c) const;
+    AStringVector split(AChar separator) const;
+    AStringVector split(AStringView separator) const;
 
     AString replacedAll(AChar from, AChar to) const;
 

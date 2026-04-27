@@ -290,6 +290,65 @@ void AString::resizeToNullTerminator() {
     resize(end - current);
 }
 
+bool AString::startsWith(AChar prefix) const noexcept {
+    auto utf8p = prefix.toUtf8();
+    return startsWith(AStringView(utf8p.data(), utf8p.size()));
+}
+
+bool AString::endsWith(AChar suffix) const noexcept {
+    auto utf8s = suffix.toUtf8();
+    return endsWith(AStringView(utf8s.data(), utf8s.size()));
+}
+
+auto AString::erase(const_iterator it) -> iterator {
+    if (it == cend()) {
+        return end();
+    }
+
+    size_type byte_pos = it.getBytePos();
+
+    size_type temp_pos = byte_pos;
+    aui::utf8::detail::decodeUtf8At(data(), temp_pos, size());
+    size_type char_byte_length = temp_pos - byte_pos;
+
+    super::erase(byte_pos, char_byte_length);
+
+    return iterator(this, byte_pos);
+}
+
+auto AString::erase(const_iterator begin, const_iterator end) -> iterator {
+    if (begin == cend() || begin == end) {
+        return iterator(this, begin == cend() ? size() : begin.getBytePos());
+    }
+
+    if (end == cend()) {
+        end = cend();
+    }
+
+    size_type begin_byte_pos = begin.getBytePos();
+    size_type end_byte_pos = end.getBytePos();
+
+    if (begin_byte_pos >= end_byte_pos) {
+        return iterator(this, begin_byte_pos);
+    }
+
+    size_type bytes_to_erase = end_byte_pos - begin_byte_pos;
+
+    super::erase(begin_byte_pos, bytes_to_erase);
+
+    return iterator(this, begin_byte_pos);
+}
+
+void AString::erase(size_t u_pos, size_t u_count) {
+    erase(begin() + u_pos, begin() + u_pos + u_count);
+}
+
+AStringVector AString::split(AChar separator) const {
+    return view().split(separator);
+}
+
+AStringVector AString::split(AStringView separator) const {
+    return view().split(separator);
 AStringVector AString::split(AChar c) const {
     return view().split(c);
 }

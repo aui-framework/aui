@@ -185,7 +185,8 @@ public:
 
     AString removedAll(AChar c) const;
 
-    AStringVector split(AChar c) const;
+    AStringVector split(AStringView separator) const;
+    AStringVector split(AChar separator) const;
 
     constexpr AChar first() const {
         if (empty()) {

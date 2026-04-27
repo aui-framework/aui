@@ -266,6 +266,10 @@ AStringVector AStringView::split(AChar c) const {
     return result;
 }
 
+AStringVector AStringView::split(AChar separator) const {
+    return split(AStringView(separator.toString()));
+}
+
 AString AStringView::replacedAll(AChar from, AChar to) const {
     return utf8().replacedAll(from, to);
 }

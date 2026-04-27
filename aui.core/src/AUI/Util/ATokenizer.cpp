@@ -149,22 +149,6 @@ T ATokenizer::readIntImpl() {
                 case '7':
                 case '8':
                 case '9':
-                case 'x':
-                case 'X':
-
-                    // hex
-                case 'a':
-                case 'A':
-                case 'b':
-                case 'B':
-                case 'c':
-                case 'C':
-                case 'd':
-                case 'D':
-                case 'e':
-                case 'E':
-                case 'f':
-                case 'F':
                     mTemporaryAStringBuffer << c;
                     break;
                 case '-':

@@ -578,7 +578,7 @@ namespace aui::impl::future {
  *     AFuture<int> longOperation();
  *     AFuture<int> myFunction() {
  *       int resultOfLongOperation = co_await longOperation();
- *       return resultOfLongOperation + 1;
+ *       co_return resultOfLongOperation + 1;
  *     }
  *     ```
  *
@@ -621,7 +621,7 @@ namespace aui::impl::future {
  * AFuture may execute the task (if not default-constructed) on the caller thread instead of waiting. See AFuture::wait
  * for details.
  */
-template<typename T = void>
+template<typename T>
 class AFuture final: public aui::impl::future::Future<T> {
 private:
     using super = typename aui::impl::future::Future<T>;
@@ -950,6 +950,7 @@ struct aui::impl::future::Future<Value>::CoPromiseType {
     {
         return std::suspend_never{};
     }
+
     auto unhandled_exception() const noexcept {
         future.supplyException();
     }
@@ -963,6 +964,32 @@ struct aui::impl::future::Future<Value>::CoPromiseType {
     }
 };
 
+template<>
+struct aui::impl::future::Future<void>::CoPromiseType {
+    AFuture<void> future;
+    auto initial_suspend() const noexcept
+    {
+        return std::suspend_never{};
+    }
+
+    auto final_suspend() const noexcept
+    {
+        return std::suspend_never{};
+    }
+
+    auto unhandled_exception() const noexcept {
+        future.supplyException();
+    }
+
+    const AFuture<void>& get_return_object() const noexcept {
+        return future;
+    }
+
+    void return_void() const noexcept {
+        future.supplyValue();
+    }
+};
+
 template<typename T>
 auto operator co_await(AFuture<T> future) {
     struct Awaitable {
@@ -972,20 +999,27 @@ auto operator co_await(AFuture<T> future) {
             return future.hasResult();
         }
 
-        T await_resume() {
-            return *future;
+        auto await_resume() {
+            if constexpr (std::is_same_v<T, void>) {
+                *future;
+            } else {
+                return std::move(*future);
+            }
         }
 
-
-        void await_suspend(std::coroutine_handle<> h)
+        void await_suspend(std::coroutine_handle<> handle)
         {
-            future.onSuccess([h](const int&) {
-                h.resume();
-            });
-            
-            future.onError([h](const AException&) {
-                h.resume();
-            });
+            // onSuccess and onError are called by supplyValue which might have been called on a different thread.
+            // if we keep this logic for coroutines, the callstack will grow very fast and inconsistent.
+            // for co_await, let's keep the caller thread.
+            // if user wants to magically switch threads using co_await, they'll figure out how to shoot their knee.
+            auto callback = [handle = std::move(handle), callerThread = AThread::current()](const auto&...) {
+                callerThread->enqueue([handle = std::move(handle)] {
+                    handle.resume();
+                });
+            };
+            future.onSuccess(callback);
+            future.onError(std::move(callback));
         }
     };
 
