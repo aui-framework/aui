@@ -195,57 +195,8 @@ AString& AString::append(AChar c) {
     return *this;
 }
 
-AString& AString::replaceAll(AChar from, AChar to) {
-    if (empty()) return *this;
-    return (*this = replacedAll(from, to));
-}
-
-AString& AString::replaceAll(AStringView from, AStringView to) {
-    if (empty()) return *this;
-    for (size_type next = 0;;)
-    {
-        next = find(from.bytes(), next);
-        if (next == NPOS)
-        {
-            return *this;
-        }
-
-        auto fromLength = from.sizeBytes();
-        auto toLength = to.sizeBytes();
-
-        if (fromLength == toLength) {
-            for (auto c : to) {
-                *(bytes().begin() + next++) = c;
-            }
-        } else if (fromLength < toLength) {
-            const auto diff = toLength - fromLength;
-            for (auto c : aui::range(to.bytes().begin(), to.bytes().end() - diff)) {
-                *(bytes().begin() + next++) = c;
-            }
-            next = std::distance(bytes().begin(), bytes().insert(bytes().begin() + next, to.bytes().begin() + fromLength, to.bytes().end())) + 1;
-        } else {
-            for (auto c : to) {
-                *(bytes().begin() + next++) = c;
-            }
-            const auto diff = fromLength - toLength;
-            super::erase(bytes().begin() + next, bytes().begin() + next + diff);
-        }
-    }
-    return *this;
-}
-
 AString AString::replacedAll(AChar from, AChar to) const {
-    if (empty()) return {};
-    AString copy;
-    copy.reserve(sizeBytes());
-    for (auto c : *this) {
-        if (c == from) {
-            copy << to;
-        } else {
-            copy << c;
-        }
-    }
-    return copy;
+    return view().replacedAll(from, to);
 }
 
 AString AString::replacedAll(AStringView from, AStringView to) const {
@@ -271,12 +222,34 @@ AString AString::replacedAll(AStringView from, AStringView to) const {
     return result;
 }
 
-AString& AString::removeAll(AChar c) {
-    for (auto it = begin(); it != end();) {
-        if (*it == c) {
-            it = erase(it);
+AString& AString::replaceAll(AStringView from, AStringView to) {
+    if (empty()) return *this;
+    for (size_type next = 0;;) {
+        next = find(from.bytes(), next);
+        if (next == NPOS)
+        {
+            return *this;
+        }
+
+        auto fromLength = from.sizeBytes();
+        auto toLength = to.sizeBytes();
+
+        if (fromLength == toLength) {
+            for (auto c : to) {
+                *(bytes().begin() + next++) = c;
+            }
+        } else if (fromLength < toLength) {
+            const auto diff = toLength - fromLength;
+            for (auto c : aui::range(to.bytes().begin(), to.bytes().end() - diff)) {
+                *(bytes().begin() + next++) = c;
+            }
+            next = std::distance(bytes().begin(), bytes().insert(bytes().begin() + next, to.bytes().begin() + fromLength, to.bytes().end())) + 1;
         } else {
-            ++it;
+            for (auto c : to) {
+                *(bytes().begin() + next++) = c;
+            }
+            const auto diff = fromLength - toLength;
+            super::erase(bytes().begin() + next, bytes().begin() + next + diff);
         }
     }
     return *this;

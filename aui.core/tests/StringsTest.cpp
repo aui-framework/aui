@@ -51,15 +51,17 @@ TEST(Strings, ToFloat) {
 }
 
 TEST(Strings, Uppercase1) {
-    EXPECT_EQ("å"_as.uppercase(), "Å");
+    EXPECT_EQ("a"_as.uppercase(), "A"); // ascii
+    EXPECT_EQ("å"_au8.uppercase(), "Å"); // unicode
 }
 
 TEST(Strings, Uppercase2) {
-    EXPECT_EQ("àáâäǎæãāăą ŵëþűųǐíïıįğ çżð"_as.uppercase(), "ÀÁÂÄǍÆÃĀĂĄ ŴËÞŰŲǏÍÏİĮĞ ÇŻÐ");
+    EXPECT_EQ("àáâäǎæãāăą ŵëþűųǐíïıįğ çżð"_au8.uppercase(), "ÀÁÂÄǍÆÃĀĂĄ ŴËÞŰŲǏÍÏİĮĞ ÇŻÐ");
 }
 
 TEST(Strings, Downcase1) {
-    EXPECT_EQ("Å"_as.lowercase(), "å");
+    EXPECT_EQ("A"_as.lowercase(), "a"); // ascii
+    EXPECT_EQ("Å"_au8.lowercase(), "å"); // unicode
 }
 
 TEST(Strings, ReplaceAll1) {
@@ -144,7 +146,7 @@ TEST(Strings, ClownUnicode) {
 
 TEST(Strings, MultibyteErase) {
     auto s = "A🤡B"_as;
-    s.erase(1, 1);
+    s.erase(1, 4); // clown is 4 bytes width in UTF-8
     EXPECT_EQ(s, "AB");
     EXPECT_EQ(s.bytes().size(), 2);
 }
@@ -158,7 +160,8 @@ TEST(Strings, MultibyteInsert) {
 
 TEST(Strings, Chinese) {
     EXPECT_EQ("嗨"_as, "嗨");
-    EXPECT_EQ("嗨"_as.length(), 1);
+    EXPECT_EQ("嗨"_as.length(), 3);
+    EXPECT_EQ("嗨"_as.utf8().length(), 1);
     EXPECT_EQ("嗨"_as.toStdString(), "嗨");
 }
 
@@ -183,7 +186,7 @@ TEST(Strings, Substr1) {
 
 TEST(Strings, Substr2) {
     AString str("🤡, как твои дела?");
-    EXPECT_EQ(str.substr(0, 1), "🤡");
-    EXPECT_EQ(str.substr(1), ", как твои дела?");
-    EXPECT_EQ(str.substr(1, 3), ", к");
+    EXPECT_EQ(str.utf8().substr(0, 1), "🤡");
+    EXPECT_EQ(str.utf8().substr(1), ", как твои дела?");
+    EXPECT_EQ(str.utf8().substr(1, 3), ", к");
 }

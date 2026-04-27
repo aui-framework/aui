@@ -25,13 +25,10 @@ class API_AUI_CORE AStringVector;
 
 
 /**
- * @brief Represents a UTF-8 string view.
+ * @brief Represents a string view.
  * @ingroup core
  * @details
- * AStringView stores a pointer and size of constant 8-bit integer sequence representing UTF-8 code units. Each Unicode
- * character (codepoint) is encoded using 1-4 consecutive code units, supporting the full Unicode standard.
- *
- * Unicode provides comprehensive support for international writing systems and symbols.
+ * AStringView stores a pointer and size of constant byte sequence.
  *
  * AStringView points to constant data. For owning version of AStringView, see [AString].
  *
@@ -184,7 +181,9 @@ public:
 
     AString lowercase() const;
 
-    AString removedAll(AChar c);
+    AString replacedAll(AChar from, AChar to) const;
+
+    AString removedAll(AChar c) const;
 
     AStringVector split(AChar c) const;
 

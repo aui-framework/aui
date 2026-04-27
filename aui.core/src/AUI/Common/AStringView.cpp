@@ -266,10 +266,12 @@ AStringVector AStringView::split(AChar c) const {
     return result;
 }
 
-AString AStringView::removedAll(AChar c) {
-    AString copy{*this};
-    copy.removeAll(c);
-    return copy;
+AString AStringView::replacedAll(AChar from, AChar to) const {
+    return utf8().replacedAll(from, to);
+}
+
+AString AStringView::removedAll(AChar c) const {
+    return utf8().removedAll(c);
 }
 
 #if AUI_PLATFORM_WIN

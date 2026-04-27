@@ -850,3 +850,60 @@ AString AUtf8View::lowercase() const {
 
     return buf;
 }
+
+AString AUtf8View::replacedAll(AChar from, AChar to) const {
+    std::string result;
+    result.reserve(sizeBytes());
+
+    auto to_str = to.toUtf8();
+
+    for (auto it = begin(); it != end(); ++it) {
+        if (*it == from) {
+            result.append(to_str.begin(), to_str.end());
+        } else {
+            auto byte_start = it.getBytePos();
+            auto next_it = it;
+            ++next_it;
+            result.append(str.data(), byte_start, next_it.getBytePos() - byte_start);
+        }
+    }
+
+    return result;
+}
+
+AString AUtf8View::removedAll(AChar c) const {
+    std::string result;
+    result.reserve(str.size());
+
+    for (auto it = begin(); it != end(); ++it) {
+        if (*it != c) {
+            auto byte_start = it.getBytePos();
+            auto next_it = it;
+            ++next_it;
+            auto byte_end = next_it.getBytePos();
+            result.append(str, byte_start, byte_end - byte_start);
+        }
+    }
+
+    return result;
+}
+
+AStringVector AUtf8View::split(AChar c) const {
+    if (c == '\0') return {};
+    if (empty()) {
+        return {};
+    }
+    AStringVector result;
+    result.reserve(length() / 10);
+
+    auto segment_begin = begin();
+    for (auto it = begin(); it != end(); ++it) {
+        if (*it == c) {
+            result << AUtf8View(segment_begin.data(), it.data() - segment_begin.data());
+            segment_begin = std::next(it);
+        }
+    }
+    result << AUtf8View(segment_begin.data(), end().data() - segment_begin.data());
+
+    return result;
+}

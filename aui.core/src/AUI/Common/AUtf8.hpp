@@ -389,9 +389,16 @@ public:
 
 class AStringView;
 class AString;
+class AStringVector;
 
 /**
  * @brief UTF-8 View
+ * @ingroup core
+ * @details
+ * AUtf8View stores a pointer and size of constant 8-bit integer sequence representing UTF-8 code units. Each Unicode
+ * character (codepoint) is encoded using 1-4 consecutive code units, supporting the full Unicode standard.
+ *
+ * Unicode provides comprehensive support for international writing systems and symbols.
  */
 class API_AUI_CORE AUtf8View {
 public:
@@ -414,6 +421,10 @@ public:
     constexpr AUtf8View(const char8_t* begin, const char8_t* end) : str(pointer_cast<char>(begin), pointer_cast<char>(end)) {}
 
     constexpr AUtf8View(const iterator& begin, const iterator& end) : str(begin.data(), end.data()) {}
+
+    constexpr AUtf8View(const char* data) noexcept : str(data) {}
+
+    constexpr AUtf8View(const char8_t* data) noexcept : str(pointer_cast<char>(data)) {}
 
     constexpr AUtf8View(std::string_view s) noexcept : str(s) {}
 
@@ -528,6 +539,12 @@ public:
 
     AString lowercase() const;
 
+    AStringVector split(AChar c) const;
+
+    AString replacedAll(AChar from, AChar to) const;
+
+    AString removedAll(AChar c) const;
+
     constexpr const_iterator begin() const noexcept {
         return const_iterator(data(), data(), data() + sizeBytes(), 0);
     }
@@ -564,3 +581,7 @@ public:
         return str == other.str;
     }
 };
+
+inline AUtf8View operator""_au8(const char* str, size_t len) {
+    return {str, len};
+}

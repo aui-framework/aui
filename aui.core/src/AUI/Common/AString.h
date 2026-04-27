@@ -33,13 +33,10 @@ class API_AUI_CORE AByteBufferView;
 class API_AUI_CORE AUtf8View;
 
 /**
- * @brief Represents a UTF-8 string.
+ * @brief Represents an owned string.
  * @ingroup core
  * @details
- * AString stores a sequence of 8-bit integers representing UTF-8 code units. Each Unicode character
- * (codepoint) is encoded using 1-4 consecutive code units, supporting the full Unicode standard.
- *
- * Unicode provides comprehensive support for international writing systems and symbols.
+ * AString stores a byte sequence
  *
  * For non-owning version of AString, see [AStringView].
  */
@@ -359,18 +356,24 @@ public:
 
     AStringVector split(AChar c) const;
 
-    AString& replaceAll(AChar from, AChar to);
-
-    AString& replaceAll(AStringView from, AStringView to);
-
     AString replacedAll(AChar from, AChar to) const;
+
+    AString& replaceAll(AChar from, AChar to) {
+        if (empty()) return *this;
+        return (*this = replacedAll(from, to));
+    }
 
     AString replacedAll(AStringView from, AStringView to) const;
 
-    AString& removeAll(AChar c);
+    AString& replaceAll(AStringView from, AStringView to);
 
-    AString removedAll(AChar c) {
+    AString removedAll(AChar c) const {
         return view().removedAll(c);
+    }
+
+    AString& removeAll(AChar c) {
+        if (empty()) return *this;
+        return (*this = removedAll(c));
     }
 
     AString processEscapes() const;
