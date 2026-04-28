@@ -235,7 +235,29 @@ void AWindow::hideTouchscreenKeyboardImpl() {
 }
 
 void AWindow::moveToCenter() {
+    if (!mHandle) return;
+    auto* s = static_cast<NSWindow*>(mHandle);
+    NSScreen* screen = [s screen];
+    if (!screen) {
+        screen = [[NSScreen screens] firstObject];
+    }
+    if (!screen) return;
 
+    const NSRect screenFrame = [screen frame];
+    const float dpi = getDpiRatio();
+    const glm::ivec2 windowSize = getSize();
+
+    // Mathematical center in points
+    const CGFloat centerX = screenFrame.origin.x + (screenFrame.size.width - windowSize.x / dpi) / 2;
+    const CGFloat centerY = screenFrame.origin.y + (screenFrame.size.height - windowSize.y / dpi) / 2;
+
+    // Convert to AUI coordinates
+    NSScreen* primary = [[NSScreen screens] firstObject];
+    const CGFloat primaryH = [primary frame].size.height;
+    const int auiX = int(centerX * dpi);
+    const int auiY = int((primaryH - (centerY + windowSize.y / dpi)) * dpi);
+
+    setPosition({auiX, auiY});
 }
 
 void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
