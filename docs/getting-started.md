@@ -249,7 +249,7 @@ to free you from dependency management and focus you right to development of you
 
         !!! warning "AUI version support"
             XMake package support currently targets **AUI v7.1.2**. Newer versions (v8.x and above) are not yet
-            available in xmake-repo. If you need the latest AUI, use [AUI Boot] or [CPM] instead.
+            available in xmake-repo. If you need the latest AUI, use AUI Boot or CPM instead.
 
         !!! success "Install XMake"
 
