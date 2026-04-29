@@ -244,38 +244,82 @@ bool AStringView::toBool() const {
            (d[3] == 'e' || d[3] == 'E');
 }
 
-AStringVector AStringView::split(AChar c) const {
+AString AStringView::replacedAll(AStringView from, AStringView to) const {
+    AString result;
+    result.reserve(size());
+
+    for (size_type pos = 0;;) {
+        auto next = find(from.bytes(), pos);
+        if (next == npos) {
+            result.bytes().insert(result.bytes().end(),
+                                  bytes().begin() + pos, bytes().end());
+            return result;
+        }
+
+        result.bytes().insert(result.bytes().end(),
+                              bytes().begin() + pos, bytes().begin() + next);
+        result.bytes().insert(result.bytes().end(),
+                              to.bytes().begin(), to.bytes().end());
+
+        pos = next + from.length();
+    }
+}
+
+AString AStringView::replacedAll(AChar from, AChar to) const {
+    auto utf8from = from.toUtf8();
+    auto utf8to   = to.toUtf8();
+    return replacedAll(AStringView(utf8from.begin(), utf8from.end()),
+                       AStringView(utf8to.begin(),   utf8to.end()));
+}
+
+AString AStringView::removedAll(AStringView seq) const {
+    AString result;
+    result.reserve(size());
+
+    for (size_type pos = 0;;) {
+        auto next = find(seq.bytes(), pos);
+        if (next == npos) {
+            result.bytes().insert(result.bytes().end(),
+                                  bytes().begin() + pos, bytes().end());
+            return result;
+        }
+
+        result.bytes().insert(result.bytes().end(),
+                              bytes().begin() + pos, bytes().begin() + next);
+
+        pos = next + seq.length();
+    }
+}
+
+AString AStringView::removedAll(AChar c) const {
+    auto utf8c = c.toUtf8();
+    return removedAll(AStringView(utf8c.begin(), utf8c.end()));
+}
+
+AStringVector AStringView::split(AStringView separator) const {
     if (empty()) {
         return {};
     }
-    auto utf8c = c.toUtf8();
-    if (utf8c.empty()) return {};
-    std::string separator_utf8(utf8c.begin(), utf8c.end());
+
     AStringVector result;
-    result.reserve(length() / 10);
+    result.reserve(8);
+
     for (size_type s = 0;;) {
-        auto next = super::find(separator_utf8, s);
+        auto next = find(separator, s);
         if (next == npos) {
             result << substr(s);
             break;
         }
-
         result << substr(s, next - s);
-        s = next + separator_utf8.length();
+        s = next + separator.length();
     }
+
     return result;
 }
 
 AStringVector AStringView::split(AChar separator) const {
-    return split(AStringView(separator.toString()));
-}
-
-AString AStringView::replacedAll(AChar from, AChar to) const {
-    return utf8().replacedAll(from, to);
-}
-
-AString AStringView::removedAll(AChar c) const {
-    return utf8().removedAll(c);
+    auto utf8s = separator.toUtf8();
+    return split(AStringView(utf8s.begin(), utf8s.end()));
 }
 
 #if AUI_PLATFORM_WIN

@@ -181,9 +181,11 @@ public:
 
     using super::push_back;
 
-    void insert(size_type pos, AChar c);
+    using super::insert;
 
     void insert(size_type pos, AStringView str);
+
+    void insert(size_type pos, AChar c);
 
     /**
      * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
@@ -354,19 +356,36 @@ public:
         return view().lowercase();
     }
 
-    AStringVector split(AChar separator) const;
     AStringVector split(AStringView separator) const;
 
-    AString replacedAll(AChar from, AChar to) const;
+    AStringVector split(AChar separator) const;
+
+    AString replacedAll(AStringView from, AStringView to) const {
+        return view().replacedAll(from, to);
+    }
+
+    AString& replaceAll(AStringView from, AStringView to) {
+        if (empty()) return *this;
+        return (*this = replacedAll(from, to));
+    }
+
+    AString replacedAll(AChar from, AChar to) const {
+        return view().replacedAll(from, to);
+    }
 
     AString& replaceAll(AChar from, AChar to) {
         if (empty()) return *this;
         return (*this = replacedAll(from, to));
     }
 
-    AString replacedAll(AStringView from, AStringView to) const;
+    AString removedAll(AStringView seq) const {
+        return view().removedAll(seq);
+    }
 
-    AString& replaceAll(AStringView from, AStringView to);
+    AString& removeAll(AStringView seq) {
+        if (empty()) return *this;
+        return (*this = removedAll(seq));
+    }
 
     AString removedAll(AChar c) const {
         return view().removedAll(c);

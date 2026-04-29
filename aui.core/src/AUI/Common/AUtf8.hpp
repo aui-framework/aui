@@ -539,12 +539,6 @@ public:
 
     AString lowercase() const;
 
-    AStringVector split(AChar c) const;
-
-    AString replacedAll(AChar from, AChar to) const;
-
-    AString removedAll(AChar c) const;
-
     constexpr const_iterator begin() const noexcept {
         return const_iterator(data(), data(), data() + sizeBytes(), 0);
     }

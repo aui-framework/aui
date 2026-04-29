@@ -142,13 +142,13 @@ AString::AString(size_type n, AChar c) {
     }
 }
 
-void AString::insert(size_type pos, AChar c) {
-    auto utf8c = c.toUtf8();
-    bytes().insert(bytes().begin() + aui::utf8::detail::findUnicodePos(bytes(), pos).valueOr(0), utf8c.begin(), utf8c.end());
-}
-
 void AString::insert(size_type pos, AStringView str) {
     bytes().insert(bytes().begin() + aui::utf8::detail::findUnicodePos(bytes(), pos).valueOr(0), str.begin(), str.end());
+}
+
+void AString::insert(size_type pos, AChar c) {
+    auto utf8c = c.toUtf8();
+    insert(pos, AStringView(utf8c.begin(), utf8c.size()));
 }
 
 AByteBuffer AString::encode(AStringEncoding encoding) const {
@@ -195,66 +195,6 @@ AString& AString::append(AChar c) {
     return *this;
 }
 
-AString AString::replacedAll(AChar from, AChar to) const {
-    return view().replacedAll(from, to);
-}
-
-AString AString::replacedAll(AStringView from, AStringView to) const {
-    AString result;
-
-    result.reserve(size());
-
-    for (size_type pos = 0;;)
-    {
-        auto next = find(from.bytes(), pos);
-        if (next == NPOS)
-        {
-            result.bytes().insert(result.bytes().end(), bytes().begin() + pos, bytes().end());
-            return result;
-        }
-
-        result.bytes().insert(result.bytes().end(), bytes().begin() + pos, bytes().begin() + next);
-        result.bytes().insert(result.bytes().end(), to.bytes().begin(), to.bytes().end());
-
-        pos = next + from.length();
-    }
-
-    return result;
-}
-
-AString& AString::replaceAll(AStringView from, AStringView to) {
-    if (empty()) return *this;
-    for (size_type next = 0;;) {
-        next = find(from.bytes(), next);
-        if (next == NPOS)
-        {
-            return *this;
-        }
-
-        auto fromLength = from.sizeBytes();
-        auto toLength = to.sizeBytes();
-
-        if (fromLength == toLength) {
-            for (auto c : to) {
-                *(bytes().begin() + next++) = c;
-            }
-        } else if (fromLength < toLength) {
-            const auto diff = toLength - fromLength;
-            for (auto c : aui::range(to.bytes().begin(), to.bytes().end() - diff)) {
-                *(bytes().begin() + next++) = c;
-            }
-            next = std::distance(bytes().begin(), bytes().insert(bytes().begin() + next, to.bytes().begin() + fromLength, to.bytes().end())) + 1;
-        } else {
-            for (auto c : to) {
-                *(bytes().begin() + next++) = c;
-            }
-            const auto diff = fromLength - toLength;
-            super::erase(bytes().begin() + next, bytes().begin() + next + diff);
-        }
-    }
-    return *this;
-}
-
 AString AString::processEscapes() const {
     AString result;
     result.reserve(length());
@@ -290,65 +230,10 @@ void AString::resizeToNullTerminator() {
     resize(end - current);
 }
 
-bool AString::startsWith(AChar prefix) const noexcept {
-    auto utf8p = prefix.toUtf8();
-    return startsWith(AStringView(utf8p.data(), utf8p.size()));
-}
-
-bool AString::endsWith(AChar suffix) const noexcept {
-    auto utf8s = suffix.toUtf8();
-    return endsWith(AStringView(utf8s.data(), utf8s.size()));
-}
-
-auto AString::erase(const_iterator it) -> iterator {
-    if (it == cend()) {
-        return end();
-    }
-
-    size_type byte_pos = it.getBytePos();
-
-    size_type temp_pos = byte_pos;
-    aui::utf8::detail::decodeUtf8At(data(), temp_pos, size());
-    size_type char_byte_length = temp_pos - byte_pos;
-
-    super::erase(byte_pos, char_byte_length);
-
-    return iterator(this, byte_pos);
-}
-
-auto AString::erase(const_iterator begin, const_iterator end) -> iterator {
-    if (begin == cend() || begin == end) {
-        return iterator(this, begin == cend() ? size() : begin.getBytePos());
-    }
-
-    if (end == cend()) {
-        end = cend();
-    }
-
-    size_type begin_byte_pos = begin.getBytePos();
-    size_type end_byte_pos = end.getBytePos();
-
-    if (begin_byte_pos >= end_byte_pos) {
-        return iterator(this, begin_byte_pos);
-    }
-
-    size_type bytes_to_erase = end_byte_pos - begin_byte_pos;
-
-    super::erase(begin_byte_pos, bytes_to_erase);
-
-    return iterator(this, begin_byte_pos);
-}
-
-void AString::erase(size_t u_pos, size_t u_count) {
-    erase(begin() + u_pos, begin() + u_pos + u_count);
+AStringVector AString::split(AStringView separator) const {
+    return view().split(separator);
 }
 
 AStringVector AString::split(AChar separator) const {
     return view().split(separator);
-}
-
-AStringVector AString::split(AStringView separator) const {
-    return view().split(separator);
-AStringVector AString::split(AChar c) const {
-    return view().split(c);
 }

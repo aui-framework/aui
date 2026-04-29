@@ -181,11 +181,16 @@ public:
 
     AString lowercase() const;
 
+    AString replacedAll(AStringView from, AStringView to) const;
+
     AString replacedAll(AChar from, AChar to) const;
+
+    AString removedAll(AStringView seq) const;
 
     AString removedAll(AChar c) const;
 
     AStringVector split(AStringView separator) const;
+
     AStringVector split(AChar separator) const;
 
     constexpr AChar first() const {
