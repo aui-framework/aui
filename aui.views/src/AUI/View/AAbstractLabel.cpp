@@ -180,7 +180,7 @@ void AAbstractLabel::processTextOverflow(AString& text) {
 
     if (mTextOverflow == ATextOverflow::ELLIPSIS) {
         auto ending = AChar(ELLIPSIS).toUtf8();
-        text.append(AStringView(ending.data(), ending.size()));
+        text.append(AStringView(ending.begin(), ending.end()));
     }
 }
 

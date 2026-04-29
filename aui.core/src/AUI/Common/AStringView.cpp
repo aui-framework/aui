@@ -302,7 +302,7 @@ AStringVector AStringView::split(AStringView separator) const {
     }
 
     AStringVector result;
-    result.reserve(8);
+    result.reserve(length() / 10);
 
     for (size_type s = 0;;) {
         auto next = find(separator, s);
