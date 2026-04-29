@@ -32,8 +32,8 @@ using namespace std::chrono_literals;
 
 static constexpr auto CONTACTS_SORT = ranges::actions::sort(std::less {}, [](const _<Contact>& c) -> decltype(auto) { return *c->displayName; });
 
-static char groupLetter(const AString& s) {
-    return s.empty() ? '_' : s.first();
+static AChar groupLetter(const AString& s) {
+    return s.empty() ? AChar(U'_') : s.utf8().first();
 }
 
 class ContactsWindow : public AWindow {
