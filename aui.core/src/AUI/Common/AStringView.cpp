@@ -19,6 +19,12 @@
 #include <AUI/Common/AByteBuffer.h>
 #include <simdutf.h>
 
+bool AStringView::contains(AStringView str) const noexcept {
+    if (str.empty()) return true;
+    if (str.length() > length()) return false;
+    return std::search(bytes().begin(), bytes().end(), str.bytes().begin(), str.bytes().end()) != bytes().end();
+}
+
 bool AStringView::contains(char c) const noexcept {
     for (auto it = begin(); it != end(); ++it) {
         if (*it == c) {
@@ -26,12 +32,6 @@ bool AStringView::contains(char c) const noexcept {
         }
     }
     return false;
-}
-
-bool AStringView::contains(AStringView str) const noexcept {
-    if (str.empty()) return true;
-    if (str.length() > length()) return false;
-    return std::search(bytes().begin(), bytes().end(), str.bytes().begin(), str.bytes().end()) != bytes().end();
 }
 
 AByteBuffer AStringView::encode(AStringEncoding encoding) const {

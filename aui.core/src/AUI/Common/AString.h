@@ -395,28 +395,28 @@ public:
      */
     void resizeToNullTerminator();
 
-    bool contains(char c) const noexcept {
-        return view().contains(c);
-    }
-
     bool contains(AStringView str) const noexcept {
         return view().contains(str);
     }
 
-    bool startsWith(char prefix) const noexcept {
-        return view().startsWith(prefix);
+    bool contains(char c) const noexcept {
+        return view().contains(c);
     }
 
     bool startsWith(AStringView prefix) const noexcept {
         return view().startsWith(prefix);
     }
 
-    bool endsWith(char prefix) const noexcept {
-        return view().endsWith(prefix);
+    bool startsWith(char prefix) const noexcept {
+        return view().startsWith(prefix);
     }
 
     bool endsWith(AStringView suffix) const noexcept {
         return view().endsWith(suffix);
+    }
+
+    bool endsWith(char prefix) const noexcept {
+        return view().endsWith(prefix);
     }
 
     /**

@@ -58,16 +58,19 @@ public:
 
     explicit AStringView(const std::string& str) noexcept : super(str) {}
 
+    constexpr bool startsWith(AStringView prefix) const noexcept {
+        if (prefix.size() > size()) return false;
+        return bytes().substr(0, prefix.size()) == prefix.bytes(); // NOLINT(*-use-starts-ends-with)
+    }
+
     constexpr bool startsWith(char prefix) const noexcept {
         if (empty()) return false;
         return at(0) == prefix;
     }
 
-    constexpr bool startsWith(AStringView prefix) const noexcept {
-        if (prefix.size() > size()) {
-            return false;
-        }
-        return bytes().substr(0, prefix.size()) == prefix.bytes(); // NOLINT(*-use-starts-ends-with)
+    constexpr bool endsWith(AStringView suffix) const noexcept {
+        if (suffix.size() > size()) return false;
+        return bytes().substr(size() - suffix.size()) == suffix.bytes();
     }
 
     constexpr bool endsWith(char prefix) const noexcept {
@@ -75,20 +78,14 @@ public:
         return at(size() - 1) == prefix;
     }
 
-    constexpr bool endsWith(AStringView suffix) const noexcept {
-        if (suffix.size() > size()) {
-            return false;
-        }
-        return bytes().substr(size() - suffix.size()) == suffix.bytes();
-    }
-
     [[nodiscard]]
     constexpr bool empty() const noexcept {
         return super::empty();
     }
 
-    bool contains(char c) const noexcept;
     bool contains(AStringView str) const noexcept;
+
+    bool contains(char c) const noexcept;
 
     constexpr bool operator==(AStringView other) const noexcept {
         return bytes() == other.bytes();
