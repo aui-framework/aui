@@ -168,7 +168,7 @@ AString AString::restrictLength(size_t s, const AString& stringAtEnd) const {
 
 AString AString::trimDoubleSpace() const noexcept {
     AString s;
-    s.reserve(sizeBytes());
+    s.reserve(size());
     bool prevWasSpace = false;
     for (auto c : *this) {
         if (c == U' ') {

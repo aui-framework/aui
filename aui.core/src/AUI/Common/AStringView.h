@@ -72,7 +72,7 @@ public:
 
     constexpr bool endsWith(char prefix) const noexcept {
         if (empty()) return false;
-        return at(sizeBytes() - 1) == prefix;
+        return at(size() - 1) == prefix;
     }
 
     constexpr bool endsWith(AStringView suffix) const noexcept {
@@ -123,14 +123,6 @@ public:
     [[nodiscard]]
     constexpr AStringView substr(size_type pos = 0, size_type count = npos) const noexcept {
         return AStringView(super::substr(pos, count));
-    }
-
-    /**
-     * @brief Returns the number of bytes in the UTF-8 encoded string
-     * @sa length
-     */
-    size_type sizeBytes() const noexcept {
-        return super::size();
     }
 
     /**

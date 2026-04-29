@@ -248,15 +248,6 @@ public:
     }
 
     /**
-     * @brief Returns the number of bytes in the UTF-8 encoded string
-     * @sa length
-     */
-    [[nodiscard]]
-    size_type sizeBytes() const noexcept {
-        return size();
-    }
-
-    /**
      * @brief Returns a substring `[pos, pos + count)`.
      * @param pos The starting position of the substring.
      * @param count The number of characters to include in the substring.
@@ -308,7 +299,7 @@ public:
 
     constexpr char last() const noexcept {
         if (empty()) return 0;
-        return at(sizeBytes() - 1);
+        return at(size() - 1);
     }
 
     using super::append;
@@ -542,11 +533,6 @@ public:
 
     template<typename... Args>
     AString format(Args&&... args) const;
-
-//private: // non-private because ASerializable
-    size_type size() const noexcept {
-        return super::size();
-    }
 };
 
 inline AString operator+(const AString& l, const AString& r) noexcept

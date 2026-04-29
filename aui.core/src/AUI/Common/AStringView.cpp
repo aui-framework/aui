@@ -234,7 +234,7 @@ AOptional<int> AStringView::toNumber(aui::ranged_number<int, 2, 36> base) const 
 }
 
 bool AStringView::toBool() const {
-    if (sizeBytes() != 4) {
+    if (size() != 4) {
         return false;
     }
     const char* d = data();
@@ -326,9 +326,9 @@ AStringVector AStringView::split(AChar separator) const {
 namespace aui::win32 {
 std::wstring toWchar(AStringView str) {
     static_assert(sizeof(wchar_t) == sizeof(char16_t), "wchar_t size must be same as char16_t");
-    size_t words = simdutf::utf16_length_from_utf8(str.data(), str.sizeBytes());
+    size_t words = simdutf::utf16_length_from_utf8(str.data(), str.size());
     std::wstring encoded(words, L'\0');
-    auto size = simdutf::convert_utf8_to_utf16(str.data(), str.sizeBytes(), reinterpret_cast<char16_t*>(encoded.data()));
+    auto size = simdutf::convert_utf8_to_utf16(str.data(), str.size(), reinterpret_cast<char16_t*>(encoded.data()));
     encoded[words] = '\0';
     encoded.resize(size);
     return std::move(encoded);
