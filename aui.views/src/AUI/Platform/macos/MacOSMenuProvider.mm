@@ -121,7 +121,7 @@ NSImage* drawableToNSImage(const _<IDrawable>& drawable) {
     NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize(16, 16)];   // +1, caller owns
     [image addRepresentation:rep];                                        // rep now +2 (image retains)
     [rep release];                                                        // back to +1 owned by image
-    [image setTemplate:NO];
+    [image setTemplate:YES];
     return image;
 }
 
