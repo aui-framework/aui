@@ -25,14 +25,69 @@ class API_AUI_CORE AStringVector;
 
 
 /**
- * @brief Represents a string view.
+ * @brief Non-owning view into a UTF-8 string - a lightweight `const` reference to character data you don't own.
  * @ingroup core
  * @details
- * AStringView stores a pointer and size of constant byte sequence.
+ * `AStringView` is the read-only counterpart to @ref AString. It inherits from `std::string_view` and holds
+ * only a pointer and a length - **no heap allocation, no copy**. This makes it the correct type to use
+ * for any function parameter that only needs to *read* a string, regardless of whether the caller holds
+ * an `AString`, a `std::string`, a `const char*`, or a string literal.
  *
- * AStringView points to constant data. For owning version of AStringView, see [AString].
+ * ## Why `AStringView` exists
+ * Before non-owning views, a function that accepted a string had two bad options:
+ * - Take `const AString&` - forces the caller to own an `AString`; a raw `const char*` or `std::string`
+ *   triggers a silent heap allocation just to call the function.
+ * - Take `const char*` - loses the length, breaks on embedded nulls, and can't accept `std::string`
+ *   without `.c_str()`.
  *
- * To work with raw bytes, use AStringView::bytes() function.
+ * `AStringView` eliminates both problems. It constructs implicitly from `const char*`, `std::string_view`,
+ * `AString`, and `char8_t*` with zero overhead, so callers pass whatever they already have:
+ * @code{.cpp}
+ * void log(AStringView message); // one signature, every string type accepted
+ *
+ * log("literal");            // const char*  - no allocation
+ * log(some_astring);         // AString      - no copy
+ * log(some_std_string_view); // string_view  - no copy
+ * @endcode
+ *
+ * ## Lifetime responsibility
+ * `AStringView` does **not** own its data. It is only valid as long as the underlying string is alive.
+ * Never store an `AStringView` that outlives its source, and never return one that points into a local:
+ * @code{.cpp}
+ * AStringView bad() {
+ *     AString local = "hello";
+ *     return local.trim();    // dangling - local is destroyed on return
+ * }
+ * @endcode
+ * When ownership is needed, convert to @ref AString explicitly:
+ * @code{.cpp}
+ * AString owned = AString(view);
+ * @endcode
+ *
+ * ## Typical usage
+ * @code{.cpp}
+ * AStringView s = "  Hello, World!  ";
+ *
+ * s = s.trim()                     // "Hello, World!"  (returns a new view, no allocation)
+ * s.startsWith("Hello")            // true
+ * s.contains("World")              // true
+ * AString upper = s.uppercase();   // "  HELLO, WORLD!  "  (allocates only here)
+ *
+ * auto parts = s.trim().split(", "); // AStringVector{"Hello", "World!"}
+ * @endcode
+ *
+ * ## Numeric parsing
+ * @code{.cpp}
+ * AStringView("42").toInt()        // AOptional<int32_t>{42}
+ * AStringView("0xFF").toInt()      // AOptional<int32_t>{255}  (hex prefix auto-detected)
+ * AStringView("bad").toInt()       // AOptional<int32_t>{nullopt}
+ * @endcode
+ *
+ * @note Methods that must produce a new string - `uppercase()`, `lowercase()`, `replacedAll()`,
+ * `split()`, `encode()` - return an @ref AString or @ref AStringVector and allocate only at that point.
+ * Pure view operations (`trim`, `substr`, `startsWith`, `contains`) return `AStringView` and never allocate.
+ *
+ * @see AString, AUtf8View, AByteBuffer, AStringVector
  */
 class API_AUI_CORE AStringView: public std::string_view {
 private:
@@ -50,9 +105,9 @@ public:
 
     using super::super;
 
-    constexpr AStringView(const char8_t* utf8_str, size_t length) noexcept : super(pointer_cast<char>(utf8_str), length) {}
+    constexpr AStringView(const char8_t* utf8_str, size_t length) noexcept : super(aui::detail::pointer_cast<char>(utf8_str), length) {}
 
-    constexpr AStringView(const char8_t* utf8_str) noexcept : super(pointer_cast<char>(utf8_str)) {}
+    constexpr AStringView(const char8_t* utf8_str) noexcept : super(aui::detail::pointer_cast<char>(utf8_str)) {}
 
     constexpr AStringView(std::string_view str) noexcept : super(str) {}
 

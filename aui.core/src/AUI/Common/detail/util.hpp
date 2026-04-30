@@ -11,6 +11,8 @@
 
 #pragma once
 
+namespace aui::detail {
+
 template <typename OutT, typename InT>
 constexpr const OutT* pointer_cast(const InT* ptr) {
     static_assert(sizeof(InT) == sizeof(OutT), "Size mismatch");
@@ -39,4 +41,6 @@ constexpr const OutT* pointer_cast(InT* ptr) {
     };
 
     return Converter(ptr).to;
+}
+
 }

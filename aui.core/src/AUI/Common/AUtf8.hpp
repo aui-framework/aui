@@ -392,13 +392,11 @@ class AString;
 class AStringVector;
 
 /**
- * @brief UTF-8 View
+ * @brief Non-owning, code-point-aware view into a UTF-8 string.
  * @ingroup core
  * @details
- * AUtf8View stores a pointer and size of constant 8-bit integer sequence representing UTF-8 code units. Each Unicode
- * character (codepoint) is encoded using 1-4 consecutive code units, supporting the full Unicode standard.
- *
- * Unicode provides comprehensive support for international writing systems and symbols.
+ * `AUtf8View` is the iterator layer that sits on top of @ref AStringView and @ref AString when you need
+ * to work with **individual Unicode characters** rather than raw bytes.
  */
 class API_AUI_CORE AUtf8View {
 public:
@@ -416,15 +414,15 @@ public:
 
     constexpr AUtf8View(const char* begin, const char* end) : str(begin, end) {}
 
-    constexpr AUtf8View(const char8_t* data, size_t size) noexcept : str(pointer_cast<char>(data), size) {}
+    constexpr AUtf8View(const char8_t* data, size_t size) noexcept : str(aui::detail::pointer_cast<char>(data), size) {}
 
-    constexpr AUtf8View(const char8_t* begin, const char8_t* end) : str(pointer_cast<char>(begin), pointer_cast<char>(end)) {}
+    constexpr AUtf8View(const char8_t* begin, const char8_t* end) : str(aui::detail::pointer_cast<char>(begin), aui::detail::pointer_cast<char>(end)) {}
 
     constexpr AUtf8View(const iterator& begin, const iterator& end) : str(begin.data(), end.data()) {}
 
     constexpr AUtf8View(const char* data) noexcept : str(data) {}
 
-    constexpr AUtf8View(const char8_t* data) noexcept : str(pointer_cast<char>(data)) {}
+    constexpr AUtf8View(const char8_t* data) noexcept : str(aui::detail::pointer_cast<char>(data)) {}
 
     constexpr AUtf8View(std::string_view s) noexcept : str(s) {}
 
