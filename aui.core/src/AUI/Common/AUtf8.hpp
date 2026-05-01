@@ -15,7 +15,9 @@
 
 #pragma once
 
+#include <string_view>
 #include <AUI/api.h>
+#include <AUI/Common/detail/util.hpp>
 #include <AUI/Common/AChar.h>
 #include <AUI/Common/AOptional.h>
 
@@ -384,3 +386,194 @@ public:
         return base_iterator_ <= other.base_iterator_;
     }
 };
+
+class AStringView;
+class AString;
+class AStringVector;
+
+/**
+ * @brief Non-owning, code-point-aware view into a UTF-8 string.
+ * @ingroup core
+ * @details
+ * `AUtf8View` is the iterator layer that sits on top of @ref AStringView and @ref AString when you need
+ * to work with **individual Unicode characters** rather than raw bytes.
+ */
+class API_AUI_CORE AUtf8View {
+public:
+    using const_iterator = AUtf8ConstIterator;
+    using iterator = const_iterator;
+    using const_reverse_iterator = AUtf8ConstReverseIterator;
+    using reverse_iterator = const_reverse_iterator;
+    using size_type = size_t;
+
+    std::string_view str;
+
+    AUtf8View() noexcept {}
+
+    constexpr AUtf8View(const char* data, size_t size) noexcept : str(data, size) {}
+
+    constexpr AUtf8View(const char* begin, const char* end) : str(begin, end) {}
+
+    constexpr AUtf8View(const char8_t* data, size_t size) noexcept : str(aui::detail::pointer_cast<char>(data), size) {}
+
+    constexpr AUtf8View(const char8_t* begin, const char8_t* end) : str(aui::detail::pointer_cast<char>(begin), aui::detail::pointer_cast<char>(end)) {}
+
+    constexpr AUtf8View(const iterator& begin, const iterator& end) : str(begin.data(), end.data()) {}
+
+    constexpr AUtf8View(const char* data) noexcept : str(data) {}
+
+    constexpr AUtf8View(const char8_t* data) noexcept : str(aui::detail::pointer_cast<char>(data)) {}
+
+    constexpr AUtf8View(std::string_view s) noexcept : str(s) {}
+
+    constexpr AUtf8View(AStringView s) noexcept;
+
+    [[nodiscard]]
+    bool isValidUtf8() const noexcept;
+
+    /**
+     * @brief Checked access to the Unicode character at the specified index.
+     * @param i The index of the Unicode character (not byte offset).
+     * @return The character at the specified position.
+     */
+    [[nodiscard]]
+    constexpr AChar at(const size_type i) const {
+        if (i >= sizeBytes()) {
+            return AChar();
+        }
+        return *(begin() + i);
+    }
+
+    /**
+     * @brief Unchecked access to the Unicode character at the specified index.
+     * @param i The index of the Unicode character (not byte offset).
+     * @return The character at the specified position.
+     */
+    [[nodiscard]]
+    constexpr AChar operator[](const size_type i) const {
+        return at(i);
+    }
+
+    constexpr bool empty() const noexcept {
+        return str.empty();
+    }
+
+    constexpr const char* data() const noexcept {
+        return str.data();
+    }
+
+    constexpr size_type sizeBytes() const noexcept {
+        return str.size();
+    }
+
+    /**
+     * @brief Returns the number of Unicode characters in the string
+     * @sa sizeBytes
+     */
+    size_type length() const noexcept;
+
+    constexpr AChar first() const {
+        if (empty()) {
+            return AChar();
+        }
+        return *begin();
+    }
+
+    constexpr AChar last() const {
+        if (empty()) {
+            return AChar();
+        }
+        auto it = end();
+        --it;
+        return *it;
+    }
+
+    /**
+     * @brief Returns a view of a portion of the string.
+     * @param pos Index of the first Unicode character to include.
+     * @param count Number of Unicode characters to include.
+     * @return A new AUtf8View representing the sub-range.
+     * @note Both pos and count refer to Unicode characters, not raw bytes.
+     */
+    constexpr AUtf8View substr(size_type pos, size_type count = std::string_view::npos) const {
+        auto it = begin();
+        auto e = end();
+        for (size_type i = 0; i < pos; ++i) {
+            if (it == e) {
+                return AUtf8View(e, e);
+            }
+            ++it;
+        }
+        auto startIt = it;
+        for (size_type i = 0; i < count && it != e; ++i) {
+            ++it;
+        }
+        return AUtf8View(startIt, it);
+    }
+
+    constexpr const_iterator find(AChar c) const {
+        for (auto it = begin(); it != end(); ++it) {
+            if (*it == c) return it;
+        }
+        return end();
+    }
+
+    constexpr bool contains(AChar c) const noexcept {
+        for (AChar character : *this) {
+            if (character == c) return true;
+        }
+        return false;
+    }
+
+    bool startsWith(AChar prefix) const noexcept;
+
+    bool endsWith(AChar suffix) const noexcept;
+
+    std::string_view bytes() const noexcept {
+        return str;
+    }
+
+    AString uppercase() const;
+
+    AString lowercase() const;
+
+    constexpr const_iterator begin() const noexcept {
+        return const_iterator(data(), data(), data() + sizeBytes(), 0);
+    }
+
+    constexpr const_iterator end() const noexcept {
+        return const_iterator(data(), data(), data() + sizeBytes(), sizeBytes());
+    }
+
+    constexpr const_iterator cbegin() const noexcept {
+        return begin();
+    }
+
+    constexpr const_iterator cend() const noexcept {
+        return end();
+    }
+
+    constexpr const_reverse_iterator rbegin() const noexcept {
+        return AUtf8ConstReverseIterator(end());
+    }
+
+    constexpr const_reverse_iterator rend() const noexcept {
+        return AUtf8ConstReverseIterator(begin());
+    }
+
+    constexpr const_reverse_iterator crbegin() const noexcept {
+        return rbegin();
+    }
+
+    constexpr const_reverse_iterator crend() const noexcept {
+        return rend();
+    }
+
+    constexpr bool operator==(AUtf8View other) const noexcept {
+        return str == other.str;
+    }
+};
+
+inline AUtf8View operator""_au8(const char* str, size_t len) {
+    return {str, len};
+}

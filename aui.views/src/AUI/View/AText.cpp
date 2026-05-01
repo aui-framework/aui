@@ -184,7 +184,7 @@ void AText::setMarkdown(const AString& md, const Flags& flags) {
     clearContent();
     auto parsedFlags = parseFlags(flags);
     Entries entries;
-    ATokenizer tokenizer(_new<AByteBufferInputStream>(AByteBufferView(md.data(), md.sizeBytes())));
+    ATokenizer tokenizer(_new<AByteBufferInputStream>(AByteBufferView(md.data(), md.size())));
     std::string lastWord;
     bool rightAfterNewLine = true;
     bool italic = false;

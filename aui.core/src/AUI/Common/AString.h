@@ -18,7 +18,7 @@
 #include <AUI/Core.h>
 #include <AUI/Traits/values.h>
 #include <AUI/Common/ASet.h>
-#include <AUI/Common/AUtf8.h>
+#include <AUI/Common/AUtf8.hpp>
 #include <AUI/Common/AStringView.h>
 #include <optional>
 #include <span>
@@ -28,140 +28,67 @@
 #include <range/v3/all.hpp>
 #endif
 
-class API_AUI_CORE AUtf8MutableIterator {
-public:
-    using iterator_category = std::bidirectional_iterator_tag;
-    using value_type = AChar;
-    using difference_type = std::ptrdiff_t;
-    using pointer = const AChar*;
-    using reference = AChar;
-
-private:
-    AString* string_;
-    size_t byte_pos_;
-
-    size_t getCurrentCharByteLength() const noexcept;
-
-    static size_t getEncodedByteLength(char32_t codepoint) noexcept;
-
-    static size_t encodeUtf8(char32_t codepoint, char* buffer) noexcept;
-
-public:
-    AUtf8MutableIterator() noexcept;
-    AUtf8MutableIterator(AString* str, size_t pos) noexcept;
-
-    /**
-     * @brief Dereference operator - returns current character
-     */
-    const AChar operator*() const noexcept;
-
-    /**
-     * @brief Assignment operator - replaces current character
-     * @param c The character to assign at current position
-     * @return Reference to this iterator
-     */
-    AUtf8MutableIterator& operator=(AChar c);
-
-    /**
-     * @brief Pre-increment operator
-     */
-    AUtf8MutableIterator& operator++() noexcept;
-
-    /**
-     * @brief Post-increment operator
-     */
-    AUtf8MutableIterator operator++(int) noexcept;
-
-    /**
-     * @brief Pre-decrement operator
-     */
-    AUtf8MutableIterator& operator--() noexcept;
-
-    /**
-     * @brief Post-decrement operator
-     */
-    AUtf8MutableIterator operator--(int) noexcept;
-
-    /**
-     * @brief Advance this iterator by n characters forward (in-place)
-     * @param n Number of characters to advance (can be negative for backward movement)
-     * @return Reference to this iterator
-     */
-    AUtf8MutableIterator& operator+=(int n) noexcept;
-
-    AUtf8MutableIterator& operator-=(int n) noexcept {
-        return *this += (-n);
-    }
-
-    AUtf8MutableIterator operator+(int n) const noexcept {
-        AUtf8MutableIterator result = *this;
-        result += n;
-        return result;
-    }
-
-    AUtf8MutableIterator operator-(int n) const noexcept {
-        AUtf8MutableIterator result = *this;
-        result -= n;
-        return result;
-    }
-
-    /**
-     * @brief Equality comparison
-     */
-    bool operator==(const AUtf8MutableIterator& other) const noexcept;
-
-    /**
-     * @brief Inequality comparison
-     */
-    bool operator!=(const AUtf8MutableIterator& other) const noexcept;
-
-    /**
-     * @brief Get current byte position
-     */
-    size_t getBytePos() const noexcept;
-
-    /**
-     * @brief Get pointer to the string
-     */
-    AString* getString() const noexcept;
-
-    /**
-     * @brief Convert to const iterator
-     */
-    operator AUtf8ConstIterator() const noexcept;
-
-    difference_type operator-(const AUtf8MutableIterator& other) const noexcept;
-
-    bool operator<(const AUtf8MutableIterator& other) const noexcept {
-        return byte_pos_ < other.byte_pos_;
-    }
-
-    bool operator<=(const AUtf8MutableIterator& other) const noexcept {
-        return byte_pos_ <= other.byte_pos_;
-    }
-
-    bool operator>(const AUtf8MutableIterator& other) const noexcept {
-        return byte_pos_ > other.byte_pos_;
-    }
-
-    bool operator>=(const AUtf8MutableIterator& other) const noexcept {
-        return byte_pos_ >= other.byte_pos_;
-    }
-};
-
 class API_AUI_CORE AByteBuffer;
 class API_AUI_CORE AByteBufferView;
+class API_AUI_CORE AUtf8View;
 
 /**
- * @brief Represents a UTF-8 string.
+ * @brief Owned UTF-8 string with rich conversion, parsing, and manipulation APIs.
  * @ingroup core
  * @details
- * AString stores a sequence of 8-bit integers representing UTF-8 code units. Each Unicode character
- * (codepoint) is encoded using 1-4 consecutive code units, supporting the full Unicode standard.
+ * `AString` is the primary string type in AUI. It inherits from `std::string` and stores its data as a
+ * null-terminated UTF-8 byte sequence, making it fully compatible with standard C++ APIs while adding
+ * higher-level functionality.
  *
- * Unicode provides comprehensive support for international writing systems and symbols.
+ * ## Encoding model
+ * All content is stored as UTF-8. Positional operations such as @ref substr, @ref trimLeft, and @ref trimRight
+ * operate on Unicode code points, **not** raw bytes. Use @ref bytes() to access the underlying byte storage
+ * directly when byte-level access is required.
  *
- * For non-owning version of AString, see [AStringView].
+ * ## Construction
+ * `AString` can be constructed from any common character type:
+ * @code{.cpp}
+ * AString a = "hello";    // const char* (UTF-8)
+ * AString b = u8"hello";  // const char8_t* (UTF-8)
+ * AString c = u"hello";   // const char16_t* (UTF-16)
+ * AString d = U"hello";   // const char32_t* (UTF-32)
+ * AString e = AString::fromLatin1("caf\xe9"); // Latin-1 -> UTF-8
+ * @endcode
+ *
+ * ## Encoding conversion
+ * Convert to other encodings on demand - the internal UTF-8 storage is never mutated:
+ * @code{.cpp}
+ * std::u16string utf16 = str.toUtf16();
+ * AByteBuffer raw = str.encode(AStringEncoding::UTF16);
+ * @endcode
+ *
+ * ## String manipulation
+ * @code{.cpp}
+ * AString s = "  Hello, World!  ";
+ * s.trim();                        // "Hello, World!"
+ * s.replaceAll("World", "AUI");    // "Hello, AUI!"
+ * auto parts = s.split(", ");      // AStringVector{"Hello", "AUI!"}
+ * @endcode
+ *
+ * ## Numeric parsing
+ * Parsing methods return @ref AOptional to signal failure without exceptions:
+ * @code{.cpp}
+ * AOptional<int32_t>  i = AString("42").toInt();      // 42
+ * AOptional<double>   d = AString("3.14").toDouble(); // 3.14
+ * AOptional<int32_t>  x = AString("bad").toInt();     // nullopt
+ * @endcode
+ *
+ * ## Numeric formatting
+ * @code{.cpp}
+ * AString s1 = AString::number(42);     // "42"
+ * AString s2 = AString::number(3.14f);  // "3.14" (trailing zeros stripped)
+ * AString s3 = AString::numberHex(255); // "ff"
+ * @endcode
+ *
+ * @note For non-owning string references, prefer @ref AStringView. For iterating over
+ * individual Unicode code points, use @ref AUtf8View via @ref utf8().
+ *
+ * @see AStringView, AUtf8View, AByteBuffer, AStringVector
  */
 class API_AUI_CORE AString: public std::string {
 private:
@@ -173,10 +100,10 @@ public:
     using value_type = super::value_type;
     using bytes_type = super;
 
-    using iterator = AUtf8MutableIterator;
-    using const_iterator = AUtf8ConstIterator;
-    using reverse_iterator = AUtf8ConstReverseIterator;
-    using const_reverse_iterator = AUtf8ConstReverseIterator;
+    using iterator = super::iterator;
+    using const_iterator = super::const_iterator;
+    using reverse_iterator = super::reverse_iterator;
+    using const_reverse_iterator = super::const_reverse_iterator;
 
     auto constexpr static NPOS = super::npos;
 
@@ -235,13 +162,11 @@ public:
 
     AString(super::const_iterator begin, super::const_iterator end);
 
-    AString(const_iterator begin, const_iterator end);
-
     template <typename InputIterator>
 #if AUI_PLATFORM_ANDROID
-    requires std::is_same_v<ranges::iter_value_t<InputIterator>, AChar>
+    requires std::is_same_v<ranges::iter_value_t<InputIterator>, char>
 #else
-    requires std::is_same_v<std::iter_value_t<InputIterator>, AChar>
+    requires std::is_same_v<std::iter_value_t<InputIterator>, char>
 #endif
     AString(InputIterator first, InputIterator last) {
         auto count = std::distance(first, last);
@@ -259,7 +184,7 @@ public:
 
     AString(const char* utf8_bytes) : AString(utf8_bytes, strLength(utf8_bytes)) {}
 
-    AString(const char8_t* utf8_bytes, size_type length) : AString(pointer_cast<char>(utf8_bytes), length) {}
+    AString(const char8_t* utf8_bytes, size_type length) : AString(aui::detail::pointer_cast<char>(utf8_bytes), length) {}
 
     AString(const char8_t* utf8_bytes) : AString(utf8_bytes, strLength(utf8_bytes)) {}
 
@@ -306,11 +231,11 @@ public:
 
     using super::push_back;
 
-    void push_back(AChar c) noexcept;
-
-    void insert(size_type pos, AChar c);
+    using super::insert;
 
     void insert(size_type pos, AStringView str);
+
+    void insert(size_type pos, AChar c);
 
     /**
      * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
@@ -373,24 +298,6 @@ public:
     }
 
     /**
-     * @brief Returns the number of bytes in the UTF-8 encoded string
-     * @sa length
-     */
-    [[nodiscard]]
-    size_type sizeBytes() const noexcept {
-        return size();
-    }
-
-    /**
-     * @brief Returns the number of Unicode characters in the string
-     * @sa sizeBytes
-     */
-    [[nodiscard]]
-    size_type length() const noexcept {
-        return view().length();
-    }
-
-    /**
      * @brief Returns a substring `[pos, pos + count)`.
      * @param pos The starting position of the substring.
      * @param count The number of characters to include in the substring.
@@ -435,10 +342,22 @@ public:
         return *this;
     }
 
+    constexpr char first() const noexcept {
+        if (empty()) return 0;
+        return at(0);
+    }
+
+    constexpr char last() const noexcept {
+        if (empty()) return 0;
+        return at(size() - 1);
+    }
+
     using super::append;
 
     AString& append(char c);
+
     AString& append(AChar c);
+
     AString& append(AStringView c) {
         append(c.bytes());
         return *this;
@@ -478,21 +397,44 @@ public:
         return view().lowercase();
     }
 
-    AStringVector split(AChar separator) const;
     AStringVector split(AStringView separator) const;
 
-    AString& replaceAll(AChar from, AChar to);
+    AStringVector split(AChar separator) const;
 
-    AString& replaceAll(AStringView from, AStringView to);
+    AString replacedAll(AStringView from, AStringView to) const {
+        return view().replacedAll(from, to);
+    }
 
-    AString replacedAll(AChar from, AChar to) const;
+    AString& replaceAll(AStringView from, AStringView to) {
+        if (empty()) return *this;
+        return (*this = replacedAll(from, to));
+    }
 
-    AString replacedAll(AStringView from, AStringView to) const;
+    AString replacedAll(AChar from, AChar to) const {
+        return view().replacedAll(from, to);
+    }
 
-    AString& removeAll(AChar c);
+    AString& replaceAll(AChar from, AChar to) {
+        if (empty()) return *this;
+        return (*this = replacedAll(from, to));
+    }
 
-    AString removedAll(AChar c) {
+    AString removedAll(AStringView seq) const {
+        return view().removedAll(seq);
+    }
+
+    AString& removeAll(AStringView seq) {
+        if (empty()) return *this;
+        return (*this = removedAll(seq));
+    }
+
+    AString removedAll(AChar c) const {
         return view().removedAll(c);
+    }
+
+    AString& removeAll(AChar c) {
+        if (empty()) return *this;
+        return (*this = removedAll(c));
     }
 
     AString processEscapes() const;
@@ -503,24 +445,28 @@ public:
      */
     void resizeToNullTerminator();
 
-    bool contains(AChar c) const noexcept {
-        return view().contains(c);
-    }
-
     bool contains(AStringView str) const noexcept {
         return view().contains(str);
     }
 
-    bool startsWith(AChar prefix) const noexcept;
+    bool contains(char c) const noexcept {
+        return view().contains(c);
+    }
 
     bool startsWith(AStringView prefix) const noexcept {
         return view().startsWith(prefix);
     }
 
-    bool endsWith(AChar prefix) const noexcept;
+    bool startsWith(char prefix) const noexcept {
+        return view().startsWith(prefix);
+    }
 
     bool endsWith(AStringView suffix) const noexcept {
         return view().endsWith(suffix);
+    }
+
+    bool endsWith(char prefix) const noexcept {
+        return view().endsWith(prefix);
     }
 
     /**
@@ -631,93 +577,12 @@ public:
         return view().toNumberOrException(base);
     }
 
+    AUtf8View utf8() const noexcept {
+        return AUtf8View(view());
+    }
+
     template<typename... Args>
     AString format(Args&&... args) const;
-
-    iterator begin() noexcept {
-        return AUtf8MutableIterator(this, 0);
-    }
-
-    iterator end() noexcept {
-        return AUtf8MutableIterator(this, size());
-    }
-
-    const_iterator begin() const noexcept {
-        return AUtf8ConstIterator(data(), data(), data() + size(), 0);
-    }
-
-    const_iterator end() const noexcept {
-        return AUtf8ConstIterator(data(), data(), data() + size(), size());
-    }
-
-    const_iterator cbegin() const noexcept {
-        return begin();
-    }
-
-    const_iterator cend() const noexcept {
-        return end();
-    }
-
-    reverse_iterator rbegin() noexcept {
-        return AUtf8ConstReverseIterator(end());
-    }
-
-    reverse_iterator rend() noexcept {
-        return AUtf8ConstReverseIterator(begin());
-    }
-
-    const_reverse_iterator rbegin() const noexcept {
-        return AUtf8ConstReverseIterator(end());
-    }
-
-    const_reverse_iterator rend() const noexcept {
-        return AUtf8ConstReverseIterator(begin());
-    }
-
-    const_reverse_iterator crbegin() const noexcept {
-        return rbegin();
-    }
-
-    const_reverse_iterator crend() const noexcept {
-        return rend();
-    }
-
-    AChar first() const {
-        if (empty()) {
-            return AChar();
-        }
-        return *begin();
-    }
-
-    AChar last() const {
-        if (empty()) {
-            return AChar();
-        }
-        auto it = end();
-        --it;
-        return *it;
-    }
-
-    /**
-     * @brief Unchecked access to the UTF-8 character at the specified position.
-     * @param i The position of the character to return.
-     * @return The character at the specified position.
-     */
-    [[nodiscard]]
-    const AChar operator[](size_type i) const {
-        return view()[i];
-    }
-
-    iterator erase(const_iterator it);
-
-    iterator erase(const_iterator begin, const_iterator end);
-
-    void erase(size_t u_pos, size_t u_count);
-
-//private: // non private because ASerializable
-    size_type size() const noexcept {
-        return super::size();
-    }
 };
 
 inline AString operator+(const AString& l, const AString& r) noexcept
@@ -760,6 +625,8 @@ inline AString operator""_as(const char* str, size_t len)
 {
     return {str};
 }
+
+constexpr AUtf8View::AUtf8View(AStringView s) noexcept : str(s) {}
 
 inline std::ostream& operator<<(std::ostream& o, const AString& s)
 {

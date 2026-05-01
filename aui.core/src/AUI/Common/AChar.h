@@ -13,6 +13,7 @@
 
 #include <cstddef>
 #include <string>
+#include <AUI/Core.h>
 
 template <typename StoredType, std::size_t MaxSize>
 class AStaticVector;
@@ -21,7 +22,7 @@ class AStaticVector;
  * @brief Represents a single 32-bit char.
  * @ingroup core
  */
-class AChar {
+class API_AUI_CORE AChar {
 private:
     char32_t mValue;
 

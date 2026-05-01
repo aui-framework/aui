@@ -18,7 +18,7 @@
 
 ALanguageCode::ALanguageCode(const AString& str) {
     auto& ascii = str.bytes();
-    if (str.length() != str.sizeBytes() || str.sizeBytes() != 5 || ascii[2] != '-' || islower(ascii[2]) || islower(ascii[3])) {
+    if (str.length() != str.size() || str.size() != 5 || ascii[2] != '-' || islower(ascii[2]) || islower(ascii[3])) {
         throw AException("invalid language code: " + str);
     }
     mGroup[0] = ascii[0];
