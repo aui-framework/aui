@@ -43,6 +43,7 @@ public:
      * (`TrackPopupMenuEx`) on Windows — giving native appearance, VoiceOver/Narrator
      * integration, and system-level animations. On Linux/X11 there is no system-wide
      * native context menu API; this flag is a no-op and the AUI-drawn provider is kept.
+     * Call from the UI thread; the cached provider is swapped without synchronization.
      */
     static void setUseSystemMenus(bool enabled = true);
 
@@ -51,6 +52,7 @@ public:
      * @details
      * Useful for testing, embedded renderers, or apps that want a fully custom menu look
      * and feel. Pass `nullptr` to reset to the default factory behaviour.
+     * Call from the UI thread; the cached provider is swapped without synchronization.
      */
     static void setGlobalProvider(_<IMenuProvider> provider);
 
