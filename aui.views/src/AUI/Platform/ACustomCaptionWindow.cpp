@@ -14,9 +14,7 @@
 
 ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int height, bool stacked, AWindow* parent, WindowStyle ws)
   : ACustomWindow(name, width, height, parent), CustomCaptionWindowImplCurrent() {
-    if (ws != WindowStyle::DEFAULT) {
-        setWindowStyle(windowStyle() | ws);
-    }
+    setWindowStyle(windowStyle() | ws);
     initCustomCaption(name, stacked, this);
 
     connect(minimized, this, [&]() { updateMiddleButtonIcon(); });

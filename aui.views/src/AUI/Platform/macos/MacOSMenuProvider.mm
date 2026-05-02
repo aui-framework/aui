@@ -21,11 +21,7 @@
 #include <functional>
 #include <utility>
 
-namespace {
-
 // Trampoline so an NSMenuItem target/action pair can invoke a std::function.
-}
-
 @interface AUIMenuTarget : NSObject
 - (instancetype)initWithCallback:(std::function<void()>)cb;
 - (void)invoke:(id)sender;
@@ -67,6 +63,8 @@ void applyShortcut(NSMenuItem* item, const AShortcut& shortcut) {
     if (display.empty()) return;
 
     // Parse the last character as the key (common pattern: "Ctrl+Shift+S" → 'S').
+    // The if/else avoids an AString/AStringView conversion ambiguity that fires when
+    // `display` and `display.substr(...)` are mixed in a ternary.
     const auto plus = display.rfind('+');
     AString keyPart;
     if (plus == AString::NPOS) {
@@ -118,15 +116,18 @@ NSImage* drawableToNSImage(const _<IDrawable>& drawable) {
     }
     std::memcpy([rep bitmapData], buf.data(), bytesPerRow * h);
 
-    NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize(16, 16)];   // +1, caller owns
-    [image addRepresentation:rep];                                        // rep now +2 (image retains)
-    [rep release];                                                        // back to +1 owned by image
+    NSImage* image = [[NSImage alloc] initWithSize:NSMakeSize(16, 16)];
+    [image addRepresentation:rep];
+    [rep release];
     [image setTemplate:YES];
     return image;
 }
 
 NSMenu* buildMenu(const AVector<AMenuItem>& items, NSMutableArray* keepAlive) {
-    NSMenu* menu = [[NSMenu alloc] init];   // +1, caller owns
+    // MRR ownership: every NSObject we alloc here is at +1 (we own it). After handing off
+    // to a parent collection (NSMenu / NSMutableArray) that retains, we drop our +1 with
+    // release. The root NSMenu is returned to the caller at +1.
+    NSMenu* menu = [[NSMenu alloc] init];
     [menu setAutoenablesItems:NO];
 
     for (const auto& item : items) {
@@ -139,27 +140,27 @@ NSMenu* buildMenu(const AVector<AMenuItem>& items, NSMutableArray* keepAlive) {
             case AMenu::SUBLIST: {
                 NSMenuItem* mi = [[NSMenuItem alloc] initWithTitle:toNs(item.name)
                                                             action:nil
-                                                     keyEquivalent:@""];   // +1
-                NSMenu* sub = buildMenu(item.subItems, keepAlive);        // +1
-                [mi setSubmenu:sub];                                      // retain
-                [sub release];                                            // back to +1 owned by mi
+                                                     keyEquivalent:@""];
+                NSMenu* sub = buildMenu(item.subItems, keepAlive);
+                [mi setSubmenu:sub];
+                [sub release];
                 [mi setEnabled:item.enabled];
                 if (NSImage* icon = drawableToNSImage(item.icon)) {
                     [mi setImage:icon];
-                    [icon release];                                       // setImage retains
+                    [icon release];
                 }
-                [menu addItem:mi];                                        // retain
-                [mi release];                                             // back to +1 owned by menu
+                [menu addItem:mi];
+                [mi release];
                 break;
             }
             case AMenu::SINGLE: {
-                AUIMenuTarget* tgt = [[AUIMenuTarget alloc] initWithCallback:item.onAction]; // +1
-                [keepAlive addObject:tgt];                                                    // retain
-                [tgt release];                                                                // +1 owned by keepAlive
+                AUIMenuTarget* tgt = [[AUIMenuTarget alloc] initWithCallback:item.onAction];
+                [keepAlive addObject:tgt];
+                [tgt release];
 
                 NSMenuItem* mi = [[NSMenuItem alloc] initWithTitle:toNs(item.name)
                                                             action:@selector(invoke:)
-                                                     keyEquivalent:@""];   // +1
+                                                     keyEquivalent:@""];
                 [mi setTarget:tgt];
                 [mi setEnabled:item.enabled];
                 applyShortcut(mi, item.shortcut);
@@ -173,7 +174,7 @@ NSMenu* buildMenu(const AVector<AMenuItem>& items, NSMutableArray* keepAlive) {
             }
         }
     }
-    return menu;   // caller owns (+1)
+    return menu;
 }
 
 }   // namespace

@@ -78,11 +78,17 @@ void AMenu::setUseSystemMenus(bool enabled) {
     if (gUseSystemMenus == enabled) {
         return;
     }
+    if (gCachedProvider && gCachedProvider->isOpen()) {
+        gCachedProvider->closeMenu();
+    }
     gUseSystemMenus = enabled;
     resetCache();
 }
 
 void AMenu::setGlobalProvider(_<IMenuProvider> provider) {
+    if (gCachedProvider && gCachedProvider->isOpen()) {
+        gCachedProvider->closeMenu();
+    }
     gOverrideProvider = std::move(provider);
     resetCache();
 }

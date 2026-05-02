@@ -157,8 +157,10 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
                 result = HTCAPTION;
             }
         }
-        if (result)
+        if (result) {
             return result;
+        }
+        return AWindow::winProc(hwnd, uMsg, wParam, lParam);
     } //end case WM_NCHITTEST
 
     case WM_NCMOUSEMOVE: {
