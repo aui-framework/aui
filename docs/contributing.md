@@ -52,13 +52,59 @@ manually review and adjust AI-generated code/documentation. We won't merge chang
 
 Please treat AI as a tool, not as a complete replacement of a software engineer.
 
-## Understanding Story Point Values
+## Contributing from your project
+
+Want to help make AUI better? You can work on AUI right from your own project!
+
+- **Open your project**. If you don't have one, clone https://github.com/aui-framework/example_app.
+
+- **Expose AUI's source code**: Open the file called `CMakeLists.txt` and add `ADD_SUBDIRECTORY`:
+
+   ```
+   # import AUI
+   auib_import(aui https://github.com/aui-framework/aui
+           COMPONENTS core views curl json crypt updater
+           ADD_SUBDIRECTORY # <------- here
+           VERSION ${AUI_VERSION})
+   ```
+
+   > **Note**: This disables use of precompiled packages, AUI will be built locally.
+
+- **See AUI in your editor**: Now, when you open the project in :simple-clion: **CLion**, AUI will show up as a folder.
+
+- **Make changes**: You can now change things in the AUI folder. Fix bugs or add cool stuff.
+
+- **Make your own copy of AUI**: Go to GitHub and make a "fork" of [AUI](https://github.com/aui-framework/aui), if
+   you don't have one already.
+
+- **Open a terminal in AUI**: Right-click on the AUI folder in :simple-clion: **CLion**. Choose "Open In" and
+   then "Terminal".
+
+- **Send your changes**: In the terminal window, type these commands (change "ololo" to your GitHub name):
+
+   ```
+   git checkout develop
+   git checkout -b feat/your-feature-name
+   git remote set-url origin git@github.com:ololo/aui
+   git add -A
+   git commit -m "your commit message here"
+   git push -u fork feat/your-feature-name
+   ```
+
+   This saves your changes to your feature branch on your fork.
+
+   > **Note**: If you already added a fork remote in a previous session, skip the `git remote set-url` line.
+
+- **Share your work**: Go to your fork on GitHub. It will ask if you want to make a "pull request". Just do it! Make
+   sure the pull request targets the `develop` branch of the original AUI repository.
+
+## Story points
 
 Story points are designed as relative measurements of work complexity, deliberately decoupled from time-based metrics (
 hours/days/weeks). They provide a general indication of effort required for task completion. It's important to note that
 story point comparisons across different teams, departments, or organizations are inherently invalid.
 
-![](imgs/Screenshot_20250722_041541.png)
+![](imgs/Screenshot_20250722_041541.png "Story point scale reference chart")
 
 For example, Team A's 100-point sprint delivery might represent more actual work than Team B's 200 points, as each team
 develops their own story point scale. While this guide isn't meant to standardize story points globally, it offers
