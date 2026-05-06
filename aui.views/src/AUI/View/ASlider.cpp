@@ -77,7 +77,7 @@ private:
 /// [defaultTrack]
 _<AView> Slider::defaultTrack(const contract::In<aui::float_within_0_1>& value) {
     return ProgressBar { .progress = value } AUI_OVERRIDE_STYLE {
-        FixedSize { {}, 4_dp },
+        FixedSize { {}, 6_dp },
         MinSize { 150_dp, {} },
     };
 }
@@ -87,8 +87,8 @@ _<AView> Slider::defaultTrack(const contract::In<aui::float_within_0_1>& value) 
 _<AView> Slider::defaultHandle() {
     return _new<AView>() AUI_OVERRIDE_STYLE {
         BackgroundSolid { AStylesheet::getOsThemeColor() },
-        FixedSize { 8_dp },
-        BorderRadius { 4_dp },
+        FixedSize { 12_dp },
+        BorderRadius { 6_dp },
     };
 }
 /// [defaultHandle]
