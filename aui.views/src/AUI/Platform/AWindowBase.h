@@ -64,7 +64,7 @@ public:
         AProperty<bool> renderToTextureDecay = false;
 
         /**
-         * @brief When set to true, the next time window's markMinContentSizeInvalid, debugger is invoked. Value is
+         * @brief When set to true, the next time window's requestLayout, debugger is invoked. Value is
          * reset to false.
          */
         AProperty<bool> breakpointOnMarkMinContentSizeInvalid = false;
@@ -386,7 +386,7 @@ public:
         return mProfiling;
     }
 
-    void markMinContentSizeInvalid() override;
+    void requestLayout() override;
     void onKeyRepeat(AInput::Key key) override;
     void onKeyUp(AInput::Key key) override;
 

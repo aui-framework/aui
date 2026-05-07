@@ -34,7 +34,22 @@ void AAbstractLabel::render(ARenderContext context) {
     doRenderText(context.render);
 }
 
-int AAbstractLabel::getContentMinimumWidth() {
+glm::ivec2 AAbstractLabel::onIntrinsicMeasure(AConstraints constraints) {
+    AString text = getTransformedText();
+    AFontStyle& style = getFontStyle();
+    int availableWidth = constraints.maxWidth;
+    int measuredWidth = style.getWidth(text);
+    if (measuredWidth > availableWidth) {
+        measuredWidth = availableWidth;
+        processTextOverflow(text, availableWidth);
+    }
+    return {
+        measuredWidth,
+        style.getLineHeight(),
+    };
+}
+
+int AAbstractLabel::onComputeIntrinsicWidth(int height) {
     switch (mTextOverflow) {
         case ATextOverflow::ELLIPSIS:
             return getFontStyle().getWidth(AString::fromUtf32(std::u32string_view(&ELLIPSIS, 1)));
@@ -51,7 +66,7 @@ int AAbstractLabel::getContentMinimumWidth() {
     return acc;
 }
 
-int AAbstractLabel::getContentMinimumHeight() {
+int AAbstractLabel::onComputeIntrinsicHeight(int width) {
     if (mText.empty())
         return 0;
 
@@ -160,22 +175,13 @@ Iterator findTruncationPoint(Iterator begin, Iterator end, int maxWidth, ATextOv
     return findFirstOverflowedIndex(begin, end, availableWidth, fontStyle);
 }
 
-void AAbstractLabel::processTextOverflow(AString& text) {
+void AAbstractLabel::processTextOverflow(AString& text, int maxWidth) {
     if (mTextOverflow == ATextOverflow::NONE) return;
 
-    int overflowingWidth;
-    if (getFixedSize().x == 0) {
-        overflowingWidth = getMaxSize().x;
-    } else {
-        overflowingWidth = std::min(getMaxSize().x, getFixedSize().x);
-    }
-
-    overflowingWidth = std::min(overflowingWidth, mSize.x);
-
-    mIsTextTooLarge = getFontStyle().getWidth(text) > overflowingWidth;
+    mIsTextTooLarge = getFontStyle().getWidth(text) > maxWidth;
     if (!mIsTextTooLarge) return;
 
-    auto truncation_point = findTruncationPoint(text.begin(), text.end(), overflowingWidth, mTextOverflow, getFontStyle());
+    auto truncation_point = findTruncationPoint(text.begin(), text.end(), maxWidth, mTextOverflow, getFontStyle());
     text.erase(truncation_point, text.end());
 
     if (mTextOverflow == ATextOverflow::ELLIPSIS) {
@@ -184,18 +190,18 @@ void AAbstractLabel::processTextOverflow(AString& text) {
     }
 }
 
-void AAbstractLabel::doPrerender(IRenderer& render) {
+void AAbstractLabel::doPrerender(IRenderer& render, int maxWidth) {
     auto fs = getFontStyle();
     if (!mText.empty()) {
         AString transformedText = getTransformedText();
-        processTextOverflow(transformedText);
+        processTextOverflow(transformedText, maxWidth);
         mPrerendered = render.prerenderString({0, 0}, transformedText, fs);
     }
 }
 
 void AAbstractLabel::doRenderText(IRenderer& render) {
     if (!mPrerendered) {
-        doPrerender(render);
+        doPrerender(render, getSize().x);
     }
 
 
@@ -267,12 +273,12 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
         if (mPrerendered) {
             int y = mPadding.top + getFontStyle().getAscenderHeight();
 
-            // adding height of descender we established in getContentMinimumHeight, see explanation there.
+            // adding height of descender we established in intrinsic height, see explanation there.
             y += getFontStyle().font->getDescenderHeight(getFontStyle().size);
 
             if (mVerticalAlign == VerticalAlign::MIDDLE) {
                 y = (glm::max)(y,
-                               y + int(glm::ceil((getContentHeight() - getContentMinimumHeight())) / 2.0));
+                               y + int(glm::ceil((getContentHeight() - getHeight())) / 2.0));
             }
             RenderHints::PushMatrix m(render);
             render.translate({mTextLeftOffset + mPadding.left, y});
@@ -306,7 +312,7 @@ void AAbstractLabel::onDpiChanged() {
 
 void AAbstractLabel::invalidateFont() {
     mPrerendered = nullptr;
-    markMinContentSizeInvalid();
+    requestLayout();
     redraw();
 }
 
@@ -329,7 +335,7 @@ void AAbstractLabel::setText(AString newText) {
     mText = std::move(newText);
     mPrerendered = nullptr;
 
-    markMinContentSizeInvalid();
+    requestLayout();
     redraw();
 
     emit mTextChanged(mText);

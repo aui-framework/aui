@@ -59,23 +59,34 @@ AScrollArea::AScrollArea(const AScrollArea::Builder& builder) {
     });
 }
 
-int AScrollArea::getContentMinimumWidth() {
-    if (getExpandingHorizontal() != 0)
+int AScrollArea::onComputeIntrinsicWidth(int height) {
+    if (getExpandingHorizontal() != 0 || !contents()) {
         return 0;
-    return AViewContainerBase::getContentMinimumWidth() + (contents() ? contents()->getMinimumSizePlusMargin().x : 0);
+    }
+    const auto margins = contents()->getMargin().occupiedSize();
+    return contents()->computeWidth(height == -1 ? -1 : std::max(0, height - margins.y)) + margins.x;
 }
-int AScrollArea::getContentMinimumHeight() {
-    if (getExpandingVertical() != 0)
+
+int AScrollArea::onComputeIntrinsicHeight(int width) {
+    if (getExpandingVertical() != 0 || !contents()) {
         return 0;
-    return AViewContainerBase::getContentMinimumHeight() + (contents() ? contents()->getMinimumSizePlusMargin().y : 0);
+    }
+    const auto margins = contents()->getMargin().occupiedSize();
+    return contents()->computeHeight(width == -1 ? -1 : std::max(0, width - margins.x)) + margins.y;
 }
+
 void AScrollArea::setSize(glm::ivec2 size) {
     AViewContainerBase::setSize(size);
     mInner->applyGeometryToChildrenIfNecessary();
     if (contents()) {
-        mVerticalScrollbar->setScrollDimensions(mInner->getHeight(), contents()->getMinimumSizePlusMargin().y);
+        const auto margins = contents()->getMargin().occupiedSize();
+        const int childWidth = std::max(0, mInner->getWidth() - margins.x);
+        const int childHeight = std::max(0, mInner->getHeight() - margins.y);
+        const int contentHeight = contents()->measure(AConstraints::fixedWidth(childWidth)).y + margins.y;
+        const int contentWidth = contents()->measure(AConstraints::fixedHeight(childHeight)).x + margins.x;
 
-        mHorizontalScrollbar->setScrollDimensions(mInner->getWidth(), contents()->getMinimumSizePlusMargin().x);
+        mVerticalScrollbar->setScrollDimensions(mInner->getHeight(), contentHeight);
+        mHorizontalScrollbar->setScrollDimensions(mInner->getWidth(), contentWidth);
     }
 }
 

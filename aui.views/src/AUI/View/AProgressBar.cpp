@@ -35,7 +35,7 @@ void AProgressBar::setSize(glm::ivec2 size) {
 }
 
 void AProgressBar::updateInnerWidth() {
-    mInner->setGeometry(mPadding.left,
+    mInner->layout(mPadding.left,
                         mPadding.top,
                         int(mValue * float(getContentWidth())),
                         getContentHeight());

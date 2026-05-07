@@ -30,15 +30,15 @@ namespace {
             LinearLayoutImpl::removeView(view, index);
         }
 
-        void onResize(int x, int y, int width, int height) override {
+        void layout(int x, int y, int width, int height) override {
 
         }
 
-        int getMinimumWidth() override {
+        int onComputeIntrinsicWidth(int height) override {
             return 0;
         }
 
-        int getMinimumHeight() override {
+        int onComputeIntrinsicHeight(int width) override {
             return 0;
         }
 
@@ -140,14 +140,18 @@ void ADragArea::applyGeometryToChildren() {
     for (const auto& v : getViews()) {
         v->ensureAssUpdated();
         auto margins = v->getMargin();
-        auto finalWidth = v->getMinimumWidth() + margins.horizontal();
+        auto measuredSize = v->measure({
+            .maxWidth = std::max(0, width - margins.horizontal()),
+            .maxHeight = std::max(0, height - margins.vertical()),
+        });
+        auto finalWidth = measuredSize.x + margins.horizontal();
         auto finalX = (width - finalWidth) / 2;
 
-        auto finalHeight = v->getMinimumHeight() + margins.vertical();
+        auto finalHeight = measuredSize.y + margins.vertical();
         auto finalY = (height - finalHeight) / 2;
 
         if (DragAreaLayout::isViewMarkedToBeCentered(*v)) {
-            v->setGeometry(finalX + x + margins.left,
+            v->layout(finalX + x + margins.left,
                            finalY + y + margins.top,
                            finalWidth - margins.horizontal(),
                            finalHeight - margins.vertical());

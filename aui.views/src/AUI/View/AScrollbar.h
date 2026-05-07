@@ -34,12 +34,20 @@ private:
     bool mDragging = false;
 
 public:
+    int onComputeIntrinsicWidth(int height) override;
+    int onComputeIntrinsicHeight(int width) override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
     void setSize(glm::ivec2 size) override;
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
     void setOverridenSize(int overridenSize) {
+        if (mOverridenSize == overridenSize) {
+            return;
+        }
         mOverridenSize = overridenSize;
+        requestLayout();
+        redraw();
     }
 
 private:
@@ -55,11 +63,11 @@ public:
 
     }
 
-    int getMinimumWidth() override {
+    int onComputeIntrinsicWidth(int height) override {
         return 0;
     }
 
-    int getMinimumHeight() override {
+    int onComputeIntrinsicHeight(int width) override {
         return 0;
     }
 };
@@ -190,6 +198,7 @@ private:
      */
     AOptional<StickToEnd> mStickToEnd;
     ass::ScrollbarAppearance::AxisValue mAppearance = ass::ScrollbarAppearance::ON_DEMAND;
+
+    int getMeasuredButtonOccupiedSpace(const _<AView>& view) const;
+    int getMeasuredHandleOccupiedSpace() const;
 };
-
-

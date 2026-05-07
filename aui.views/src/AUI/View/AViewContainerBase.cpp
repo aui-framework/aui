@@ -169,7 +169,7 @@ void AViewContainerBase::addViewCustomLayout(const _<AView>& view) {
     }
     mViews << view;
     view->mParent = this;
-    view->setSize(view->getMinimumSize());
+    view->setSize(view->measure(AConstraints {}));
     view->mSkipUntilLayoutUpdate = true;
     AUI_NULLSAFE(mLayout)->addView(view);
     view->onViewGraphSubtreeChanged();
@@ -340,20 +340,6 @@ void AViewContainerBase::onMouseLeave() {
             view->onMouseLeave();
         }
     }
-}
-
-int AViewContainerBase::getContentMinimumWidth() {
-    if (mLayout) {
-        return (glm::max)(mLayout->getMinimumWidth(), AView::getContentMinimumWidth());
-    }
-    return AView::getContentMinimumWidth();
-}
-
-int AViewContainerBase::getContentMinimumHeight() {
-    if (mLayout) {
-        return (glm::max)(mLayout->getMinimumHeight(), AView::getContentMinimumHeight());
-    }
-    return AView::getContentMinimumHeight();
 }
 
 void AViewContainerBase::onPointerPressed(const APointerPressedEvent& event) {
@@ -540,7 +526,7 @@ void AViewContainerBase::applyGeometryToChildren() {
     if (!lock) {
         throw AException("applyGeometryToChildren: can't ensure safe iteration");
     }
-    mLayout->onResize(mPadding.left, mPadding.top,
+    mLayout->layout(mPadding.left, mPadding.top,
                       getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
 }
 
@@ -689,7 +675,7 @@ void AViewContainerBase::onClickPrevented() {
 
 void AViewContainerBase::invalidateCaches() {
     mConsumesClickCache.reset();
-    markMinContentSizeInvalid();
+    requestLayout();
     redraw();
 }
 
@@ -727,9 +713,19 @@ void AViewContainerBase::setViews(AVector<_<AView>> views) {
     }
 }
 
-void AViewContainerBase::markMinContentSizeInvalid() {
-    AView::markMinContentSizeInvalid();
-    mWantsLayoutUpdate = true;
+int AViewContainerBase::onComputeIntrinsicWidth(int height) {
+    if (mLayout) return mLayout->onComputeIntrinsicWidth(height);
+    return 0;
+}
+
+int AViewContainerBase::onComputeIntrinsicHeight(int width) {
+    if (mLayout) return mLayout->onComputeIntrinsicHeight(width);
+    return 0;
+}
+
+glm::ivec2 AViewContainerBase::onIntrinsicMeasure(AConstraints constraints) {
+    if (mLayout) return mLayout->onIntrinsicMeasure(constraints);
+    return AView::onIntrinsicMeasure(constraints);
 }
 
 void AViewContainerBase::forceUpdateLayoutRecursively() {

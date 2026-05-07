@@ -29,7 +29,7 @@ class AListViewContainer : public AViewContainer {
    public:
     void applyGeometryToChildren() override {
         if (getLayout())
-            getLayout()->onResize(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
+            getLayout()->layout(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
                                   getSize().y - mPadding.vertical());
     }
 
@@ -69,7 +69,10 @@ class AListItem : public ALabel, public ass::ISelectable {
    public:
     AListItem() { addAssName(".list-item"); }
 
-    AListItem(const AString& text) : ALabel(text) { addAssName(".list-item"); }
+    AListItem(const AString& text) : ALabel(text) {
+        addAssName(".list-item");
+        setExpanding({1, 0});
+    }
 
     virtual ~AListItem() = default;
 
@@ -150,7 +153,7 @@ void AListView::updateItem(size_t at, const AString& value) {
 
 void AListView::removeItem(size_t at) { mContent->removeView(at); }
 
-void AListView::onDataCountChanged() { markMinContentSizeInvalid(); }
+void AListView::onDataCountChanged() { requestLayout(); }
 
 void AListView::onDataChanged() { redraw(); }
 

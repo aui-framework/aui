@@ -544,7 +544,7 @@ void ATextArea::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas)
                                 getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()
     };
     if (mVerticalAlign == VerticalAlign::MIDDLE) {
-        ascender.y += (getContentHeight() - this->getContentMinimumHeight()) / 2;
+        ascender.y += (getContentHeight() - this->computeIntrinsicHeight(getContentWidth())) / 2;
     }
 
     auto wordEntries = entities()
@@ -566,4 +566,3 @@ bool ATextArea::isPasswordField() const noexcept {
 ATextInputType ATextArea::textInputType() const noexcept {
     return ATextInputType::MULTILINE;
 }
-

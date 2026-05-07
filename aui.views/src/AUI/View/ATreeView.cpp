@@ -36,7 +36,7 @@ public:
     }
 
     void applyGeometryToChildren() override {
-        getLayout()->onResize(mPadding.left, mPadding.top - mScrollY,
+        getLayout()->layout(mPadding.left, mPadding.top - mScrollY,
                               getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
     }
 
@@ -44,12 +44,12 @@ public:
         return mIndex;
     }
 
-    int getContentMinimumWidth() override {
-        return 40;
+    int onComputeIntrinsicWidth(int height) override {
+        return AViewContainer::onComputeIntrinsicWidth(height);
     }
 
-    int getContentMinimumHeight() override {
-        return 40;
+    int onComputeIntrinsicHeight(int width) override {
+        return AViewContainer::onComputeIntrinsicHeight(width);
     }
 };
 
@@ -280,7 +280,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
             }
         });
     }
-    markMinContentSizeInvalid();
+    requestLayout();
     updateScrollbarDimensions();
     AWindow::current()->flagRedraw();
 }
@@ -313,15 +313,16 @@ void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeModel
 }
 
 
-void ATreeView::setSize(glm::ivec2 size) {
-    AViewContainerBase::setSize(size);
+void ATreeView::onLayout(int w, int h) {
+    AViewContainerBase::onLayout(w, h);
 
     updateScrollbarDimensions();
 }
 
 void ATreeView::updateScrollbarDimensions() {
     if (mContent) {
-        mScrollbar->setScrollDimensions(getHeight(), mContent->AViewContainer::getContentMinimumHeight());
+        const int contentHeight = mContent->getSize().y;
+        mScrollbar->setScrollDimensions(getHeight(), contentHeight);
     }
 }
 
@@ -354,8 +355,8 @@ void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATr
 
 }
 
-int ATreeView::getContentMinimumHeight() {
-    return 40;
+int ATreeView::onComputeIntrinsicHeight(int width) {
+    return AViewContainerBase::onComputeIntrinsicHeight(width);
 }
 
 void ATreeView::handleMouseMove(ATreeView::ItemView* pView) {

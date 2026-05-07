@@ -124,7 +124,10 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(
       ASplitter::Horizontal()
           .withItems({
             mViewHierarchyTree = _new<ATreeView>() AUI_OVERRIDE_STYLE { MinSize { 300_dp }, Expanding {} },
-            Centered { mViewPropertiesView = _new<ViewPropertiesView>(nullptr) },
+            //mViewPropertiesView = _new<ViewPropertiesView>(nullptr),
+            Centered { mViewPropertiesView = _new<ViewPropertiesView>(nullptr) } AUI_OVERRIDE_STYLE {
+                Expanding { 0, 1 }
+            },
           })
           .withExpanding().build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
     } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });

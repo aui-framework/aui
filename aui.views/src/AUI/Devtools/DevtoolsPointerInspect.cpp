@@ -85,18 +85,18 @@ public:
         drawView(view, ctx);
     }
 
-    int getContentMinimumWidth() override {
+    int onComputeIntrinsicWidth(int height) override {
         if (auto view = mView.lock()) {
-            return view->getContentMinimumWidth();
+            return view->computeIntrinsicWidth(height);
         }
-        return AViewContainerBase::getContentMinimumWidth();
+        return AViewContainerBase::onComputeIntrinsicWidth(height);
     }
 
-    int getContentMinimumHeight() override {
+    int onComputeIntrinsicHeight(int width) override {
         if (auto view = mView.lock()) {
-            return view->getContentMinimumHeight();
+            return view->computeIntrinsicWidth(width);
         }
-        return AViewContainerBase::getContentMinimumHeight();
+        return AViewContainerBase::onComputeIntrinsicWidth(width);
     }
 
     [[nodiscard]]
@@ -106,7 +106,7 @@ public:
 
     void setView(_weak<AView> view) {
         mView = std::move(view);
-        markMinContentSizeInvalid();
+        requestLayout();
     }
 
 private:
@@ -194,5 +194,5 @@ void DevtoolsPointerInspect::inspect(AView* ptr) {
     });
     mResultView->addView(parentHelper);
     mResultView->addView(std::move(fake));
-    markMinContentSizeInvalid();
+    requestLayout();
 }

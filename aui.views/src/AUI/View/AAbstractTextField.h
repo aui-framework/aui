@@ -28,7 +28,8 @@ public:
 
     ~AAbstractTextField() override;
 
-    int getContentMinimumHeight() override;
+    int onComputeIntrinsicWidth(int height) override;
+    int onComputeIntrinsicHeight(int width) override;
 
     void setText(const AString& t) override;
 

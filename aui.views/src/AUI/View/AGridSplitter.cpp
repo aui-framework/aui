@@ -25,14 +25,15 @@ public:
     AGridSplitterLayout(int cellsX, int cellsY, AGridSplitter& gridSplitter)
       : AAdvancedGridLayout(cellsX, cellsY), mGridSplitter(gridSplitter) {}
     ~AGridSplitterLayout() override = default;
-    void onResize(int x, int y, int width, int height) override {
+    void layout(int x, int y, int width, int height) override {
         {
-            auto splitterWidth = aui::HVLayout<ALayoutDirection::HORIZONTAL>::getMinimumWidth(
+            auto splitterWidth = aui::HVLayout<ALayoutDirection::HORIZONTAL>::onComputeIntrinsicWidth(
                 mGridSplitter.mHorizontalHelper.items() |
                     ranges::views::transform([](const ASplitterHelper::Item& item) {
                         return SizeInjector<ALayoutDirection::HORIZONTAL> { item };
                     }),
-                mSpacing);
+                mSpacing,
+                height);
 
             if (width < splitterWidth) {
                 mGridSplitter.mHorizontalHelper.reclaimSpace(width - splitterWidth);
@@ -40,18 +41,19 @@ public:
         }
 
         {
-            auto splitterHeight = aui::HVLayout<ALayoutDirection::VERTICAL>::getMinimumHeight(
+            auto splitterHeight = aui::HVLayout<ALayoutDirection::VERTICAL>::onComputeIntrinsicHeight(
                 mGridSplitter.mVerticalHelper.items() | ranges::views::transform([](const ASplitterHelper::Item& item) {
                     return SizeInjector<ALayoutDirection::VERTICAL> { item };
                 }),
-                mSpacing);
+                mSpacing,
+                width);
 
             if (height < splitterHeight) {
                 mGridSplitter.mVerticalHelper.reclaimSpace(height - splitterHeight);
             }
         }
 
-        AAdvancedGridLayout::onResize(x, y, width, height);
+        AAdvancedGridLayout::layout(x, y, width, height);
     }
 
 protected:
@@ -67,7 +69,7 @@ protected:
                 e.x = 0;
             if (fixed.y != 0)
                 e.y = 0;
-            glm::ivec2 m = { cell.view->getMinimumWidth(), cell.view->getMinimumHeight() };
+            glm::ivec2 m = { cell.view->computeWidth(-1), cell.view->computeHeight(-1) };
             if (cell.x == 0) {
                 auto& i = mGridSplitter.mVerticalHelper.items()[cell.y];
                 m.y = glm::max(m.y, i.overridedSize.valueOr(0));

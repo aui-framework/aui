@@ -290,19 +290,19 @@ class AViewContainer;
  * AWindow::redraw()
  * └─> AWindow::applyGeometryToChildrenIfNecessary()
  *     └─> AWindow::applyGeometryToChildren()
- *         └─> ALayout::onResize()                                                  ┐
- *             └─> AViewContainerBase::getMinimumSize()              ┐              │
- *                 └─> AViewContainerBase::getContentMinimumWidth()  │              │
- *                     └─> ALayout::getMinimumWidth()                │              │
- *                         └─> AView::getMinimumWidth()              │ cached       │
- *                 └─> AViewContainerBase::getContentMinimumHeight() │              │ potentially
- *                     └─> ALayout::getMinimumHeight()               │              │ recursive
- *                         └─> AView::getMinimumHeight()             ┘              │
+ *         └─> ALayout::layout()                                                    ┐
+ *             └─> AViewContainerBase::measure()                     ┐              │
+ *                 └─> AViewContainerBase::onIntrinsicMeasure()      │              │
+ *                     └─> ALayout::onIntrinsicMeasure()             │              │
+ *                         └─> AView::measure()                      │ cached       │
+ *                 └─> AViewContainerBase::onComputeIntrinsicWidth() │              │ potentially
+ *                     └─> ALayout::onComputeIntrinsicWidth()        │              │ recursive
+ *                         └─> AView::computeIntrinsicWidth()        ┘              │
  *             └─> AViewContainerBase::setGeometry()                                │
  *                 └─> AViewContainerBase::setSize()                                │
  *                     └─> AViewContainerBase::applyGeometryToChildrenIfNecessary() │
  *                         └─> AViewContainerBase::applyGeometryToChildren()        │
- *                             └─> ALayout::onResize()                              ┘
+ *                             └─> ALayout::layout()                                ┘
  *                                 └─> AView::setGeometry()
  * ```
  *
@@ -314,19 +314,19 @@ class AViewContainer;
  *   only if really needed (i.e., if there were a resize event, or views were added or removed)
  * - [applyGeometryToChildren](AViewContainerBase::applyGeometryToChildren) - applies geometry to its children with
  *   no preconditions
- * - [ALayout::onResize] - implemented by layout manager, whose have their own algorithms of arranging views
+ * - [ALayout::layout] - implemented by layout manager, whose have their own algorithms of arranging views
  * - [AView::setGeometry] - sets geometry of a view (which might be a container)
  *
  * ### Size calculation { #SIZE_CALCULATION }
  *
- * - Layout manager queries **Minimum size** which is determined with [AView::getMinimumSize()] and cached until the
- *   view or its children call [AView::markMinContentSizeInvalid()]. It considers:
- *     - Children's minimum sizes (if any). A child includes its [ass::Padding] to its minimum size.
+ * - Layout manager queries **Measure** which is determined with [AView::measure()] and cached until the
+ *   view or its children call [AView::requestLayout()]. It considers:
+ *     - Children's intrinsic sizes (if any). A child includes its [ass::Padding] to its intrinsic size.
  *     - Children's [ass::Margin]
  *     - Container's [ass::Padding]
  *     - Container's [ass::LayoutSpacing]
  *     - Other constraints such as [ass::FixedSize]
- * - After minimum sizes of children are calculated, layout manager queries their **expanding** ratios, and gives such
+ * - After measured sizes of children are calculated, layout manager queries their **expanding** ratios, and gives such
  *   views a share of free space if available. Unlike minimum size, [EXPANDING] ratio does not depend on children's
  *   [EXPANDING] ratios.
  *
@@ -355,7 +355,7 @@ public:
      * @details
      * See [layout-managers] for more info.
      */
-    virtual void onResize(int x, int y, int width, int height) = 0;
+    virtual void layout(int x, int y, int width, int height) = 0;
 
     /**
      * @brief Attaches view to the layout.
@@ -377,8 +377,16 @@ public:
      */
     virtual void removeView(aui::no_escape<AView> view, size_t index) = 0;
 
-    virtual int getMinimumWidth() = 0;
-    virtual int getMinimumHeight() = 0;
+    virtual int onComputeIntrinsicWidth(int height) = 0;
+    virtual int onComputeIntrinsicHeight(int width) = 0;
+
+    virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints) {
+        int desiredWidth = onComputeIntrinsicWidth(-1);
+        int finalWidth = std::clamp(desiredWidth, constraints.minWidth, constraints.maxWidth);
+        int desiredHeight = onComputeIntrinsicHeight(finalWidth);
+        int finalHeight = std::clamp(desiredHeight, constraints.minHeight, constraints.maxHeight);
+        return { finalWidth, finalHeight };
+    }
 
     /**
      * @brief Visits all views in the layout.

@@ -70,8 +70,6 @@ public:
      */
     void selectItem(size_t i) { updateSelectionOnItem(i, SelectAction::CLEAR_SELECTION_AND_SET); }
 
-    int getContentFullHeight() { return getLayout()->getMinimumHeight() + 8; }
-
     void setAllowMultipleSelection(bool allowMultipleSelection);
 
     [[nodiscard]] AListModelSelection<AString> getSelectionModel() const {

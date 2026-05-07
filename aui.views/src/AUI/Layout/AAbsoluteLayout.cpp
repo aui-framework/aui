@@ -11,37 +11,41 @@
 
 #include "AAbsoluteLayout.h"
 
-void AAbsoluteLayout::onResize(int x, int y, int width, int height) {
+void AAbsoluteLayout::layout(int x, int y, int width, int height) {
     for (const auto& i : mViews) {
         if (i.pivotX && i.pivotY) {
-            i.view->setGeometry(
-                i.pivotX->getValuePx(), i.pivotY->getValuePx(),
-                i.sizeX ? i.sizeX->getValuePx() : i.view->getMinimumWidth(),
-                i.sizeY ? i.sizeY->getValuePx() : i.view->getMinimumHeight());
+            i.view->layout(
+                i.pivotX->getValuePx() + x, i.pivotY->getValuePx() + y,
+                i.sizeX ? i.sizeX->getValuePx() : i.view->computeWidth(-1),
+                i.sizeY ? i.sizeY->getValuePx() : i.view->computeHeight(-1));
             continue;
         }
-        i.view->setGeometry(i.view->getPosition(), i.view->getSize());
+        i.view->layout(i.view->getPosition(), i.view->getSize());
     }
 }
 
-int AAbsoluteLayout::getMinimumWidth() {
+int AAbsoluteLayout::onComputeIntrinsicWidth(int height) {
     int v = 0;
     for (const auto& i : mViews) {
-        int x = i.pivotX.valueOr(0).getValuePx();
+        int x = i.pivotX.valueOr(AMetric(0)).getValuePx();
         if (i.sizeX) {
             x += i.sizeX->getValuePx();
+        } else {
+            x += i.view->computeWidth(-1);
         }
         v = glm::max(v, x);
     }
     return v;
 }
 
-int AAbsoluteLayout::getMinimumHeight() {
+int AAbsoluteLayout::onComputeIntrinsicHeight(int width) {
     int v = 0;
     for (const auto& i : mViews) {
-        int x = i.pivotY.valueOr(0).getValuePx();
+        int x = i.pivotY.valueOr(AMetric(0)).getValuePx();
         if (i.sizeY) {
             x += i.sizeY->getValuePx();
+        } else {
+            x += i.view->computeHeight(-1);
         }
         v = glm::max(v, x);
     }

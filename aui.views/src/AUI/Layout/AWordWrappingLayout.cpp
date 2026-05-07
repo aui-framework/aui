@@ -36,21 +36,33 @@ void AWordWrappingLayout::removeView(aui::no_escape<AView> view, size_t index) {
     mViewEntry.removeAt(index);
 }
 
-
-
-int AWordWrappingLayout::getMinimumWidth() {
-    return 0;
-}
-
-int AWordWrappingLayout::getMinimumHeight() {
-    int m = 0;
-    for (auto& view : mViews) {
-        m = (glm::max)(view->getPosition().y + view->getSize().y, m);
+int AWordWrappingLayout::onComputeIntrinsicWidth(int height) {
+    int max = 0;
+    for (auto& v : mViewEntry) {
+        max = std::max(max, v.getSize().x);
     }
-    return m;
+    return max;
 }
 
-void AWordWrappingLayout::onResize(int x, int y, int width, int height) {
+int AWordWrappingLayout::onComputeIntrinsicHeight(int width) {
+    if (width == -1) {
+        int h = 0;
+        for (auto& v : mViewEntry) {
+            h += v.getSize().y;
+        }
+        return h;
+    }
+    AVector<_<AWordWrappingEngineBase::Entry>> entries;
+    for (auto& v : mViewEntry) {
+        entries << aui::ptr::fake_shared(&v);
+    }
+    AWordWrappingEngine we;
+    we.setEntries(std::move(entries));
+    we.performLayout({0, 0}, {width, 1000000});
+    return we.height().valueOr(0);
+}
+
+void AWordWrappingLayout::layout(int x, int y, int width, int height) {
     AVector<_<AWordWrappingEngineBase::Entry>> entries;
     for (auto& v : mViewEntry) {
         entries << aui::ptr::fake_shared(&v);

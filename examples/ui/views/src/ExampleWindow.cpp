@@ -178,7 +178,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     addView(Horizontal {
       _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) AUI_OVERRIDE_STYLE { FixedSize { 32_dp } },
       AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") AUI_OVERRIDE_STYLE {
-            Expanding(1, 0),
+            Expanding(1, 1),
           },
       Horizontal {} AUI_LET {
               mAsync << AUI_THREADPOOL {
@@ -198,6 +198,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   };
               };
           },
+    } AUI_OVERRIDE_STYLE {
+        Expanding(1, 0),
     });
 
     _<ATabView> tabView;
@@ -595,46 +597,46 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
             "Splitters");
 
         it->addTab(
-            AScrollArea::Builder().withContents(
-                Vertical {
-                  ASplitter::Horizontal().withItems({
-                    Vertical::Expanding {
-                      _new<ALabel>("Default"),
-                      AText::fromString(
-                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
-                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
-                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
-                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
-                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") AUI_OVERRIDE_STYLE { ATextAlign::JUSTIFY },
-                    } AUI_OVERRIDE_STYLE { MinSize { 200_dp } },
-                    Vertical::Expanding {
-                      _new<ALabel>("Word breaking"),
-                      AText::fromString(
-                          "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
-                          "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
-                          "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
-                          "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
-                          "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
-                          "proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
-                          { WordBreak::BREAK_ALL }),
-                    } AUI_OVERRIDE_STYLE { MinSize { 200_dp } },
-                  }).build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-                  [] {
-                      _<AViewContainer> v1 = Vertical {};
-                      _<AViewContainer> v2 = Vertical {};
-                      for (int i = 0; i <= 9; ++i) {
-                          v1->addView(Horizontal {
-                            _new<ALabel>("{} px"_format(i + 6)),
-                            _new<ALabel>("Hello! [] .~123`") AUI_OVERRIDE_STYLE { FontSize { AMetric(i + 6, AMetric::T_PX) } } });
-                          v2->addView(Horizontal {
-                            _new<ALabel>("{} px"_format(i + 16)),
-                            _new<ALabel>("Hello! [] .~123`") AUI_OVERRIDE_STYLE { FontSize { AMetric(i + 16, AMetric::T_PX) } } });
-                      }
-                      return Horizontal { v1, v2 };
-                  }(),
-                } AUI_LET { it->setExpanding(); }),
-            "Text");
+          AScrollArea::Builder().withContents(
+            Vertical {
+              ASplitter::Horizontal().withItems({
+                Vertical::Expanding {
+                  Label { "Default" },
+                  AText::fromString(
+                      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                      "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                      "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                      "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                      "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                      "proident, sunt in culpa qui officia deserunt mollit anim id est laborum") AUI_OVERRIDE_STYLE { ATextAlign::JUSTIFY },
+                } AUI_OVERRIDE_STYLE { MinSize { 200_dp } },
+                Vertical::Expanding {
+                  Label { "Word breaking" },
+                  AText::fromString(
+                      "Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod "
+                      "tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, "
+                      "quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo "
+                      "consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse "
+                      "cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non "
+                      "proident, sunt in culpa qui officia deserunt mollit anim id est laborum",
+                      { WordBreak::BREAK_ALL }),
+                } AUI_OVERRIDE_STYLE { MinSize { 200_dp } },
+              }).build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+              [] {
+                  _<AViewContainer> v1 = Vertical {};
+                  _<AViewContainer> v2 = Vertical {};
+                  for (int i = 0; i <= 9; ++i) {
+                      v1->addView(Horizontal {
+                        _new<ALabel>("{} px"_format(i + 6)),
+                        _new<ALabel>("Hello! [] .~123`") AUI_OVERRIDE_STYLE { FontSize { AMetric(i + 6, AMetric::T_PX) } } });
+                      v2->addView(Horizontal {
+                        _new<ALabel>("{} px"_format(i + 16)),
+                        _new<ALabel>("Hello! [] .~123`") AUI_OVERRIDE_STYLE { FontSize { AMetric(i + 16, AMetric::T_PX) } } });
+                  }
+                  return Horizontal { v1, v2 };
+              }(),
+            } /*AUI_LET { it->setExpanding(); }*/),
+          "Text");
 
         it->addTab(
             Vertical {
@@ -710,7 +712,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
               it << "#copyright";
               it->setEnabled(false);
           },
-    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
+    } AUI_OVERRIDE_STYLE {
+        Expanding(1, 0),
+        LayoutSpacing { 4_dp }
+    });
 }
 
 void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {

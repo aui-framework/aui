@@ -106,13 +106,13 @@ void AWindow::redraw() {
             mRenderingContext->endPaint(*this);
         };
 
-        if (mMarkedMinContentSizeInvalid) {
+        if (mWantsLayoutUpdate) {
             ensureAssUpdated();
 #if AUI_PLATFORM_WIN
             setSize(glm::clamp(getSize(), getMinimumSize(), getMaxSize()));
 #endif
             applyGeometryToChildrenIfNecessary();
-            mMarkedMinContentSizeInvalid = false;
+            mWantsLayoutUpdate = false;
 #if AUI_PLATFORM_LINUX
             IPlatformAbstraction::current().windowAnnounceMinMaxSize(*this);
 #endif
@@ -267,7 +267,7 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     };
     auto window = _new<AOverlappingWindow>(this);
     auto finalPos = unmapPosition(position);
-    window->setGeometry(finalPos.x, finalPos.y, size.x, size.y);
+    window->layout(finalPos.x, finalPos.y, size.x, size.y);
     // show later
     AUI_UI_THREAD {
         window->show();

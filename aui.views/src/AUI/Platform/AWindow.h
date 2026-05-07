@@ -146,7 +146,7 @@ public:
 
     void setPosition(glm::ivec2 position) override;
     void setSize(glm::ivec2 size) override;
-    void setGeometry(int x, int y, int width, int height) override;
+    void setGeometry(int x, int y, int width, int height);
 
 #if AUI_PLATFORM_LINUX
     void applyGeometryToChildren() override;

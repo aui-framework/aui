@@ -68,8 +68,7 @@ AView::~AView() {
     AUI_ASSERT_UI_THREAD_ONLY();
 }
 
-void AView::redraw()
-{
+void AView::redraw() {
     AUI_ASSERT_UI_THREAD_ONLY();
     if (mRedrawRequested) {
         return;
@@ -82,20 +81,16 @@ void AView::redraw()
     markPixelDataInvalid(invalidRect);
     mRedrawRequested = true;
 }
-void AView::markMinContentSizeInvalid()
-{
+
+void AView::requestLayout() {
     AUI_ASSERT_UI_THREAD_ONLY();
-    mCachedMinContentSize.reset();
-    if (mMarkedMinContentSizeInvalid) {
-        // already marked.
-        // TODO uncomment this
-//        for (auto i = getParent(); i; i = i->getParent()) {
-//            AUI_ASSERT(i->mMarkedMinContentSizeInvalid);
-//        }
-        // return;
+    mWantsLayoutUpdate = true;
+    mIntrinsicWidthCache.clear();
+    mIntrinsicHeightCache.clear();
+    mLastConstraints = AConstraints{ -1, -1, -1, -1 };
+    if (mFixedSize == glm::ivec2(0)) {
+        AUI_NULLSAFE(mParent)->requestLayout();
     }
-    mMarkedMinContentSizeInvalid = true;
-    AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
 }
 
 void AView::drawStencilMask(ARenderContext ctx)
@@ -201,7 +196,6 @@ static void walkToParentStack(AView* view, aui::invocable<AView*> auto&& callbac
 
 void AView::invalidateAllStyles()
 {
-    auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusMargin() : glm::ivec2(DEFINITELY_INVALID_SIZE);
     AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
 
     auto collectRules = [this](const AStylesheet& sh) {
@@ -222,10 +216,10 @@ void AView::invalidateAllStyles()
         collectRules(*v->mExtraStylesheet);
     });
 
-    invalidateStateStylesImpl(prevMinSize);
+    invalidateStateStylesImpl();
 }
 
-void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
+void AView::invalidateStateStylesImpl() {
     if (!mAssHelper) return;
     mCursor.reset();
     mOverflow = AOverflow::VISIBLE;
@@ -255,44 +249,138 @@ void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     applyAssRule(mCustomStyleRule);
     commitStyle();
 
-    if (prevMinimumSizePlusField != getMinimumSizePlusMargin()) {
-        mMarkedMinContentSizeInvalid = true;
-        AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
-    }
+    requestLayout();
     redraw();
 }
 
-int AView::getContentMinimumWidth() {
-    return 0;
-}
-
-int AView::getContentMinimumHeight() {
-    return 0;
-}
-
-bool AView::hasFocus() const
-{
+bool AView::hasFocus() const {
     return mHasFocus;
+}
+
+int AView::computeIntrinsicWidth(int height) {
+    auto it = mIntrinsicWidthCache.find(height);
+    if (it != mIntrinsicWidthCache.end()) {
+        return it->second;
+    }
+    int val = onComputeIntrinsicWidth(height);
+    mIntrinsicWidthCache.insert({height, val});
+    return val;
+}
+
+int AView::computeIntrinsicHeight(int width) {
+    auto it = mIntrinsicHeightCache.find(width);
+    if (it != mIntrinsicHeightCache.end()) {
+        return it->second;
+    }
+    int val = onComputeIntrinsicHeight(width);
+    mIntrinsicHeightCache.insert({width, val});
+    return val;
+}
+
+int AView::onComputeIntrinsicWidth(int height) {
+    return 0;
+}
+
+int AView::onComputeIntrinsicHeight(int width) {
+    return 0;
+}
+
+int AView::computeWidth(int height) {
+    ensureAssUpdated();
+    if (mFixedSize.x != 0) {
+        return mFixedSize.x;
+    }
+    auto padding = getPadding();
+    return glm::clamp(
+        computeIntrinsicWidth(height == -1 ? -1 : std::max(0, height - padding.vertical())) + padding.horizontal(),
+        mMinSize.x,
+        mMaxSize.x);
+}
+
+int AView::computeHeight(int width) {
+    ensureAssUpdated();
+    if (mFixedSize.y != 0) {
+        return mFixedSize.y;
+    }
+    auto padding = getPadding();
+    return glm::clamp(
+        computeIntrinsicHeight(width == -1 ? -1 : std::max(0, width - padding.horizontal())) + padding.vertical(),
+        mMinSize.y,
+        mMaxSize.y);
+}
+
+glm::ivec2 AView::measure(AConstraints constraints) {
+    if (mLastConstraints == constraints) {
+        return mMeasuredSize;
+    }
+    AConstraints effectiveConstraints = constraints;
+
+    if (mFixedSize.x != 0) {
+        effectiveConstraints.minWidth = effectiveConstraints.maxWidth = mFixedSize.x;
+    } else {
+        effectiveConstraints.minWidth = std::max(effectiveConstraints.minWidth, mMinSize.x);
+        if (mMaxSize.x != -1) {
+            effectiveConstraints.maxWidth = std::min(effectiveConstraints.maxWidth, mMaxSize.x);
+        }
+    }
+
+    if (mFixedSize.y != 0) {
+        effectiveConstraints.minHeight = effectiveConstraints.maxHeight = mFixedSize.y;
+    } else {
+        effectiveConstraints.minHeight = std::max(effectiveConstraints.minHeight, mMinSize.y);
+        if (mMaxSize.y != -1) {
+            effectiveConstraints.maxHeight = std::min(effectiveConstraints.maxHeight, mMaxSize.y);
+        }
+    }
+
+    effectiveConstraints.maxWidth = std::max(effectiveConstraints.minWidth, effectiveConstraints.maxWidth);
+    effectiveConstraints.maxHeight = std::max(effectiveConstraints.minHeight, effectiveConstraints.maxHeight);
+
+    int hPadding = mPadding.left + mPadding.right;
+    int vPadding = mPadding.top + mPadding.bottom;
+
+    AConstraints contentConstraints;
+    contentConstraints.minWidth = std::max(0, effectiveConstraints.minWidth - hPadding);
+    contentConstraints.maxWidth = std::max(0, effectiveConstraints.maxWidth - hPadding);
+    contentConstraints.minHeight = std::max(0, effectiveConstraints.minHeight - vPadding);
+    contentConstraints.maxHeight = std::max(0, effectiveConstraints.maxHeight - vPadding);
+
+    glm::ivec2 contentSize = onIntrinsicMeasure(contentConstraints);
+
+    int finalWidth = contentSize.x + hPadding;
+    int finalHeight = contentSize.y + vPadding;
+
+    mMeasuredSize.x = std::clamp(finalWidth, effectiveConstraints.minWidth, effectiveConstraints.maxWidth);
+    mMeasuredSize.y = std::clamp(finalHeight, effectiveConstraints.minHeight, effectiveConstraints.maxHeight);
+
+    mLastConstraints = constraints;
+    return mMeasuredSize;
+}
+
+glm::ivec2 AView::onIntrinsicMeasure(AConstraints constraints) {
+    int desiredWidth = computeIntrinsicWidth(-1);
+    int finalWidth = std::clamp(desiredWidth, constraints.minWidth, constraints.maxWidth);
+    int desiredHeight = computeIntrinsicHeight(finalWidth);
+    int finalHeight = std::clamp(desiredHeight, constraints.minHeight, constraints.maxHeight);
+    return { finalWidth, finalHeight };
 }
 
 int AView::getMinimumWidth() {
     ensureAssUpdated();
-    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumSize().x + mPadding.horizontal(), mMinSize.x, mMaxSize.x)) : mFixedSize.x);
+    return (mFixedSize.x == 0 ? mMinSize.x : mFixedSize.x);
 }
 
 int AView::getMinimumHeight() {
     ensureAssUpdated();
-    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumSize().y + mPadding.vertical(), mMinSize.y, mMaxSize.y)) : mFixedSize.y);
+    return (mFixedSize.y == 0 ? mMinSize.y : mFixedSize.y);
 }
 
-void AView::getTransform(glm::mat4& transform) const
-{
+void AView::getTransform(glm::mat4& transform) const {
     transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
 }
 
-void AView::pack()
-{
-    setSize({ getMinimumWidth(), getMinimumHeight() });
+void AView::pack() {
+    setSize(measure(AConstraints {}));
 }
 
 void AView::addAssName(const AString& assName)
@@ -498,7 +586,6 @@ glm::ivec2 AView::getPositionInWindow() const {
 
 
 void AView::setPosition(glm::ivec2 position) {
-    mSkipUntilLayoutUpdate = false;
     if (mPosition == position) [[unlikely]] {
         return;
     }
@@ -506,27 +593,19 @@ void AView::setPosition(glm::ivec2 position) {
     redraw();
     emit mPositionChanged(position);
 }
-void AView::setSize(glm::ivec2 size)
-{
-    mMarkedMinContentSizeInvalid = false;
-    mSkipUntilLayoutUpdate = false;
+
+void AView::setSize(glm::ivec2 size) {
     auto newSize = mSize;
-    if (mFixedSize.x != 0)
-    {
+    if (mFixedSize.x != 0) {
         newSize.x = mFixedSize.x;
-    }
-    else
-    {
+    } else {
         newSize.x = size.x;
         if (mMinSize.x != 0)
             newSize.x = glm::max(mMinSize.x, newSize.x);
     }
-    if (mFixedSize.y != 0)
-    {
+    if (mFixedSize.y != 0) {
         newSize.y = mFixedSize.y;
-    }
-    else
-    {
+    } else {
         newSize.y = size.y;
         if (mMinSize.y != 0)
             newSize.y = glm::max(mMinSize.y, newSize.y);
@@ -541,17 +620,20 @@ void AView::setSize(glm::ivec2 size)
     emit mSizeChanged(newSize);
 }
 
-void AView::setGeometry(int x, int y, int width, int height) {
-    mSkipUntilLayoutUpdate = false;
-    auto oldPosition = mPosition;
-    auto oldSize = mSize;
-    setPosition({ x, y });
-    setSize({width, height});
+void AView::layout(int x, int y, int w, int h) {
+  auto oldPosition = mPosition;
+  auto oldSize = mSize;
+  setPosition({ x, y });
+  setSize({ w, h });
+  onLayout(mSize.x, mSize.y);
+  mSkipUntilLayoutUpdate = false;
+  mWantsLayoutUpdate = false;
+  if (oldPosition != mPosition || oldSize != mSize) {
+    emit geometryChanged(mPosition, mSize);
+  }
+}
 
-    if (mPosition == oldPosition && mSize == oldSize) [[unlikely]] {
-        return;
-    }
-    emit geometryChanged({x, y}, {width, height});
+void AView::onLayout(int w, int h) {
 }
 
 bool AView::consumesClick(const glm::ivec2& pos) {
@@ -675,9 +757,8 @@ void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     if (mAssHelper == nullptr) {
         return;
     }
-    auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusMargin() : glm::ivec2(DEFINITELY_INVALID_SIZE);
     AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
-    invalidateStateStylesImpl(prevMinSize);
+    invalidateStateStylesImpl();
 }
 
 
@@ -725,8 +806,7 @@ void AView::setVisibility(Visibility visibility) noexcept
     }
     auto prev = std::exchange(mVisibility, visibility);
     if ((mVisibility & Visibility::FLAG_CONSUME_SPACE) != (prev & Visibility::FLAG_CONSUME_SPACE)) {
-        mMarkedMinContentSizeInvalid = false; // force
-        markMinContentSizeInvalid();
+        requestLayout();
     }
     redraw();
     emit mVisibilityChanged(visibility);
@@ -838,8 +918,7 @@ void AView::forceUpdateLayoutRecursively() {
     AUI_DO_ONCE {
         ALogger::warn("AView") << "AView::forceUpdateLayoutRecursively() called; it's for debugging purposes only.";
     }
-    mMarkedMinContentSizeInvalid = true;
-    mCachedMinContentSize.reset();
+    requestLayout();
 }
 
 void AView::commitStyle() {

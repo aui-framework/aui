@@ -77,7 +77,7 @@ AAdvancedGridLayout::AAdvancedGridLayout(int cellsX, int cellsY): cellsX(cellsX)
     mIndices.resize(cellsX * cellsY, -1);
 }
 
-void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
+void AAdvancedGridLayout::layout(int x, int y, int width, int height)
 {
     AVector<CompositionCache> columns;
     AVector<CompositionCache> rows;
@@ -146,7 +146,7 @@ void AAdvancedGridLayout::onResize(int x, int y, int width, int height)
         auto geomY = posY + margins.top;
         auto geomW = width - margins.horizontal();
         auto geomH = height - margins.vertical();
-        v.view->setGeometry(geomX, geomY, geomW, geomH);
+        v.view->layout(geomX, geomY, geomW, geomH);
     }
 }
 
@@ -159,7 +159,7 @@ void AAdvancedGridLayout::prepareCache(AVector<CompositionCache>& columns, AVect
         auto fixed = v.view->getFixedSize();
         if (fixed.x != 0) e.x = 0;
         if (fixed.y != 0) e.y = 0;
-        glm::ivec2 m = { v.view->getMinimumWidth(), v.view->getMinimumHeight() };
+        glm::ivec2 m = { v.view->computeWidth(-1), v.view->computeHeight(-1) };
         glm::ivec2 minSpace = m + glm::ivec2{v.view->getMargin().horizontal(), v.view->getMargin().vertical()};
 
         columns[v.x].expandingSum += e.x;
@@ -207,7 +207,7 @@ void AAdvancedGridLayout::removeView(aui::no_escape<AView> view, size_t index) {
     mCells.removeAt(index);
 }
 
-int AAdvancedGridLayout::getMinimumWidth()
+int AAdvancedGridLayout::onComputeIntrinsicWidth(int height)
 {
     int min = -mSpacing;
     for (int x = 0; x < cellsX; ++x)
@@ -216,14 +216,14 @@ int AAdvancedGridLayout::getMinimumWidth()
         for (auto& view : getColumn(x))
         {
             if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
-            minForColumn = glm::max(int(view->getMinimumWidth() + view->getMargin().horizontal()), minForColumn);
+            minForColumn = glm::max(view->computeWidth(-1) + view->getMargin().horizontal(), minForColumn);
         }
         min += minForColumn + mSpacing;
     }
-    return min;
+    return std::max(0, min);
 }
 
-int AAdvancedGridLayout::getMinimumHeight()
+int AAdvancedGridLayout::onComputeIntrinsicHeight(int width)
 {
     int min = -mSpacing;
     for (int y = 0; y < cellsY; ++y)
@@ -232,11 +232,11 @@ int AAdvancedGridLayout::getMinimumHeight()
         for (auto& view : getRow(y))
         {
             if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
-            minForRow = glm::max(int(view->getMinimumHeight() + view->getMargin().vertical()), minForRow);
+            minForRow = glm::max(view->computeHeight(-1) + view->getMargin().vertical(), minForRow);
         }
         min += minForRow + mSpacing;
     }
-    return min;
+    return std::max(0, min);
 }
 
 AVector<_<AView>> AAdvancedGridLayout::getAllViews() {

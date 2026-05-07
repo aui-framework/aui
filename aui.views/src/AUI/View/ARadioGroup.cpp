@@ -49,7 +49,7 @@ void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
         });
     }
 
-    markMinContentSizeInvalid();
+    requestLayout();
 }
 
 void ARadioGroup::setSelectedId(int id) const {

@@ -77,7 +77,7 @@ AGridLayout::AGridLayout(int cellsX, int cellsY): mCellsX(cellsX), mCellsY(cells
 	mIndices.resize(cellsX * cellsY, -1);
 }
 
-void AGridLayout::onResize(int x, int y, int width, int height)
+void AGridLayout::layout(int x, int y, int width, int height)
 {
 	float cellWidth = static_cast<float>(width) / mCellsX;
 	float cellHeight = static_cast<float>(height) / mCellsY;
@@ -100,7 +100,7 @@ void AGridLayout::onResize(int x, int y, int width, int height)
 		posX2 = glm::round(posX2);
 		posY2 = glm::round(posY2);
 		
-		v.view->setGeometry(posX1 + margins.left, posY1 + margins.top,
+		v.view->layout(posX1 + margins.left, posY1 + margins.top,
 			posX2 - posX1 - margins.horizontal(), posY2 - posY1 - margins.vertical());
 	}
 }
@@ -135,30 +135,32 @@ void AGridLayout::removeView(aui::no_escape<AView> view, size_t index) {
 	mCells.removeAt(index);
 }
 
-int AGridLayout::getMinimumWidth()
+int AGridLayout::onComputeIntrinsicWidth(int height)
 {
+    int childHeight = height == -1 ? -1 : height / mCellsY;
 	int min = 0;
 	for (int y = 0; y < mCellsY; ++y)
 	{
 		int minForRow = 0;
 		for (auto& view : getRow(y))
 		{
-			minForRow = glm::max(int(view->getMinimumWidth() + view->getMargin().horizontal()), minForRow);
+			minForRow = glm::max(view->computeWidth(childHeight == -1 ? -1 : std::max(0, childHeight - view->getMargin().vertical())) + view->getMargin().horizontal(), minForRow);
 		}
 		min = glm::max(minForRow * mCellsX, min);
 	}
 	return min;
 }
 
-int AGridLayout::getMinimumHeight()
+int AGridLayout::onComputeIntrinsicHeight(int width)
 {
+    int childWidth = width == -1 ? -1 : width / mCellsX;
 	int min = 0;
 	for (int x = 0; x < mCellsX; ++x)
 	{
 		int minForColumn = 0;
 		for (auto& view : getColumn(x))
 		{
-			minForColumn = glm::max(int(view->getMinimumHeight() + view->getMargin().vertical()), minForColumn);
+			minForColumn = glm::max(view->computeHeight(childWidth == -1 ? -1 : std::max(0, childWidth - view->getMargin().horizontal())) + view->getMargin().vertical(), minForColumn);
 		}
 		min = glm::max(minForColumn * mCellsY, min);
 	}

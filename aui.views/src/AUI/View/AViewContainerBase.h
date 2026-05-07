@@ -96,10 +96,6 @@ public:
 
     void onClickPrevented() override;
 
-    int getContentMinimumWidth() override;
-
-    int getContentMinimumHeight() override;
-
     void onPointerPressed(const APointerPressedEvent& event) override;
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override;
@@ -312,11 +308,13 @@ public:
 
     void forceUpdateLayoutRecursively() override;
 
-    void markMinContentSizeInvalid() override;
     void markPixelDataInvalid(ARect<int> invalidArea) override;
 
 protected:
-    bool mWantsLayoutUpdate = true;
+    int onComputeIntrinsicWidth(int height) override;
+    int onComputeIntrinsicHeight(int width) override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+
     glm::ivec2 mLastLayoutUpdateSize{0, 0};
 
     void drawView(const _<AView>& view, ARenderContext contextOfTheContainer);

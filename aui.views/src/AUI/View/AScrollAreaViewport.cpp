@@ -26,8 +26,8 @@ public:
 };
 
 AScrollAreaViewport::AScrollAreaViewport() {
-    addAssName("AScrollAreaViewport");
-    addView(mInner = _new<Inner>());
+  addAssName("AScrollAreaViewport");
+  addView(mInner = _new<Inner>());
 }
 
 AScrollAreaViewport::~AScrollAreaViewport() {
@@ -35,30 +35,31 @@ AScrollAreaViewport::~AScrollAreaViewport() {
 }
 
 void AScrollAreaViewport::setContents(_<AView> content) {
-    mInner->setPosition({0, 0});
-    ALayoutInflater::inflate(mInner, content);
-    mContents = std::move(content);
-    updateContentsScroll();
+  ALayoutInflater::inflate(mInner, content);
+  mContents = std::move(content);
+  updateContentsScroll();
 }
 
 void AScrollAreaViewport::applyGeometryToChildren() {
-    AViewContainerBase::applyGeometryToChildren();
-    mInner->setSize(glm::max(mInner->getMinimumSize(), getSize()));
-    if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
-        if (!IRenderViewToTexture::isEnabledForView(*mInner)) {
-            auto w = AWindow::current();
-            if (!w) {
-                return;
-            }
+  AViewContainerBase::applyGeometryToChildren();
+  mInner->setSkipUntilLayoutUpdate(false);
+  mInner->setSize(glm::max(mInner->getMinimumSize(), getSize()));
+  if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
+    if (!IRenderViewToTexture::isEnabledForView(*mInner)) {
+      auto w = AWindow::current();
+      if (!w) {
+        return;
+      }
 
-            IRenderViewToTexture::enableForView(w->getRenderingContext()->renderer(), *mInner);
-        }
-    } else {
-        IRenderViewToTexture::disableForView(*mInner);
+      IRenderViewToTexture::enableForView(w->getRenderingContext()->renderer(), *mInner);
     }
+  } else {
+    IRenderViewToTexture::disableForView(*mInner);
+  }
 }
 void AScrollAreaViewport::updateContentsScroll() {
-    mInner->setPosition(-glm::ivec2(mScroll));
-    emit mScrollChanged(mScroll);
-    redraw();
+  mInner->setSkipUntilLayoutUpdate(false);
+  mInner->setPosition(-glm::ivec2(mScroll));
+  emit mScrollChanged(mScroll);
+  redraw();
 }

@@ -275,7 +275,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
     }
 
     if (needsMinSizeUpdate) {
-        markMinContentSizeInvalid();
+        requestLayout();
     }
 }
 

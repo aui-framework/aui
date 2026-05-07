@@ -16,6 +16,7 @@
 #include "AViewContainer.h"
 #include "AUI/Font/IFontView.h"
 #include <initializer_list>
+#include <limits>
 #include <variant>
 #include <AUI/Enum/WordBreak.h>
 #include <AUI/Enum/VerticalAlign.h>
@@ -228,45 +229,29 @@ public:
         AViewContainerBase::setSize(size);
         if (widthDiffers) {
             mPrerenderedString = nullptr;
-            markMinContentSizeInvalid();
+            requestLayout();
         }
     }
 
-    int getContentMinimumWidth() override {
-        if (expanding()->x != 0 || mFixedSize.x != 0) {
-            // there's no need to calculate min size because width is defined.
-            return 0;
-        }
-
-        // if width is not defined, when we try to occupy as much space as possible, only restricted by max size.
-        // basically, it is drastically simplified version of perform layout.
+    int onComputeIntrinsicWidth(int height) override {
         int max = 0;
         int accumulator = 0;
-        const auto paddedMaxSize = mMaxSize.x - mPadding.horizontal();
         for (const auto& e : mEngine.entries()) {
             if (e->forcesNextLine()) {
                 max = glm::max(max, accumulator);
                 accumulator = 0;
                 continue;
             }
-            if (accumulator + e->getSize().x > paddedMaxSize) {
-                if (accumulator == 0) {
-                    return mMaxSize.x;
-                }
-                // there's no need to calculate min size further.
-                goto ret;
-            }
             accumulator += e->getSize().x;
         }
-        ret:
         return glm::max(max, accumulator);
     }
-    int getContentMinimumHeight() override {
-        if (!mPrerenderedString) {
-            performLayout();
-        }
 
-        if (auto engineHeight = mEngine.height()) {
+    int onComputeIntrinsicHeight(int width) override {
+        if (width == -1) {
+            width = onComputeIntrinsicWidth(-1);
+        }
+        if (auto engineHeight = measureLayoutForWidth(width)) {
             return *engineHeight + getFontStyle().getDescenderHeight();
         }
 
@@ -275,7 +260,7 @@ public:
 
     void invalidateFont() override {
         mPrerenderedString.reset();
-        markMinContentSizeInvalid();
+        requestLayout();
     }
 
 protected:
@@ -306,8 +291,8 @@ protected:
         mPrerenderedString = nullptr;
     }
 
-    void markMinContentSizeInvalid() override {
-        AViewContainerBase::markMinContentSizeInvalid();
+    void requestLayout() override {
+        AViewContainerBase::requestLayout();
         mPrerenderedString = nullptr;
     }
 
@@ -319,9 +304,23 @@ protected:
 
 
     void performLayout() {
+        performLayoutForWidth(getSize().x - mPadding.horizontal());
+    }
+
+    AOptional<int> measureLayoutForWidth(int width) {
+        APerformanceSection s("ATextBase::measureLayoutForWidth");
+        mEngine.setTextAlign(getFontStyle().align);
+        mEngine.setLineHeight(getFontStyle().lineSpacing);
+        mEngine.performLayout({ 0, 0 }, { std::max(0, width), std::numeric_limits<int>::max() / 4 }, false);
+        return mEngine.height();
+    }
+
+    void performLayoutForWidth(int width) {
         APerformanceSection s("ATextBase::performLayout");
         mEngine.setTextAlign(getFontStyle().align);
         mEngine.setLineHeight(getFontStyle().lineSpacing);
-        mEngine.performLayout({mPadding.left, mPadding.top }, getSize() - glm::ivec2{mPadding.horizontal(), mPadding.vertical()});
+        mEngine.performLayout(
+            {mPadding.left, mPadding.top },
+            {std::max(0, width), std::numeric_limits<int>::max() / 4});
     }
 };

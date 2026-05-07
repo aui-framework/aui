@@ -1,6 +1,6 @@
 # options: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 BasedOnStyle: Google
-IndentWidth: 4
+IndentWidth: 2
 ColumnLimit: 120
 # does (int) x instead of (int)x
 SpaceAfterCStyleCast: true

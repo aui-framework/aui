@@ -617,14 +617,14 @@ void AWindowBase::processTouchscreenKeyboardRequest() {
 }
 
 
-void AWindowBase::markMinContentSizeInvalid() {
+void AWindowBase::requestLayout() {
     if (auto& p = profiling()) {
         if (p->breakpointOnMarkMinContentSizeInvalid) {
             p->breakpointOnMarkMinContentSizeInvalid = false;
             AUI_BREAKPOINT();
         }
     }
-    AViewContainer::markMinContentSizeInvalid();
+    AViewContainer::requestLayout();
     flagRedraw();
 }
 

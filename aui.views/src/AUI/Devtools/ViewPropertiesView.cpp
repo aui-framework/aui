@@ -90,6 +90,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             [this, targetView](bool expanding) { targetView->expanding() = expanding ? glm::ivec2(1) : glm::ivec2(0); },
             Label { "Expanding" },
           },
+          Label { "mSkipUntilLayoutUpdate = {}"_format(targetView->mSkipUntilLayoutUpdate) },
         },
 
         AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),

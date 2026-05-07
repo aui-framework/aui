@@ -72,7 +72,7 @@ public:
 
         auto windowSize = getSize();
 
-        container->setGeometry(position.x, position.y, size.x, size.y);
+        container->layout(position.x, position.y, size.x, size.y);
         return container;
     }
 
@@ -80,7 +80,7 @@ public:
         removeView(surface);
     }
 
-    void markMinContentSizeInvalid() override {
+    void requestLayout() override {
         flagRedraw();
         mRequiresLayoutUpdate = true;
     }
@@ -134,7 +134,7 @@ void AEmbedAuiWrap::setContainer(const _<AViewContainer>& container) {
     mContainer->setPosition({0, 0});
     container->setPosition({0, 0});
     mContainer->makeCurrent();
-    mContainer->markMinContentSizeInvalid();
+    mContainer->requestLayout();
     mContainer->flagRedraw();
 }
 

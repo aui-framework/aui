@@ -46,8 +46,8 @@ public:
         mInner->setContents(std::move(content));
     }
 
-    int getContentMinimumWidth() override;
-    int getContentMinimumHeight() override;
+    int onComputeIntrinsicWidth(int height) override;
+    int onComputeIntrinsicHeight(int width) override;
 
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;

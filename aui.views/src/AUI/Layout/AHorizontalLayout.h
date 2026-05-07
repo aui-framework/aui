@@ -53,11 +53,13 @@ public:
     AHorizontalLayout(int spacing) : mSpacing(spacing) {
     }
 
-    void onResize(int x, int y, int width, int height) override;
+    void layout(int x, int y, int width, int height) override;
 
-    int getMinimumWidth() override;
+    int onComputeIntrinsicWidth(int height) override;
 
-    int getMinimumHeight() override;
+    int onComputeIntrinsicHeight(int width) override;
+
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
 
     void setSpacing(int spacing) override;
 

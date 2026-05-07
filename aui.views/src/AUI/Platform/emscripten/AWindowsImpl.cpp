@@ -127,7 +127,7 @@ namespace aui::emscripten {
         auto s = glm::ivec2(size * emscripten_get_device_pixel_ratio());
         ALogger::info("Emscripten") << "px size: " << s;
         emscripten_set_canvas_element_size("#canvas", s.x, s.y);
-        AUI_NULLSAFE(window)->setGeometry(0, 0, s.x, s.y);
+        AUI_NULLSAFE(window)->layout(0, 0, s.x, s.y);
     }
 }
 
@@ -137,7 +137,7 @@ namespace {
         return glm::dvec2{mouseEvent->targetX, mouseEvent->targetY} * emscripten_get_device_pixel_ratio();
     }
 
-    bool onResize(int eventType, const EmscriptenUiEvent* event, void *userData) {
+    bool layout(int eventType, const EmscriptenUiEvent* event, void *userData) {
         aui::emscripten::applySize(AWindow::current(), glm::dvec2{event->windowInnerWidth, event->windowInnerHeight});
         return true;
     }
@@ -170,7 +170,7 @@ namespace {
 
 void AWindowManager::loop() {
     AUI_DO_ONCE {
-        emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, onResize);
+        emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, layout);
         emscripten_set_mousemove_callback("#canvas", nullptr, false, onMouseMove);
         emscripten_set_mousedown_callback("#canvas", nullptr, false, onMousePressed);
         emscripten_set_mouseup_callback("#canvas", nullptr, false, onMouseReleased);

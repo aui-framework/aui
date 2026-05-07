@@ -20,16 +20,20 @@
 
 using HVLayout = aui::HVLayout<ALayoutDirection::VERTICAL>;
 
-void AVerticalLayout::onResize(int x, int y, int width, int height) {
-    HVLayout::onResize({ x, y }, { width, height }, mViews, mSpacing);
+void AVerticalLayout::layout(int x, int y, int width, int height) {
+    HVLayout::layout({ x, y }, { width, height }, mViews, mSpacing);
 }
 
-int AVerticalLayout::getMinimumWidth() {
-    return HVLayout::getMinimumWidth(mViews, mSpacing);
+int AVerticalLayout::onComputeIntrinsicWidth(int height) {
+    return HVLayout::onComputeIntrinsicWidth(mViews, mSpacing, height);
 }
 
-int AVerticalLayout::getMinimumHeight() {
-    return HVLayout::getMinimumHeight(mViews, mSpacing);
+int AVerticalLayout::onComputeIntrinsicHeight(int width) {
+    return HVLayout::onComputeIntrinsicHeight(mViews, mSpacing, width);
+}
+
+glm::ivec2 AVerticalLayout::onIntrinsicMeasure(AConstraints constraints) {
+    return HVLayout::onIntrinsicMeasure(mViews, mSpacing, constraints);
 }
 
 void AVerticalLayout::setSpacing(int spacing) {
@@ -40,7 +44,7 @@ void AVerticalLayout::setSpacing(int spacing) {
     if (mViews.empty()) {
         return;
     }
-    AUI_NULLSAFE(mViews.first()->getParent())->markMinContentSizeInvalid();
+    AUI_NULLSAFE(mViews.first()->getParent())->requestLayout();
 }
 
 ALayoutDirection AVerticalLayout::getLayoutDirection() {

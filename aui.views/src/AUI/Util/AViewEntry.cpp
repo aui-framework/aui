@@ -20,14 +20,15 @@ glm::ivec2 AViewEntry::getSize() {
         return {0, 0};
     }
     return {
-        mView->getMinimumWidth() + mView->getMargin().horizontal(),
-        mView->getMinimumHeight() + mView->getMargin().vertical() };
+        mView->computeIntrinsicWidth(-1) + mView->getMargin().horizontal(),
+        mView->computeIntrinsicHeight(-1) + mView->getMargin().vertical() };
 }
 
 void AViewEntry::setPosition(glm::ivec2 position) {
     Entry::setPosition(position);
-    mView->setGeometry(position + glm::ivec2{mView->getMargin().left, mView->getMargin().top},
-                       mView->getMinimumSize());
+    auto s = getSize();
+    mView->layout(position + glm::ivec2{mView->getMargin().left, mView->getMargin().top},
+                  s - mView->getMargin().occupiedSize());
 
 }
 

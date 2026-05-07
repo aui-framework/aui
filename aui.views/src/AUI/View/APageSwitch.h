@@ -27,7 +27,7 @@ private:
 public:
     APageSwitch(const AString& text, unsigned pageNumber, const _<APageView>& pageView);
 
-    int getContentMinimumWidth() override;
+    int onComputeIntrinsicWidth(int height) override;
 };
 
 

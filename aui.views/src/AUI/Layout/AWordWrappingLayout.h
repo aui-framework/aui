@@ -24,11 +24,11 @@ private:
     AVector<AViewEntry> mViewEntry;
 
 public:
-    void onResize(int x, int y, int width, int height) override;
+    void layout(int x, int y, int width, int height) override;
 
-    int getMinimumWidth() override;
+    int onComputeIntrinsicWidth(int height) override;
 
-    int getMinimumHeight() override;
+    int onComputeIntrinsicHeight(int width) override;
 
     void addView(const _<AView>& view, AOptional<size_t> index) override;
 

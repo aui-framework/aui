@@ -40,8 +40,8 @@ class API_AUI_VIEWS ASpacerFixed : public AView {
 public:
     explicit ASpacerFixed(AMetric space) : mSpace(space) {}
     bool consumesClick(const glm::ivec2& pos) override;
-    int getContentMinimumWidth() override;
-    int getContentMinimumHeight() override;
+    int onComputeIntrinsicWidth(int height) override;
+    int onComputeIntrinsicHeight(int width) override;
 
 private:
     AMetric mSpace;
