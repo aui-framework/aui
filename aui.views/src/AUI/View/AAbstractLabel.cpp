@@ -50,15 +50,6 @@ glm::ivec2 AAbstractLabel::onIntrinsicMeasure(AConstraints constraints) {
 }
 
 int AAbstractLabel::onComputeIntrinsicWidth(int height) {
-    switch (mTextOverflow) {
-        case ATextOverflow::ELLIPSIS:
-            return getFontStyle().getWidth(AString::fromUtf32(std::u32string_view(&ELLIPSIS, 1)));
-        case ATextOverflow::CLIP:
-            return 0;
-        case ATextOverflow::NONE:
-            break;
-    }
-
     int acc = mPrerendered ? mPrerendered->getWidth() : getFontStyle().getWidth(mText);
     if (mIcon) {
         acc += getIconSize().x * 2;

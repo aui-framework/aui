@@ -37,13 +37,29 @@ AScrollAreaViewport::~AScrollAreaViewport() {
 void AScrollAreaViewport::setContents(_<AView> content) {
   ALayoutInflater::inflate(mInner, content);
   mContents = std::move(content);
-  updateContentsScroll();
+  mInner->setSkipUntilLayoutUpdate(false);
+  mInner->setPosition(-glm::ivec2(mScroll));
+  requestLayout();
+  redraw();
+}
+
+void AScrollAreaViewport::setScrollSurfaceSize(glm::ivec2 size) {
+  size = glm::max(size, glm::ivec2(0));
+  if (mScrollSurfaceSize == size) {
+    return;
+  }
+  mScrollSurfaceSize = size;
+  requestLayout();
+  redraw();
+}
+
+glm::ivec2 AScrollAreaViewport::onIntrinsicMeasure(AConstraints constraints) {
+  return mInner->measure(constraints);
 }
 
 void AScrollAreaViewport::applyGeometryToChildren() {
-  AViewContainerBase::applyGeometryToChildren();
   mInner->setSkipUntilLayoutUpdate(false);
-  mInner->setSize(glm::max(mInner->getMinimumSize(), getSize()));
+  mInner->layout(-glm::ivec2(mScroll), mScrollSurfaceSize);
   if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
     if (!IRenderViewToTexture::isEnabledForView(*mInner)) {
       auto w = AWindow::current();

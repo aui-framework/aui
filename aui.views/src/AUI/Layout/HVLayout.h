@@ -14,6 +14,7 @@
 #include <AUI/Util/ALayoutDirection.h>
 #include <AUI/Util/AConstraints.hpp>
 #include <AUI/Enum/Visibility.h>
+#include <range/v3/range.hpp>
 #include <vector>
 
 namespace aui {
@@ -132,21 +133,25 @@ public:
         return aui::layout_direction::getPerpendicularAxisValue(direction, v);
     }
 
-    static int computePerpendicularSize(const auto& view, int ourAxisSize, int availablePerpendicularSize) {
+    static int computePerpendicularSize(
+        const auto& view,
+        int ourAxisSize,
+        int availablePerpendicularSize,
+        int minimumPerpendicularSize) {
         if constexpr (direction == ALayoutDirection::HORIZONTAL) {
             if (getPerpAxisValue(view->getExpanding()) != 0 && getPerpAxisValue(view->getFixedSize()) == 0) {
-                return availablePerpendicularSize;
+                return glm::max(availablePerpendicularSize, minimumPerpendicularSize);
             }
-            return glm::min(availablePerpendicularSize, view->measure({
+            return glm::max(minimumPerpendicularSize, view->measure({
                 .minWidth = ourAxisSize,
                 .maxWidth = ourAxisSize,
                 .maxHeight = availablePerpendicularSize,
             }).y);
         } else {
             if (getPerpAxisValue(view->getExpanding()) != 0 && getPerpAxisValue(view->getFixedSize()) == 0) {
-                return availablePerpendicularSize;
+                return glm::max(availablePerpendicularSize, minimumPerpendicularSize);
             }
-            return glm::min(availablePerpendicularSize, view->measure({
+            return glm::max(minimumPerpendicularSize, view->measure({
                 .minHeight = ourAxisSize,
                 .maxHeight = ourAxisSize,
                 .maxWidth = availablePerpendicularSize,
@@ -154,8 +159,21 @@ public:
         }
     }
 
-    static int computeExpandingLowerBound(const auto& view) {
-        return getAxisValue(view->getMinSize());
+    static int computeExpandingLowerBound(const auto& view, int perpendicularConstraint) {
+        AConstraints constraints {};
+        if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+            constraints.maxWidth = 0;
+            if (perpendicularConstraint != -1) {
+                constraints.maxHeight = perpendicularConstraint;
+            }
+            return glm::max(getAxisValue(view->getMinSize()), view->measure(constraints).x);
+        } else {
+            constraints.maxHeight = 0;
+            if (perpendicularConstraint != -1) {
+                constraints.maxWidth = perpendicularConstraint;
+            }
+            return glm::max(getAxisValue(view->getMinSize()), view->measure(constraints).y);
+        }
     }
 
     static int computePreferredMainAxisSize(const auto& view, int perpendicularConstraint) {
@@ -170,7 +188,8 @@ public:
         ranges::range auto&& views,
         int spacing,
         int containerAxisSize,
-        auto&& preferredMainAxisProvider) {
+        auto&& preferredMainAxisProvider,
+        auto&& minimumMainAxisProvider) {
 
         std::vector<MainAxisSizeInfo> result;
         result.reserve(static_cast<size_t>(ranges::size(views)));
@@ -197,7 +216,7 @@ public:
                 info.maxSize = fixedSize;
             } else if (expanding > 0) {
                 info.weight = expanding;
-                info.baseSize = computeExpandingLowerBound(view);
+                info.baseSize = minimumMainAxisProvider(view);
                 info.maxSize = rawMaxSize > 0
                     ? glm::max(info.baseSize, rawMaxSize)
                     : std::numeric_limits<int>::max();
@@ -246,6 +265,12 @@ public:
                     0,
                     getPerpAxisValue(paddedSize - view->getMargin().occupiedSize()));
                 return computePreferredMainAxisSize(view, childPerpAxis);
+            },
+            [&](const auto& view) {
+                const int childPerpAxis = glm::max(
+                    0,
+                    getPerpAxisValue(paddedSize - view->getMargin().occupiedSize()));
+                return computeExpandingLowerBound(view, childPerpAxis);
             });
 
         long long posOurAxis = getAxisValue(paddedPosition) * FIXED_POINT_DENOMINATOR;
@@ -276,7 +301,8 @@ public:
             const int viewSizePerpAxis = computePerpendicularSize(
                 view,
                 viewSizeOurAxis,
-                availablePerpendicularSize);
+                availablePerpendicularSize,
+                getPerpAxisValue(view->getMinSize()));
 
             view->layout(
                 getAxisValue(glm::ivec2 { viewPosOurAxis, viewPosPerpAxis }),
@@ -306,20 +332,30 @@ public:
         }
     }
 
-    static glm::ivec2 onIntrinsicMeasure(ranges::range auto&& views, int spacing, AConstraints constraints) {
-        if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-            int heightConstraint = constraints.maxHeight >= 1000000 ? -1 : constraints.maxHeight;
-            int width = onComputeIntrinsicWidth(views, spacing, heightConstraint);
-            int heightConstraintForHeight = constraints.maxWidth >= 1000000 ? width : glm::clamp(width, constraints.minWidth, constraints.maxWidth);
-            int height = onComputeIntrinsicHeight(views, spacing, heightConstraintForHeight);
-            return { width, height };
-        } else {
-            int widthConstraint = constraints.maxWidth >= 1000000 ? -1 : constraints.maxWidth;
-            int height = onComputeIntrinsicHeight(views, spacing, widthConstraint);
-            int widthConstraintForWidth = constraints.maxHeight >= 1000000 ? height : glm::clamp(height, constraints.minHeight, constraints.maxHeight);
-            int width = onComputeIntrinsicWidth(views, spacing, widthConstraintForWidth);
-            return { width, height };
-        }
+  static glm::ivec2 onIntrinsicMeasure(ranges::range auto&& views, int spacing, AConstraints constraints) {
+      if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+        int height_constraint = constraints.maxHeight >= 1000000 ? -1 : constraints.maxHeight;
+        int width = onComputeIntrinsicWidth(views, spacing, height_constraint);
+
+        int height_constraint_for_height = glm::clamp(
+            width,
+            constraints.minWidth,
+            constraints.maxWidth >= 1000000 ? width : glm::max(width, constraints.maxWidth)
+        );
+        int height = onComputeIntrinsicHeight(views, spacing, height_constraint_for_height);
+        return { width, height };
+      } else {
+        int width_constraint = constraints.maxWidth >= 1000000 ? -1 : constraints.maxWidth;
+        int height = onComputeIntrinsicHeight(views, spacing, width_constraint);
+
+        int width_constraint_for_width = glm::clamp(
+            height,
+            constraints.minHeight,
+            constraints.maxHeight >= 1000000 ? height : glm::max(height, constraints.maxHeight)
+        );
+        int width = onComputeIntrinsicWidth(views, spacing, width_constraint_for_width);
+        return { width, height };
+      }
     }
 
 private:
@@ -375,6 +411,8 @@ private:
         const auto resolvedMainAxisSizes =
             resolveMainAxisSizes(views, spacing, ourAxisConstraint, [&](const auto& view) {
                 return computeMainAxisSizeForConstraint(view);
+            }, [&](const auto& view) {
+                return computeExpandingLowerBound(view, -1);
             });
 
         int maxPerp = 0;

@@ -310,51 +310,59 @@ int AView::computeHeight(int width) {
 }
 
 glm::ivec2 AView::measure(AConstraints constraints) {
-    if (mLastConstraints == constraints) {
-        return mMeasuredSize;
-    }
-    AConstraints effectiveConstraints = constraints;
-
-    if (mFixedSize.x != 0) {
-        effectiveConstraints.minWidth = effectiveConstraints.maxWidth = mFixedSize.x;
-    } else {
-        effectiveConstraints.minWidth = std::max(effectiveConstraints.minWidth, mMinSize.x);
-        if (mMaxSize.x != -1) {
-            effectiveConstraints.maxWidth = std::min(effectiveConstraints.maxWidth, mMaxSize.x);
-        }
-    }
-
-    if (mFixedSize.y != 0) {
-        effectiveConstraints.minHeight = effectiveConstraints.maxHeight = mFixedSize.y;
-    } else {
-        effectiveConstraints.minHeight = std::max(effectiveConstraints.minHeight, mMinSize.y);
-        if (mMaxSize.y != -1) {
-            effectiveConstraints.maxHeight = std::min(effectiveConstraints.maxHeight, mMaxSize.y);
-        }
-    }
-
-    effectiveConstraints.maxWidth = std::max(effectiveConstraints.minWidth, effectiveConstraints.maxWidth);
-    effectiveConstraints.maxHeight = std::max(effectiveConstraints.minHeight, effectiveConstraints.maxHeight);
-
-    int hPadding = mPadding.left + mPadding.right;
-    int vPadding = mPadding.top + mPadding.bottom;
-
-    AConstraints contentConstraints;
-    contentConstraints.minWidth = std::max(0, effectiveConstraints.minWidth - hPadding);
-    contentConstraints.maxWidth = std::max(0, effectiveConstraints.maxWidth - hPadding);
-    contentConstraints.minHeight = std::max(0, effectiveConstraints.minHeight - vPadding);
-    contentConstraints.maxHeight = std::max(0, effectiveConstraints.maxHeight - vPadding);
-
-    glm::ivec2 contentSize = onIntrinsicMeasure(contentConstraints);
-
-    int finalWidth = contentSize.x + hPadding;
-    int finalHeight = contentSize.y + vPadding;
-
-    mMeasuredSize.x = std::clamp(finalWidth, effectiveConstraints.minWidth, effectiveConstraints.maxWidth);
-    mMeasuredSize.y = std::clamp(finalHeight, effectiveConstraints.minHeight, effectiveConstraints.maxHeight);
-
-    mLastConstraints = constraints;
+  if (mLastConstraints == constraints) {
     return mMeasuredSize;
+  }
+  AConstraints effectiveConstraints = constraints;
+
+  if (mFixedSize.x != 0) {
+    effectiveConstraints.minWidth = effectiveConstraints.maxWidth = mFixedSize.x;
+  } else {
+    effectiveConstraints.minWidth = std::max(effectiveConstraints.minWidth, mMinSize.x);
+    if (mMaxSize.x != -1) {
+      effectiveConstraints.maxWidth = std::min(effectiveConstraints.maxWidth, mMaxSize.x);
+    }
+  }
+
+  if (mFixedSize.y != 0) {
+    effectiveConstraints.minHeight = effectiveConstraints.maxHeight = mFixedSize.y;
+  } else {
+    effectiveConstraints.minHeight = std::max(effectiveConstraints.minHeight, mMinSize.y);
+    if (mMaxSize.y != -1) {
+      effectiveConstraints.maxHeight = std::min(effectiveConstraints.maxHeight, mMaxSize.y);
+    }
+  }
+
+  effectiveConstraints.maxWidth = std::max(effectiveConstraints.minWidth, effectiveConstraints.maxWidth);
+  effectiveConstraints.maxHeight = std::max(effectiveConstraints.minHeight, effectiveConstraints.maxHeight);
+
+  int hPadding = mPadding.left + mPadding.right;
+  int vPadding = mPadding.top + mPadding.bottom;
+
+  AConstraints contentConstraints;
+  contentConstraints.minWidth = std::max(0, effectiveConstraints.minWidth - hPadding);
+  contentConstraints.maxWidth = std::max(0, effectiveConstraints.maxWidth - hPadding);
+  contentConstraints.minHeight = std::max(0, effectiveConstraints.minHeight - vPadding);
+  contentConstraints.maxHeight = std::max(0, effectiveConstraints.maxHeight - vPadding);
+
+  glm::ivec2 contentSize = onIntrinsicMeasure(contentConstraints);
+
+  if (contentSize.x == 0) {
+    contentSize.x = 0;
+  }
+
+  int finalWidth = contentSize.x + hPadding;
+  int finalHeight = contentSize.y + vPadding;
+
+  mMeasuredSize.x = std::max(effectiveConstraints.minWidth, finalWidth);
+  mMeasuredSize.y = std::max(effectiveConstraints.minHeight, finalHeight);
+
+  if (mMeasuredSize.x == 0) {
+    mMeasuredSize.x = 0;
+  }
+
+  mLastConstraints = constraints;
+  return mMeasuredSize;
 }
 
 glm::ivec2 AView::onIntrinsicMeasure(AConstraints constraints) {
@@ -380,7 +388,7 @@ void AView::getTransform(glm::mat4& transform) const {
 }
 
 void AView::pack() {
-    setSize(measure(AConstraints {}));
+  layout(getPosition(), measure(AConstraints {}));
 }
 
 void AView::addAssName(const AString& assName)
@@ -416,10 +424,8 @@ namespace {
     }
 }
 
-void AView::ensureAssUpdated()
-{
-    if (mAssHelper == nullptr)
-    {
+void AView::ensureAssUpdated() {
+    if (mAssHelper == nullptr) {
         mAssHelper = _new<AAssHelper>();
 
         setupConnectionsCustomStyleRecursive(this, mCustomStyleRule);

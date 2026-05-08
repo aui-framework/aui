@@ -39,6 +39,15 @@ public:
         return mContents;
     }
 
+    void setScrollSurfaceSize(glm::ivec2 size);
+
+    [[nodiscard]]
+    glm::ivec2 scrollSurfaceSize() const noexcept {
+        return mScrollSurfaceSize;
+    }
+
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+
     void applyGeometryToChildren() override;
 
     bool consumesClick(const glm::ivec2& position) override {
@@ -99,6 +108,7 @@ public:
 private:
     _<Inner> mInner;
     _<AView> mContents;
+    glm::ivec2 mScrollSurfaceSize = {};
 
     glm::uvec2 mScroll = {0, 0};
     emits<glm::uvec2> mScrollChanged;

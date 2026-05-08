@@ -430,9 +430,9 @@ void AWindowBase::flagRedraw() {
 
 void AWindowBase::applyGeometryToChildren() {
     APerformanceSection updateLayout("layout update");
-    AUI_REPEAT(2) {   // AText may trigger extra layout update
+    //AUI_REPEAT(2) {   // AText may trigger extra layout update // TODO(Nelonn): delete this
         AViewContainer::applyGeometryToChildren();
-    }
+    //}
     emit layoutUpdateComplete;
 }
 

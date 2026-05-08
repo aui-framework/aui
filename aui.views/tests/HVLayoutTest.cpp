@@ -13,6 +13,9 @@
 #include <range/v3/range.hpp>
 #include <AUI/Layout/HVLayout.h>
 #include <AUI/View/AView.h>
+#include <AUI/View/ASplitter.h>
+#include <AUI/View/ASplitterHelper.h>
+#include <AUI/Util/SplitterSizeInjector.h>
 #include <functional>
 #include <limits>
 
@@ -62,6 +65,27 @@ public:
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
         lastMeasureConstraints = constraints;
         return measuredContentSize;
+    }
+};
+
+class SplitterMeasureView : public AView {
+public:
+    int preferredWidth = 0;
+    int preferredHeight = 0;
+
+    int onComputeIntrinsicWidth(int height) override {
+        return preferredWidth;
+    }
+
+    int onComputeIntrinsicHeight(int width) override {
+        return preferredHeight;
+    }
+
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
+        return {
+            constraints.maxWidth,
+            constraints.maxHeight == 1000000 ? preferredHeight : constraints.maxHeight,
+        };
     }
 };
 
@@ -227,4 +251,76 @@ TEST(AViewMeasure, MeasureHonorsFixedSizeAndContentConstraints) {
     EXPECT_EQ(view.lastMeasureConstraints.minHeight, 20);
     EXPECT_EQ(view.lastMeasureConstraints.maxHeight, 20);
     EXPECT_EQ(measured, glm::ivec2(50, 30));
+}
+
+TEST(ASplitterHelper, ReclaimSpaceUsesViewMinimumSize) {
+    auto view = _new<SplitterMeasureView>();
+    view->preferredWidth = 80;
+    view->preferredHeight = 10;
+    view->setMinSize({ 30, 0 });
+    view->setSize({ 100, 20 });
+
+    ASplitterHelper helper(ALayoutDirection::HORIZONTAL);
+    helper.setItems(AVector<ASplitterHelper::Item> { { .view = view } });
+
+    EXPECT_EQ(helper.reclaimSpace(100, 0), 30);
+    ASSERT_TRUE(helper.items().first().overridedSize.hasValue());
+    EXPECT_EQ(*helper.items().first().overridedSize, 30);
+}
+
+TEST(ASplitterHelper, OverridenSizeIsExactOnMainAxis) {
+    auto view = _new<FakeLayoutItem>();
+    view->preferredWidth = [](int) { return 80; };
+    view->preferredHeight = [](int) { return 10; };
+    view->setMinSize({ 7, 0 });
+    view->setExpanding({ 1, 0 });
+
+    ASplitterHelper::Item item {
+        .view = view,
+        .overridedSize = 20,
+    };
+
+    SizeInjector<ALayoutDirection::HORIZONTAL> injected { item };
+
+    EXPECT_EQ(injected.computeWidth(-1), 20);
+    EXPECT_EQ(injected.computeIntrinsicWidth(-1), 20);
+    EXPECT_EQ(injected.getFixedSize().x, 0);
+    EXPECT_EQ(injected.getMinimumSize().x, 7);
+    EXPECT_EQ(injected.getExpanding().x, 0);
+}
+
+TEST(ASplitterHelper, OverridenSizeDoesNotGoBelowViewMinimum) {
+    auto view = _new<FakeLayoutItem>();
+    view->preferredWidth = [](int) { return 80; };
+    view->preferredHeight = [](int) { return 10; };
+    view->setMinSize({ 30, 0 });
+
+    ASplitterHelper::Item item {
+        .view = view,
+        .overridedSize = 20,
+    };
+
+    SizeInjector<ALayoutDirection::HORIZONTAL> injected { item };
+
+    EXPECT_EQ(injected.computeWidth(-1), 30);
+    EXPECT_EQ(injected.computeIntrinsicWidth(-1), 30);
+}
+
+TEST(ASplitter, DefaultsToEqualHorizontalExpansionWhenChildrenAreNotExpanding) {
+    auto left = _new<FakeLayoutItem>();
+    left->preferredWidth = [](int) { return 40; };
+    left->preferredHeight = [](int) { return 10; };
+
+    auto right = _new<FakeLayoutItem>();
+    right->preferredWidth = [](int) { return 40; };
+    right->preferredHeight = [](int) { return 10; };
+
+    auto splitter = _cast<ASplitter>(ASplitter::Horizontal()
+        .withItems({ left, right })
+        .build());
+
+    splitter->layout(0, 0, 100, 20);
+
+    expectRect(left, { 0, 0 }, { 50, 10 });
+    expectRect(right, { 50, 0 }, { 50, 10 });
 }

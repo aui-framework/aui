@@ -25,6 +25,21 @@ AText::AText() {
     addView(mViewsContainer = _new<AViewContainer>());
 }
 
+int AText::onComputeIntrinsicWidth(int height) {
+    if (mParsedFlags.wordBreak != WordBreak::BREAK_ALL) {
+        return ATextBase::onComputeIntrinsicWidth(height);
+    }
+
+    int maxEntryWidth = 0;
+    for (const auto& entry : mEngine.entries()) {
+        if (entry->forcesNextLine()) {
+            continue;
+        }
+        maxEntryWidth = glm::max(maxEntryWidth, entry->getSize().x);
+    }
+    return maxEntryWidth;
+}
+
 
 void AText::pushWord(Entries& entries,
                      AString word,

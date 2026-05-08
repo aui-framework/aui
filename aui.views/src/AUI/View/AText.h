@@ -90,6 +90,7 @@ public:
 protected:
     void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
     void applyGeometryToChildren() override;
+    int onComputeIntrinsicWidth(int height) override;
 
 private:
     class WordEntry final : public aui::detail::WordEntry {
