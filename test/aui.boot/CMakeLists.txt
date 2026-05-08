@@ -38,6 +38,21 @@ function(define_aui_boot_test NAME)
 
 endfunction()
 
+# CLI mode tests (cmake -P aui.boot.cmake <command>)
+# Each test is a separate file so CTest shows them individually.
+set(_cli_test_dir "${CMAKE_CURRENT_SOURCE_DIR}/CLI")
+set(_cli_tests
+    test_help
+    test_no_args
+    test_unknown_command
+    test_update
+)
+foreach(_cli_test ${_cli_tests})
+    add_test(NAME "aui.build.boot.cli.${_cli_test}"
+            COMMAND ${CMAKE_COMMAND} -P "${_cli_test_dir}/${_cli_test}.cmake"
+            WORKING_DIRECTORY "${_cli_test_dir}")
+endforeach()
+
 if (DEFINED AUI_TEST_DEPLOY_VERSION)
     message(STATUS "AUI_TEST_DEPLOY_VERSION=${AUI_TEST_DEPLOY_VERSION} (deployment tests only)")
     define_aui_boot_test(Precompiled1)

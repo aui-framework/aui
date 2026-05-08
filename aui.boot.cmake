@@ -18,6 +18,15 @@
 # Original code located at https://github.com/aui-framework/aui
 # =====================================================================================================================
 #
+# CLI mode (cmake -P):
+#   cmake -P aui.boot.cmake help          - print this help
+#   cmake -P aui.boot.cmake update [ver]  - update aui.boot.cmake to the latest version
+#   cmake -P aui.boot.cmake create        - create a new project from example_app
+#
+# For more information, see https://aui-framework.github.io/develop/getting-started
+# =====================================================================================================================
+#
+
 
 cmake_minimum_required(VERSION 3.22)
 
@@ -25,6 +34,90 @@ find_program(GIT_EXECUTABLE NAMES git git.exe git.cmd git.bat)
 if (NOT GIT_EXECUTABLE)
     message(FATAL_ERROR "Git not found! Please install Git and try again. https://git-scm.com/")
 endif ()
+
+# ---- CLI mode ----------------------------------------------------------------
+# When invoked via "cmake -P aui.boot.cmake <command>", dispatch subcommands.
+# In cmake -P mode:
+#   CMAKE_ARGV0 = "cmake"
+#   CMAKE_ARGV1 = "-P"
+#   CMAKE_ARGV2 = script path
+#   CMAKE_ARGV3 = first user argument
+if(CMAKE_SCRIPT_MODE_FILE)
+    set(_auib_cli_command "${CMAKE_ARGV3}")
+
+    if("${_auib_cli_command}" STREQUAL "help" OR "${_auib_cli_command}" STREQUAL "")
+        message("")
+        message("AUI.Boot -- CMake package manager for AUI Framework")
+        message("")
+        message("Usage: cmake -P aui.boot.cmake <command>")
+        message("")
+        message("Commands:")
+        message("  help                    Print this help message")
+        message("  update [version]        Update aui.boot.cmake to the specified version")
+        message("                          (default: develop branch)")
+        message("  create                  Create a new project in the current directory")
+        message("")
+        message("For more information, see https://aui-framework.github.io/develop/getting-started")
+        message("")
+    elseif("${_auib_cli_command}" STREQUAL "update")
+        # Determine version: use CMAKE_ARGV4 if provided, otherwise "develop"
+        if(NOT "${CMAKE_ARGV4}" STREQUAL "")
+            set(_auib_update_version "${CMAKE_ARGV4}")
+        else()
+            set(_auib_update_version "develop")
+        endif()
+
+        set(_auib_update_url
+            "https://raw.githubusercontent.com/aui-framework/aui/refs/heads/${_auib_update_version}/aui.boot.cmake")
+
+        message(STATUS "Downloading aui.boot.cmake (${_auib_update_version}) from ${_auib_update_url}")
+
+        # Download to a temp file first, then replace the current script
+        set(_auib_tmp "${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake.tmp")
+        file(DOWNLOAD "${_auib_update_url}" "${_auib_tmp}" SHOW_PROGRESS STATUS _auib_dl_status)
+
+        list(GET _auib_dl_status 0 _auib_dl_code)
+        list(GET _auib_dl_status 1 _auib_dl_msg)
+
+        if(NOT _auib_dl_code EQUAL 0)
+            message(FATAL_ERROR "Failed to download aui.boot.cmake: ${_auib_dl_msg}")
+        endif()
+
+        # Overwrite this script with the downloaded version
+        configure_file("${_auib_tmp}" "${CMAKE_ARGV2}" COPYONLY)
+        file(REMOVE "${_auib_tmp}")
+
+        message(STATUS "aui.boot.cmake updated to ${_auib_update_version} successfully.")
+    elseif("${_auib_cli_command}" STREQUAL "create")
+        find_program(_auib_git NAMES git git.exe git.cmd git.bat)
+        if(NOT _auib_git)
+            message(FATAL_ERROR "Git not found! Please install Git and try again. https://git-scm.com/")
+        endif()
+
+        message(STATUS "Cloning example_app into ${CMAKE_CURRENT_SOURCE_DIR} ...")
+        execute_process(
+            COMMAND "${_auib_git}" clone https://github.com/aui-framework/example_app "${CMAKE_CURRENT_SOURCE_DIR}/example_app"
+            RESULT_VARIABLE _auib_clone_result
+            OUTPUT_QUIET
+            ERROR_VARIABLE _auib_clone_error
+        )
+        if(NOT _auib_clone_result EQUAL 0)
+            message(FATAL_ERROR "Failed to clone example_app: ${_auib_clone_error}")
+        endif()
+        message(STATUS "Project created in ${CMAKE_CURRENT_SOURCE_DIR}/example_app")
+        message(STATUS "")
+        message(STATUS "Next steps:")
+        message(STATUS "  cd example_app")
+        message(STATUS "  cmake -B build && cmake --build build")
+    else()
+        message(FATAL_ERROR "Unknown command: ${_auib_cli_command}. Use 'cmake -P aui.boot.cmake help' for usage.")
+    endif()
+    return()
+endif()
+# ---- End CLI mode ------------------------------------------------------------
+
+# The rest of this file is only for include() mode (project context).
+# In script mode (cmake -P), the CLI block at the end handles everything.
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
