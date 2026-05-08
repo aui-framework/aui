@@ -136,26 +136,25 @@ public:
     static int computePerpendicularSize(
         const auto& view,
         int ourAxisSize,
-        int availablePerpendicularSize,
-        int minimumPerpendicularSize) {
+        int availablePerpendicularSize) {
         if constexpr (direction == ALayoutDirection::HORIZONTAL) {
             if (getPerpAxisValue(view->getExpanding()) != 0 && getPerpAxisValue(view->getFixedSize()) == 0) {
-                return glm::max(availablePerpendicularSize, minimumPerpendicularSize);
+                return availablePerpendicularSize;
             }
-            return glm::max(minimumPerpendicularSize, view->measure({
+            return view->measure({
                 .minWidth = ourAxisSize,
                 .maxWidth = ourAxisSize,
                 .maxHeight = availablePerpendicularSize,
-            }).y);
+            }).y;
         } else {
             if (getPerpAxisValue(view->getExpanding()) != 0 && getPerpAxisValue(view->getFixedSize()) == 0) {
-                return glm::max(availablePerpendicularSize, minimumPerpendicularSize);
+                return availablePerpendicularSize;
             }
-            return glm::max(minimumPerpendicularSize, view->measure({
+            return view->measure({
                 .minHeight = ourAxisSize,
                 .maxHeight = ourAxisSize,
                 .maxWidth = availablePerpendicularSize,
-            }).x);
+            }).x;
         }
     }
 
@@ -166,13 +165,13 @@ public:
             if (perpendicularConstraint != -1) {
                 constraints.maxHeight = perpendicularConstraint;
             }
-            return glm::max(getAxisValue(view->getMinSize()), view->measure(constraints).x);
+            return view->measure(constraints).x;
         } else {
             constraints.maxHeight = 0;
             if (perpendicularConstraint != -1) {
                 constraints.maxWidth = perpendicularConstraint;
             }
-            return glm::max(getAxisValue(view->getMinSize()), view->measure(constraints).y);
+            return view->measure(constraints).y;
         }
     }
 
@@ -301,8 +300,7 @@ public:
             const int viewSizePerpAxis = computePerpendicularSize(
                 view,
                 viewSizeOurAxis,
-                availablePerpendicularSize,
-                getPerpAxisValue(view->getMinSize()));
+                availablePerpendicularSize);
 
             view->layout(
                 getAxisValue(glm::ivec2 { viewPosOurAxis, viewPosPerpAxis }),
