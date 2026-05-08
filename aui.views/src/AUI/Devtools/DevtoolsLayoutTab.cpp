@@ -120,6 +120,8 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(
         Button { Label { "Force layout update" },  {me::forceLayoutUpdate} },
         SpacerExpanding {},
         Label { "Use CTRL to hit test views" },
+      } AUI_OVERRIDE_STYLE {
+        Expanding {1, 0}
       },
       ASplitter::Horizontal()
           .withItems({
