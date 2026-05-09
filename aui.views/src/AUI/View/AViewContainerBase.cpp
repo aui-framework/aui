@@ -66,7 +66,7 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
 
     const bool showRedraw = [&] {
       if (view->mRedrawRequested) [[unlikely]] {
-          if (auto w = AWindow::current()) [[unlikely]] {
+          if (auto w = ASurface::current()) [[unlikely]] {
               if (auto& p = w->profiling()) {
                   if (p->highlightRedrawRequests) {
                       return true;
@@ -614,6 +614,11 @@ bool AViewContainerBase::onGesture(const glm::ivec2& origin, const AGestureEvent
     if (p && p->enabled())
         return p->onGesture(origin - p->getPosition(), event);
     return false;
+}
+
+void AViewContainerBase::requestLayout() {
+    AView::requestLayout();
+    AUI_NULLSAFE(mLayout)->requestLayout();
 }
 
 void AViewContainerBase::invalidateAssHelper() {

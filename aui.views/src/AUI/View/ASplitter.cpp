@@ -133,11 +133,20 @@ public:
     }
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
-        const bool boundedMain = getAxisValue(glm::ivec2 { constraints.maxWidth, constraints.maxHeight }) < 1000000;
-        const int perpendicularConstraint =
-            getPerpAxisValue(glm::ivec2 { constraints.maxWidth, constraints.maxHeight }) >= 1000000
-                ? -1
-                : getPerpAxisValue(glm::ivec2 { constraints.maxWidth, constraints.maxHeight });
+        const bool boundedMain = [&] {
+            if constexpr (Direction == ALayoutDirection::HORIZONTAL) {
+                return !constraints.isUnlimitedWidth();
+            } else {
+                return !constraints.isUnlimitedHeight();
+            }
+        }();
+        const int perpendicularConstraint = [&] {
+            if constexpr (Direction == ALayoutDirection::HORIZONTAL) {
+                return constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight;
+            } else {
+                return constraints.isUnlimitedWidth() ? -1 : constraints.maxWidth;
+            }
+        }();
         const int availableMain = boundedMain
             ? getAxisValue(glm::ivec2 { constraints.maxWidth, constraints.maxHeight })
             : 0;
@@ -156,11 +165,14 @@ public:
                 continue;
             }
             const auto margin = view->getMargin().occupiedSize();
+            const int perpendicularSize = perpendicularConstraint == -1
+                ? computePerpendicularMinMaxSizes(view, item.mainSize).max
+                : computePerpendicularSize(view, item.mainSize, perpendicularConstraint);
             if constexpr (Direction == ALayoutDirection::HORIZONTAL) {
                 result.x += item.mainSize + margin.x;
-                result.y = std::max(result.y, computePerpendicularSize(view, item.mainSize, perpendicularConstraint) + margin.y);
+                result.y = std::max(result.y, perpendicularSize + margin.y);
             } else {
-                result.x = std::max(result.x, computePerpendicularSize(view, item.mainSize, perpendicularConstraint) + margin.x);
+                result.x = std::max(result.x, perpendicularSize + margin.x);
                 result.y += item.mainSize + margin.y;
             }
         }
@@ -181,17 +193,17 @@ public:
             const auto margin = view->getMargin().occupiedSize();
             const int minMain = computeMinimumMainAxisSize(view, -1);
             const int maxMain = computePreferredMainAxisSize(view, -1, true);
-            const int minPerp = computePerpendicularSize(view, minMain, -1);
-            const int maxPerp = computePerpendicularSize(view, maxMain, -1);
+            const auto minAtMinMain = computePerpendicularMinMaxSizes(view, minMain);
+            const auto minAtMaxMain = computePerpendicularMinMaxSizes(view, maxMain);
 
             if constexpr (Direction == ALayoutDirection::HORIZONTAL) {
                 result.min.x += minMain + margin.x;
                 result.max.x += maxMain + margin.x;
-                result.min.y = std::max(result.min.y, std::max(minPerp, minMax.min.y) + margin.y);
-                result.max.y = std::max(result.max.y, std::max(maxPerp, minMax.min.y) + margin.y);
+                result.min.y = std::max(result.min.y, std::max(minAtMinMain.min, minMax.min.y) + margin.y);
+                result.max.y = std::max(result.max.y, std::max(minAtMaxMain.max, minMax.min.y) + margin.y);
             } else {
-                result.min.x = std::max(result.min.x, std::max(minPerp, minMax.min.x) + margin.x);
-                result.max.x = std::max(result.max.x, std::max(maxPerp, minMax.min.x) + margin.x);
+                result.min.x = std::max(result.min.x, std::max(minAtMinMain.min, minMax.min.x) + margin.x);
+                result.max.x = std::max(result.max.x, std::max(minAtMaxMain.max, minMax.min.x) + margin.x);
                 result.min.y += minMain + margin.y;
                 result.max.y += maxMain + margin.y;
             }
@@ -290,6 +302,26 @@ private:
         }
 
         return computeStructuralMinimumMainAxisSize(view, perpendicularConstraint);
+    }
+
+    struct PerpendicularMinMaxSizes {
+        int min = 0;
+        int max = 0;
+    };
+
+    PerpendicularMinMaxSizes computePerpendicularMinMaxSizes(const _<AView>& view, int mainSize) const {
+        const auto minMax = view->computeMinMaxSizes(mainSize);
+        if constexpr (Direction == ALayoutDirection::HORIZONTAL) {
+            return {
+                .min = minMax.min.y,
+                .max = minMax.max.y,
+            };
+        } else {
+            return {
+                .min = minMax.min.x,
+                .max = minMax.max.x,
+            };
+        }
     }
 
     int computePerpendicularSize(const _<AView>& view, int mainSize, int availablePerpendicular) const {

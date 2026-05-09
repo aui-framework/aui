@@ -56,7 +56,7 @@ TEST(AScrollArea, MeasurePrefersAvailableWidthForWrappingContent) {
 
     const auto measured = scrollArea.measure({
         .maxWidth = 100,
-        .maxHeight = 1000000,
+        .maxHeight = -1,
     });
 
     EXPECT_EQ(measured, glm::ivec2(100, 40));
@@ -71,7 +71,7 @@ TEST(AScrollAreaViewport, MeasureUsesContentSize) {
 
     const auto measured = viewport.measure({
         .maxWidth = 100,
-        .maxHeight = 1000000,
+        .maxHeight = -1,
     });
 
     EXPECT_EQ(measured, glm::ivec2(100, 40));

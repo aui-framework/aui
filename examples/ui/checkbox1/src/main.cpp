@@ -54,7 +54,7 @@ AUI_ENTRY {
                             _new<AButton>("Add").connect(&AButton::clicked, AUI_SLOT(model)::addItem),
                             _new<AButton>("Remove").connect(&AButton::clicked, AUI_SLOT(model)::removeItem),
                           } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-                          //_new<AListView>(model)
+                          _new<AListView>(model)
                       } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } };
                   }(),
                 },

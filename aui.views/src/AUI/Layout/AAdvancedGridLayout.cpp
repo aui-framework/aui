@@ -11,6 +11,7 @@
 
 #include "AAdvancedGridLayout.h"
 #include "AUI/View/AViewContainerBase.h"
+#include <limits>
 
 int AAdvancedGridLayout::indexOf(_<AView> view)
 {
@@ -231,9 +232,11 @@ glm::ivec2 AAdvancedGridLayout::onIntrinsicMeasure(AConstraints constraints)
     if (cellsY > 0) {
         result.y += mSpacing * (cellsY - 1);
     }
+    const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
+    const int maxHeight = constraints.isUnlimitedHeight() ? std::numeric_limits<int>::max() : constraints.maxHeight;
     return {
-        std::clamp(result.x, constraints.minWidth, constraints.maxWidth),
-        std::clamp(result.y, constraints.minHeight, constraints.maxHeight),
+        std::clamp(result.x, constraints.minWidth, maxWidth),
+        std::clamp(result.y, constraints.minHeight, maxHeight),
     };
 }
 

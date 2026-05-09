@@ -96,7 +96,7 @@ public:
                                 if (auto s = mSurface.lock()) {
                                     window = s->getParentWindow();
                                 } else {
-                                    window = AWindow::current();
+                                    window = ASurface::current();
                                 }
 
                                 auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinSize());
@@ -141,12 +141,12 @@ public:
 
 void AEmbedMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
   closeMenu();
-  auto mousePos = AWindow::current()->getMousePos();
+  auto mousePos = ASurface::current()->getMousePos();
   mMenuContainer = _new<MenuContainer>(vector, mousePos);
   auto size = mMenuContainer->measure(AConstraints {});
   mMenuContainer->layout(glm::ivec2(0, 0), size);
 
-  auto surfaceContainer = AWindow::current()->createOverlappingSurface(mousePos, size);
+  auto surfaceContainer = ASurface::current()->createOverlappingSurface(mousePos, size);
   surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
   surfaceContainer->addView(mMenuContainer);
   mMenuContainer->setSurface(surfaceContainer);

@@ -35,7 +35,7 @@ void AForEachUIBase::putOurViewsToSharedCache() {
 //            ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") Cached view for id: " << e.id;
         }
 
-        if (auto w = AWindow::current()) {
+        if (auto w = ASurface::current()) {
             connect(w->layoutUpdateComplete, AObject::GENERIC_OBSERVER, [viewsCache] {
                 viewsCache->clear();
             });

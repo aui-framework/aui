@@ -660,7 +660,7 @@ inline _<TO> _cast(std::shared_ptr<FROM>&& object)
  * and even combine multiple `AUI_NULLSAFE` statements:
  *
  * ```cpp
- * AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(AWindow::current())->flagRedraw();
+ * AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(ASurface::current())->flagRedraw();
  * ```
  */
 #define AUI_NULLSAFE(s) if(decltype(auto) _tmp = (s))_tmp

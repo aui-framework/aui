@@ -87,7 +87,7 @@ void ADragArea::ADraggableHandle::onPointerPressed(const APointerPressedEvent& e
     connect(mouseMove, dragArea, &ADragArea::handleMouseMove);
     dragArea->startDragging(container);
 
-    connect(AWindow::current()->mouseMove,
+    connect(ASurface::current()->mouseMove,
             this,
             [this](const glm::ivec2& windowPos) {
                 if (mDragging) {

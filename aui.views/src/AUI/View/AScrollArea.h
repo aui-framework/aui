@@ -47,7 +47,7 @@ public:
         requestLayout();
     }
 
-    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    //glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
     AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
     void applyGeometryToChildren() override;
 

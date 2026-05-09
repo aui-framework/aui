@@ -35,44 +35,48 @@
 
 static constexpr auto LOG_TAG = "ASurface";
 
+ASurface* ASurface::current() {
+  return currentWindowStorage();
+}
+
 ASurface::ASurface() {
 }
 
 ASurface::~ASurface() {
-    if (currentWindowStorage() == this) {
-        currentWindowStorage() = nullptr;
-    }
+  if (currentWindowStorage() == this) {
+    currentWindowStorage() = nullptr;
+  }
 }
 
 float ASurface::fetchDpiFromSystem() const {
-    return 1.0f;
+  return 1.0f;
 }
 
 void ASurface::updateDpi() {
-    emit dpiChanged;
-    mDpiRatio = [&]() -> float {
-        float systemDpi = fetchDpiFromSystem();
-        float ratio = mScalingParams.scalingFactor * (UITestState::isTesting() ? 1.f : systemDpi);
-        if (!mScalingParams.minimalWindowSizeDp) {
-            return ratio;
-        }
+  emit dpiChanged;
+  mDpiRatio = [&]() -> float {
+    float systemDpi = fetchDpiFromSystem();
+    float ratio = mScalingParams.scalingFactor * (UITestState::isTesting() ? 1.f : systemDpi);
+    if (!mScalingParams.minimalWindowSizeDp) {
+      return ratio;
+    }
 
-        glm::vec2 maxDpiRatios = glm::vec2(getSize()) / glm::vec2(*mScalingParams.minimalWindowSizeDp);
-        float maxDpiRatio = glm::min(maxDpiRatios.x, maxDpiRatios.y);
-        maxDpiRatio = glm::round(maxDpiRatio / 0.25f) * 0.25f;
-        return glm::min(ratio, maxDpiRatio);
-    }();
-    onDpiChanged();
+    glm::vec2 maxDpiRatios = glm::vec2(getSize()) / glm::vec2(*mScalingParams.minimalWindowSizeDp);
+    float maxDpiRatio = glm::min(maxDpiRatios.x, maxDpiRatios.y);
+    maxDpiRatio = glm::round(maxDpiRatio / 0.25f) * 0.25f;
+    return glm::min(ratio, maxDpiRatio);
+  }();
+  onDpiChanged();
 }
 
 void ASurface::setScalingParams(ScalingParams params) {
-    mScalingParams = std::move(params);
-    updateDpi();
+   mScalingParams = std::move(params);
+   updateDpi();
 }
 
 _unique<AWindowManager>& ASurface::getWindowManagerImpl() {
-    thread_local _unique<AWindowManager> ourWindowManager = std::make_unique<AWindowManager>();
-    return ourWindowManager;
+  thread_local _unique<AWindowManager> ourWindowManager = std::make_unique<AWindowManager>();
+  return ourWindowManager;
 }
 
 void ASurface::setFocusedView(const _<AView>& view) {

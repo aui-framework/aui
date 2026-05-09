@@ -153,7 +153,7 @@ public:
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
         return {
             constraints.maxWidth,
-            constraints.maxHeight == 1000000 ? preferredHeight : constraints.maxHeight,
+            constraints.isUnlimitedHeight() ? preferredHeight : constraints.maxHeight,
         };
     }
 

@@ -37,9 +37,9 @@ void AAbstractLabel::render(ARenderContext context) {
 glm::ivec2 AAbstractLabel::onIntrinsicMeasure(AConstraints constraints) {
     AString text = getTransformedText();
     AFontStyle& style = getFontStyle();
-    int availableWidth = constraints.maxWidth;
     int measuredWidth = style.getWidth(text);
-    if (measuredWidth > availableWidth) {
+    if (!constraints.isUnlimitedWidth() && measuredWidth > constraints.maxWidth) {
+        const int availableWidth = constraints.maxWidth;
         measuredWidth = availableWidth;
         processTextOverflow(text, availableWidth);
     }

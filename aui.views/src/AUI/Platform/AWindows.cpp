@@ -193,10 +193,6 @@ void AWindow::onKeyRepeat(AInput::Key key) {
         v->onKeyRepeat(key);
 }
 
-ASurface* AWindow::current() {
-    return currentWindowStorage();
-}
-
 void AWindow::onCloseButtonClicked() {
     close();
 }

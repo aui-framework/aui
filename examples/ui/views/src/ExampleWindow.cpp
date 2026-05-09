@@ -480,7 +480,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                   Horizontal {
                     _new<ANumberPicker>().connect(&ANumberPicker::valueChanged,
                                                   [](int64_t x) {
-                                                      AWindow::current()->setScalingParams(
+                                                      ASurface::current()->setScalingParams(
                                                           { x * 0.25f,
                                                             std::nullopt });
                                                   }) AUI_LET {

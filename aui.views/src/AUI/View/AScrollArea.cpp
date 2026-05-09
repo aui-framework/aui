@@ -25,10 +25,7 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <algorithm>
-
-namespace {
-constexpr int UNBOUNDED_CONSTRAINT = 1000000;
-}
+#include <limits>
 
 AScrollArea::AScrollArea() : AScrollArea(Builder {}) { addAssName("AScrollArea"); }
 
@@ -109,7 +106,7 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
     minConstraints.minWidth = 0;
     minConstraints.maxWidth = 0; // probe minimum width under impossible width constraint
     minConstraints.minHeight = 0;
-    minConstraints.maxHeight = UNBOUNDED_CONSTRAINT; // equivalent of "height is not important"
+    minConstraints.maxHeight = -1; // height is not important
 
     const int minimumScrollableContentWidth = margins.x + contents()->measure(minConstraints).x;
 
@@ -184,39 +181,56 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
     return result;
 }
 
-glm::ivec2 AScrollArea::onIntrinsicMeasure(AConstraints constraints) {
-    const bool widthBounded = constraints.maxWidth < UNBOUNDED_CONSTRAINT;
-    const bool heightBounded = constraints.maxHeight < UNBOUNDED_CONSTRAINT;
+/*glm::ivec2 AScrollArea::onIntrinsicMeasure(AConstraints constraints) {
+    const bool widthBounded = !constraints.isUnlimitedWidth();
+    const bool heightBounded = !constraints.isUnlimitedHeight();
+
+    if (!widthBounded) {
+        auto layout = calculateLayout(
+            {
+                constraints.minWidth,
+                heightBounded ? constraints.maxHeight : 0,
+            },
+            true,
+            heightBounded);
+        const int maxHeight = heightBounded ? constraints.maxHeight : std::numeric_limits<int>::max();
+        return {
+            constraints.minWidth,
+            std::clamp(layout.outerSize.y, constraints.minHeight, maxHeight),
+        };
+    }
 
     auto layout = calculateLayout(
         {
-            widthBounded ? constraints.maxWidth : 0,
+            constraints.maxWidth,
             heightBounded ? constraints.maxHeight : 0,
         },
-        widthBounded,
+        true,
         heightBounded);
 
+    const int measuredWidth = layout.outerSize.x;
+    const int maxWidth = constraints.maxWidth;
+    const int maxHeight = heightBounded ? constraints.maxHeight : std::numeric_limits<int>::max();
     return {
-        std::clamp(layout.outerSize.x, constraints.minWidth, constraints.maxWidth),
-        std::clamp(layout.outerSize.y, constraints.minHeight, constraints.maxHeight),
+        std::clamp(measuredWidth, constraints.minWidth, maxWidth),
+        std::clamp(layout.outerSize.y, constraints.minHeight, maxHeight),
     };
-}
+}*/
 
 AMinMaxSizes AScrollArea::onComputeIntrinsicMinMaxSizes(int height) {
     if (!contents()) {
         return {};
     }
-    const auto contentMinMax = contents()->computeMinMaxSizes();
     const auto maxOuterSize = calculateLayout(
         {
-            contentMinMax.max.x,
+            0,
             height == -1 ? 0 : height,
         },
-        false,
+        true,
         height != -1).outerSize;
     return {
         .min = {},
-        .max = maxOuterSize,
+        .max = { 0, maxOuterSize.y },
     };
 }
 
@@ -277,14 +291,14 @@ void AScrollArea::onScroll(const AScrollEvent& event) {
         auto prevScroll = mVerticalScrollbar->getCurrentScroll();
         mVerticalScrollbar->onScroll(event.delta.y);
         if (prevScroll != mVerticalScrollbar->getCurrentScroll()) {
-            AWindow::current()->preventClickOnPointerRelease();
+            ASurface::current()->preventClickOnPointerRelease();
         }
     }
     if (bool(mHorizontalScrollbar->getVisibility() & Visibility::FLAG_RENDER_NEEDED)) {
         auto prevScroll = mHorizontalScrollbar->getCurrentScroll();
         mHorizontalScrollbar->onScroll(event.delta.x);
         if (prevScroll != mHorizontalScrollbar->getCurrentScroll()) {
-            AWindow::current()->preventClickOnPointerRelease();
+            ASurface::current()->preventClickOnPointerRelease();
         }
     }
 }

@@ -160,7 +160,7 @@ private:
 
     void updateTexture() {
         if (!mTexture) {
-            mTexture = AWindow::current()->getRenderingContext()->renderer().getNewTexture();
+            mTexture = ASurface::current()->getRenderingContext()->renderer().getNewTexture();
         }
 
         CellsImage image(mCells->size());

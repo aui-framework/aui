@@ -25,7 +25,7 @@ void AMenu::show(const AMenuModel& model) {
 _<IMenuProvider>& AMenu::provider() {
     static _<IMenuProvider> provider = nullptr;
     if (provider == nullptr) {
-        if (dynamic_cast<AWindow*>(AWindow::current())) {
+        if (dynamic_cast<AWindow*>(ASurface::current())) {
             provider = _new<AWindowMenuProvider>();
         } else {
             provider = _new<AEmbedMenuProvider>();

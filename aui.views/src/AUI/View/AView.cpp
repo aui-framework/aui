@@ -21,6 +21,7 @@
 #include "AUI/Animator/AAnimator.h"
 
 #include <exception>
+#include <limits>
 #include <glm/gtc/matrix_transform.hpp>
 #include <memory>
 #include <AUI/IO/AStringStream.h>
@@ -44,7 +45,6 @@
 #undef min
 
 static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
-static constexpr int UNBOUNDED_CONSTRAINT = 1000000;
 
 ASurface* AView::getWindow() const
 {
@@ -308,69 +308,65 @@ glm::ivec2 AView::measure(AConstraints constraints) {
   if (auto it = mMeasureCache.find(constraints); it != mMeasureCache.end()) {
     return it->second;
   }
-  AConstraints effectiveConstraints = constraints;
 
-  if (effectiveConstraints.maxWidth == -1) {
-    effectiveConstraints.maxWidth = UNBOUNDED_CONSTRAINT;
-  }
-  if (effectiveConstraints.maxHeight == -1) {
-    effectiveConstraints.maxHeight = UNBOUNDED_CONSTRAINT;
-  }
+  AConstraints effective = constraints;
+  bool unlimitedWidth = effective.maxWidth == -1;
+  bool unlimitedHeight = effective.maxHeight == -1;
 
   if (mFixedSize.x != 0) {
-    effectiveConstraints.minWidth = effectiveConstraints.maxWidth = mFixedSize.x;
+    effective.minWidth = effective.maxWidth = mFixedSize.x;
+    unlimitedWidth = false;
   } else {
-    effectiveConstraints.minWidth = std::max(effectiveConstraints.minWidth, mMinSize.x);
+    effective.minWidth = std::max(effective.minWidth, mMinSize.x);
     if (mMaxSize.x != -1) {
-      effectiveConstraints.maxWidth = std::min(effectiveConstraints.maxWidth, mMaxSize.x);
+      effective.maxWidth = unlimitedWidth ? mMaxSize.x : std::min(effective.maxWidth, mMaxSize.x);
+      unlimitedWidth = false;
     }
   }
-
   if (mFixedSize.y != 0) {
-    effectiveConstraints.minHeight = effectiveConstraints.maxHeight = mFixedSize.y;
+    effective.minHeight = effective.maxHeight = mFixedSize.y;
+    unlimitedHeight = false;
   } else {
-    effectiveConstraints.minHeight = std::max(effectiveConstraints.minHeight, mMinSize.y);
+    effective.minHeight = std::max(effective.minHeight, mMinSize.y);
     if (mMaxSize.y != -1) {
-      effectiveConstraints.maxHeight = std::min(effectiveConstraints.maxHeight, mMaxSize.y);
+      effective.maxHeight = unlimitedHeight ? mMaxSize.y : std::min(effective.maxHeight, mMaxSize.y);
+      unlimitedHeight = false;
     }
   }
 
-  effectiveConstraints.maxWidth = std::max(effectiveConstraints.minWidth, effectiveConstraints.maxWidth);
-  effectiveConstraints.maxHeight = std::max(effectiveConstraints.minHeight, effectiveConstraints.maxHeight);
+  const int effectiveMaxWidth = unlimitedWidth
+      ? std::numeric_limits<int>::max()
+      : std::max(effective.minWidth, effective.maxWidth);
+  const int effectiveMaxHeight = unlimitedHeight
+      ? std::numeric_limits<int>::max()
+      : std::max(effective.minHeight, effective.maxHeight);
 
   int hPadding = mPadding.left + mPadding.right;
   int vPadding = mPadding.top + mPadding.bottom;
 
-  AConstraints contentConstraints;
-  contentConstraints.minWidth = std::max(0, effectiveConstraints.minWidth - hPadding);
-  contentConstraints.maxWidth = std::max(0, effectiveConstraints.maxWidth - hPadding);
-  contentConstraints.minHeight = std::max(0, effectiveConstraints.minHeight - vPadding);
-  contentConstraints.maxHeight = std::max(0, effectiveConstraints.maxHeight - vPadding);
+  AConstraints content;
+  content.minWidth = std::max(0, effective.minWidth - hPadding);
+  content.maxWidth = unlimitedWidth ? -1 : std::max(0, effectiveMaxWidth - hPadding);
+  content.minHeight = std::max(0, effective.minHeight - vPadding);
+  content.maxHeight = unlimitedHeight ? -1 : std::max(0, effectiveMaxHeight - vPadding);
 
-  glm::ivec2 contentSize = onIntrinsicMeasure(contentConstraints);
-  if (contentSize.x == 0 && constraints.maxWidth >= UNBOUNDED_CONSTRAINT && constraints.maxHeight < UNBOUNDED_CONSTRAINT) {
-    contentSize.x = std::max(contentSize.x, onComputeIntrinsicMinMaxSizes(contentConstraints.maxHeight).max.x);
-  }
-  if (contentSize.y == 0 && constraints.maxWidth < UNBOUNDED_CONSTRAINT && constraints.maxHeight >= UNBOUNDED_CONSTRAINT) {
-    contentSize.y = std::max(contentSize.y, onComputeIntrinsicMinMaxSizes(-1).max.y);
-  }
+  glm::ivec2 content_size = onIntrinsicMeasure(content);
 
-  int finalWidth = contentSize.x + hPadding;
-  int finalHeight = contentSize.y + vPadding;
+  glm::ivec2 measured;
+  measured.x = std::clamp(content_size.x + hPadding, effective.minWidth,  effectiveMaxWidth);
+  measured.y = std::clamp(content_size.y + vPadding, effective.minHeight, effectiveMaxHeight);
 
-  glm::ivec2 measuredSize;
-  measuredSize.x = std::clamp(finalWidth, effectiveConstraints.minWidth, effectiveConstraints.maxWidth);
-  measuredSize.y = std::clamp(finalHeight, effectiveConstraints.minHeight, effectiveConstraints.maxHeight);
-
-  return mMeasureCache.emplace(constraints, measuredSize).first->second;
+  return mMeasureCache.emplace(constraints, measured).first->second;
 }
 
 glm::ivec2 AView::onIntrinsicMeasure(AConstraints constraints) {
   const auto minMax =
       onComputeIntrinsicMinMaxSizes(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
+  const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
+  const int maxHeight = constraints.isUnlimitedHeight() ? std::numeric_limits<int>::max() : constraints.maxHeight;
   return {
-    std::clamp(minMax.max.x, constraints.minWidth, constraints.maxWidth),
-    std::clamp(minMax.max.y, constraints.minHeight, constraints.maxHeight),
+    std::clamp(minMax.max.x, constraints.minWidth, maxWidth),
+    std::clamp(minMax.max.y, constraints.minHeight, maxHeight),
   };
 }
 
@@ -436,14 +432,14 @@ void AView::ensureAssUpdated() {
 
 void AView::onMouseEnter() {
   mMouseEntered = true;
-  if (AWindow::current()->shouldDisplayHoverAnimations()) {
+  if (ASurface::current()->shouldDisplayHoverAnimations()) {
     mHovered.set(this, true);
   }
 }
 
 void AView::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
   if (mCursor) {
-    AUI_NULLSAFE(AWindow::current())->setCursor(mCursor);
+    AUI_NULLSAFE(ASurface::current())->setCursor(mCursor);
   }
 }
 
@@ -787,7 +783,7 @@ void AView::onClickPrevented() {
 void AView::setCursor(AOptional<ACursor> cursor) {
     mCursor = std::move(cursor);
     if (mParent) { // ASurface does not have parent
-        AWindow::current()->forceUpdateCursor();
+        ASurface::current()->forceUpdateCursor();
     }
 }
 
@@ -830,7 +826,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
         }
         // temporary disable drawing from texture. this will be set back to true by the callback below.
         mRenderToTexture->drawFromTexture = false;
-        AWindow::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](IRenderer& renderer) {
+        ASurface::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](IRenderer& renderer) {
             if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
                 // dead interface?
                 return;

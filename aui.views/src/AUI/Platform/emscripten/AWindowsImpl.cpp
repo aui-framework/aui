@@ -138,18 +138,18 @@ namespace {
     }
 
     bool layout(int eventType, const EmscriptenUiEvent* event, void *userData) {
-        aui::emscripten::applySize(AWindow::current(), glm::dvec2{event->windowInnerWidth, event->windowInnerHeight});
+        aui::emscripten::applySize(ASurface::current(), glm::dvec2{event->windowInnerWidth, event->windowInnerHeight});
         return true;
     }
 
     bool onMouseMove(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
-        AUI_NULLSAFE(AWindow::current())->onPointerMove(position(mouseEvent), { .pointerIndex = APointerIndex::button((AInput::Key)mouseEvent->button), });
+        AUI_NULLSAFE(ASurface::current())->onPointerMove(position(mouseEvent), { .pointerIndex = APointerIndex::button((AInput::Key)mouseEvent->button), });
         return true;
     }
 
 
     bool onMousePressed(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
-        AUI_NULLSAFE(AWindow::current())->onPointerPressed({
+        AUI_NULLSAFE(ASurface::current())->onPointerPressed({
             .position = position(mouseEvent),
             .pointerIndex = APointerIndex::button((AInput::Key)mouseEvent->button),
             .asButton = AInput::LBUTTON,
@@ -159,7 +159,7 @@ namespace {
 
 
     bool onMouseReleased(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
-        AUI_NULLSAFE(AWindow::current())->onPointerReleased({
+        AUI_NULLSAFE(ASurface::current())->onPointerReleased({
             .position = position(mouseEvent),
             .pointerIndex = APointerIndex::button((AInput::Key)mouseEvent->button),
             .asButton = AInput::LBUTTON,

@@ -145,6 +145,11 @@ public:
         return mChildrenContainer;
     }
 
+    [[nodiscard]]
+    bool isExpanded() const noexcept {
+        return mExpanded;
+    }
+
 signals:
     emits<bool> expandStateChanged;
 
@@ -189,64 +194,69 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     mContent->setExpanding();
 
     if (mModel) {
-        fillViewsRecursively(mContent, ATreeModelIndex::ROOT);
-        connect(mModel->dataInserted, [this](ATreeModelIndex i) {
-            try {
-                auto parent = mModel->parent(i);
-                _<AViewContainer> itemContainer;
-                if (parent == ATreeModelIndex::ROOT) {
-                    itemContainer = mContent;
-                } else {
-                    itemContainer = indexToView(*parent)->childrenContainer();
-                }
-                bool group = mModel->childrenCount(i) != 0;
-                auto item = _new<ItemView>(this, mViewFactory(mModel, i), group, i);
-                makeElement(itemContainer, i, group, item);
-                redraw();
-            } catch (const AException& e) {
-                ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
-            }
-        });
-        connect(mModel->dataRemoved, [this](ATreeModelIndex i) {
-            try {
-                ATreeModelIndexOrRoot parent = mModel->parent(i);
-                _<AViewContainer> itemContainer;
-                if (parent == ATreeModelIndex::ROOT) {
-                    itemContainer = mContent;
-                } else {
-                    itemContainer = indexToView(*parent)->childrenContainer();
-                }
-                itemContainer->removeView(i.row() * 2);
-                itemContainer->removeView(i.row() * 2);
-                redraw();
-            } catch (const AException& e) {
-                ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
-            }
-        });
-        connect(mModel->dataChanged, [this](ATreeModelIndex i) {
-            try {
-                auto parent = mModel->parent(i);
-                _<AViewContainer> itemContainer;
-                if (parent == ATreeModelIndex::ROOT) {
-                    itemContainer = mContent;
-                } else {
-                    itemContainer = indexToView(*parent)->childrenContainer();
-                }
-                // remove old view
-                itemContainer->removeView(i.row() * 2);
-                itemContainer->removeView(i.row() * 2);
-                // add new view
-                bool group = mModel->childrenCount(i) != 0;
-                auto item = _new<ItemView>(this, mViewFactory(mModel, i), group, i);
-                makeElement(itemContainer, i, group, item);
-                redraw();
-            } catch (const AException& e) {
-                ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
-            }
-        });
+        rebuildContents();
+        connect(mModel->dataInserted, [this](ATreeModelIndex) { rebuildContents(); });
+        connect(mModel->dataRemoved, [this](ATreeModelIndex) { rebuildContents(); });
+        connect(mModel->dataChanged, [this](ATreeModelIndex) { rebuildContents(); });
     }
     requestLayout();
-    AWindow::current()->flagRedraw();
+    ASurface::current()->flagRedraw();
+}
+
+void ATreeView::rebuildContents() {
+    if (!mContent) {
+        return;
+    }
+
+    AVector<ATreeModelIndex> expandedIndices;
+    std::function<void(const _<AViewContainer>&)> collectExpandedIndices = [&](const _<AViewContainer>& container) {
+        if (!container) {
+            return;
+        }
+        for (const auto& view : container->getViews()) {
+            if (auto item = _cast<ItemView>(view)) {
+                if (item->isExpanded()) {
+                    expandedIndices << item->getIndex();
+                }
+                collectExpandedIndices(item->childrenContainer());
+            } else if (auto nested = _cast<AViewContainer>(view)) {
+                collectExpandedIndices(nested);
+            }
+        }
+    };
+    collectExpandedIndices(mContent);
+
+    AOptional<ATreeModelIndex> selectedIndex;
+    if (auto selected = mPrevSelection.lock()) {
+        selectedIndex = selected->getIndex();
+    }
+    mPrevSelection.reset();
+
+    mContent->removeAllViews();
+    if (mModel) {
+        fillViewsRecursively(mContent, ATreeModelIndex::ROOT);
+    }
+
+    for (const auto& index : expandedIndices) {
+        try {
+            if (auto itemView = indexToView(index)) {
+                itemView->expand();
+            }
+        } catch (const AException&) {
+        }
+    }
+
+    if (selectedIndex) {
+        try {
+            if (auto itemView = indexToView(*selectedIndex)) {
+                itemView->setSelected(true);
+            }
+        } catch (const AException&) {
+        }
+    }
+
+    requestLayout();
+    redraw();
 }
 
 void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView) {

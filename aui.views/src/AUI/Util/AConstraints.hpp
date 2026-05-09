@@ -29,8 +29,8 @@
 struct AConstraints {
   int minWidth = 0;
   int minHeight = 0;
-  int maxWidth = 1000000;
-  int maxHeight = 1000000;
+  int maxWidth = -1;
+  int maxHeight = -1;
 
   static AConstraints fixedWidth(int width) {
     return AConstraints {

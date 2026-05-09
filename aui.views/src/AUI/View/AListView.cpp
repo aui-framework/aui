@@ -163,14 +163,16 @@ void AListView::onDataCountChanged() { requestLayout(); }
 void AListView::onDataChanged() { redraw(); }
 
 glm::ivec2 AListView::onIntrinsicMeasure(AConstraints constraints) {
-    const int width = constraints.maxWidth >= 1000000 ? 0 : constraints.maxWidth;
-    if (!mContent) {
-        return { width, 0 };
-    }
-    return {
-        width,
-        mContent->measure(AConstraints::fixedWidth(glm::max(0, width))).y,
-    };
+  if (!mContent) {
+    return { 0, 0 };
+  }
+  auto minMax = mContent->computeMinMaxSizes();
+  const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
+  const int maxHeight = constraints.isUnlimitedHeight() ? std::numeric_limits<int>::max() : constraints.maxHeight;
+  return {
+    std::clamp(minMax.max.x, constraints.minWidth, maxWidth),
+    std::clamp(minMax.max.y, constraints.minHeight, maxHeight),
+  };
 }
 
 AMinMaxSizes AListView::onComputeIntrinsicMinMaxSizes(int) {

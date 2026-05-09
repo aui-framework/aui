@@ -27,175 +27,180 @@
 #include <optional>
 
 namespace testing {
-    class UITest;
+  class UITest;
 }
 
 class API_AUI_VIEWS ASurface: public AViewContainer {
-    friend class SoftwareRenderer;
-    friend class IPlatformAbstraction;
-    friend class testing::UITest;
-    friend struct IRenderingContext::Init;
+  friend class SoftwareRenderer;
+  friend class IPlatformAbstraction;
+  friend class testing::UITest;
+  friend struct IRenderingContext::Init;
 
 public:
-    using BeforeFrameQueue = AMessageQueue<AFakeMutex, IRenderer&>;
+  using BeforeFrameQueue = AMessageQueue<AFakeMutex, IRenderer&>;
 
-    ASurface();
+  /**
+   * @return Current surface for current thread.
+   */
+  static ASurface* current();
 
-    ~ASurface() override;
+  ASurface();
 
-    /**
-     * @brief Profiling (debugging) settings for this window.
-     * @details
-     * Can be controlled with devtools window.
-     */
-    struct Profiling {
-        /**
-         * @brief View to highlight.
-         */
-        AProperty<_weak<AView>> highlightView;
+  ~ASurface() override;
 
-        /**
-         * @brief Highlight redraw requests.
-         */
-        AProperty<bool> highlightRedrawRequests = false;
+  /**
+   * @brief Profiling (debugging) settings for this window.
+   * @details
+   * Can be controlled with devtools window.
+   */
+  struct Profiling {
+      /**
+       * @brief View to highlight.
+       */
+      AProperty<_weak<AView>> highlightView;
 
-        /**
-         * @brief Visually displays render-to-texture caching by decreasing brightness of pixels that didn't updated in
-         * this frame. This effect may help to debug AView::redraw issues.
-         */
-        AProperty<bool> renderToTextureDecay = false;
+      /**
+       * @brief Highlight redraw requests.
+       */
+      AProperty<bool> highlightRedrawRequests = false;
 
-        /**
-         * @brief When set to true, the next time window's requestLayout, debugger is invoked. Value is
-         * reset to false.
-         */
-        AProperty<bool> breakpointOnMarkMinContentSizeInvalid = false;
+      /**
+       * @brief Visually displays render-to-texture caching by decreasing brightness of pixels that didn't updated in
+       * this frame. This effect may help to debug AView::redraw issues.
+       */
+      AProperty<bool> renderToTextureDecay = false;
 
-        /**
-         * @brief When set to true, all rendered strings will display their baselines.
-         */
-        AProperty<bool> showBaseline = false;
-    };
+      /**
+       * @brief When set to true, the next time window's requestLayout, debugger is invoked. Value is
+       * reset to false.
+       */
+      AProperty<bool> breakpointOnMarkMinContentSizeInvalid = false;
 
-
-    /**
-     * @brief Enables or disables user input for this window.
-     * @param blockUserInput whether block user input or not.
-     * @details
-     * Visually nothing changes, but when the user tries to interact with the window, nothing happens with the window
-     * and on some platforms a system sound played notifying the user that the window is blocked.
-     *
-     * It is userful when you open a modal window and you want the user to complete the action in the modal window first
-     * in order to continue interacting with the parent window.
-     *
-     * When displaying a modal dialog and has blocked the parent window, the application must unblock the parent window
-     * before the modal dialog destroyed, otherwise, another window will receive the keyboard focus and be activated.
-     */
-    virtual void blockUserInput(bool blockUserInput = true);
+      /**
+       * @brief When set to true, all rendered strings will display their baselines.
+       */
+      AProperty<bool> showBaseline = false;
+  };
 
 
-    /**
-     * @brief Prevents click action on upcoming pointer release.
-     * @details
-     * Also disables hover and pressed animations.
-     *
-     * Used by AScrollArea when it's scroll is triggered.
-     *
-     * Calls AView::onClickPrevented() over focus chain.
-     */
-    void preventClickOnPointerRelease();
+  /**
+   * @brief Enables or disables user input for this window.
+   * @param blockUserInput whether block user input or not.
+   * @details
+   * Visually nothing changes, but when the user tries to interact with the window, nothing happens with the window
+   * and on some platforms a system sound played notifying the user that the window is blocked.
+   *
+   * It is userful when you open a modal window and you want the user to complete the action in the modal window first
+   * in order to continue interacting with the parent window.
+   *
+   * When displaying a modal dialog and has blocked the parent window, the application must unblock the parent window
+   * before the modal dialog destroyed, otherwise, another window will receive the keyboard focus and be activated.
+   */
+  virtual void blockUserInput(bool blockUserInput = true);
 
-    /**
-     * @see ASurface::preventClickOnPointerRelease
-     */
-    [[nodiscard]]
-    bool isPreventingClickOnPointerRelease() const noexcept {
-        return mPreventClickOnPointerRelease.valueOr(false);
-    }
 
-    /**
-     * @brief Iterates over focus chain, from parent to child.
-     */
-    template<aui::invocable<const _<AView>&> Callback>
-    void iterateOverFocusChain(Callback&& callback) {
-        for (auto view = mFocusedView.lock(); view;) {
-            callback(view);
+  /**
+   * @brief Prevents click action on upcoming pointer release.
+   * @details
+   * Also disables hover and pressed animations.
+   *
+   * Used by AScrollArea when it's scroll is triggered.
+   *
+   * Calls AView::onClickPrevented() over focus chain.
+   */
+  void preventClickOnPointerRelease();
 
-            auto container = _cast<AViewContainer>(view);
-            if (!container) return;
-            view = container->focusChainTarget();
-        }
-    }
+  /**
+   * @see ASurface::preventClickOnPointerRelease
+   */
+  [[nodiscard]]
+  bool isPreventingClickOnPointerRelease() const noexcept {
+      return mPreventClickOnPointerRelease.valueOr(false);
+  }
 
-    /**
-     * @brief Returns previous frame's rendering duration in millis.
-     * @details
-     * Returns previous frame's rendering duration in millis, including native rendering preparation and buffer
-     * swapping. The value does not include the elapsed time between frames.
-     *
-     * The value is updated after native buffer swap.
-     */
-    [[nodiscard]]
-    virtual unsigned frameMillis() const noexcept = 0;
+  /**
+   * @brief Iterates over focus chain, from parent to child.
+   */
+  template<aui::invocable<const _<AView>&> Callback>
+  void iterateOverFocusChain(Callback&& callback) {
+      for (auto view = mFocusedView.lock(); view;) {
+          callback(view);
 
-    static AWindowManager& getWindowManager() {
-        return *getWindowManagerImpl();
-    }
-    template<typename WindowManager, typename... Args>
-    static void setWindowManager(Args&&... args) {
-        destroyWindowManager(); // destroys previous window manager so IEventLoop::Handle sets window manager to the
-                                // previous one BEFORE the new window manager is set
-        getWindowManagerImpl() = std::make_unique<WindowManager>(std::forward<Args>(args)...);
-    }
-    static void destroyWindowManager() {
-        getWindowManagerImpl() = nullptr;
-    }
+          auto container = _cast<AViewContainer>(view);
+          if (!container) return;
+          view = container->focusChainTarget();
+      }
+  }
 
-    const _unique<IRenderingContext>& getRenderingContext() const {
-        return mRenderingContext;
-    }
+  /**
+   * @brief Returns previous frame's rendering duration in millis.
+   * @details
+   * Returns previous frame's rendering duration in millis, including native rendering preparation and buffer
+   * swapping. The value does not include the elapsed time between frames.
+   *
+   * The value is updated after native buffer swap.
+   */
+  [[nodiscard]]
+  virtual unsigned frameMillis() const noexcept = 0;
 
-    [[nodiscard]]
-    BeforeFrameQueue& beforeFrameQueue() noexcept {
-        return mBeforeFrameQueue;
-    }
+  static AWindowManager& getWindowManager() {
+      return *getWindowManagerImpl();
+  }
+  template<typename WindowManager, typename... Args>
+  static void setWindowManager(Args&&... args) {
+      destroyWindowManager(); // destroys previous window manager so IEventLoop::Handle sets window manager to the
+                              // previous one BEFORE the new window manager is set
+      getWindowManagerImpl() = std::make_unique<WindowManager>(std::forward<Args>(args)...);
+  }
+  static void destroyWindowManager() {
+      getWindowManagerImpl() = nullptr;
+  }
 
-    void updateDpi();
+  const _unique<IRenderingContext>& getRenderingContext() const {
+      return mRenderingContext;
+  }
 
-    /**
-     * @brief Returns current dpi ratio
-     * @see ScalingParams, scaling params affects dpi ratio
-     * @details
-     * dpi ratio value is rounded to 0.25
-     */
-    float getDpiRatio()
-    {
-        return mDpiRatio;
-    }
+  [[nodiscard]]
+  BeforeFrameQueue& beforeFrameQueue() noexcept {
+      return mBeforeFrameQueue;
+  }
 
-    _<AView> getFocusedView() const
-    {
-        return mFocusedView.lock();
-    }
+  void updateDpi();
 
-    void setFocusedView(const _<AView>& view);
-    void updateFocusChain();
-    void onPointerPressed(const APointerPressedEvent& event) override;
+  /**
+   * @brief Returns current dpi ratio
+   * @see ScalingParams, scaling params affects dpi ratio
+   * @details
+   * dpi ratio value is rounded to 0.25
+   */
+  float getDpiRatio()
+  {
+      return mDpiRatio;
+  }
 
-    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
+  _<AView> getFocusedView() const
+  {
+      return mFocusedView.lock();
+  }
 
-    void closeOverlappingSurfacesOnClick();
+  void setFocusedView(const _<AView>& view);
+  void updateFocusChain();
+  void onPointerPressed(const APointerPressedEvent& event) override;
 
-    bool isFocused() const {
-        return mIsFocused;
-    }
+  void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
-    [[nodiscard]]
-    const glm::ivec2& getMousePos() const {
-        return mMousePos;
-    }
+  void closeOverlappingSurfacesOnClick();
 
-    void onKeyDown(AInput::Key key) override;
+  bool isFocused() const {
+      return mIsFocused;
+  }
+
+  [[nodiscard]]
+  const glm::ivec2& getMousePos() const {
+      return mMousePos;
+  }
+
+  void onKeyDown(AInput::Key key) override;
 
 #if defined(__clang__)
 #pragma clang diagnostic push
@@ -228,7 +233,7 @@ public:
      * @return a new surface.
      * @details
      * ```cpp
-     * auto surfaceContainer = AWindow::current()->createOverlappingSurface({0, 0}, {100, 100});
+     * auto surfaceContainer = ASurface::current()->createOverlappingSurface({0, 0}, {100, 100});
      *
      * ALayoutInflater::inflate(surfaceContainer, Vertical {
      *     Button { Label { "Item1" } },
@@ -241,7 +246,7 @@ public:
      *
      * To create overlapping surface below some `view`, use AView::getPositionInWindow:
      * ```cpp
-     * auto surfaceContainer = AWindow::current()->createOverlappingSurface(view->getPositionInWindow() + view->getSize(), {100, 100});
+     * auto surfaceContainer = ASurface::current()->createOverlappingSurface(view->getPositionInWindow() + view->getSize(), {100, 100});
      * ```
      */
     _<AOverlappingSurface> createOverlappingSurface(const glm::ivec2& position,
@@ -506,7 +511,7 @@ private:
  * @details
  *
  */
-#define AUI_ASSERT_UI_THREAD_ONLY() { AUI_ASSERTX(AWindow::current() == nullptr || AThread::current() == AWindow::current()->getThread(), "this method should be used in ui thread only."); }
+#define AUI_ASSERT_UI_THREAD_ONLY() { AUI_ASSERTX(ASurface::current() == nullptr || AThread::current() == ASurface::current()->getThread(), "this method should be used in ui thread only."); }
 
 /**
  * @brief Asserts that the macro invocation has not been performed in the UI thread.
@@ -514,5 +519,5 @@ private:
  * @details
  *
  */
-#define AUI_ASSERT_WORKER_THREAD_ONLY() { AUI_ASSERTX(AWindow::current() == nullptr || AThread::current() != AWindow::current()->getThread(), "this method should be used in worker thread only."); }
+#define AUI_ASSERT_WORKER_THREAD_ONLY() { AUI_ASSERTX(ASurface::current() == nullptr || AThread::current() != ASurface::current()->getThread(), "this method should be used in worker thread only."); }
 

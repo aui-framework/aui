@@ -18,6 +18,7 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/ALabel.h>
 #include <AUI/View/AAbstractTextField.h>
+#include <limits>
 #include "AScrollbar.h"
 #include "ASpacerExpanding.h"
 #include <algorithm>
@@ -370,9 +371,11 @@ AMinMaxSizes AScrollbarHandle::onComputeIntrinsicMinMaxSizes(int height) {
 
 glm::ivec2 AScrollbarHandle::onIntrinsicMeasure(AConstraints constraints) {
     const auto minMax = onComputeIntrinsicMinMaxSizes(-1);
+    const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
+    const int maxHeight = constraints.isUnlimitedHeight() ? std::numeric_limits<int>::max() : constraints.maxHeight;
     return {
-        std::clamp(minMax.max.x, constraints.minWidth, constraints.maxWidth),
-        std::clamp(minMax.max.y, constraints.minHeight, constraints.maxHeight),
+        std::clamp(minMax.max.x, constraints.minWidth, maxWidth),
+        std::clamp(minMax.max.y, constraints.minHeight, maxHeight),
     };
 }
 

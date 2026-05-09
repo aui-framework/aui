@@ -53,8 +53,8 @@ TEST(ATreeView, ShowsHorizontalScrollbarForWideRows) {
     treeView.setModel(model);
     treeView.setSize({ 100, 40 });
 
-    EXPECT_TRUE(bool(horizontalScrollbar(treeView)->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
-    EXPECT_FALSE(bool(verticalScrollbar(treeView)->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
+    EXPECT_TRUE(static_cast<bool>(horizontalScrollbar(treeView)->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
+    EXPECT_FALSE(static_cast<bool>(verticalScrollbar(treeView)->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
     EXPECT_EQ(horizontalScrollbar(treeView)->getPosition().y, 25);
     EXPECT_EQ(horizontalScrollbar(treeView)->getWidth(), 100);
 }

@@ -10,8 +10,7 @@
  */
 
 #include "ALinearLayout.h"
-
-static constexpr int UNBOUNDED_CONSTRAINT = 1000000;
+#include <limits>
 
 void ALayout::requestLayout() {
     mMeasureCache.clear();
@@ -31,18 +30,21 @@ glm::ivec2 ALayout::measure(AConstraints constraints) {
     }
 
     AConstraints effectiveConstraints = constraints;
-    if (effectiveConstraints.maxWidth == -1) {
-        effectiveConstraints.maxWidth = UNBOUNDED_CONSTRAINT;
-    }
-    if (effectiveConstraints.maxHeight == -1) {
-        effectiveConstraints.maxHeight = UNBOUNDED_CONSTRAINT;
-    }
-    effectiveConstraints.maxWidth = std::max(effectiveConstraints.minWidth, effectiveConstraints.maxWidth);
-    effectiveConstraints.maxHeight = std::max(effectiveConstraints.minHeight, effectiveConstraints.maxHeight);
+    const bool unlimitedWidth = effectiveConstraints.maxWidth == -1;
+    const bool unlimitedHeight = effectiveConstraints.maxHeight == -1;
+    const int effectiveMaxWidth = unlimitedWidth
+        ? std::numeric_limits<int>::max()
+        : std::max(effectiveConstraints.minWidth, effectiveConstraints.maxWidth);
+    const int effectiveMaxHeight = unlimitedHeight
+        ? std::numeric_limits<int>::max()
+        : std::max(effectiveConstraints.minHeight, effectiveConstraints.maxHeight);
+
+    effectiveConstraints.maxWidth = unlimitedWidth ? -1 : effectiveMaxWidth;
+    effectiveConstraints.maxHeight = unlimitedHeight ? -1 : effectiveMaxHeight;
 
     auto measuredSize = onIntrinsicMeasure(effectiveConstraints);
-    measuredSize.x = std::clamp(measuredSize.x, effectiveConstraints.minWidth, effectiveConstraints.maxWidth);
-    measuredSize.y = std::clamp(measuredSize.y, effectiveConstraints.minHeight, effectiveConstraints.maxHeight);
+    measuredSize.x = std::clamp(measuredSize.x, effectiveConstraints.minWidth, effectiveMaxWidth);
+    measuredSize.y = std::clamp(measuredSize.y, effectiveConstraints.minHeight, effectiveMaxHeight);
 
     return mMeasureCache.emplace(constraints, measuredSize).first->second;
 }

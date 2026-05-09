@@ -66,7 +66,7 @@ void AScrollAreaViewport::applyGeometryToChildren() {
   mInner->layout(-glm::ivec2(mScroll), mScrollSurfaceSize);
   if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
     if (!IRenderViewToTexture::isEnabledForView(*mInner)) {
-      auto w = AWindow::current();
+      auto w = ASurface::current();
       if (!w) {
         return;
       }

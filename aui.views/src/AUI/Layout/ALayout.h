@@ -16,6 +16,7 @@
 #include "AUI/View/AView.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Util/ALayoutDirection.h"
+#include <limits>
 
 class AViewContainer;
 
@@ -390,9 +391,11 @@ public:
 
     virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints) {
         const auto minMax = onComputeIntrinsicMinMaxSizes(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
+        const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
+        const int maxHeight = constraints.isUnlimitedHeight() ? std::numeric_limits<int>::max() : constraints.maxHeight;
         return {
-            std::clamp(minMax.max.x, constraints.minWidth, constraints.maxWidth),
-            std::clamp(minMax.max.y, constraints.minHeight, constraints.maxHeight),
+            std::clamp(minMax.max.x, constraints.minWidth, maxWidth),
+            std::clamp(minMax.max.y, constraints.minHeight, maxHeight),
         };
     }
     virtual AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) = 0;

@@ -40,7 +40,7 @@ class AMenuContainer : public AViewContainerBase {
         if (auto s = mSurface.lock())
             window = s->getParentWindow();
         else
-            window = AWindow::current();
+            window = ASurface::current();
 
         auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinSize());
         surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
@@ -144,7 +144,7 @@ class AMenuContainer : public AViewContainerBase {
 
 void AWindowMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     closeMenu();
-    mWindow = AWindow::current();
+    mWindow = ASurface::current();
     auto mousePos = mWindow->getMousePos();
     auto menu = _new<AMenuContainer>(vector, mousePos);
     auto surfaceContainer = mWindow->createOverlappingSurface(mousePos, menu->getMinSize());
