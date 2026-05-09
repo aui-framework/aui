@@ -234,22 +234,22 @@ public:
     }
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
-        int width = 0;
-        if (constraints.isUnlimitedWidth()) {
-            int max = 0;
-            int accumulator = 0;
-            for (const auto& e : mEngine.entries()) {
-                if (e->forcesNextLine()) {
-                    max = glm::max(max, accumulator);
-                    accumulator = 0;
-                    continue;
-                }
-                accumulator += e->getSize().x;
+        int max = 0;
+        int accumulator = 0;
+        for (const auto& e : mEngine.entries()) {
+            if (e->forcesNextLine()) {
+                max = glm::max(max, accumulator);
+                accumulator = 0;
+                continue;
             }
-            width = glm::max(max, accumulator);
-        } else {
-            width = constraints.maxWidth;
+            accumulator += e->getSize().x;
         }
+        const int preferredWidth = glm::max(max, accumulator);
+
+        const int width = constraints.isUnlimitedWidth()
+            ? glm::max(preferredWidth, constraints.minWidth)
+            : glm::clamp(preferredWidth, constraints.minWidth, constraints.maxWidth);
+
         int height = 0;
         if (auto engineHeight = measureLayoutForWidth(width)) {
             height = *engineHeight + getFontStyle().getDescenderHeight();

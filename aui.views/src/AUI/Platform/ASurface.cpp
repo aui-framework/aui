@@ -517,13 +517,13 @@ void ASurface::render(ARenderContext context) {
 }
 
 ASurface*& ASurface::currentWindowStorage() {
-    thread_local ASurface* threadLocal = nullptr;
-    static ASurface* global = nullptr;
-    if (threadLocal)
-        return threadLocal;
-    return global;
+  thread_local ASurface* threadLocal = nullptr;
+  static ASurface* global = nullptr;
+  if (threadLocal) {
+    return threadLocal;
+  }
+  return global;
 }
-
 
 void ASurface::onFocusLost() {
     AView::onFocusLost();

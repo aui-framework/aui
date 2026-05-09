@@ -77,8 +77,60 @@ void AForEachUIBase::applyGeometryToChildren() {
 }
 
 glm::ivec2 AForEachUIBase::onIntrinsicMeasure(AConstraints constraints) {
-    ensureViewsForMeasurement();
+    if (isModelEmpty()) {
+        return {
+            constraints.isUnlimitedWidth() ? constraints.minWidth
+                                           : std::clamp(0, constraints.minWidth, constraints.maxWidth),
+            constraints.isUnlimitedHeight() ? constraints.minHeight
+                                            : std::clamp(0, constraints.minHeight, constraints.maxHeight),
+        };
+    }
+
+    ensureViewport();
+    if (mViewport.lock()) {
+        if (measurementRequiresFullMaterialization(constraints)) {
+            materializeAllViewsForMeasurement();
+            AUI_DEFER {
+                restoreLazyViewportAfterMeasurement();
+            };
+        } else {
+            ensureViewsForMeasurement();
+        }
+    } else {
+        ensureViewsForMeasurement();
+    }
+
+    if (constraints.isUnlimitedWidth() || constraints.isUnlimitedHeight()) {
+        const auto minMax =
+            AViewContainerBase::onComputeIntrinsicMinMaxSizes(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
+        return {
+            constraints.isUnlimitedWidth()
+                ? std::max(minMax.max.x, constraints.minWidth)
+                : std::clamp(minMax.max.x, constraints.minWidth, constraints.maxWidth),
+            constraints.isUnlimitedHeight()
+                ? std::max(minMax.max.y, constraints.minHeight)
+                : std::clamp(minMax.max.y, constraints.minHeight, constraints.maxHeight),
+        };
+    }
+
     return AViewContainerBase::onIntrinsicMeasure(constraints);
+}
+
+AMinMaxSizes AForEachUIBase::onComputeIntrinsicMinMaxSizes(int height) {
+    if (isModelEmpty()) {
+        return {};
+    }
+
+    ensureViewport();
+    if (mViewport.lock()) {
+        materializeAllViewsForMeasurement();
+        AUI_DEFER {
+            restoreLazyViewportAfterMeasurement();
+        };
+        return AViewContainerBase::onComputeIntrinsicMinMaxSizes(height);
+    }
+    ensureViewsForMeasurement();
+    return AViewContainerBase::onComputeIntrinsicMinMaxSizes(height);
 }
 
 void AForEachUIBase::onViewGraphSubtreeChanged() {
@@ -368,10 +420,7 @@ void AForEachUIBase::ensureViewsForMeasurement() {
     ensureViewport();
 
     if (mViewport.lock()) {
-        if (!mCache) {
-            mCache.emplace();
-            inflate();
-        }
+        materializeAllViewsForMeasurement();
         return;
     }
 
@@ -387,4 +436,46 @@ void AForEachUIBase::ensureViewsForMeasurement() {
     for (auto i = mViewsModel.begin(); i != mViewsModel.end(); ++i) {
         addView(i);
     }
+}
+
+void AForEachUIBase::materializeAllViewsForMeasurement() {
+    if (mCache) {
+        removeAllViews();
+        mCache->items.clear();
+    } else {
+        mCache.emplace();
+    }
+
+    for (auto i = mViewsModel.begin(); i != mViewsModel.end(); ++i) {
+        addView(i);
+    }
+}
+
+void AForEachUIBase::restoreLazyViewportAfterMeasurement() {
+    if (!mViewport.lock()) {
+        return;
+    }
+    putOurViewsToSharedCache();
+    mCache.emplace();
+    mLastInflatedScroll.reset();
+    inflate();
+}
+
+bool AForEachUIBase::measurementRequiresFullMaterialization(AConstraints constraints) const {
+    if (!getLayout()) {
+        return true;
+    }
+    switch (getLayout()->getLayoutDirection()) {
+        case ALayoutDirection::HORIZONTAL:
+            return constraints.isUnlimitedWidth();
+        case ALayoutDirection::VERTICAL:
+            return constraints.isUnlimitedHeight();
+        case ALayoutDirection::NONE:
+            return true;
+    }
+    return true;
+}
+
+bool AForEachUIBase::isModelEmpty() const {
+    return mViewsModel.begin() == mViewsModel.end();
 }

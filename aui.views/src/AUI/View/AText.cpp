@@ -35,10 +35,7 @@ AMinMaxSizes AText::onComputeIntrinsicMinMaxSizes(int height) {
     minContentWidth = glm::max(minContentWidth, entry->getSize().x);
   }
 
-  if (mParsedFlags.wordBreak == WordBreak::BREAK_ALL) {
-    minMax.max.x = minContentWidth;
-  }
-  minMax.min.x = glm::max(minMax.min.x, minContentWidth);
+  minMax.min.x = minContentWidth;
   return minMax;
 }
 

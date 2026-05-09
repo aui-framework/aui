@@ -77,6 +77,7 @@ protected:
     void onViewGraphSubtreeChanged() override;
     void applyGeometryToChildren() override;
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
 
     /**
      * @brief Notifies that range was changed or iterators might have invalidated.
@@ -101,6 +102,10 @@ private:
     AOptional<glm::ivec2> mLastInflatedScroll {};
 
     void ensureViewsForMeasurement();
+    void materializeAllViewsForMeasurement();
+    void restoreLazyViewportAfterMeasurement();
+    bool measurementRequiresFullMaterialization(AConstraints constraints) const;
+    bool isModelEmpty() const;
 
     void addView(List::iterator iterator, AOptional<std::size_t> index = std::nullopt);
     void removeViews(aui::range<AVector<_<AView>>::const_iterator> iterators);
