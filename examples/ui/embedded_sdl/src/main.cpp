@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <AUI/Common/AUtf8.h>
+#include <AUI/Common/AUtf8.hpp>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/APlatform.h>
