@@ -728,6 +728,7 @@ void AView::setVisibility(Visibility visibility) noexcept
         mMarkedMinContentSizeInvalid = false; // force
         markMinContentSizeInvalid();
     }
+    redraw();
     emit mVisibilityChanged(visibility);
 }
 

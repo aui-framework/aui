@@ -11,25 +11,28 @@
 
 #pragma once
 
+#include <atomic>
+#include <functional>
+#include <optional>
 #include <exception>
 #include <thread>
 #include <utility>
-#include "AUI/Traits/concepts.h"
-#include "AUI/Util/ABitField.h"
 #if AUI_COROUTINES
 #include <coroutine>
 #endif
 
-#include <atomic>
-#include <functional>
-#include <optional>
-#include "AConditionVariable.h"
-#include "AMutex.h"
+#include <AUI/Common/AException.h>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/Reflect/AReflect.h>
+#include <AUI/Thread/AConditionVariable.h>
+#include <AUI/Thread/AMutex.h>
+#include <AUI/Thread/AThread.h>
+#include <AUI/Thread/AThreadPool.h>
+#include <AUI/Thread/AFutureWait.h>
+#include <AUI/Traits/concepts.h>
+#include <AUI/Util/ABitField.h>
 
 class AThreadPool;
 
@@ -40,6 +43,9 @@ public:
     AInvocationTargetException(const AString& message = {}, std::exception_ptr causedBy = std::current_exception()):
         AException(message, std::move(causedBy), AStacktrace::capture(3)) {}
     AString getMessage() const noexcept override {
+        if (causedBy() == nullptr) {
+            return AException::getMessage();
+        }
         try {
             std::rethrow_exception(causedBy());
         } catch (const AException& e) {
@@ -53,23 +59,6 @@ public:
 
     ~AInvocationTargetException() noexcept override = default;
 };
-
-
-/**
- * Controls <code>AFuture::wait</code> behaviour.
- * @see AFuture::wait
- */
-AUI_ENUM_FLAG(AFutureWait) {
-    JUST_WAIT = 0b00,
-    ALLOW_STACKFUL_COROUTINES = 0b10,
-
-    /**
-     * @brief Use work stealing.
-     */
-    ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP = 0b01,
-    DEFAULT = ALLOW_STACKFUL_COROUTINES | ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP,
-};
-
 
 namespace aui::impl::future {
     /**
@@ -191,7 +180,7 @@ namespace aui::impl::future {
                 return false;
             }
 
-            void wait(const _weak<CancellationWrapper<Inner>>& innerWeak, ABitField<AFutureWait> flags = AFutureWait::DEFAULT) noexcept;
+            void wait(const _weak<CancellationWrapper<Inner>>& innerWeak, ABitField<AFutureWait> flags = AFutureWait::DEFAULT);
 
             void cancel() noexcept {
                 std::unique_lock lock(mutex);
@@ -472,6 +461,10 @@ namespace aui::impl::future {
          * @details
          * The task will be executed inside wait() function if the threadpool have not taken the task to execute
          * yet. This behaviour can be disabled by <code>AFutureWait::JUST_WAIT</code> flag.
+         *
+         * Exceptions captured from AFuture's task are not propagated. This function contains
+         * `AThread::interruptionPoint()`: if `wait`'s caller's thread is interrupted, this function throws an
+         * `AThread::Interrupted` exception.
          */
         void wait(AFutureWait flags = AFutureWait::DEFAULT) const {
             (*mInner)->wait(mInner, flags);
@@ -491,7 +484,6 @@ namespace aui::impl::future {
 
             (*mInner)->wait(mInner, flags);
 
-            AThread::interruptionPoint();
             if ((*mInner)->exception) {
                 throw *(*mInner)->exception;
             }
@@ -586,7 +578,7 @@ namespace aui::impl::future {
  *     AFuture<int> longOperation();
  *     AFuture<int> myFunction() {
  *       int resultOfLongOperation = co_await longOperation();
- *       return resultOfLongOperation + 1;
+ *       co_return resultOfLongOperation + 1;
  *     }
  *     ```
  *
@@ -629,7 +621,7 @@ namespace aui::impl::future {
  * AFuture may execute the task (if not default-constructed) on the caller thread instead of waiting. See AFuture::wait
  * for details.
  */
-template<typename T = void>
+template<typename T>
 class AFuture final: public aui::impl::future::Future<T> {
 private:
     using super = typename aui::impl::future::Future<T>;
@@ -898,13 +890,9 @@ public:
     }
 };
 
-
-#include <AUI/Thread/AThreadPool.h>
-#include <AUI/Common/AException.h>
-
 template <typename Value>
 void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapper<Inner>>& innerWeak,
-                                                   ABitField<AFutureWait> flags) noexcept {
+                                                   ABitField<AFutureWait> flags) {
     if (hasResult()) return; // cheap check
     std::unique_lock lock(mutex);
     try {
@@ -946,6 +934,7 @@ void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapp
     } catch (const AThread::Interrupted& e) {
         e.needRethrow();
     }
+    AThread::interruptionPoint();
 }
 
 #if AUI_COROUTINES
@@ -961,6 +950,7 @@ struct aui::impl::future::Future<Value>::CoPromiseType {
     {
         return std::suspend_never{};
     }
+
     auto unhandled_exception() const noexcept {
         future.supplyException();
     }
@@ -974,6 +964,32 @@ struct aui::impl::future::Future<Value>::CoPromiseType {
     }
 };
 
+template<>
+struct aui::impl::future::Future<void>::CoPromiseType {
+    AFuture<void> future;
+    auto initial_suspend() const noexcept
+    {
+        return std::suspend_never{};
+    }
+
+    auto final_suspend() const noexcept
+    {
+        return std::suspend_never{};
+    }
+
+    auto unhandled_exception() const noexcept {
+        future.supplyException();
+    }
+
+    const AFuture<void>& get_return_object() const noexcept {
+        return future;
+    }
+
+    void return_void() const noexcept {
+        future.supplyValue();
+    }
+};
+
 template<typename T>
 auto operator co_await(AFuture<T> future) {
     struct Awaitable {
@@ -983,20 +999,27 @@ auto operator co_await(AFuture<T> future) {
             return future.hasResult();
         }
 
-        T await_resume() {
-            return *future;
+        auto await_resume() {
+            if constexpr (std::is_same_v<T, void>) {
+                *future;
+            } else {
+                return std::move(*future);
+            }
         }
 
-
-        void await_suspend(std::coroutine_handle<> h)
+        void await_suspend(std::coroutine_handle<> handle)
         {
-            future.onSuccess([h](const int&) {
-                h.resume();
-            });
-            
-            future.onError([h](const AException&) {
-                h.resume();
-            });
+            // onSuccess and onError are called by supplyValue which might have been called on a different thread.
+            // if we keep this logic for coroutines, the callstack will grow very fast and inconsistent.
+            // for co_await, let's keep the caller thread.
+            // if user wants to magically switch threads using co_await, they'll figure out how to shoot their knee.
+            auto callback = [handle = std::move(handle), callerThread = AThread::current()](const auto&...) {
+                callerThread->enqueue([handle = std::move(handle)] {
+                    handle.resume();
+                });
+            };
+            future.onSuccess(callback);
+            future.onError(std::move(callback));
         }
     };
 

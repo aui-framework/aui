@@ -10,19 +10,23 @@
  */
 
 #pragma once
+
 #include <thread>
 #include <utility>
-#include "AUI/Common/ADeque.h"
-#include "AMutex.h"
-#include "AUI/Common/SharedPtrTypes.h"
-#include "AUI/Common/AString.h"
-#include "AUI/Util/AMessageQueue.h"
-#include <AUI/Platform/AStacktrace.h>
 #include <functional>
+#include <AUI/Common/SharedPtrTypes.h>
+#include <AUI/Common/AString.h>
+#include <AUI/Common/AObject.h>
+#include <AUI/Platform/AStacktrace.h>
+#include <AUI/Thread/AMutex.h>
+#include <AUI/Util/AMessageQueue.h>
 
 class IEventLoop;
 class AString;
 class AConditionVariable;
+
+template<typename T = void>
+class AFuture;
 
 /**
  * @brief Represents an abstract thread which might be not created with AThread.
@@ -163,8 +167,6 @@ private:
     static _<AAbstractThread>& threadStorage();
 };
 
-#include "AUI/Common/AObject.h"
-
 /**
  * @brief Represents a user-defined thread.
  * @ingroup core
@@ -205,7 +207,7 @@ private:
 public:
     AThread(std::function<void()> functor);
 
-    virtual ~AThread();
+    ~AThread() override;
 
     void detach();
 
@@ -225,8 +227,24 @@ public:
      *        Most operation systems guarantee that elasped time will be greater than specified.
      *        <code>AThread::interrupt()</code> is supported.
      * @param duration sleep duration.
+     * @details
+     * Blocking sleep.
      */
     static void sleep(std::chrono::milliseconds duration);
+
+    /**
+     * @brief Sleep for specified duration.
+     *        Most operation systems guarantee that elasped time will be greater than specified.
+     *        <code>AThread::interrupt()</code> is supported.
+     * @param duration sleep duration.
+     * @details
+     * Async sleep.
+     *
+     * ```cpp
+     * co_await AThread::asyncSleep(1s);
+     * ```
+     */
+    static AFuture<> asyncSleep(std::chrono::milliseconds duration);
 
     /**
      * @return current thread.
@@ -269,5 +287,3 @@ public:
      */
     void join();
 };
-
-#include "AConditionVariable.h"

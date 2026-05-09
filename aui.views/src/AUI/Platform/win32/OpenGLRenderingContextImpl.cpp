@@ -14,20 +14,17 @@
 //
 
 #include <AUI/GL/gl.h>
+#include <AUI/GL/GLDebug.h>
+#include <glad/glad_wgl.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
-#include <AUI/GL/GLDebug.h>
-#include <glad/glad_wgl.h>
-
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/GL/State.h>
-#include "AUI/Util/kAUI.h"
-
+#include <AUI/Util/kAUI.h>
 #include <tuple>
 #include <string_view>
-
 
 HGLRC OpenGLRenderingContext::ourHrc = nullptr;
 

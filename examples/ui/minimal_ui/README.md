@@ -27,13 +27,15 @@ project(project_template_ui)
 # Tip: in a production project don't use branch name, use a specific name tag (i.e. v1.1.1),
 # but for a sandbox project branch name is perfectly enough
 set(AUI_VERSION v8.0.0-rc.8)
-
 # Use AUI.Boot
-file(
-        DOWNLOAD
-        https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
-include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+#
+# Download aui.boot.cmake (one-time):
+#   curl https://raw.githubusercontent.com/aui-framework/aui/refs/heads/develop/aui.boot.cmake -o aui.boot.cmake
+#
+# Or use CLI mode:
+#   cmake -P aui.boot.cmake update
+#
+include(aui.boot.cmake)
 
 # import AUI
 auib_import(aui https://github.com/aui-framework/aui

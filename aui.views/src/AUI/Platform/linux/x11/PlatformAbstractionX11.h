@@ -44,6 +44,8 @@ public:
         Atom targets;
         Atom netWmSyncRequest;
         Atom netWmSyncRequestCounter;
+        Atom netWmIcon;
+        Atom cardinal;
     } ourAtoms;
 
     ~PlatformAbstractionX11() override = default;

@@ -37,8 +37,8 @@ struct GLSLOptions {
      * @brief Turns off #version prefix for custom shaders
      */
     bool custom = false;
-    Precision floatp = Precision::mediump;
-    Precision intp = Precision::mediump;
+    Precision floatp = Precision::highp;
+    Precision intp = Precision::highp;
 };
 
 class API_AUI_VIEWS Program: public aui::noncopyable {

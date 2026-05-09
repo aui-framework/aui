@@ -14,8 +14,9 @@
 //
 #pragma once
 
-#include "AUI/Common/AByteBufferView.h"
-#include "AUI/Image/IAnimatedImageFactory.h"
+#include <AUI/Common/AByteBufferView.h>
+#include <AUI/Image/IAnimatedImageFactory.h>
+#include <chrono>
 
 typedef struct nsgif nsgif_t;
 

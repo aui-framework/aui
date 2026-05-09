@@ -51,15 +51,17 @@ TEST(Strings, ToFloat) {
 }
 
 TEST(Strings, Uppercase1) {
-    EXPECT_EQ("å"_as.uppercase(), "Å");
+    EXPECT_EQ("a"_as.uppercase(), "A"); // ascii
+    EXPECT_EQ("å"_au8.uppercase(), "Å"); // unicode
 }
 
 TEST(Strings, Uppercase2) {
-    EXPECT_EQ("àáâäǎæãāăą ŵëþűųǐíïıįğ çżð"_as.uppercase(), "ÀÁÂÄǍÆÃĀĂĄ ŴËÞŰŲǏÍÏİĮĞ ÇŻÐ");
+    EXPECT_EQ("àáâäǎæãāăą ŵëþűųǐíïıįğ çżð"_au8.uppercase(), "ÀÁÂÄǍÆÃĀĂĄ ŴËÞŰŲǏÍÏİĮĞ ÇŻÐ");
 }
 
 TEST(Strings, Downcase1) {
-    EXPECT_EQ("Å"_as.lowercase(), "å");
+    EXPECT_EQ("A"_as.lowercase(), "a"); // ascii
+    EXPECT_EQ("Å"_au8.lowercase(), "å"); // unicode
 }
 
 TEST(Strings, ReplaceAll1) {
@@ -115,25 +117,25 @@ TEST(Strings, RemoveAll1) {
 }
 
 TEST(Strings, Contains) {
-    EXPECT_EQ("Ку🤡Ку"_as.contains(U'🤡'), true);
-    EXPECT_EQ("Ку🤡Ку"_as.contains(U'👽'), false);
-    EXPECT_EQ("Ru letter: а"_as.contains(U'a'), false);
-    EXPECT_EQ("En letter: a"_as.contains(U'a'), true);
+    EXPECT_EQ("Ку🤡Ку"_as.utf8().contains(U'🤡'), true);
+    EXPECT_EQ("Ку🤡Ку"_as.utf8().contains(U'👽'), false);
+    EXPECT_EQ("Ru letter: а"_as.utf8().contains(U'a'), false);
+    EXPECT_EQ("En letter: a"_as.utf8().contains(U'a'), true);
 }
 
 TEST(Strings, StartsWith) {
-    EXPECT_EQ("Ку🤡Ку"_as.startsWith(U'К'), true);
+    EXPECT_EQ("Ку🤡Ку"_as.utf8().startsWith(U'К'), true);
     EXPECT_EQ("Ку🤡Ку"_as.startsWith("Ку"), true); // russian letters
 
-    EXPECT_EQ("Ку🤡Ку"_as.startsWith(U'K'), false);
+    EXPECT_EQ("Ку🤡Ку"_as.utf8().startsWith(U'K'), false);
     EXPECT_EQ("Ку🤡Ку"_as.startsWith("Ky"), false); // english letters
 }
 
 TEST(Strings, EndsWith) {
-    EXPECT_EQ("Ку🤡Ку"_as.endsWith(U'у'), true);
+    EXPECT_EQ("Ку🤡Ку"_as.utf8().endsWith(U'у'), true);
     EXPECT_EQ("Ку🤡Ку"_as.endsWith("Ку"), true); // russian letters
 
-    EXPECT_EQ("Ку🤡Ку"_as.endsWith(U'y'), false);
+    EXPECT_EQ("Ку🤡Ку"_as.utf8().endsWith(U'y'), false);
     EXPECT_EQ("Ку🤡Ку"_as.endsWith("Ky"), false); // english letters
 }
 
@@ -144,7 +146,7 @@ TEST(Strings, ClownUnicode) {
 
 TEST(Strings, MultibyteErase) {
     auto s = "A🤡B"_as;
-    s.erase(1, 1);
+    s.erase(1, 4); // clown is 4 bytes width in UTF-8
     EXPECT_EQ(s, "AB");
     EXPECT_EQ(s.bytes().size(), 2);
 }
@@ -158,23 +160,16 @@ TEST(Strings, MultibyteInsert) {
 
 TEST(Strings, Chinese) {
     EXPECT_EQ("嗨"_as, "嗨");
-    EXPECT_EQ("嗨"_as.length(), 1);
+    EXPECT_EQ("嗨"_as.length(), 3);
+    EXPECT_EQ("嗨"_as.utf8().length(), 1);
     EXPECT_EQ("嗨"_as.toStdString(), "嗨");
 }
 
 TEST(Strings, Utf8Iterators) {
     AString str("Привет, 🤡, Как твои дела?");
 
-    EXPECT_EQ(*(str.begin() + 8), U'🤡');
-    EXPECT_EQ((str.begin() + 9) - (str.begin() + 7), 2);
-
-    (str.begin() + 8) = U'👽';
-    EXPECT_EQ(*(str.begin() + 8), U'👽');
-    EXPECT_EQ((str.begin() + 9) - (str.begin() + 7), 2);
-
-    (str.begin() + 8) = 'A';
-    EXPECT_EQ(*(str.begin() + 8), 'A');
-    EXPECT_EQ((str.begin() + 9) - (str.begin() + 7), 2);
+    EXPECT_EQ(*(str.utf8().begin() + 8), U'🤡');
+    EXPECT_EQ((str.utf8().begin() + 9) - (str.utf8().begin() + 7), 2);
 }
 
 TEST(Strings, UtfEncoding) {
@@ -191,7 +186,7 @@ TEST(Strings, Substr1) {
 
 TEST(Strings, Substr2) {
     AString str("🤡, как твои дела?");
-    EXPECT_EQ(str.substr(0, 1), "🤡");
-    EXPECT_EQ(str.substr(1), ", как твои дела?");
-    EXPECT_EQ(str.substr(1, 3), ", к");
+    EXPECT_EQ(str.utf8().substr(0, 1), "🤡");
+    EXPECT_EQ(str.utf8().substr(1), ", как твои дела?");
+    EXPECT_EQ(str.utf8().substr(1, 3), ", к");
 }

@@ -161,8 +161,60 @@ public:
     [[nodiscard]]
     AImage resizedLinearDownscale(glm::uvec2 newSize) const;
 
+    /**
+     * @brief Converts (if needed) the image to the format `desiredFormat` known at compile time. The image is then
+     * passed to `consumer`.
+     * @tparam desiredFormat the image format to convert to
+     * @param consumer the consumer function that will accept the image view of format `desiredFormat`
+     * @details
+     * Guarantees that the image passed into consumer is in the pixel format `desiredFormat`.
+     *
+     * ## Two possible paths
+     * ### 1) The image is already in desiredFormat
+     *
+     * Then the function avoids any work and passes the existing image view directly to consumer.
+     *
+     * - No conversion
+     * - No allocation
+     * - Minimal overhead
+     * - This is the fast path.
+     *
+     * ### 2) The image is in a different format
+     *
+     * Then the function:
+     *
+     * - creates an owning image object,
+     * - converts the pixels into `desiredFormat`,
+     * - passes the converted image view to `consumer`.
+     *
+     * So the callback always receives the format it asked for.
+     *
+     * ## Why it exists
+     *
+     * This is useful when you want code that only works with one pixel format, but the input may come in several
+     * formats. For example, you can write an image saver that expects RGBA and let convert handle the conversion if
+     * needed.
+     *
+     * The function is a template on the target format, so the desired pixel format is known at compile time. That lets
+     * the API be type-safe and efficient.
+     *
+     * ## In short
+     * “Give me an image in format X, and I’ll call your callback with an image view in format X, converting only if
+     * necessary.”
+     */
+    template<auto /* APixelFormat::Value */ desiredFormat>
+    void convert(aui::invocable<AFormattedImageView<desiredFormat>> auto && consumer) const;
+
+    /**
+     * @brief Converts the image to the format `desiredFormat` known at runtime.
+     * @param desiredFormat the image format to convert to
+     * @return Owning, type-erased representation of an image in `desiredFormat`
+     * @details
+     * In contrast to the template version of `convert`, this overload is easier to use at the cost of runtime overhead.
+     */
     [[nodiscard]]
-    AImage convert(APixelFormat format) const;
+    AImage convert(APixelFormat desiredFormat) const;
+
 
     /**
      * @brief Shortcut to buffer().data().
@@ -182,7 +234,7 @@ protected:
  * @brief Same as AImageView but all universal AColor methods replaced with concrete specific AFormattedColor type thus
  * can be used by performance critical code.
  */
-template <auto f>
+template <auto /* APixelFormat::Value */ f>
 class AFormattedImageView : public AImageView {
 public:
     using Color = AFormattedColor<f>;

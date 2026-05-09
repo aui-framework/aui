@@ -20,11 +20,10 @@ namespace aui {
      * @brief Utility wrapper implementing the stack-allocated (fast) pimpl idiom.
      * @ingroup useful_templates
      * @details
-     * the following functions can be called only if <code>T</code> is a complete type:
-     * <ul>
-     *   <li>ctor</li>
-     *   <li>dtor</li>
-     * </ul>
+     * the following functions can be called only if `T` is a complete type:
+     *
+     * - ctor
+     * - dtor
      *
      * See https://youtu.be/mkPTreWiglk?t=157 (Russian)
      */

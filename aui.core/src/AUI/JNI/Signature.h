@@ -28,14 +28,22 @@ namespace aui::jni {
     template<typename T>
     inline constexpr auto signature_v = signature<T>{}();
 
-    template<aui::jni::convertible Return, aui::jni::convertible ... Args>
+    template<typename Return, typename ... Args>
     struct signature<Return(Args...)> {
         constexpr auto operator()() const noexcept {
+            checkIsConvertible<Return>();
+            (checkIsConvertible<Args>(), ...);
             if constexpr (sizeof...(Args) > 0) {
                 return AStringLiteral<'('>{} + (... + signature_v<Args>) + AStringLiteral<')'>{} + signature_v<Return>;
             } else {
                 return AStringLiteral<'(', ')'>{} + signature_v<Return>;
             }
+        }
+
+    private:
+        template<typename Arg>
+        static constexpr auto checkIsConvertible() {
+            static_assert(aui::jni::convertible<Arg>, "All types within function signature must conform aui::jni::convertible");
         }
     };
 }

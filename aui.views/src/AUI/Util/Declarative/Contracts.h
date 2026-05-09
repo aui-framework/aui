@@ -104,6 +104,20 @@ public:
         mImpl = Devastated {};
     }
 
+    const T& value() const {
+        return std::visit(
+            aui::lambda_overloaded {
+              [&](const Devastated&) -> const T& { throw AException("an attempt to dereference a property twice"); },
+              [&](const Constant& c) -> const T& { return c.value; },
+              [&](const ReactiveExpression& c) -> const T& { return **c.value; },
+            }, mImpl
+        );
+    }
+
+    const T& operator*() const { return value(); }
+
+    const T* operator->() const { return &value(); }
+
 private:
     std::variant<Devastated, Constant, ReactiveExpression> mImpl;
 };

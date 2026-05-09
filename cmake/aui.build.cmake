@@ -142,7 +142,7 @@ else()
     set(AUI_COMPILER_MSVC 0 CACHE INTERNAL "Compiler")
 endif()
 
-if (CMAKE_GENERATOR_PLATFORM MATCHES "(arm64)|(ARM64)" OR CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64|arm64)")
+if (CMAKE_GENERATOR_PLATFORM MATCHES "(arm64)|(ARM64)" OR CMAKE_SYSTEM_PROCESSOR MATCHES "(aarch64|arm64|ARM64)")
     set(AUI_ARCH_X86_64 0 CACHE INTERNAL "Arch")
     set(AUI_ARCH_X86 0 CACHE INTERNAL "Arch")
     set(AUI_ARCH_ARM_64 1 CACHE INTERNAL "Arch")
@@ -164,6 +164,11 @@ elseif (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)|(i.86)")
         set(AUI_ARCH_ARM_64 0 CACHE INTERNAL "Arch")
         set(AUI_ARCH_ARM_V7 0 CACHE INTERNAL "Arch")
     endif()
+else ()
+    set(AUI_ARCH_X86_64 0 CACHE INTERNAL "Arch")
+    set(AUI_ARCH_X86 0 CACHE INTERNAL "Arch")
+    set(AUI_ARCH_ARM_64 0 CACHE INTERNAL "Arch")
+    set(AUI_ARCH_ARM_V7 0 CACHE INTERNAL "Arch")
 endif()
 
 set(AUI_EXCLUDE_PLATFORMS ${AUI_EXCLUDE_PLATFORMS} CACHE INTERNAL "")
@@ -343,7 +348,7 @@ macro(_aui_import_google_benchmark)
                 find_package(benchmark REQUIRED CONFIG)
             else()
                 auib_import(benchmark https://github.com/google/benchmark
-                            VERSION v1.9.4
+                            VERSION 7e413be55370f0f4567761fe71ea8232d6871d06
                             CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
                             LINK STATIC)
             endif()
@@ -655,6 +660,8 @@ endfunction(aui_deploy_library)
 function(_auib_collect_srcs _out dir)
     file(GLOB_RECURSE SRCS
             ${dir}/*.cpp
+            ${dir}/*.cxx
+            ${dir}/*.cc
             ${dir}/*.c
             ${dir}/*.mm
             ${dir}/*.m)
@@ -669,8 +676,17 @@ function(auib_add_srcs TARGET DIR)
 endfunction()
 
 function(aui_executable AUI_MODULE_NAME)
-    _auib_collect_srcs(SRCS ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+    set(_src_dir ${CMAKE_CURRENT_SOURCE_DIR}/src/)
+    if (NOT EXISTS ${_src_dir})
+        message(FATAL_ERROR "aui_executable can't find \"${_src_dir}\" directory")
+    endif ()
+    _auib_collect_srcs(SRCS ${_src_dir})
     _auib_collect_srcs(SRCS_TESTS_TMP ${CMAKE_CURRENT_SOURCE_DIR}/tests/)
+
+    list(LENGTH SRCS SRCS_COUNT)
+    if (SRCS_COUNT LESS_EQUAL 0)
+        message(FATAL_ERROR "aui_executable can't find source files in \"${_src_dir}\", i.e., \"${_src_dir}main.cpp\"")
+    endif ()
 
     set(options WIN32_SUBSYSTEM_CONSOLE)
     set(oneValueArgs COMPILE_ASSETS EXPORT)
@@ -803,7 +819,7 @@ cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
 set(CMAKE_CXX_STANDARD 20)
 set(BUILD_SHARED_LIBS FALSE)
-set(AUI_VERSION c2922f01895f8fd9913ce99397b84d32e7630b30)
+set(AUI_VERSION 377d530a608dc906dbd55d63fee7ceb40150149a)
 file(
         DOWNLOAD
         https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
@@ -929,6 +945,11 @@ function(aui_compile_assets AUI_MODULE_NAME)
 
     _aui_check_toolbox()
     message(STATUS "aui.toolbox: using ${AUI_TOOLBOX_EXE} to compile assets for ${AUI_MODULE_NAME}")
+    if (TARGET aui.toolbox)
+        set(_toolbox_dep aui.toolbox)
+    else()
+        set(_toolbox_dep ${AUI_TOOLBOX_EXE})
+    endif()
     foreach(ASSET_PATH ${ASSETS})
         string(MD5 OUTPUT_PATH ${ASSET_PATH})
         set(OUTPUT_PATH "${CMAKE_CURRENT_BINARY_DIR}/autogen/${OUTPUT_PATH}.cpp")
@@ -937,7 +958,7 @@ function(aui_compile_assets AUI_MODULE_NAME)
         add_custom_command(
                 OUTPUT ${OUTPUT_PATH}
                 COMMAND ${AUI_TOOLBOX_EXE} pack ${ASSETS_DIR} ${_in} ${_out}
-                DEPENDS ${SELF_DIR}/${ASSET_PATH}
+                DEPENDS ${SELF_DIR}/${ASSET_PATH} ${_toolbox_dep}
         )
         target_sources(${AUI_MODULE_NAME} PRIVATE ${OUTPUT_PATH})
     endforeach()
@@ -955,14 +976,13 @@ function(aui_compile_assets_add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
         get_target_property(TARGET_DIR ${AUI_MODULE_NAME} ARCHIVE_OUTPUT_DIRECTORY)
     endif()
 
-    if (NOT EXISTS ${FILE_PATH})
-        message(FATAL_ERROR "File ${FILE_PATH} does not exist! Is your path absolute?")
-    endif()
+    _aui_check_toolbox()
+    message(STATUS "aui.toolbox: using ${AUI_TOOLBOX_EXE} to add assets for ${AUI_MODULE_NAME}")
 
-    if (TARGET aui.toolbox AND NOT CMAKE_CROSSCOMPILING)
-        set(AUI_TOOLBOX_EXE $<TARGET_FILE:aui.toolbox>)
-    else()
-        set(AUI_TOOLBOX_EXE aui.toolbox)
+    if (TARGET aui.toolbox)
+        set(_toolbox_dep aui.toolbox)
+    else ()
+        set(_toolbox_dep ${AUI_TOOLBOX_EXE})
     endif()
 
     string(MD5 OUTPUT_PATH ${ASSET_PATH})
@@ -970,7 +990,7 @@ function(aui_compile_assets_add AUI_MODULE_NAME FILE_PATH ASSET_PATH)
     add_custom_command(
             OUTPUT ${OUTPUT_PATH}
             COMMAND ${AUI_TOOLBOX_EXE} pack_manual ${FILE_PATH} ${ASSET_PATH} ${OUTPUT_PATH}
-            DEPENDS ${FILE_PATH}
+            DEPENDS ${FILE_PATH} ${_toolbox_dep}
     )
 
     target_sources(${AUI_MODULE_NAME} PRIVATE ${OUTPUT_PATH})
@@ -1186,6 +1206,8 @@ function(aui_module AUI_MODULE_NAME)
     if (_type STREQUAL "STATIC_LIBRARY")
         if (MSVC)
             target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:/WHOLEARCHIVE:$<TARGET_FILE:${AUI_MODULE_NAME}>>")
+        elseif (WIN32 AND CMAKE_CXX_COMPILER_ID MATCHES "Clang")
+            target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:-Wl,/WHOLEARCHIVE:$<TARGET_FILE:${AUI_MODULE_NAME}>>")
         elseif (CMAKE_CXX_COMPILER_ID MATCHES "Clang|GNU")
             if (APPLE)
                 target_link_options(${AUI_MODULE_NAME} PUBLIC "$<$<BOOL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},INTERFACE_AUI_WHOLEARCHIVE>>:-Wl,-force_load,$<TARGET_FILE:${AUI_MODULE_NAME}>>")
@@ -1248,12 +1270,17 @@ function(auisl_shader TARGET NAME)
 
     set(_targets software glsl120)
     _aui_check_toolbox()
+    if (TARGET aui.toolbox)
+        set(_toolbox_dep aui.toolbox)
+    else()
+        set(_toolbox_dep ${AUI_TOOLBOX_EXE})
+    endif()
     foreach(_target ${_targets})
         set(_output "${_compiled_shader_dir}/${NAME}.${_target}.cpp")
 
         add_custom_command(
                 OUTPUT ${_output}
-                DEPENDS ${_path}
+                DEPENDS ${_path} ${_toolbox_dep}
                 COMMAND ${AUI_TOOLBOX_EXE}
                 ARGS auisl ${_target} ${_path} ${_output}
         )
@@ -1538,6 +1565,19 @@ macro(aui_app)
         install(TARGETS ${APP_TARGET}
                 DESTINATION $<TARGET_PROPERTY:${APP_TARGET},AUI_INSTALL_RUNTIME_DIR>)
         get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
+        # Setup icon for x11
+        if (APP_ICON)
+            set(_ico "${_current_app_build_files}/app")
+            if (TARGET aui.toolbox)
+                add_dependencies(${APP_TARGET} aui.toolbox)
+            endif()
+            add_custom_command(
+                OUTPUT "${_ico}/icon_512x512.png"
+                COMMAND ${AUI_TOOLBOX_EXE}
+                ARGS svg2png ${_icon_absolute} -r=512 -o=${_ico} -p=icon
+            )
+            aui_compile_assets_add(${APP_TARGET} "${_ico}/icon_512x512.png" "__aui/icon_512x512.png")
+        endif()
         if (NOT APP_LINUX_DESKTOP)
             # generate desktop file
             set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_executable}\nType=Application\nTerminal=false\nCategories=Utility")

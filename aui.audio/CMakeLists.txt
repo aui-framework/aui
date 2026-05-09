@@ -28,7 +28,7 @@ if (AUI_PLATFORM_ANDROID)
 elseif (AUI_PLATFORM_LINUX)
     aui_link(aui.audio PUBLIC pulse)
 elseif (AUI_PLATFORM_WIN)
-    aui_link(aui.audio PUBLIC Winmm dsound.lib dxguid.lib)
+    aui_link(aui.audio PUBLIC winmm dsound.lib dxguid.lib)
 endif()
 
 if(AUIB_DISABLE)

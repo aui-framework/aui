@@ -641,21 +641,24 @@ Here's how exactly it is computed:
 
 <!-- aui:snippet aui.boot.cmake BUILD_SPECIFIER -->
 
-### ~/.aui/repo
+### ~/.aui/repo { #AUIB_REPO_DIR }
 
 Contains dependencies source code (if any), downloaded by `auib_import`.
 
-- `~/.aui/repo/<PackageName>/src` - source code of `<PackageName>`. If it is a git repository, AUI.Boot will try to
-  checkout a specific version first instead of cloning the whole repo again.
-- `~/.aui/repo/<PackageName>/src/FETCHED` - indicates the latest download is successful.
-- `~/.aui/repo/<PackageName>/build` - `<PackageName>` build directory. Cleaned up after a successful installation.
+- `~/.aui/repo/<PackageName>-<VERSION_OR_HASH>` - source code of `<PackageName>` for the specific version/hash.
+  If it is a git repository, AUI.Boot will try to checkout that specific version first instead of cloning the whole repo
+  again.
+- `~/.aui/repo/<PackageName>-<VERSION_OR_HASH>/FETCHED` - indicates the latest download was successful.
+
+### ~/.aui/builds
+
+- `~/.aui/builds/<PackageName>-<BUILD_SPECIFIER>` - `<PackageName>` build directory for that build configuration.
+  Cleaned up after a successful installation.
 
 If the dependency imported as a [subdirectory](#AUIB_ADD_SUBDIRECTORY), these paths are used instead:
 
-- `~/.aui/repo/<PackageName>/as/<VERSION>/<PackageName>` - a copy of source to be used by CMake's `add_subdirectory`.
-  The second `<PackageName>` helps IDEs such as CLion to identify dependency name.
-- `~/.aui/repo/<PackageName>/as/<VERSION>/<PackageName>/FETCHED` - indicates the latest download is successful.
-- `~/.aui/repo/<PackageName>/as/<VERSION>/build` - build directory.
+- `~/.aui/builds/<PackageName>-<BUILD_SPECIFIER>-as` - `<PackageName>` build directory for that build configuration.
+  Cleaned up after a successful installation.
 
 ### ~/.aui/crosscompile-host
 
@@ -673,6 +676,10 @@ layer over CMake).
 
 Despite CMake itself is complex (spoiler: every build system is) but thanks to the complexity **CMake actually does the
 job good enough** and its scripting system thankfully allows to download files from internet (and not only that).
+
+AUI Boot allows to choose `find_package` or `add_subdirectory` approach to import AUI's dependencies. Some projects,
+i.e., LibVNCServer, can be used only with `find_package` approach, whereas others didn't set up CMake Install at all,
+therefore, AUI Boot allows to use `add_subdirectory` approach.
 
 Introducing additional building layer literally multiplies the building complexity by two. Moreover, Android targets
 already introduce such a layer (called Gradle). For example, if we were using [Conan](https://conan.io/), Android

@@ -34,7 +34,7 @@ size_t AFileInputStream::read(char* dst, size_t size) {
     return r;
 }
 
-void AFileInputStream::seek(std::streamoff offset, ASeekDir dir) noexcept {
+void AFileInputStream::seek(std::streamoff offset, ASeekDir dir) {
     auto whence = [&] {
         switch (dir) {
             case ASeekDir::BEGIN:

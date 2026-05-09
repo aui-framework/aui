@@ -13,13 +13,12 @@
 // Created by alex2 on 07.11.2020.
 //
 
-#include "ALanguageCode.h"
-
 #include <AUI/Common/AException.h>
+#include "ALanguageCode.h"
 
 ALanguageCode::ALanguageCode(const AString& str) {
     auto& ascii = str.bytes();
-    if (str.sizeBytes() != 5) {
+    if (str.size() != 5) {
         throw AException("invalid language code length: " + str);
     }
     if (ascii[2] != '-' && ascii[2] != '_') {
