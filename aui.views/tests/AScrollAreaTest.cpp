@@ -8,19 +8,23 @@ namespace {
 
 class TrackingWrappingView : public AView {
 public:
-    int onComputeIntrinsicWidth(int height) override {
-        return 200;
-    }
-
-    int onComputeIntrinsicHeight(int width) override {
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
+        const int width = constraints.isUnlimitedWidth() ? 200 : constraints.maxWidth;
         mLastMeasuredWidth = width;
-        if (width == -1 || width > 100) {
-            return 20;
+        if (width > 100) {
+            return { width, 20 };
         }
         if (width <= 85) {
-            return 80;
+            return { width, 80 };
         }
-        return 40;
+        return { width, 40 };
+    }
+
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+        return {
+            .min = { 200, 20 },
+            .max = { 200, 20 },
+        };
     }
 
     [[nodiscard]]
@@ -34,12 +38,11 @@ private:
 
 class MinimumWidthView : public AView {
 public:
-    int onComputeIntrinsicWidth(int height) override {
-        return 40;
-    }
-
-    int onComputeIntrinsicHeight(int width) override {
-        return 20;
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+        return {
+            .min = { 40, 20 },
+            .max = { 40, 20 },
+        };
     }
 };
 

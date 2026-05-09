@@ -11,6 +11,7 @@
 
 #include <gtest/gtest.h>
 #include <AUI/View/ATextBase.h>
+#include <AUI/View/AText.h>
 
 namespace {
 
@@ -72,7 +73,7 @@ TEST(ATextBase, IntrinsicWidthIgnoresPaddingAndMaxSize) {
     text.setMaxSize({ 20, 100 });
     text.setEntries({ line1a, line1b, lineBreak, line2 });
 
-    EXPECT_EQ(text.onComputeIntrinsicWidth(-1), 40);
+    EXPECT_EQ(text.onComputeIntrinsicMinMaxSizes(-1).max.x, 40);
 }
 
 TEST(ATextBase, IntrinsicHeightMeasurementDoesNotStoreLayout) {
@@ -82,11 +83,20 @@ TEST(ATextBase, IntrinsicHeightMeasurementDoesNotStoreLayout) {
     TestTextBase text;
     text.setEntries({ left, right });
 
-    EXPECT_GT(text.onComputeIntrinsicHeight(20), 0);
+    EXPECT_GT(text.measure(AConstraints::fixedWidth(20)).y, 0);
     EXPECT_EQ(left->setPositionCalls(), 0);
     EXPECT_EQ(right->setPositionCalls(), 0);
 
     text.performStoredLayoutForWidthForTest(20);
     EXPECT_GT(left->setPositionCalls(), 0);
     EXPECT_GT(right->setPositionCalls(), 0);
+}
+
+TEST(AText, MinContentWidthUsesLongestWordForNormalWordBreak) {
+    AText text;
+    text.setString("aa longest bbb", { WordBreak::NORMAL });
+
+    const auto minMax = text.computeMinMaxSizes();
+
+    EXPECT_EQ(minMax.min.x, text.getFontStyle().getWidth(U"longest"));
 }

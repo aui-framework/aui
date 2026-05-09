@@ -34,9 +34,8 @@ private:
     bool mDragging = false;
 
 public:
-    int onComputeIntrinsicWidth(int height) override;
-    int onComputeIntrinsicHeight(int width) override;
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
     void setSize(glm::ivec2 size) override;
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPointerPressed(const APointerPressedEvent& event) override;
@@ -62,14 +61,7 @@ public:
     AScrollbarOffsetSpacer(): ASpacerExpanding(0, 0) {
 
     }
-
-    int onComputeIntrinsicWidth(int height) override {
-        return 0;
-    }
-
-    int onComputeIntrinsicHeight(int width) override {
-        return 0;
-    }
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override { return {}; }
 };
 
 /**

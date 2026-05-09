@@ -9,107 +9,108 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <AUI/Util/AWordWrappingEngineImpl.h>
 #include "AText.h"
 
-#include "ALabel.h"
-#include "AUI/IO/AByteBufferInputStream.h"
-#include "AUI/Util/ATokenizer.h"
-
+#include <AUI/Util/AWordWrappingEngineImpl.h>
+#include <AUI/View/ALabel.h>
+#include <AUI/IO/AByteBufferInputStream.h>
+#include <AUI/Util/ATokenizer.h>
 #include <AUI/Xml/AXml.h>
 #include <AUI/IO/AStringStream.h>
 #include <AUI/Util/AViewEntry.h>
 #include <stack>
 
 AText::AText() {
-    addView(mViewsContainer = _new<AViewContainer>());
+  addView(mViewsContainer = _new<AViewContainer>());
 }
 
-int AText::onComputeIntrinsicWidth(int height) {
-    if (mParsedFlags.wordBreak != WordBreak::BREAK_ALL) {
-        return ATextBase::onComputeIntrinsicWidth(height);
-    }
+AMinMaxSizes AText::onComputeIntrinsicMinMaxSizes(int height) {
+  auto minMax = ATextBase::onComputeIntrinsicMinMaxSizes(height);
 
-    int maxEntryWidth = 0;
-    for (const auto& entry : mEngine.entries()) {
-        if (entry->forcesNextLine()) {
-            continue;
-        }
-        maxEntryWidth = glm::max(maxEntryWidth, entry->getSize().x);
+  int minContentWidth = 0;
+  for (const auto& entry : mEngine.entries()) {
+    if (entry->forcesNextLine() || entry->escapesEdges()) {
+      continue;
     }
-    return maxEntryWidth;
+    minContentWidth = glm::max(minContentWidth, entry->getSize().x);
+  }
+
+  if (mParsedFlags.wordBreak == WordBreak::BREAK_ALL) {
+    minMax.max.x = minContentWidth;
+  }
+  minMax.min.x = glm::max(minMax.min.x, minContentWidth);
+  return minMax;
 }
-
 
 void AText::pushWord(Entries& entries,
                      AString word,
                      const ParsedFlags& flags) {
-    if (flags.wordBreak == WordBreak::NORMAL) {
-        mWordEntries.emplace_back(this, std::move(word));
-        entries << aui::ptr::fake_shared(&mWordEntries.last());
-    } else {
-        for (const auto& c: word) {
-            mCharEntries.emplace_back(this, c);
-            entries << aui::ptr::fake_shared(&mCharEntries.last());
-        }
+  if (flags.wordBreak == WordBreak::NORMAL) {
+    mWordEntries.emplace_back(this, std::move(word));
+    entries << aui::ptr::fake_shared(&mWordEntries.last());
+  } else {
+    for (const auto& c: word) {
+      mCharEntries.emplace_back(this, c);
+      entries << aui::ptr::fake_shared(&mCharEntries.last());
     }
+  }
 }
 
 AText::ParsedFlags AText::parseFlags(const AText::Flags& flags) {
-    ParsedFlags pf;
-    for (auto& flag: flags) {
-        std::visit(aui::lambda_overloaded{
-                [&](WordBreak w) { pf.wordBreak = w; }
-        }, flag);
-    }
-    return pf;
+  ParsedFlags pf;
+  for (auto& flag: flags) {
+    std::visit(aui::lambda_overloaded{
+      [&](WordBreak w) { pf.wordBreak = w; }
+    }, flag);
+  }
+  return pf;
 }
 
 void AText::clearContent() {
-    mWordEntries.clear();
-    mCharEntries.clear();
-    mViewsContainer->removeAllViews();
-    ATextBase::clearContent();
+  mWordEntries.clear();
+  mCharEntries.clear();
+  mViewsContainer->removeAllViews();
+  ATextBase::clearContent();
 }
 
 void AText::setString(const AString& string, const Flags& flags) {
-    clearContent();
-    auto parsedFlags = parseFlags(flags);
-    mParsedFlags = parsedFlags;
-    Entries entries;
-    entries.reserve(string.length());
-    processString(string, parsedFlags, entries);
+  clearContent();
+  auto parsedFlags = parseFlags(flags);
+  mParsedFlags = parsedFlags;
+  Entries entries;
+  entries.reserve(string.length());
+  processString(string, parsedFlags, entries);
 
-    mEngine.setEntries(std::move(entries));
+  mEngine.setEntries(std::move(entries));
 }
 
-void AText::processString(const AString& string, const AText::ParsedFlags& parsedFlags,
+void AText::processString(AStringView string, const AText::ParsedFlags& parsedFlags,
                           Entries& entries) {
-    AString currentWord;
-    auto commitWord = [&] {
-        if (!currentWord.empty()) {
-            pushWord(entries, std::move(currentWord), parsedFlags);
-        }
-    };
-    for (auto c: string) {
-        switch (c) {
-            case U'\r':
-                break;
-            case U' ':
-                commitWord();
-                entries << aui::ptr::fake_shared(&mWhitespaceEntry);
-                break;
-            case U'\n':
-                commitWord();
-                entries << aui::ptr::fake_shared(&mNextLineEntry);
-                break;
-
-            default:
-                currentWord += c;
-                continue;
-        }
+  AString currentWord;
+  auto commitWord = [&] {
+    if (!currentWord.empty()) {
+      pushWord(entries, std::move(currentWord), parsedFlags);
     }
-    commitWord();
+  };
+  for (auto c: string) {
+    switch (c) {
+      case '\r':
+        break;
+      case ' ':
+        commitWord();
+        entries << aui::ptr::fake_shared(&mWhitespaceEntry);
+        break;
+      case '\n':
+        commitWord();
+        entries << aui::ptr::fake_shared(&mNextLineEntry);
+        break;
+
+      default:
+        currentWord += c;
+        continue;
+    }
+  }
+  commitWord();
 }
 
 
@@ -300,8 +301,10 @@ void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
     auto ascender = glm::ivec2 {0,
                                  getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()
     };
+    const int textHeight =
+        this->measure(AConstraints::fixedWidth(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
     if (mVerticalAlign == VerticalAlign::MIDDLE) {
-        ascender += (getContentHeight() - ATextBase<>::computeIntrinsicHeight(getContentWidth())) / 2;
+        ascender += (getContentHeight() - textHeight) / 2;
     }
     for (auto& wordEntry: mWordEntries) {
         canvas->addString(wordEntry.getPosition() + ascender, wordEntry.getWord());
@@ -318,8 +321,10 @@ void AText::applyGeometryToChildren() {
     AViewContainerBase::applyGeometryToChildren();
 
     int y = 0;
+    const int textHeight =
+        this->measure(AConstraints::fixedWidth(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
     if (mVerticalAlign == VerticalAlign::MIDDLE) {
-        y += (getContentHeight() - ATextBase<>::computeIntrinsicHeight(getContentWidth())) / 2;
+        y += (getContentHeight() - textHeight) / 2;
     }
     mViewsContainer->layout(0, y, getWidth(), getHeight());
 }

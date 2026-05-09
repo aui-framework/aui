@@ -25,12 +25,11 @@ class FixedMeasureView : public AView {
 public:
     FixedMeasureView(int width, int height) : mWidth(width), mHeight(height) {}
 
-    int onComputeIntrinsicWidth(int height) override {
-        return mWidth;
-    }
-
-    int onComputeIntrinsicHeight(int width) override {
-        return mHeight;
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+        return {
+            .min = { mWidth, mHeight },
+            .max = { mWidth, mHeight },
+        };
     }
 
 private:
@@ -47,12 +46,11 @@ public:
       });
     }
 
-    int onComputeIntrinsicWidth(int height) override {
-        return mPreferredWidth;
-    }
-
-    int onComputeIntrinsicHeight(int width) override {
-        return mPreferredHeight;
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+        return {
+            .min = { mPreferredWidth, mPreferredHeight },
+            .max = { mPreferredWidth, mPreferredHeight },
+        };
     }
 
 private:
@@ -74,7 +72,7 @@ TEST(HVLayout, VerticalLayoutKeepsChildPerpendicularMinimumSize) {
     AVector<_<AView>> views { child };
     VerticalHVLayout::layout({ 0, 0 }, { 40, 100 }, views, 0);
 
-    expectRect(child, { 0, 0 }, { 60, 20 });
+    expectRect(child, { 0, 0 }, { 120, 20 });
 }
 
 TEST(AGroupBox, KeepsMinimumWidthOfContentWhenParentIsNarrower) {

@@ -348,38 +348,31 @@ void AScrollbarHandle::onPointerReleased(const APointerReleasedEvent& event) {
     mDragging = false;
 }
 
-int AScrollbarHandle::onComputeIntrinsicWidth(int height) {
+AMinMaxSizes AScrollbarHandle::onComputeIntrinsicMinMaxSizes(int height) {
+    glm::ivec2 exactSize = {};
     switch (mScrollbar.mDirection) {
         case ALayoutDirection::VERTICAL:
-            return 15_dp;
+            exactSize = { 15_dp, mOverridenSize };
+            break;
 
         case ALayoutDirection::HORIZONTAL:
-            return mOverridenSize;
+            exactSize = { mOverridenSize, 15_dp };
+            break;
 
         case ALayoutDirection::NONE:
             break;
     }
-    return 0;
-}
-
-int AScrollbarHandle::onComputeIntrinsicHeight(int width) {
-    switch (mScrollbar.mDirection) {
-        case ALayoutDirection::VERTICAL:
-            return mOverridenSize;
-
-        case ALayoutDirection::HORIZONTAL:
-            return 15_dp;
-
-        case ALayoutDirection::NONE:
-            break;
-    }
-    return 0;
+    return {
+        .min = exactSize,
+        .max = exactSize,
+    };
 }
 
 glm::ivec2 AScrollbarHandle::onIntrinsicMeasure(AConstraints constraints) {
+    const auto minMax = onComputeIntrinsicMinMaxSizes(-1);
     return {
-        std::clamp(onComputeIntrinsicWidth(-1), constraints.minWidth, constraints.maxWidth),
-        std::clamp(onComputeIntrinsicHeight(-1), constraints.minHeight, constraints.maxHeight),
+        std::clamp(minMax.max.x, constraints.minWidth, constraints.maxWidth),
+        std::clamp(minMax.max.y, constraints.minHeight, constraints.maxHeight),
     };
 }
 
