@@ -82,6 +82,7 @@ public:
 
     void onDataCountChanged() override;
     void onDataChanged() override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
     AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
 
 signals:

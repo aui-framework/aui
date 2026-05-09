@@ -348,10 +348,10 @@ glm::ivec2 AView::measure(AConstraints constraints) {
   contentConstraints.maxHeight = std::max(0, effectiveConstraints.maxHeight - vPadding);
 
   glm::ivec2 contentSize = onIntrinsicMeasure(contentConstraints);
-  if (constraints.maxWidth >= UNBOUNDED_CONSTRAINT && constraints.maxHeight < UNBOUNDED_CONSTRAINT) {
+  if (contentSize.x == 0 && constraints.maxWidth >= UNBOUNDED_CONSTRAINT && constraints.maxHeight < UNBOUNDED_CONSTRAINT) {
     contentSize.x = std::max(contentSize.x, onComputeIntrinsicMinMaxSizes(contentConstraints.maxHeight).max.x);
   }
-  if (constraints.maxWidth < UNBOUNDED_CONSTRAINT && constraints.maxHeight >= UNBOUNDED_CONSTRAINT) {
+  if (contentSize.y == 0 && constraints.maxWidth < UNBOUNDED_CONSTRAINT && constraints.maxHeight >= UNBOUNDED_CONSTRAINT) {
     contentSize.y = std::max(contentSize.y, onComputeIntrinsicMinMaxSizes(-1).max.y);
   }
 

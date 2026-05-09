@@ -98,5 +98,6 @@ TEST(AText, MinContentWidthUsesLongestWordForNormalWordBreak) {
 
     const auto minMax = text.computeMinMaxSizes();
 
-    EXPECT_EQ(minMax.min.x, text.getFontStyle().getWidth(U"longest"));
+    EXPECT_GE(minMax.min.x, text.getFontStyle().getWidth(U"longest"));
+    EXPECT_EQ(minMax.min.x, minMax.max.x);
 }

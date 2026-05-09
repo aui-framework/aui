@@ -104,7 +104,7 @@ AListView::~AListView() {}
 
 AListView::AListView(_<IListModel<AString>> model) {
     setCustomStyle({
-        ass::MinSize { AMetric(0, AMetric::T_PX), {} },
+        ass::MinSize { AMetric(0, AMetric::T_PX), AMetric(0, AMetric::T_PX) },
     });
     mObserver = _new<AListModelObserver<AString>>(this);
     setModel(std::move(model));
@@ -161,6 +161,17 @@ void AListView::removeItem(size_t at) { mContent->removeView(at); }
 void AListView::onDataCountChanged() { requestLayout(); }
 
 void AListView::onDataChanged() { redraw(); }
+
+glm::ivec2 AListView::onIntrinsicMeasure(AConstraints constraints) {
+    const int width = constraints.maxWidth >= 1000000 ? 0 : constraints.maxWidth;
+    if (!mContent) {
+        return { width, 0 };
+    }
+    return {
+        width,
+        mContent->measure(AConstraints::fixedWidth(glm::max(0, width))).y,
+    };
+}
 
 AMinMaxSizes AListView::onComputeIntrinsicMinMaxSizes(int) {
     if (!mContent) {
