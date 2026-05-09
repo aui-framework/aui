@@ -236,6 +236,10 @@ class API_AUI_VIEWS AView : public AObject {
   [[nodiscard]] const glm::ivec2& getMinSize() const noexcept { return mMinSize; }
 
   void setMinSize(const glm::ivec2& minSize) {
+    ensureAssUpdated();
+    if (!mApplyingStyles) {
+      mExplicitMinSize = minSize;
+    }
     if (mMinSize == minSize) [[unlikely]] {
       return;
     }
@@ -249,6 +253,7 @@ class API_AUI_VIEWS AView : public AObject {
   [[nodiscard]] const glm::ivec2& getMaxSize() const { return mMaxSize; }
 
   void setMaxSize(const glm::ivec2& maxSize) {
+    ensureAssUpdated();
     if (mMaxSize == maxSize) [[unlikely]] {
       return;
     }
@@ -349,7 +354,14 @@ class API_AUI_VIEWS AView : public AObject {
    * @details
    * @copydetails AView::mMargin
    */
-  void setMargin(const ABoxFields& margin) { mMargin = margin; }
+  void setMargin(const ABoxFields& margin) {
+    ensureAssUpdated();
+    if (mMargin == margin) [[unlikely]] {
+      return;
+    }
+    mMargin = margin;
+    requestLayout();
+  }
 
   /**
    * @brief Determines whether this AView processes this click or passes it thru.
@@ -377,6 +389,7 @@ class API_AUI_VIEWS AView : public AObject {
    * @copydetails AView::mPadding
    */
   void setPadding(const ABoxFields& padding) {
+    ensureAssUpdated();
     if (mPadding == padding) [[unlikely]] {
       return;
     }
@@ -928,6 +941,7 @@ class API_AUI_VIEWS AView : public AObject {
    * @brief Minimal size.
    */
   glm::ivec2 mMinSize = { 0, 0 };
+  AOptional<glm::ivec2> mExplicitMinSize;
 
   /**
    * @brief Maximal size.
@@ -1140,6 +1154,8 @@ protected:
    * @brief Applies state-dependent styles and invalidates pixel data, layout, repaint if needed.
    */
   virtual void invalidateStateStylesImpl();
+
+  bool mApplyingStyles = false;
 
   void notifyParentChildFocused(const _<AView>& view);
 };

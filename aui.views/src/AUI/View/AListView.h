@@ -82,6 +82,7 @@ public:
 
     void onDataCountChanged() override;
     void onDataChanged() override;
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
 
 signals:
     emits<AListModelSelection<AString>> selectionChanged;

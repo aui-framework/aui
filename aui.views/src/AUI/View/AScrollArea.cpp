@@ -113,9 +113,11 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
 
     const int measuredMinimumContentWidth = margins.x + contents()->measure(minConstraints).x;
     const int minimumScrollableContentWidth =
-        std::max(measuredMinimumContentWidth, margins.x + contents()->getMinSize().x);
+        std::max(measuredMinimumContentWidth, margins.x + contentMinMax.min.x);
 
-    int viewportWidth = widthBounded ? availableSize.x : std::max(minimumScrollableContentWidth, naturalContentWidth);
+    int viewportWidth = widthBounded
+        ? availableSize.x
+        : (availableSize.x > 0 ? availableSize.x : std::max(minimumScrollableContentWidth, naturalContentWidth));
     viewportWidth = std::max(viewportWidth, 0);
 
     auto contentHeightForViewportWidth = [&](int width) {
@@ -123,7 +125,9 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
         return contents()->measure(AConstraints::fixedWidth(contentWidth)).y + margins.y;
     };
 
-    int viewportHeight = heightBounded ? availableSize.y : contentHeightForViewportWidth(viewportWidth);
+    int viewportHeight = heightBounded
+        ? availableSize.y
+        : (availableSize.y > 0 ? availableSize.y : contentHeightForViewportWidth(viewportWidth));
     viewportHeight = std::max(viewportHeight, 0);
 
     result.verticalScrollbarWidth = measureVerticalScrollbarWidth(viewportHeight);
@@ -204,16 +208,24 @@ AMinMaxSizes AScrollArea::onComputeIntrinsicMinMaxSizes(int height) {
     if (!contents()) {
         return {};
     }
-    const auto outerSize = calculateLayout(
+    const auto contentMinMax = contents()->computeMinMaxSizes();
+    const auto minOuterSize = calculateLayout(
         {
-            contents()->computeMinMaxSizes().max.x,
-            height == -1 ? contents()->computeMinMaxSizes().max.y : height,
+            contentMinMax.min.x,
+            height == -1 ? 0 : height,
+        },
+        false,
+        height != -1).outerSize;
+    const auto maxOuterSize = calculateLayout(
+        {
+            contentMinMax.max.x,
+            height == -1 ? 0 : height,
         },
         false,
         height != -1).outerSize;
     return {
-        .min = outerSize,
-        .max = outerSize,
+        .min = minOuterSize,
+        .max = maxOuterSize,
     };
 }
 

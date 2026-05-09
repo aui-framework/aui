@@ -10,6 +10,11 @@
 */
 
 /// [ACheckBox_example]
+#include "AUI/View/AButton.h"
+#include "AUI/View/AGroupBox.h"
+#include "AUI/View/AListView.h"
+#include "DemoListModel.h"
+
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -35,8 +40,24 @@ AUI_ENTRY {
     auto state = _new<State>();
     window->setContents(
         Vertical {
-            minimalCheckBox(AUI_PTR_ALIAS(state, checked)),
-            Label { AUI_REACT(state->checked ? "Checkbox is checked" : "Checkbox is not checked") },
+            //minimalCheckBox(AUI_PTR_ALIAS(state, checked)),
+            //Label { AUI_REACT(state->checked ? "Checkbox is checked" : "Checkbox is not checked") },
+
+          // list view
+                GroupBox {
+                  Label { "List view" },
+                  [] {   // lambda style inlining
+                      auto model = _new<DemoListModel>();
+
+                      return Vertical {
+                          Horizontal {
+                            _new<AButton>("Add").connect(&AButton::clicked, AUI_SLOT(model)::addItem),
+                            _new<AButton>("Remove").connect(&AButton::clicked, AUI_SLOT(model)::removeItem),
+                          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                          //_new<AListView>(model)
+                      } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } };
+                  }(),
+                },
         }
     );
     window->show();

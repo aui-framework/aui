@@ -12,11 +12,13 @@
 #include "AListView.h"
 
 #include <AUI/ASS/Property/ScrollbarAppearance.h>
+#include <AUI/ASS/ASS.h>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/Layout/AVerticalLayout.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Util/AMetric.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 
 #include "ALabel.h"
@@ -101,6 +103,9 @@ class AListItem : public ALabel, public ass::ISelectable {
 AListView::~AListView() {}
 
 AListView::AListView(_<IListModel<AString>> model) {
+    setCustomStyle({
+        ass::MinSize { AMetric(0, AMetric::T_PX), {} },
+    });
     mObserver = _new<AListModelObserver<AString>>(this);
     setModel(std::move(model));
 }
@@ -156,6 +161,18 @@ void AListView::removeItem(size_t at) { mContent->removeView(at); }
 void AListView::onDataCountChanged() { requestLayout(); }
 
 void AListView::onDataChanged() { redraw(); }
+
+AMinMaxSizes AListView::onComputeIntrinsicMinMaxSizes(int) {
+    if (!mContent) {
+        return {};
+    }
+
+    const auto contentMinMax = mContent->computeMinMaxSizes();
+    return {
+        .min = { 0, contentMinMax.min.y },
+        .max = { 0, contentMinMax.max.y },
+    };
+}
 
 void AListView::updateSelectionOnItem(size_t i, AListView::SelectAction action) {
     switch (action) {

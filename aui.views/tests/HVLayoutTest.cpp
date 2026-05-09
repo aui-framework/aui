@@ -122,6 +122,29 @@ public:
     }
 };
 
+class ZeroMainAxisMinView : public AView {
+public:
+    int minWidth = 0;
+    int preferredHeight = 10;
+
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
+        if (constraints.isHeightTight() && constraints.maxHeight == 0) {
+            return { 100000, 0 };
+        }
+        return {
+            minWidth,
+            constraints.isHeightTight() ? constraints.maxHeight : preferredHeight,
+        };
+    }
+
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+        return {
+            .min = { minWidth, 0 },
+            .max = { minWidth, preferredHeight },
+        };
+    }
+};
+
 class SplitterMeasureView : public AView {
 public:
     int preferredWidth = 0;
@@ -262,6 +285,20 @@ TEST(HVLayout, VerticalExpandingConsumesRemainingSpace) {
     expectRect(top, { 0, 0 }, { 24, 24 });
     expectRect(middle, { 0, 24 }, { 24, 52 });
     expectRect(bottom, { 0, 76 }, { 24, 24 });
+}
+
+TEST(HVLayout, VerticalComputeMinWidthIgnoresZeroHeightProbeGarbage) {
+    auto narrow = _new<ZeroMainAxisMinView>();
+    narrow->minWidth = 50;
+
+    auto wide = _new<ZeroMainAxisMinView>();
+    wide->minWidth = 3173;
+
+    AVector<_<AView>> views { narrow, wide };
+
+    const auto minMax = VerticalHVLayout::computeIntrinsicMinMaxSizes(views, 0);
+
+    EXPECT_EQ(minMax.min.x, 3173);
 }
 
 TEST(AViewMeasure, MeasureUsesPaddingAdjustedConstraints) {

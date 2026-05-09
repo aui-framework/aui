@@ -1,8 +1,8 @@
 #include <gtest/gtest.h>
-#include <AUI/Common/FixedSizeCache.h>
+#include <AUI/Common/AFixedSizeCache.hpp>
 
 TEST(FixedSizeCache, KeepsItemsSortedAndDoesNotOverwriteExistingKeys) {
-    FixedSizeCache<int, int, 4> cache;
+    AFixedSizeCache<int, int, 4> cache;
 
     EXPECT_TRUE(cache.emplace(5, 50).second);
     EXPECT_TRUE(cache.emplace(1, 10).second);
@@ -24,7 +24,7 @@ TEST(FixedSizeCache, KeepsItemsSortedAndDoesNotOverwriteExistingKeys) {
 }
 
 TEST(FixedSizeCache, ClearsCacheOnOverflow) {
-    FixedSizeCache<int, int, 2> cache;
+    AFixedSizeCache<int, int, 2> cache;
 
     cache.emplace(2, 20);
     cache.emplace(1, 10);

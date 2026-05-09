@@ -34,6 +34,18 @@ struct SizeInjector {
     ASPLITTER_IMPL_FORWARD_METHOD(getMinSize)
 
     glm::ivec2 measure(AConstraints constraints) const {
+        if (item.overridedSize) {
+            const int overridedAxis = glm::max(
+                aui::layout_direction::getAxisValue(direction, item.view->getMinSize()),
+                *item.overridedSize);
+            if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+                constraints.minWidth = overridedAxis;
+                constraints.maxWidth = overridedAxis;
+            } else {
+                constraints.minHeight = overridedAxis;
+                constraints.maxHeight = overridedAxis;
+            }
+        }
         return item.view->measure(constraints);
     }
 

@@ -139,7 +139,11 @@ int ASplitterHelper::reclaimSpace(int space, size_t dividerIndex) {
     int direction = glm::sign(space);
 
     int amountToShrink = glm::abs(space);
-    for (int i = int(dividerIndex) + glm::clamp(direction, 0, 1); // first index to shrink
+    int firstIndexToShrink = int(dividerIndex) + glm::clamp(direction, 0, 1);
+    if (firstIndexToShrink >= int(mItems.size())) {
+        firstIndexToShrink = int(mItems.size()) - 1;
+    }
+    for (int i = firstIndexToShrink; // first index to shrink
          i < mItems.size() && i >= 0; // dual check for both forward and backward iteration
          i += direction) {
         auto& currentItem = mItems[i];

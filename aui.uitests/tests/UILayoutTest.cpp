@@ -209,26 +209,26 @@ namespace {
 class LabelMock : public ALabel {
 public:
     LabelMock(AString text) : ALabel(std::move(text)) {
-        ON_CALL(*this, onComputeIntrinsicWidth)
-            .WillByDefault([this](int height) { return ALabel::onComputeIntrinsicWidth(height); });
+        ON_CALL(*this, onComputeIntrinsicMinMaxSizes)
+            .WillByDefault([this](int height) { return ALabel::onComputeIntrinsicMinMaxSizes(height); });
     }
-    MOCK_METHOD(int, onComputeIntrinsicWidth, (int height), (override));
+    MOCK_METHOD(AMinMaxSizes, onComputeIntrinsicMinMaxSizes, (int height), (override));
 };
 }   // namespace
 
 TEST_F(UILayoutTest, GetContentMinimumWidthPerformance1) {
-    // checks how many times intrinsic width is computed.
+    // checks how many times intrinsic size is computed.
     // in this test, it should call be exactly once.
 
     testing::InSequence s;
     auto l = _new<LabelMock>("test");
-    EXPECT_CALL(*l, onComputeIntrinsicWidth(testing::_)).Times(1);
+    EXPECT_CALL(*l, onComputeIntrinsicMinMaxSizes(testing::_)).Times(1);
     inflate(Centered { Horizontal {
       l,
     } });
     l->getWindow()->applyGeometryToChildrenIfNecessary();
 
-    // extra layout update that should not call LabelMock::onComputeIntrinsicWidth one more time
+    // extra layout update that should not call LabelMock::onComputeIntrinsicMinMaxSizes one more time
     AUI_REPEAT(10) { l->getWindow()->applyGeometryToChildrenIfNecessary(); }
 }
 
@@ -239,7 +239,7 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
     testing::InSequence s;
     auto l1 = _new<LabelMock>("test");
     auto l2 = _new<ALabel>("test");
-    EXPECT_CALL(*l1, onComputeIntrinsicWidth(testing::_)).Times(2);
+    EXPECT_CALL(*l1, onComputeIntrinsicMinMaxSizes(testing::_)).Times(2);
     inflate(Centered { Horizontal {
       l1,
       l2,
@@ -251,7 +251,7 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
 
     EXPECT_GE(l2->getPositionInWindow().x, prevPosX);   // l2 is expected to shift to right.
 
-    // extra layout update that should not compute intrinsic width one more time
+    // extra layout update that should not compute intrinsic size one more time
     l1->getWindow()->applyGeometryToChildrenIfNecessary();
 }
 
@@ -427,7 +427,7 @@ TEST_F(UILayoutTest, Margin7) {
 
 TEST_F(UILayoutTest, ExpandingTextHasNonZeroIntrinsicWidth) {
     auto text = AText::fromString("middle");
-    EXPECT_GT(text->computeWidth(-1), 0);
+    EXPECT_GT(text->computeMinMaxSizes().max.x, 0);
 }
 
 TEST_F(UILayoutTest, HorizontalSpacerExpandingConsumesRemainingSpace) {

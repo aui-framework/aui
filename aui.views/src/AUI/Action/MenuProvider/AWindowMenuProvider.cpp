@@ -33,7 +33,7 @@ class AMenuContainer : public AViewContainerBase {
     glm::ivec2 mOriginPosition;
 
     void onShowSublistMenu(const _<AView>& view, const AVector<AMenuItem>& items) {
-        auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinimumSize().x, 0);
+        auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinSize().x, 0);
         mSubWindow = _new<AMenuContainer>(items, pos);
 
         AWindowBase* window = nullptr;
@@ -42,7 +42,7 @@ class AMenuContainer : public AViewContainerBase {
         else
             window = AWindow::current();
 
-        auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize());
+        auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinSize());
         surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
         surfaceContainer->addView(mSubWindow);
         mSubWindow->setSurface(surfaceContainer);
@@ -147,7 +147,7 @@ void AWindowMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     mWindow = AWindow::current();
     auto mousePos = mWindow->getMousePos();
     auto menu = _new<AMenuContainer>(vector, mousePos);
-    auto surfaceContainer = mWindow->createOverlappingSurface(mousePos, menu->getMinimumSize());
+    auto surfaceContainer = mWindow->createOverlappingSurface(mousePos, menu->getMinSize());
     surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
     surfaceContainer->addView(menu);
     menu->setSurface(surfaceContainer);

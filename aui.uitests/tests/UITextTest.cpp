@@ -14,6 +14,7 @@
 #include <AUI/View/AText.h>
 #include <AUI/View/AScrollArea.h>
 #include <gmock/gmock.h>
+#include <algorithm>
 
 using namespace ass;
 using namespace declarative;
@@ -122,4 +123,60 @@ TEST_F(UIText, Visibility) {
     uitest::frame();
 
     saveScreenshot("label visible");
+}
+
+TEST_F(UIText, MeasureUsesTightWidthForWrapping) {
+    auto text = AText::fromString("alpha beta gamma delta epsilon zeta eta theta");
+
+    const auto unconstrained = text->measure(AConstraints {});
+    ASSERT_GT(unconstrained.x, 0);
+    ASSERT_GT(unconstrained.y, 0);
+
+    const int tightWidth = std::max(1, unconstrained.x / 2);
+    const auto constrained = text->measure({
+        .maxWidth = tightWidth,
+    });
+
+    EXPECT_EQ(constrained.x, tightWidth);
+    EXPECT_GT(constrained.y, unconstrained.y);
+}
+
+TEST_F(UIText, MeasureHeightGrowsWhenWidthShrinks) {
+    auto text = AText::fromString("one two three four five six seven eight nine ten");
+
+    const auto wide = text->measure({
+        .maxWidth = 220,
+    });
+    const auto narrow = text->measure({
+        .maxWidth = 120,
+    });
+
+    EXPECT_EQ(wide.x, 220);
+    EXPECT_EQ(narrow.x, 120);
+    EXPECT_GE(narrow.y, wide.y);
+}
+
+TEST_F(UIText, MeasureIncludesPadding) {
+    auto plain = AText::fromString("padding probe");
+    auto padded = AText::fromString("padding probe");
+    padded->setPadding({ .left = 7, .top = 3, .right = 11, .bottom = 5 });
+
+    const auto plainMeasured = plain->measure(AConstraints {});
+    const auto paddedMeasured = padded->measure(AConstraints {});
+
+    EXPECT_EQ(paddedMeasured.x, plainMeasured.x + 18);
+    EXPECT_EQ(paddedMeasured.y, plainMeasured.y + 8);
+}
+
+TEST_F(UIText, BreakAllAllowsNarrowIntrinsicWidthAndWrapping) {
+    auto text = AText::fromString("supercalifragilisticexpialidocious", { WordBreak::BREAK_ALL });
+
+    const auto unconstrained = text->measure(AConstraints {});
+    const auto constrained = text->measure({
+        .maxWidth = std::max(1, unconstrained.x / 2),
+    });
+
+    EXPECT_LT(text->computeMinMaxSizes().max.x, unconstrained.x);
+    EXPECT_EQ(constrained.x, std::max(1, unconstrained.x / 2));
+    EXPECT_GT(constrained.y, unconstrained.y);
 }

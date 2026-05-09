@@ -346,6 +346,28 @@ public:
         }
     }
 
+    static int computeMinimumPerpendicularContribution(const auto& view, const AMinMaxSizes& minMax, glm::ivec2 margin) {
+        const int minimumPerpendicularSize = getPerpAxisValue(minMax.min) + getPerpAxisValue(margin);
+        const int minimumMainAxisSize = getAxisValue(minMax.min);
+        if (minimumMainAxisSize <= 0) {
+            return minimumPerpendicularSize;
+        }
+        return glm::max(
+            minimumPerpendicularSize,
+            measurePerpendicularForMainAxisSize(view, minimumMainAxisSize) + getPerpAxisValue(margin));
+    }
+
+    static int computeMaximumPerpendicularContribution(const auto& view, const AMinMaxSizes& minMax, glm::ivec2 margin) {
+        const int maximumPerpendicularSize = getPerpAxisValue(minMax.max) + getPerpAxisValue(margin);
+        const int maximumMainAxisSize = getAxisValue(minMax.max);
+        if (maximumMainAxisSize <= 0) {
+            return maximumPerpendicularSize;
+        }
+        return glm::max(
+            maximumPerpendicularSize,
+            measurePerpendicularForMainAxisSize(view, maximumMainAxisSize) + getPerpAxisValue(margin));
+    }
+
     static AMinMaxSizes computeIntrinsicMinMaxSizes(ranges::range auto&& views, int spacing) {
         AMinMaxSizes result;
         int visibleCount = 0;
@@ -359,10 +381,8 @@ public:
             const auto margin = view->getMargin().occupiedSize();
             const auto childMin = minMax.min + margin;
             const auto childMax = minMax.max + margin;
-            const int childMeasuredMinPerp = measurePerpendicularForMainAxisSize(view, getAxisValue(minMax.min)) +
-                                             getPerpAxisValue(margin);
-            const int childMeasuredMaxPerp = measurePerpendicularForMainAxisSize(view, getAxisValue(minMax.max)) +
-                                             getPerpAxisValue(margin);
+            const int childMeasuredMinPerp = computeMinimumPerpendicularContribution(view, minMax, margin);
+            const int childMeasuredMaxPerp = computeMaximumPerpendicularContribution(view, minMax, margin);
 
             if constexpr (direction == ALayoutDirection::HORIZONTAL) {
                 result.min.x += childMin.x;
@@ -396,23 +416,19 @@ public:
         int height_constraint = constraints.maxHeight >= 1000000 ? -1 : constraints.maxHeight;
         int width = preferredWidth(views, spacing, height_constraint);
 
-        int height_constraint_for_height = glm::clamp(
-            width,
-            constraints.minWidth,
-            constraints.maxWidth >= 1000000 ? width : glm::max(width, constraints.maxWidth)
-        );
-        int height = preferredHeight(views, spacing, height_constraint_for_height);
+        int width_constraint_for_height = constraints.maxWidth >= 1000000
+            ? glm::max(width, constraints.minWidth)
+            : glm::clamp(width, constraints.minWidth, constraints.maxWidth);
+        int height = preferredHeight(views, spacing, width_constraint_for_height);
         return { width, height };
       } else {
         int width_constraint = constraints.maxWidth >= 1000000 ? -1 : constraints.maxWidth;
         int height = preferredHeight(views, spacing, width_constraint);
 
-        int width_constraint_for_width = glm::clamp(
-            height,
-            constraints.minHeight,
-            constraints.maxHeight >= 1000000 ? height : glm::max(height, constraints.maxHeight)
-        );
-        int width = preferredWidth(views, spacing, width_constraint_for_width);
+        int height_constraint_for_width = constraints.maxHeight >= 1000000
+            ? glm::max(height, constraints.minHeight)
+            : glm::clamp(height, constraints.minHeight, constraints.maxHeight);
+        int width = preferredWidth(views, spacing, height_constraint_for_width);
         return { width, height };
       }
     }

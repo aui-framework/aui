@@ -474,8 +474,8 @@ void PlatformAbstractionX11::windowSetSize(AWindow& window, glm::ivec2 size) {
 
         XGetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizehints, &userhints);
 
-        sizehints->min_width = window.getMinimumWidth();
-        sizehints->min_height = window.getMinimumHeight();
+        sizehints->min_width = window.getMinSize().x;
+        sizehints->min_height = window.getMinSize().y;
         sizehints->flags |= PMinSize;
 
         XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizehints);
@@ -644,8 +644,8 @@ void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
     if (PlatformAbstractionX11::ourDisplay != nullptr) {
         auto sizeHints = aui::ptr::manage_unique(XAllocSizeHints(), XFree);
         sizeHints->flags = PMinSize | PMaxSize;
-        sizeHints->min_width = window.getMinimumWidth();
-        sizeHints->min_height = window.getMinimumHeight();
+        sizeHints->min_width = window.getMinSize().x;
+        sizeHints->min_height = window.getMinSize().y;
         sizeHints->max_width = window.getMaxSize().x;
         sizeHints->max_height = window.getMaxSize().y;
         XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizeHints.get());

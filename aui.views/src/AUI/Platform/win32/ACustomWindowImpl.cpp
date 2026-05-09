@@ -49,8 +49,8 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     {
         MINMAXINFO* info = reinterpret_cast<MINMAXINFO*>(lParam);
 
-        info->ptMinTrackSize.x = getMinimumWidth();
-        info->ptMinTrackSize.y = getMinimumHeight();
+        info->ptMinTrackSize.x = getMinSize().x;
+        info->ptMinTrackSize.y = getMinSize().y;
         return 0;
     }
     case WM_NCCALCSIZE:

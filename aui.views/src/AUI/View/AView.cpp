@@ -242,12 +242,20 @@ void AView::invalidateStateStylesImpl() {
     mAssHelper->state.backgroundUrl.sizing.reset();
     mAssHelper->state.backgroundUrl.image.reset();
 
+    mApplyingStyles = true;
+    AUI_DEFER {
+        mApplyingStyles = false;
+    };
+
     for (const auto& r : mAssHelper->mPossiblyApplicableRules) {
         if (r.getSelector().isStateApplicable(this)) {
             applyAssRule(r);
         }
     }
     applyAssRule(mCustomStyleRule);
+    if (mExplicitMinSize) {
+        mMinSize = *mExplicitMinSize;
+    }
     commitStyle();
 
     requestLayout();
@@ -340,6 +348,12 @@ glm::ivec2 AView::measure(AConstraints constraints) {
   contentConstraints.maxHeight = std::max(0, effectiveConstraints.maxHeight - vPadding);
 
   glm::ivec2 contentSize = onIntrinsicMeasure(contentConstraints);
+  if (constraints.maxWidth >= UNBOUNDED_CONSTRAINT && constraints.maxHeight < UNBOUNDED_CONSTRAINT) {
+    contentSize.x = std::max(contentSize.x, onComputeIntrinsicMinMaxSizes(contentConstraints.maxHeight).max.x);
+  }
+  if (constraints.maxWidth < UNBOUNDED_CONSTRAINT && constraints.maxHeight >= UNBOUNDED_CONSTRAINT) {
+    contentSize.y = std::max(contentSize.y, onComputeIntrinsicMinMaxSizes(-1).max.y);
+  }
 
   int finalWidth = contentSize.x + hPadding;
   int finalHeight = contentSize.y + vPadding;
