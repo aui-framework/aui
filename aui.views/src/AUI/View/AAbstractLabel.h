@@ -48,9 +48,7 @@ public:
     void doRenderText(IRenderer& render);
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
-
-    int onComputeIntrinsicWidth(int height) override;
-    int onComputeIntrinsicHeight(int width) override;
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
 
     const _<IDrawable>& getIcon() const {
         return mIcon;
@@ -160,4 +158,3 @@ public:
         return &AAbstractLabel::setText;
     }
 };
-

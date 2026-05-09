@@ -569,7 +569,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 _new<AButton>("Three"),
                 _new<AButton>("Four"),
                 _new<AButton>("Five"),
-              }).build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+              }).build() AUI_OVERRIDE_STYLE {
+                Expanding { 1, 0 },
+                LayoutSpacing { 4_dp },
+              },
               ASplitter::Horizontal().withItems({
                 _new<AButton>("One"),
                 _new<AButton>("Two"),

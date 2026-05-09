@@ -49,19 +49,24 @@ glm::ivec2 AAbstractLabel::onIntrinsicMeasure(AConstraints constraints) {
     };
 }
 
-int AAbstractLabel::onComputeIntrinsicWidth(int height) {
-    int acc = mPrerendered ? mPrerendered->getWidth() : getFontStyle().getWidth(mText);
+AMinMaxSizes AAbstractLabel::onComputeIntrinsicMinMaxSizes(int height) {
+    int width = mPrerendered ? mPrerendered->getWidth() : getFontStyle().getWidth(mText);
     if (mIcon) {
-        acc += getIconSize().x * 2;
+        width += getIconSize().x * 2;
     }
-    return acc;
+    int heightValue = 0;
+    if (!mText.empty()) {
+        heightValue = getFontStyle().size * (1 + ranges::count(mText.toStdString(), '\n')) +
+                      getFontStyle().font->getDescenderHeight(getFontStyle().size);
+    }
+    const glm::ivec2 exactSize { width, heightValue };
+    return {
+        .min = exactSize,
+        .max = exactSize,
+    };
 }
 
-int AAbstractLabel::onComputeIntrinsicHeight(int width) {
-    if (mText.empty())
-        return 0;
-
-    // Normally, text will be rendered as this:
+// Normally, text will be rendered as this:
     //
     //
     //      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -132,10 +137,6 @@ int AAbstractLabel::onComputeIntrinsicHeight(int width) {
     //    D - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
     //    E
     //    R
-
-    return getFontStyle().size * (1 + ranges::count(mText.toStdString(), '\n')) + getFontStyle().font->getDescenderHeight(getFontStyle().size);
-}
-
 
 void AAbstractLabel::setSize(glm::ivec2 size) {
     AView::setSize(size);

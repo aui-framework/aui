@@ -25,7 +25,6 @@ struct SizeInjector {
         return item.view->name(std::forward<Args>(args)...); \
     }
     ASPLITTER_IMPL_FORWARD_METHOD(ensureAssUpdated)
-    ASPLITTER_IMPL_FORWARD_METHOD(getExpanding)
     ASPLITTER_IMPL_FORWARD_METHOD(getVisibility)
     ASPLITTER_IMPL_FORWARD_METHOD(getMargin)
     ASPLITTER_IMPL_FORWARD_METHOD(layout)
@@ -38,53 +37,30 @@ struct SizeInjector {
         return item.view->measure(constraints);
     }
 
-    int computeIntrinsicWidth(int height) const {
-        auto value = item.view->computeIntrinsicWidth(height);
-        if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-            if (item.overridedSize) {
-                value = glm::max(value, *item.overridedSize);
-            }
-        }
-        return value;
-    }
-
-    int computeWidth(int height) const {
-        auto value = item.view->computeWidth(height);
-        if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-            if (item.overridedSize) {
-                value = glm::max(value, *item.overridedSize);
-            }
-        }
-        return value;
-    }
-
-    int computeIntrinsicHeight(int width) const {
-        auto value = item.view->computeIntrinsicHeight(width);
-        if constexpr (direction == ALayoutDirection::VERTICAL) {
-            if (item.overridedSize) {
-                value = glm::max(value, *item.overridedSize);
-            }
-        }
-        return value;
-    }
-
-    int computeHeight(int width) const {
-        auto value = item.view->computeHeight(width);
-        if constexpr (direction == ALayoutDirection::VERTICAL) {
-            if (item.overridedSize) {
-                value = glm::max(value, *item.overridedSize);
-            }
-        }
-        return value;
-    }
-
-    glm::ivec2 getMinimumSize() const {
-        auto size = item.view->getMinimumSize();
+    glm::ivec2 getExpanding() const {
+        auto expanding = item.view->getExpanding();
         if (item.overridedSize) {
-            auto& value = aui::layout_direction::getAxisValue(direction, size);
-            value = glm::max(*item.overridedSize, value);
+            auto& value = aui::layout_direction::getAxisValue(direction, expanding);
+            value = 0;
         }
-        return size;
+        return expanding;
+    }
+
+    glm::ivec2 getMinSize() const {
+        return item.view->getMinSize();
+    }
+
+    AMinMaxSizes computeMinMaxSizes() const {
+        auto value = item.view->computeMinMaxSizes();
+        if (item.overridedSize) {
+            auto& minAxis = aui::layout_direction::getAxisValue(direction, value.min);
+            auto& maxAxis = aui::layout_direction::getAxisValue(direction, value.max);
+            const int overridedAxis = glm::max(aui::layout_direction::getAxisValue(direction, item.view->getMinSize()),
+                                               *item.overridedSize);
+            minAxis = overridedAxis;
+            maxAxis = overridedAxis;
+        }
+        return value;
     }
 
     bool operator==(const SizeInjector& rhs) const noexcept { return item.view == rhs.item.view; }

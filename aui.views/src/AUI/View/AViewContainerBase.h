@@ -311,11 +311,12 @@ public:
     void markPixelDataInvalid(ARect<int> invalidArea) override;
 
 protected:
-    int onComputeIntrinsicWidth(int height) override;
-    int onComputeIntrinsicHeight(int width) override;
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
 
     glm::ivec2 mLastLayoutUpdateSize{0, 0};
+
+  //void onLayout(int w, int h) override;
 
     void drawView(const _<AView>& view, ARenderContext contextOfTheContainer);
 

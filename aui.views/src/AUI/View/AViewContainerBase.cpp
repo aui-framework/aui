@@ -40,6 +40,11 @@ bool isDefinitelyInvisible(AView& view) {
 }
 }
 
+//void AViewContainerBase::onLayout(int w, int h) {
+//  AView::onLayout(w, h);
+//  applyGeometryToChildrenIfNecessary();
+//}
+
 void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
     if (aui::view::impl::isDefinitelyInvisible(*view)) [[unlikely]] {
         return;
@@ -512,8 +517,9 @@ void AViewContainerBase::setSize(glm::ivec2 size) {
 
 void AViewContainerBase::invalidateAllStyles() {
     AView::invalidateAllStyles();
-    if (mSizeSet)
-        applyGeometryToChildrenIfNecessary();
+    if (mSizeSet) {
+      applyGeometryToChildrenIfNecessary();
+    }
 }
 
 void AViewContainerBase::applyGeometryToChildren() {
@@ -713,19 +719,14 @@ void AViewContainerBase::setViews(AVector<_<AView>> views) {
     }
 }
 
-int AViewContainerBase::onComputeIntrinsicWidth(int height) {
-    if (mLayout) return mLayout->onComputeIntrinsicWidth(height);
-    return 0;
-}
-
-int AViewContainerBase::onComputeIntrinsicHeight(int width) {
-    if (mLayout) return mLayout->onComputeIntrinsicHeight(width);
-    return 0;
-}
-
 glm::ivec2 AViewContainerBase::onIntrinsicMeasure(AConstraints constraints) {
-    if (mLayout) return mLayout->onIntrinsicMeasure(constraints);
+    if (mLayout) return mLayout->measure(constraints);
     return AView::onIntrinsicMeasure(constraints);
+}
+
+AMinMaxSizes AViewContainerBase::onComputeIntrinsicMinMaxSizes(int height) {
+    if (mLayout) return mLayout->computeMinMaxSizes(height);
+    return AView::onComputeIntrinsicMinMaxSizes(height);
 }
 
 void AViewContainerBase::forceUpdateLayoutRecursively() {

@@ -109,7 +109,7 @@ void AWindow::redraw() {
         if (mWantsLayoutUpdate) {
             ensureAssUpdated();
 #if AUI_PLATFORM_WIN
-            setSize(glm::clamp(getSize(), getMinimumSize(), getMaxSize()));
+            setSize(glm::clamp(getSize(), getMinSize(), getMaxSize()));
 #endif
             applyGeometryToChildrenIfNecessary();
             mWantsLayoutUpdate = false;
@@ -236,7 +236,7 @@ AWindowManager::~AWindowManager() {
 void AWindow::windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) {
     mWindowTitle = name;
     mParentWindow = parent;
-    mSize = (glm::max)(glm::ivec2{ width, height }, getMinimumSize());
+    mSize = (glm::max)(glm::ivec2{ width, height }, getMinSize());
 
     currentWindowStorage() = this;
 

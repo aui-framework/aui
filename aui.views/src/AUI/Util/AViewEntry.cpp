@@ -19,9 +19,10 @@ glm::ivec2 AViewEntry::getSize() {
     if (!(mView->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
         return {0, 0};
     }
+    const auto preferred = mView->computeMinMaxSizes().max;
     return {
-        mView->computeIntrinsicWidth(-1) + mView->getMargin().horizontal(),
-        mView->computeIntrinsicHeight(-1) + mView->getMargin().vertical() };
+        preferred.x + mView->getMargin().horizontal(),
+        preferred.y + mView->getMargin().vertical() };
 }
 
 void AViewEntry::setPosition(glm::ivec2 position) {
