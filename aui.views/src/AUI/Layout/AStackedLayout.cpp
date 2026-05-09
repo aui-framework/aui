@@ -11,8 +11,7 @@
 
 #include "AStackedLayout.h"
 
-
-void ::AStackedLayout::layout(int x, int y, int width, int height) {
+void AStackedLayout::layout(int x, int y, int width, int height) {
   for (auto& v: mViews) {
     v->ensureAssUpdated();
     auto margins = v->getMargin();
@@ -47,22 +46,36 @@ void ::AStackedLayout::layout(int x, int y, int width, int height) {
   }
 }
 
-int ::AStackedLayout::onComputeIntrinsicWidth(int height) {
-    int m = 0;
-    for (auto& v: mViews) {
-      if (!!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
-        m = glm::max(v->computeWidth(height == -1 ? -1 : std::max(0, height - v->getMargin().vertical())) + v->getMargin().horizontal(), m);
-      }
+glm::ivec2 AStackedLayout::onIntrinsicMeasure(AConstraints constraints) {
+  int width = 0;
+  int height = 0;
+  for (auto& v: mViews) {
+    if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+      continue;
     }
-    return m;
+    auto margins = v->getMargin().occupiedSize();
+    auto measured = v->measure({
+      .minWidth = 0,
+      .maxWidth = std::max(0, constraints.maxWidth - margins.x),
+      .minHeight = 0,
+      .maxHeight = std::max(0, constraints.maxHeight - margins.y),
+    });
+    width = glm::max(width, measured.x + margins.x);
+    height = glm::max(height, measured.y + margins.y);
+  }
+  return { width, height };
 }
 
-int ::AStackedLayout::onComputeIntrinsicHeight(int width) {
-    int m = 0;
-    for (auto& v: mViews) {
-        if (!!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
-          m = glm::max(v->computeHeight(width == -1 ? -1 : std::max(0, width - v->getMargin().horizontal())) + v->getMargin().vertical(), m);
-        }
+AMinMaxSizes AStackedLayout::onComputeIntrinsicMinMaxSizes(int) {
+  AMinMaxSizes result;
+  for (const auto& view : mViews) {
+    if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+      continue;
     }
-    return m;
+    const auto minMax = view->computeMinMaxSizes();
+    const auto margin = view->getMargin().occupiedSize();
+    result.min = glm::max(result.min, minMax.min + margin);
+    result.max = glm::max(result.max, minMax.max + margin);
+  }
+  return result;
 }

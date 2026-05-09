@@ -24,16 +24,12 @@ void AHorizontalLayout::layout(int x, int y, int width, int height) {
     HVLayout::layout({ x, y }, { width, height }, mViews, mSpacing);
 }
 
-int AHorizontalLayout::onComputeIntrinsicWidth(int height) {
-    return HVLayout::onComputeIntrinsicWidth(mViews, mSpacing, height);
-}
-
-int AHorizontalLayout::onComputeIntrinsicHeight(int width) {
-    return HVLayout::onComputeIntrinsicHeight(mViews, mSpacing, width);
-}
-
 glm::ivec2 AHorizontalLayout::onIntrinsicMeasure(AConstraints constraints) {
     return HVLayout::onIntrinsicMeasure(mViews, mSpacing, constraints);
+}
+
+AMinMaxSizes AHorizontalLayout::onComputeIntrinsicMinMaxSizes(int) {
+    return HVLayout::computeIntrinsicMinMaxSizes(mViews, mSpacing);
 }
 
 void AHorizontalLayout::setSpacing(int spacing) {
@@ -41,6 +37,7 @@ void AHorizontalLayout::setSpacing(int spacing) {
         return;
     }
     mSpacing = spacing;
+    requestLayout();
     if (mViews.empty()) {
         return;
     }
@@ -50,4 +47,3 @@ void AHorizontalLayout::setSpacing(int spacing) {
 ALayoutDirection AHorizontalLayout::getLayoutDirection() {
     return ALayoutDirection::HORIZONTAL;
 }
-

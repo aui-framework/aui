@@ -56,10 +56,9 @@ public:
 	void addView(const _<AView>& view, int x, int y);
     void addView(const _<AView>& view, AOptional<size_t> index) override;
     void removeView(aui::no_escape<AView> view, size_t index) override;
-    int onComputeIntrinsicWidth(int height) override;
-	int onComputeIntrinsicHeight(int width) override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
     AVector<_<AView>> getAllViews() override;
 
     int indexOf(_<AView> view);
 };
-

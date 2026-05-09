@@ -36,14 +36,14 @@
  */
 class API_AUI_VIEWS AStackedLayout : public ALinearLayout<> {
 public:
-    AStackedLayout() {
-    }
+  AStackedLayout() {
+  }
 
-    virtual ~AStackedLayout() = default;
+  ~AStackedLayout() override = default;
 
-    void layout(int x, int y, int width, int height) override;
+  void layout(int x, int y, int width, int height) override;
 
-    int onComputeIntrinsicWidth(int height) override;
+  glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
 
-    int onComputeIntrinsicHeight(int width) override;
+  AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
 };

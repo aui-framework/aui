@@ -24,16 +24,12 @@ void AVerticalLayout::layout(int x, int y, int width, int height) {
     HVLayout::layout({ x, y }, { width, height }, mViews, mSpacing);
 }
 
-int AVerticalLayout::onComputeIntrinsicWidth(int height) {
-    return HVLayout::onComputeIntrinsicWidth(mViews, mSpacing, height);
-}
-
-int AVerticalLayout::onComputeIntrinsicHeight(int width) {
-    return HVLayout::onComputeIntrinsicHeight(mViews, mSpacing, width);
-}
-
 glm::ivec2 AVerticalLayout::onIntrinsicMeasure(AConstraints constraints) {
     return HVLayout::onIntrinsicMeasure(mViews, mSpacing, constraints);
+}
+
+AMinMaxSizes AVerticalLayout::onComputeIntrinsicMinMaxSizes(int) {
+    return HVLayout::computeIntrinsicMinMaxSizes(mViews, mSpacing);
 }
 
 void AVerticalLayout::setSpacing(int spacing) {
@@ -41,6 +37,7 @@ void AVerticalLayout::setSpacing(int spacing) {
         return;
     }
     mSpacing = spacing;
+    requestLayout();
     if (mViews.empty()) {
         return;
     }

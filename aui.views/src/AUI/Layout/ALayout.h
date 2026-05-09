@@ -12,6 +12,7 @@
 #pragma once
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/ADeque.h"
+#include <AUI/Common/AFixedSizeCache.hpp>
 #include "AUI/View/AView.h"
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Util/ALayoutDirection.h"
@@ -295,9 +296,9 @@ class AViewContainer;
  *                 └─> AViewContainerBase::onIntrinsicMeasure()      │              │
  *                     └─> ALayout::onIntrinsicMeasure()             │              │
  *                         └─> AView::measure()                      │ cached       │
- *                 └─> AViewContainerBase::onComputeIntrinsicWidth() │              │ potentially
- *                     └─> ALayout::onComputeIntrinsicWidth()        │              │ recursive
- *                         └─> AView::computeIntrinsicWidth()        ┘              │
+ *                 └─> AViewContainerBase::onComputeIntrinsicMinMaxSizes() │        │ potentially
+ *                     └─> ALayout::onComputeIntrinsicMinMaxSizes()        │        │ recursive
+ *                         └─> AView::computeMinMaxSizes()                 ┘        │
  *             └─> AViewContainerBase::setGeometry()                                │
  *                 └─> AViewContainerBase::setSize()                                │
  *                     └─> AViewContainerBase::applyGeometryToChildrenIfNecessary() │
@@ -344,7 +345,9 @@ class AViewContainer;
 class API_AUI_VIEWS ALayout : public AObject {
 public:
     ALayout() = default;
-    virtual ~ALayout() = default;
+    ~ALayout() override = default;
+
+    virtual void requestLayout();
 
     /**
      * @brief Applies geometry to children.
@@ -377,16 +380,22 @@ public:
      */
     virtual void removeView(aui::no_escape<AView> view, size_t index) = 0;
 
-    virtual int onComputeIntrinsicWidth(int height) = 0;
-    virtual int onComputeIntrinsicHeight(int width) = 0;
+    AMinMaxSizes computeMinMaxSizes(int height = -1);
+
+    glm::ivec2 measure(AConstraints constraints);
+
+    int getMinimumWidth();
+    int getMinimumHeight();
+    glm::ivec2 getMinimumSize() { return { getMinimumWidth(), getMinimumHeight() }; }
 
     virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints) {
-        int desiredWidth = onComputeIntrinsicWidth(-1);
-        int finalWidth = std::clamp(desiredWidth, constraints.minWidth, constraints.maxWidth);
-        int desiredHeight = onComputeIntrinsicHeight(finalWidth);
-        int finalHeight = std::clamp(desiredHeight, constraints.minHeight, constraints.maxHeight);
-        return { finalWidth, finalHeight };
+        const auto minMax = onComputeIntrinsicMinMaxSizes(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
+        return {
+            std::clamp(minMax.max.x, constraints.minWidth, constraints.maxWidth),
+            std::clamp(minMax.max.y, constraints.minHeight, constraints.maxHeight),
+        };
     }
+    virtual AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) = 0;
 
     /**
      * @brief Visits all views in the layout.
@@ -400,4 +409,8 @@ public:
      * @param spacing spacing in px.
      */
     virtual void setSpacing(int spacing);
+
+protected:
+    AFixedSizeCache<AConstraints, glm::ivec2, 8> mMeasureCache;
+    AFixedSizeCache<int, AMinMaxSizes, 4> mMinMaxSizesCache;
 };

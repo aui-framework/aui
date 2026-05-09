@@ -34,9 +34,9 @@ public:
 
     void removeView(aui::no_escape<AView> view, size_t index) override;
 
-    int onComputeIntrinsicWidth(int height) override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
 
-    int onComputeIntrinsicHeight(int width) override;
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
 
     int indexOf(_<AView> view);
 

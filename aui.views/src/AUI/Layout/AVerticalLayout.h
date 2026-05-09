@@ -54,11 +54,9 @@ public:
 
     void layout(int x, int y, int width, int height) override;
 
-    int onComputeIntrinsicWidth(int height) override;
-
-    int onComputeIntrinsicHeight(int width) override;
-
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
 
     /**
      * @see [LayoutSpacing](ass::LayoutSpacing)

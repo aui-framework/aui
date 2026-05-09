@@ -26,14 +26,12 @@ private:
 public:
     void layout(int x, int y, int width, int height) override;
 
-    int onComputeIntrinsicWidth(int height) override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
 
-    int onComputeIntrinsicHeight(int width) override;
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
 
     void addView(const _<AView>& view, AOptional<size_t> index) override;
 
     void removeView(aui::no_escape<AView> view, size_t index) override;
 
 };
-
-

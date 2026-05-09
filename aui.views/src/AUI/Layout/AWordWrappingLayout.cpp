@@ -36,21 +36,17 @@ void AWordWrappingLayout::removeView(aui::no_escape<AView> view, size_t index) {
     mViewEntry.removeAt(index);
 }
 
-int AWordWrappingLayout::onComputeIntrinsicWidth(int height) {
-    int max = 0;
+glm::ivec2 AWordWrappingLayout::onIntrinsicMeasure(AConstraints constraints) {
+    int width = 0;
     for (auto& v : mViewEntry) {
-        max = std::max(max, v.getSize().x);
+        width = std::max(width, v.getSize().x);
     }
-    return max;
-}
-
-int AWordWrappingLayout::onComputeIntrinsicHeight(int width) {
-    if (width == -1) {
-        int h = 0;
+    if (constraints.isUnlimitedWidth()) {
+        int height = 0;
         for (auto& v : mViewEntry) {
-            h += v.getSize().y;
+            height += v.getSize().y;
         }
-        return h;
+        return { width, height };
     }
     AVector<_<AWordWrappingEngineBase::Entry>> entries;
     for (auto& v : mViewEntry) {
@@ -58,8 +54,20 @@ int AWordWrappingLayout::onComputeIntrinsicHeight(int width) {
     }
     AWordWrappingEngine we;
     we.setEntries(std::move(entries));
-    we.performLayout({0, 0}, {width, 1000000});
-    return we.height().valueOr(0);
+    we.performLayout({0, 0}, {constraints.maxWidth, constraints.maxHeight});
+    return { constraints.maxWidth, we.height().valueOr(0) };
+}
+
+AMinMaxSizes AWordWrappingLayout::onComputeIntrinsicMinMaxSizes(int) {
+    AMinMaxSizes result;
+    for (auto& viewEntry : mViewEntry) {
+        const auto size = viewEntry.getSize();
+        result.min.x = glm::max(result.min.x, size.x);
+        result.max.x += size.x;
+        result.min.y += size.y;
+        result.max.y += size.y;
+    }
+    return result;
 }
 
 void AWordWrappingLayout::layout(int x, int y, int width, int height) {

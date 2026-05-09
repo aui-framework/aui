@@ -10,6 +10,7 @@
  */
 
 #include "AAdvancedGridLayout.h"
+#include "AUI/View/AViewContainerBase.h"
 
 int AAdvancedGridLayout::indexOf(_<AView> view)
 {
@@ -159,7 +160,7 @@ void AAdvancedGridLayout::prepareCache(AVector<CompositionCache>& columns, AVect
         auto fixed = v.view->getFixedSize();
         if (fixed.x != 0) e.x = 0;
         if (fixed.y != 0) e.y = 0;
-        glm::ivec2 m = { v.view->computeWidth(-1), v.view->computeHeight(-1) };
+        glm::ivec2 m = v.view->computeMinMaxSizes().max;
         glm::ivec2 minSpace = m + glm::ivec2{v.view->getMargin().horizontal(), v.view->getMargin().vertical()};
 
         columns[v.x].expandingSum += e.x;
@@ -192,6 +193,7 @@ void AAdvancedGridLayout::addView(const _<AView>& view, int x, int y)
     }
     index = mCells.size();
     mCells << GridCell{view, x, y};
+    requestLayout();
 }
 
 void AAdvancedGridLayout::removeView(aui::no_escape<AView> view, size_t index) {
@@ -205,42 +207,93 @@ void AAdvancedGridLayout::removeView(aui::no_escape<AView> view, size_t index) {
         }
     }
     mCells.removeAt(index);
+    requestLayout();
 }
 
-int AAdvancedGridLayout::onComputeIntrinsicWidth(int height)
+glm::ivec2 AAdvancedGridLayout::onIntrinsicMeasure(AConstraints constraints)
 {
-    int min = -mSpacing;
-    for (int x = 0; x < cellsX; ++x)
-    {
+    AVector<CompositionCache> columns;
+    AVector<CompositionCache> rows;
+    columns.resize(cellsX);
+    rows.resize(cellsY);
+    prepareCache(columns, rows);
+
+    glm::ivec2 result = {};
+    for (const auto& column : columns) {
+        result.x += column.minSize;
+    }
+    for (const auto& row : rows) {
+        result.y += row.minSize;
+    }
+    if (cellsX > 0) {
+        result.x += mSpacing * (cellsX - 1);
+    }
+    if (cellsY > 0) {
+        result.y += mSpacing * (cellsY - 1);
+    }
+    return {
+        std::clamp(result.x, constraints.minWidth, constraints.maxWidth),
+        std::clamp(result.y, constraints.minHeight, constraints.maxHeight),
+    };
+}
+
+AMinMaxSizes AAdvancedGridLayout::onComputeIntrinsicMinMaxSizes(int) {
+    AMinMaxSizes result;
+
+    for (int x = 0; x < cellsX; ++x) {
         int minForColumn = 0;
-        for (auto& view : getColumn(x))
-        {
-            if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
-            minForColumn = glm::max(view->computeWidth(-1) + view->getMargin().horizontal(), minForColumn);
+        int maxForColumn = 0;
+        for (const auto& view : getColumn(x)) {
+            if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+                continue;
+            }
+            const auto minMax = view->computeMinMaxSizes();
+            minForColumn = glm::max(minForColumn, minMax.min.x + view->getMargin().horizontal());
+            maxForColumn = glm::max(maxForColumn, minMax.max.x + view->getMargin().horizontal());
         }
-        min += minForColumn + mSpacing;
+        result.min.x += minForColumn;
+        result.max.x += maxForColumn;
     }
-    return std::max(0, min);
-}
 
-int AAdvancedGridLayout::onComputeIntrinsicHeight(int width)
-{
-    int min = -mSpacing;
-    for (int y = 0; y < cellsY; ++y)
-    {
+    for (int y = 0; y < cellsY; ++y) {
         int minForRow = 0;
-        for (auto& view : getRow(y))
-        {
-            if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) continue;
-            minForRow = glm::max(view->computeHeight(-1) + view->getMargin().vertical(), minForRow);
+        int maxForRow = 0;
+        for (const auto& view : getRow(y)) {
+            if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+                continue;
+            }
+            const auto minMax = view->computeMinMaxSizes();
+            minForRow = glm::max(minForRow, minMax.min.y + view->getMargin().vertical());
+            maxForRow = glm::max(maxForRow, minMax.max.y + view->getMargin().vertical());
         }
-        min += minForRow + mSpacing;
+        result.min.y += minForRow;
+        result.max.y += maxForRow;
     }
-    return std::max(0, min);
+
+    if (cellsX > 0) {
+        result.min.x += mSpacing * (cellsX - 1);
+        result.max.x += mSpacing * (cellsX - 1);
+    }
+    if (cellsY > 0) {
+        result.min.y += mSpacing * (cellsY - 1);
+        result.max.y += mSpacing * (cellsY - 1);
+    }
+
+    return result;
 }
 
 AVector<_<AView>> AAdvancedGridLayout::getAllViews() {
     return { mCells.begin(), mCells.end() };
 }
 
-void AAdvancedGridLayout::setSpacing(int spacing) { mSpacing = spacing; }
+void AAdvancedGridLayout::setSpacing(int spacing) {
+    if (mSpacing == static_cast<unsigned>(spacing)) [[unlikely]] {
+        return;
+    }
+    mSpacing = spacing;
+    requestLayout();
+    if (mCells.empty()) {
+        return;
+    }
+    AUI_NULLSAFE(mCells.first().view->getParent())->requestLayout();
+}

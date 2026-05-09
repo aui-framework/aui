@@ -138,29 +138,31 @@ public:
         const auto& view,
         int ourAxisSize,
         int availablePerpendicularSize) {
+        const auto minMaxSizes = view->computeMinMaxSizes(ourAxisSize);
+        const int minimumPerpendicularSize = getPerpAxisValue(minMaxSizes.min);
         if constexpr (direction == ALayoutDirection::HORIZONTAL) {
             if (getPerpAxisValue(view->getExpanding()) != 0 && getPerpAxisValue(view->getFixedSize()) == 0) {
-                return availablePerpendicularSize;
+                return glm::max(availablePerpendicularSize, minimumPerpendicularSize);
             }
-            return view->measure({
+            return glm::max(minimumPerpendicularSize, view->measure({
                 .minWidth = ourAxisSize,
                 .maxWidth = ourAxisSize,
                 .maxHeight = availablePerpendicularSize,
-            }).y;
+            }).y);
         } else {
             if (getPerpAxisValue(view->getExpanding()) != 0 && getPerpAxisValue(view->getFixedSize()) == 0) {
-                return availablePerpendicularSize;
+                return glm::max(availablePerpendicularSize, minimumPerpendicularSize);
             }
-            return view->measure({
+            return glm::max(minimumPerpendicularSize, view->measure({
                 .minHeight = ourAxisSize,
                 .maxHeight = ourAxisSize,
                 .maxWidth = availablePerpendicularSize,
-            }).x;
+            }).x);
         }
     }
 
-    static int computeExpandingLowerBound(const auto& view, int) {
-            const auto minMaxSizes = view->computeMinMaxSizes();
+    static int computeExpandingLowerBound(const auto& view, int perpendicularConstraint) {
+            const auto minMaxSizes = view->computeMinMaxSizes(perpendicularConstraint);
         if constexpr (direction == ALayoutDirection::HORIZONTAL) {
             return minMaxSizes.min.x;
         } else {
