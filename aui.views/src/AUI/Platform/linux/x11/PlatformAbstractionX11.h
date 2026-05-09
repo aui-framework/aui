@@ -55,8 +55,8 @@ public:
     _<ACursor::Custom> createCustomCursor(AImageView image) override;
 
     // CLIPBOARD
-    void copyToClipboard(const AString& text) override;
-    AString pasteFromClipboard() override;
+    void setClipboardText(const AString& text) override;
+    AString getClipboardText() override;
 
     // INPUT
     AInput::Key inputFromNative(int k) override;
@@ -66,7 +66,6 @@ public:
     // PLATFORM/DESKTOP
     glm::ivec2 desktopGetMousePosition() override;
     void desktopSetMousePosition(glm::ivec2 pos) override;
-    float platformGetDpiRatio() override;
 
 
     // WINDOW
