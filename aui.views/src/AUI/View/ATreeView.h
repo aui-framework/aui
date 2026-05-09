@@ -42,7 +42,6 @@ public:
     void setModel(const _<ITreeModel<AString>>& model);
     void onScroll(const AScrollEvent& event) override;
     void onLayout(int w, int h) override;
-    int onComputeIntrinsicHeight(int width) override;
     void handleMouseMove(ItemView* pView);
 
     void setViewFactory(const std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeModelIndex&)>& viewFactory) {
@@ -75,5 +74,4 @@ private:
     void makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView);
     _<ItemView> indexToView(const ATreeModelIndex& target);
 };
-
 

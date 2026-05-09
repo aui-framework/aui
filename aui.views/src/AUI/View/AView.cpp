@@ -599,7 +599,7 @@ void AView::setSize(glm::ivec2 size) {
 }
 
 void AView::layout(int x, int y, int w, int h) {
-  if (mLastLayoutSize == glm::ivec2(w, h) && !mWantsLayoutUpdate) {
+  if (mPosition == glm::ivec2(x, y) && mLastLayoutSize == glm::ivec2(w, h) && !mWantsLayoutUpdate) {
     return;
   }
   auto oldPosition = mPosition;

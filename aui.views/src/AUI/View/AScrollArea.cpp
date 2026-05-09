@@ -101,8 +101,9 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
     }
 
     const auto margins = contents()->getMargin().occupiedSize();
-    const int naturalContentWidth = margins.x + contents()->computeWidth(-1);
-    const int naturalContentHeight = margins.y + contents()->computeHeight(-1);
+    const auto contentMinMax = contents()->computeMinMaxSizes();
+    const int naturalContentWidth = margins.x + contentMinMax.max.x;
+    const int naturalContentHeight = margins.y + contentMinMax.max.y;
 
     AConstraints minConstraints;
     minConstraints.minWidth = 0;
@@ -112,7 +113,7 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
 
     const int measuredMinimumContentWidth = margins.x + contents()->measure(minConstraints).x;
     const int minimumScrollableContentWidth =
-        std::max(measuredMinimumContentWidth, margins.x + contents()->getMinimumWidth());
+        std::max(measuredMinimumContentWidth, margins.x + contents()->getMinSize().x);
 
     int viewportWidth = widthBounded ? availableSize.x : std::max(minimumScrollableContentWidth, naturalContentWidth);
     viewportWidth = std::max(viewportWidth, 0);
@@ -181,28 +182,6 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
     return result;
 }
 
-int AScrollArea::onComputeIntrinsicWidth(int height) {
-    if (!contents()) {
-        return 0;
-    }
-    return calculateLayout(
-               { height == -1 ? contents()->computeWidth(-1) : UNBOUNDED_CONSTRAINT, height == -1 ? UNBOUNDED_CONSTRAINT : height },
-               false,
-               height != -1)
-        .outerSize.x;
-}
-
-int AScrollArea::onComputeIntrinsicHeight(int width) {
-    if (!contents()) {
-        return 0;
-    }
-    return calculateLayout(
-               { width == -1 ? contents()->computeWidth(-1) : width, width == -1 ? contents()->computeHeight(-1) : UNBOUNDED_CONSTRAINT },
-               width != -1,
-               false)
-        .outerSize.y;
-}
-
 glm::ivec2 AScrollArea::onIntrinsicMeasure(AConstraints constraints) {
     const bool widthBounded = constraints.maxWidth < UNBOUNDED_CONSTRAINT;
     const bool heightBounded = constraints.maxHeight < UNBOUNDED_CONSTRAINT;
@@ -218,6 +197,23 @@ glm::ivec2 AScrollArea::onIntrinsicMeasure(AConstraints constraints) {
     return {
         std::clamp(layout.outerSize.x, constraints.minWidth, constraints.maxWidth),
         std::clamp(layout.outerSize.y, constraints.minHeight, constraints.maxHeight),
+    };
+}
+
+AMinMaxSizes AScrollArea::onComputeIntrinsicMinMaxSizes(int height) {
+    if (!contents()) {
+        return {};
+    }
+    const auto outerSize = calculateLayout(
+        {
+            contents()->computeMinMaxSizes().max.x,
+            height == -1 ? contents()->computeMinMaxSizes().max.y : height,
+        },
+        false,
+        height != -1).outerSize;
+    return {
+        .min = outerSize,
+        .max = outerSize,
     };
 }
 

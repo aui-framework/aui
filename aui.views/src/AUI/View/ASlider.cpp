@@ -51,12 +51,12 @@ public:
         requestLayout();
     }
 
-    int onComputeIntrinsicWidth(int height) override {
-        return mHandle->computeWidth(height);
-    }
-
-    int onComputeIntrinsicHeight(int width) override {
-        return mHandle->computeHeight(width);
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+        auto minMax = mHandle->computeMinMaxSizes();
+        return {
+            .min = { minMax.min.x, minMax.max.y },
+            .max = { minMax.max.x, minMax.max.y },
+        };
     }
 
     emits<aui::float_within_0_1> valueChanged;

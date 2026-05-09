@@ -69,9 +69,8 @@ public:
         return mSelectionId;
     }
     void setSelectionId(int id);
-    int onComputeIntrinsicWidth(int height) override;
-    int onComputeIntrinsicHeight(int width) override;
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
 
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
@@ -85,5 +84,4 @@ public:
 signals:
     emits<int> selectionChanged;
 };
-
 

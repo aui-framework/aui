@@ -34,12 +34,8 @@ namespace {
 
         }
 
-        int onComputeIntrinsicWidth(int height) override {
-            return 0;
-        }
-
-        int onComputeIntrinsicHeight(int width) override {
-            return 0;
+        AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+            return {};
         }
 
         static void markViewToBeCentered(AView& v) {

@@ -33,12 +33,15 @@ bool AAbstractTextField::handlesNonMouseNavigation() {
 }
 
 
-int AAbstractTextField::onComputeIntrinsicWidth(int height) {
-    return 100; // default width for text field
-}
-
-int AAbstractTextField::onComputeIntrinsicHeight(int width) {
-    return getFontStyle().size + getFontStyle().font->getDescenderHeight(getFontStyle().size);
+AMinMaxSizes AAbstractTextField::onComputeIntrinsicMinMaxSizes(int height) {
+    const glm::ivec2 exactSize {
+        100,
+        getFontStyle().size + getFontStyle().font->getDescenderHeight(getFontStyle().size),
+    };
+    return {
+        .min = exactSize,
+        .max = exactSize,
+    };
 }
 
 
@@ -308,11 +311,13 @@ glm::ivec2 AAbstractTextField::getCursorPosition() {
 
 int AAbstractTextField::getVerticalAlignmentOffset() noexcept {
     int y = getPadding().top + getFontStyle().getAscenderHeight();
+    const int textHeight =
+        measure(AConstraints::fixedWidth(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
 
     // adding height of descender we established in intrinsic height, see explanation there.
     y += getFontStyle().font->getDescenderHeight(getFontStyle().size);
 
     y = (glm::max)(y,
-                   y + int(glm::ceil((getContentHeight() - computeIntrinsicHeight(-1)) / 2.0)));
+                   y + int(glm::ceil((getContentHeight() - textHeight) / 2.0)));
     return y;
 }

@@ -77,20 +77,24 @@ public:
         // reclaim space if provided size is less than the current layout size.
         if constexpr (BaseLayout::DIRECTION == ALayoutDirection::HORIZONTAL) {
             const auto splitterWidth =
-                HVLayout::onComputeIntrinsicWidth(viewsWithFixedSizeInjected(), BaseLayout::getSpacing(), height);
+                HVLayout::preferredWidth(viewsWithFixedSizeInjected(), BaseLayout::getSpacing(), height);
             if (width < splitterWidth) {
                 mSplitterHelper.reclaimSpace(width - splitterWidth);
             }
         }
         if constexpr (BaseLayout::DIRECTION == ALayoutDirection::VERTICAL) {
             const auto splitterHeight =
-                HVLayout::onComputeIntrinsicHeight(viewsWithFixedSizeInjected(), BaseLayout::getSpacing(), width);
+                HVLayout::preferredHeight(viewsWithFixedSizeInjected(), BaseLayout::getSpacing(), width);
             if (height < splitterHeight) {
                 mSplitterHelper.reclaimSpace(height - splitterHeight);
             }
         }
 
         HVLayout::layout(paddedPos, paddedSize, viewsWithFixedSizeInjected(), BaseLayout::getSpacing());
+    }
+
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+        return HVLayout::computeIntrinsicMinMaxSizes(viewsWithFixedSizeInjected(), BaseLayout::getSpacing());
     }
 
     ~ASplitterLayout() override = default;
@@ -115,9 +119,11 @@ _<AView> ASplitter::Builder<Layout>::build() {
         atLeastOneItemHasExpanding |= splitter->mHelper.getAxisValue(item->getExpanding()) > 0;
     }
     if (!atLeastOneItemHasExpanding) {
-        auto spacer = _new<ASpacerExpanding>();
-        splitter->addView(spacer);
-        mItems << spacer;
+        for (auto& item : mItems) {
+            auto expanding = item->getExpanding();
+            splitter->mHelper.getAxisValue(expanding) = 1;
+            item->setExpanding(expanding);
+        }
     }
 
     splitter->mHelper.setItems(std::move(mItems));

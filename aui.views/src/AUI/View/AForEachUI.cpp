@@ -76,6 +76,11 @@ void AForEachUIBase::applyGeometryToChildren() {
         getViews().first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
 }
 
+glm::ivec2 AForEachUIBase::onIntrinsicMeasure(AConstraints constraints) {
+    ensureViewsForMeasurement();
+    return AViewContainerBase::onIntrinsicMeasure(constraints);
+}
+
 void AForEachUIBase::onViewGraphSubtreeChanged() {
 //    ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") onViewGraphSubtreeChanged";
     AViewContainerBase::onViewGraphSubtreeChanged();
@@ -357,4 +362,29 @@ void AForEachUIBase::ensureViewport() {
         return;
     }
     mViewport = findViewport();
+}
+
+void AForEachUIBase::ensureViewsForMeasurement() {
+    ensureViewport();
+
+    if (mViewport.lock()) {
+        if (!mCache) {
+            mCache.emplace();
+            inflate();
+        }
+        return;
+    }
+
+    if (mCache) {
+        if (!getViews().empty()) {
+            return;
+        }
+        mCache->items.clear();
+    } else {
+        mCache.emplace();
+    }
+
+    for (auto i = mViewsModel.begin(); i != mViewsModel.end(); ++i) {
+        addView(i);
+    }
 }

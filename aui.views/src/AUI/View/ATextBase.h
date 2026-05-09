@@ -233,7 +233,31 @@ public:
         }
     }
 
-    int onComputeIntrinsicWidth(int height) override {
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
+        int width = 0;
+        if (constraints.isUnlimitedWidth()) {
+            int max = 0;
+            int accumulator = 0;
+            for (const auto& e : mEngine.entries()) {
+                if (e->forcesNextLine()) {
+                    max = glm::max(max, accumulator);
+                    accumulator = 0;
+                    continue;
+                }
+                accumulator += e->getSize().x;
+            }
+            width = glm::max(max, accumulator);
+        } else {
+            width = constraints.maxWidth;
+        }
+        int height = 0;
+        if (auto engineHeight = measureLayoutForWidth(width)) {
+            height = *engineHeight + getFontStyle().getDescenderHeight();
+        }
+        return { width, height };
+    }
+
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int widthConstraint) override {
         int max = 0;
         int accumulator = 0;
         for (const auto& e : mEngine.entries()) {
@@ -244,18 +268,15 @@ public:
             }
             accumulator += e->getSize().x;
         }
-        return glm::max(max, accumulator);
-    }
-
-    int onComputeIntrinsicHeight(int width) override {
-        if (width == -1) {
-            width = onComputeIntrinsicWidth(-1);
+        const int preferredWidth = glm::max(max, accumulator);
+        int preferredHeight = 0;
+        if (auto engineHeight = measureLayoutForWidth(preferredWidth)) {
+            preferredHeight = *engineHeight + getFontStyle().getDescenderHeight();
         }
-        if (auto engineHeight = measureLayoutForWidth(width)) {
-            return *engineHeight + getFontStyle().getDescenderHeight();
-        }
-
-        return 0;
+        return {
+            .min = { preferredWidth, preferredHeight },
+            .max = { preferredWidth, preferredHeight },
+        };
     }
 
     void invalidateFont() override {

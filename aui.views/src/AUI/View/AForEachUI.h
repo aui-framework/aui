@@ -76,6 +76,7 @@ protected:
 
     void onViewGraphSubtreeChanged() override;
     void applyGeometryToChildren() override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
 
     /**
      * @brief Notifies that range was changed or iterators might have invalidated.
@@ -98,6 +99,8 @@ private:
     List mViewsModel;
     aui::dyn_range_capabilities mViewsModelCapabilities;
     AOptional<glm::ivec2> mLastInflatedScroll {};
+
+    void ensureViewsForMeasurement();
 
     void addView(List::iterator iterator, AOptional<std::size_t> index = std::nullopt);
     void removeViews(aui::range<AVector<_<AView>>::const_iterator> iterators);

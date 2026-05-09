@@ -17,16 +17,6 @@
 
 static const auto CLICK_BIAS = 4_dp;
 
-namespace {
-int intrinsicSizeForSplitterAxis(ALayoutDirection direction, const _<AView>& view) {
-    const auto perpendicularSize = direction == ALayoutDirection::HORIZONTAL ? view->getHeight() : view->getWidth();
-    if (direction == ALayoutDirection::HORIZONTAL) {
-        return view->computeWidth(perpendicularSize);
-    }
-    return view->computeHeight(perpendicularSize);
-}
-}
-
 void ASplitterHelper::beginDrag(const glm::ivec2& mousePos) {
     int cursor = getAxisValue(mousePos);
     size_t dividerIndex = 0;
@@ -158,7 +148,7 @@ int ASplitterHelper::reclaimSpace(int space, size_t dividerIndex) {
         const bool isNonExpandingView = getAxisValue(currentItem.view->getExpanding()) == 0;
 
         // check if current view can handle us all free space
-        int minSize = intrinsicSizeForSplitterAxis(mDirection, currentItem.view);
+        int minSize = getAxisValue(currentItem.view->getMinSize());
         int currentDelta = currentSize - minSize;
         if (currentDelta >= amountToShrink) {
             // best case. current view handled all free space

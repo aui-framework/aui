@@ -28,7 +28,3 @@ APageSwitch::APageSwitch(const AString& text, unsigned pageNumber, const _<APage
         pageView->setPageId(pageNumber);
     });
 }
-
-int APageSwitch::onComputeIntrinsicWidth(int height) {
-    return ALabel::onComputeIntrinsicWidth(height);
-}

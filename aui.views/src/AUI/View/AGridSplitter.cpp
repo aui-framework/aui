@@ -27,7 +27,7 @@ public:
     ~AGridSplitterLayout() override = default;
     void layout(int x, int y, int width, int height) override {
         {
-            auto splitterWidth = aui::HVLayout<ALayoutDirection::HORIZONTAL>::onComputeIntrinsicWidth(
+            auto splitterWidth = aui::HVLayout<ALayoutDirection::HORIZONTAL>::preferredWidth(
                 mGridSplitter.mHorizontalHelper.items() |
                     ranges::views::transform([](const ASplitterHelper::Item& item) {
                         return SizeInjector<ALayoutDirection::HORIZONTAL> { item };
@@ -41,7 +41,7 @@ public:
         }
 
         {
-            auto splitterHeight = aui::HVLayout<ALayoutDirection::VERTICAL>::onComputeIntrinsicHeight(
+            auto splitterHeight = aui::HVLayout<ALayoutDirection::VERTICAL>::preferredHeight(
                 mGridSplitter.mVerticalHelper.items() | ranges::views::transform([](const ASplitterHelper::Item& item) {
                     return SizeInjector<ALayoutDirection::VERTICAL> { item };
                 }),
@@ -69,7 +69,7 @@ protected:
                 e.x = 0;
             if (fixed.y != 0)
                 e.y = 0;
-            glm::ivec2 m = { cell.view->computeWidth(-1), cell.view->computeHeight(-1) };
+            glm::ivec2 m = cell.view->computeMinMaxSizes().max;
             if (cell.x == 0) {
                 auto& i = mGridSplitter.mVerticalHelper.items()[cell.y];
                 m.y = glm::max(m.y, i.overridedSize.valueOr(0));

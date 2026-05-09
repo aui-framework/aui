@@ -543,8 +543,10 @@ void ATextArea::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas)
     auto ascender = glm::ivec2 {0,
                                 getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()
     };
+    const int textHeight =
+        this->measure(AConstraints::fixedWidth(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
     if (mVerticalAlign == VerticalAlign::MIDDLE) {
-        ascender.y += (getContentHeight() - this->computeIntrinsicHeight(getContentWidth())) / 2;
+        ascender.y += (getContentHeight() - textHeight) / 2;
     }
 
     auto wordEntries = entities()

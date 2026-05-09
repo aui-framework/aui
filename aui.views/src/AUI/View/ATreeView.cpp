@@ -43,14 +43,6 @@ public:
     size_t getIndex() const {
         return mIndex;
     }
-
-    int onComputeIntrinsicWidth(int height) override {
-        return AViewContainer::onComputeIntrinsicWidth(height);
-    }
-
-    int onComputeIntrinsicHeight(int width) override {
-        return AViewContainer::onComputeIntrinsicHeight(width);
-    }
 };
 
 class ATreeView::ItemView: public AViewContainerBase, public ass::ISelectable
@@ -353,10 +345,6 @@ void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATr
         makeElement(content, childIndex, group,  item);
     }
 
-}
-
-int ATreeView::onComputeIntrinsicHeight(int width) {
-    return AViewContainerBase::onComputeIntrinsicHeight(width);
 }
 
 void ATreeView::handleMouseMove(ATreeView::ItemView* pView) {
