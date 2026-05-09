@@ -89,7 +89,7 @@ public:
                             }
 
                             connect(mSublistOnHoverDisplayDelay->fired, [this, view, items] {
-                                auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinimumSize().x, 0);
+                                auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinSize().x, 0);
                                 mSubWindow = _new<MenuContainer>(items, pos);
 
                                 ASurface* window = nullptr;
@@ -99,7 +99,7 @@ public:
                                     window = AWindow::current();
                                 }
 
-                                auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize());
+                                auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinSize());
                                 surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
                                 surfaceContainer->addView(mSubWindow);
                                 mSubWindow->setSurface(surfaceContainer);

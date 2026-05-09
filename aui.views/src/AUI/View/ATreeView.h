@@ -18,8 +18,8 @@
 
 
 #include "AUI/Model/ATreeModelIndex.h"
+#include "AScrollArea.h"
 #include "AViewContainer.h"
-#include "AScrollbar.h"
 #include <AUI/Model/ITreeModel.h>
 
 /**
@@ -31,9 +31,8 @@
  * @details
  * ATreeView provides view of string-capable ITreeModel objects.
  */
-class API_AUI_VIEWS ATreeView: public AViewContainerBase {
+class API_AUI_VIEWS ATreeView: public AScrollArea {
 private:
-    class ContainerView;
     class ItemView;
 
 public:
@@ -41,7 +40,6 @@ public:
     ATreeView(const _<ITreeModel<AString>>& model);
     void setModel(const _<ITreeModel<AString>>& model);
     void onScroll(const AScrollEvent& event) override;
-    void onLayout(int w, int h) override;
     void handleMouseMove(ItemView* pView);
 
     void setViewFactory(const std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeModelIndex&)>& viewFactory) {
@@ -58,14 +56,12 @@ signals:
 
 private:
     _<ITreeModel<AString>> mModel;
-    _<ContainerView> mContent;
-    _<AScrollbar> mScrollbar;
+    _<AViewContainer> mContent;
     _weak<ItemView> mPrevSelection;
 
     std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeModelIndex& index)> mViewFactory;
 
 
-    void updateScrollbarDimensions();
     void handleMousePressed(ItemView* v);
     void handleMouseDoubleClicked(ItemView* v);
     void handleSelected(ItemView* v);
@@ -74,4 +70,3 @@ private:
     void makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView);
     _<ItemView> indexToView(const ATreeModelIndex& target);
 };
-

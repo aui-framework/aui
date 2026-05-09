@@ -19,7 +19,7 @@
 #include <AUI/Platform/linux/IPlatformAbstraction.h>
 #elif AUI_PLATFORM_MACOS
 #include <AUI/Platform/macos/Platform.h>
-#elif AUI_PLATFORM_WINDOWS
+#elif AUI_PLATFORM_WIN
 #include <AUI/Platform/win32/Platform.h>
 #elif AUI_PLATFORM_IOS
 #include <AUI/Platform/ios/Platform.h>
@@ -45,7 +45,7 @@ APlatform& APlatform::current() {
         impl = IPlatformAbstraction::create();
 #elif AUI_PLATFORM_MACOS
         impl = std::make_unique<aui::PlatformMacOS>();
-#elif AUI_PLATFORM_WINDOWS
+#elif AUI_PLATFORM_WIN
         impl = std::make_unique<aui::PlatformWin32>();
 #elif AUI_PLATFORM_IOS
         impl = std::make_unique<aui::PlatformIOS>();

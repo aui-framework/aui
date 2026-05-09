@@ -24,27 +24,6 @@
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 
-class ATreeView::ContainerView final: public AViewContainer {
-private:
-    int mScrollY = 0;
-    size_t mIndex = -1;
-
-public:
-    void setScrollY(int scrollY) {
-        mScrollY = scrollY;
-        applyGeometryToChildren();
-    }
-
-    void applyGeometryToChildren() override {
-        getLayout()->layout(mPadding.left, mPadding.top - mScrollY,
-                              getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
-    }
-
-    size_t getIndex() const {
-        return mIndex;
-    }
-};
-
 class ATreeView::ItemView: public AViewContainerBase, public ass::ISelectable
 {
 public:
@@ -205,15 +184,9 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
         clearAllIngoingConnections();
     }
     mModel = model;
-    setLayout(std::make_unique<AHorizontalLayout>());
-
-    addView(mContent = _new<ContainerView>());
-    addView(mScrollbar = _new<AScrollbar>());
-
+    setContents(mContent = _new<AViewContainer>());
     mContent->setLayout(std::make_unique<AVerticalLayout>());
     mContent->setExpanding();
-
-    connect(mScrollbar->scrolled, mContent, &ContainerView::setScrollY);
 
     if (mModel) {
         fillViewsRecursively(mContent, ATreeModelIndex::ROOT);
@@ -273,7 +246,6 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
         });
     }
     requestLayout();
-    updateScrollbarDimensions();
     AWindow::current()->flagRedraw();
 }
 
@@ -298,29 +270,13 @@ void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeModel
             }
 
             applyGeometryToChildrenIfNecessary();
-            updateScrollbarDimensions();
             redraw();
         });
     }
 }
 
-
-void ATreeView::onLayout(int w, int h) {
-    AViewContainerBase::onLayout(w, h);
-
-    updateScrollbarDimensions();
-}
-
-void ATreeView::updateScrollbarDimensions() {
-    if (mContent) {
-        const int contentHeight = mContent->getSize().y;
-        mScrollbar->setScrollDimensions(getHeight(), contentHeight);
-    }
-}
-
 void ATreeView::onScroll(const AScrollEvent& event) {
-    //AViewContainer::onScroll(pos, delta);
-    mScrollbar->onScroll(event);
+    AScrollArea::onScroll(event);
     onPointerMove(event.origin, {event.pointerIndex}); // update hover on scroll
 }
 
@@ -376,11 +332,7 @@ void ATreeView::select(const ATreeModelIndex& indexToSelect) {
         }
         itemView->focus();
         itemView->setSelected(true);
-
-        auto myPositionInWindow = getPositionInWindow();
-        auto targetPositionInWindow = itemView->getPositionInWindow();
-
-        mScrollbar->scroll(targetPositionInWindow.y - myPositionInWindow.y);
+        scrollTo(itemView);
 
     } catch (const AException& e) {
         ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
