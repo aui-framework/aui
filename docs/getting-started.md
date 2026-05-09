@@ -182,6 +182,14 @@ to free you from dependency management and focus you right to development of you
     === "AUI Boot"
         
         [aui.boot] is \*official\* way of using AUI. It is a CMake-based package manager that requires nothing but CMake.
+
+        Download AUI.Boot (one-time):
+
+        ```bash
+        curl https://raw.githubusercontent.com/aui-framework/aui/refs/heads/develop/aui.boot.cmake -o aui.boot.cmake
+        ```
+
+        Create `CMakeLists.txt`:
         
         ```cmake title="CMakeLists.txt"
         # Standard routine
@@ -189,11 +197,7 @@ to free you from dependency management and focus you right to development of you
         project(project_template)
         
         # Use AUI.Boot
-        file(
-            DOWNLOAD 
-            https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake 
-            ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
-        include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+        include(aui.boot.cmake)
         
         # import AUI
         auib_import(
