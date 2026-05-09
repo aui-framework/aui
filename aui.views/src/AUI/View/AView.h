@@ -14,29 +14,30 @@
 #include <chrono>
 #include <functional>
 #include <array>
-
 #include <glm/glm.hpp>
 
-#include "AUI/Common/ASmallVector.h"
+#include <AUI/Common/ASmallVector.h>
 #include <AUI/ASS/Property/IProperty.h>
 #include <AUI/ASS/Property/ScrollbarAppearance.h>
-#include "AUI/Common/ABoxFields.h"
-#include "AUI/Common/ADeque.h"
-#include "AUI/Common/AObject.h"
-#include "AUI/Common/SharedPtr.h"
-#include "AUI/Platform/ACursor.h"
-#include "AUI/Platform/AInput.h"
-#include "AUI/Reflect/AClass.h"
-#include "AUI/Font/AFontStyle.h"
-#include "AUI/Util/AFieldSignalEmitter.h"
-#include "AUI/Render/ARenderContext.h"
-#include "AUI/Util/IBackgroundEffect.h"
+#include <AUI/Common/ABoxFields.h>
+#include <AUI/Common/ADeque.h>
+#include <AUI/Common/AObject.h>
+#include <AUI/Common/SharedPtr.h>
+#include <AUI/Common/AFixedSizeCache.hpp>
+#include <AUI/Platform/ACursor.h>
+#include <AUI/Platform/AInput.h>
+#include <AUI/Reflect/AClass.h>
+#include <AUI/Font/AFontStyle.h>
+#include <AUI/Util/AFieldSignalEmitter.h>
+#include <AUI/Render/ARenderContext.h>
+#include <AUI/Util/IBackgroundEffect.h>
 #include <AUI/ASS/PropertyListRecursive.h>
 #include <AUI/Enum/AOverflow.h>
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Enum/MouseCollisionPolicy.h>
 #include <AUI/Util/ALayoutDirection.h>
 #include <AUI/Util/AConstraints.hpp>
+#include <AUI/Util/AMinMaxSizes.hpp>
 #include <AUI/Action/AMenu.h>
 
 #include <AUI/Event/AScrollEvent.h>
@@ -55,6 +56,7 @@ class AViewContainerBase;
 class AAnimator;
 class AAssHelper;
 class AStylesheet;
+class ViewPropertiesView;
 
 /**
  * @brief Base class of all UI objects.
@@ -231,9 +233,28 @@ class API_AUI_VIEWS AView : public AObject {
   /**
    * @return minSize (ignoring fixedSize)
    */
-  glm::ivec2 getMinSize() const noexcept { return mMinSize; }
+  [[nodiscard]] const glm::ivec2& getMinSize() const noexcept { return mMinSize; }
 
-  void setMinSize(glm::ivec2 minSize) noexcept { mMinSize = minSize; }
+  void setMinSize(const glm::ivec2& minSize) {
+    if (mMinSize == minSize) [[unlikely]] {
+      return;
+    }
+    mMinSize = minSize;
+    requestLayout();
+  }
+
+  /**
+   * @return maxSize (ignoring fixedSize)
+   */
+  [[nodiscard]] const glm::ivec2& getMaxSize() const { return mMaxSize; }
+
+  void setMaxSize(const glm::ivec2& maxSize) {
+    if (mMaxSize == maxSize) [[unlikely]] {
+      return;
+    }
+    mMaxSize = maxSize;
+    requestLayout();
+  }
 
   /**
    * @brief Marks this view it requires a layout update.
@@ -307,7 +328,7 @@ class API_AUI_VIEWS AView : public AObject {
    */
   [[nodiscard]]
   glm::ivec2 getMinimumSizePlusMargin() {
-    return getMinimumSize() + mMargin.occupiedSize();
+    return getMinSize() + mMargin.occupiedSize();
   }
 
   /**
@@ -355,7 +376,13 @@ class API_AUI_VIEWS AView : public AObject {
    * @details
    * @copydetails AView::mPadding
    */
-  void setPadding(const ABoxFields& padding) { mPadding = padding; }
+  void setPadding(const ABoxFields& padding) {
+    if (mPadding == padding) [[unlikely]] {
+      return;
+    }
+    mPadding = padding;
+    requestLayout();
+  }
 
   /**
    * @brief String which helps to identify this object in debug string output (i.e., for logging)
@@ -398,45 +425,6 @@ class API_AUI_VIEWS AView : public AObject {
   void setCursor(AOptional<ACursor> cursor);
 
   bool hasFocus() const;
-
-  /**
-   * @return content-area width for height.
-   */
-  int computeIntrinsicWidth(int height);
-
-  /**
-   * @return content-area height for width.
-   */
-  int computeIntrinsicHeight(int width);
-
-  int computeWidth(int height);
-
-  int computeHeight(int width);
-
-  virtual int getMinimumWidth();
-  virtual int getMinimumHeight();
-
-  /**
-   * @brief Returns the minimum size required for this view.
-   * @return Minimum size (width, height) this view requires in pixels, excluding margins.
-   * @details
-   * The minimum size includes:
-   * - Minimum content size
-   * - Padding
-   *
-   * This value represents the absolute minimum dimensions the view needs to properly display its content. It's used
-   * by layout managers to ensure views aren't sized smaller than what they require to be functional.
-   */
-  glm::ivec2 getMinimumSize() { return { getMinimumWidth(), getMinimumHeight() }; }
-
-  glm::ivec2 measure(AConstraints constraints);
-
-  void setMaxSize(const glm::ivec2& maxSize) { mMaxSize = maxSize; }
-
-  /**
-   * @return maxSize (ignoring fixedSize)
-   */
-  [[nodiscard]] const glm::ivec2& getMaxSize() const { return mMaxSize; }
 
   /**
    * @return content size
@@ -502,6 +490,10 @@ class API_AUI_VIEWS AView : public AObject {
    */
   void setSizeForced(glm::ivec2 size) { mSize = size; }
   virtual void setSize(glm::ivec2 size);
+
+  AMinMaxSizes computeMinMaxSizes(int height = -1);
+
+  glm::ivec2 measure(AConstraints constraints);
 
   /**
    * @brief Performs layout with a position and size of the view.
@@ -875,6 +867,8 @@ class API_AUI_VIEWS AView : public AObject {
   emits<_<AView>> childFocused;
 
   protected:
+  friend class ViewPropertiesView;
+
   /**
    * @brief Parent AView.
    */
@@ -915,14 +909,11 @@ class API_AUI_VIEWS AView : public AObject {
    */
   emits<glm::ivec2> mSizeChanged;
 
-  bool mWantsLayoutUpdate = false;
+  bool mWantsLayoutUpdate = true;
+  glm::ivec2 mLastLayoutSize = { -1, -1 };
 
-  // TODO: test performance and maybe implement FixedSizeCache<Size>
-  std::map<int, int> mIntrinsicWidthCache;
-  std::map<int, int> mIntrinsicHeightCache;
-
-  AConstraints mLastConstraints = { -1, -1, -1, -1 };
-  glm::ivec2 mMeasuredSize = {};
+  AFixedSizeCache<AConstraints, glm::ivec2, 8> mMeasureCache;
+  AFixedSizeCache<int, AMinMaxSizes, 4> mMinMaxSizesCache;
 
   /**
    * @brief Redraw requested flag for this particular view/
@@ -941,7 +932,7 @@ class API_AUI_VIEWS AView : public AObject {
   /**
    * @brief Maximal size.
    */
-  glm::ivec2 mMaxSize = { 0x7fffff, 0x7fffff };
+  glm::ivec2 mMaxSize = { 100000, 100000 };
 
   /**
    * @brief Fixed size.
@@ -976,36 +967,12 @@ class API_AUI_VIEWS AView : public AObject {
    * This flag addresses the issue when some container is filled with views by addView during several frames, causing
    * to draw them in wrong place (then their layout is not processed yet).
    */
-public:
   bool mSkipUntilLayoutUpdate = true;
-protected:
 
-  /**
-   * @brief Calculates the intrinsic width of the content.
-   *
-   * @param height The constraint on height.
-   *               If height is **-1**, the method returns the "natural" width
-   *               of the content (Unconstrained), as if it has infinite vertical space.
-   *               If height is **> 0**, it returns the preferred width for that
-   *               specific height (relevant for multi-line text or aspect-ratio content).
-   * @return The preferred width of the content-area (excluding padding).
-   */
-  virtual int onComputeIntrinsicWidth(int height);
-
-  /**
-   * @brief Calculates the intrinsic height of the content.
-   *
-   * @param width  The constraint on width.
-   *               If width is **-1**, the method returns the "natural" height
-   *               of the content (Unconstrained), as if it has infinite horizontal space.
-   *               If width is **> 0**, it returns the preferred height for that
-   *               specific width (e.g., height of a text block wrapped to this width).
-   * @return The preferred height of the content-area (excluding padding).
-   */
-  virtual int onComputeIntrinsicHeight(int width);
-
+public:
   virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints);
-
+  virtual AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height);
+protected:
   virtual void onLayout(int w, int h);
 
   /**

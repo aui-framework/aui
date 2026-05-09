@@ -44,6 +44,7 @@
 #undef min
 
 static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
+static constexpr int UNBOUNDED_CONSTRAINT = 1000000;
 
 AWindowBase* AView::getWindow() const
 {
@@ -83,14 +84,14 @@ void AView::redraw() {
 }
 
 void AView::requestLayout() {
-    AUI_ASSERT_UI_THREAD_ONLY();
-    mWantsLayoutUpdate = true;
-    mIntrinsicWidthCache.clear();
-    mIntrinsicHeightCache.clear();
-    mLastConstraints = AConstraints{ -1, -1, -1, -1 };
-    if (mFixedSize == glm::ivec2(0)) {
-        AUI_NULLSAFE(mParent)->requestLayout();
-    }
+  AUI_ASSERT_UI_THREAD_ONLY();
+  mWantsLayoutUpdate = true;
+  mLastLayoutSize = glm::ivec2(-1, -1);
+  mMeasureCache.clear();
+  mMinMaxSizesCache.clear();
+  if (mFixedSize == glm::ivec2(0)) {
+    AUI_NULLSAFE(mParent)->requestLayout();
+  }
 }
 
 void AView::drawStencilMask(ARenderContext ctx)
@@ -257,63 +258,56 @@ bool AView::hasFocus() const {
     return mHasFocus;
 }
 
-int AView::computeIntrinsicWidth(int height) {
-    auto it = mIntrinsicWidthCache.find(height);
-    if (it != mIntrinsicWidthCache.end()) {
-        return it->second;
+AMinMaxSizes AView::computeMinMaxSizes(int height) {
+  ensureAssUpdated();
+  if (auto it = mMinMaxSizesCache.find(height); it != mMinMaxSizesCache.end()) {
+    return it->second;
+  }
+
+  auto sizes = onComputeIntrinsicMinMaxSizes(height == -1 ? -1 : std::max(0, height - mPadding.vertical()));
+  const glm::ivec2 padding = mPadding.occupiedSize();
+
+  sizes.min += padding;
+  sizes.max += padding;
+
+  if (mFixedSize.x != 0) {
+    sizes.min.x = sizes.max.x = mFixedSize.x;
+  } else {
+    sizes.min.x = std::max(sizes.min.x, mMinSize.x);
+    sizes.max.x = std::max(sizes.max.x, sizes.min.x);
+    if (mMaxSize.x != -1) {
+      sizes.max.x = std::min(sizes.max.x, mMaxSize.x);
+      sizes.min.x = std::min(sizes.min.x, sizes.max.x);
     }
-    int val = onComputeIntrinsicWidth(height);
-    mIntrinsicWidthCache.insert({height, val});
-    return val;
-}
+  }
 
-int AView::computeIntrinsicHeight(int width) {
-    auto it = mIntrinsicHeightCache.find(width);
-    if (it != mIntrinsicHeightCache.end()) {
-        return it->second;
+  if (mFixedSize.y != 0) {
+    sizes.min.y = sizes.max.y = mFixedSize.y;
+  } else {
+    sizes.min.y = std::max(sizes.min.y, mMinSize.y);
+    sizes.max.y = std::max(sizes.max.y, sizes.min.y);
+    if (mMaxSize.y != -1) {
+      sizes.max.y = std::min(sizes.max.y, mMaxSize.y);
+      sizes.min.y = std::min(sizes.min.y, sizes.max.y);
     }
-    int val = onComputeIntrinsicHeight(width);
-    mIntrinsicHeightCache.insert({width, val});
-    return val;
-}
+  }
 
-int AView::onComputeIntrinsicWidth(int height) {
-    return 0;
-}
-
-int AView::onComputeIntrinsicHeight(int width) {
-    return 0;
-}
-
-int AView::computeWidth(int height) {
-    ensureAssUpdated();
-    if (mFixedSize.x != 0) {
-        return mFixedSize.x;
-    }
-    auto padding = getPadding();
-    return glm::clamp(
-        computeIntrinsicWidth(height == -1 ? -1 : std::max(0, height - padding.vertical())) + padding.horizontal(),
-        mMinSize.x,
-        mMaxSize.x);
-}
-
-int AView::computeHeight(int width) {
-    ensureAssUpdated();
-    if (mFixedSize.y != 0) {
-        return mFixedSize.y;
-    }
-    auto padding = getPadding();
-    return glm::clamp(
-        computeIntrinsicHeight(width == -1 ? -1 : std::max(0, width - padding.horizontal())) + padding.vertical(),
-        mMinSize.y,
-        mMaxSize.y);
+  return mMinMaxSizesCache.emplace(height, sizes).first->second;
 }
 
 glm::ivec2 AView::measure(AConstraints constraints) {
-  if (mLastConstraints == constraints) {
-    return mMeasuredSize;
+  ensureAssUpdated();
+  if (auto it = mMeasureCache.find(constraints); it != mMeasureCache.end()) {
+    return it->second;
   }
   AConstraints effectiveConstraints = constraints;
+
+  if (effectiveConstraints.maxWidth == -1) {
+    effectiveConstraints.maxWidth = UNBOUNDED_CONSTRAINT;
+  }
+  if (effectiveConstraints.maxHeight == -1) {
+    effectiveConstraints.maxHeight = UNBOUNDED_CONSTRAINT;
+  }
 
   if (mFixedSize.x != 0) {
     effectiveConstraints.minWidth = effectiveConstraints.maxWidth = mFixedSize.x;
@@ -347,71 +341,56 @@ glm::ivec2 AView::measure(AConstraints constraints) {
 
   glm::ivec2 contentSize = onIntrinsicMeasure(contentConstraints);
 
-  if (contentSize.x == 0) {
-    contentSize.x = 0;
-  }
-
   int finalWidth = contentSize.x + hPadding;
   int finalHeight = contentSize.y + vPadding;
 
-  mMeasuredSize.x = std::max(effectiveConstraints.minWidth, finalWidth);
-  mMeasuredSize.y = std::max(effectiveConstraints.minHeight, finalHeight);
+  glm::ivec2 measuredSize;
+  measuredSize.x = std::clamp(finalWidth, effectiveConstraints.minWidth, effectiveConstraints.maxWidth);
+  measuredSize.y = std::clamp(finalHeight, effectiveConstraints.minHeight, effectiveConstraints.maxHeight);
 
-  if (mMeasuredSize.x == 0) {
-    mMeasuredSize.x = 0;
-  }
-
-  mLastConstraints = constraints;
-  return mMeasuredSize;
+  return mMeasureCache.emplace(constraints, measuredSize).first->second;
 }
 
 glm::ivec2 AView::onIntrinsicMeasure(AConstraints constraints) {
-    int desiredWidth = computeIntrinsicWidth(-1);
-    int finalWidth = std::clamp(desiredWidth, constraints.minWidth, constraints.maxWidth);
-    int desiredHeight = computeIntrinsicHeight(finalWidth);
-    int finalHeight = std::clamp(desiredHeight, constraints.minHeight, constraints.maxHeight);
-    return { finalWidth, finalHeight };
+  const auto minMax =
+      onComputeIntrinsicMinMaxSizes(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
+  return {
+    std::clamp(minMax.max.x, constraints.minWidth, constraints.maxWidth),
+    std::clamp(minMax.max.y, constraints.minHeight, constraints.maxHeight),
+  };
 }
 
-int AView::getMinimumWidth() {
-    ensureAssUpdated();
-    return (mFixedSize.x == 0 ? mMinSize.x : mFixedSize.x);
-}
-
-int AView::getMinimumHeight() {
-    ensureAssUpdated();
-    return (mFixedSize.y == 0 ? mMinSize.y : mFixedSize.y);
+AMinMaxSizes AView::onComputeIntrinsicMinMaxSizes(int height) {
+  return {};
 }
 
 void AView::getTransform(glm::mat4& transform) const {
-    transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
+  transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
 }
 
 void AView::pack() {
   layout(getPosition(), measure(AConstraints {}));
 }
 
-void AView::addAssName(const AString& assName)
-{
-    AUI_ASSERTX(!assName.empty(), "empty ass name");
-    if (mAssNames.contains(assName)) {
-        return;
-    }
-    mAssNames << assName;
-    invalidateAssHelper();
+void AView::addAssName(const AString& assName) {
+   AUI_ASSERTX(!assName.empty(), "empty ass name");
+   if (mAssNames.contains(assName)) {
+       return;
+   }
+   mAssNames << assName;
+   invalidateAssHelper();
 }
 
 void AView::invalidateAssHelper() {
-    mAssHelper = nullptr;
-    aui::zero(mAss);
-    redraw();
+  mAssHelper = nullptr;
+  aui::zero(mAss);
+  redraw();
 }
 
-void AView::removeAssName(const AString& assName)
-{
-    AUI_ASSERTX(!assName.empty(), "empty ass name");
-    mAssNames.removeAll(assName);
-    invalidateAssHelper();
+void AView::removeAssName(const AString& assName) {
+  AUI_ASSERTX(!assName.empty(), "empty ass name");
+  mAssNames.removeAll(assName);
+  invalidateAssHelper();
 }
 
 
@@ -425,53 +404,46 @@ namespace {
 }
 
 void AView::ensureAssUpdated() {
-    if (mAssHelper == nullptr) {
-        mAssHelper = _new<AAssHelper>();
+  if (mAssHelper == nullptr) {
+    mAssHelper = _new<AAssHelper>();
 
-        setupConnectionsCustomStyleRecursive(this, mCustomStyleRule);
+    setupConnectionsCustomStyleRecursive(this, mCustomStyleRule);
 
-        connect(customCssPropertyChanged, mAssHelper,
-                &AAssHelper::onInvalidateStateAss);
-        connect(mAssHelper->invalidateFullAss, this, [&]()
-        {
-            mAssHelper = nullptr;
-        });
-        connect(mAssHelper->invalidateStateAss, me::invalidateStateStyles);
+    connect(customCssPropertyChanged, mAssHelper,
+            &AAssHelper::onInvalidateStateAss);
+    connect(mAssHelper->invalidateFullAss, this, [&]() {
+      mAssHelper = nullptr;
+    });
+    connect(mAssHelper->invalidateStateAss, me::invalidateStateStyles);
 
-        invalidateAllStyles();
-    }
+    invalidateAllStyles();
+  }
 }
 
-void AView::onMouseEnter()
-{
-    mMouseEntered = true;
-    if (AWindow::current()->shouldDisplayHoverAnimations()) {
-        mHovered.set(this, true);
-    }
+void AView::onMouseEnter() {
+  mMouseEntered = true;
+  if (AWindow::current()->shouldDisplayHoverAnimations()) {
+    mHovered.set(this, true);
+  }
 }
 
-
-void AView::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event)
-{
-    if (mCursor) {
-        AUI_NULLSAFE(AWindow::current())->setCursor(mCursor);
-    }
+void AView::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
+  if (mCursor) {
+    AUI_NULLSAFE(AWindow::current())->setCursor(mCursor);
+  }
 }
 
-void AView::onMouseLeave()
-{
-    mMouseEntered = false;
-    mHovered.set(this, false);
+void AView::onMouseLeave() {
+  mMouseEntered = false;
+  mHovered.set(this, false);
 }
 
-
-void AView::onPointerPressed(const APointerPressedEvent& event)
-{
-    if (!mPressed.contains(event.pointerIndex)) {
-        mPressed << event.pointerIndex;
-        emit pressedState(true, event.pointerIndex);
-        emit pressed(event.pointerIndex);
-    }
+void AView::onPointerPressed(const APointerPressedEvent& event) {
+  if (!mPressed.contains(event.pointerIndex)) {
+    mPressed << event.pointerIndex;
+    emit pressedState(true, event.pointerIndex);
+    emit pressed(event.pointerIndex);
+  }
 }
 
 void AView::onPointerReleased(const APointerReleasedEvent& event)
@@ -627,6 +599,9 @@ void AView::setSize(glm::ivec2 size) {
 }
 
 void AView::layout(int x, int y, int w, int h) {
+  if (mLastLayoutSize == glm::ivec2(w, h) && !mWantsLayoutUpdate) {
+    return;
+  }
   auto oldPosition = mPosition;
   auto oldSize = mSize;
   setPosition({ x, y });
@@ -634,6 +609,7 @@ void AView::layout(int x, int y, int w, int h) {
   onLayout(mSize.x, mSize.y);
   mSkipUntilLayoutUpdate = false;
   mWantsLayoutUpdate = false;
+  mLastLayoutSize = mSize;
   if (oldPosition != mPosition || oldSize != mSize) {
     emit geometryChanged(mPosition, mSize);
   }
