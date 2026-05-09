@@ -13,6 +13,7 @@
 
 #include <AUI/Util/ALayoutDirection.h>
 #include <AUI/Util/AConstraints.hpp>
+#include <AUI/Util/AMinMaxSizes.hpp>
 #include <AUI/Enum/Visibility.h>
 #include <range/v3/range.hpp>
 #include <vector>
@@ -158,28 +159,27 @@ public:
         }
     }
 
-    static int computeExpandingLowerBound(const auto& view, int perpendicularConstraint) {
-        AConstraints constraints {};
+    static int computeExpandingLowerBound(const auto& view, int) {
+            const auto minMaxSizes = view->computeMinMaxSizes();
         if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-            constraints.maxWidth = 0;
-            if (perpendicularConstraint != -1) {
-                constraints.maxHeight = perpendicularConstraint;
-            }
-            return view->measure(constraints).x;
+            return minMaxSizes.min.x;
         } else {
-            constraints.maxHeight = 0;
-            if (perpendicularConstraint != -1) {
-                constraints.maxWidth = perpendicularConstraint;
-            }
-            return view->measure(constraints).y;
+            return minMaxSizes.min.y;
         }
     }
 
     static int computePreferredMainAxisSize(const auto& view, int perpendicularConstraint) {
+            const auto minMaxSizes = view->computeMinMaxSizes();
         if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-            return view->computeWidth(perpendicularConstraint);
+            if (perpendicularConstraint != -1) {
+                return view->measure(AConstraints::fixedHeight(perpendicularConstraint)).x;
+            }
+            return minMaxSizes.max.x;
         } else {
-            return view->computeHeight(perpendicularConstraint);
+            if (perpendicularConstraint != -1) {
+                return view->measure(AConstraints::fixedWidth(perpendicularConstraint)).y;
+            }
+            return minMaxSizes.max.y;
         }
     }
 
@@ -314,69 +314,133 @@ public:
         }
     }
 
-    static int onComputeIntrinsicWidth(ranges::range auto&& views, int spacing, int height) {
+    static int preferredWidth(ranges::range auto&& views, int spacing, int height) {
         if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-            return onComputeIntrinsicOurAxis(views, spacing, height);
+            return preferredOurAxis(views, spacing, height);
         } else {
-            return onComputeIntrinsicPerpAxis(views, spacing, height);
+            return preferredPerpendicularAxis(views, spacing, height);
         }
     }
 
-    static int onComputeIntrinsicHeight(ranges::range auto&& views, int spacing, int width) {
+    static int preferredHeight(ranges::range auto&& views, int spacing, int width) {
         if constexpr (direction == ALayoutDirection::VERTICAL) {
-            return onComputeIntrinsicOurAxis(views, spacing, width);
+            return preferredOurAxis(views, spacing, width);
         } else {
-            return onComputeIntrinsicPerpAxis(views, spacing, width);
+            return preferredPerpendicularAxis(views, spacing, width);
         }
+    }
+
+    static int measurePerpendicularForMainAxisSize(const auto& view, int ourAxisSize) {
+        if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+            return view->measure({
+                .minWidth = ourAxisSize,
+                .maxWidth = ourAxisSize,
+            }).y;
+        } else {
+            return view->measure({
+                .minHeight = ourAxisSize,
+                .maxHeight = ourAxisSize,
+            }).x;
+        }
+    }
+
+    static AMinMaxSizes computeIntrinsicMinMaxSizes(ranges::range auto&& views, int spacing) {
+        AMinMaxSizes result;
+        int visibleCount = 0;
+
+        for (const auto& view : views) {
+            if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+                continue;
+            }
+
+            const auto minMax = view->computeMinMaxSizes();
+            const auto margin = view->getMargin().occupiedSize();
+            const auto childMin = minMax.min + margin;
+            const auto childMax = minMax.max + margin;
+            const int childMeasuredMinPerp = measurePerpendicularForMainAxisSize(view, getAxisValue(minMax.min)) +
+                                             getPerpAxisValue(margin);
+            const int childMeasuredMaxPerp = measurePerpendicularForMainAxisSize(view, getAxisValue(minMax.max)) +
+                                             getPerpAxisValue(margin);
+
+            if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+                result.min.x += childMin.x;
+                result.max.x += childMax.x;
+                result.min.y = glm::max(result.min.y, childMeasuredMinPerp);
+                result.max.y = glm::max(result.max.y, childMeasuredMaxPerp);
+            } else {
+                result.min.x = glm::max(result.min.x, childMeasuredMinPerp);
+                result.max.x = glm::max(result.max.x, childMeasuredMaxPerp);
+                result.min.y += childMin.y;
+                result.max.y += childMax.y;
+            }
+
+            ++visibleCount;
+        }
+
+        const int totalSpacing = glm::max(0, visibleCount - 1) * spacing;
+        if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+            result.min.x += totalSpacing;
+            result.max.x += totalSpacing;
+        } else {
+            result.min.y += totalSpacing;
+            result.max.y += totalSpacing;
+        }
+
+        return result;
     }
 
   static glm::ivec2 onIntrinsicMeasure(ranges::range auto&& views, int spacing, AConstraints constraints) {
       if constexpr (direction == ALayoutDirection::HORIZONTAL) {
         int height_constraint = constraints.maxHeight >= 1000000 ? -1 : constraints.maxHeight;
-        int width = onComputeIntrinsicWidth(views, spacing, height_constraint);
+        int width = preferredWidth(views, spacing, height_constraint);
 
         int height_constraint_for_height = glm::clamp(
             width,
             constraints.minWidth,
             constraints.maxWidth >= 1000000 ? width : glm::max(width, constraints.maxWidth)
         );
-        int height = onComputeIntrinsicHeight(views, spacing, height_constraint_for_height);
+        int height = preferredHeight(views, spacing, height_constraint_for_height);
         return { width, height };
       } else {
         int width_constraint = constraints.maxWidth >= 1000000 ? -1 : constraints.maxWidth;
-        int height = onComputeIntrinsicHeight(views, spacing, width_constraint);
+        int height = preferredHeight(views, spacing, width_constraint);
 
         int width_constraint_for_width = glm::clamp(
             height,
             constraints.minHeight,
             constraints.maxHeight >= 1000000 ? height : glm::max(height, constraints.maxHeight)
         );
-        int width = onComputeIntrinsicWidth(views, spacing, width_constraint_for_width);
+        int width = preferredWidth(views, spacing, width_constraint_for_width);
         return { width, height };
       }
     }
 
 private:
-    static int computeMainAxisSizeForConstraint(const auto& view) {
+    static int preferredMainAxisSize(const auto& view) {
         if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-            return view->computeWidth(-1);
+            return view->computeMinMaxSizes().max.x;
         } else {
-            return view->computeHeight(-1);
+            return view->computeMinMaxSizes().max.y;
         }
     }
 
-    static int onComputeIntrinsicOurAxis(ranges::range auto&& views, int spacing, int perpAxisConstraint) {
+    static int preferredOurAxis(ranges::range auto&& views, int spacing, int perpAxisConstraint) {
         int sum = -spacing;
         for (const auto& v : views) {
             if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE))
                 continue;
-            int childPerpAxisConstraint = (perpAxisConstraint == -1) ? -1 : std::max(0, perpAxisConstraint - getPerpAxisValue(v->getMargin().occupiedSize()));
+            const int childPerpAxisConstraint =
+                (perpAxisConstraint == -1) ? -1 : std::max(0, perpAxisConstraint - getPerpAxisValue(v->getMargin().occupiedSize()));
 
-            int childOurAxisIntrinsic;
+            int childOurAxisIntrinsic = 0;
             if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-                childOurAxisIntrinsic = v->computeWidth(childPerpAxisConstraint);
+                childOurAxisIntrinsic = childPerpAxisConstraint == -1
+                    ? v->computeMinMaxSizes().max.x
+                    : v->measure(AConstraints::fixedHeight(childPerpAxisConstraint)).x;
             } else {
-                childOurAxisIntrinsic = v->computeHeight(childPerpAxisConstraint);
+                childOurAxisIntrinsic = childPerpAxisConstraint == -1
+                    ? v->computeMinMaxSizes().max.y
+                    : v->measure(AConstraints::fixedWidth(childPerpAxisConstraint)).y;
             }
 
             sum += childOurAxisIntrinsic + getAxisValue(v->getMargin().occupiedSize()) + spacing;
@@ -384,7 +448,7 @@ private:
         return std::max(0, sum);
     }
 
-    static int onComputeIntrinsicPerpAxis(ranges::range auto&& views, int spacing, int ourAxisConstraint) {
+    static int preferredPerpendicularAxis(ranges::range auto&& views, int spacing, int ourAxisConstraint) {
         if (ourAxisConstraint == -1) {
             int maxPerp = 0;
             for (const auto& v : views) {
@@ -393,9 +457,9 @@ private:
 
                 int childPerpAxisIntrinsic;
                 if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-                    childPerpAxisIntrinsic = v->computeHeight(-1);
+                    childPerpAxisIntrinsic = v->computeMinMaxSizes().max.y;
                 } else {
-                    childPerpAxisIntrinsic = v->computeWidth(-1);
+                    childPerpAxisIntrinsic = v->computeMinMaxSizes().max.x;
                 }
 
                 maxPerp = std::max(maxPerp, childPerpAxisIntrinsic + getPerpAxisValue(v->getMargin().occupiedSize()));
@@ -408,7 +472,7 @@ private:
         }
         const auto resolvedMainAxisSizes =
             resolveMainAxisSizes(views, spacing, ourAxisConstraint, [&](const auto& view) {
-                return computeMainAxisSizeForConstraint(view);
+                return preferredMainAxisSize(view);
             }, [&](const auto& view) {
                 return computeExpandingLowerBound(view, -1);
             });
