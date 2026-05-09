@@ -55,7 +55,15 @@ Use our setup-free repository templates for quick start:
 ## Integrating AUI to existing CMake project
 
 To link AUI to your project, use the following CMake script. This script is self sufficient and does not require additional setup, AUI is imported to your project thanks to
-[AUI.Boot](https://aui-framework.github.io/develop/md_docs_2AUI_01Boot.html).
+[AUI.Boot](https://aui-framework.github.io/develop/aui.boot).
+
+Download aui.boot (one-time):
+
+```bash
+curl https://raw.githubusercontent.com/aui-framework/aui/refs/heads/develop/aui.boot.cmake -o aui.boot.cmake
+```
+
+Update CMakeLists.txt
 
 `CMakeLists.txt`:
 ```cmake
@@ -63,14 +71,8 @@ To link AUI to your project, use the following CMake script. This script is self
 cmake_minimum_required(VERSION 3.16)
 project(aui_app)
 
-set(AUI_VERSION v9.5.0)
-
-# Use AUI.Boot
-file(
-        DOWNLOAD
-        https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
-include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+include(aui.boot.cmake)
+set(AUI_VERSION v8.0.0-rc.21)
 
 # import AUI
 auib_import(aui https://github.com/aui-framework/aui
