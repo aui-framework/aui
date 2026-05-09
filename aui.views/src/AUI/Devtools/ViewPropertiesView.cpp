@@ -76,6 +76,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
 
         Label { AUI_REACT("Min size = {}px"_format(targetView->getMinSize())) },
+        Label { AUI_REACT("Max size = {}px"_format(targetView->getMaxSize())) },
         Label { AUI_REACT("Size = {}px"_format(targetView->size())) },
         Label { AUI_REACT("Compute min size = {}px"_format(targetView->computeMinMaxSizes().min)) },
         Label { AUI_REACT("Compute max size = {}px"_format(targetView->computeMinMaxSizes().max)) },
