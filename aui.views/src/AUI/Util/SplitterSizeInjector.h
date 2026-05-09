@@ -50,8 +50,8 @@ struct SizeInjector {
         return item.view->getMinSize();
     }
 
-    AMinMaxSizes computeMinMaxSizes() const {
-        auto value = item.view->computeMinMaxSizes();
+    AMinMaxSizes computeMinMaxSizes(int height = -1) const {
+        auto value = item.view->computeMinMaxSizes(height);
         if (item.overridedSize) {
             auto& minAxis = aui::layout_direction::getAxisValue(direction, value.min);
             auto& maxAxis = aui::layout_direction::getAxisValue(direction, value.max);
