@@ -57,11 +57,11 @@ void SoftwareRenderingContextX11::init(const IRenderingContext::Init& init) {
     SoftwareRenderingContext::endResize(init.window);
 }
 
-void SoftwareRenderingContextX11::destroyNativeWindow(AWindowBase& window) {
+void SoftwareRenderingContextX11::destroyNativeWindow(ASurface& window) {
     xDestroyNativeWindow(window);
 }
 
-void SoftwareRenderingContextX11::endPaint(AWindowBase& window) {
+void SoftwareRenderingContextX11::endPaint(ASurface& window) {
     SoftwareRenderingContext::endPaint(window);
     if (auto nativeWindow = dynamic_cast<AWindow*>(&window)) {
         XPutImage(PlatformAbstractionX11::ourDisplay,

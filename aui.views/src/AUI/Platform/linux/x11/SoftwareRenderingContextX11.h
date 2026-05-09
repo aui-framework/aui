@@ -17,9 +17,9 @@
 class SoftwareRenderingContextX11: public SoftwareRenderingContext, public RenderingContextX11 {
 public:
     ~SoftwareRenderingContextX11() override;
-    void init(const Init& init) override;
-    void destroyNativeWindow(AWindowBase& window) override;
-    void endPaint(AWindowBase& window) override;
+    void init(const Init& init);
+    void destroyNativeWindow(ASurface& window) override;
+    void endPaint(ASurface& window) override;
 
 protected:
     void reallocate() override;

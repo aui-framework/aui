@@ -13,7 +13,7 @@
 
 #include <AUI/Enum/VerticalAlign.h>
 #include <AUI/Enum/TextTransform.h>
-#include "AUI/Platform/AWindowBase.h"
+#include "AUI/Platform/ASurface.h"
 #include "AView.h"
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Common/AString.h"

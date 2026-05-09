@@ -51,7 +51,7 @@
 #include <AUI/Common/AProperty.h>
 
 class AWindow;
-class AWindowBase;
+class ASurface;
 class AViewContainerBase;
 class AAnimator;
 class AAssHelper;
@@ -175,7 +175,7 @@ class API_AUI_VIEWS AView : public AObject {
    * @brief Determines window which this AView belongs to.
    * @return window which this AView belongs to. Could be nullptr
    */
-  AWindowBase* getWindow() const;
+  ASurface* getWindow() const;
 
   virtual void drawStencilMask(ARenderContext ctx);
 
@@ -740,7 +740,7 @@ class API_AUI_VIEWS AView : public AObject {
   void operator&(ass::PropertyListRecursive rule) { setCustomStyle(std::move(rule)); }
 
   /**
-   * @brief Called on AWindowBase::preventClickOnPointerRelease.
+   * @brief Called on ASurface::preventClickOnPointerRelease.
    */
   virtual void onClickPrevented();
 

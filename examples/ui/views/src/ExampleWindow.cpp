@@ -722,7 +722,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
 }
 
 void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
-    AWindowBase::onDragDrop(event);
+    ASurface::onDragDrop(event);
 
     for (const auto& [k, v] : event.data.data()) {
         ALogger::info("Drop") << "[" << k << "] = " << AString::fromUtf8(v);

@@ -10,7 +10,7 @@
  */
 
 #include <AUI/Platform/AClipboard.h>
-#include <AUI/Platform/AWindowBase.h>
+#include <AUI/Platform/ASurface.h>
 #include "AAbstractTextField.h"
 
 

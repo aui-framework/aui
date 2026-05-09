@@ -14,7 +14,7 @@ from pathlib import Path
 from mkdocs.structure.files import File
 
 from docs.python.generators import parse_tests, examples_page, common, cpp_parser, doxygen
-from docs.python.generators.cpp_parser import CppClass
+from docs.python.generators.cpp_parser import CppClass, CppEnum
 
 log = logging.getLogger('mkdocs')
 
@@ -110,7 +110,7 @@ def _snippet(args: str):
 """
 
 def _steal_documentation(args: str):
-    i = [i for i in cpp_parser.index if isinstance(i, CppClass) and i.namespaced_name() == args]
+    i = [i for i in cpp_parser.index if (isinstance(i, CppClass) or isinstance(i, CppEnum)) and i.namespaced_name() == args]
     if not i:
         log.warning(f"Can't find class '{args}' in index")
         return f"Can't find class: {args} in index"

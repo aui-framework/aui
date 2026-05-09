@@ -112,7 +112,7 @@ public:
     }
 };
 
-DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(targetWindow) {
+DevtoolsLayoutTab::DevtoolsLayoutTab(ASurface* targetWindow) : mTargetWindow(targetWindow) {
     using namespace declarative;
 
     setContents(Vertical {
