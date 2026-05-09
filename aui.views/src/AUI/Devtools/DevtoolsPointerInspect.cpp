@@ -85,18 +85,18 @@ public:
         drawView(view, ctx);
     }
 
-    int onComputeIntrinsicWidth(int height) override {
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
         if (auto view = mView.lock()) {
-            return view->computeIntrinsicWidth(height);
+            return view->measure(constraints);
         }
-        return AViewContainerBase::onComputeIntrinsicWidth(height);
+        return AViewContainerBase::onIntrinsicMeasure(constraints);
     }
 
-    int onComputeIntrinsicHeight(int width) override {
+    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override {
         if (auto view = mView.lock()) {
-            return view->computeIntrinsicWidth(width);
+            return view->computeMinMaxSizes(height);
         }
-        return AViewContainerBase::onComputeIntrinsicWidth(width);
+        return AViewContainerBase::onComputeIntrinsicMinMaxSizes(height);
     }
 
     [[nodiscard]]

@@ -75,8 +75,10 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
           Button { Label { "Copy" }, [addressStr] { AClipboard::copyToClipboard(addressStr); } },
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
 
-        Label { AUI_REACT("Min size = {}px"_format(targetView->getMinimumSize())) },
+        Label { AUI_REACT("Min size = {}px"_format(targetView->getMinSize())) },
         Label { AUI_REACT("Size = {}px"_format(targetView->size())) },
+        Label { AUI_REACT("Compute min size = {}px"_format(targetView->computeMinMaxSizes().min)) },
+        Label { AUI_REACT("Compute max size = {}px"_format(targetView->computeMinMaxSizes().max)) },
 
         Vertical {
           CheckBox {
@@ -90,10 +92,9 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
             [this, targetView](bool expanding) { targetView->expanding() = expanding ? glm::ivec2(1) : glm::ivec2(0); },
             Label { "Expanding" },
           },
-          Label { "mSkipUntilLayoutUpdate = {}"_format(targetView->mSkipUntilLayoutUpdate) },
         },
 
-        AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
+        AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", "), { WordBreak::BREAK_ALL }),
 
         Button {
           Label { "Add \"DevtoolsTest\" stylesheet name" },
