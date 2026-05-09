@@ -1,6 +1,6 @@
-# AUI + SDL3 Example
+# SDL3
 
-<!-- aui:example ui -->
+<!-- aui:example custom_windowing_toolkits -->
 This code demonstrates how to integrate the AUI Framework with SDL3 to create a window with OpenGL rendering. 
 
 ## Overview
@@ -18,6 +18,7 @@ This application creates a simple GUI window using SDL3 for window management an
 **Purpose:** This structure acts as a bridge between AUI's rendering system and the SDL3/OpenGL environment.
 
 **Key responsibilities:**
+
 - **m_renderer**: Holds the OpenGL renderer instance
 - **beginPaint()**: Prepares the framebuffer for drawing by binding it and clearing it with white color
 - **endPaint()**: Finalizes the drawing operations
@@ -32,13 +33,16 @@ This application creates a simple GUI window using SDL3 for window management an
 **Purpose:** Represents the main application window and manages the connection between SDL3 and AUI Framework.
 
 **Key members:**
-- **sdl_window**: The SDL3 window handle
-- **gl_context**: The OpenGL context for rendering
-- **close**: Flag to signal when the application should exit
 
-**Methods:**
-- **init()**: Initializes the AUI window system with the rendering context, sets viewport size based on actual pixel dimensions, and configures DPI scaling for high-resolution displays
-- **~EmbedWindow()**: Destructor that properly cleans up SDL resources (GL context and window)
+- `sdl_window`: The SDL3 window handle
+- `gl_context`: The OpenGL context for rendering
+- `close`: Flag to signal when the application should exit
+
+Methods:
+
+- `init()`: Initializes the AUI window system with the rendering context, sets viewport size based on actual pixel
+  dimensions, and configures DPI scaling for high-resolution displays
+- `~EmbedWindow()`: Destructor that properly cleans up SDL resources (GL context and window)
 
 ---
 
@@ -57,9 +61,10 @@ This application creates a simple GUI window using SDL3 for window management an
 **Purpose:** Converts SDL3 mouse button constants to AUI's pointer index format.
 
 **Mappings:**
-- SDL_BUTTON_LEFT → Left mouse button
-- SDL_BUTTON_MIDDLE → Middle mouse button
-- SDL_BUTTON_RIGHT → Right mouse button
+
+- `SDL_BUTTON_LEFT` → Left mouse button
+- `SDL_BUTTON_MIDDLE` → Middle mouse button
+- `SDL_BUTTON_RIGHT` → Right mouse button
 
 ---
 
@@ -71,13 +76,15 @@ This application creates a simple GUI window using SDL3 for window management an
 
 **Handled events:**
 
-- **SDL_EVENT_QUIT**: Sets the close flag to terminate the application
-- **SDL_EVENT_WINDOW_RESIZED** / **SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED**: Updates the viewport size when window dimensions change
-- **SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED**: Updates DPI ratio when the window moves between displays with different scaling
-- **SDL_EVENT_MOUSE_MOTION**: Forwards mouse movement to AUI's pointer tracking
-- **SDL_EVENT_MOUSE_BUTTON_DOWN/UP**: Forwards mouse clicks with proper button mapping
-- **SDL_EVENT_MOUSE_WHEEL**: Forwards scroll wheel events with position and scroll delta
-- **SDL_EVENT_KEY_DOWN/UP/TEXT_INPUT**: Forwards keyboard input to ASurface
+- `SDL_EVENT_QUIT`: Sets the close flag to terminate the application
+- `SDL_EVENT_WINDOW_RESIZED` / `SDL_EVENT_WINDOW_PIXEL_SIZE_CHANGED`: Updates the viewport size when window dimensions
+  change
+- `SDL_EVENT_WINDOW_DISPLAY_SCALE_CHANGED`: Updates DPI ratio when the window moves between displays with different
+  scaling
+- `SDL_EVENT_MOUSE_MOTION`: Forwards mouse movement to AUI's pointer tracking
+- `SDL_EVENT_MOUSE_BUTTON_DOWN/UP`: Forwards mouse clicks with proper button mapping
+- `SDL_EVENT_MOUSE_WHEEL`: Forwards scroll wheel events with position and scroll delta
+- `SDL_EVENT_KEY_DOWN/UP/TEXT_INPUT`: Forwards keyboard input to ASurface
 
 ---
 
@@ -96,11 +103,12 @@ This application creates a simple GUI window using SDL3 for window management an
 <!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp CreateWindow -->
 
 **Purpose:** Creates the main window with the following properties:
+
 - Title: "AUI + SDL3"
 - Initial size: 600×400 pixels
-- **SDL_WINDOW_OPENGL**: Enables OpenGL rendering
-- **SDL_WINDOW_RESIZABLE**: Allows the user to resize the window
-- **SDL_WINDOW_HIGH_PIXEL_DENSITY**: Supports high-DPI displays (Retina, 4K, etc.)
+- `SDL_WINDOW_OPENGL`: Enables OpenGL rendering
+- `SDL_WINDOW_RESIZABLE`: Allows the user to resize the window
+- `SDL_WINDOW_HIGH_PIXEL_DENSITY`: Supports high-DPI displays (Retina, 4K, etc.)
 
 ---
 
@@ -130,10 +138,11 @@ This application creates a simple GUI window using SDL3 for window management an
 <!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp UI -->
 
 **Purpose:** Defines the UI layout using AUI's declarative syntax:
-- **Centered**: Centers the content in the window
-- **Vertical**: Arranges children vertically
-- **Label**: Displays "Hello, World!" text
-- **Button**: Creates a clickable button with:
+
+- `Centered`: Centers the content in the window
+- `Vertical`: Arranges children vertically
+- `Label`: Displays "Hello, World!" text
+- `Button`: Creates a clickable button with:
     - Label saying "Click me"
     - onClick handler that logs "Hello world!" when clicked
 
@@ -170,6 +179,7 @@ This is similar to modern declarative UI frameworks like SwiftUI or React.
 <!-- aui:snippet examples/ui/embedded_sdl/src/main.cpp FrameRateLimit -->
 
 **Purpose:** Limits the frame rate to match the display's refresh rate to:
+
 - Prevent unnecessary CPU/GPU usage
 - Synchronize with the monitor's refresh cycle
 - Save battery on laptops
