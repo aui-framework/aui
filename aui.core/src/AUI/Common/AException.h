@@ -95,6 +95,7 @@
  */
 class API_AUI_CORE AException : public std::exception {
     mutable AOptional<std::string> mMessage;
+    mutable AOptional<std::string> mWhatCache;
 
 public:
     AException() : mStacktrace(AStacktrace::capture(2)) {}
@@ -112,9 +113,9 @@ public:
     ~AException() noexcept override = default;
 
     const char* what() const noexcept override {
-        if (!mMessage)
-            mMessage = getMessage().toStdString();
-        return mMessage->c_str();
+        if (!mWhatCache)
+            mWhatCache = getMessage().toStdString();
+        return mWhatCache->c_str();
     }
 
     const AStacktrace& stacktrace() const noexcept { return mStacktrace; }
