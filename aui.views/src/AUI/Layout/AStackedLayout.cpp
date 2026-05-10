@@ -13,6 +13,10 @@
 
 void AStackedLayout::layout(int x, int y, int width, int height) {
   for (auto& v: mViews) {
+    if (!(v->getVisibility() & Visibility::FLAG_RENDER_NEEDED)) {
+      continue;
+    }
+
     v->ensureAssUpdated();
     auto margins = v->getMargin();
 
