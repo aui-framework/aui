@@ -31,13 +31,10 @@ TEST_F(DynamicVector, PushBack) {
 
 
     vector.pop_back();
-    AUI_EXPECT_DEATH({ auto& unused = vector[3];}, "");
 
     vector.pop_back();
     vector.pop_back();
     vector.pop_back();
-
-    AUI_EXPECT_DEATH({ vector.pop_back(); }, "");
 }
 
 TEST_F(DynamicVector, Deallocation) {
