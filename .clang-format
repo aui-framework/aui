@@ -15,7 +15,7 @@ AlignConsecutiveMacros: Consecutive
 # use \n instead of \r\n
 UseCRLF: false
 
-AccessModifierOffset: -4
+AccessModifierOffset: -2
 EmptyLineBeforeAccessModifier: Always
 EmptyLineAfterAccessModifier: Never
 
