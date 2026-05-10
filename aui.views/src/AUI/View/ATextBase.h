@@ -224,15 +224,6 @@ public:
         }
     }
 
-    void setSize(glm::ivec2 size) override {
-        bool widthDiffers = size.x != getWidth();
-        AViewContainerBase::setSize(size);
-        if (widthDiffers) {
-            mPrerenderedString = nullptr;
-            requestLayout();
-        }
-    }
-
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
         int max = 0;
         int accumulator = 0;

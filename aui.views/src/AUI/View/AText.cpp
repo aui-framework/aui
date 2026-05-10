@@ -295,33 +295,31 @@ void AText::setMarkdown(const AString& md, const Flags& flags) {
 }
 
 void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
-    auto ascender = glm::ivec2 {0,
-                                 getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()
-    };
-    const int textHeight =
-        this->measure(AConstraints::fixedWidth(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
-    if (mVerticalAlign == VerticalAlign::MIDDLE) {
-        ascender += (getContentHeight() - textHeight) / 2;
+  auto ascender = glm::ivec2 {0, getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()};
+  const int textHeight =
+      this->measure(AConstraints::fixedWidth(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
+  if (mVerticalAlign == VerticalAlign::MIDDLE) {
+    ascender += (getContentHeight() - textHeight) / 2;
+  }
+  for (auto& wordEntry: mWordEntries) {
+    canvas->addString(wordEntry.getPosition() + ascender, wordEntry.getWord());
+  }
+  for (auto& charEntry: mCharEntries) {
+    auto c = charEntry.getChar();
+    if (c != ' ') {
+        AString str(1, c);
+        canvas->addString(charEntry.getPosition() + ascender, str);
     }
-    for (auto& wordEntry: mWordEntries) {
-        canvas->addString(wordEntry.getPosition() + ascender, wordEntry.getWord());
-    }
-    for (auto& charEntry: mCharEntries) {
-        auto c = charEntry.getChar();
-        if (c != ' ') {
-            AString str(1, c);
-            canvas->addString(charEntry.getPosition() + ascender, str);
-        }
-    }
+  }
 }
-void AText::applyGeometryToChildren() {
-    AViewContainerBase::applyGeometryToChildren();
+void AText::onLayout(int w, int h) {
+  AViewContainerBase::onLayout(w, h);
 
-    int y = 0;
-    const int textHeight =
-        this->measure(AConstraints::fixedWidth(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
-    if (mVerticalAlign == VerticalAlign::MIDDLE) {
-        y += (getContentHeight() - textHeight) / 2;
-    }
-    mViewsContainer->layout(0, y, getWidth(), getHeight());
+  int y = 0;
+  const int textHeight =
+      this->measure(AConstraints::fixedWidth(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
+  if (mVerticalAlign == VerticalAlign::MIDDLE) {
+    y += (getContentHeight() - textHeight) / 2;
+  }
+  mViewsContainer->layout(0, y, w, h);
 }

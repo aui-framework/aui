@@ -53,8 +53,6 @@ public:
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
-    void setSize(glm::ivec2 size) override;
-
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
     void onClickPrevented() override;

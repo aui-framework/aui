@@ -61,7 +61,7 @@ AMinMaxAxis AScrollAreaViewport::onComputeIntrinsicMinMaxAxis(int height) {
   return mInner->computeMinMaxAxis(height);
 }
 
-void AScrollAreaViewport::applyGeometryToChildren() {
+void AScrollAreaViewport::onLayout(int w, int h) {
   mInner->setSkipUntilLayoutUpdate(false);
   mInner->layout(-glm::ivec2(mScroll), mScrollSurfaceSize);
   if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
@@ -77,6 +77,7 @@ void AScrollAreaViewport::applyGeometryToChildren() {
     IRenderViewToTexture::disableForView(*mInner);
   }
 }
+
 void AScrollAreaViewport::updateContentsScroll() {
   mInner->setSkipUntilLayoutUpdate(false);
   mInner->setPosition(-glm::ivec2(mScroll));

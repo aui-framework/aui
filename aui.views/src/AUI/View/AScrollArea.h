@@ -41,7 +41,6 @@ public:
 public:
     AScrollArea();
 
-    void setSize(glm::ivec2 size) override;
     void setContents(_<AView> content) {
         mInner->setContents(std::move(content));
         requestLayout();
@@ -49,7 +48,7 @@ public:
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
-    void applyGeometryToChildren() override;
+    void onLayout(int w, int h) override;
 
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;

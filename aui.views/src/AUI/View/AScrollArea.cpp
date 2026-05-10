@@ -233,47 +233,43 @@ AMinMaxAxis AScrollArea::onComputeIntrinsicMinMaxAxis(int height) {
     };
 }
 
-void AScrollArea::applyGeometryToChildren() {
-    const glm::ivec2 paddedPosition = { mPadding.left, mPadding.top };
-    const glm::ivec2 paddedSize = glm::max(getSize() - mPadding.occupiedSize(), glm::ivec2(0));
+void AScrollArea::onLayout(int w, int h) {
+  const glm::ivec2 paddedPosition = { mPadding.left, mPadding.top };
+  const glm::ivec2 paddedSize = glm::ivec2(w, h);
 
-    auto layout = calculateLayout(paddedSize, true, true);
+  auto layout = calculateLayout(paddedSize, true, true);
 
-    mInner->setScrollSurfaceSize(layout.contentSize);
-    mInner->layout(paddedPosition, layout.viewportSize);
+  mInner->setScrollSurfaceSize(layout.contentSize);
+  mInner->layout(paddedPosition, layout.viewportSize);
 
-    AUI_NULLSAFE(mVerticalScrollbar)->setScrollDimensions(layout.viewportSize.y, layout.contentSize.y);
-    AUI_NULLSAFE(mHorizontalScrollbar)->setScrollDimensions(layout.viewportSize.x, layout.contentSize.x);
+  AUI_NULLSAFE(mVerticalScrollbar)->setScrollDimensions(layout.viewportSize.y, layout.contentSize.y);
+  AUI_NULLSAFE(mHorizontalScrollbar)->setScrollDimensions(layout.viewportSize.x, layout.contentSize.x);
 
-    if (hasInternalVerticalScrollbar()) {
-        if (layout.hasVerticalScrollbar) {
-            mVerticalScrollbar->setVisibility(Visibility::VISIBLE);
-            mVerticalScrollbar->layout(
-                paddedPosition.x + layout.viewportSize.x,
-                paddedPosition.y,
-                layout.verticalScrollbarWidth,
-                layout.viewportSize.y);
-        } else {
-            mVerticalScrollbar->setVisibility(Visibility::GONE);
-        }
+  if (hasInternalVerticalScrollbar()) {
+    if (layout.hasVerticalScrollbar) {
+      mVerticalScrollbar->setVisibility(Visibility::VISIBLE);
+      mVerticalScrollbar->layout(
+          paddedPosition.x + layout.viewportSize.x,
+          paddedPosition.y,
+          layout.verticalScrollbarWidth,
+          layout.viewportSize.y);
+    } else {
+      mVerticalScrollbar->setVisibility(Visibility::GONE);
     }
+  }
 
-    if (hasInternalHorizontalScrollbar()) {
-        if (layout.hasHorizontalScrollbar) {
-            mHorizontalScrollbar->setVisibility(Visibility::VISIBLE);
-            mHorizontalScrollbar->layout(
-                paddedPosition.x,
-                paddedPosition.y + layout.viewportSize.y,
-                layout.viewportSize.x,
-                layout.horizontalScrollbarHeight);
-        } else {
-            mHorizontalScrollbar->setVisibility(Visibility::GONE);
-        }
+  if (hasInternalHorizontalScrollbar()) {
+    if (layout.hasHorizontalScrollbar) {
+      mHorizontalScrollbar->setVisibility(Visibility::VISIBLE);
+      mHorizontalScrollbar->layout(
+          paddedPosition.x,
+          paddedPosition.y + layout.viewportSize.y,
+          layout.viewportSize.x,
+          layout.horizontalScrollbarHeight);
+    } else {
+      mHorizontalScrollbar->setVisibility(Visibility::GONE);
     }
-}
-
-void AScrollArea::setSize(glm::ivec2 size) {
-    AViewContainerBase::setSize(size);
+  }
 }
 
 void AScrollArea::onScroll(const AScrollEvent& event) {

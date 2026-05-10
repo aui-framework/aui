@@ -89,7 +89,7 @@ public:
 
 protected:
     void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
-    void applyGeometryToChildren() override;
+    void onLayout(int w, int h) override;
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
 private:

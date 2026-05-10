@@ -62,9 +62,9 @@ public:
     emits<aui::float_within_0_1> valueChanged;
 
 protected:
-    void applyGeometryToChildren() override {
-        auto handleSize = mHandle->measure(AConstraints::fixedHeight(getSize().y));
-        mHandle->layout({getSize().x * mValue - handleSize.x / 2.f, 0}, { handleSize.x, getSize().y });
+    void onLayout(int w, int h) override {
+        auto handleSize = mHandle->measure(AConstraints::fixedHeight(h));
+        mHandle->layout({w * mValue - handleSize.x / 2.f, 0}, { handleSize.x, h });
     }
 
 private:
