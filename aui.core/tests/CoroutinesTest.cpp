@@ -100,7 +100,7 @@ struct CoPromiseTypeBase {
      * still access and fulfill the future after ownership has been transferred to the caller.
      * This is critical for safely handling cases where the caller has destroyed the future.
      */
-    AFuture<T>::PtrWeak futureWeak = future.inner().weak();
+    typename AFuture<T>::PtrWeak futureWeak = future.inner().weak();
 
 
     /**
@@ -166,7 +166,7 @@ struct CoPromiseTypeBase {
          */
         struct Awaiter {
             NestedAwaiter nestedAwaiter;
-            AFuture<T>::PtrWeak parentFuture;
+            typename AFuture<T>::PtrWeak parentFuture;
 
             /** @brief Delegates to the nested awaiter's await_ready. */
             bool await_ready() noexcept {
@@ -312,7 +312,7 @@ struct aui::impl::future::Future<void>::CoPromiseType: CoPromiseTypeBase<void> {
      * @brief Called by the compiler when the coroutine co_return s without a value.
      */
     void return_void() noexcept {
-        this->return_();
+        super::return_();
     }
 };
 
