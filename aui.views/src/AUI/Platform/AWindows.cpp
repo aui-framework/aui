@@ -86,63 +86,80 @@ bool AWindow::isRedrawWillBeEfficient() {
 }
 void AWindow::redraw() {
 #if AUI_PROFILING
-    APerformanceFrame frame([&](APerformanceSection::Datas sections) {
-        emit performanceFrameComplete(sections);
-    });
-    APerformanceSection s("AWindow::redraw", std::nullopt, fmt::format("frame {}", [] { static uint64_t frameIndex = 0; return frameIndex++; }()));
+  APerformanceFrame frame([&](APerformanceSection::Datas sections) {
+    emit performanceFrameComplete(sections);
+  });
+  APerformanceSection s("AWindow::redraw", std::nullopt, fmt::format("frame {}", [] { static uint64_t frameIndex = 0; return frameIndex++; }()));
 #endif
 
-    {
-        if (isClosed()) {
-            return;
-        }
-        auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        {
-            APerformanceSection s("IRenderingContext::beginPaint");
-            mRenderingContext->beginPaint(*this);
-        }
-        AUI_DEFER {
-            APerformanceSection s("IRenderingContext::endPaint");
-            mRenderingContext->endPaint(*this);
-        };
+  {
+    if (isClosed()) {
+      return;
+    }
 
-        if (mWantsLayoutUpdate) {
-            ensureAssUpdated();
+    if (mWantsLayoutUpdate) {
+      ensureAssUpdated();
 #if AUI_PLATFORM_WIN
-            setSize(glm::clamp(getSize(), getMinSize(), getMaxSize()));
+      setSize(glm::clamp(getSize(), getMinSize(), getMaxSize()));
 #endif
-            applyGeometryToChildrenIfNecessary();
-            mWantsLayoutUpdate = false;
+      auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+      layout(getPosition(), getSize());
+      auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+      unsigned millis = mFrameMillis = static_cast<unsigned>((after - before).count());
+      if (millis > 20) {
+        static auto lastNotification = 0ms;
+        if (after - lastNotification > 5min) {
+          lastNotification = after;
+          if (millis > 40) {
+            ALogger::warn("Performance") << "Layout took {}ms! Unacceptably bad performance"_format(millis);
+          } else {
+            ALogger::warn("Performance") << "Layout took {}ms! Bad performance"_format(millis);
+          }
+        }
+      }
+      mWantsLayoutUpdate = false;
 #if AUI_PLATFORM_LINUX
-            IPlatformAbstraction::current().windowAnnounceMinMaxSize(*this);
+      IPlatformAbstraction::current().windowAnnounceMinMaxSize(*this);
 #endif
-        }
-#if AUI_PLATFORM_WIN
-        mRedrawFlag = true;
-#elif AUI_PLATFORM_MACOS
-        mRedrawFlag = false;
-#endif
-        doDrawWindow();
+    }
 
-        // measure frame time
-        auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        unsigned millis = mFrameMillis = unsigned((after - before).count());
-        if (millis > 20) {
-            static auto lastNotification = 0ms;
-            if (after - lastNotification > 5min) {
-                lastNotification = after;
-                if (millis > 40) {
-                    ALogger::warn("Performance") << "Frame render took {}ms! Unacceptably bad performance"_format(millis);
-                } else {
-                    ALogger::warn("Performance") << "Frame render took {}ms! Bad performance"_format(millis);
-                }
-            }
-        }
-    }
+    auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
     {
-        APerformanceSection s2("emit redrawn");
-        emit redrawn();
+      APerformanceSection s("IRenderingContext::beginPaint");
+      mRenderingContext->beginPaint(*this);
     }
+    AUI_DEFER {
+      APerformanceSection s("IRenderingContext::endPaint");
+      mRenderingContext->endPaint(*this);
+    };
+
+#if AUI_PLATFORM_WIN
+    mRedrawFlag = true;
+#elif AUI_PLATFORM_MACOS
+    mRedrawFlag = false;
+#endif
+
+    doDrawWindow();
+
+    // measure frame time
+    auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+    unsigned millis = mFrameMillis = static_cast<unsigned>((after - before).count());
+    if (millis > 20) {
+      static auto lastNotification = 0ms;
+      if (after - lastNotification > 5min) {
+        lastNotification = after;
+        if (millis > 40) {
+          ALogger::warn("Performance") << "Frame render took {}ms! Unacceptably bad performance"_format(millis);
+        } else {
+          ALogger::warn("Performance") << "Frame render took {}ms! Bad performance"_format(millis);
+        }
+      }
+    }
+  }
+  {
+    APerformanceSection s2("emit redrawn");
+    emit redrawn();
+  }
 }
 
 _<AWindow> AWindow::wrapViewToWindow(const _<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {

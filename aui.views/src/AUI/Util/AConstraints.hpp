@@ -16,6 +16,7 @@
 #pragma once
 
 #include <compare>
+#include <glm/glm.hpp>
 
 /**
  * Layout constraints for a UI element.
@@ -60,6 +61,14 @@ struct AConstraints {
 
   constexpr bool isUnlimitedHeight() const noexcept {
     return maxHeight == -1;
+  }
+
+  constexpr glm::ivec2 min() const noexcept {
+    return {minWidth, minHeight};
+  }
+
+  constexpr glm::ivec2 max() const noexcept {
+    return {maxWidth, maxHeight};
   }
 
   constexpr auto operator<=>(const AConstraints&) const = default;

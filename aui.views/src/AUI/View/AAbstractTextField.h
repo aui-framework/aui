@@ -67,7 +67,7 @@ public:
 
     void onCharEntered(AChar c) override;
 
-    void setSize(glm::ivec2 size) override;
+    void onLayout(int w, int h) override;
 
     glm::ivec2 getCursorPosition() override;
 

@@ -155,6 +155,3 @@ void AWindow::moveToCenter() {
 void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
 
 }
-void AWindow::applyGeometryToChildren() {
-    ASurface::applyGeometryToChildren();
-}

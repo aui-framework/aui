@@ -61,10 +61,10 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
     mWrappedView->setSize(mWrappedView->measure(AConstraints {}));
 }
 
-void ARulerArea::setSize(glm::ivec2 size) {
-    AViewContainerBase::setSize(size);
+void ARulerArea::onLayout(int w, int h) {
     mWrappedView->setSize(mWrappedView->measure(AConstraints {}));
     updatePosition();
+    AViewContainerBase::onLayout(w, h);
 }
 
 void ARulerArea::setWrappedViewPosition(const glm::ivec2& pos) {

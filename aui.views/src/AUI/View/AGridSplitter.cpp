@@ -123,7 +123,7 @@ void AGridSplitter::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event)
     mHorizontalHelper.mouseDrag(pos);
 
     if (mVerticalHelper.isDragging() || mHorizontalHelper.isDragging()) {
-        applyGeometryToChildrenIfNecessary();
+        requestLayout();
         redraw();
         AView::onPointerMove(pos, event);   // NOLINT(*-parent-virtual-call)
         return;

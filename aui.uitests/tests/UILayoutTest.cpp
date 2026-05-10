@@ -226,10 +226,10 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance1) {
     inflate(Centered { Horizontal {
       l,
     } });
-    l->getWindow()->applyGeometryToChildrenIfNecessary();
+    l->getWindow()->redraw();
 
     // extra layout update that should not call LabelMock::onComputeIntrinsicMinMaxAxis one more time
-    AUI_REPEAT(10) { l->getWindow()->applyGeometryToChildrenIfNecessary(); }
+    AUI_REPEAT(10) { l->getWindow()->redraw(); }
 }
 
 TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
@@ -244,15 +244,15 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
       l1,
       l2,
     } });
-    l1->getWindow()->applyGeometryToChildrenIfNecessary();
+    l1->getWindow()->redraw();
     auto prevPosX = l2->getPositionInWindow().x;
     l1->text() = "test2";
-    l1->getWindow()->applyGeometryToChildrenIfNecessary();
+    l1->getWindow()->redraw();
 
     EXPECT_GE(l2->getPositionInWindow().x, prevPosX);   // l2 is expected to shift to right.
 
     // extra layout update that should not compute intrinsic size one more time
-    l1->getWindow()->applyGeometryToChildrenIfNecessary();
+    l1->getWindow()->redraw();
 }
 
 namespace {

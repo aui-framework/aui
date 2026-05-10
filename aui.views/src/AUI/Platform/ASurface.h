@@ -304,7 +304,6 @@ public:
 
   void onFocusLost() override;
   void render(ARenderContext context) override;
-  void applyGeometryToChildren() override;
   void onPointerReleased(const APointerReleasedEvent& event) override;
 
   /**
@@ -455,6 +454,8 @@ protected:
 
   virtual void showTouchscreenKeyboardImpl();
   virtual void hideTouchscreenKeyboardImpl();
+
+  void onLayout(int w, int h) override;
 
   void markPixelDataInvalid(ARect<int> invalidArea) override;
 

@@ -53,8 +53,7 @@ float ASurface::fetchDpiFromSystem() const {
 }
 
 void ASurface::updateDpi() {
-  emit dpiChanged;
-  mDpiRatio = [&]() -> float {
+  float newDpi = [&]() -> float {
     float systemDpi = fetchDpiFromSystem();
     float ratio = mScalingParams.scalingFactor * (UITestState::isTesting() ? 1.f : systemDpi);
     if (!mScalingParams.minimalWindowSizeDp) {
@@ -66,6 +65,9 @@ void ASurface::updateDpi() {
     maxDpiRatio = glm::round(maxDpiRatio / 0.25f) * 0.25f;
     return glm::min(ratio, maxDpiRatio);
   }();
+  if (mDpiRatio == newDpi) return;
+  mDpiRatio = newDpi;
+  emit dpiChanged;
   onDpiChanged();
 }
 
@@ -430,9 +432,9 @@ void ASurface::flagRedraw() {
 
 }
 
-void ASurface::applyGeometryToChildren() {
+void ASurface::onLayout(int w, int h) {
     APerformanceSection updateLayout("layout update");
-    AViewContainer::applyGeometryToChildren();
+    AViewContainer::onLayout(w, h);
     emit layoutUpdateComplete;
 }
 

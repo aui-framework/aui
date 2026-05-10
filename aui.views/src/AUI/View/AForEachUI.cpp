@@ -44,38 +44,6 @@ void AForEachUIBase::putOurViewsToSharedCache() {
     mCache.reset();
 }
 
-void AForEachUIBase::applyGeometryToChildren() {
-    auto viewport = mViewport.lock();
-    if (!viewport) {
-        if (!mCache) {
-            mCache.emplace();
-            removeAllViews();
-            for (auto i = mViewsModel.begin(); i != mViewsModel.end(); ++i) {
-                addView(i);
-            }
-        }
-        AViewContainerBase::applyGeometryToChildren();
-        return;
-    }
-
-    if (!mLastInflatedScroll) {
-        mLastInflatedScroll = -calculateOffsetWithinViewportSlidingSurface();
-    }
-
-    if (!mCache) {
-        mCache.emplace();
-        inflate();
-        return;
-    }
-
-    if (getViews().empty()) {
-        return;
-    }
-    //    ALOG_DEBUG(LOG_TAG) << this << " compensateLayoutUpdatesByScroll";
-    viewport->compensateLayoutUpdatesByScroll(
-        getViews().first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
-}
-
 glm::ivec2 AForEachUIBase::onIntrinsicMeasure(AConstraints constraints) {
     if (isModelEmpty()) {
         return {
@@ -191,22 +159,49 @@ void AForEachUIBase::setPosition(glm::ivec2 position) {
     inflate();
 }
 
-void AForEachUIBase::setSize(glm::ivec2 size) {
-    auto prevSize = getSize();
-    AViewContainerBase::setSize(size);
+void AForEachUIBase::onLayout(int w, int h) {
     if (!getLayout()) {
+        AViewContainerBase::onLayout(w, h);
+        mLastOnLayoutSize = {w, h};
         return;
     }
-    if (!mViewport.lock()) {
+
+    auto viewport = mViewport.lock();
+    if (!viewport) {
+        if (!mCache) {
+            mCache.emplace();
+            removeAllViews();
+            for (auto i = mViewsModel.begin(); i != mViewsModel.end(); ++i) {
+                addView(i);
+            }
+        }
+        AViewContainerBase::onLayout(w, h);
+        mLastOnLayoutSize = {w, h};
         return;
     }
+
+    if (!mLastInflatedScroll) {
+        mLastInflatedScroll = -calculateOffsetWithinViewportSlidingSurface();
+    }
+
+    if (!mCache) {
+        mCache.emplace();
+        inflate();
+    }
+
+    if (getViews().empty()) {
+        AViewContainerBase::onLayout(w, h);
+        mLastOnLayoutSize = {w, h};
+        return;
+    }
+
     int diff = [&] {
         switch (getLayout()->getLayoutDirection()) {
             case ALayoutDirection::HORIZONTAL:
-                return prevSize.x - size.x;
+                return mLastOnLayoutSize.x - w;
 
             case ALayoutDirection::VERTICAL:
-                return prevSize.y - size.y;
+                return mLastOnLayoutSize.y - h;
 
             case ALayoutDirection::NONE:
                 break;
@@ -214,9 +209,13 @@ void AForEachUIBase::setSize(glm::ivec2 size) {
         return 0;
     }();
     if (diff == 0) {
+        AViewContainerBase::onLayout(w, h);
+        mLastOnLayoutSize = {w, h};
         return;
     }
     inflate({ .backward = diff < 0, .forward = diff > 0 });
+    AViewContainerBase::onLayout(w, h);
+    mLastOnLayoutSize = {w, h};
 }
 
 void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
@@ -292,7 +291,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             addView(it, 0);
 
             viewport->compensateLayoutUpdatesByScroll(
-                prevFirstView, [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
+                prevFirstView, [this] { AViewContainerBase::onLayout(getWidth(), getHeight()); }, axisMask());
             auto diff = prevFirstView->getPosition() - getViews().first()->getPosition();
             inflateTill += diff;
 
@@ -325,7 +324,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             addView(it);
             needsMinSizeUpdate = true;
             viewport->compensateLayoutUpdatesByScroll(
-                getViews().first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
+                getViews().first(), [this] { AViewContainerBase::onLayout(getWidth(), getHeight()); }, axisMask());
         }
     }
 

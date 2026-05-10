@@ -188,7 +188,7 @@ void AScrollbar::updateScrollHandleOffset(int max) {
         case ALayoutDirection::NONE:
             break;
     }
-    applyGeometryToChildren();
+    requestLayout();
     redraw();
 }
 
@@ -377,7 +377,8 @@ glm::ivec2 AScrollbarHandle::onIntrinsicMeasure(AConstraints constraints) {
   return {};
 }
 
-void AScrollbarHandle::setSize(glm::ivec2 size) {
+void AScrollbarHandle::onLayout(int w, int h) {
+  glm::ivec2 size {w, h};
   switch (mScrollbar.mDirection) {
     case ALayoutDirection::VERTICAL:
       size = {static_cast<int>((15_dp).getValuePx()), mOverridenSize};
@@ -391,11 +392,12 @@ void AScrollbarHandle::setSize(glm::ivec2 size) {
   }
 
   AView::setSize(size);
+  AView::onLayout(getWidth(), getHeight());
 }
 
-void AScrollbar::setSize(glm::ivec2 size) {
-  AViewContainerBase::setSize(size);
+void AScrollbar::onLayout(int w, int h) {
   updateScrollHandleSize();
+  AViewContainerBase::onLayout(w, h);
 }
 
 void AScrollbar::scrollToEnd() {

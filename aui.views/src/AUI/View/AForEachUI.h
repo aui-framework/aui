@@ -62,7 +62,7 @@ public:
     AForEachUIBase() {}
     ~AForEachUIBase() override = default;
     void setPosition(glm::ivec2 position) override;
-    void setSize(glm::ivec2 size) override;
+    void onLayout(int w, int h) override;
 
 protected:
     struct Cache {
@@ -73,9 +73,9 @@ protected:
     };
 
     AOptional<Cache> mCache;
+    glm::ivec2 mLastOnLayoutSize = {0, 0};
 
     void onViewGraphSubtreeChanged() override;
-    void applyGeometryToChildren() override;
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 

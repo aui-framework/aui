@@ -84,14 +84,14 @@ TEST_F(UIScrollTest, ContainedViewExpanded) {
 }
 
 TEST_F(UIScrollTest, ScrollTo1) {
-    mTestWindow->applyGeometryToChildrenIfNecessary();
+    mTestWindow->redraw();
     By::text("Bottom").check(uitest::impl::not$(isBottomAboveBottomOf(By::type<AScrollArea>())));
     mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBottomLabel);
     By::text("Bottom").check(isBottomAboveBottomOf(By::type<AScrollArea>()));
 }
 
 TEST_F(UIScrollTest, ScrollTo2) {
-    mTestWindow->applyGeometryToChildrenIfNecessary();
+    mTestWindow->redraw();
     mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBottomLabel);
     By::text("Content").check(isTopAboveTopOf(By::type<AScrollArea>()), "first check");
     mTestWindow->mScrollArea->scrollTo(mTestWindow->mMockedContainer->mBigContent);

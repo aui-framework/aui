@@ -36,7 +36,7 @@ private:
 public:
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
-    void setSize(glm::ivec2 size) override;
+    void onLayout(int w, int h) override;
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
@@ -129,7 +129,7 @@ public:
 
     void onPointerPressed(const APointerPressedEvent& event) override;
 
-    void setSize(glm::ivec2 size) override;
+    void onLayout(int w, int h) override;
 
     static const _<ATimer>& buttonTimer();
 

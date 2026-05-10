@@ -121,7 +121,7 @@ void AEmbedContext::windowRender() {
     render.setWindow(mContainer.get());
     if (mContainer->mRequiresLayoutUpdate) {
         mContainer->mRequiresLayoutUpdate = false;
-        mContainer->applyGeometryToChildrenIfNecessary();
+        //mContainer->applyGeometryToChildrenIfNecessary(); // TODO(Nelonn): fix
     }
     AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;

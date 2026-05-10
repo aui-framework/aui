@@ -29,7 +29,7 @@ class AListViewContainer : public AViewContainer {
     mutable std::size_t mIndex = -1;
 
    public:
-    void applyGeometryToChildren() override {
+    void onLayout(int w, int h) override {
         if (getLayout())
             getLayout()->layout(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
                                   getSize().y - mPadding.vertical());
@@ -58,7 +58,7 @@ class AListViewContainer : public AViewContainer {
 
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
-        applyGeometryToChildrenIfNecessary();
+        onLayout(getWidth(), getHeight());
     }
 
     size_t getIndex() const { return mIndex; }

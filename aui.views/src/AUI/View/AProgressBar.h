@@ -111,7 +111,7 @@ public:
 public:
     AProgressBar();
 
-    void setSize(glm::ivec2 size) override;
+    void onLayout(int w, int h) override;
 
 private:
     aui::float_within_0_1 mValue = 0.f;
@@ -167,4 +167,3 @@ public:
     }
     static void setup(const _<AProgressBar>& view) {}
 };
-

@@ -152,6 +152,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 GetClientRect(mHandle, &clientRect);
                 AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
                 AViewContainer::setSize({LOWORD(lParam), HIWORD(lParam)});
+                requestLayout();
 
                 switch (wParam) {
                     case SIZE_MAXIMIZED:
@@ -442,22 +443,24 @@ glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
 }
 
 void AWindow::show() {
-    if (!getWindowManager().mWindows.contains(_cast<AWindow>(aui::ptr::shared_from_this(this)))) {
-        getWindowManager().mWindows << _cast<AWindow>(aui::ptr::shared_from_this(this));
-    }
-    try {
-        mSelfHolder = _cast<AWindow>(aui::ptr::shared_from_this(this));
-    } catch (...) {
-        mSelfHolder = nullptr;
-    }
-    AThread::current() << [this, self = shared_from_this()]() {
-        redraw();
-    };
+  if (!getWindowManager().mWindows.contains(_cast<AWindow>(aui::ptr::shared_from_this(this)))) {
+    getWindowManager().mWindows << _cast<AWindow>(aui::ptr::shared_from_this(this));
+  }
+  try {
+    mSelfHolder = _cast<AWindow>(aui::ptr::shared_from_this(this));
+  } catch (...) {
+    mSelfHolder = nullptr;
+  }
+  AThread::current() << [this, self = shared_from_this()]() {
+    redraw();
+  };
 
-    UpdateWindow(mHandle);
-    ShowWindow(mHandle, SW_SHOWNORMAL);
+  UpdateWindow(mHandle);
+  ShowWindow(mHandle, SW_SHOWNORMAL);
 
-    emit shown();
+  updateDpi();
+
+  emit shown();
 }
 void AWindow::setIcon(const AImage& image) {
     if (!mHandle) return;
