@@ -120,10 +120,6 @@ void AWindow::redraw() {
 #if AUI_PLATFORM_LINUX
       IPlatformAbstraction::current().windowAnnounceMinMaxSize(*this);
 #endif
-      if (mWantsLayoutUpdate) {
-        ALogger::warn("Layout") << "AView::requestLayout() shouldn't be called while performing layout";
-        mWantsLayoutUpdate = false;
-      }
     }
 
     auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());

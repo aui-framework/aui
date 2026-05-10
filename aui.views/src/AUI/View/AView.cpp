@@ -89,7 +89,7 @@ void AView::requestLayout() {
   mLastLayoutSize = glm::ivec2(-1, -1);
   mMeasureCache.clear();
   mMinMaxSizesCache.clear();
-  if (mFixedSize == glm::ivec2(0)) {
+  if (mFixedSize == glm::ivec2(0) && static_cast<bool>(getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
     AUI_NULLSAFE(mParent)->requestLayout();
   }
 }
