@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -33,14 +33,10 @@ bool AAbstractTextField::handlesNonMouseNavigation() {
 }
 
 
-AMinMaxSizes AAbstractTextField::onComputeIntrinsicMinMaxSizes(int height) {
-    const glm::ivec2 exactSize {
-        100,
-        getFontStyle().size + getFontStyle().font->getDescenderHeight(getFontStyle().size),
-    };
+AMinMaxAxis AAbstractTextField::onComputeIntrinsicMinMaxAxis(int height) {
     return {
-        .min = exactSize,
-        .max = exactSize,
+        .min = 100,
+        .max = 100,
     };
 }
 

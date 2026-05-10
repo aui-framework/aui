@@ -28,7 +28,7 @@ public:
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
     void addView(const _<AView>& view, AOptional<size_t> index) override;
 

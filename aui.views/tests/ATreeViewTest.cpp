@@ -19,10 +19,10 @@ class FixedWidthTreeItemView : public AView {
 public:
     FixedWidthTreeItemView(int width, int height) : mWidth(width), mHeight(height) {}
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
-            .min = { mWidth, mHeight },
-            .max = { mWidth, mHeight },
+            .min = mWidth,
+            .max = mWidth,
         };
     }
 

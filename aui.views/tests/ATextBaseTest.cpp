@@ -73,7 +73,7 @@ TEST(ATextBase, IntrinsicWidthIgnoresPaddingAndMaxSize) {
     text.setMaxSize({ 20, 100 });
     text.setEntries({ line1a, line1b, lineBreak, line2 });
 
-    EXPECT_EQ(text.onComputeIntrinsicMinMaxSizes(-1).max.x, 40);
+    EXPECT_EQ(text.onComputeIntrinsicMinMaxAxis(-1).max, 40);
 }
 
 TEST(ATextBase, IntrinsicHeightMeasurementDoesNotStoreLayout) {
@@ -96,8 +96,8 @@ TEST(AText, MinContentWidthUsesLongestWordForNormalWordBreak) {
     AText text;
     text.setString("aa longest bbb", { WordBreak::NORMAL });
 
-    const auto minMax = text.computeMinMaxSizes();
+    const auto minMax = text.computeMinMaxAxis();
 
-    EXPECT_GE(minMax.min.x, text.getFontStyle().getWidth(U"longest"));
-    EXPECT_EQ(minMax.min.x, minMax.max.x);
+    EXPECT_GE(minMax.min, text.getFontStyle().getWidth(U"longest"));
+    EXPECT_GE(minMax.max, minMax.min);
 }

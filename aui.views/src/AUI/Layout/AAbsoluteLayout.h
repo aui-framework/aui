@@ -38,7 +38,7 @@ public:
     void addView(const _<AView>& view, AOptional<size_t> index) override;
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
 private:
     using ViewInfo = aui::detail::AbsoluteLayoutCell;

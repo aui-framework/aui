@@ -90,7 +90,7 @@ public:
 protected:
     void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
     void applyGeometryToChildren() override;
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
 private:
     class WordEntry final : public aui::detail::WordEntry {

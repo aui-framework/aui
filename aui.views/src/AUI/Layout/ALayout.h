@@ -297,9 +297,9 @@ class AViewContainer;
  *                 └─> AViewContainerBase::onIntrinsicMeasure()      │              │
  *                     └─> ALayout::onIntrinsicMeasure()             │              │
  *                         └─> AView::measure()                      │ cached       │
- *                 └─> AViewContainerBase::onComputeIntrinsicMinMaxSizes() │        │ potentially
- *                     └─> ALayout::onComputeIntrinsicMinMaxSizes()        │        │ recursive
- *                         └─> AView::computeMinMaxSizes()                 ┘        │
+ *                 └─> AViewContainerBase::onComputeIntrinsicMinMaxAxis() │        │ potentially
+ *                     └─> ALayout::onComputeIntrinsicMinMaxAxis()        │        │ recursive
+ *                         └─> AView::computeMinMaxAxis()                 ┘        │
  *             └─> AViewContainerBase::setGeometry()                                │
  *                 └─> AViewContainerBase::setSize()                                │
  *                     └─> AViewContainerBase::applyGeometryToChildrenIfNecessary() │
@@ -381,7 +381,7 @@ public:
      */
     virtual void removeView(aui::no_escape<AView> view, size_t index) = 0;
 
-    AMinMaxSizes computeMinMaxSizes(int height = -1);
+    AMinMaxAxis computeMinMaxAxis(int height = -1);
 
     glm::ivec2 measure(AConstraints constraints);
 
@@ -390,15 +390,14 @@ public:
     glm::ivec2 getMinimumSize() { return { getMinimumWidth(), getMinimumHeight() }; }
 
     virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints) {
-        const auto minMax = onComputeIntrinsicMinMaxSizes(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
+        const auto minMax = onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
         const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
-        const int maxHeight = constraints.isUnlimitedHeight() ? std::numeric_limits<int>::max() : constraints.maxHeight;
         return {
-            std::clamp(minMax.max.x, constraints.minWidth, maxWidth),
-            std::clamp(minMax.max.y, constraints.minHeight, maxHeight),
+            std::clamp(minMax.max, constraints.minWidth, maxWidth),
+            constraints.minHeight,
         };
     }
-    virtual AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) = 0;
+    virtual AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) = 0;
 
     /**
      * @brief Visits all views in the layout.
@@ -415,5 +414,5 @@ public:
 
 protected:
     AFixedSizeCache<AConstraints, glm::ivec2, 8> mMeasureCache;
-    AFixedSizeCache<int, AMinMaxSizes, 4> mMinMaxSizesCache;
+    AFixedSizeCache<int, AMinMaxAxis, 4> mMinMaxSizesCache;
 };

@@ -51,11 +51,11 @@ public:
         requestLayout();
     }
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
-        auto minMax = mHandle->computeMinMaxSizes();
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
+        auto minMax = mHandle->computeMinMaxAxis();
         return {
-            .min = { minMax.min.x, minMax.max.y },
-            .max = { minMax.max.x, minMax.max.y },
+            .min = minMax.min,
+            .max = minMax.max,
         };
     }
 

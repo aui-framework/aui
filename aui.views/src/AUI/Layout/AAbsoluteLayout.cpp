@@ -14,10 +14,12 @@
 void AAbsoluteLayout::layout(int x, int y, int width, int height) {
     for (const auto& i : mViews) {
         if (i.pivotX && i.pivotY) {
+            const int measuredHeight =
+                i.sizeY ? static_cast<int>(i.sizeY->getValuePx()) : i.view->measure(AConstraints {}).y;
             i.view->layout(
                 i.pivotX->getValuePx() + x, i.pivotY->getValuePx() + y,
-                i.sizeX ? i.sizeX->getValuePx() : i.view->computeMinMaxSizes().max.x,
-                i.sizeY ? i.sizeY->getValuePx() : i.view->computeMinMaxSizes().max.y);
+                i.sizeX ? i.sizeX->getValuePx() : i.view->computeMinMaxAxis().max,
+                measuredHeight);
             continue;
         }
         i.view->layout(i.view->getPosition(), i.view->getSize());
@@ -41,16 +43,13 @@ glm::ivec2 AAbsoluteLayout::onIntrinsicMeasure(AConstraints constraints) {
     return size;
 }
 
-AMinMaxSizes AAbsoluteLayout::onComputeIntrinsicMinMaxSizes(int) {
-    AMinMaxSizes result;
+AMinMaxAxis AAbsoluteLayout::onComputeIntrinsicMinMaxAxis(int) {
+    AMinMaxAxis result;
     for (const auto& i : mViews) {
-        const auto minMax = i.view->computeMinMaxSizes();
+        const auto minMax = i.view->computeMinMaxAxis();
         const int x = i.pivotX.valueOr(AMetric(0)).getValuePx();
-        const int y = i.pivotY.valueOr(AMetric(0)).getValuePx();
-        result.min.x = glm::max(result.min.x, x + (i.sizeX ? static_cast<int>(i.sizeX->getValuePx()) : minMax.min.x));
-        result.min.y = glm::max(result.min.y, y + (i.sizeY ? static_cast<int>(i.sizeY->getValuePx()) : minMax.min.y));
-        result.max.x = glm::max(result.max.x, x + (i.sizeX ? static_cast<int>(i.sizeX->getValuePx()) : minMax.max.x));
-        result.max.y = glm::max(result.max.y, y + (i.sizeY ? static_cast<int>(i.sizeY->getValuePx()) : minMax.max.y));
+        result.min = glm::max(result.min, x + (i.sizeX ? static_cast<int>(i.sizeX->getValuePx()) : minMax.min));
+        result.max = glm::max(result.max, x + (i.sizeX ? static_cast<int>(i.sizeX->getValuePx()) : minMax.max));
     }
     return result;
 }

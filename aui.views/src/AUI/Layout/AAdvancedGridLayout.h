@@ -36,7 +36,7 @@ public:
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
     int indexOf(_<AView> view);
 

@@ -10,14 +10,12 @@
  */
 
 //
-// Created by Nelonn on 5/9/2026.
+// Created by Nelonn on 5/10/2026.
 //
 
 #pragma once
 
-#include <glm/glm.hpp>
-
-struct AMinMaxSizes {
-  glm::ivec2 min = {};
-  glm::ivec2 max = {};
+struct AMinMaxAxis {
+  int min = 0;
+  int max = 0;
 };

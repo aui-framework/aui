@@ -24,8 +24,8 @@ AText::AText() {
   addView(mViewsContainer = _new<AViewContainer>());
 }
 
-AMinMaxSizes AText::onComputeIntrinsicMinMaxSizes(int height) {
-  auto minMax = ATextBase::onComputeIntrinsicMinMaxSizes(height);
+AMinMaxAxis AText::onComputeIntrinsicMinMaxAxis(int height) {
+  auto minMax = ATextBase::onComputeIntrinsicMinMaxAxis(height);
 
   int minContentWidth = 0;
   for (const auto& entry : mEngine.entries()) {
@@ -35,7 +35,7 @@ AMinMaxSizes AText::onComputeIntrinsicMinMaxSizes(int height) {
     minContentWidth = glm::max(minContentWidth, entry->getSize().x);
   }
 
-  minMax.min.x = minContentWidth;
+  minMax.min = minContentWidth;
   return minMax;
 }
 

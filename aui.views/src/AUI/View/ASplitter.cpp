@@ -104,9 +104,12 @@ public:
         return aui::HVLayout<Direction>::onIntrinsicMeasure(injected, mSpacing, constraints);
     }
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override {
         auto injected = viewsWithFixedSizeInjected();
-        return aui::HVLayout<Direction>::computeIntrinsicMinMaxSizes(injected, mSpacing);
+        auto result = aui::HVLayout<Direction>::computeIntrinsicMinMaxSizes(injected, mSpacing);
+        result.max = aui::HVLayout<Direction>::preferredWidth(injected, mSpacing, height);
+        result.max = glm::max(result.max, result.min);
+        return result;
     }
 
     ~ASplitterLayout() override = default;

@@ -17,11 +17,11 @@ void ALayout::requestLayout() {
     mMinMaxSizesCache.clear();
 }
 
-AMinMaxSizes ALayout::computeMinMaxSizes(int height) {
+AMinMaxAxis ALayout::computeMinMaxAxis(int height) {
     if (auto it = mMinMaxSizesCache.find(height); it != mMinMaxSizesCache.end()) {
         return it->second;
     }
-    return mMinMaxSizesCache.emplace(height, onComputeIntrinsicMinMaxSizes(height)).first->second;
+    return mMinMaxSizesCache.emplace(height, onComputeIntrinsicMinMaxAxis(height)).first->second;
 }
 
 glm::ivec2 ALayout::measure(AConstraints constraints) {
@@ -50,11 +50,11 @@ glm::ivec2 ALayout::measure(AConstraints constraints) {
 }
 
 int ALayout::getMinimumWidth() {
-    return computeMinMaxSizes(-1).min.x;
+    return computeMinMaxAxis(-1).min;
 }
 
 int ALayout::getMinimumHeight() {
-    return computeMinMaxSizes(-1).min.y;
+    return measure(AConstraints::fixedWidth(getMinimumWidth())).y;
 }
 
 void ALayout::setSpacing(int spacing) {}

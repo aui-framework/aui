@@ -47,8 +47,8 @@ public:
         requestLayout();
     }
 
-    //glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
     void applyGeometryToChildren() override;
 
     void onPointerPressed(const APointerPressedEvent& event) override;

@@ -209,10 +209,10 @@ namespace {
 class LabelMock : public ALabel {
 public:
     LabelMock(AString text) : ALabel(std::move(text)) {
-        ON_CALL(*this, onComputeIntrinsicMinMaxSizes)
-            .WillByDefault([this](int height) { return ALabel::onComputeIntrinsicMinMaxSizes(height); });
+        ON_CALL(*this, onComputeIntrinsicMinMaxAxis)
+            .WillByDefault([this](int height) { return ALabel::onComputeIntrinsicMinMaxAxis(height); });
     }
-    MOCK_METHOD(AMinMaxSizes, onComputeIntrinsicMinMaxSizes, (int height), (override));
+    MOCK_METHOD(AMinMaxAxis, onComputeIntrinsicMinMaxAxis, (int height), (override));
 };
 }   // namespace
 
@@ -222,13 +222,13 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance1) {
 
     testing::InSequence s;
     auto l = _new<LabelMock>("test");
-    EXPECT_CALL(*l, onComputeIntrinsicMinMaxSizes(testing::_)).Times(1);
+    EXPECT_CALL(*l, onComputeIntrinsicMinMaxAxis(testing::_)).Times(1);
     inflate(Centered { Horizontal {
       l,
     } });
     l->getWindow()->applyGeometryToChildrenIfNecessary();
 
-    // extra layout update that should not call LabelMock::onComputeIntrinsicMinMaxSizes one more time
+    // extra layout update that should not call LabelMock::onComputeIntrinsicMinMaxAxis one more time
     AUI_REPEAT(10) { l->getWindow()->applyGeometryToChildrenIfNecessary(); }
 }
 
@@ -239,7 +239,7 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
     testing::InSequence s;
     auto l1 = _new<LabelMock>("test");
     auto l2 = _new<ALabel>("test");
-    EXPECT_CALL(*l1, onComputeIntrinsicMinMaxSizes(testing::_)).Times(2);
+    EXPECT_CALL(*l1, onComputeIntrinsicMinMaxAxis(testing::_)).Times(2);
     inflate(Centered { Horizontal {
       l1,
       l2,
@@ -427,7 +427,7 @@ TEST_F(UILayoutTest, Margin7) {
 
 TEST_F(UILayoutTest, ExpandingTextHasNonZeroIntrinsicWidth) {
     auto text = AText::fromString("middle");
-    EXPECT_GT(text->computeMinMaxSizes().max.x, 0);
+    EXPECT_GT(text->computeMinMaxAxis().max, 0);
 }
 
 TEST_F(UILayoutTest, HorizontalSpacerExpandingConsumesRemainingSpace) {

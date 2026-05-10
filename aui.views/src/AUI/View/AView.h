@@ -37,7 +37,7 @@
 #include <AUI/Enum/MouseCollisionPolicy.h>
 #include <AUI/Util/ALayoutDirection.h>
 #include <AUI/Util/AConstraints.hpp>
-#include <AUI/Util/AMinMaxSizes.hpp>
+#include <AUI/Util/AMinMaxAxis.hpp>
 #include <AUI/Action/AMenu.h>
 
 #include <AUI/Event/AScrollEvent.h>
@@ -504,7 +504,7 @@ class API_AUI_VIEWS AView : public AObject {
   void setSizeForced(glm::ivec2 size) { mSize = size; }
   virtual void setSize(glm::ivec2 size);
 
-  AMinMaxSizes computeMinMaxSizes(int height = -1);
+  AMinMaxAxis computeMinMaxAxis(int height = -1);
 
   glm::ivec2 measure(AConstraints constraints);
 
@@ -926,7 +926,7 @@ class API_AUI_VIEWS AView : public AObject {
   glm::ivec2 mLastLayoutSize = { -1, -1 };
 
   AFixedSizeCache<AConstraints, glm::ivec2, 8> mMeasureCache;
-  AFixedSizeCache<int, AMinMaxSizes, 4> mMinMaxSizesCache;
+  AFixedSizeCache<int, AMinMaxAxis, 4> mMinMaxSizesCache;
 
   /**
    * @brief Redraw requested flag for this particular view/
@@ -985,7 +985,7 @@ class API_AUI_VIEWS AView : public AObject {
 
 public:
   virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints);
-  virtual AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height);
+  virtual AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height);
 protected:
   virtual void onLayout(int w, int h);
 

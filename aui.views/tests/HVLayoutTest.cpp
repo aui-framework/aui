@@ -46,10 +46,10 @@ public:
         };
     }
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
             .min = {},
-            .max = { preferredWidth(-1), preferredHeight(-1) },
+            .max = preferredWidth(-1),
         };
     }
 };
@@ -74,11 +74,11 @@ public:
         return measuredContentSize;
     }
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override {
         lastHeightConstraint = height;
         return {
             .min = {},
-            .max = { intrinsicWidth, intrinsicHeight },
+            .max = intrinsicWidth,
         };
     }
 };
@@ -86,9 +86,9 @@ public:
 class MinMaxTestView : public AView {
 public:
     int calls = 0;
-    AMinMaxSizes value;
+    AMinMaxAxis value;
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         ++calls;
         return value;
     }
@@ -96,20 +96,20 @@ public:
 
 class LabelMinMaxTestView : public AAbstractLabel {
 public:
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
-            .min = { 17, 9 },
-            .max = { 17, 9 },
+            .min = 17,
+            .max = 17,
         };
     }
 };
 
 class WrappingMinMaxTestView : public AView {
 public:
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
-            .min = { 20, 10 },
-            .max = { 80, 10 },
+            .min = 20,
+            .max = 80,
         };
     }
 
@@ -137,10 +137,10 @@ public:
         };
     }
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
-            .min = { minWidth, 0 },
-            .max = { minWidth, preferredHeight },
+            .min = minWidth,
+            .max = minWidth,
         };
     }
 };
@@ -157,10 +157,10 @@ public:
         };
     }
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
             .min = {},
-            .max = { preferredWidth, preferredHeight },
+            .max = preferredWidth,
         };
     }
 };
@@ -265,8 +265,8 @@ TEST(HVLayout, HorizontalComputeMinMaxSizesUsesChildrenAndSpacing) {
     AVector<_<AView>> views { left, right };
     const auto minMax = HorizontalHVLayout::computeIntrinsicMinMaxSizes(views, 6);
 
-    EXPECT_EQ(minMax.min, glm::ivec2(27, 22));
-    EXPECT_EQ(minMax.max, glm::ivec2(80, 22));
+    EXPECT_EQ(minMax.min, 27);
+    EXPECT_EQ(minMax.max, 80);
 }
 
 TEST(HVLayout, VerticalExpandingConsumesRemainingSpace) {
@@ -298,7 +298,7 @@ TEST(HVLayout, VerticalComputeMinWidthIgnoresZeroHeightProbeGarbage) {
 
     const auto minMax = VerticalHVLayout::computeIntrinsicMinMaxSizes(views, 0);
 
-    EXPECT_EQ(minMax.min.x, 3173);
+    EXPECT_EQ(minMax.min, 3173);
 }
 
 TEST(AViewMeasure, MeasureUsesPaddingAdjustedConstraints) {
@@ -371,30 +371,30 @@ TEST(AViewMeasure, ComputeMinMaxSizesUsesIntrinsicSemantics) {
     view.intrinsicWidth = 10;
     view.intrinsicHeight = 9;
 
-    const auto minMax = view.computeMinMaxSizes();
+    const auto minMax = view.computeMinMaxAxis();
 
-    EXPECT_EQ(minMax.min, glm::ivec2(20, 30));
-    EXPECT_EQ(minMax.max, glm::ivec2(20, 30));
+    EXPECT_EQ(minMax.min, 20);
+    EXPECT_EQ(minMax.max, 20);
 }
 
 TEST(AViewMeasure, ComputeMinMaxSizesIsCachedUntilRequestLayout) {
     MinMaxTestView view;
     view.value = {
-        .min = { 1, 2 },
-        .max = { 3, 4 },
+        .min = 1,
+        .max = 3,
     };
 
-    EXPECT_EQ(view.computeMinMaxSizes().max, glm::ivec2(3, 4));
-    EXPECT_EQ(view.computeMinMaxSizes().max, glm::ivec2(3, 4));
+    EXPECT_EQ(view.computeMinMaxAxis().max, 3);
+    EXPECT_EQ(view.computeMinMaxAxis().max, 3);
     EXPECT_EQ(view.calls, 1);
 
     view.value = {
-        .min = { 5, 6 },
-        .max = { 7, 8 },
+        .min = 5,
+        .max = 7,
     };
     view.requestLayout();
 
-    EXPECT_EQ(view.computeMinMaxSizes().max, glm::ivec2(7, 8));
+    EXPECT_EQ(view.computeMinMaxAxis().max, 7);
     EXPECT_EQ(view.calls, 2);
 }
 
@@ -414,19 +414,19 @@ TEST(AViewMeasure, ViewContainerForwardsLayoutMinMaxSizes) {
     container.addView(left);
     container.addView(right);
 
-    const auto minMax = container.computeMinMaxSizes();
+    const auto minMax = container.computeMinMaxAxis();
 
-    EXPECT_EQ(minMax.min, glm::ivec2(17, 20));
-    EXPECT_EQ(minMax.max, glm::ivec2(70, 20));
+    EXPECT_EQ(minMax.min, 17);
+    EXPECT_EQ(minMax.max, 70);
 }
 
 TEST(AViewMeasure, AbstractLabelUsesExactIntrinsicMinMaxSizes) {
     LabelMinMaxTestView view;
 
-    const auto minMax = view.computeMinMaxSizes();
+    const auto minMax = view.computeMinMaxAxis();
 
-    EXPECT_EQ(minMax.min, glm::ivec2(17, 9));
-    EXPECT_EQ(minMax.max, glm::ivec2(17, 9));
+    EXPECT_EQ(minMax.min, 17);
+    EXPECT_EQ(minMax.max, 17);
 }
 
 TEST(ASplitterHelper, ReclaimSpaceUsesViewMinimumSize) {
@@ -458,8 +458,8 @@ TEST(ASplitterHelper, OverridenSizeIsExactOnMainAxis) {
 
     SizeInjector<ALayoutDirection::HORIZONTAL> injected { item };
 
-    EXPECT_EQ(injected.computeMinMaxSizes().max.x, 20);
-    EXPECT_EQ(injected.computeMinMaxSizes().min.x, 20);
+    EXPECT_EQ(injected.computeMinMaxAxis().max, 20);
+    EXPECT_EQ(injected.computeMinMaxAxis().min, 20);
     EXPECT_EQ(injected.getFixedSize().x, 0);
     EXPECT_EQ(injected.getMinSize().x, 7);
     EXPECT_EQ(injected.getExpanding().x, 0);
@@ -478,8 +478,8 @@ TEST(ASplitterHelper, OverridenSizeDoesNotGoBelowViewMinimum) {
 
     SizeInjector<ALayoutDirection::HORIZONTAL> injected { item };
 
-    EXPECT_EQ(injected.computeMinMaxSizes().max.x, 30);
-    EXPECT_EQ(injected.computeMinMaxSizes().min.x, 30);
+    EXPECT_EQ(injected.computeMinMaxAxis().max, 30);
+    EXPECT_EQ(injected.computeMinMaxAxis().min, 30);
 }
 
 TEST(ASplitter, DefaultsToEqualHorizontalExpansionWhenChildrenAreNotExpanding) {
@@ -512,7 +512,7 @@ TEST(ASplitter, HorizontalMinHeightUsesChildHeightAtMinimumWidths) {
         .withItems({ wrapping, fixed })
         .build());
 
-    const auto minMax = splitter->computeMinMaxSizes();
+    const auto minMax = splitter->computeMinMaxAxis();
 
-    EXPECT_EQ(minMax.min, glm::ivec2(40, 50));
+    EXPECT_EQ(minMax.min, 40);
 }

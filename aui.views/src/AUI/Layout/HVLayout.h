@@ -13,7 +13,7 @@
 
 #include <AUI/Util/ALayoutDirection.h>
 #include <AUI/Util/AConstraints.hpp>
-#include <AUI/Util/AMinMaxSizes.hpp>
+#include <AUI/Util/AMinMaxAxis.hpp>
 #include <AUI/Enum/Visibility.h>
 #include <range/v3/range.hpp>
 #include <vector>
@@ -136,58 +136,58 @@ struct HVLayout {
   }
 
   static int computePerpendicularSize(const auto& view, int ourAxisSize, int availablePerpendicularSize) {
-    const auto minMaxSizes = view->computeMinMaxSizes(ourAxisSize);
-    const int minimumPerpendicularSize = getPerpAxisValue(minMaxSizes.min);
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
       if (getPerpAxisValue(view->getExpanding()) != 0 && getPerpAxisValue(view->getFixedSize()) == 0) {
-        return glm::max(availablePerpendicularSize, minimumPerpendicularSize);
+        return glm::max(
+            availablePerpendicularSize,
+            view->measure({
+                  .minWidth = ourAxisSize,
+                  .maxWidth = ourAxisSize,
+                }).y);
       }
-      return glm::max(
-          minimumPerpendicularSize,
-          view
-              ->measure({
-                .minWidth = ourAxisSize,
-                .maxWidth = ourAxisSize,
-                .maxHeight = availablePerpendicularSize,
-              })
-              .y);
+      return view
+          ->measure({
+            .minWidth = ourAxisSize,
+            .maxWidth = ourAxisSize,
+            .maxHeight = availablePerpendicularSize,
+          })
+          .y;
     } else {
       if (getPerpAxisValue(view->getExpanding()) != 0 && getPerpAxisValue(view->getFixedSize()) == 0) {
-        return glm::max(availablePerpendicularSize, minimumPerpendicularSize);
+        return glm::max(
+            availablePerpendicularSize,
+            view->measure({
+                  .minHeight = ourAxisSize,
+                  .maxHeight = ourAxisSize,
+                }).x);
       }
-      return glm::max(
-          minimumPerpendicularSize,
-          view
-              ->measure({
-                .minHeight = ourAxisSize,
-                .maxHeight = ourAxisSize,
-                .maxWidth = availablePerpendicularSize,
-              })
-              .x);
+      return view
+          ->measure({
+            .minHeight = ourAxisSize,
+            .maxHeight = ourAxisSize,
+            .maxWidth = availablePerpendicularSize,
+          })
+          .x;
     }
   }
 
   static int computeExpandingLowerBound(const auto& view, int perpendicularConstraint) {
-    const auto minMaxSizes = view->computeMinMaxSizes(perpendicularConstraint);
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-      return minMaxSizes.min.x;
+      return view->computeMinMaxAxis(perpendicularConstraint).min;
     } else {
-      return minMaxSizes.min.y;
+      return view->measure(AConstraints::fixedWidth(glm::max(0, perpendicularConstraint))).y;
     }
   }
 
   static int computePreferredMainAxisSize(const auto& view, int perpendicularConstraint) {
-    const auto minMaxSizes = view->computeMinMaxSizes();
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
       if (perpendicularConstraint != -1) {
         return view->measure(AConstraints::fixedHeight(perpendicularConstraint)).x;
       }
-      return minMaxSizes.max.x;
+      return view->computeMinMaxAxis().max;
     } else {
-      if (perpendicularConstraint != -1) {
-        return view->measure(AConstraints::fixedWidth(perpendicularConstraint)).y;
-      }
-      return minMaxSizes.max.y;
+      return view->measure(AConstraints::fixedWidth(
+          perpendicularConstraint == -1 ? view->computeMinMaxAxis().max : perpendicularConstraint)).y;
     }
   }
 
@@ -343,19 +343,24 @@ struct HVLayout {
     }
   }
 
-  static int computeMinimumPerpendicularContribution(const auto& view, const AMinMaxSizes& minMax, glm::ivec2 margin) {
-    return getPerpAxisValue(minMax.min) + getPerpAxisValue(margin);
+  static int computeMinimumPerpendicularContribution(const auto& view, glm::ivec2 margin) {
+    if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+      return view->measure(AConstraints::fixedWidth(view->computeMinMaxAxis().min)).y + margin.y;
+    } else {
+      return view->computeMinMaxAxis().min + margin.x;
+    }
   }
 
-  static int computeMaximumPerpendicularContribution(const auto& view, const AMinMaxSizes& minMax, glm::ivec2 margin) {
-    const int perp = getPerpAxisValue(view->getExpanding()) > 0
-        ? getPerpAxisValue(minMax.min)
-        : getPerpAxisValue(minMax.max);
-    return perp + getPerpAxisValue(margin);
+  static int computeMaximumPerpendicularContribution(const auto& view, glm::ivec2 margin) {
+    if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+      return view->measure(AConstraints::fixedWidth(view->computeMinMaxAxis().max)).y + margin.y;
+    } else {
+      return view->computeMinMaxAxis().max + margin.x;
+    }
   }
 
-  static AMinMaxSizes computeIntrinsicMinMaxSizes(ranges::range auto&& views, int spacing) {
-    AMinMaxSizes result;
+  static AMinMaxAxis computeIntrinsicMinMaxSizes(ranges::range auto&& views, int spacing) {
+    AMinMaxAxis result;
     int visibleCount = 0;
 
     for (const auto& view : views) {
@@ -363,23 +368,16 @@ struct HVLayout {
         continue;
       }
 
-      const auto minMax = view->computeMinMaxSizes();
+      const auto minMax = view->computeMinMaxAxis();
       const auto margin = view->getMargin().occupiedSize();
-      const auto childMin = minMax.min + margin;
-      const auto childMax = minMax.max + margin;
-      const int childMeasuredMinPerp = computeMinimumPerpendicularContribution(view, minMax, margin);
-      const int childMeasuredMaxPerp = computeMaximumPerpendicularContribution(view, minMax, margin);
-
+      const int childMin = minMax.min + margin.x;
+      const int childMax = minMax.max + margin.x;
       if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-        result.min.x += childMin.x;
-        result.max.x += childMax.x;
-        result.min.y = glm::max(result.min.y, childMeasuredMinPerp);
-        result.max.y = glm::max(result.max.y, childMeasuredMaxPerp);
+        result.min += childMin;
+        result.max += childMax;
       } else {
-        result.min.x = glm::max(result.min.x, childMeasuredMinPerp);
-        result.max.x = glm::max(result.max.x, childMeasuredMaxPerp);
-        result.min.y += childMin.y;
-        result.max.y += childMax.y;
+        result.min = glm::max(result.min, childMin);
+        result.max = glm::max(result.max, childMax);
       }
 
       ++visibleCount;
@@ -387,11 +385,8 @@ struct HVLayout {
 
     const int totalSpacing = glm::max(0, visibleCount - 1) * spacing;
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-      result.min.x += totalSpacing;
-      result.max.x += totalSpacing;
-    } else {
-      result.min.y += totalSpacing;
-      result.max.y += totalSpacing;
+      result.min += totalSpacing;
+      result.max += totalSpacing;
     }
 
     return result;
@@ -417,11 +412,11 @@ struct HVLayout {
 
   private:
   static int preferredMainAxisSize(const auto& view) {
-    const auto minMax = view->computeMinMaxSizes();
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-      return getAxisValue(view->getExpanding()) > 0 ? minMax.min.x : minMax.max.x;
+      const auto minMax = view->computeMinMaxAxis();
+      return getAxisValue(view->getExpanding()) > 0 ? minMax.min : minMax.max;
     } else {
-      return getAxisValue(view->getExpanding()) > 0 ? minMax.min.y : minMax.max.y;
+      return view->measure(AConstraints::fixedWidth(view->computeMinMaxAxis().max)).y;
     }
   }
 
@@ -440,16 +435,12 @@ struct HVLayout {
         childOurAxisIntrinsic =
             childPerpAxisConstraint == -1
                 ? (getAxisValue(v->getExpanding()) > 0
-                    ? v->computeMinMaxSizes().min.x
-                    : v->computeMinMaxSizes().max.x)
+                    ? v->computeMinMaxAxis().min
+                    : v->computeMinMaxAxis().max)
                 : v->measure(AConstraints::fixedHeight(childPerpAxisConstraint)).x;
       } else {
-        childOurAxisIntrinsic =
-            childPerpAxisConstraint == -1
-                ? (getAxisValue(v->getExpanding()) > 0
-                    ? v->computeMinMaxSizes().min.y
-                    : v->computeMinMaxSizes().max.y)
-                : v->measure(AConstraints::fixedWidth(childPerpAxisConstraint)).y;
+        childOurAxisIntrinsic = v->measure(AConstraints::fixedWidth(
+            childPerpAxisConstraint == -1 ? v->computeMinMaxAxis().max : childPerpAxisConstraint)).y;
       }
 
       sum += childOurAxisIntrinsic + getAxisValue(v->getMargin().occupiedSize()) + spacing;
@@ -459,17 +450,23 @@ struct HVLayout {
 
   static int preferredPerpendicularAxis(ranges::range auto&& views, int spacing, int ourAxisConstraint) {
     if (ourAxisConstraint == -1) {
+      if constexpr (direction == ALayoutDirection::VERTICAL) {
+        int maxWidth = 0;
+        for (const auto& v : views) {
+          if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+            continue;
+          }
+          maxWidth = std::max(maxWidth, v->computeMinMaxAxis().max + v->getMargin().horizontal());
+        }
+        return maxWidth;
+      }
+
       int maxPerp = 0;
       for (const auto& v : views) {
         if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE))
           continue;
 
-        int childPerpAxisIntrinsic;
-        if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-          childPerpAxisIntrinsic = v->computeMinMaxSizes().max.y;
-        } else {
-          childPerpAxisIntrinsic = v->computeMinMaxSizes().max.x;
-        }
+        const int childPerpAxisIntrinsic = v->measure(AConstraints::fixedWidth(v->computeMinMaxAxis().max)).y;
 
         maxPerp = std::max(maxPerp, childPerpAxisIntrinsic + getPerpAxisValue(v->getMargin().occupiedSize()));
       }

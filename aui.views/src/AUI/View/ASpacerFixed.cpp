@@ -11,22 +11,18 @@
 
 #include "ASpacerFixed.h"
 
-AMinMaxSizes ASpacerFixed::onComputeIntrinsicMinMaxSizes(int height) {
-    glm::ivec2 exactSize = {};
+AMinMaxAxis ASpacerFixed::onComputeIntrinsicMinMaxAxis(int height) {
     if (auto parent = getParent()) {
         if (const auto& layout = parent->getLayout()) {
             if (layout->getLayoutDirection() == ALayoutDirection::HORIZONTAL) {
-                exactSize.x = static_cast<int>(mSpace.getValuePx());
-            }
-            if (layout->getLayoutDirection() == ALayoutDirection::VERTICAL) {
-                exactSize.y = static_cast<int>(mSpace.getValuePx());
+                return {
+                    .min = static_cast<int>(mSpace.getValuePx()),
+                    .max = static_cast<int>(mSpace.getValuePx()),
+                };
             }
         }
     }
-    return {
-        .min = exactSize,
-        .max = exactSize,
-    };
+    return {};
 }
 
 bool ASpacerFixed::consumesClick(const glm::ivec2& pos) {

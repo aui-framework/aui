@@ -77,7 +77,7 @@ protected:
     void onViewGraphSubtreeChanged() override;
     void applyGeometryToChildren() override;
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
     /**
      * @brief Notifies that range was changed or iterators might have invalidated.

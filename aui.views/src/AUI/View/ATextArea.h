@@ -70,6 +70,7 @@ public:
     void onCharEntered(AChar c) override;
     glm::ivec2 getCursorPosition() override;
     void setSize(glm::ivec2 size) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int widthConstraint) override;
 
     bool isPasswordField() const noexcept override;
 
@@ -122,5 +123,4 @@ public:
 
     static void setup(const _<ATextArea>& view) {}
 };
-
 

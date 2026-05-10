@@ -703,9 +703,9 @@ glm::ivec2 AViewContainerBase::onIntrinsicMeasure(AConstraints constraints) {
     return AView::onIntrinsicMeasure(constraints);
 }
 
-AMinMaxSizes AViewContainerBase::onComputeIntrinsicMinMaxSizes(int height) {
-    if (mLayout) return mLayout->computeMinMaxSizes(height);
-    return AView::onComputeIntrinsicMinMaxSizes(height);
+AMinMaxAxis AViewContainerBase::onComputeIntrinsicMinMaxAxis(int height) {
+    if (mLayout) return mLayout->computeMinMaxAxis(height);
+    return AView::onComputeIntrinsicMinMaxAxis(height);
 }
 
 void AViewContainerBase::forceUpdateLayoutRecursively() {

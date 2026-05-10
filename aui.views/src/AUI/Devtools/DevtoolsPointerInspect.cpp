@@ -92,11 +92,11 @@ public:
         return AViewContainerBase::onIntrinsicMeasure(constraints);
     }
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override {
         if (auto view = mView.lock()) {
-            return view->computeMinMaxSizes(height);
+            return view->computeMinMaxAxis(height);
         }
-        return AViewContainerBase::onComputeIntrinsicMinMaxSizes(height);
+        return AViewContainerBase::onComputeIntrinsicMinMaxAxis(height);
     }
 
     [[nodiscard]]

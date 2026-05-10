@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -28,7 +28,7 @@ glm::ivec2 AHorizontalLayout::onIntrinsicMeasure(AConstraints constraints) {
     return HVLayout::onIntrinsicMeasure(mViews, mSpacing, constraints);
 }
 
-AMinMaxSizes AHorizontalLayout::onComputeIntrinsicMinMaxSizes(int) {
+AMinMaxAxis AHorizontalLayout::onComputeIntrinsicMinMaxAxis(int) {
     return HVLayout::computeIntrinsicMinMaxSizes(mViews, mSpacing);
 }
 

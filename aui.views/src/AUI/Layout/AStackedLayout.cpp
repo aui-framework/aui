@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -56,9 +56,9 @@ glm::ivec2 AStackedLayout::onIntrinsicMeasure(AConstraints constraints) {
     auto margins = v->getMargin().occupiedSize();
     auto measured = v->measure({
       .minWidth = 0,
-      .maxWidth = std::max(0, constraints.maxWidth - margins.x),
+      .maxWidth = constraints.isUnlimitedWidth() ? -1 : std::max(0, constraints.maxWidth - margins.x),
       .minHeight = 0,
-      .maxHeight = std::max(0, constraints.maxHeight - margins.y),
+      .maxHeight = constraints.isUnlimitedHeight() ? -1 : std::max(0, constraints.maxHeight - margins.y),
     });
     width = glm::max(width, measured.x + margins.x);
     height = glm::max(height, measured.y + margins.y);
@@ -66,16 +66,15 @@ glm::ivec2 AStackedLayout::onIntrinsicMeasure(AConstraints constraints) {
   return { width, height };
 }
 
-AMinMaxSizes AStackedLayout::onComputeIntrinsicMinMaxSizes(int) {
-  AMinMaxSizes result;
+AMinMaxAxis AStackedLayout::onComputeIntrinsicMinMaxAxis(int) {
+  AMinMaxAxis result;
   for (const auto& view : mViews) {
     if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
       continue;
     }
-    const auto minMax = view->computeMinMaxSizes();
-    const auto margin = view->getMargin().occupiedSize();
-    result.min = glm::max(result.min, minMax.min + margin);
-    result.max = glm::max(result.max, minMax.max + margin);
+    const auto minMax = view->computeMinMaxAxis();
+    result.min = glm::max(result.min, minMax.min + view->getMargin().horizontal());
+    result.max = glm::max(result.max, minMax.max + view->getMargin().horizontal());
   }
   return result;
 }

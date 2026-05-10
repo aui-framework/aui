@@ -176,7 +176,7 @@ TEST_F(UIText, BreakAllAllowsNarrowIntrinsicWidthAndWrapping) {
         .maxWidth = std::max(1, unconstrained.x / 2),
     });
 
-    EXPECT_LT(text->computeMinMaxSizes().max.x, unconstrained.x);
+    EXPECT_LT(text->computeMinMaxAxis().max, unconstrained.x);
     EXPECT_EQ(constrained.x, std::max(1, unconstrained.x / 2));
     EXPECT_GT(constrained.y, unconstrained.y);
 }

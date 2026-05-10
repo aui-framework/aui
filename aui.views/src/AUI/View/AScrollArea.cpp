@@ -98,17 +98,10 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
     }
 
     const auto margins = contents()->getMargin().occupiedSize();
-    const auto contentMinMax = contents()->computeMinMaxSizes();
-    const int naturalContentWidth = margins.x + contentMinMax.max.x;
-    const int naturalContentHeight = margins.y + contentMinMax.max.y;
+    const auto contentMinMax = contents()->computeMinMaxAxis();
+    const int naturalContentWidth = margins.x + contentMinMax.max;
 
-    AConstraints minConstraints;
-    minConstraints.minWidth = 0;
-    minConstraints.maxWidth = 0; // probe minimum width under impossible width constraint
-    minConstraints.minHeight = 0;
-    minConstraints.maxHeight = -1; // height is not important
-
-    const int minimumScrollableContentWidth = margins.x + contents()->measure(minConstraints).x;
+    const int minimumScrollableContentWidth = margins.x + contentMinMax.min;
 
     int viewportWidth = widthBounded
         ? availableSize.x
@@ -119,6 +112,8 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
         const int contentWidth = std::max(0, width - margins.x);
         return contents()->measure(AConstraints::fixedWidth(contentWidth)).y + margins.y;
     };
+    const int naturalContentHeight =
+        contentHeightForViewportWidth(glm::max(naturalContentWidth, minimumScrollableContentWidth));
 
     int viewportHeight = heightBounded
         ? availableSize.y
@@ -181,56 +176,60 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
     return result;
 }
 
-/*glm::ivec2 AScrollArea::onIntrinsicMeasure(AConstraints constraints) {
-    const bool widthBounded = !constraints.isUnlimitedWidth();
-    const bool heightBounded = !constraints.isUnlimitedHeight();
-
-    if (!widthBounded) {
-        auto layout = calculateLayout(
-            {
-                constraints.minWidth,
-                heightBounded ? constraints.maxHeight : 0,
-            },
-            true,
-            heightBounded);
-        const int maxHeight = heightBounded ? constraints.maxHeight : std::numeric_limits<int>::max();
+glm::ivec2 AScrollArea::onIntrinsicMeasure(AConstraints constraints) {
+    const int width = constraints.isUnlimitedWidth() ? constraints.minWidth : constraints.maxWidth;
+    const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
+    const int maxHeight = constraints.isUnlimitedHeight() ? std::numeric_limits<int>::max() : constraints.maxHeight;
+    if (constraints.isUnlimitedWidth()) {
         return {
-            constraints.minWidth,
-            std::clamp(layout.outerSize.y, constraints.minHeight, maxHeight),
+            std::clamp(width, constraints.minWidth, maxWidth),
+            std::clamp(constraints.minHeight, constraints.minHeight, maxHeight),
+        };
+    }
+    if (!contents()) {
+        return {
+            std::clamp(width, constraints.minWidth, maxWidth),
+            std::clamp(0, constraints.minHeight, maxHeight),
         };
     }
 
-    auto layout = calculateLayout(
-        {
-            constraints.maxWidth,
-            heightBounded ? constraints.maxHeight : 0,
-        },
-        true,
-        heightBounded);
+    const auto margins = contents()->getMargin().occupiedSize();
+    const int viewportWidth = glm::max(0, width);
+    const int contentWidth = glm::max(0, viewportWidth - margins.x);
+    int measuredHeight = contents()->measure(AConstraints::fixedWidth(contentWidth)).y + margins.y;
 
-    const int measuredWidth = layout.outerSize.x;
-    const int maxWidth = constraints.maxWidth;
-    const int maxHeight = heightBounded ? constraints.maxHeight : std::numeric_limits<int>::max();
+    const int minimumScrollableContentWidth = margins.x + contents()->computeMinMaxAxis().min;
+
+    if (minimumScrollableContentWidth > viewportWidth) {
+        measuredHeight += measureHorizontalScrollbarHeight(viewportWidth);
+    }
+
     return {
-        std::clamp(measuredWidth, constraints.minWidth, maxWidth),
-        std::clamp(layout.outerSize.y, constraints.minHeight, maxHeight),
+        std::clamp(width, constraints.minWidth, maxWidth),
+        std::clamp(measuredHeight, constraints.minHeight, maxHeight),
     };
-}*/
+}
 
-AMinMaxSizes AScrollArea::onComputeIntrinsicMinMaxSizes(int height) {
+AMinMaxAxis AScrollArea::onComputeIntrinsicMinMaxAxis(int height) {
     if (!contents()) {
         return {};
     }
-    const auto maxOuterSize = calculateLayout(
-        {
-            0,
-            height == -1 ? 0 : height,
-        },
-        true,
-        height != -1).outerSize;
+
+    const auto margins = contents()->getMargin().occupiedSize();
+    const auto contentMinMax = contents()->computeMinMaxAxis(height);
+    int maxWidth = margins.x + contentMinMax.max;
+
+    if (height != -1) {
+        const int contentHeight =
+            contents()->measure(AConstraints::fixedWidth(contentMinMax.max)).y + margins.y;
+        if (contentHeight > height) {
+            maxWidth += measureVerticalScrollbarWidth(height);
+        }
+    }
+
     return {
-        .min = {},
-        .max = { 0, maxOuterSize.y },
+        .min = 0,
+        .max = maxWidth,
     };
 }
 

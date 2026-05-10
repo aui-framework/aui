@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -57,7 +57,7 @@ public:
     void addView(const _<AView>& view, AOptional<size_t> index) override;
     void removeView(aui::no_escape<AView> view, size_t index) override;
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
     AVector<_<AView>> getAllViews() override;
 
     int indexOf(_<AView> view);

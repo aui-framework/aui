@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -164,19 +164,18 @@ glm::ivec2 AGridLayout::onIntrinsicMeasure(AConstraints constraints)
 	return result;
 }
 
-AMinMaxSizes AGridLayout::onComputeIntrinsicMinMaxSizes(int) {
-    AMinMaxSizes result;
+AMinMaxAxis AGridLayout::onComputeIntrinsicMinMaxAxis(int) {
+    AMinMaxAxis result;
     for (const auto& cell : mCells) {
         if (!(cell.view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
             continue;
         }
-        const auto minMax = cell.view->computeMinMaxSizes();
-        const auto margin = cell.view->getMargin().occupiedSize();
-        result.min = glm::max(result.min, minMax.min + margin);
-        result.max = glm::max(result.max, minMax.max + margin);
+        const auto minMax = cell.view->computeMinMaxAxis();
+        result.min = glm::max(result.min, minMax.min + cell.view->getMargin().horizontal());
+        result.max = glm::max(result.max, minMax.max + cell.view->getMargin().horizontal());
     }
-    result.min *= glm::ivec2(mCellsX, mCellsY);
-    result.max *= glm::ivec2(mCellsX, mCellsY);
+    result.min *= mCellsX;
+    result.max *= mCellsX;
     return result;
 }
 

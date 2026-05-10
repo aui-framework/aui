@@ -82,10 +82,10 @@ glm::ivec2 ADropdownList::onIntrinsicMeasure(AConstraints constraints) {
     return AButton::onIntrinsicMeasure(constraints) + glm::ivec2(20, 0);
 }
 
-AMinMaxSizes ADropdownList::onComputeIntrinsicMinMaxSizes(int height) {
-    auto minMax = AButton::onComputeIntrinsicMinMaxSizes(height);
-    minMax.min.x += 20;
-    minMax.max.x += 20;
+AMinMaxAxis ADropdownList::onComputeIntrinsicMinMaxAxis(int height) {
+    auto minMax = AButton::onComputeIntrinsicMinMaxAxis(height);
+    minMax.min += 20;
+    minMax.max += 20;
     return minMax;
 }
 
@@ -99,7 +99,7 @@ void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
 
         auto list = _new<AListView>(mModel) AUI_OVERRIDE_STYLE { ass::Margin { 0 }, ass::Expanding{}, ass::MinSize {  AMetric(getWidth(), AMetric::T_PX), 0, } };
         list << ".combobox_list";
-        const int listWidth = (glm::max)(getWidth(), list->computeMinMaxSizes().max.x);
+        const int listWidth = (glm::max)(getWidth(), list->computeMinMaxAxis().max);
         const auto listSize = list->measure(AConstraints::fixedWidth(listWidth));
         int listHeight = listSize.y + 2; // bias
         auto comboBoxPos = getPositionInWindow();

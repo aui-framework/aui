@@ -185,6 +185,21 @@ ATextArea::~ATextArea() {
 
 }
 
+AMinMaxAxis ATextArea::onComputeIntrinsicMinMaxAxis(int widthConstraint) {
+    auto minMax = ATextBase::onComputeIntrinsicMinMaxAxis(widthConstraint);
+
+    int minContentWidth = 0;
+    for (const auto& entry : mEngine.entries()) {
+        if (entry->forcesNextLine() || entry->escapesEdges()) {
+            continue;
+        }
+        minContentWidth = glm::max(minContentWidth, entry->getSize().x);
+    }
+
+    minMax.min = minContentWidth;
+    return minMax;
+}
+
 AString ATextArea::toString() const {
     return text();
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -49,20 +49,14 @@ glm::ivec2 AAbstractLabel::onIntrinsicMeasure(AConstraints constraints) {
     };
 }
 
-AMinMaxSizes AAbstractLabel::onComputeIntrinsicMinMaxSizes(int height) {
+AMinMaxAxis AAbstractLabel::onComputeIntrinsicMinMaxAxis(int height) {
     int width = mPrerendered ? mPrerendered->getWidth() : getFontStyle().getWidth(mText);
     if (mIcon) {
         width += getIconSize().x * 2;
     }
-    int heightValue = 0;
-    if (!mText.empty()) {
-        heightValue = getFontStyle().size * (1 + ranges::count(mText.toStdString(), '\n')) +
-                      getFontStyle().font->getDescenderHeight(getFontStyle().size);
-    }
-    const glm::ivec2 exactSize { width, heightValue };
     return {
-        .min = exactSize,
-        .max = exactSize,
+        .min = width,
+        .max = width,
     };
 }
 

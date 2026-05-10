@@ -161,14 +161,16 @@ void AAdvancedGridLayout::prepareCache(AVector<CompositionCache>& columns, AVect
         auto fixed = v.view->getFixedSize();
         if (fixed.x != 0) e.x = 0;
         if (fixed.y != 0) e.y = 0;
-        glm::ivec2 m = v.view->computeMinMaxSizes().max;
-        glm::ivec2 minSpace = m + glm::ivec2{v.view->getMargin().horizontal(), v.view->getMargin().vertical()};
+        const int measuredWidth = v.view->computeMinMaxAxis().max;
+        const int measuredHeight = v.view->measure(AConstraints::fixedWidth(measuredWidth)).y;
 
         columns[v.x].expandingSum += e.x;
         rows[v.y].expandingSum    += e.y;
 
-        columns[v.x].minSize = glm::max(columns[v.x].minSize, minSpace.x);
-        rows[v.y].minSize    = glm::max(rows[v.y].minSize,    minSpace.y);
+        columns[v.x].minSize =
+            glm::max(columns[v.x].minSize, measuredWidth + v.view->getMargin().horizontal());
+        rows[v.y].minSize =
+            glm::max(rows[v.y].minSize, measuredHeight + v.view->getMargin().vertical());
 
     }
 }
@@ -240,8 +242,8 @@ glm::ivec2 AAdvancedGridLayout::onIntrinsicMeasure(AConstraints constraints)
     };
 }
 
-AMinMaxSizes AAdvancedGridLayout::onComputeIntrinsicMinMaxSizes(int) {
-    AMinMaxSizes result;
+AMinMaxAxis AAdvancedGridLayout::onComputeIntrinsicMinMaxAxis(int) {
+    AMinMaxAxis result;
 
     for (int x = 0; x < cellsX; ++x) {
         int minForColumn = 0;
@@ -250,36 +252,20 @@ AMinMaxSizes AAdvancedGridLayout::onComputeIntrinsicMinMaxSizes(int) {
             if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
                 continue;
             }
-            const auto minMax = view->computeMinMaxSizes();
-            minForColumn = glm::max(minForColumn, minMax.min.x + view->getMargin().horizontal());
-            maxForColumn = glm::max(maxForColumn, minMax.max.x + view->getMargin().horizontal());
+            const auto minMax = view->computeMinMaxAxis();
+            minForColumn = glm::max(minForColumn, minMax.min + view->getMargin().horizontal());
+            maxForColumn = glm::max(maxForColumn, minMax.max + view->getMargin().horizontal());
         }
-        result.min.x += minForColumn;
-        result.max.x += maxForColumn;
+        result.min += minForColumn;
+        result.max += maxForColumn;
     }
 
     for (int y = 0; y < cellsY; ++y) {
-        int minForRow = 0;
-        int maxForRow = 0;
-        for (const auto& view : getRow(y)) {
-            if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
-                continue;
-            }
-            const auto minMax = view->computeMinMaxSizes();
-            minForRow = glm::max(minForRow, minMax.min.y + view->getMargin().vertical());
-            maxForRow = glm::max(maxForRow, minMax.max.y + view->getMargin().vertical());
-        }
-        result.min.y += minForRow;
-        result.max.y += maxForRow;
     }
 
     if (cellsX > 0) {
-        result.min.x += mSpacing * (cellsX - 1);
-        result.max.x += mSpacing * (cellsX - 1);
-    }
-    if (cellsY > 0) {
-        result.min.y += mSpacing * (cellsY - 1);
-        result.max.y += mSpacing * (cellsY - 1);
+        result.min += mSpacing * (cellsX - 1);
+        result.max += mSpacing * (cellsX - 1);
     }
 
     return result;

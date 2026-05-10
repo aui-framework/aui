@@ -70,7 +70,7 @@ public:
     }
     void setSelectionId(int id);
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
     void onPointerReleased(const APointerReleasedEvent& event) override;
 

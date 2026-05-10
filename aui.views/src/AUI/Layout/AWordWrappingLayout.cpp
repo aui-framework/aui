@@ -58,14 +58,12 @@ glm::ivec2 AWordWrappingLayout::onIntrinsicMeasure(AConstraints constraints) {
     return { constraints.maxWidth, we.height().valueOr(0) };
 }
 
-AMinMaxSizes AWordWrappingLayout::onComputeIntrinsicMinMaxSizes(int) {
-    AMinMaxSizes result;
+AMinMaxAxis AWordWrappingLayout::onComputeIntrinsicMinMaxAxis(int) {
+    AMinMaxAxis result;
     for (auto& viewEntry : mViewEntry) {
         const auto size = viewEntry.getSize();
-        result.min.x = glm::max(result.min.x, size.x);
-        result.max.x += size.x;
-        result.min.y += size.y;
-        result.max.y += size.y;
+        result.min = glm::max(result.min, size.x);
+        result.max += size.x;
     }
     return result;
 }

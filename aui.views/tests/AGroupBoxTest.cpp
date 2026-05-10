@@ -25,10 +25,10 @@ class FixedMeasureView : public AView {
 public:
     FixedMeasureView(int width, int height) : mWidth(width), mHeight(height) {}
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
-            .min = { mWidth, mHeight },
-            .max = { mWidth, mHeight },
+            .min = mWidth,
+            .max = mWidth,
         };
     }
 
@@ -46,10 +46,10 @@ public:
       });
     }
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
-            .min = { mPreferredWidth, mPreferredHeight },
-            .max = { mPreferredWidth, mPreferredHeight },
+            .min = mPreferredWidth,
+            .max = mPreferredWidth,
         };
     }
 

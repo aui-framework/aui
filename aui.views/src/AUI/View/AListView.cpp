@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -166,24 +166,23 @@ glm::ivec2 AListView::onIntrinsicMeasure(AConstraints constraints) {
   if (!mContent) {
     return { 0, 0 };
   }
-  auto minMax = mContent->computeMinMaxSizes();
+  const int width = constraints.isUnlimitedWidth()
+      ? constraints.minWidth
+      : constraints.maxWidth;
+  const int contentWidth = glm::max(0, width);
+  const auto contentMeasured = mContent->measure(AConstraints::fixedWidth(contentWidth));
   const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
   const int maxHeight = constraints.isUnlimitedHeight() ? std::numeric_limits<int>::max() : constraints.maxHeight;
   return {
-    std::clamp(minMax.max.x, constraints.minWidth, maxWidth),
-    std::clamp(minMax.max.y, constraints.minHeight, maxHeight),
+    std::clamp(width, constraints.minWidth, maxWidth),
+    std::clamp(contentMeasured.y, constraints.minHeight, maxHeight),
   };
 }
 
-AMinMaxSizes AListView::onComputeIntrinsicMinMaxSizes(int) {
-    if (!mContent) {
-        return {};
-    }
-
-    const auto contentMinMax = mContent->computeMinMaxSizes();
+AMinMaxAxis AListView::onComputeIntrinsicMinMaxAxis(int) {
     return {
-        .min = { 0, contentMinMax.min.y },
-        .max = { 0, contentMinMax.max.y },
+        .min = 0,
+        .max = 0,
     };
 }
 

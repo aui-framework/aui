@@ -314,7 +314,7 @@ public:
 
 protected:
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
     glm::ivec2 mLastLayoutUpdateSize{0, 0};
 

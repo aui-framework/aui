@@ -62,15 +62,14 @@ struct SizeInjector {
         return item.view->getMinSize();
     }
 
-    AMinMaxSizes computeMinMaxSizes(int height = -1) const {
-        auto value = item.view->computeMinMaxSizes(height);
+    AMinMaxAxis computeMinMaxAxis(int height = -1) const {
+        auto value = item.view->computeMinMaxAxis(height);
         if (item.overridedSize) {
-            auto& minAxis = aui::layout_direction::getAxisValue(direction, value.min);
-            auto& maxAxis = aui::layout_direction::getAxisValue(direction, value.max);
-            const int overridedAxis = glm::max(aui::layout_direction::getAxisValue(direction, item.view->getMinSize()),
-                                               *item.overridedSize);
-            minAxis = overridedAxis;
-            maxAxis = overridedAxis;
+            if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+                const int overridedAxis = glm::max(item.view->getMinSize().x, *item.overridedSize);
+                value.min = overridedAxis;
+                value.max = overridedAxis;
+            }
         }
         return value;
     }

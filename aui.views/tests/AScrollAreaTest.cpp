@@ -20,10 +20,10 @@ public:
         return { width, 40 };
     }
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
-            .min = { 200, 20 },
-            .max = { 200, 20 },
+            .min = 0,
+            .max = 200,
         };
     }
 
@@ -38,10 +38,25 @@ private:
 
 class MinimumWidthView : public AView {
 public:
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
-            .min = { 40, 20 },
-            .max = { 40, 20 },
+            .min = 40,
+            .max = 40,
+        };
+    }
+};
+
+class FixedHeightOverflowingWidthView : public AView {
+public:
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
+        const int width = constraints.isUnlimitedWidth() ? 150 : constraints.maxWidth;
+        return { width, 20 };
+    }
+
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
+        return {
+            .min = 150,
+            .max = 150,
         };
     }
 };
@@ -61,6 +76,32 @@ TEST(AScrollArea, MeasurePrefersAvailableWidthForWrappingContent) {
 
     EXPECT_EQ(measured, glm::ivec2(100, 40));
     EXPECT_EQ(content->lastMeasuredWidth(), 100);
+}
+
+TEST(AScrollArea, MeasureWithUnboundedWidthReturnsMinimumOnly) {
+    auto content = _new<TrackingWrappingView>();
+
+    AScrollArea scrollArea;
+    scrollArea.setContents(content);
+
+    const auto measured = scrollArea.measure({});
+
+    EXPECT_EQ(measured, glm::ivec2(0, 0));
+}
+
+TEST(AScrollArea, MeasureAddsHorizontalScrollbarHeightForWidthOverflow) {
+    auto content = _new<FixedHeightOverflowingWidthView>();
+
+    AScrollArea scrollArea;
+    scrollArea.setContents(content);
+
+    const int scrollbarHeight = scrollArea.horizontalScrollbar()->measure(AConstraints::fixedWidth(100)).y;
+    const auto measured = scrollArea.measure({
+        .maxWidth = 100,
+        .maxHeight = -1,
+    });
+
+    EXPECT_EQ(measured, glm::ivec2(100, 20 + scrollbarHeight));
 }
 
 TEST(AScrollAreaViewport, MeasureUsesContentSize) {

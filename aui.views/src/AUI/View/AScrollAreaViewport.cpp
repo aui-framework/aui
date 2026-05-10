@@ -57,8 +57,8 @@ glm::ivec2 AScrollAreaViewport::onIntrinsicMeasure(AConstraints constraints) {
   return mInner->measure(constraints);
 }
 
-AMinMaxSizes AScrollAreaViewport::onComputeIntrinsicMinMaxSizes(int height) {
-  return mInner->computeMinMaxSizes(height);
+AMinMaxAxis AScrollAreaViewport::onComputeIntrinsicMinMaxAxis(int height) {
+  return mInner->computeMinMaxAxis(height);
 }
 
 void AScrollAreaViewport::applyGeometryToChildren() {

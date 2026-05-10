@@ -257,7 +257,7 @@ public:
         return { width, height };
     }
 
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int widthConstraint) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int widthConstraint) override {
         int max = 0;
         int accumulator = 0;
         for (const auto& e : mEngine.entries()) {
@@ -269,13 +269,9 @@ public:
             accumulator += e->getSize().x;
         }
         const int preferredWidth = glm::max(max, accumulator);
-        int preferredHeight = 0;
-        if (auto engineHeight = measureLayoutForWidth(preferredWidth)) {
-            preferredHeight = *engineHeight + getFontStyle().getDescenderHeight();
-        }
         return {
-            .min = { preferredWidth, preferredHeight },
-            .max = { preferredWidth, preferredHeight },
+            .min = preferredWidth,
+            .max = preferredWidth,
         };
     }
 

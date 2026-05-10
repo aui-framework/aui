@@ -69,7 +69,10 @@ protected:
                 e.x = 0;
             if (fixed.y != 0)
                 e.y = 0;
-            glm::ivec2 m = cell.view->computeMinMaxSizes().max;
+            glm::ivec2 m = {
+                cell.view->computeMinMaxAxis().max,
+                cell.view->measure(AConstraints::fixedWidth(cell.view->computeMinMaxAxis().max)).y,
+            };
             if (cell.x == 0) {
                 auto& i = mGridSplitter.mVerticalHelper.items()[cell.y];
                 m.y = glm::max(m.y, i.overridedSize.valueOr(0));

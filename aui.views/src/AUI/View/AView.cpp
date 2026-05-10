@@ -266,37 +266,24 @@ bool AView::hasFocus() const {
     return mHasFocus;
 }
 
-AMinMaxSizes AView::computeMinMaxSizes(int height) {
+AMinMaxAxis AView::computeMinMaxAxis(int height) {
   ensureAssUpdated();
   if (auto it = mMinMaxSizesCache.find(height); it != mMinMaxSizesCache.end()) {
     return it->second;
   }
 
-  auto sizes = onComputeIntrinsicMinMaxSizes(height == -1 ? -1 : std::max(0, height - mPadding.vertical()));
-  const glm::ivec2 padding = mPadding.occupiedSize();
-
-  sizes.min += padding;
-  sizes.max += padding;
+  auto sizes = onComputeIntrinsicMinMaxAxis(height == -1 ? -1 : std::max(0, height - mPadding.vertical()));
+  sizes.min += mPadding.horizontal();
+  sizes.max += mPadding.horizontal();
 
   if (mFixedSize.x != 0) {
-    sizes.min.x = sizes.max.x = mFixedSize.x;
+    sizes.min = sizes.max = mFixedSize.x;
   } else {
-    sizes.min.x = std::max(sizes.min.x, mMinSize.x);
-    sizes.max.x = std::max(sizes.max.x, sizes.min.x);
+    sizes.min = std::max(sizes.min, mMinSize.x);
+    sizes.max = std::max(sizes.max, sizes.min);
     if (mMaxSize.x != -1) {
-      sizes.max.x = std::min(sizes.max.x, mMaxSize.x);
-      sizes.min.x = std::min(sizes.min.x, sizes.max.x);
-    }
-  }
-
-  if (mFixedSize.y != 0) {
-    sizes.min.y = sizes.max.y = mFixedSize.y;
-  } else {
-    sizes.min.y = std::max(sizes.min.y, mMinSize.y);
-    sizes.max.y = std::max(sizes.max.y, sizes.min.y);
-    if (mMaxSize.y != -1) {
-      sizes.max.y = std::min(sizes.max.y, mMaxSize.y);
-      sizes.min.y = std::min(sizes.min.y, sizes.max.y);
+      sizes.max = std::min(sizes.max, mMaxSize.x);
+      sizes.min = std::min(sizes.min, sizes.max);
     }
   }
 
@@ -310,14 +297,21 @@ glm::ivec2 AView::measure(AConstraints constraints) {
   }
 
   AConstraints effective = constraints;
-  bool unlimitedWidth = effective.maxWidth == -1;
-  bool unlimitedHeight = effective.maxHeight == -1;
+  const bool requestedUnlimitedWidth = effective.maxWidth == -1;
+  const bool requestedUnlimitedHeight = effective.maxHeight == -1;
+  const bool passUnlimitedWidth = requestedUnlimitedWidth && mFixedSize.x == 0;
+  const bool passUnlimitedHeight = requestedUnlimitedHeight && mFixedSize.y == 0;
+  bool unlimitedWidth = requestedUnlimitedWidth;
+  bool unlimitedHeight = requestedUnlimitedHeight;
 
   if (mFixedSize.x != 0) {
     effective.minWidth = effective.maxWidth = mFixedSize.x;
     unlimitedWidth = false;
   } else {
     effective.minWidth = std::max(effective.minWidth, mMinSize.x);
+    if (effective.minWidth == 0 && effective.maxWidth == 0) {
+      effective.minWidth = computeMinMaxAxis(passUnlimitedHeight ? -1 : effective.maxHeight).min;
+    }
     if (mMaxSize.x != -1) {
       effective.maxWidth = unlimitedWidth ? mMaxSize.x : std::min(effective.maxWidth, mMaxSize.x);
       unlimitedWidth = false;
@@ -346,9 +340,9 @@ glm::ivec2 AView::measure(AConstraints constraints) {
 
   AConstraints content;
   content.minWidth = std::max(0, effective.minWidth - hPadding);
-  content.maxWidth = unlimitedWidth ? -1 : std::max(0, effectiveMaxWidth - hPadding);
+  content.maxWidth = passUnlimitedWidth ? -1 : (unlimitedWidth ? -1 : std::max(0, effectiveMaxWidth - hPadding));
   content.minHeight = std::max(0, effective.minHeight - vPadding);
-  content.maxHeight = unlimitedHeight ? -1 : std::max(0, effectiveMaxHeight - vPadding);
+  content.maxHeight = passUnlimitedHeight ? -1 : (unlimitedHeight ? -1 : std::max(0, effectiveMaxHeight - vPadding));
 
   glm::ivec2 content_size = onIntrinsicMeasure(content);
 
@@ -361,16 +355,15 @@ glm::ivec2 AView::measure(AConstraints constraints) {
 
 glm::ivec2 AView::onIntrinsicMeasure(AConstraints constraints) {
   const auto minMax =
-      onComputeIntrinsicMinMaxSizes(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
+      onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
   const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
-  const int maxHeight = constraints.isUnlimitedHeight() ? std::numeric_limits<int>::max() : constraints.maxHeight;
   return {
-    std::clamp(minMax.max.x, constraints.minWidth, maxWidth),
-    std::clamp(minMax.max.y, constraints.minHeight, maxHeight),
+    std::clamp(minMax.max, constraints.minWidth, maxWidth),
+    constraints.minHeight,
   };
 }
 
-AMinMaxSizes AView::onComputeIntrinsicMinMaxSizes(int height) {
+AMinMaxAxis AView::onComputeIntrinsicMinMaxAxis(int height) {
   return {};
 }
 

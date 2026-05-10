@@ -34,7 +34,7 @@ namespace {
 
         }
 
-        AMinMaxSizes onComputeIntrinsicMinMaxSizes(int) override {
+        AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
             return {};
         }
 

@@ -100,23 +100,21 @@ glm::ivec2 AForEachUIBase::onIntrinsicMeasure(AConstraints constraints) {
         ensureViewsForMeasurement();
     }
 
-    if (constraints.isUnlimitedWidth() || constraints.isUnlimitedHeight()) {
-        const auto minMax =
-            AViewContainerBase::onComputeIntrinsicMinMaxSizes(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
-        return {
-            constraints.isUnlimitedWidth()
-                ? std::max(minMax.max.x, constraints.minWidth)
-                : std::clamp(minMax.max.x, constraints.minWidth, constraints.maxWidth),
-            constraints.isUnlimitedHeight()
-                ? std::max(minMax.max.y, constraints.minHeight)
-                : std::clamp(minMax.max.y, constraints.minHeight, constraints.maxHeight),
-        };
-    }
+    const auto minMax =
+        AViewContainerBase::onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
+    const int width = constraints.isUnlimitedWidth()
+        ? std::max(minMax.max, constraints.minWidth)
+        : std::clamp(minMax.max, constraints.minWidth, constraints.maxWidth);
 
-    return AViewContainerBase::onIntrinsicMeasure(constraints);
+    return AViewContainerBase::onIntrinsicMeasure({
+        .minWidth = width,
+        .maxWidth = width,
+        .minHeight = constraints.minHeight,
+        .maxHeight = constraints.maxHeight,
+    });
 }
 
-AMinMaxSizes AForEachUIBase::onComputeIntrinsicMinMaxSizes(int height) {
+AMinMaxAxis AForEachUIBase::onComputeIntrinsicMinMaxAxis(int height) {
     if (isModelEmpty()) {
         return {};
     }
@@ -127,10 +125,10 @@ AMinMaxSizes AForEachUIBase::onComputeIntrinsicMinMaxSizes(int height) {
         AUI_DEFER {
             restoreLazyViewportAfterMeasurement();
         };
-        return AViewContainerBase::onComputeIntrinsicMinMaxSizes(height);
+        return AViewContainerBase::onComputeIntrinsicMinMaxAxis(height);
     }
     ensureViewsForMeasurement();
-    return AViewContainerBase::onComputeIntrinsicMinMaxSizes(height);
+    return AViewContainerBase::onComputeIntrinsicMinMaxAxis(height);
 }
 
 void AForEachUIBase::onViewGraphSubtreeChanged() {

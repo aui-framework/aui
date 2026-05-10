@@ -35,7 +35,7 @@ private:
 
 public:
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
     void setSize(glm::ivec2 size) override;
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPointerPressed(const APointerPressedEvent& event) override;
@@ -61,7 +61,7 @@ public:
     AScrollbarOffsetSpacer(): ASpacerExpanding(0, 0) {
 
     }
-    AMinMaxSizes onComputeIntrinsicMinMaxSizes(int height) override { return {}; }
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override { return {}; }
 };
 
 /**
