@@ -16,8 +16,8 @@ namespace aui::impl::future {
  */
 template <typename T>
 concept Cpp20Awaiter = requires(T &t) {
-    { t.await_ready() } -> convertible_to<bool>;
-    { t.await_suspend(std::coroutine_handle {}) };
+    { t.await_ready() } -> ::aui::convertible_to<bool>;
+    { t.await_suspend(std::coroutine_handle<>{}) };
     { t.await_resume() };
 };
 

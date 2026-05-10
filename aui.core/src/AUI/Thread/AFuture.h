@@ -142,10 +142,6 @@ namespace aui::impl::future {
                 }
             }
 
-            ~Inner() noexcept {
-                ALOG_TRACE("AFuture") << "AFuture destruction\n" << AStacktrace::capture(1);
-            }
-
             void waitForTask() noexcept {
                 std::unique_lock lock(mutex);
                 bool rethrowInterrupted = false;
