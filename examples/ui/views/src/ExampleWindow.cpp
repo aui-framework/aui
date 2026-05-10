@@ -580,7 +580,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 SpacerExpanding(),
                 _new<AButton>("Four"),
                 _new<AButton>("Five"),
-              }).build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+              }).build() AUI_OVERRIDE_STYLE {
+                Expanding { 1, 0 },
+                LayoutSpacing { 4_dp },
+              },
               _new<ALabel>("Vertical splitter"),
               ASplitter::Vertical()
                       .withItems({ _new<AButton>("One"), _new<AButton>("Two"), _new<AButton>("Three"),

@@ -81,6 +81,9 @@ public:
 
     void setExpanded(bool expanded) {
         mExpanded = expanded;
+        if (mExpanded) {
+            AUI_NULLSAFE(mEnsureChildrenCreated)();
+        }
         if (mCollapseDisplay) {
             mCollapseDisplay->setDrawable(IDrawable::fromUrl(
                     mExpanded ? ":uni/svg/tree-expanded.svg" : ":uni/svg/tree-collapsed.svg"));
@@ -93,7 +96,7 @@ public:
     }
 
     void collapse() {
-        setExpanded(true);
+        setExpanded(false);
     }
 
     virtual ~ItemView() = default;
@@ -140,6 +143,10 @@ public:
         mChildrenContainer = childrenContainer;
     }
 
+    void setEnsureChildrenCreated(std::function<void()> ensureChildrenCreated) {
+        mEnsureChildrenCreated = std::move(ensureChildrenCreated);
+    }
+
     [[nodiscard]]
     const _<AViewContainer>& childrenContainer() const {
         return mChildrenContainer;
@@ -160,6 +167,7 @@ protected:
 
 private:
     _<AViewContainer> mChildrenContainer;
+    std::function<void()> mEnsureChildrenCreated;
 
     bool mSelected = false;
     bool mExpanded = false;
@@ -259,32 +267,6 @@ void ATreeView::rebuildContents() {
     redraw();
 }
 
-void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView) {
-    // always add wrapper (even if isGroup = false) to simplify view walkthrough
-    _<AViewContainer> wrapper = declarative::Vertical{};
-    wrapper->setVisibility(Visibility::GONE);
-    wrapper << ".list-item-group";
-    container->addView(childIndex.row() * 2, wrapper);
-
-    container->addView(childIndex.row() * 2, itemView);
-    
-    if (isGroup) {
-        fillViewsRecursively(wrapper, childIndex);
-        itemView->setChildrenContainer(wrapper);
-
-        connect(itemView->expandStateChanged, wrapper, [this, wrapper](bool expanded) {
-            if (expanded) {
-                wrapper->setVisibility(Visibility::VISIBLE);
-            } else {
-                wrapper->setVisibility(Visibility::GONE);
-            }
-
-            applyGeometryToChildrenIfNecessary();
-            redraw();
-        });
-    }
-}
-
 void ATreeView::onScroll(const AScrollEvent& event) {
     AScrollArea::onScroll(event);
     onPointerMove(event.origin, {event.pointerIndex}); // update hover on scroll
@@ -304,13 +286,38 @@ void ATreeView::handleSelected(ATreeView::ItemView* v) {
 }
 
 void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndexOrRoot& index) {
+    AVector<_<AView>> views;
+    views.reserve(mModel->childrenCount(index) * 2);
+
     for (size_t i = 0; i < mModel->childrenCount(index); ++i) {
         auto childIndex = mModel->indexOfChild(i, 0, index);
         bool group = mModel->childrenCount(childIndex) != 0;
         auto item = _new<ItemView>(this, mViewFactory(mModel, childIndex), group, childIndex);
-        makeElement(content, childIndex, group,  item);
+
+        // always add wrapper (even if isGroup = false) to simplify view walkthrough
+        _<AViewContainer> wrapper = declarative::Vertical{};
+        wrapper->setVisibility(Visibility::GONE);
+        wrapper << ".list-item-group";
+
+        if (group) {
+            item->setChildrenContainer(wrapper);
+            item->setEnsureChildrenCreated([this, wrapper, childIndex] {
+                if (!wrapper->getViews().empty()) {
+                    return;
+                }
+                fillViewsRecursively(wrapper, childIndex);
+            });
+
+            connect(item->expandStateChanged, wrapper, [wrapper](bool expanded) {
+                wrapper->setVisibility(expanded ? Visibility::VISIBLE : Visibility::GONE);
+            });
+        }
+
+        views << item;
+        views << wrapper;
     }
 
+    content->setViews(std::move(views));
 }
 
 void ATreeView::handleMouseMove(ATreeView::ItemView* pView) {

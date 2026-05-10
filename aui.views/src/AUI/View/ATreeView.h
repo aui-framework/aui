@@ -68,6 +68,5 @@ private:
 
     void rebuildContents();
     void fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndexOrRoot& index);
-    void makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView);
     _<ItemView> indexToView(const ATreeModelIndex& target);
 };
