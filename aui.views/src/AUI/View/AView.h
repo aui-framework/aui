@@ -94,7 +94,7 @@ class API_AUI_VIEWS AView : public AObject {
   friend class AViewContainer;
   friend class IRenderViewToTexture;
 
-  public:
+public:
   AView();
   ~AView() override;
 
@@ -802,7 +802,7 @@ class API_AUI_VIEWS AView : public AObject {
     return mFloating;
   }
 
-  signals:
+signals:
   /**
    * @see onViewGraphSubtreeChanged()
    */
@@ -879,7 +879,7 @@ class API_AUI_VIEWS AView : public AObject {
 
   emits<_<AView>> childFocused;
 
-  protected:
+protected:
   friend class ViewPropertiesView;
 
   /**
@@ -1035,7 +1035,7 @@ protected:
 
   virtual void commitStyle();
 
-  private:
+private:
   /**
    * @brief Animation.
    */
