@@ -3,6 +3,7 @@
 #include <AUI/Util/AMetric.h>
 #include <AUI/View/AScrollArea.h>
 #include <AUI/View/AScrollAreaViewport.h>
+#include <AUI/View/AScrollbar.h>
 
 namespace {
 
@@ -89,6 +90,19 @@ TEST(AScrollArea, MeasureWithUnboundedWidthReturnsMinimumOnly) {
     EXPECT_EQ(measured, glm::ivec2(0, 0));
 }
 
+TEST(AScrollArea, MeasureWithZeroWidthUsesNaturalContentHeightPlusScrollbar) {
+    auto content = _new<TrackingWrappingView>();
+
+    AScrollArea scrollArea;
+    scrollArea.setContents(content);
+
+    const int horizontalScrollbarMinWidth = scrollArea.horizontalScrollbar()->computeMinMaxAxis().min;
+    const int verticalScrollbarMinHeight = scrollArea.verticalScrollbar()->measure(AConstraints {}).y;
+    const auto measured = scrollArea.measure(AConstraints::fixedInline(0));
+
+    EXPECT_EQ(measured, glm::ivec2(horizontalScrollbarMinWidth, verticalScrollbarMinHeight));
+}
+
 TEST(AScrollArea, MeasureAddsHorizontalScrollbarHeightForWidthOverflow) {
     auto content = _new<FixedHeightOverflowingWidthView>();
 
@@ -117,6 +131,30 @@ TEST(AScrollAreaViewport, MeasureUsesContentSize) {
 
     EXPECT_EQ(measured, glm::ivec2(100, 40));
     EXPECT_EQ(content->lastMeasuredWidth(), 100);
+}
+
+TEST(AScrollAreaViewport, MeasureWithZeroWidthReturnsZeroViewportSize) {
+    auto content = _new<TrackingWrappingView>();
+
+    AScrollAreaViewport viewport;
+    viewport.setContents(content);
+
+    const auto measured = viewport.measure(AConstraints::fixedInline(0));
+
+    EXPECT_EQ(measured, glm::ivec2(0, 0));
+}
+
+TEST(AScrollbar, MeasureIsStableForZeroMainAxisConstraint) {
+    AScrollbar horizontal(ALayoutDirection::HORIZONTAL);
+    AScrollbar vertical(ALayoutDirection::VERTICAL);
+
+    const auto horizontalMeasured = horizontal.measure(AConstraints::fixedInline(0));
+    const auto verticalMeasured = vertical.measure(AConstraints::fixedBlock(0));
+
+    EXPECT_EQ(horizontalMeasured.x, 0);
+    EXPECT_GT(horizontalMeasured.y, 0);
+    EXPECT_EQ(verticalMeasured.y, 0);
+    EXPECT_GT(verticalMeasured.x, 0);
 }
 
 TEST(AScrollArea, VerticalOverflowReducesViewportWidthWithoutHorizontalScroll) {
