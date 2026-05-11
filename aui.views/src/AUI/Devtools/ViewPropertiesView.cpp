@@ -126,6 +126,8 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
         Label { AUI_REACT("Compute max size = {}px"_format(targetView->computeMinMaxAxis().max)) },
         Label { AUI_REACT("Measure (width -1) = {}px"_format(targetView->measure(AConstraints {}))) },
         Label { AUI_REACT("Measure (width 0) = {}px"_format(targetView->measure(AConstraints::fixedInline(0)))) },
+        Label { AUI_REACT("Measure (width 512) = {}px"_format(targetView->measure(AConstraints { .maxInline = 512 }))) },
+        Label { AUI_REACT("Measure (height 512) = {}px"_format(targetView->measure(AConstraints { .maxBlock = 512 }))) },
 
         Vertical {
           CheckBox {
