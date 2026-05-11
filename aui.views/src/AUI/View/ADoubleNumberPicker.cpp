@@ -134,3 +134,21 @@ void ADoubleNumberPicker::changeBy(double v) {
     setValue(v);
     emit valueChanging(v);
 }
+
+void ADoubleNumberPicker::onLayout(int w, int h) {
+    AViewContainerBase::onLayout(w, h);
+
+    if (getViews().size() < 2) {
+        return;
+    }
+
+    const auto& upDown = getViews()[1];
+    if (!(upDown->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+        return;
+    }
+
+    upDown->setPosition({
+        upDown->getPosition().x,
+        getPadding().top + std::max(0, (getContentHeight() - upDown->getHeight()) / 2),
+    });
+}

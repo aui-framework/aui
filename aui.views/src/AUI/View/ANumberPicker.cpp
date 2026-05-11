@@ -142,3 +142,21 @@ void ANumberPicker::changeBy(int64_t v) {
     setValue(getValue() + v);
     emit valueChanging(getValue());
 }
+
+void ANumberPicker::onLayout(int w, int h) {
+    AViewContainerBase::onLayout(w, h);
+
+    if (getViews().size() < 2) {
+        return;
+    }
+
+    const auto& upDown = getViews()[1];
+    if (!(upDown->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+        return;
+    }
+
+    upDown->setPosition({
+        upDown->getPosition().x,
+        getPadding().top + std::max(0, (getContentHeight() - upDown->getHeight()) / 2),
+    });
+}

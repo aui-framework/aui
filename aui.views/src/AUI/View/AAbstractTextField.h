@@ -13,6 +13,7 @@
 
 #include <AUI/View/AAbstractTypeableView.h>
 #include "AUI/Enum/ATextInputType.h"
+#include "AUI/Enum/VerticalAlign.h"
 #include "AView.h"
 #include "AUI/Common/ATimer.h"
 #include <AUI/Common/IStringable.h>
@@ -45,6 +46,14 @@ public:
     [[nodiscard]]
     ATextInputType textInputType() const noexcept override {
         return mTextInputType;
+    }
+
+    void setVerticalAlign(VerticalAlign verticalAlign) {
+        if (mVerticalAlign == verticalAlign) {
+            return;
+        }
+        mVerticalAlign = verticalAlign;
+        redraw();
     }
 
     void setEditable(bool isEditable) {
@@ -106,6 +115,7 @@ protected:
 
 private:
     ATextInputType mTextInputType = ATextInputType::DEFAULT;
+    VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
     bool mIsPasswordTextField = false;
     bool mIsEditable = true;
     int mTextAlignOffset = 0;

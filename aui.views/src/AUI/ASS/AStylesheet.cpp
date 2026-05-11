@@ -194,6 +194,10 @@ AStylesheet::AStylesheet() {
         },
         {
             class_of(".input-field"),
+            VerticalAlign::MIDDLE,
+        },
+        {
+            class_of(".input-field"),
             Padding { 3_dp, 6_dp },
             TextColor { 0_rgb },
             BackgroundSolid { 0xffffff_rgb },
@@ -201,6 +205,10 @@ AStylesheet::AStylesheet() {
             BorderRadius { 4_dp },
             MinSize { 100_dp, 22_dp },
             AOverflow::HIDDEN,
+        },
+        {
+            c(".number-picker") >> t<AAbstractTypeable>(),
+            VerticalAlign::DEFAULT,
         },
         {
             class_of::hover(".input-field"),
