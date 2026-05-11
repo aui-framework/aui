@@ -29,9 +29,16 @@ struct SizeInjector {
     ASPLITTER_IMPL_FORWARD_METHOD(getMargin)
     ASPLITTER_IMPL_FORWARD_METHOD(layout)
     ASPLITTER_IMPL_FORWARD_METHOD(getSize)
-    ASPLITTER_IMPL_FORWARD_METHOD(getFixedSize)
     ASPLITTER_IMPL_FORWARD_METHOD(getMaxSize)
     ASPLITTER_IMPL_FORWARD_METHOD(getMinSize)
+
+    glm::ivec2 getFixedSize() const {
+        auto fixedSize = item.view->getFixedSize();
+        if (item.overridedSize) {
+            aui::layout_direction::getAxisValue(direction, fixedSize) = 0;
+        }
+        return fixedSize;
+    }
 
     glm::ivec2 measure(AConstraints constraints) const {
         if (item.overridedSize) {
