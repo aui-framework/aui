@@ -10,17 +10,9 @@
  */
 
 #include <gtest/gtest.h>
-#include <range/v3/range.hpp>
 #include <AUI/Layout/HVLayout.h>
-#include <AUI/Layout/AHorizontalLayout.h>
-#include <AUI/View/AAbstractLabel.h>
 #include <AUI/View/AView.h>
-#include <AUI/View/AViewContainer.h>
-#include <AUI/View/ASplitter.h>
-#include <AUI/View/ASplitterHelper.h>
-#include <AUI/Util/SplitterSizeInjector.h>
 #include <functional>
-#include <limits>
 
 template<typename T>
 inline std::ostream& operator<<(std::ostream& o, const glm::tvec2<T>& v) {
@@ -54,74 +46,6 @@ public:
     }
 };
 
-class MeasureTestView : public AView {
-public:
-    int intrinsicWidth = 0;
-    int intrinsicHeight = 0;
-    glm::ivec2 measuredContentSize = {};
-    int lastWidthConstraint = std::numeric_limits<int>::min();
-    int lastHeightConstraint = std::numeric_limits<int>::min();
-    AConstraints lastMeasureConstraints {};
-
-    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
-        lastMeasureConstraints = constraints;
-        if (constraints.isWidthTight()) {
-            lastWidthConstraint = constraints.maxWidth;
-        }
-        if (constraints.isHeightTight()) {
-            lastHeightConstraint = constraints.maxHeight;
-        }
-        return measuredContentSize;
-    }
-
-    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override {
-        lastHeightConstraint = height;
-        return {
-            .min = {},
-            .max = intrinsicWidth,
-        };
-    }
-};
-
-class MinMaxTestView : public AView {
-public:
-    int calls = 0;
-    AMinMaxAxis value;
-
-    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
-        ++calls;
-        return value;
-    }
-};
-
-class LabelMinMaxTestView : public AAbstractLabel {
-public:
-    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
-        return {
-            .min = 17,
-            .max = 17,
-        };
-    }
-};
-
-class WrappingMinMaxTestView : public AView {
-public:
-    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
-        return {
-            .min = 20,
-            .max = 80,
-        };
-    }
-
-    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
-        const int width = constraints.isWidthTight() ? constraints.maxWidth : 80;
-        return {
-            width,
-            width <= 20 ? 50 : 10,
-        };
-    }
-};
-
 class ZeroMainAxisMinView : public AView {
 public:
     int minWidth = 0;
@@ -145,24 +69,30 @@ public:
     }
 };
 
-class SplitterMeasureView : public AView {
+class PreferredButMinConstrainedView : public AView {
 public:
-    int preferredWidth = 0;
-    int preferredHeight = 0;
+    PreferredButMinConstrainedView(int preferredWidth, int preferredHeight, int minWidth)
+        : mPreferredWidth(preferredWidth), mPreferredHeight(preferredHeight) {
+        setMinSize({ minWidth, 0 });
+    }
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
         return {
-            constraints.maxWidth,
-            constraints.isUnlimitedHeight() ? preferredHeight : constraints.maxHeight,
+            constraints.isWidthTight() ? constraints.maxWidth : mPreferredWidth,
+            constraints.isHeightTight() ? constraints.maxHeight : mPreferredHeight,
         };
     }
 
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
             .min = {},
-            .max = preferredWidth,
+            .max = mPreferredWidth,
         };
     }
+
+private:
+    int mPreferredWidth;
+    int mPreferredHeight;
 };
 
 template<typename T>
@@ -249,6 +179,31 @@ TEST(HVLayout, HorizontalIntrinsicWidthUsesPreferredSizeForExpandingChildren) {
     EXPECT_EQ(HorizontalHVLayout::preferredWidth(views, 0, -1), 224);
 }
 
+TEST(HVLayout, HorizontalIntrinsicHeightTightWidthSkipsGoneExpander) {
+    auto fixed = _new<FakeLayoutItem>();
+    fixed->setFixedSize({ 20, 10 });
+
+    auto gone = _new<FakeLayoutItem>();
+    gone->setExpanding({ 10, 0 });
+    gone->setVisibility(Visibility::GONE);
+    gone->preferredWidth = [](int) { return 100; };
+    gone->preferredHeight = [](int) { return 100; };
+
+    auto wrapped = _new<FakeLayoutItem>();
+    wrapped->setExpanding({ 1, 0 });
+    wrapped->preferredWidth = [](int) { return 60; };
+    wrapped->preferredHeight = [](int width) {
+        if (width == -1) {
+            return 10;
+        }
+        return width <= 20 ? 40 : 10;
+    };
+
+    AVector<_<AView>> views { fixed, gone, wrapped };
+
+    EXPECT_EQ(HorizontalHVLayout::preferredHeight(views, 0, 40), 40);
+}
+
 TEST(HVLayout, HorizontalComputeMinMaxSizesUsesChildrenAndSpacing) {
     auto left = _new<FakeLayoutItem>();
     left->setMinSize({ 10, 5 });
@@ -301,218 +256,273 @@ TEST(HVLayout, VerticalComputeMinWidthIgnoresZeroHeightProbeGarbage) {
     EXPECT_EQ(minMax.min, 3173);
 }
 
-TEST(AViewMeasure, MeasureUsesPaddingAdjustedConstraints) {
-    MeasureTestView view;
-    view.setPadding({ .left = 3, .right = 5, .top = 7, .bottom = 11 });
-    view.intrinsicWidth = 10;
-    view.intrinsicHeight = 9;
-
-    EXPECT_EQ(view.measure(AConstraints::fixedHeight(40)).x, 18);
-    EXPECT_EQ(view.lastHeightConstraint, 22);
-
-    EXPECT_EQ(view.measure(AConstraints::fixedWidth(50)).y, 27);
-    EXPECT_EQ(view.lastWidthConstraint, 42);
-}
-
-TEST(AViewMeasure, MeasurePassesContentConstraintsAndAddsPaddingBack) {
-    MeasureTestView view;
-    view.setPadding({ .left = 3, .right = 5, .top = 7, .bottom = 11 });
-    view.measuredContentSize = { 20, 10 };
-
-    auto measured = view.measure({
-        .minWidth = 30,
-        .minHeight = 25,
-        .maxWidth = 40,
-        .maxHeight = 60,
-    });
-
-    EXPECT_EQ(view.lastMeasureConstraints.minWidth, 22);
-    EXPECT_EQ(view.lastMeasureConstraints.maxWidth, 32);
-    EXPECT_EQ(view.lastMeasureConstraints.minHeight, 7);
-    EXPECT_EQ(view.lastMeasureConstraints.maxHeight, 42);
-    EXPECT_EQ(measured, glm::ivec2(30, 28));
-}
-
-TEST(AViewMeasure, MeasureHonorsMinAndMaxSize) {
-    MeasureTestView view;
-    view.setMinSize({ 20, 30 });
-    view.setMaxSize({ 40, 50 });
-    view.measuredContentSize = { 10, 60 };
-
-    auto measured = view.measure(AConstraints {});
-
-    EXPECT_EQ(view.lastMeasureConstraints.minWidth, 20);
-    EXPECT_EQ(view.lastMeasureConstraints.maxWidth, 40);
-    EXPECT_EQ(view.lastMeasureConstraints.minHeight, 30);
-    EXPECT_EQ(view.lastMeasureConstraints.maxHeight, 50);
-    EXPECT_EQ(measured, glm::ivec2(20, 50));
-}
-
-TEST(AViewMeasure, MeasureHonorsFixedSizeAndContentConstraints) {
-    MeasureTestView view;
-    view.setPadding({ .left = 4, .right = 6, .top = 2, .bottom = 8 });
-    view.setFixedSize({ 50, 30 });
-    view.measuredContentSize = { 0, 0 };
-
-    auto measured = view.measure(AConstraints {});
-
-    EXPECT_EQ(view.lastMeasureConstraints.minWidth, 40);
-    EXPECT_EQ(view.lastMeasureConstraints.maxWidth, 40);
-    EXPECT_EQ(view.lastMeasureConstraints.minHeight, 20);
-    EXPECT_EQ(view.lastMeasureConstraints.maxHeight, 20);
-    EXPECT_EQ(measured, glm::ivec2(50, 30));
-}
-
-TEST(AViewMeasure, ComputeMinMaxSizesUsesIntrinsicSemantics) {
-    MeasureTestView view;
-    view.setMinSize({ 20, 30 });
-    view.setPadding({ .left = 3, .right = 5, .top = 7, .bottom = 11 });
-    view.measuredContentSize = { 10, 5 };
-    view.intrinsicWidth = 10;
-    view.intrinsicHeight = 9;
-
-    const auto minMax = view.computeMinMaxAxis();
-
-    EXPECT_EQ(minMax.min, 20);
-    EXPECT_EQ(minMax.max, 20);
-}
-
-TEST(AViewMeasure, ComputeMinMaxSizesIsCachedUntilRequestLayout) {
-    MinMaxTestView view;
-    view.value = {
-        .min = 1,
-        .max = 3,
-    };
-
-    EXPECT_EQ(view.computeMinMaxAxis().max, 3);
-    EXPECT_EQ(view.computeMinMaxAxis().max, 3);
-    EXPECT_EQ(view.calls, 1);
-
-    view.value = {
-        .min = 5,
-        .max = 7,
-    };
-    view.requestLayout();
-
-    EXPECT_EQ(view.computeMinMaxAxis().max, 7);
-    EXPECT_EQ(view.calls, 2);
-}
-
-TEST(AViewMeasure, ViewContainerForwardsLayoutMinMaxSizes) {
+TEST(HVLayout, HorizontalSpacingAndMargins) {
     auto left = _new<FakeLayoutItem>();
-    left->setMinSize({ 10, 5 });
-    left->preferredWidth = [](int) { return 30; };
+    left->setFixedSize({ 20, 20 });
+    left->setMargin({ .right = 10 });
+
+    auto right = _new<FakeLayoutItem>();
+    right->setFixedSize({ 20, 20 });
+    right->setMargin({ .left = 5 });
+
+    AVector<_<AView>> views { left, right };
+    HorizontalHVLayout::layout({ 0, 0 }, { 100, 20 }, views, 15);
+
+    expectRect(left, { 0, 0 }, { 20, 20 });
+    // left_pos(0) + left_size(20) + left_margin_right(10) + spacing(15) + right_margin_left(5) = 50
+    expectRect(right, { 50, 0 }, { 20, 20 });
+}
+
+TEST(HVLayout, HorizontalExpandingBetweenFixedViewsWithSpacingAndMargins) {
+    auto leading = _new<FakeLayoutItem>();
+    leading->setFixedSize({ 10, 20 });
+    leading->setMargin({ .right = 3 });
+
+    auto middle = _new<FakeLayoutItem>();
+    middle->setExpanding({ 1, 0 });
+    middle->setMargin({ .left = 4, .right = 5 });
+    middle->preferredHeight = [](int) { return 20; };
+
+    auto trailing = _new<FakeLayoutItem>();
+    trailing->setFixedSize({ 10, 20 });
+    trailing->setMargin({ .left = 2 });
+
+    AVector<_<AView>> views { leading, middle, trailing };
+    HorizontalHVLayout::layout({ 0, 0 }, { 100, 20 }, views, 7);
+
+    expectRect(leading, { 0, 0 }, { 10, 20 });
+    expectRect(middle, { 24, 0 }, { 52, 20 });
+    expectRect(trailing, { 90, 0 }, { 10, 20 });
+}
+
+TEST(HVLayout, HorizontalVisibility) {
+    auto v1 = _new<FakeLayoutItem>();
+    v1->setFixedSize({ 20, 20 });
+
+    auto v2 = _new<FakeLayoutItem>();
+    v2->setFixedSize({ 20, 20 });
+    v2->setVisibility(Visibility::GONE);
+
+    auto v3 = _new<FakeLayoutItem>();
+    v3->setFixedSize({ 20, 20 });
+    v3->setVisibility(Visibility::INVISIBLE);
+
+    AVector<_<AView>> views { v1, v2, v3 };
+    HorizontalHVLayout::layout({ 0, 0 }, { 100, 20 }, views, 10);
+
+    expectRect(v1, { 0, 0 }, { 20, 20 });
+    // v2 is GONE, so it should be skipped.
+    // v3 is INVISIBLE, but it has CONSUME_SPACE, so it should be placed.
+    expectRect(v3, { 30, 0 }, { 20, 20 });
+}
+
+TEST(HVLayout, HorizontalGoneExpandingViewDoesNotReceiveSpace) {
+    auto leading = _new<FakeLayoutItem>();
+    leading->setFixedSize({ 20, 20 });
+
+    auto gone = _new<FakeLayoutItem>();
+    gone->setExpanding({ 10, 0 });
+    gone->setVisibility(Visibility::GONE);
+    gone->preferredHeight = [](int) { return 20; };
+
+    auto middle = _new<FakeLayoutItem>();
+    middle->setExpanding({ 1, 0 });
+    middle->preferredHeight = [](int) { return 20; };
+
+    auto trailing = _new<FakeLayoutItem>();
+    trailing->setFixedSize({ 20, 20 });
+
+    AVector<_<AView>> views { leading, gone, middle, trailing };
+    HorizontalHVLayout::layout({ 0, 0 }, { 100, 20 }, views, 0);
+
+    expectRect(leading, { 0, 0 }, { 20, 20 });
+    expectRect(middle, { 20, 0 }, { 60, 20 });
+    expectRect(trailing, { 80, 0 }, { 20, 20 });
+}
+
+TEST(HVLayout, HorizontalWeightSaturation) {
+    auto e1 = _new<FakeLayoutItem>();
+    e1->setExpanding({ 1, 0 });
+    e1->setMaxSize({ 40, -1 });
+    e1->preferredHeight = [](int) { return 20; };
+
+    auto e2 = _new<FakeLayoutItem>();
+    e2->setExpanding({ 1, 0 });
+    e2->preferredHeight = [](int) { return 20; };
+
+    AVector<_<AView>> views { e1, e2 };
+    // Total width 100. e1 and e2 both want 50. But e1 is capped at 40.
+    // So e2 should get 100 - 40 = 60.
+    HorizontalHVLayout::layout({ 0, 0 }, { 100, 20 }, views, 0);
+
+    expectRect(e1, { 0, 0 }, { 40, 20 });
+    expectRect(e2, { 40, 0 }, { 60, 20 });
+}
+
+TEST(HVLayout, HorizontalSingleExpandingChildRespectsMaxSize) {
+    auto only = _new<FakeLayoutItem>();
+    only->setExpanding({ 1, 0 });
+    only->setMaxSize({ 30, -1 });
+    only->preferredHeight = [](int) { return 20; };
+
+    AVector<_<AView>> views { only };
+    HorizontalHVLayout::layout({ 0, 0 }, { 100, 20 }, views, 0);
+
+    expectRect(only, { 0, 0 }, { 30, 20 });
+}
+
+TEST(HVLayout, HorizontalWeightSaturationComplex) {
+    auto e1 = _new<FakeLayoutItem>();
+    e1->setExpanding({ 1, 0 });
+    e1->setMaxSize({ 20, -1 });
+    e1->preferredHeight = [](int) { return 20; };
+
+    auto e2 = _new<FakeLayoutItem>();
+    e2->setExpanding({ 2, 0 });
+    e2->setMaxSize({ 40, -1 });
+    e2->preferredHeight = [](int) { return 20; };
+
+    auto e3 = _new<FakeLayoutItem>();
+    e3->setExpanding({ 1, 0 });
+    e3->preferredHeight = [](int) { return 20; };
+
+    AVector<_<AView>> views { e1, e2, e3 };
+    // Total 100. Weights 1:2:1. Shares: 25, 50, 25.
+    // e1 capped at 20. Remaining 80. Weights 2:1. Shares 53, 26.
+    // e2 capped at 40. Remaining 40. Weight 1. Share 40.
+    // Final: 20, 40, 40.
+    HorizontalHVLayout::layout({ 0, 0 }, { 100, 20 }, views, 0);
+
+    expectRect(e1, { 0, 0 }, { 20, 20 });
+    expectRect(e2, { 20, 0 }, { 40, 20 });
+    expectRect(e3, { 60, 0 }, { 40, 20 });
+}
+
+TEST(HVLayout, HorizontalExpandingUsesMinimumBeforeWeightDistribution) {
+    auto left = _new<FakeLayoutItem>();
+    left->setExpanding({ 1, 0 });
+    left->setMinSize({ 20, 0 });
     left->preferredHeight = [](int) { return 20; };
 
     auto right = _new<FakeLayoutItem>();
-    right->setMinSize({ 7, 11 });
-    right->preferredWidth = [](int) { return 40; };
-    right->preferredHeight = [](int) { return 13; };
+    right->setExpanding({ 1, 0 });
+    right->setMinSize({ 10, 0 });
+    right->preferredHeight = [](int) { return 20; };
 
-    AViewContainer container;
-    container.setLayout(std::make_unique<AHorizontalLayout>());
-    container.addView(left);
-    container.addView(right);
+    AVector<_<AView>> views { left, right };
+    HorizontalHVLayout::layout({ 0, 0 }, { 90, 20 }, views, 0);
 
-    const auto minMax = container.computeMinMaxAxis();
-
-    EXPECT_EQ(minMax.min, 17);
-    EXPECT_EQ(minMax.max, 70);
+    expectRect(left, { 0, 0 }, { 50, 20 });
+    expectRect(right, { 50, 0 }, { 40, 20 });
 }
 
-TEST(AViewMeasure, AbstractLabelUsesExactIntrinsicMinMaxSizes) {
-    LabelMinMaxTestView view;
+TEST(HVLayout, VerticalSpacingAndMargins) {
+    auto top = _new<FakeLayoutItem>();
+    top->setFixedSize({ 20, 20 });
+    top->setMargin({ .bottom = 10 });
 
-    const auto minMax = view.computeMinMaxAxis();
+    auto bottom = _new<FakeLayoutItem>();
+    bottom->setFixedSize({ 20, 20 });
+    bottom->setMargin({ .top = 5 });
 
-    EXPECT_EQ(minMax.min, 17);
-    EXPECT_EQ(minMax.max, 17);
+    AVector<_<AView>> views { top, bottom };
+    VerticalHVLayout::layout({ 0, 0 }, { 20, 100 }, views, 15);
+
+    expectRect(top, { 0, 0 }, { 20, 20 });
+    expectRect(bottom, { 0, 50 }, { 20, 20 });
 }
 
-TEST(ASplitterHelper, ReclaimSpaceUsesViewMinimumSize) {
-    auto view = _new<SplitterMeasureView>();
-    view->preferredWidth = 80;
-    view->preferredHeight = 10;
-    view->setMinSize({ 30, 0 });
-    view->setSize({ 100, 20 });
+TEST(HVLayout, VerticalExpandingBetweenFixedViewsWithSpacingAndMargins) {
+    auto top = _new<FakeLayoutItem>();
+    top->setFixedSize({ 20, 10 });
+    top->setMargin({ .bottom = 3 });
 
-    ASplitterHelper helper(ALayoutDirection::HORIZONTAL);
-    helper.setItems(AVector<ASplitterHelper::Item> { { .view = view } });
+    auto middle = _new<FakeLayoutItem>();
+    middle->setExpanding({ 0, 1 });
+    middle->setMargin({ .top = 4, .bottom = 5 });
+    middle->preferredWidth = [](int) { return 20; };
 
-    EXPECT_EQ(helper.reclaimSpace(100, 0), 30);
-    ASSERT_TRUE(helper.items().first().overridedSize.hasValue());
-    EXPECT_EQ(*helper.items().first().overridedSize, 30);
+    auto bottom = _new<FakeLayoutItem>();
+    bottom->setFixedSize({ 20, 10 });
+    bottom->setMargin({ .top = 2 });
+
+    AVector<_<AView>> views { top, middle, bottom };
+    VerticalHVLayout::layout({ 0, 0 }, { 20, 100 }, views, 7);
+
+    expectRect(top, { 0, 0 }, { 20, 10 });
+    expectRect(middle, { 0, 24 }, { 20, 52 });
+    expectRect(bottom, { 0, 90 }, { 20, 10 });
 }
 
-TEST(ASplitterHelper, OverridenSizeIsExactOnMainAxis) {
-    auto view = _new<FakeLayoutItem>();
-    view->preferredWidth = [](int) { return 80; };
-    view->preferredHeight = [](int) { return 10; };
-    view->setMinSize({ 7, 0 });
-    view->setExpanding({ 1, 0 });
+TEST(HVLayout, VerticalLayoutUsesWidthFromFinalHeight) {
+    auto child = _new<PreferredButMinConstrainedView>(120, 20, 60);
 
-    ASplitterHelper::Item item {
-        .view = view,
-        .overridedSize = 20,
-    };
+    AVector<_<AView>> views { child };
+    VerticalHVLayout::layout({ 0, 0 }, { 40, 100 }, views, 0);
 
-    SizeInjector<ALayoutDirection::HORIZONTAL> injected { item };
-
-    EXPECT_EQ(injected.computeMinMaxAxis().max, 20);
-    EXPECT_EQ(injected.computeMinMaxAxis().min, 20);
-    EXPECT_EQ(injected.getFixedSize().x, 0);
-    EXPECT_EQ(injected.getMinSize().x, 7);
-    EXPECT_EQ(injected.getExpanding().x, 0);
+    expectRect(child, { 0, 0 }, { 120, 20 });
 }
 
-TEST(ASplitterHelper, OverridenSizeDoesNotGoBelowViewMinimum) {
-    auto view = _new<FakeLayoutItem>();
-    view->preferredWidth = [](int) { return 80; };
-    view->preferredHeight = [](int) { return 10; };
-    view->setMinSize({ 30, 0 });
+TEST(HVLayout, PerpendicularContribution) {
+    auto item = _new<FakeLayoutItem>();
+    item->setMinSize({ 10, 10 });
+    item->preferredWidth = [](int) { return 100; };
+    item->preferredHeight = [](int w) { return w == 10 ? 50 : 20; };
+    item->setMargin({ .top = 2, .bottom = 3, .left = 4, .right = 1 });
 
-    ASplitterHelper::Item item {
-        .view = view,
-        .overridedSize = 20,
-    };
+    AVector<_<AView>> views { item };
 
-    SizeInjector<ALayoutDirection::HORIZONTAL> injected { item };
+    // Horizontal: min our is 10. perp at 10 is 50. + margin(2+3) = 55.
+    EXPECT_EQ(HorizontalHVLayout::computeMinimumPerpendicularContribution(item, item->getMargin().occupiedSize()), 55);
+    // Horizontal: max our is 100. perp at 100 is 20. + margin(2+3) = 25.
+    EXPECT_EQ(HorizontalHVLayout::computeMaximumPerpendicularContribution(item, item->getMargin().occupiedSize()), 25);
 
-    EXPECT_EQ(injected.computeMinMaxAxis().max, 30);
-    EXPECT_EQ(injected.computeMinMaxAxis().min, 30);
+    // Vertical: min our is 10. + margin(2+3) = 15.
+    EXPECT_EQ(VerticalHVLayout::computeMinimumPerpendicularContribution(item, item->getMargin().occupiedSize()), 15);
+    // Vertical: max our is 100 + margin(4+1) = 105.
+    EXPECT_EQ(VerticalHVLayout::computeMaximumPerpendicularContribution(item, item->getMargin().occupiedSize()), 105);
 }
 
-TEST(ASplitter, DefaultsToEqualHorizontalExpansionWhenChildrenAreNotExpanding) {
-    auto left = _new<FakeLayoutItem>();
-    left->preferredWidth = [](int) { return 40; };
-    left->preferredHeight = [](int) { return 10; };
+TEST(HVLayout, HorizontalPerpendicularMaxSizeCapsExpandingHeight) {
+    auto item = _new<FakeLayoutItem>();
+    item->setFixedSize({ 40, 0 });
+    item->setExpanding({ 0, 1 });
+    item->setMaxSize({ -1, 15 });
+    item->preferredHeight = [](int) { return 10; };
 
-    auto right = _new<FakeLayoutItem>();
-    right->preferredWidth = [](int) { return 40; };
-    right->preferredHeight = [](int) { return 10; };
+    AVector<_<AView>> views { item };
+    HorizontalHVLayout::layout({ 0, 0 }, { 40, 30 }, views, 0);
 
-    auto splitter = _cast<ASplitter>(ASplitter::Horizontal()
-        .withItems({ left, right })
-        .build());
-
-    splitter->layout(0, 0, 100, 20);
-
-    expectRect(left, { 0, 0 }, { 50, 10 });
-    expectRect(right, { 50, 0 }, { 50, 10 });
+    expectRect(item, { 0, 0 }, { 40, 15 });
 }
 
-TEST(ASplitter, HorizontalMinHeightUsesChildHeightAtMinimumWidths) {
-    auto wrapping = _new<WrappingMinMaxTestView>();
+TEST(HVLayout, VerticalIntrinsicWidthUsesAllocatedHeight) {
     auto fixed = _new<FakeLayoutItem>();
-    fixed->setMinSize({ 20, 10 });
-    fixed->preferredWidth = [](int) { return 20; };
-    fixed->preferredHeight = [](int) { return 10; };
+    fixed->setFixedSize({ 10, 20 });
 
-    auto splitter = _cast<ASplitter>(ASplitter::Horizontal()
-        .withItems({ wrapping, fixed })
-        .build());
+    auto wrapped = _new<FakeLayoutItem>();
+    wrapped->setExpanding({ 0, 1 });
+    wrapped->preferredHeight = [](int) { return 60; };
+    wrapped->preferredWidth = [](int height) {
+        if (height == -1) return 10;
+        return height <= 20 ? 40 : 10;
+    };
 
-    const auto minMax = splitter->computeMinMaxAxis();
+    AVector<_<AView>> views { fixed, wrapped };
 
-    EXPECT_EQ(minMax.min, 40);
+    EXPECT_EQ(VerticalHVLayout::preferredWidth(views, 0, -1), 10);
+    EXPECT_EQ(VerticalHVLayout::preferredWidth(views, 0, 40), 40);
+}
+
+TEST(HVLayout, VerticalPerpendicularMaxSizeCapsExpandingWidth) {
+    auto item = _new<FakeLayoutItem>();
+    item->setFixedSize({ 0, 40 });
+    item->setExpanding({ 1, 0 });
+    item->setMaxSize({ 15, -1 });
+    item->preferredWidth = [](int) { return 10; };
+
+    AVector<_<AView>> views { item };
+    VerticalHVLayout::layout({ 0, 0 }, { 30, 40 }, views, 0);
+
+    expectRect(item, { 0, 0 }, { 15, 40 });
 }
