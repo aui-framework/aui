@@ -70,7 +70,7 @@ ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
 glm::ivec2 ViewPropertiesView::onIntrinsicMeasure(AConstraints constraints) {
     const auto start = high_resolution_clock::now();
     auto result = AScrollArea::onIntrinsicMeasure(constraints);
-    logDurationIfNonZero("measure", start);
+    logDurationIfNonZero(("measure " + std::to_string(constraints.maxInline) + " " + std::to_string(constraints.maxBlock)).c_str(), start);
     return result;
 }
 
