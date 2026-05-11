@@ -125,6 +125,8 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     Label { AUI_REACT("Min size = {}px"_format(targetView->getMinSize())) },
     Label { AUI_REACT("Max size = {}px"_format(targetView->getMaxSize())) },
     Label { AUI_REACT("Fixed size = {}px"_format(targetView->getFixedSize())) },
+
+    // TODO(Nelonn): COMPUTE THIS EATING FPS LIKE A SHIT
     Label { AUI_REACT("Compute min size = {}px"_format(targetView->computeMinMaxAxis().min)) },
     Label { AUI_REACT("Compute max size = {}px"_format(targetView->computeMinMaxAxis().max)) },
     Label { AUI_REACT("Measure (width -1) = {}px"_format(targetView->measure(AConstraints {}))) },
