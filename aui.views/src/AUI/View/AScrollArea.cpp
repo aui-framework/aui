@@ -129,13 +129,7 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
         const int effectiveViewportHeight =
             std::max(0, viewportHeight - (result.hasHorizontalScrollbar ? result.horizontalScrollbarHeight : 0));
 
-        const bool widthCompressionChangesLayout =
-            contentHeightForViewportWidth(effectiveViewportWidth) > naturalContentHeight;
-
-        int contentSurfaceWidth = std::max(effectiveViewportWidth, minimumScrollableContentWidth);
-        if (!widthCompressionChangesLayout) {
-            contentSurfaceWidth = std::max(contentSurfaceWidth, naturalContentWidth);
-        }
+        const int contentSurfaceWidth = std::max(effectiveViewportWidth, minimumScrollableContentWidth);
         const int contentSurfaceHeight = std::max(
             effectiveViewportHeight,
             contentHeightForViewportWidth(contentSurfaceWidth));
@@ -159,12 +153,7 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
         std::max(0, viewportWidth - (result.hasVerticalScrollbar ? result.verticalScrollbarWidth : 0)),
         std::max(0, viewportHeight - (result.hasHorizontalScrollbar ? result.horizontalScrollbarHeight : 0)),
     };
-    const bool widthCompressionChangesLayout =
-        contentHeightForViewportWidth(result.viewportSize.x) > naturalContentHeight;
-    int contentSurfaceWidth = std::max(result.viewportSize.x, minimumScrollableContentWidth);
-    if (!widthCompressionChangesLayout) {
-        contentSurfaceWidth = std::max(contentSurfaceWidth, naturalContentWidth);
-    }
+    const int contentSurfaceWidth = std::max(result.viewportSize.x, minimumScrollableContentWidth);
     result.contentSize = {
         contentSurfaceWidth,
         std::max(result.viewportSize.y, contentHeightForViewportWidth(contentSurfaceWidth)),

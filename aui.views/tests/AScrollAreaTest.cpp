@@ -62,6 +62,30 @@ public:
     }
 };
 
+class FlexibleWideView : public AView {
+public:
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
+        const int width = constraints.isUnlimitedInline() ? 6000 : constraints.maxInline;
+        mLastMeasuredWidth = width;
+        return { width, 20 };
+    }
+
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
+        return {
+            .min = 0,
+            .max = 6000,
+        };
+    }
+
+    [[nodiscard]]
+    int lastMeasuredWidth() const noexcept {
+        return mLastMeasuredWidth;
+    }
+
+private:
+    int mLastMeasuredWidth = -1;
+};
+
 }   // namespace
 
 TEST(AScrollArea, MeasurePrefersAvailableWidthForWrappingContent) {
@@ -116,6 +140,18 @@ TEST(AScrollArea, MeasureAddsHorizontalScrollbarHeightForWidthOverflow) {
     });
 
     EXPECT_EQ(measured, glm::ivec2(100, 20 + scrollbarHeight));
+}
+
+TEST(AScrollArea, LayoutPrefersViewportWidthWhenContentCanShrinkWithoutOverflow) {
+    auto content = _new<FlexibleWideView>();
+
+    AScrollArea scrollArea;
+    scrollArea.setContents(content);
+    scrollArea.layout({ 0, 0 }, { 100, 40 });
+
+    EXPECT_FALSE(bool(scrollArea.horizontalScrollbar()->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
+    EXPECT_EQ(content->lastMeasuredWidth(), 100);
+    EXPECT_EQ(content->getWidth(), 100);
 }
 
 TEST(AScrollAreaViewport, MeasureUsesContentSize) {
