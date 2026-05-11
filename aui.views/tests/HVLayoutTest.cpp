@@ -34,16 +34,21 @@ public:
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
         const int widthConstraint = constraints.isUnlimitedInline() ? -1 : constraints.maxInline;
         const int heightConstraint = constraints.isUnlimitedBlock() ? -1 : constraints.maxBlock;
-        return {
-            constraints.isInlineTight() ? constraints.maxInline : preferredWidth(heightConstraint),
-            constraints.isBlockTight() ? constraints.maxBlock : preferredHeight(widthConstraint),
-        };
+        int w = constraints.isInlineTight() ? constraints.maxInline : preferredWidth(heightConstraint);
+        int h = constraints.isBlockTight() ? constraints.maxBlock : preferredHeight(widthConstraint);
+
+        if (!constraints.isUnlimitedInline()) w = std::min(w, constraints.maxInline);
+        if (!constraints.isUnlimitedBlock()) h = std::min(h, constraints.maxBlock);
+        if (w < constraints.minInline) w = constraints.minInline;
+        if (h < constraints.minBlock) h = constraints.minBlock;
+
+        return { w, h };
     }
 
-    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int h) override {
         return {
             .min = {},
-            .max = preferredWidth(-1),
+            .max = preferredWidth(h),
         };
     }
 };
@@ -57,10 +62,11 @@ public:
         if (constraints.isBlockTight() && constraints.maxBlock == 0) {
             return { 100000, 0 };
         }
-        return {
-            minWidth,
-            constraints.isBlockTight() ? constraints.maxBlock : preferredHeight,
-        };
+        int w = minWidth;
+        int h = constraints.isBlockTight() ? constraints.maxBlock : preferredHeight;
+        if (!constraints.isUnlimitedInline()) w = std::min(w, constraints.maxInline);
+        if (!constraints.isUnlimitedBlock()) h = std::min(h, constraints.maxBlock);
+        return { w, h };
     }
 
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
@@ -82,10 +88,13 @@ public:
     }
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
-        return {
-            constraints.isInlineTight() ? constraints.maxInline : mPreferredWidth,
-            constraints.isBlockTight() ? constraints.maxBlock : mPreferredHeight,
-        };
+        int w = constraints.isInlineTight() ? constraints.maxInline : mPreferredWidth;
+        int h = constraints.isBlockTight() ? constraints.maxBlock : mPreferredHeight;
+        if (!constraints.isUnlimitedInline()) w = std::min(w, constraints.maxInline);
+        if (!constraints.isUnlimitedBlock()) h = std::min(h, constraints.maxBlock);
+        if (w < constraints.minInline) w = constraints.minInline;
+        if (h < constraints.minBlock) h = constraints.minBlock;
+        return { w, h };
     }
 
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
@@ -530,4 +539,31 @@ TEST(HVLayout, VerticalPerpendicularMaxSizeCapsExpandingWidth) {
     VerticalHVLayout::layout({ 0, 0 }, { 30, 40 }, views, 0);
 
     expectRect(item, { 0, 0 }, { 15, 40 });
+}
+
+TEST(HVLayout, VerticalExpandingChildDoesNotOverflow) {
+    auto top = _new<FakeLayoutItem>();
+    top->setExpanding({ 1, 0 }); // horizontal expanding, fixed height
+    top->preferredHeight = [](int) { return 27; };
+
+    auto bottom = _new<FakeLayoutItem>();
+    bottom->setExpanding({ 1, 1 }); // all directions
+    // Simulate the user's view behavior:
+    // It wants to be 1174 high if unconstrained, but can be as small as 512 if constrained.
+    bottom->preferredWidth = [](int h) {
+        if (h != -1 && h <= 700) return 512;
+        return 1377;
+    };
+    bottom->preferredHeight = [](int w) {
+        return 1174;
+    };
+
+    AVector<_<AView>> views { top, bottom };
+    // Container 700x700
+    VerticalHVLayout::layout({ 0, 0 }, { 700, 700 }, views, 0);
+
+    expectRect(top, { 0, 0 }, { 700, 27 });
+    // The height of 'bottom' should be 700 - 27 = 673.
+    // If it's 1174, the test fails.
+    EXPECT_EQ(bottom->getSize().y, 673);
 }
