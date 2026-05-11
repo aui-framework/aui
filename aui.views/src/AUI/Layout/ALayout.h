@@ -10,12 +10,13 @@
  */
 
 #pragma once
-#include "AUI/Common/AObject.h"
-#include "AUI/Common/ADeque.h"
+
+#include <AUI/Common/AObject.h>
+#include <AUI/Common/ADeque.h>
 #include <AUI/Common/AFixedSizeCache.hpp>
-#include "AUI/View/AView.h"
-#include "AUI/Common/SharedPtr.h"
-#include "AUI/Util/ALayoutDirection.h"
+#include <AUI/View/AView.h>
+#include <AUI/Common/SharedPtr.h>
+#include <AUI/Util/ALayoutDirection.h>
 #include <limits>
 
 class AViewContainer;
