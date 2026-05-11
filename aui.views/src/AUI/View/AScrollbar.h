@@ -130,6 +130,8 @@ public:
     void onPointerPressed(const APointerPressedEvent& event) override;
 
     void onLayout(int w, int h) override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
     static const _<ATimer>& buttonTimer();
 
@@ -193,4 +195,6 @@ private:
 
     int getMeasuredButtonOccupiedSpace(const _<AView>& view) const;
     int getMeasuredHandleOccupiedSpace() const;
+    int chromeThickness() const;
+    int minimumChromeLength() const;
 };

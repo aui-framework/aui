@@ -19,8 +19,6 @@
 using namespace declarative;
 
 ATabView::ATabView() {
-    setLayout(std::make_unique<AVerticalLayout>());
-
     addView(mRow = _new<ATabButtonRow>());
     addView(mPageView = _new<APageView>());
     mPageView->setExpanding();
@@ -45,6 +43,49 @@ void ATabView::addTab(const _<AView>& view, const AString& name) {
 
 void ATabView::setTabId(unsigned int tabId) {
     mPageView->setPageId(tabId);
+}
+
+glm::ivec2 ATabView::onIntrinsicMeasure(AConstraints constraints) {
+    const int availableInline = constraints.isUnlimitedInline() ? -1 : constraints.maxInline;
+    const auto rowMeasured = mRow->measure(
+        availableInline == -1 ? AConstraints {} : AConstraints::fixedInline(availableInline));
+
+    AConstraints pageConstraints = constraints;
+    if (!constraints.isUnlimitedBlock()) {
+        const int remainingBlock = std::max(0, constraints.maxBlock - rowMeasured.y);
+        pageConstraints.minBlock = std::max(0, pageConstraints.minBlock - rowMeasured.y);
+        pageConstraints.maxBlock = remainingBlock;
+    }
+    const auto pageMeasured = mPageView->measure(pageConstraints);
+
+    return {
+        std::max(rowMeasured.x, pageMeasured.x),
+        rowMeasured.y + pageMeasured.y,
+    };
+}
+
+AMinMaxAxis ATabView::onComputeIntrinsicMinMaxAxis(int height) {
+    const auto rowMinMax = mRow->computeMinMaxAxis();
+    const int rowHeight = mRow->measure(AConstraints::fixedInline(rowMinMax.max)).y;
+    const int pageHeight = height == -1 ? -1 : std::max(0, height - rowHeight);
+    const auto pageMinMax = mPageView->computeMinMaxAxis(pageHeight);
+
+    return {
+        .min = std::max(rowMinMax.min, pageMinMax.min),
+        .max = std::max(rowMinMax.max, pageMinMax.max),
+    };
+}
+
+void ATabView::onLayout(int w, int h) {
+    AViewContainerBase::onLayout(w, h);
+
+    const int contentWidth = std::max(0, w - mPadding.horizontal());
+    const auto rowMeasured = mRow->measure(AConstraints::fixedInline(contentWidth));
+    const int rowHeight = std::min(rowMeasured.y, std::max(0, h - mPadding.vertical()));
+    const int pageHeight = std::max(0, h - mPadding.vertical() - rowHeight);
+
+    mRow->layout(mPadding.left, mPadding.top, contentWidth, rowHeight);
+    mPageView->layout(mPadding.left, mPadding.top + rowHeight, contentWidth, pageHeight);
 }
 
 void ATabButtonView::setCurrent(bool current) {

@@ -287,6 +287,85 @@ int AScrollbar::getMeasuredHandleOccupiedSpace() const {
     return 0;
 }
 
+int AScrollbar::chromeThickness() const {
+    const auto backward = mBackwardButton->measure(AConstraints {});
+    const auto forward = mForwardButton->measure(AConstraints {});
+
+    switch (mDirection) {
+        case ALayoutDirection::HORIZONTAL:
+            return std::max(backward.y, forward.y);
+
+        case ALayoutDirection::VERTICAL:
+            return std::max(backward.x, forward.x);
+
+        case ALayoutDirection::NONE:
+            break;
+    }
+    return 0;
+}
+
+int AScrollbar::minimumChromeLength() const {
+    const auto backward = mBackwardButton->measure(AConstraints {});
+    const auto forward = mForwardButton->measure(AConstraints {});
+
+    switch (mDirection) {
+        case ALayoutDirection::HORIZONTAL:
+            return backward.x + forward.x;
+
+        case ALayoutDirection::VERTICAL:
+            return backward.y + forward.y;
+
+        case ALayoutDirection::NONE:
+            break;
+    }
+    return 0;
+}
+
+glm::ivec2 AScrollbar::onIntrinsicMeasure(AConstraints constraints) {
+    const int thickness = chromeThickness();
+    const int minimumLength = minimumChromeLength();
+
+    switch (mDirection) {
+        case ALayoutDirection::HORIZONTAL: {
+            const int width = constraints.isUnlimitedInline()
+                ? std::max(minimumLength, constraints.minInline)
+                : std::clamp(minimumLength, constraints.minInline, constraints.maxInline);
+            return { width, thickness };
+        }
+
+        case ALayoutDirection::VERTICAL: {
+            const int height = constraints.isUnlimitedBlock()
+                ? std::max(minimumLength, constraints.minBlock)
+                : std::clamp(minimumLength, constraints.minBlock, constraints.maxBlock);
+            return { thickness, height };
+        }
+
+        case ALayoutDirection::NONE:
+            break;
+    }
+    return {};
+}
+
+AMinMaxAxis AScrollbar::onComputeIntrinsicMinMaxAxis(int) {
+    switch (mDirection) {
+        case ALayoutDirection::HORIZONTAL:
+            return {
+                .min = minimumChromeLength(),
+                .max = minimumChromeLength(),
+            };
+
+        case ALayoutDirection::VERTICAL:
+            return {
+                .min = chromeThickness(),
+                .max = chromeThickness(),
+            };
+
+        case ALayoutDirection::NONE:
+            break;
+    }
+    return {};
+}
+
 float AScrollbar::getAvailableSpaceForSpacer() {
     const auto backwardButtonOccupiedSpace = getMeasuredButtonOccupiedSpace(mBackwardButton);
     const auto forwardButtonOccupiedSpace = getMeasuredButtonOccupiedSpace(mForwardButton);

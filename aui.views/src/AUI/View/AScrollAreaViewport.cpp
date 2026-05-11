@@ -54,6 +54,9 @@ void AScrollAreaViewport::setScrollSurfaceSize(glm::ivec2 size) {
 }
 
 glm::ivec2 AScrollAreaViewport::onIntrinsicMeasure(AConstraints constraints) {
+  if (constraints.isInlineTight() && constraints.maxInline == 0) {
+    return { 0, constraints.minBlock };
+  }
   return mInner->measure(constraints);
 }
 

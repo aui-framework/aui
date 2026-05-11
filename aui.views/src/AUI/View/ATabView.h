@@ -70,7 +70,9 @@ public:
 
     void addTab(const _<AView>& view, const AString& name = {});
     void setTabId(unsigned tabId);
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
+    void onLayout(int w, int h) override;
 
 };
-
 
