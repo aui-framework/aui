@@ -139,8 +139,8 @@ void AGridLayout::removeView(aui::no_escape<AView> view, size_t index) {
 
 glm::ivec2 AGridLayout::onIntrinsicMeasure(AConstraints constraints)
 {
-    const int childWidth = mCellsX == 0 ? 0 : constraints.maxWidth / mCellsX;
-    const int childHeight = mCellsY == 0 ? 0 : constraints.maxHeight / mCellsY;
+    const int childWidth = mCellsX == 0 ? 0 : constraints.maxInline / mCellsX;
+    const int childHeight = mCellsY == 0 ? 0 : constraints.maxBlock / mCellsY;
     glm::ivec2 result = {};
     for (int y = 0; y < mCellsY; ++y)
 	{
@@ -150,10 +150,10 @@ glm::ivec2 AGridLayout::onIntrinsicMeasure(AConstraints constraints)
 		{
             auto margins = view->getMargin().occupiedSize();
             auto measured = view->measure({
-                .minWidth = 0,
-                .maxWidth = std::max(0, childWidth - margins.x),
-                .minHeight = 0,
-                .maxHeight = std::max(0, childHeight - margins.y),
+                .minInline = 0,
+                .maxInline = std::max(0, childWidth - margins.x),
+                .minBlock = 0,
+                .maxBlock = std::max(0, childHeight - margins.y),
             });
 			rowWidth = glm::max(rowWidth, measured.x + margins.x);
             rowHeight = glm::max(rowHeight, measured.y + margins.y);

@@ -83,7 +83,7 @@ TEST(ATextBase, IntrinsicHeightMeasurementDoesNotStoreLayout) {
     TestTextBase text;
     text.setEntries({ left, right });
 
-    EXPECT_GT(text.measure(AConstraints::fixedWidth(20)).y, 0);
+    EXPECT_GT(text.measure(AConstraints::fixedInline(20)).y, 0);
     EXPECT_EQ(left->setPositionCalls(), 0);
     EXPECT_EQ(right->setPositionCalls(), 0);
 

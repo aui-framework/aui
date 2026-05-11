@@ -21,54 +21,54 @@
 /**
  * Layout constraints for a UI element.
  *
- * Defines the minimum and maximum allowed width and height.
+ * Defines minimum and maximum allowed inline and block sizes.
  * A maximum value of -1 means that the size is unlimited.
  *
  * The constraint is considered tight when its minimum and maximum
  * values are equal.
  */
 struct AConstraints {
-  int minWidth = 0;
-  int minHeight = 0;
-  int maxWidth = -1;
-  int maxHeight = -1;
+  int minInline = 0;
+  int maxInline = -1;
+  int minBlock = 0;
+  int maxBlock = -1;
 
-  static AConstraints fixedWidth(int width) {
+  static AConstraints fixedInline(int value) {
     return AConstraints {
-      .minWidth = width,
-      .maxWidth = width,
+      .minInline = value,
+      .maxInline = value,
     };
   }
 
-  static AConstraints fixedHeight(int height) {
+  static AConstraints fixedBlock(int value) {
     return AConstraints {
-      .minHeight = height,
-      .maxHeight = height,
+      .minBlock = value,
+      .maxBlock = value,
     };
   }
 
-  constexpr bool isWidthTight() const noexcept {
-    return minWidth == maxWidth;
+  constexpr bool isInlineTight() const noexcept {
+    return minInline == maxInline;
   }
 
-  constexpr bool isHeightTight() const noexcept {
-    return minHeight == maxHeight;
+  constexpr bool isBlockTight() const noexcept {
+    return minBlock == maxBlock;
   }
 
-  constexpr bool isUnlimitedWidth() const noexcept {
-    return maxWidth == -1;
+  constexpr bool isUnlimitedInline() const noexcept {
+    return maxInline == -1;
   }
 
-  constexpr bool isUnlimitedHeight() const noexcept {
-    return maxHeight == -1;
+  constexpr bool isUnlimitedBlock() const noexcept {
+    return maxBlock == -1;
   }
 
   constexpr glm::ivec2 min() const noexcept {
-    return {minWidth, minHeight};
+    return {minInline, minBlock};
   }
 
   constexpr glm::ivec2 max() const noexcept {
-    return {maxWidth, maxHeight};
+    return {maxInline, maxBlock};
   }
 
   constexpr auto operator<=>(const AConstraints&) const = default;

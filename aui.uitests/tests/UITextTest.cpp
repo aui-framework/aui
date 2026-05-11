@@ -134,7 +134,7 @@ TEST_F(UIText, MeasureUsesTightWidthForWrapping) {
 
     const int tightWidth = std::max(1, unconstrained.x / 2);
     const auto constrained = text->measure({
-        .maxWidth = tightWidth,
+        .maxInline = tightWidth,
     });
 
     EXPECT_EQ(constrained.x, tightWidth);
@@ -145,10 +145,10 @@ TEST_F(UIText, MeasureHeightGrowsWhenWidthShrinks) {
     auto text = AText::fromString("one two three four five six seven eight nine ten");
 
     const auto wide = text->measure({
-        .maxWidth = 220,
+        .maxInline = 220,
     });
     const auto narrow = text->measure({
-        .maxWidth = 120,
+        .maxInline = 120,
     });
 
     EXPECT_EQ(wide.x, 220);
@@ -173,7 +173,7 @@ TEST_F(UIText, BreakAllAllowsNarrowIntrinsicWidthAndWrapping) {
 
     const auto unconstrained = text->measure(AConstraints {});
     const auto constrained = text->measure({
-        .maxWidth = std::max(1, unconstrained.x / 2),
+        .maxInline = std::max(1, unconstrained.x / 2),
     });
 
     EXPECT_LT(text->computeMinMaxAxis().max, unconstrained.x);

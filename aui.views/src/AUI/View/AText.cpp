@@ -297,7 +297,7 @@ void AText::setMarkdown(const AString& md, const Flags& flags) {
 void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
   auto ascender = glm::ivec2 {0, getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()};
   const int textHeight =
-      this->measure(AConstraints::fixedWidth(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
+      this->measure(AConstraints::fixedInline(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
   if (mVerticalAlign == VerticalAlign::MIDDLE) {
     ascender += (getContentHeight() - textHeight) / 2;
   }
@@ -317,7 +317,7 @@ void AText::onLayout(int w, int h) {
 
   int y = 0;
   const int textHeight =
-      this->measure(AConstraints::fixedWidth(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
+      this->measure(AConstraints::fixedInline(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
   if (mVerticalAlign == VerticalAlign::MIDDLE) {
     y += (getContentHeight() - textHeight) / 2;
   }

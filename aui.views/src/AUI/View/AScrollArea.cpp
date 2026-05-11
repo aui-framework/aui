@@ -74,7 +74,7 @@ int AScrollArea::measureVerticalScrollbarWidth(int availableHeight) const {
     if (availableHeight == -1) {
         return mVerticalScrollbar->measure(AConstraints {}).x;
     }
-    return mVerticalScrollbar->measure(AConstraints::fixedHeight(std::max(0, availableHeight))).x;
+    return mVerticalScrollbar->measure(AConstraints::fixedBlock(std::max(0, availableHeight))).x;
 }
 
 int AScrollArea::measureHorizontalScrollbarHeight(int availableWidth) const {
@@ -84,7 +84,7 @@ int AScrollArea::measureHorizontalScrollbarHeight(int availableWidth) const {
     if (availableWidth == -1) {
         return mHorizontalScrollbar->measure(AConstraints {}).y;
     }
-    return mHorizontalScrollbar->measure(AConstraints::fixedWidth(std::max(0, availableWidth))).y;
+    return mHorizontalScrollbar->measure(AConstraints::fixedInline(std::max(0, availableWidth))).y;
 }
 
 AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSize, bool widthBounded, bool heightBounded) const {
@@ -110,7 +110,7 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
 
     auto contentHeightForViewportWidth = [&](int width) {
         const int contentWidth = std::max(0, width - margins.x);
-        return contents()->measure(AConstraints::fixedWidth(contentWidth)).y + margins.y;
+        return contents()->measure(AConstraints::fixedInline(contentWidth)).y + margins.y;
     };
     const int naturalContentHeight =
         contentHeightForViewportWidth(glm::max(naturalContentWidth, minimumScrollableContentWidth));
@@ -177,26 +177,26 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
 }
 
 glm::ivec2 AScrollArea::onIntrinsicMeasure(AConstraints constraints) {
-    const int width = constraints.isUnlimitedWidth() ? constraints.minWidth : constraints.maxWidth;
-    const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
-    const int maxHeight = constraints.isUnlimitedHeight() ? std::numeric_limits<int>::max() : constraints.maxHeight;
-    if (constraints.isUnlimitedWidth()) {
+    const int width = constraints.isUnlimitedInline() ? constraints.minInline : constraints.maxInline;
+    const int maxWidth = constraints.isUnlimitedInline() ? std::numeric_limits<int>::max() : constraints.maxInline;
+    const int maxHeight = constraints.isUnlimitedBlock() ? std::numeric_limits<int>::max() : constraints.maxBlock;
+    if (constraints.isUnlimitedInline()) {
         return {
-            std::clamp(width, constraints.minWidth, maxWidth),
-            std::clamp(constraints.minHeight, constraints.minHeight, maxHeight),
+            std::clamp(width, constraints.minInline, maxWidth),
+            std::clamp(constraints.minBlock, constraints.minBlock, maxHeight),
         };
     }
     if (!contents()) {
         return {
-            std::clamp(width, constraints.minWidth, maxWidth),
-            std::clamp(0, constraints.minHeight, maxHeight),
+            std::clamp(width, constraints.minInline, maxWidth),
+            std::clamp(0, constraints.minBlock, maxHeight),
         };
     }
 
     const auto margins = contents()->getMargin().occupiedSize();
     const int viewportWidth = glm::max(0, width);
     const int contentWidth = glm::max(0, viewportWidth - margins.x);
-    int measuredHeight = contents()->measure(AConstraints::fixedWidth(contentWidth)).y + margins.y;
+    int measuredHeight = contents()->measure(AConstraints::fixedInline(contentWidth)).y + margins.y;
 
     const int minimumScrollableContentWidth = margins.x + contents()->computeMinMaxAxis().min;
 
@@ -205,8 +205,8 @@ glm::ivec2 AScrollArea::onIntrinsicMeasure(AConstraints constraints) {
     }
 
     return {
-        std::clamp(width, constraints.minWidth, maxWidth),
-        std::clamp(measuredHeight, constraints.minHeight, maxHeight),
+        std::clamp(width, constraints.minInline, maxWidth),
+        std::clamp(measuredHeight, constraints.minBlock, maxHeight),
     };
 }
 
@@ -221,7 +221,7 @@ AMinMaxAxis AScrollArea::onComputeIntrinsicMinMaxAxis(int height) {
 
     if (height != -1) {
         const int contentHeight =
-            contents()->measure(AConstraints::fixedWidth(contentMinMax.max)).y + margins.y;
+            contents()->measure(AConstraints::fixedInline(contentMinMax.max)).y + margins.y;
         if (contentHeight > height) {
             maxWidth += measureVerticalScrollbarWidth(height);
         }

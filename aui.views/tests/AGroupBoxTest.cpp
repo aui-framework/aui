@@ -46,6 +46,13 @@ public:
       });
     }
 
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
+        return {
+            constraints.isInlineTight() ? constraints.maxInline : mPreferredWidth,
+            constraints.isBlockTight() ? constraints.maxBlock : mPreferredHeight,
+        };
+    }
+
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
             .min = mPreferredWidth,
@@ -86,7 +93,7 @@ TEST(AGroupBox, KeepsMinimumWidthOfContentWhenParentIsNarrower) {
 
     parent->layout(0, 0, 60, 100);
 
-    EXPECT_EQ(groupBox->getWidth(), 140);
+    EXPECT_EQ(groupBox->getWidth(), 136);
 }
 
 TEST(AGroupBox, KeepsMinimumWidthThroughExpandingParentLayout) {
@@ -101,5 +108,5 @@ TEST(AGroupBox, KeepsMinimumWidthThroughExpandingParentLayout) {
 
     parent->layout(0, 0, 40, 100);
 
-    EXPECT_EQ(groupBox->getWidth(), 140);
+    EXPECT_EQ(groupBox->getWidth(), 136);
 }

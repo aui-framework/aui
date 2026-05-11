@@ -254,12 +254,12 @@ void AScrollbar::handleScrollbar(int s) {
 int AScrollbar::getMeasuredButtonOccupiedSpace(const _<AView>& view) const {
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL: {
-            const auto measured = view->measure(AConstraints::fixedHeight(getHeight()));
+            const auto measured = view->measure(AConstraints::fixedBlock(getHeight()));
             return measured.x + view->getMargin().horizontal();
         }
 
         case ALayoutDirection::VERTICAL: {
-            const auto measured = view->measure(AConstraints::fixedWidth(getWidth()));
+            const auto measured = view->measure(AConstraints::fixedInline(getWidth()));
             return measured.y + view->getMargin().vertical();
         }
 
@@ -272,12 +272,12 @@ int AScrollbar::getMeasuredButtonOccupiedSpace(const _<AView>& view) const {
 int AScrollbar::getMeasuredHandleOccupiedSpace() const {
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL: {
-            const auto measured = mHandle->measure(AConstraints::fixedHeight(getHeight()));
+            const auto measured = mHandle->measure(AConstraints::fixedBlock(getHeight()));
             return measured.x + mHandle->getMargin().horizontal();
         }
 
         case ALayoutDirection::VERTICAL: {
-            const auto measured = mHandle->measure(AConstraints::fixedWidth(getWidth()));
+            const auto measured = mHandle->measure(AConstraints::fixedInline(getWidth()));
             return measured.y + mHandle->getMargin().vertical();
         }
 

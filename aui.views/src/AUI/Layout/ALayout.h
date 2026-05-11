@@ -391,11 +391,11 @@ public:
     glm::ivec2 getMinimumSize() { return { getMinimumWidth(), getMinimumHeight() }; }
 
     virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints) {
-        const auto minMax = onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
-        const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
+        const auto minMax = onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedBlock() ? -1 : constraints.maxBlock);
+        const int maxInline = constraints.isUnlimitedInline() ? std::numeric_limits<int>::max() : constraints.maxInline;
         return {
-            std::clamp(minMax.max, constraints.minWidth, maxWidth),
-            constraints.minHeight,
+            std::clamp(minMax.max, constraints.minInline, maxInline),
+            constraints.minBlock,
         };
     }
     virtual AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) = 0;

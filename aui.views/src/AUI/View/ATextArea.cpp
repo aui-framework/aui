@@ -559,7 +559,7 @@ void ATextArea::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas)
                                 getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()
     };
     const int textHeight =
-        this->measure(AConstraints::fixedWidth(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
+        this->measure(AConstraints::fixedInline(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
     if (mVerticalAlign == VerticalAlign::MIDDLE) {
         ascender.y += (getContentHeight() - textHeight) / 2;
     }

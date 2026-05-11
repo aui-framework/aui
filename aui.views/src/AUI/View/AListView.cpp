@@ -166,16 +166,16 @@ glm::ivec2 AListView::onIntrinsicMeasure(AConstraints constraints) {
   if (!mContent) {
     return { 0, 0 };
   }
-  const int width = constraints.isUnlimitedWidth()
-      ? constraints.minWidth
-      : constraints.maxWidth;
+  const int width = constraints.isUnlimitedInline()
+      ? constraints.minInline
+      : constraints.maxInline;
   const int contentWidth = glm::max(0, width);
-  const auto contentMeasured = mContent->measure(AConstraints::fixedWidth(contentWidth));
-  const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
-  const int maxHeight = constraints.isUnlimitedHeight() ? std::numeric_limits<int>::max() : constraints.maxHeight;
+  const auto contentMeasured = mContent->measure(AConstraints::fixedInline(contentWidth));
+  const int maxWidth = constraints.isUnlimitedInline() ? std::numeric_limits<int>::max() : constraints.maxInline;
+  const int maxHeight = constraints.isUnlimitedBlock() ? std::numeric_limits<int>::max() : constraints.maxBlock;
   return {
-    std::clamp(width, constraints.minWidth, maxWidth),
-    std::clamp(contentMeasured.y, constraints.minHeight, maxHeight),
+    std::clamp(width, constraints.minInline, maxWidth),
+    std::clamp(contentMeasured.y, constraints.minBlock, maxHeight),
   };
 }
 

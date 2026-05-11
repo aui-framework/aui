@@ -63,7 +63,7 @@ public:
 
 protected:
     void onLayout(int w, int h) override {
-        auto handleSize = mHandle->measure(AConstraints::fixedHeight(h));
+        auto handleSize = mHandle->measure(AConstraints::fixedBlock(h));
         mHandle->layout({w * mValue - handleSize.x / 2.f, 0}, { handleSize.x, h });
     }
 

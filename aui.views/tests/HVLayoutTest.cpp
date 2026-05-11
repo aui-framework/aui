@@ -30,11 +30,11 @@ public:
     std::function<int(int)> preferredHeight = [](int) { return 0; };
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
-        const int widthConstraint = constraints.isUnlimitedWidth() ? -1 : constraints.maxWidth;
-        const int heightConstraint = constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight;
+        const int widthConstraint = constraints.isUnlimitedInline() ? -1 : constraints.maxInline;
+        const int heightConstraint = constraints.isUnlimitedBlock() ? -1 : constraints.maxBlock;
         return {
-            constraints.isWidthTight() ? constraints.maxWidth : preferredWidth(heightConstraint),
-            constraints.isHeightTight() ? constraints.maxHeight : preferredHeight(widthConstraint),
+            constraints.isInlineTight() ? constraints.maxInline : preferredWidth(heightConstraint),
+            constraints.isBlockTight() ? constraints.maxBlock : preferredHeight(widthConstraint),
         };
     }
 
@@ -52,12 +52,12 @@ public:
     int preferredHeight = 10;
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
-        if (constraints.isHeightTight() && constraints.maxHeight == 0) {
+        if (constraints.isBlockTight() && constraints.maxBlock == 0) {
             return { 100000, 0 };
         }
         return {
             minWidth,
-            constraints.isHeightTight() ? constraints.maxHeight : preferredHeight,
+            constraints.isBlockTight() ? constraints.maxBlock : preferredHeight,
         };
     }
 
@@ -78,8 +78,8 @@ public:
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
         return {
-            constraints.isWidthTight() ? constraints.maxWidth : mPreferredWidth,
-            constraints.isHeightTight() ? constraints.maxHeight : mPreferredHeight,
+            constraints.isInlineTight() ? constraints.maxInline : mPreferredWidth,
+            constraints.isBlockTight() ? constraints.maxBlock : mPreferredHeight,
         };
     }
 

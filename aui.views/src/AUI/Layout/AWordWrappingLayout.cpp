@@ -41,7 +41,7 @@ glm::ivec2 AWordWrappingLayout::onIntrinsicMeasure(AConstraints constraints) {
     for (auto& v : mViewEntry) {
         width = std::max(width, v.getSize().x);
     }
-    if (constraints.isUnlimitedWidth()) {
+    if (constraints.isUnlimitedInline()) {
         int height = 0;
         for (auto& v : mViewEntry) {
             height += v.getSize().y;
@@ -54,8 +54,8 @@ glm::ivec2 AWordWrappingLayout::onIntrinsicMeasure(AConstraints constraints) {
     }
     AWordWrappingEngine we;
     we.setEntries(std::move(entries));
-    we.performLayout({0, 0}, {constraints.maxWidth, constraints.maxHeight});
-    return { constraints.maxWidth, we.height().valueOr(0) };
+    we.performLayout({0, 0}, {constraints.maxInline, constraints.maxBlock});
+    return { constraints.maxInline, we.height().valueOr(0) };
 }
 
 AMinMaxAxis AWordWrappingLayout::onComputeIntrinsicMinMaxAxis(int) {

@@ -46,11 +46,11 @@ struct SizeInjector {
                 aui::layout_direction::getAxisValue(direction, item.view->getMinSize()),
                 *item.overridedSize);
             if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-                constraints.minWidth = overridedAxis;
-                constraints.maxWidth = overridedAxis;
+                constraints.minInline = overridedAxis;
+                constraints.maxInline = overridedAxis;
             } else {
-                constraints.minHeight = overridedAxis;
-                constraints.maxHeight = overridedAxis;
+                constraints.minBlock = overridedAxis;
+                constraints.maxBlock = overridedAxis;
             }
         }
         return item.view->measure(constraints);

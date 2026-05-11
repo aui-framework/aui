@@ -18,6 +18,7 @@
 #include "ViewPropertiesView.h"
 #include <AUI/ASS/ASS.h>
 #include <AUI/Common/IStringable.h>
+#include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AClipboard.h>
 #include <AUI/Reflect/AReflect.h>
 #include <AUI/Traits/iterators.h>
@@ -36,9 +37,21 @@
 #include "AUI/View/AGroupBox.h"
 #include "AUI/Common/AString.h"
 #include "AUI/View/AForEachUI.h"
+#include <chrono>
 
 using namespace ass;
 using namespace declarative;
+using namespace std::chrono;
+
+namespace {
+void logDurationIfNonZero(const char* phase, high_resolution_clock::time_point start) {
+    const auto durationMs = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+    if (durationMs == 0) {
+        return;
+    }
+    ALogger::info("ViewPropertiesView") << phase << " took " << durationMs << " ms";
+}
+}
 
 ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
     setCustomStyle({
@@ -52,6 +65,36 @@ ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
       Expanding(),
     });
     setTargetView(targetView);
+}
+
+glm::ivec2 ViewPropertiesView::onIntrinsicMeasure(AConstraints constraints) {
+    const auto start = high_resolution_clock::now();
+    auto result = AScrollArea::onIntrinsicMeasure(constraints);
+    logDurationIfNonZero("measure", start);
+    return result;
+}
+
+AMinMaxAxis ViewPropertiesView::onComputeIntrinsicMinMaxAxis(int height) {
+    const auto start = high_resolution_clock::now();
+    auto result = AScrollArea::onComputeIntrinsicMinMaxAxis(height);
+    logDurationIfNonZero(("min max " + std::to_string(height)).c_str(), start);
+    return result;
+}
+
+void ViewPropertiesView::onLayout(int w, int h) {
+    const auto start = high_resolution_clock::now();
+    AScrollArea::onLayout(w, h);
+    logDurationIfNonZero("layout", start);
+}
+
+void ViewPropertiesView::render(ARenderContext context) {
+    const auto start = high_resolution_clock::now();
+    AScrollArea::render(context);
+    logDurationIfNonZero("render", start);
+}
+
+void ViewPropertiesView::requestLayout() {
+  AScrollArea::requestLayout();
 }
 
 void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
@@ -81,7 +124,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
         Label { AUI_REACT("Compute min size = {}px"_format(targetView->computeMinMaxAxis().min)) },
         Label { AUI_REACT("Compute max size = {}px"_format(targetView->computeMinMaxAxis().max)) },
         Label { AUI_REACT("Measure (width -1) = {}px"_format(targetView->measure(AConstraints {}))) },
-        Label { AUI_REACT("Measure (width 0) = {}px"_format(targetView->measure(AConstraints::fixedWidth(0)))) },
+        Label { AUI_REACT("Measure (width 0) = {}px"_format(targetView->measure(AConstraints::fixedInline(0)))) },
 
         Vertical {
           CheckBox {
@@ -152,6 +195,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 void ViewPropertiesView::displayApplicableRule(
     const _<AViewContainer>& dst, ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
     const ass::PropertyList* rule) {
+    const auto start = high_resolution_clock::now();
     for (const auto& decl : rule->declarations()) {
         applicableDeclarations.push_front(decl.get());
         dst->addView(_new<ALabel>(IStringable::toString(decl)) AUI_OVERRIDE_STYLE { Opacity { 0.7f } });
@@ -162,12 +206,15 @@ void ViewPropertiesView::displayApplicableRule(
     dst->addView(
         _new<AHDividerView>()
             AUI_OVERRIDE_STYLE { BackgroundSolid { 0x505050_rgb }, Margin { 5_dp, 0 }, MinSize { {}, 10_dp } });
+    logDurationIfNonZero("displayApplicableRule", start);
 }
 
 void ViewPropertiesView::requestTargetUpdate() {
+    const auto start = high_resolution_clock::now();
     if (auto targetView = mTargetView.lock()) {
         if (auto targetWindow = targetView->getWindow()) {
             targetWindow->redraw();
         }
     }
+    logDurationIfNonZero("requestTargetUpdate", start);
 }

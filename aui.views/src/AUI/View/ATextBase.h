@@ -237,9 +237,9 @@ public:
         }
         const int preferredWidth = glm::max(max, accumulator);
 
-        const int width = constraints.isUnlimitedWidth()
-            ? glm::max(preferredWidth, constraints.minWidth)
-            : glm::clamp(preferredWidth, constraints.minWidth, constraints.maxWidth);
+        const int width = constraints.isUnlimitedInline()
+            ? glm::max(preferredWidth, constraints.minInline)
+            : glm::clamp(preferredWidth, constraints.minInline, constraints.maxInline);
 
         int height = 0;
         if (auto engineHeight = measureLayoutForWidth(width)) {

@@ -22,17 +22,17 @@ void AStackedLayout::layout(int x, int y, int width, int height) {
 
     AConstraints constraints;
     if (v->getExpandingHorizontal() == 0) {
-      constraints.minWidth = 0;
-      constraints.maxWidth = std::max(0, width - margins.horizontal());
+      constraints.minInline = 0;
+      constraints.maxInline = std::max(0, width - margins.horizontal());
     } else {
-      constraints.minWidth = constraints.maxWidth = std::max(0, width - margins.horizontal());
+      constraints.minInline = constraints.maxInline = std::max(0, width - margins.horizontal());
     }
 
     if (v->getExpandingVertical() == 0) {
-      constraints.minHeight = 0;
-      constraints.maxHeight = std::max(0, height - margins.vertical());
+      constraints.minBlock = 0;
+      constraints.maxBlock = std::max(0, height - margins.vertical());
     } else {
-      constraints.minHeight = constraints.maxHeight = std::max(0, height - margins.vertical());
+      constraints.minBlock = constraints.maxBlock = std::max(0, height - margins.vertical());
     }
 
     auto measuredSize = v->measure(constraints);
@@ -59,10 +59,10 @@ glm::ivec2 AStackedLayout::onIntrinsicMeasure(AConstraints constraints) {
     }
     auto margins = v->getMargin().occupiedSize();
     auto measured = v->measure({
-      .minWidth = 0,
-      .maxWidth = constraints.isUnlimitedWidth() ? -1 : std::max(0, constraints.maxWidth - margins.x),
-      .minHeight = 0,
-      .maxHeight = constraints.isUnlimitedHeight() ? -1 : std::max(0, constraints.maxHeight - margins.y),
+      .minInline = 0,
+      .maxInline = constraints.isUnlimitedInline() ? -1 : std::max(0, constraints.maxInline - margins.x),
+      .minBlock = 0,
+      .maxBlock = constraints.isUnlimitedBlock() ? -1 : std::max(0, constraints.maxBlock - margins.y),
     });
     width = glm::max(width, measured.x + margins.x);
     height = glm::max(height, measured.y + margins.y);

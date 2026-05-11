@@ -30,21 +30,21 @@ glm::ivec2 ALayout::measure(AConstraints constraints) {
     }
 
     AConstraints effectiveConstraints = constraints;
-    const bool unlimitedWidth = effectiveConstraints.maxWidth == -1;
-    const bool unlimitedHeight = effectiveConstraints.maxHeight == -1;
-    const int effectiveMaxWidth = unlimitedWidth
+    const bool unlimitedInline = effectiveConstraints.maxInline == -1;
+    const bool unlimitedBlock = effectiveConstraints.maxBlock == -1;
+    const int effectiveMaxInline = unlimitedInline
         ? std::numeric_limits<int>::max()
-        : std::max(effectiveConstraints.minWidth, effectiveConstraints.maxWidth);
-    const int effectiveMaxHeight = unlimitedHeight
+        : std::max(effectiveConstraints.minInline, effectiveConstraints.maxInline);
+    const int effectiveMaxBlock = unlimitedBlock
         ? std::numeric_limits<int>::max()
-        : std::max(effectiveConstraints.minHeight, effectiveConstraints.maxHeight);
+        : std::max(effectiveConstraints.minBlock, effectiveConstraints.maxBlock);
 
-    effectiveConstraints.maxWidth = unlimitedWidth ? -1 : effectiveMaxWidth;
-    effectiveConstraints.maxHeight = unlimitedHeight ? -1 : effectiveMaxHeight;
+    effectiveConstraints.maxInline = unlimitedInline ? -1 : effectiveMaxInline;
+    effectiveConstraints.maxBlock = unlimitedBlock ? -1 : effectiveMaxBlock;
 
     auto measuredSize = onIntrinsicMeasure(effectiveConstraints);
-    measuredSize.x = std::clamp(measuredSize.x, effectiveConstraints.minWidth, effectiveMaxWidth);
-    measuredSize.y = std::clamp(measuredSize.y, effectiveConstraints.minHeight, effectiveMaxHeight);
+    measuredSize.x = std::clamp(measuredSize.x, effectiveConstraints.minInline, effectiveMaxInline);
+    measuredSize.y = std::clamp(measuredSize.y, effectiveConstraints.minBlock, effectiveMaxBlock);
 
     return mMeasureCache.emplace(constraints, measuredSize).first->second;
 }
@@ -54,7 +54,7 @@ int ALayout::getMinimumWidth() {
 }
 
 int ALayout::getMinimumHeight() {
-    return measure(AConstraints::fixedWidth(getMinimumWidth())).y;
+    return measure(AConstraints::fixedInline(getMinimumWidth())).y;
 }
 
 void ALayout::setSpacing(int spacing) {}

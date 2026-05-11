@@ -25,10 +25,10 @@ struct AxisAdapter;
 
 template <>
 struct AxisAdapter<ALayoutDirection::HORIZONTAL> {
-  static AConstraints fixedPerp(int v) { return AConstraints::fixedHeight(v); }
-  static AConstraints fixedOur(int v) { return AConstraints::fixedWidth(v); }
+  static AConstraints fixedPerp(int v) { return AConstraints::fixedBlock(v); }
+  static AConstraints fixedOur(int v) { return AConstraints::fixedInline(v); }
   static AConstraints fixedOurCappedPerp(int our, int max_perp) {
-    return AConstraints { .minWidth = our, .maxWidth = our, .maxHeight = max_perp };
+    return AConstraints { .minInline = our, .maxInline = our, .maxBlock = max_perp };
   }
 
   template <typename T>
@@ -54,10 +54,10 @@ struct AxisAdapter<ALayoutDirection::HORIZONTAL> {
 
 template <>
 struct AxisAdapter<ALayoutDirection::VERTICAL> {
-  static AConstraints fixedPerp(int v) { return AConstraints::fixedWidth(v); }
-  static AConstraints fixedOur(int v) { return AConstraints::fixedHeight(v); }
+  static AConstraints fixedPerp(int v) { return AConstraints::fixedInline(v); }
+  static AConstraints fixedOur(int v) { return AConstraints::fixedBlock(v); }
   static AConstraints fixedOurCappedPerp(int our, int max_perp) {
-    return AConstraints { .minHeight = our, .maxWidth = max_perp, .maxHeight = our };
+    return AConstraints { .minBlock = our, .maxInline = max_perp, .maxBlock = our };
   }
 
   template <typename T>
@@ -409,7 +409,7 @@ public:
     int max_perp = 0;
     int visible_count = 0;
 
-    const int perp_limit = (direction == ALayoutDirection::HORIZONTAL) ? constraints.maxHeight : constraints.maxWidth;
+    const int perp_limit = (direction == ALayoutDirection::HORIZONTAL) ? constraints.maxBlock : constraints.maxInline;
 
     for (const auto& v : views) {
       if (!isLayoutParticipant(v))
@@ -433,11 +433,11 @@ public:
     total_our = std::max(0, total_our);
 
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-      int width = constraints.isUnlimitedWidth() ? std::max(total_our, constraints.minWidth) : std::clamp(total_our, constraints.minWidth, constraints.maxWidth);
-      return { width, std::max(max_perp, constraints.minHeight) };
+      int width = constraints.isUnlimitedInline() ? std::max(total_our, constraints.minInline) : std::clamp(total_our, constraints.minInline, constraints.maxInline);
+      return { width, std::max(max_perp, constraints.minBlock) };
     } else {
-      int height = constraints.isUnlimitedHeight() ? std::max(total_our, constraints.minHeight) : std::clamp(total_our, constraints.minHeight, constraints.maxHeight);
-      return { std::max(max_perp, constraints.minWidth), height };
+      int height = constraints.isUnlimitedBlock() ? std::max(total_our, constraints.minBlock) : std::clamp(total_our, constraints.minBlock, constraints.maxBlock);
+      return { std::max(max_perp, constraints.minInline), height };
     }
   }
 
@@ -454,9 +454,9 @@ private:
   static int preferredOurAxis(ranges::range auto&& views, int spacing, int perp_axis_constraint) {
     AConstraints constraints;
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-      constraints.maxHeight = perp_axis_constraint;
+      constraints.maxBlock = perp_axis_constraint;
     } else {
-      constraints.maxWidth = perp_axis_constraint;
+      constraints.maxInline = perp_axis_constraint;
     }
     return Axis::ourAxis(onIntrinsicMeasure(views, spacing, constraints));
   }
@@ -464,11 +464,11 @@ private:
   static int preferredPerpendicularAxis(ranges::range auto&& views, int spacing, int our_axis_constraint) {
     AConstraints constraints;
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-      constraints.maxWidth = our_axis_constraint;
-      constraints.minWidth = our_axis_constraint;
+      constraints.maxInline = our_axis_constraint;
+      constraints.minInline = our_axis_constraint;
     } else {
-      constraints.maxHeight = our_axis_constraint;
-      constraints.minHeight = our_axis_constraint;
+      constraints.maxBlock = our_axis_constraint;
+      constraints.minBlock = our_axis_constraint;
     }
     return Axis::perpAxis(onIntrinsicMeasure(views, spacing, constraints));
   }

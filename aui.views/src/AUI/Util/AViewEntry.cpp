@@ -20,7 +20,7 @@ glm::ivec2 AViewEntry::getSize() {
         return {0, 0};
     }
     const auto preferred = mView->computeMinMaxAxis().max;
-    const auto measured = mView->measure(AConstraints::fixedWidth(preferred));
+    const auto measured = mView->measure(AConstraints::fixedInline(preferred));
     return {
         preferred + mView->getMargin().horizontal(),
         measured.y + mView->getMargin().vertical() };

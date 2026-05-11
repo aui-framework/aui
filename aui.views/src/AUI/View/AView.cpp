@@ -290,69 +290,69 @@ glm::ivec2 AView::measure(AConstraints constraints) {
   }
 
   AConstraints effective = constraints;
-  const bool requestedUnlimitedWidth = effective.maxWidth == -1;
-  const bool requestedUnlimitedHeight = effective.maxHeight == -1;
-  const bool passUnlimitedWidth = requestedUnlimitedWidth && mFixedSize.x == 0;
-  const bool passUnlimitedHeight = requestedUnlimitedHeight && mFixedSize.y == 0;
-  bool unlimitedWidth = requestedUnlimitedWidth;
-  bool unlimitedHeight = requestedUnlimitedHeight;
+  const bool requestedUnlimitedInline = effective.maxInline == -1;
+  const bool requestedUnlimitedBlock = effective.maxBlock == -1;
+  const bool passUnlimitedInline = requestedUnlimitedInline && mFixedSize.x == 0;
+  const bool passUnlimitedBlock = requestedUnlimitedBlock && mFixedSize.y == 0;
+  bool unlimitedInline = requestedUnlimitedInline;
+  bool unlimitedBlock = requestedUnlimitedBlock;
 
   if (mFixedSize.x != 0) {
-    effective.minWidth = effective.maxWidth = mFixedSize.x;
-    unlimitedWidth = false;
+    effective.minInline = effective.maxInline = mFixedSize.x;
+    unlimitedInline = false;
   } else {
-    effective.minWidth = std::max(effective.minWidth, mMinSize.x);
-    if (effective.minWidth == 0 && effective.maxWidth == 0) {
-      effective.minWidth = computeMinMaxAxis(passUnlimitedHeight ? -1 : effective.maxHeight).min;
+    effective.minInline = std::max(effective.minInline, mMinSize.x);
+    if (effective.minInline == 0 && effective.maxInline == 0) {
+      effective.minInline = computeMinMaxAxis(passUnlimitedBlock ? -1 : effective.maxBlock).min;
     }
     if (mMaxSize.x != -1) {
-      effective.maxWidth = unlimitedWidth ? mMaxSize.x : std::min(effective.maxWidth, mMaxSize.x);
-      unlimitedWidth = false;
+      effective.maxInline = unlimitedInline ? mMaxSize.x : std::min(effective.maxInline, mMaxSize.x);
+      unlimitedInline = false;
     }
   }
   if (mFixedSize.y != 0) {
-    effective.minHeight = effective.maxHeight = mFixedSize.y;
-    unlimitedHeight = false;
+    effective.minBlock = effective.maxBlock = mFixedSize.y;
+    unlimitedBlock = false;
   } else {
-    effective.minHeight = std::max(effective.minHeight, mMinSize.y);
+    effective.minBlock = std::max(effective.minBlock, mMinSize.y);
     if (mMaxSize.y != -1) {
-      effective.maxHeight = unlimitedHeight ? mMaxSize.y : std::min(effective.maxHeight, mMaxSize.y);
-      unlimitedHeight = false;
+      effective.maxBlock = unlimitedBlock ? mMaxSize.y : std::min(effective.maxBlock, mMaxSize.y);
+      unlimitedBlock = false;
     }
   }
 
-  const int effectiveMaxWidth = unlimitedWidth
+  const int effectiveMaxInline = unlimitedInline
       ? std::numeric_limits<int>::max()
-      : std::max(effective.minWidth, effective.maxWidth);
-  const int effectiveMaxHeight = unlimitedHeight
+      : std::max(effective.minInline, effective.maxInline);
+  const int effectiveMaxBlock = unlimitedBlock
       ? std::numeric_limits<int>::max()
-      : std::max(effective.minHeight, effective.maxHeight);
+      : std::max(effective.minBlock, effective.maxBlock);
 
   int hPadding = mPadding.left + mPadding.right;
   int vPadding = mPadding.top + mPadding.bottom;
 
   AConstraints content;
-  content.minWidth = std::max(0, effective.minWidth - hPadding);
-  content.maxWidth = passUnlimitedWidth ? -1 : (unlimitedWidth ? -1 : std::max(0, effectiveMaxWidth - hPadding));
-  content.minHeight = std::max(0, effective.minHeight - vPadding);
-  content.maxHeight = passUnlimitedHeight ? -1 : (unlimitedHeight ? -1 : std::max(0, effectiveMaxHeight - vPadding));
+  content.minInline = std::max(0, effective.minInline - hPadding);
+  content.maxInline = passUnlimitedInline ? -1 : (unlimitedInline ? -1 : std::max(0, effectiveMaxInline - hPadding));
+  content.minBlock = std::max(0, effective.minBlock - vPadding);
+  content.maxBlock = passUnlimitedBlock ? -1 : (unlimitedBlock ? -1 : std::max(0, effectiveMaxBlock - vPadding));
 
   glm::ivec2 content_size = onIntrinsicMeasure(content);
 
   glm::ivec2 measured;
-  measured.x = std::clamp(content_size.x + hPadding, effective.minWidth,  effectiveMaxWidth);
-  measured.y = std::clamp(content_size.y + vPadding, effective.minHeight, effectiveMaxHeight);
+  measured.x = std::clamp(content_size.x + hPadding, effective.minInline,  effectiveMaxInline);
+  measured.y = std::clamp(content_size.y + vPadding, effective.minBlock, effectiveMaxBlock);
 
   return mMeasureCache.emplace(constraints, measured).first->second;
 }
 
 glm::ivec2 AView::onIntrinsicMeasure(AConstraints constraints) {
   const auto minMax =
-      onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
-  const int maxWidth = constraints.isUnlimitedWidth() ? std::numeric_limits<int>::max() : constraints.maxWidth;
+      onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedBlock() ? -1 : constraints.maxBlock);
+  const int maxInline = constraints.isUnlimitedInline() ? std::numeric_limits<int>::max() : constraints.maxInline;
   return {
-    std::clamp(minMax.max, constraints.minWidth, maxWidth),
-    constraints.minHeight,
+    std::clamp(minMax.max, constraints.minInline, maxInline),
+    constraints.minBlock,
   };
 }
 

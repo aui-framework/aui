@@ -135,8 +135,8 @@ void ADragArea::onLayout(int width, int height) {
         v->ensureAssUpdated();
         auto margins = v->getMargin();
         auto measuredSize = v->measure({
-            .maxWidth = std::max(0, width - margins.horizontal()),
-            .maxHeight = std::max(0, height - margins.vertical()),
+            .maxInline = std::max(0, width - margins.horizontal()),
+            .maxBlock = std::max(0, height - margins.vertical()),
         });
         auto finalWidth = measuredSize.x + margins.horizontal();
         auto finalX = (width - finalWidth) / 2;

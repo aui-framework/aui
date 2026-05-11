@@ -47,10 +47,10 @@ void AForEachUIBase::putOurViewsToSharedCache() {
 glm::ivec2 AForEachUIBase::onIntrinsicMeasure(AConstraints constraints) {
     if (isModelEmpty()) {
         return {
-            constraints.isUnlimitedWidth() ? constraints.minWidth
-                                           : std::clamp(0, constraints.minWidth, constraints.maxWidth),
-            constraints.isUnlimitedHeight() ? constraints.minHeight
-                                            : std::clamp(0, constraints.minHeight, constraints.maxHeight),
+            constraints.isUnlimitedInline() ? constraints.minInline
+                                            : std::clamp(0, constraints.minInline, constraints.maxInline),
+            constraints.isUnlimitedBlock() ? constraints.minBlock
+                                           : std::clamp(0, constraints.minBlock, constraints.maxBlock),
         };
     }
 
@@ -69,16 +69,16 @@ glm::ivec2 AForEachUIBase::onIntrinsicMeasure(AConstraints constraints) {
     }
 
     const auto minMax =
-        AViewContainerBase::onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedHeight() ? -1 : constraints.maxHeight);
-    const int width = constraints.isUnlimitedWidth()
-        ? std::max(minMax.max, constraints.minWidth)
-        : std::clamp(minMax.max, constraints.minWidth, constraints.maxWidth);
+        AViewContainerBase::onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedBlock() ? -1 : constraints.maxBlock);
+    const int width = constraints.isUnlimitedInline()
+        ? std::max(minMax.max, constraints.minInline)
+        : std::clamp(minMax.max, constraints.minInline, constraints.maxInline);
 
     return AViewContainerBase::onIntrinsicMeasure({
-        .minWidth = width,
-        .maxWidth = width,
-        .minHeight = constraints.minHeight,
-        .maxHeight = constraints.maxHeight,
+        .minInline = width,
+        .maxInline = width,
+        .minBlock = constraints.minBlock,
+        .maxBlock = constraints.maxBlock,
     });
 }
 
@@ -447,9 +447,9 @@ bool AForEachUIBase::measurementRequiresFullMaterialization(AConstraints constra
     }
     switch (getLayout()->getLayoutDirection()) {
         case ALayoutDirection::HORIZONTAL:
-            return constraints.isUnlimitedWidth();
+            return constraints.isUnlimitedInline();
         case ALayoutDirection::VERTICAL:
-            return constraints.isUnlimitedHeight();
+            return constraints.isUnlimitedBlock();
         case ALayoutDirection::NONE:
             return true;
     }

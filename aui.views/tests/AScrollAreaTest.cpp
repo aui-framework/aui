@@ -9,7 +9,7 @@ namespace {
 class TrackingWrappingView : public AView {
 public:
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
-        const int width = constraints.isUnlimitedWidth() ? 200 : constraints.maxWidth;
+        const int width = constraints.isUnlimitedInline() ? 200 : constraints.maxInline;
         mLastMeasuredWidth = width;
         if (width > 100) {
             return { width, 20 };
@@ -49,7 +49,7 @@ public:
 class FixedHeightOverflowingWidthView : public AView {
 public:
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
-        const int width = constraints.isUnlimitedWidth() ? 150 : constraints.maxWidth;
+        const int width = constraints.isUnlimitedInline() ? 150 : constraints.maxInline;
         return { width, 20 };
     }
 
@@ -70,8 +70,8 @@ TEST(AScrollArea, MeasurePrefersAvailableWidthForWrappingContent) {
     scrollArea.setContents(content);
 
     const auto measured = scrollArea.measure({
-        .maxWidth = 100,
-        .maxHeight = -1,
+        .maxInline = 100,
+        .maxBlock = -1,
     });
 
     EXPECT_EQ(measured, glm::ivec2(100, 40));
@@ -95,10 +95,10 @@ TEST(AScrollArea, MeasureAddsHorizontalScrollbarHeightForWidthOverflow) {
     AScrollArea scrollArea;
     scrollArea.setContents(content);
 
-    const int scrollbarHeight = scrollArea.horizontalScrollbar()->measure(AConstraints::fixedWidth(100)).y;
+    const int scrollbarHeight = scrollArea.horizontalScrollbar()->measure(AConstraints::fixedInline(100)).y;
     const auto measured = scrollArea.measure({
-        .maxWidth = 100,
-        .maxHeight = -1,
+        .maxInline = 100,
+        .maxBlock = -1,
     });
 
     EXPECT_EQ(measured, glm::ivec2(100, 20 + scrollbarHeight));
@@ -111,8 +111,8 @@ TEST(AScrollAreaViewport, MeasureUsesContentSize) {
     viewport.setContents(content);
 
     const auto measured = viewport.measure({
-        .maxWidth = 100,
-        .maxHeight = -1,
+        .maxInline = 100,
+        .maxBlock = -1,
     });
 
     EXPECT_EQ(measured, glm::ivec2(100, 40));
