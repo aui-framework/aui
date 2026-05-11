@@ -51,14 +51,9 @@ namespace {
 class ViewMock: public ALabel {
 public:
     ViewMock(): ALabel("Test") {
-
-    }
-    void setPosition(glm::ivec2 position) override {
-        if (getPosition() == position) {
-            return;
-        }
-        ALabel::setPosition(position);
-        setPosition2(position.x, position.y);
+        connect(geometryChanged, this, [this](glm::ivec2 position) {
+            setPosition2(position.x, position.y);
+        });
     }
 
     MOCK_METHOD(void, setPosition2, (int x, int y));

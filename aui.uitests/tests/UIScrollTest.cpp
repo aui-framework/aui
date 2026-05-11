@@ -22,8 +22,8 @@ using namespace declarative;
 class MockedViewContainer: public AViewContainer {
 public:
     MockedViewContainer() {
-        ON_CALL(*this, setSize).WillByDefault([this](glm::ivec2 size) {
-            AViewContainer::setSize(size);
+        connect(geometryChanged, this, [this](glm::ivec2 size) {
+            onSizeChanged(size);
         });
 
         setContents(
@@ -35,10 +35,10 @@ public:
         *this << ".container";
         setCustomStyle({ ass::BackgroundSolid{ AColor::BLUE } });
     
-        EXPECT_CALL(*this, setSize(testing::_)).Times(testing::AtLeast(1));
+        EXPECT_CALL(*this, onSizeChanged(testing::_)).Times(testing::AtLeast(1));
     }
 
-    MOCK_METHOD(void, setSize, (glm::ivec2), (override));
+    MOCK_METHOD(void, onSizeChanged, (glm::ivec2));
     _<ALabel> mBigContent;
     _<ALabel> mBottomLabel;
 };
