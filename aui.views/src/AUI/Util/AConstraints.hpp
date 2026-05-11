@@ -74,3 +74,5 @@ struct AConstraints {
   constexpr auto operator<=>(const AConstraints&) const = default;
   constexpr bool operator==(const AConstraints&) const = default;
 };
+
+// TODO(Nelonn): Implement exclusions
