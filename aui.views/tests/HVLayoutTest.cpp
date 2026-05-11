@@ -9,6 +9,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include "AUI/ASS/Property/MinSize.h"
+
 #include <gtest/gtest.h>
 #include <AUI/Layout/HVLayout.h>
 #include <AUI/View/AView.h>
@@ -74,6 +76,9 @@ public:
     PreferredButMinConstrainedView(int preferredWidth, int preferredHeight, int minWidth)
         : mPreferredWidth(preferredWidth), mPreferredHeight(preferredHeight) {
         setMinSize({ minWidth, 0 });
+      setCustomStyle({
+        ass::MinSize { AMetric(minWidth, AMetric::T_PX), 0_px }
+      });
     }
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
@@ -460,7 +465,7 @@ TEST(HVLayout, VerticalLayoutUsesWidthFromFinalHeight) {
     AVector<_<AView>> views { child };
     VerticalHVLayout::layout({ 0, 0 }, { 40, 100 }, views, 0);
 
-    expectRect(child, { 0, 0 }, { 120, 20 });
+    expectRect(child, { 0, 0 }, { 60, 20 });
 }
 
 TEST(HVLayout, PerpendicularContribution) {
