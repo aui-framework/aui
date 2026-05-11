@@ -198,31 +198,32 @@ void AWindow::onFocusLost() {
 }
 
 void AWindow::onKeyDown(AInput::Key key) {
-    ASurface::onKeyDown(key);
-    if (mFocusNextViewOnTab && key == AInput::Key::TAB) {
-        focusNextView();
-    }
+  ASurface::onKeyDown(key);
+  if (mFocusNextViewOnTab && key == AInput::Key::TAB) {
+    focusNextView();
+  }
 }
 
 void AWindow::onKeyRepeat(AInput::Key key) {
-    if (auto v = getFocusedView())
-        v->onKeyRepeat(key);
+  if (auto v = getFocusedView())
+    v->onKeyRepeat(key);
 }
 
 void AWindow::onCloseButtonClicked() {
-    close();
+  close();
 }
-
 
 void AWindow::setPosition(glm::ivec2 position) {
-    setGeometry(position.x, position.y, getWidth(), getHeight());
+  setGeometry(position.x, position.y, getWidth(), getHeight());
 }
 
+void AWindow::setSize(glm::ivec2 size) {
+  setGeometry(getPosition().x, getPosition().y, size.x, size.y);
+}
 
 glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) {
     return other->mapPosition(unmapPosition(position));
 }
-
 
 AWindowManager::AWindowManager(): mHandle(this) {
     mHangTimer = _new<ATimer>(10s);

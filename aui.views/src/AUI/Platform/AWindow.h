@@ -181,8 +181,8 @@ public:
 
     glm::ivec2 getWindowPosition() const;
 
-    void setPosition(glm::ivec2 position) override;
-    void setSize(glm::ivec2 size) override;
+    void setPosition(glm::ivec2 position);
+    void setSize(glm::ivec2 size);
     void setGeometry(int x, int y, int width, int height);
 
     void onFocusAcquired() override;

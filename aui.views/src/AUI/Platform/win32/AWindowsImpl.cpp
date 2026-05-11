@@ -387,59 +387,54 @@ bool AWindow::isMinimized() const {
     return IsIconic(mHandle);
 }
 
-
 bool AWindow::isMaximized() const {
-    if (!mHandle) return false;
-    return IsZoomed(mHandle);
+  if (!mHandle) return false;
+  return IsZoomed(mHandle);
 }
 
 void AWindow::maximize() {
-    if (mHandle) ShowWindow(mHandle, SW_MAXIMIZE);
+  if (mHandle) ShowWindow(mHandle, SW_MAXIMIZE);
 }
 
 glm::ivec2 AWindow::getWindowPosition() const {
-    if (!mHandle) return {0, 0};
-    RECT r;
-    GetWindowRect(mHandle, &r);
-    return {r.left, r.top};
+  if (!mHandle) return {0, 0};
+  RECT r;
+  GetWindowRect(mHandle, &r);
+  return {r.left, r.top};
 }
 
 void AWindow::flagRedraw() {
-    if (mRedrawFlag && mHandle) {
-        getThread()->enqueue([handle = mHandle] {
-            InvalidateRect(handle, nullptr, true);
-        });
-        mRedrawFlag = false;
-    }
-}
-
-
-void AWindow::setSize(glm::ivec2 size) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
+  if (mRedrawFlag && mHandle) {
+    getThread()->enqueue([handle = mHandle] {
+      InvalidateRect(handle, nullptr, true);
+    });
+    mRedrawFlag = false;
+  }
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
-    AViewContainer::setPosition({x, y});
-    AViewContainer::setSize({width, height});
+  AViewContainer::setPosition({x, y});
+  AViewContainer::setSize({width, height});
 
-    if (!mHandle) return;
+  if (!mHandle) return;
 
-    RECT r = {0, 0, width, height};
-    AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
-    MoveWindow(mHandle, x, y, r.right - r.left, r.bottom - r.top, false);
+  RECT r = {0, 0, width, height};
+  AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
+  MoveWindow(mHandle, x, y, r.right - r.left, r.bottom - r.top, false);
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
-    if (!mHandle) return position;
-    POINT p = {position.x, position.y};
-    ScreenToClient(mHandle, &p);
-    return {p.x, p.y};
+  if (!mHandle) return position;
+  POINT p = {position.x, position.y};
+  ScreenToClient(mHandle, &p);
+  return {p.x, p.y};
 }
+
 glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
-    if (!mHandle) return position;
-    POINT p = {position.x, position.y};
-    ClientToScreen(mHandle, &p);
-    return {p.x, p.y};
+  if (!mHandle) return position;
+  POINT p = {position.x, position.y};
+  ClientToScreen(mHandle, &p);
+  return {p.x, p.y};
 }
 
 void AWindow::show() {
