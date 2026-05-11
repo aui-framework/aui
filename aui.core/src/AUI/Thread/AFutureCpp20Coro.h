@@ -178,8 +178,8 @@ struct CoPromiseTypeBase {
      * then delegates to the Cpp20Awaiter overload to wrap it with cancellation support.
      */
     template <Cpp20HasPromiseType NestedAwaitable>
-    auto await_transform(NestedAwaitable &&nestedAwaitable) {
-        return await_transform(operator co_await(std::forward<NestedAwaitable>(nestedAwaitable)));
+    auto await_transform(NestedAwaitable nestedAwaitable) {
+        return await_transform(operator co_await(std::move(nestedAwaitable)));
     }
 
 protected:
