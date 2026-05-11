@@ -10,20 +10,21 @@
  */
 
 #include "AView.h"
-#include "AUI/Common/AException.h"
-#include "AUI/Common/IStringable.h"
-#include "AUI/Enum/Visibility.h"
-#include "AUI/Render/IRenderer.h"
-#include "AUI/Util/ATokenizer.h"
-#include "AUI/Platform/AWindow.h"
-#include "AUI/Url/AUrl.h"
-#include "AUI/Render/RenderHints.h"
-#include "AUI/Animator/AAnimator.h"
 
 #include <exception>
 #include <limits>
-#include <glm/gtc/matrix_transform.hpp>
+#include <stack>
 #include <memory>
+#include <glm/gtc/matrix_transform.hpp>
+#include <AUI/Common/AException.h>
+#include <AUI/Common/IStringable.h>
+#include <AUI/Enum/Visibility.h>
+#include <AUI/Render/IRenderer.h>
+#include <AUI/Util/ATokenizer.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/Url/AUrl.h>
+#include <AUI/Render/RenderHints.h>
+#include <AUI/Animator/AAnimator.h>
 #include <AUI/IO/AStringStream.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/ASS/AStylesheet.h>
@@ -31,56 +32,49 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Traits/callables.h>
 #include <AUI/Traits/iterators.h>
-#include <stack>
 #include <AUI/Action/AMenu.h>
-
-#include "AUI/Platform/ADesktop.h"
-#include "AUI/Platform/AFontManager.h"
-#include "AUI/Util/AMetric.h"
-#include "AUI/Util/Factory.h"
-#include "ALabel.h"
+#include <AUI/Platform/ADesktop.h>
+#include <AUI/Platform/AFontManager.h>
+#include <AUI/Util/AMetric.h>
+#include <AUI/Util/Factory.h>
+#include <AUI/View/ALabel.h>
 
 // windows.h
 #undef max
 #undef min
 
-static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
+ASurface* AView::getWindow() const {
+  AView* parent = nullptr;
 
-ASurface* AView::getWindow() const
-{
+  for (AView* target = const_cast<AView*>(this); target; target = target->mParent) {
+    parent = target;
+  }
 
-    AView* parent = nullptr;
-
-    for (AView* target = const_cast<AView*>(this); target; target = target->mParent) {
-        parent = target;
-    }
-
-    return dynamic_cast<ASurface*>(parent);
+  return dynamic_cast<ASurface*>(parent);
 }
 
-AView::AView()
-{
-    AUI_ASSERT_UI_THREAD_ONLY()
-    aui::zero(mAss);
-    setSlotsCallsOnlyOnMyThread(true);
+AView::AView() {
+  AUI_ASSERT_UI_THREAD_ONLY()
+  aui::zero(mAss);
+  setSlotsCallsOnlyOnMyThread(true);
 }
 
 AView::~AView() {
-    AUI_ASSERT_UI_THREAD_ONLY();
+  AUI_ASSERT_UI_THREAD_ONLY();
 }
 
 void AView::redraw() {
-    AUI_ASSERT_UI_THREAD_ONLY();
-    if (mRedrawRequested) {
-        return;
-    }
-    static constexpr auto EXTRA_OFFSET = 8;
-    auto invalidRect = ARect<int>::fromTopLeftPositionAndSize(glm::ivec2(-EXTRA_OFFSET), getSize() + glm::ivec2(EXTRA_OFFSET * 2));
-    for (auto s : mAss) {
-        AUI_NULLSAFE(s)->updateInvalidPixelRect(invalidRect);
-    }
-    markPixelDataInvalid(invalidRect);
-    mRedrawRequested = true;
+  AUI_ASSERT_UI_THREAD_ONLY();
+  if (mRedrawRequested) {
+    return;
+  }
+  static constexpr auto EXTRA_OFFSET = 8;
+  auto invalidRect = ARect<int>::fromTopLeftPositionAndSize(glm::ivec2(-EXTRA_OFFSET), getSize() + glm::ivec2(EXTRA_OFFSET * 2));
+  for (auto s : mAss) {
+    AUI_NULLSAFE(s)->updateInvalidPixelRect(invalidRect);
+  }
+  markPixelDataInvalid(invalidRect);
+  mRedrawRequested = true;
 }
 
 void AView::requestLayout() {
@@ -94,54 +88,53 @@ void AView::requestLayout() {
   }
 }
 
-void AView::drawStencilMask(ARenderContext ctx)
-{
-    switch (mOverflowMask) {
-        case AOverflowMask::ROUNDED_RECT:
-            if (mBorderRadius > 0) {
-                ctx.render.roundedRectangle(ASolidBrush{},
-                                     {mPadding.left, mPadding.top},
-                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
-                                     glm::max(mBorderRadius - std::min(mPadding.horizontal(), mPadding.vertical()), 0.f));
-            } else {
-                ctx.render.rectangle(ASolidBrush{},
-                                     {mPadding.left, mPadding.top},
-                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
-            }
-            break;
+void AView::drawStencilMask(ARenderContext ctx) {
+  switch (mOverflowMask) {
+    case AOverflowMask::ROUNDED_RECT:
+      if (mBorderRadius > 0) {
+        ctx.render.roundedRectangle(ASolidBrush{},
+                             {mPadding.left, mPadding.top},
+                             {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
+                             glm::max(mBorderRadius - std::min(mPadding.horizontal(), mPadding.vertical()), 0.f));
+      } else {
+        ctx.render.rectangle(ASolidBrush{},
+                             {mPadding.left, mPadding.top},
+                             {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+      }
+      break;
 
-        case AOverflowMask::BACKGROUND_IMAGE_ALPHA:
-            if (auto s = mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
-                s->renderFor(this, ctx);
-            }
-            break;
-    }
+    case AOverflowMask::BACKGROUND_IMAGE_ALPHA:
+      if (auto s = mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
+        s->renderFor(this, ctx);
+      }
+      break;
+  }
 }
 
 void AView::postRender(ARenderContext ctx) {
-    if (mAnimator)
-        mAnimator->postRender(this, ctx.render);
-    popStencilIfNeeded(ctx);
+  if (mAnimator) {
+    mAnimator->postRender(this, ctx.render);
+  }
+  popStencilIfNeeded(ctx);
 
-    emit redrawn;
+  emit redrawn;
 }
 
 void AView::popStencilIfNeeded(ARenderContext ctx) {
-    if (getOverflow() == AOverflow::HIDDEN || getOverflow() == AOverflow::HIDDEN_FROM_THIS)
-    {
-        /*
-         * If the AView's Overflow set to Overflow::HIDDEN AView pushed it's mask into the stencil buffer but AView
-         * cannot return stencil buffer to the previous state by itself because of C++ restrictions. We should also
-         * apply mask AFTER transform updated and BEFORE rendering AView content. The only way to return the stencil
-         * back is place it here, after rendering AView.
-         */
-        RenderHints::popMask(ctx.render, [&] {
-            drawStencilMask(ctx);
-        });
-    }
+  if (getOverflow() == AOverflow::HIDDEN || getOverflow() == AOverflow::HIDDEN_FROM_THIS) {
+    /*
+     * If the AView's Overflow set to Overflow::HIDDEN AView pushed it's mask into the stencil buffer but AView
+     * cannot return stencil buffer to the previous state by itself because of C++ restrictions. We should also
+     * apply mask AFTER transform updated and BEFORE rendering AView content. The only way to return the stencil
+     * back is place it here, after rendering AView.
+     */
+    RenderHints::popMask(ctx.render, [&] {
+      drawStencilMask(ctx);
+    });
+  }
 }
-void AView::render(ARenderContext ctx)
-{
+
+void AView::render(ARenderContext ctx) {
     if (mAnimator)
         mAnimator->animate(this, ctx.render);
 
@@ -576,29 +569,36 @@ void AView::setPosition(glm::ivec2 position) {
 }
 
 void AView::setSize(glm::ivec2 size) {
-    auto newSize = mSize;
-    if (mFixedSize.x != 0) {
-        newSize.x = mFixedSize.x;
-    } else {
-        newSize.x = size.x;
-        if (mMinSize.x != 0)
-            newSize.x = glm::max(mMinSize.x, newSize.x);
+  auto newSize = mSize;
+  if (mFixedSize.x != 0) {
+    newSize.x = mFixedSize.x;
+  } else {
+    newSize.x = size.x;
+    if (mMinSize.x != 0) {
+      newSize.x = glm::max(mMinSize.x, newSize.x);
     }
-    if (mFixedSize.y != 0) {
-        newSize.y = mFixedSize.y;
-    } else {
-        newSize.y = size.y;
-        if (mMinSize.y != 0)
-            newSize.y = glm::max(mMinSize.y, newSize.y);
+  }
+  if (mFixedSize.y != 0) {
+    newSize.y = mFixedSize.y;
+  } else {
+    newSize.y = size.y;
+    if (mMinSize.y != 0) {
+      newSize.y = glm::max(mMinSize.y, newSize.y);
     }
-    newSize = glm::min(newSize, mMaxSize);
+  }
+  if (mMaxSize.x != -1) {
+    newSize.x = glm::min(newSize.x, mMaxSize.x);
+  }
+  if (mMaxSize.y != -1) {
+    newSize.y = glm::min(newSize.y, mMaxSize.y);
+  }
 
-    if (mSize == newSize) [[unlikely]] {
-        return;
-    }
-    mSize = newSize;
-    redraw();
-    emit mSizeChanged(newSize);
+  if (mSize == newSize) [[unlikely]] {
+    return;
+  }
+  mSize = newSize;
+  redraw();
+  emit mSizeChanged(newSize);
 }
 
 void AView::layout(int x, int y, int w, int h) {

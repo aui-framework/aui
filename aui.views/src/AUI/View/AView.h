@@ -495,14 +495,14 @@ class API_AUI_VIEWS AView : public AObject {
   [[nodiscard]] aui::float_within_0_1 getOpacity() const { return mOpacity; }
   void setOpacity(aui::float_within_0_1 opacity) { mOpacity = opacity; }
 
-  virtual void setPosition(glm::ivec2 position);
+  void setPosition(glm::ivec2 position);
 
   /**
    * Set size ignoring all restrictions (i.e. min size, max size, fixed size, etc...). Used by AAnimator.
    * @param size
    */
   void setSizeForced(glm::ivec2 size) { mSize = size; }
-  virtual void setSize(glm::ivec2 size);
+  void setSize(glm::ivec2 size);
 
   AMinMaxAxis computeMinMaxAxis(int height = -1);
 

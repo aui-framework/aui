@@ -142,23 +142,6 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
     mViewport = std::move(viewport);
 }
 
-void AForEachUIBase::setPosition(glm::ivec2 position) {
-    auto prevPosition = getPosition();
-    AView::setPosition(position);
-    if (getPosition() == prevPosition) {
-        return;
-    }
-    if (mViewport.lock() == nullptr) {
-        mCache.reset();
-        return;
-    }
-    if (!mCache) {
-        return;
-    }
-    mLastInflatedScroll.reset();
-    inflate();
-}
-
 void AForEachUIBase::onLayout(int w, int h) {
     if (!getLayout()) {
         AViewContainerBase::onLayout(w, h);
@@ -435,7 +418,7 @@ void AForEachUIBase::ensureViewsForMeasurement() {
     }
 }
 
-void AForEachUIBase::materializeAllViewsForMeasurement() {
+void AForEachUIBase::materializeAllViewsForMeasurement() { // TODO(Nelonn): calls always when not needed
     if (mCache) {
         removeAllViews();
         mCache->items.clear();

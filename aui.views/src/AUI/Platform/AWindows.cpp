@@ -247,26 +247,28 @@ AWindowManager::~AWindowManager() {
 
 
 void AWindow::windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) {
-    mWindowTitle = name;
-    mParentWindow = parent;
-    mSize = (glm::max)(glm::ivec2{ width, height }, getMinSize());
+  mWindowTitle = name;
+  mParentWindow = parent;
+  mSize = (glm::max)(glm::ivec2{ width, height }, getMinSize());
 
-    currentWindowStorage() = this;
+  currentWindowStorage() = this;
 
-    getWindowManager().initNativeWindow({ *this, name, width, height, ws, parent });
+  getWindowManager().initNativeWindow({ *this, name, width, height, ws, parent });
 
-    setWindowStyle(ws);
+  moveToCenter();
 
-    AUI_UI_THREAD {
-        emit mSizeChanged(getSize());
-    };
+  setWindowStyle(ws);
+
+  AUI_UI_THREAD {
+    emit mSizeChanged(getSize());
+  };
 
 #if AUI_PLATFORM_LINUX
-    // on linux, we have to manually provide an icon for the system.
-    // __aui/icon_512x512.png is provided by aui_app cmake command.
-    if (auto _icon = AImage::fromUrl(":__aui/icon_512x512.png")) {
-        IPlatformAbstraction::current().windowSetIcon(*this,*_icon);
-    }
+  // on linux, we have to manually provide an icon for the system.
+  // __aui/icon_512x512.png is provided by aui_app cmake command.
+  if (auto _icon = AImage::fromUrl(":__aui/icon_512x512.png")) {
+    IPlatformAbstraction::current().windowSetIcon(*this,*_icon);
+  }
 #endif
 }
 

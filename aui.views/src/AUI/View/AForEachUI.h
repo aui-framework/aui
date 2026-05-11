@@ -61,7 +61,6 @@ public:
     using List = aui::any_view<Entry>;
     AForEachUIBase() {}
     ~AForEachUIBase() override = default;
-    void setPosition(glm::ivec2 position) override;
     void onLayout(int w, int h) override;
 
 protected:

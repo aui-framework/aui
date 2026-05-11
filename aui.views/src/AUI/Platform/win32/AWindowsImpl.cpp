@@ -132,6 +132,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case WM_MOVING: {
             auto r = (LPRECT)lParam;
             emit moving(glm::ivec2{r->left, r->top});
+            mPosition = glm::ivec2(r->left, r->top);
             return 0;
         }
 
@@ -413,7 +414,7 @@ void AWindow::flagRedraw() {
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
-  AViewContainer::setPosition({x, y});
+  mPosition = {x, y};
   AViewContainer::setSize({width, height});
 
   if (!mHandle) return;
@@ -457,32 +458,31 @@ void AWindow::show() {
 
   emit shown();
 }
+
 void AWindow::setIcon(const AImage& image) {
-    if (!mHandle) return;
-    AUI_ASSERT(image.format() & APixelFormat::BYTE);
+  if (!mHandle) return;
+  AUI_ASSERT(image.format() & APixelFormat::BYTE);
 
-    if (mIcon) {
-        DestroyIcon(mIcon);
-    }
+  if (mIcon) {
+    DestroyIcon(mIcon);
+  }
 
+  auto bmpColor = aui::win32::imageRgbToBitmap(image);
+  auto bmpMask = aui::win32::imageRgbToBitmap(image, aui::win32::BitmapMode::A);
 
-    auto bmpColor = aui::win32::imageRgbToBitmap(image);
-    auto bmpMask = aui::win32::imageRgbToBitmap(image, aui::win32::BitmapMode::A);
+  ICONINFO ii;
+  ii.fIcon = TRUE;
+  ii.hbmMask = bmpMask;
+  ii.hbmColor = bmpColor;
+  mIcon = CreateIconIndirect(&ii);
 
-    ICONINFO ii;
-    ii.fIcon = TRUE;
-    ii.hbmMask = bmpMask;
-    ii.hbmColor = bmpColor;
-    mIcon = CreateIconIndirect(&ii);
-
-    SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon);
+  SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon);
 }
 
 void AWindow::hide() {
-    if (!mHandle) return;
-    ShowWindow(mHandle, SW_HIDE);
+  if (!mHandle) return;
+  ShowWindow(mHandle, SW_HIDE);
 }
-
 
 void AWindowManager::notifyProcessMessages() {
     if (!mWindows.empty()) {
@@ -570,13 +570,13 @@ void AWindow::hideTouchscreenKeyboardImpl() {
 }
 
 void AWindow::moveToCenter() {
-    auto m = MonitorFromWindow(mHandle, MONITOR_DEFAULTTOPRIMARY);
-    MONITORINFO info;
-    info.cbSize = sizeof(info);
-    GetMonitorInfo(m, &info);
-    glm::ivec2 topLeft = { info.rcMonitor.left, info.rcMonitor.top };
-    glm::ivec2 bottomRight = { info.rcMonitor.right, info.rcMonitor.bottom };
-    setPosition(topLeft + (bottomRight - topLeft - getSize()) / 2);
+  auto m = MonitorFromWindow(mHandle, MONITOR_DEFAULTTOPRIMARY);
+  MONITORINFO info;
+  info.cbSize = sizeof(info);
+  GetMonitorInfo(m, &info);
+  glm::ivec2 topLeft = { info.rcMonitor.left, info.rcMonitor.top };
+  glm::ivec2 bottomRight = { info.rcMonitor.right, info.rcMonitor.bottom };
+  setPosition(topLeft + (bottomRight - topLeft - getSize()) / 2);
 }
 
 void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {

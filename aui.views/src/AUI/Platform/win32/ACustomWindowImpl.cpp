@@ -164,8 +164,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height, AWindow
     windowNativePreInit(name, width, height, parent, WindowStyle::DEFAULT);
 }
 
-void ACustomWindow::setSize(glm::ivec2 size)
-{
+void ACustomWindow::setSize(glm::ivec2 size) {
     AViewContainer::setSize(size);
     auto pos = getWindowPosition();
 
