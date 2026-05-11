@@ -15,6 +15,7 @@
 #include <AUI/Traits/values.h>
 #include <AUI/Util/ADataBinding.h>
 #include "AUI/Util/Declarative/Contracts.h"
+#include <functional>
 
 /**
  * ---
@@ -89,8 +90,22 @@ public:
     }
 
     [[nodiscard]]
-    const _<Inner>& innerView() const noexcept {
+    const _<AView>& innerView() const noexcept {
         return mInner;
+    }
+
+    /**
+     * Set custom inner view.
+     * @param inner custom inner view to use instead of default one
+     */
+    void setInnerView(_<AView> inner) {
+        if (mInner) {
+            removeView(mInner);
+        }
+        mInner = std::move(inner);
+        addView(mInner);
+        mInner->setPosition({0, 0});
+        updateInnerWidth();
     }
 
 public:
@@ -102,7 +117,7 @@ private:
     aui::float_within_0_1 mValue = 0.f;
     emits<aui::float_within_0_1> mValueChanged;
     void updateInnerWidth();
-    _<Inner> mInner;
+    _<AView> mInner;
 };
 
 namespace declarative {
@@ -116,6 +131,27 @@ struct ProgressBar {
      * Where `0.0f` = 0%, `1.0f` = 100%
      */
     contract::In<aui::float_within_0_1> progress;
+
+    /**
+     * @brief Function that creates the progress bar fill view.
+     * @details
+     * By default this is `defaultInner` which creates a simple rectangular fill.
+     * Users can replace this with a custom function to change the appearance
+     * of the progress bar fill. The function  should return a view that visually represents the progress.
+     *
+     * View's width will be automatically adjusted based on the `progress` value, so the view should be designed to look
+     * good at various widths.
+     */
+    _<AView> inner = defaultInner();
+
+    /**
+     * @brief Creates a default inner view for the progress bar.
+     * @return A view representing the progress bar fill.
+     * @details
+     * The returned view is a simple rectangle that visually represents
+     * the progress bar's fill area.
+     */
+    static _<AView> defaultInner();
 
     API_AUI_VIEWS _<AView> operator()();
 };

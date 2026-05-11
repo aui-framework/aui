@@ -13,7 +13,7 @@
 
 #include <AUI/Enum/VerticalAlign.h>
 #include <AUI/Enum/TextTransform.h>
-#include "AUI/Platform/AWindowBase.h"
+#include "AUI/Platform/ASurface.h"
 #include "AView.h"
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Common/AString.h"
@@ -136,13 +136,6 @@ private:
     AString getTransformedText();
 
     void processTextOverflow(AString& text);
-
-    template<class Iterator>
-    Iterator findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int maxWidth);
-
-    template<class Iterator>
-    [[nodiscard]]
-    Iterator processTextOverflow(Iterator begin, Iterator end, int maxWidth);
 
 };
 

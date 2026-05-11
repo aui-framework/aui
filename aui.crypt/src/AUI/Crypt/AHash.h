@@ -19,6 +19,11 @@
 #include <AUI/Common/AByteBuffer.h>
 
 /**
+ * @defgroup crypt aui::crypt
+ * @brief Cryptography
+ */
+
+/**
  * @brief Various hash functions
  * @ingroup crypt
  */

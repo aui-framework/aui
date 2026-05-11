@@ -377,6 +377,7 @@ class _Parser:
         return clazz
 
     def _parse_file(self):
+        prev_doc = None
         for self.last_token in self.iterator:
             # print(f'_parse_file iteration {self.last_token}')
             prev_doc = self.last_doc
@@ -445,6 +446,10 @@ class _Parser:
                 clazz = self._parse_class()
                 if clazz.doc:
                     yield clazz
+        if self.last_doc is not None:
+            entry = DoxygenEntry(doc=self.last_doc)
+            entry.location = self.location
+            yield entry
 
     def parse(self):
         return self._parse_file()

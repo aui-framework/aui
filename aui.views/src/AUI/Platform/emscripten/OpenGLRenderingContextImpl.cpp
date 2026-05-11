@@ -39,24 +39,24 @@ void OpenGLRenderingContext::init(const Init& init) {
     mRenderer = ourRenderer();
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(AWindowBase& window) {
+void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
+void OpenGLRenderingContext::beginPaint(ASurface& window) {
     mViewportSize = window.getSize();
     bindViewport();
     mRenderer->beginPaint(window.getSize());
 }
 
-void OpenGLRenderingContext::beginResize(AWindowBase& window) {
+void OpenGLRenderingContext::beginResize(ASurface& window) {
 }
 
-void OpenGLRenderingContext::endResize(AWindowBase& window) {
+void OpenGLRenderingContext::endResize(ASurface& window) {
 
 }
 
-void OpenGLRenderingContext::endPaint(AWindowBase& window) {
+void OpenGLRenderingContext::endPaint(ASurface& window) {
     mRenderer->endPaint();
     CommonRenderingContext::endPaint(window);
 }

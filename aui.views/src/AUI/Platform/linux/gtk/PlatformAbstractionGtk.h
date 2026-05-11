@@ -27,11 +27,10 @@ public:
     void init() override;
     _<ACursor::Custom> createCustomCursor(AImageView image) override;
     void applyNativeCursor(const ACursor &cursor, AWindow *pWindow) override;
-    void copyToClipboard(const AString &text) override;
-    AString pasteFromClipboard() override;
+    void setClipboardText(const AString &text) override;
+    AString getClipboardText() override;
     glm::ivec2 desktopGetMousePosition() override;
     void desktopSetMousePosition(glm::ivec2 pos) override;
-    float platformGetDpiRatio() override;
     AInput::Key inputFromNative(int k) override;
     int inputToNative(AInput::Key key) override;
     bool inputIsKeyDown(AInput::Key k) override;

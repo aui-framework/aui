@@ -146,6 +146,11 @@ public:
 
         return accumulator / (width() * height());
     }
+
+    [[nodiscard]]
+    AFormattedImageView<f> view() const noexcept {
+        return AFormattedImageView<f>(buffer(), size());
+    }
 };
 
 template <AImageVisitor Visitor>
@@ -154,4 +159,25 @@ auto AImage::visit(Visitor&& visitor) {
         static constexpr int format = std::decay_t<decltype(image)>::FORMAT;
         return visitor(const_cast<AFormattedImage<format>&>(reinterpret_cast<const AFormattedImage<format>&>(image)));
     });
+}
+
+template <auto /* APixelFormat::Value */ desiredFormat>
+void AImageView::convert(aui::invocable<AFormattedImageView<desiredFormat>> auto&& consumer) const {
+    if (format() == desiredFormat) {
+        // easy path: format on runtime was matched with the desired one, so we pass it as it
+        consumer(AFormattedImageView<desiredFormat>(buffer(), size()));
+        return;
+    }
+    // hard path: need to convert
+    AFormattedImage<desiredFormat> converted(size());
+
+    // convert
+    visit([&](const auto& source) {
+        using source_image_t      = std::decay_t<decltype(source)>;
+        static constexpr auto sourceFormat      = (APixelFormat::Value)source_image_t::FORMAT;
+        std::transform(source.begin(), source.end(), converted.begin(), aui::pixel_format::convert<sourceFormat, desiredFormat>);
+    });
+
+    // pass to the consumer.
+    consumer(converted.view());
 }

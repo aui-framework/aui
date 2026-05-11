@@ -119,28 +119,61 @@ managers are used to ensure easily reproducible builds. They compile and link al
 to free you from dependency management and focus you right to development of your application.
 
 === "AUI App Template"
-    
-    You can use our [app-template] to set up a new project quickly with [CLANG_FORMAT], Github Actions and other
-    features out-of-the-box. The template is based on CMake and [aui.boot].
-    
-    Clone `https://github.com/aui-framework/example_app` with your IDE or via terminal:
-    
-    ```bash
-    git clone https://github.com/aui-framework/example_app
-    ```
-    
-    and open that directory in your IDE.
 
-    ??? tip "Recommended: Create a new repo"
-    
-        From [app-template] repository, you can generate a completely separate repo with clean git history:
+    === "CMake"
+
+        You can use our [app-template] to set up a new project quickly with [CLANG_FORMAT], Github Actions and other
+        features out-of-the-box. The template is based on CMake and [aui.boot].
         
-        1. Open [http://github.com/aui-framework/example_app](http://github.com/aui-framework/example_app)
-        2. Click `Create a new repository`.
+        Clone `https://github.com/aui-framework/example_app` with your IDE or via terminal:
+        
+        ```bash
+        git clone https://github.com/aui-framework/example_app
+        ```
+        
+        and open that directory in your IDE.
+
+        ??? tip "Recommended: Create a new repo"
+        
+            From [app-template] repository, you can generate a completely separate repo with clean git history:
             
-           ![](imgs/Screenshot_20250827_113904.png)
-        
-        3. Clone your own repo into IDE.
+            1. Open [http://github.com/aui-framework/example_app](http://github.com/aui-framework/example_app)
+            2. Click `Create a new repository`.
+                
+               ![](imgs/Screenshot_20250827_113904.png)
+            
+            3. Clone your own repo into IDE.
+
+    === "XMake"
+
+        A full-fledged XMake-based app template is available at
+        [github.com/aui-framework/xmake_example_app](https://github.com/aui-framework/xmake_example_app).
+        It comes pre-configured with GitHub Actions CI/CD, `.clang-format`, `.clang-tidy`, Valgrind suppression,
+        auto-updating (Windows), and a ready-to-run AUI window — everything you need to start shipping an app.
+
+        ![](imgs/xmake-aui-template.png)
+
+        !!! warning "AUI version support"
+            The XMake app template currently targets **AUI v7.1.2**. Newer versions of AUI (v8.x and above)
+            are not yet supported. Track progress in the
+            [xmake_example_app repository](https://github.com/aui-framework/xmake_example_app).
+
+        ??? tip "Recommended: Create a new repo from the template"
+
+            1. Open [https://github.com/aui-framework/xmake_example_app](https://github.com/aui-framework/xmake_example_app)
+            2. Click `Use this template` → `Create a new repository`.
+            
+            3. Clone your new repo and open it in your IDE.
+
+        The template includes the following GitHub Actions workflows:
+
+        - **Build** — triggered on `push` and `pull_request`. Builds for all supported platforms, runs tests,
+          generates installable packages, and prepares a GitHub Release draft.
+        - **Code Quality** — triggered on `pull_request`. Runs `clang-tidy` static analysis and `valgrind`
+          dynamic analysis on tests.
+
+        To create a release, bump the version in `CMakeLists.txt` and push — the pipeline creates a GitHub Release
+        draft for you automatically.
 
 === "Manual Setup"
     
@@ -149,6 +182,14 @@ to free you from dependency management and focus you right to development of you
     === "AUI Boot"
         
         [aui.boot] is \*official\* way of using AUI. It is a CMake-based package manager that requires nothing but CMake.
+
+        Download AUI.Boot (one-time):
+
+        ```bash
+        curl https://raw.githubusercontent.com/aui-framework/aui/refs/heads/develop/aui.boot.cmake -o aui.boot.cmake
+        ```
+
+        Create `CMakeLists.txt`:
         
         ```cmake title="CMakeLists.txt"
         # Standard routine
@@ -156,11 +197,7 @@ to free you from dependency management and focus you right to development of you
         project(project_template)
         
         # Use AUI.Boot
-        file(
-            DOWNLOAD 
-            https://raw.githubusercontent.com/aui-framework/aui/master/aui.boot.cmake 
-            ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
-        include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+        include(aui.boot.cmake)
         
         # import AUI
         auib_import(
@@ -209,6 +246,134 @@ to free you from dependency management and focus you right to development of you
         aui_link(project_template PRIVATE aui::core aui::views)
         ```
     
+    === "XMake"
+
+        [XMake](https://xmake.io) is a lightweight, cross-platform build utility with built-in package management.
+        It requires no external package manager — AUI is fetched and compiled automatically from [xmake-repo](https://github.com/xmake-io/xmake-repo).
+
+        !!! warning "AUI version support"
+            XMake package support currently targets **AUI v7.1.2**. Newer versions (v8.x and above) are not yet
+            available in xmake-repo. If you need the latest AUI, use AUI Boot or CPM instead.
+
+        !!! success "Install XMake"
+
+            === ":fontawesome-brands-windows: Windows"
+
+                Install via `winget` (recommended):
+
+                ```bash
+                winget install xmake
+                ```
+
+                Or download the installer from [xmake.io](https://xmake.io/#/guide/installation) and run it.
+
+                !!! note
+                    After installation, reopen your terminal so that `xmake` is available on the `PATH`.
+
+            === ":material-apple-finder: macOS"
+
+                Install via [Homebrew](https://brew.sh):
+
+                ```bash
+                brew install xmake
+                ```
+
+            === ":fontawesome-brands-ubuntu: Ubuntu / :fontawesome-brands-debian: Debian"
+
+                ```bash
+                curl -fsSL https://xmake.io/shget.text | bash
+                ```
+
+                Or install via `apt` (may be an older version):
+
+                ```bash
+                sudo add-apt-repository ppa:xmake-io/xmake
+                sudo apt update
+                sudo apt install xmake
+                ```
+
+            === ":fontawesome-brands-fedora: Fedora / :fontawesome-brands-redhat: RHEL"
+
+                ```bash
+                curl -fsSL https://xmake.io/shget.text | bash
+                ```
+
+            Verify the installation:
+
+            ```bash
+            xmake --version
+            ```
+
+        !!! success "Create `xmake.lua`"
+
+            Create the following `xmake.lua` in your project root:
+
+            ```lua title="xmake.lua"
+            -- Specify available build configurations
+            add_rules("mode.release", "mode.debug")
+
+            -- Output compile_commands.json for clangd / VS Code IntelliSense
+            add_rules("plugin.compile_commands.autoupdate", {outputdir = ".vscode", lsp = "clangd"})
+
+            -- AUI requires C++20
+            set_languages("c++20")
+
+            -- Fetch AUI v7.1.2 from xmake-repo (latest version supported via XMake)
+            add_requires("aui v7.1.2")
+
+            -- Define the executable target
+            target("project_template")
+                -- Collect all .cpp files from the src/ directory
+                add_files("src/*.cpp")
+                add_includedirs("src")
+                -- Link AUI with only the components you need
+                add_packages("aui", {components = {"core", "image", "views", "xml"}})
+                -- Group AUI components into link groups to resolve circular dependencies
+                add_linkgroups("aui.views", "aui.xml", "aui.image", "aui.core", {whole = true})
+            ```
+
+        !!! success "Create `src/` directory and entry point"
+
+            XMake picks up all `.cpp` files from `src/` automatically. Create at minimum:
+
+            ```cpp title="src/main.cpp"
+            #include <AUI/Platform/Entry.h>
+            #include <AUI/Platform/AWindow.h>
+
+            AUI_ENTRY {
+                _new<AWindow>("Hello AUI", 300_dp, 200_dp)->show();
+                return 0;
+            }
+            ```
+
+        !!! success "Build and run"
+
+            ```bash
+            xmake          # configure dependencies and build
+            xmake run      # run the resulting executable
+            ```
+
+            On the first run, XMake will download and compile AUI and all its dependencies. This may take a few minutes.
+            Subsequent builds are incremental and fast.
+
+        ??? tip "Switching between Debug and Release"
+
+            ```bash
+            xmake f -m debug    # switch to debug configuration
+            xmake               # rebuild
+            xmake f -m release  # switch back to release
+            xmake
+            ```
+
+        ??? tip "VS Code integration"
+
+            The `plugin.compile_commands.autoupdate` rule in `xmake.lua` automatically generates
+            `.vscode/compile_commands.json` on every build. This enables full IntelliSense and
+            code navigation in VS Code via the [vscode-clangd](https://marketplace.visualstudio.com/items?itemName=llvm-vs-code-extensions.vscode-clangd) extension — no additional configuration needed.
+
+        See [Minimal UI Template XMake](minimal-ui-template-xmake.md) for a full ready-to-use example with
+        `MainWindow`.
+
     [aui_executable] hooks all CPP files from `src/` directory. You need to create `src/` directory and a CPP file in
     it.
     

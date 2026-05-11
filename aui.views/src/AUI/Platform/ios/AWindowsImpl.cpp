@@ -14,6 +14,7 @@
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Platform/ios/RenderScale.h"
 #include "AUI/Render/IRenderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -99,7 +100,7 @@ void AWindow::flagRedraw() {
 }
 
 float AWindow::fetchDpiFromSystem() const {
-    return APlatform::getDpiRatio();
+    return aui::detail::getMainScreenScale();
 }
 
 
