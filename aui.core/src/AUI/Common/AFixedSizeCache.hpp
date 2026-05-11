@@ -17,105 +17,58 @@
 
 template <class K, class V, std::size_t Size>
 class AFixedSizeCache {
-  public:
+public:
   static_assert(Size > 0, "AFixedSizeCache size should be greater than zero");
 
   using value_type = std::pair<K, V>;
   using storage_type = AStaticVector<value_type, Size>;
-  using iterator = typename storage_type::iterator;
-  using const_iterator = typename storage_type::const_iterator;
 
-  private:
+private:
   storage_type mStorage;
 
-  public:
-  [[nodiscard]]
-  iterator begin() noexcept {
-    return mStorage.begin();
+  void touch(std::size_t index) {
+    if (index == 0) return;
+    auto item = std::move(mStorage[index]);
+    mStorage.erase(mStorage.begin() + index);
+    mStorage.insert(mStorage.begin(), std::move(item));
   }
 
+public:
   [[nodiscard]]
-  const_iterator begin() const noexcept {
-    return mStorage.begin();
+  V* get(const K& key) noexcept {
+    for (std::size_t i = 0; i < mStorage.size(); ++i) {
+      if (mStorage[i].first == key) {
+        touch(i);
+        return &mStorage[0].second;
+      }
+    }
+    return nullptr;
   }
 
-  [[nodiscard]]
-  iterator end() noexcept {
-    return mStorage.end();
-  }
+  template <typename Key, typename Value>
+  V& put(Key&& key, Value&& value) {
+    for (std::size_t i = 0; i < mStorage.size(); ++i) {
+      if (mStorage[i].first == key) {
+        mStorage[i].second = std::forward<Value>(value);
+        touch(i);
+        return mStorage[0].second;
+      }
+    }
 
-  [[nodiscard]]
-  const_iterator end() const noexcept {
-    return mStorage.end();
-  }
+    if (mStorage.full()) {
+      mStorage.pop_back();
+    }
 
-  [[nodiscard]]
-  std::size_t size() const noexcept {
-    return mStorage.size();
-  }
-
-  [[nodiscard]]
-  static constexpr std::size_t capacity() noexcept {
-    return Size;
-  }
-
-  [[nodiscard]]
-  bool empty() const noexcept {
-    return mStorage.empty();
+    mStorage.insert(mStorage.begin(), { std::forward<Key>(key), std::forward<Value>(value) });
+    return mStorage.front().second;
   }
 
   void clear() noexcept { mStorage.clear(); }
 
-  [[nodiscard]]
-  iterator find(const K& key) noexcept {
-    auto it = lowerBound(key);
-    if (it == end() || it->first != key) {
-      return end();
-    }
-    return it;
-  }
+  [[nodiscard]] std::size_t size() const noexcept { return mStorage.size(); }
+  [[nodiscard]] bool empty() const noexcept { return mStorage.empty(); }
+  [[nodiscard]] static constexpr std::size_t capacity() noexcept { return Size; }
 
-  [[nodiscard]]
-  const_iterator find(const K& key) const noexcept {
-    auto it = lowerBound(key);
-    if (it == end() || it->first != key) {
-      return end();
-    }
-    return it;
-  }
-
-  template <typename Key, typename Value>
-  std::pair<iterator, bool> emplace(Key&& key, Value&& value) {
-    auto it = lowerBound(key);
-    if (it != end() && it->first == key) {
-      return { it, false };
-    }
-
-    if (mStorage.full()) {
-      clear();
-      it = begin();
-    }
-
-    return {
-      mStorage.insert(it, value_type { std::forward<Key>(key), std::forward<Value>(value) }),
-      true,
-    };
-  }
-
-  private:
-  template <typename Key>
-  [[nodiscard]]
-  iterator lowerBound(const Key& key) noexcept {
-    return std::lower_bound(begin(), end(), key, [](const value_type& item, const Key& key) {
-      return item.first < key;
-    });
-  }
-
-  template <typename Key>
-  [[nodiscard]]
-  const_iterator lowerBound(const Key& key) const noexcept {
-    return std::lower_bound(begin(), end(), key, [](const value_type& item, const Key& key) {
-      return item.first < key;
-    });
-  }
+  auto begin() noexcept { return mStorage.begin(); }
+  auto end() noexcept { return mStorage.end(); }
 };

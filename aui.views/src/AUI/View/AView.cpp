@@ -261,8 +261,8 @@ bool AView::hasFocus() const {
 
 AMinMaxAxis AView::computeMinMaxAxis(int height) {
   ensureAssUpdated();
-  if (auto it = mMinMaxSizesCache.find(height); it != mMinMaxSizesCache.end()) {
-    return it->second;
+  if (auto cached = mMinMaxSizesCache.get(height)) {
+    return *cached;
   }
 
   auto sizes = onComputeIntrinsicMinMaxAxis(height == -1 ? -1 : std::max(0, height - mPadding.vertical()));
@@ -280,13 +280,13 @@ AMinMaxAxis AView::computeMinMaxAxis(int height) {
     }
   }
 
-  return mMinMaxSizesCache.emplace(height, sizes).first->second;
+  return mMinMaxSizesCache.put(height, sizes);
 }
 
 glm::ivec2 AView::measure(AConstraints constraints) {
   ensureAssUpdated();
-  if (auto it = mMeasureCache.find(constraints); it != mMeasureCache.end()) {
-    return it->second;
+  if (auto cached = mMeasureCache.get(constraints)) {
+    return *cached;
   }
 
   AConstraints effective = constraints;
@@ -343,7 +343,7 @@ glm::ivec2 AView::measure(AConstraints constraints) {
   measured.x = std::clamp(content_size.x + hPadding, effective.minInline,  effectiveMaxInline);
   measured.y = std::clamp(content_size.y + vPadding, effective.minBlock, effectiveMaxBlock);
 
-  return mMeasureCache.emplace(constraints, measured).first->second;
+  return mMeasureCache.put(constraints, measured);
 }
 
 glm::ivec2 AView::onIntrinsicMeasure(AConstraints constraints) {
