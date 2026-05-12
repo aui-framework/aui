@@ -386,9 +386,13 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                             _new<AButton>("Add").connect(&AButton::clicked, AUI_SLOT(model)::addItem),
                             _new<AButton>("Remove").connect(&AButton::clicked, AUI_SLOT(model)::removeItem),
                           } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-                          _new<AListView>(model)
+                          _new<AListView>(model) AUI_OVERRIDE_STYLE {
+                            MinSize { 60_dp, 60_dp },
+                          }
                       } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } };
                   }(),
+                } AUI_OVERRIDE_STYLE {
+                  Expanding {}
                 },
 
                 // foreach
