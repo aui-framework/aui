@@ -39,51 +39,49 @@
 using namespace declarative;
 
 bool AWindow::consumesClick(const glm::ivec2& pos) {
-    return AViewContainer::consumesClick(pos);
+  return AViewContainer::consumesClick(pos);
 }
 
 void AWindow::onClosed() {
-    emit closed();
-    quit();
+  emit closed();
+  quit();
 }
 
 void AWindow::doDrawWindow() {
-    APerformanceSection s("AWindow::doDrawWindow");
-    auto& renderer = mRenderingContext->renderer();
-    renderer.setWindow(this);
-    render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } }, .render = renderer });
+  APerformanceSection s("AWindow::doDrawWindow");
+  auto& renderer = mRenderingContext->renderer();
+  renderer.setWindow(this);
+  render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } }, .render = renderer });
 }
 
 void AWindow::createDevtoolsWindow() {
-    class DevtoolsWindow: public AWindow {
-    public:
-        DevtoolsWindow(): AWindow("Devtools", 500_dp, 400_dp) {}
+  class DevtoolsWindow: public AWindow {
+  public:
+    DevtoolsWindow(): AWindow("Devtools", 500_dp, 400_dp) {}
 
-    protected:
-        void createDevtoolsWindow() override {
-            // you can comment out this to forbid issuing devtools on a devtools window, but who I am to disable such a
-            // meme thing?
-            AWindow::createDevtoolsWindow();
-        }
-    };
-    auto window = _new<DevtoolsWindow>();
-    ALayoutInflater::inflate(window, _new<DevtoolsPanel>(this));
-    window->show();
+  protected:
+    void createDevtoolsWindow() override {
+      // you can comment out this to forbid issuing devtools on a devtools window, but who I am to disable such a
+      // meme thing?
+      AWindow::createDevtoolsWindow();
+    }
+  };
+  auto window = _new<DevtoolsWindow>();
+  ALayoutInflater::inflate(window, _new<DevtoolsPanel>(this));
+  window->show();
 }
-
-
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
 
-
 static auto _gLastFrameTime = 0ms;
 
 bool AWindow::isRedrawWillBeEfficient() {
-    auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-    auto delta = now - _gLastFrameTime;
-    return 8ms < delta;
+  auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+  auto delta = now - _gLastFrameTime;
+  return 8ms < delta;
 }
+
 void AWindow::redraw() {
 #if AUI_PROFILING
   APerformanceFrame frame([&](APerformanceSection::Datas sections) {
@@ -162,39 +160,38 @@ void AWindow::redraw() {
 }
 
 _<AWindow> AWindow::wrapViewToWindow(const _<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {
-    view->setExpanding();
+  view->setExpanding();
 
-    auto window = _new<AWindow>(title, width, height, parent, ws);
-    window->setContents(Stacked {
-            view
-    });
-    return window;
+  auto window = _new<AWindow>(title, width, height, parent, ws);
+  window->setContents(Stacked {
+    view
+  });
+  return window;
 }
 
 void AWindow::close() {
-    onClosed();
+  onClosed();
 }
 
-
 void AWindow::onFocusAcquired() {
-    mIsFocused = true;
-    AViewContainer::onFocusAcquired();
+  mIsFocused = true;
+  AViewContainer::onFocusAcquired();
 }
 
 void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-    ASurface::onPointerMove(pos, event);
-    if (UITestState::isTesting()) {
-        return;
-    }
-    AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
+  ASurface::onPointerMove(pos, event);
+  if (UITestState::isTesting()) {
+    return;
+  }
+  AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
 }
 
 void AWindow::onFocusLost() {
-    mIsFocused = false;
-    ASurface::onFocusLost();
-    if (AMenu::isOpen()) {
-        AMenu::close();
-    }
+  mIsFocused = false;
+  ASurface::onFocusLost();
+  if (AMenu::isOpen()) {
+    AMenu::close();
+  }
 }
 
 void AWindow::onKeyDown(AInput::Key key) {
@@ -222,29 +219,26 @@ void AWindow::setSize(glm::ivec2 size) {
 }
 
 glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) {
-    return other->mapPosition(unmapPosition(position));
+  return other->mapPosition(unmapPosition(position));
 }
 
 AWindowManager::AWindowManager(): mHandle(this) {
-    mHangTimer = _new<ATimer>(10s);
-    return;
-    AObject::connect(mHangTimer->fired, mHangTimer, [&, thread = AThread::current()] {
-        if (mWatchdog.isHang()) {
-            ALogger::err("ANR") << "UI hang detected:\n" << thread->threadStacktrace();
-            std::exit(-1);
-        }
-    });
+  mHangTimer = _new<ATimer>(10s);
+  return;
+  AObject::connect(mHangTimer->fired, mHangTimer, [&, thread = AThread::current()] {
+    if (mWatchdog.isHang()) {
+      ALogger::err("ANR") << "UI hang detected:\n" << thread->threadStacktrace();
+      std::exit(-1);
+    }
+  });
 #if !AUI_DEBUG
-    mHangTimer->start();
+  mHangTimer->start();
 #endif
 }
-
 
 AWindowManager::~AWindowManager() {
 
 }
-
-
 
 void AWindow::windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) {
   mWindowTitle = name;
@@ -273,98 +267,98 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 }
 
 _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
-    class AOverlappingWindow: public AWindow {
-    public:
-        AOverlappingWindow(AWindow* parent):
-        AWindow("MENU", 100, 100, parent, WindowStyle::SYS) {
-            setCustomStyle({ ass::Padding { 0 } });
-        }
-    };
-    auto window = _new<AOverlappingWindow>(this);
-    auto finalPos = unmapPosition(position);
-    window->layout(finalPos.x, finalPos.y, size.x, size.y);
-    // show later
-    AUI_UI_THREAD {
-        window->show();
-    };
+  class AOverlappingWindow: public AWindow {
+  public:
+    AOverlappingWindow(AWindow* parent):
+    AWindow("MENU", 100, 100, parent, WindowStyle::SYS) {
+      setCustomStyle({ ass::Padding { 0 } });
+    }
+  };
+  auto window = _new<AOverlappingWindow>(this);
+  auto finalPos = unmapPosition(position);
+  window->setGeometry(finalPos.x, finalPos.y, size.x, size.y);
+  // show later
+  AUI_UI_THREAD {
+      window->show();
+  };
 
-    class MyOverlappingSurface: public AOverlappingSurface {
-    public:
-        void setOverlappingSurfacePosition(glm::ivec2 position) override {
-            emit positionSet(position);
-        }
+  class MyOverlappingSurface: public AOverlappingSurface {
+  public:
+    void setOverlappingSurfacePosition(glm::ivec2 position) override {
+      emit positionSet(position);
+    }
 
-        void setOverlappingSurfaceSize(glm::ivec2 size) override {
-            emit sizeSet(size);
-        }
+    void setOverlappingSurfaceSize(glm::ivec2 size) override {
+      emit sizeSet(size);
+    }
 
-    signals:
-        emits<glm::ivec2> positionSet;
-        emits<glm::ivec2> sizeSet;
-    };
+  signals:
+    emits<glm::ivec2> positionSet;
+    emits<glm::ivec2> sizeSet;
+  };
 
-    auto surface = _new<MyOverlappingSurface>();
-    ALayoutInflater::inflate(window, surface);
-    connect(surface->positionSet, window, [this, window = window.get()](const glm::ivec2& newPos) {
-        window->setPosition(unmapPosition(newPos));
-    });
-    connect(surface->sizeSet, window, [this, window = window.get()](const glm::ivec2& size) {
-        window->setSize(size);
-    });
+  auto surface = _new<MyOverlappingSurface>();
+  ALayoutInflater::inflate(window, surface);
+  connect(surface->positionSet, window, [this, window = window.get()](const glm::ivec2& newPos) {
+    window->setPosition(unmapPosition(newPos));
+  });
+  connect(surface->sizeSet, window, [this, window = window.get()](const glm::ivec2& size) {
+    window->setSize(size);
+  });
 
-    return surface;
+  return surface;
 }
 
 void AWindow::closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) {
-    if (auto c = dynamic_cast<AWindow*>(surface->getParent())) {
-        c->close();
-    }
+  if (auto c = dynamic_cast<AWindow*>(surface->getParent())) {
+    c->close();
+  }
 }
 
 void AWindow::forceUpdateCursor() {
-    if (mForceUpdateCursorGuard) {
-        return;
-    }
-    ASurface::forceUpdateCursor();
-    if (!mCursor) {
-        mCursor = ACursor::DEFAULT;
-    }
-    if (UITestState::isTesting()) {
-        return;
-    }
-    mCursor->applyNativeCursor(this);
+  if (mForceUpdateCursorGuard) {
+    return;
+  }
+  ASurface::forceUpdateCursor();
+  if (!mCursor) {
+    mCursor = ACursor::DEFAULT;
+  }
+  if (UITestState::isTesting()) {
+    return;
+  }
+  mCursor->applyNativeCursor(this);
 }
 
 void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
 #if AUI_PLATFORM_LINUX
-    IPlatformAbstraction::current().windowManagerInitNativeWindow(init);
+  IPlatformAbstraction::current().windowManagerInitNativeWindow(init);
 #else
-    for (const auto& graphicsApi : ARenderingContextOptions::get().initializationOrder) {
-        try {
-            std::visit(aui::lambda_overloaded{
-                    [](const ARenderingContextOptions::DirectX11&) {
-                        throw AException("DirectX is not supported");
-                    },
-                    [&](const ARenderingContextOptions::OpenGL& config) {
-                        auto context = std::make_unique<OpenGLRenderingContext>(config);
-                        context->init(init);
-                        init.setRenderingContext(std::move(context));
-                    },
-                    [&](const ARenderingContextOptions::Software&) {
-                        auto context = std::make_unique<SoftwareRenderingContext>();
-                        context->init(init);
-                        init.setRenderingContext(std::move(context));
-                    },
-            }, graphicsApi);
-            return;
-        } catch (const AException& e) {
-            ALogger::warn("AWindowManager") << "Unable to initialize graphics API:" << e;
-        }
+  for (const auto& graphicsApi : ARenderingContextOptions::get().initializationOrder) {
+    try {
+      std::visit(aui::lambda_overloaded{
+          [](const ARenderingContextOptions::DirectX11&) {
+              throw AException("DirectX is not supported");
+          },
+          [&](const ARenderingContextOptions::OpenGL& config) {
+              auto context = std::make_unique<OpenGLRenderingContext>(config);
+              context->init(init);
+              init.setRenderingContext(std::move(context));
+          },
+          [&](const ARenderingContextOptions::Software&) {
+              auto context = std::make_unique<SoftwareRenderingContext>();
+              context->init(init);
+              init.setRenderingContext(std::move(context));
+          },
+      }, graphicsApi);
+      return;
+    } catch (const AException& e) {
+      ALogger::warn("AWindowManager") << "Unable to initialize graphics API:" << e;
     }
-    throw AException("unable to initialize graphics");
+  }
+  throw AException("unable to initialize graphics");
 #endif
 }
 
 bool AWindow::isClosed() const noexcept {
-    return mSelfHolder == nullptr;
+  return mSelfHolder == nullptr;
 }
