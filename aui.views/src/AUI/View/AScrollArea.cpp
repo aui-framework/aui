@@ -197,30 +197,9 @@ glm::ivec2 AScrollArea::onIntrinsicMeasure(AConstraints constraints) {
 }
 
 AMinMaxAxis AScrollArea::onComputeIntrinsicMinMaxAxis(int height) {
-  const int horizontalScrollbarMinWidth =
-      hasInternalHorizontalScrollbar() ? mHorizontalScrollbar->computeMinMaxAxis().min : 0;
-  if (!contents()) {
-    return {
-      .min = horizontalScrollbarMinWidth,
-      .max = horizontalScrollbarMinWidth,
-    };
-  }
-
-  const auto margins = contents()->getMargin().occupiedSize();
-  const auto contentMinMax = contents()->computeMinMaxAxis(height);
-  int maxWidth = margins.x + contentMinMax.max;
-
-  if (height != -1) {
-    const int contentHeight =
-      contents()->measure(AConstraints::fixedInline(contentMinMax.max)).y + margins.y;
-    if (contentHeight > height) {
-      maxWidth += measureVerticalScrollbarWidth(height);
-    }
-  }
-
   return {
-    .min = horizontalScrollbarMinWidth,
-    .max = maxWidth,
+    .min = measureVerticalScrollbarWidth(-1) * 2,
+    .max = contents()->computeMinMaxAxis().max,
   };
 }
 
