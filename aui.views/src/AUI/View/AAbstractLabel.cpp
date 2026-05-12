@@ -38,7 +38,7 @@ glm::ivec2 AAbstractLabel::onIntrinsicMeasure(AConstraints constraints) {
     AString text = getTransformedText();
     AFontStyle& style = getFontStyle();
     int measuredWidth = style.getWidth(text);
-    if (!constraints.isUnlimitedInline() && measuredWidth > constraints.maxInline) {
+    if (mTextOverflow != ATextOverflow::NONE && !constraints.isUnlimitedInline() && measuredWidth > constraints.maxInline) {
         const int availableWidth = constraints.maxInline;
         measuredWidth = availableWidth;
         processTextOverflow(text, availableWidth);
