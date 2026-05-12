@@ -224,3 +224,19 @@ TEST(AScrollArea, MinimumWidthContentUsesHorizontalScrollbar) {
               scrollArea.getHeight() - scrollArea.horizontalScrollbar()->getHeight());
     EXPECT_EQ(scrollArea.horizontalScrollbar()->getWidth(), 100);
 }
+
+TEST(AScrollArea, MaxSizeIsLargerThanMinSize) {
+  class SmallView : public AView {
+  public:
+    SmallView() {
+      setFixedSize({200, 200});
+    }
+  };
+
+  auto scrollArea = _new<AScrollArea>();
+  scrollArea->setContents(_new<SmallView>());
+
+  auto minMax = scrollArea->computeMinMaxAxis();
+
+  EXPECT_GT(minMax.max, minMax.min);
+}
