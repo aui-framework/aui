@@ -356,6 +356,9 @@ namespace aui::impl::future {
             }
         };
 
+        using Ptr = _<CancellationWrapper<Inner>>;
+        using PtrWeak = _weak<CancellationWrapper<Inner>>;
+
 #if AUI_COROUTINES
         /**
          * @brief promise_type for C++ coroutines TS.
@@ -364,7 +367,7 @@ namespace aui::impl::future {
 #endif
 
     protected:
-        _<CancellationWrapper<Inner>> mInner;
+        Ptr mInner;
 
 
     public:
@@ -374,8 +377,15 @@ namespace aui::impl::future {
          */
         Future(TaskCallback task = nullptr): mInner(_new<CancellationWrapper<Inner>>((_unique<Inner>)(new Inner(std::move(task))))) {}
 
+        Future(Ptr ptr) noexcept: mInner(std::move(ptr)) {} // construct AFuture from internal shared_ptr.
+
+        Future(const Future&) = default;
+        Future(Future&&) noexcept = default;
+        Future& operator=(const Future&) = default;
+        Future& operator=(Future&&) noexcept = default;
+
         [[nodiscard]]
-        const _<CancellationWrapper<Inner>>& inner() const noexcept {
+        const Ptr& inner() const noexcept {
             return mInner;
         }
 
@@ -628,6 +638,8 @@ private:
 
 public:
     using Task = typename super::TaskCallback;
+    using Ptr = typename super::Ptr;
+    using PtrWeak = typename super::PtrWeak;
 #if AUI_COROUTINES
     using promise_type = typename super::CoPromiseType;
 #endif
@@ -638,6 +650,7 @@ public:
         inner->value = std::move(immediateValue);
     }
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
+    AFuture(Ptr ptr) noexcept: super(std::move(ptr)) {} // construct AFuture from internal shared_ptr.
     ~AFuture() = default;
 
     AFuture(const AFuture&) = default;
@@ -775,12 +788,15 @@ private:
 
 public:
     using Task = typename super::TaskCallback;
+    using Ptr = typename super::Ptr;
+    using PtrWeak = typename super::PtrWeak;
 #if AUI_COROUTINES
     using promise_type = typename super::CoPromiseType;
 #endif
     using Inner = decltype(std::declval<super>().inner());
 
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
+    AFuture(Ptr ptr) noexcept: super(std::move(ptr)) {} // construct AFuture from internal shared_ptr.
     ~AFuture() = default;
 
     AFuture(const AFuture&) = default;
@@ -938,91 +954,5 @@ void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapp
 }
 
 #if AUI_COROUTINES
-template<typename Value>
-struct aui::impl::future::Future<Value>::CoPromiseType {
-    AFuture<Value> future;
-    auto initial_suspend() const noexcept
-    {
-        return std::suspend_never{};
-    }
-
-    auto final_suspend() const noexcept
-    {
-        return std::suspend_never{};
-    }
-
-    auto unhandled_exception() const noexcept {
-        future.supplyException();
-    }
-
-    const AFuture<Value>& get_return_object() const noexcept {
-        return future; 
-    }
-
-    void return_value(Value v) const noexcept {
-        future.supplyValue(std::move(v));
-    }
-};
-
-template<>
-struct aui::impl::future::Future<void>::CoPromiseType {
-    AFuture<void> future;
-    auto initial_suspend() const noexcept
-    {
-        return std::suspend_never{};
-    }
-
-    auto final_suspend() const noexcept
-    {
-        return std::suspend_never{};
-    }
-
-    auto unhandled_exception() const noexcept {
-        future.supplyException();
-    }
-
-    const AFuture<void>& get_return_object() const noexcept {
-        return future;
-    }
-
-    void return_void() const noexcept {
-        future.supplyValue();
-    }
-};
-
-template<typename T>
-auto operator co_await(AFuture<T> future) {
-    struct Awaitable {
-        AFuture<T> future;
-
-        bool await_ready() const noexcept {
-            return future.hasResult();
-        }
-
-        auto await_resume() {
-            if constexpr (std::is_same_v<T, void>) {
-                *future;
-            } else {
-                return std::move(*future);
-            }
-        }
-
-        void await_suspend(std::coroutine_handle<> handle)
-        {
-            // onSuccess and onError are called by supplyValue which might have been called on a different thread.
-            // if we keep this logic for coroutines, the callstack will grow very fast and inconsistent.
-            // for co_await, let's keep the caller thread.
-            // if user wants to magically switch threads using co_await, they'll figure out how to shoot their knee.
-            auto callback = [handle = std::move(handle), callerThread = AThread::current()](const auto&...) {
-                callerThread->enqueue([handle = std::move(handle)] {
-                    handle.resume();
-                });
-            };
-            future.onSuccess(callback);
-            future.onError(std::move(callback));
-        }
-    };
-
-    return Awaitable{ std::move(future) };
-}
+#include "AFutureCpp20Coro.h"
 #endif
