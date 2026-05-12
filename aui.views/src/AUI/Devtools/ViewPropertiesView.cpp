@@ -119,6 +119,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     Horizontal {
       Label { addressStr },
       Button { Label { "Copy" }, [addressStr] { AClipboard::copyToClipboard(addressStr); } },
+      Button { Label { "Request Layout" }, [targetView] { targetView->requestLayout(); } },
     } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
 
     Label { AUI_REACT("Size = {}px"_format(targetView->size())) },
