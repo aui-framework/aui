@@ -375,28 +375,60 @@ public:
   }
 
   static glm::ivec2 onIntrinsicMeasure(ranges::range auto&& views, int spacing, AConstraints constraints) {
-    int total_our    = -spacing;
-    int max_perp     = 0;
-    int visible_count = 0;
+    // Derive padded_size from constraints so we can reuse resolveMainAxisSizes.
+    // For unbounded axes use a large sentinel value.
+    const int our_limit  = (direction == ALayoutDirection::HORIZONTAL)
+                           ? (constraints.isUnlimitedInline() ? 0 : constraints.maxInline)
+                           : (constraints.isUnlimitedBlock()  ? 0 : constraints.maxBlock);
+    const int perp_limit = (direction == ALayoutDirection::HORIZONTAL)
+                               ? constraints.maxBlock
+                               : constraints.maxInline;
 
-    const int perp_limit = (direction == ALayoutDirection::HORIZONTAL) ? constraints.maxBlock : constraints.maxInline;
+    glm::ivec2 padded_size;
+    Axis::ourAxis(padded_size) = our_limit;
+    Axis::perpAxis(padded_size) = perp_limit == -1 ? -1 : perp_limit;
+
+    // Resolve main-axis sizes exactly like layout() does — this correctly
+    // distributes remaining space to expanding children (e.g. wrapping text).
+    const auto resolved = resolveMainAxisSizes(views, spacing, padded_size);
+
+    int total_our     = -spacing;
+    int max_perp      = 0;
+    int visible_count = 0;
+    size_t index      = 0;
 
     for (const auto& v : views) {
-      if (!isLayoutParticipant(v)) continue;
-      visible_count++;
+      const auto& info = resolved[index++];
+      if (!info.visible) continue;
+      ++visible_count;
 
-      const int child_perp_limit = perp_limit == -1 ? -1 : std::max(0, perp_limit - Axis::perpAxis(v->getMargin().occupiedSize()));
-
-      auto [child_our, measured] = computePreferredMainAxisSize(v, child_perp_limit);
+      const int view_size_our  = info.finalSize;
+      //const int available_perp = std::max(0, Axis::perpAxis(padded_size) - Axis::perpAxis(v->getMargin().occupiedSize()));
+      const int available_perp = 0;
+      const int max_perp_view  = Axis::perpAxis(v->getMaxSize());
 
       int child_perp;
-      if (measured) {
-        child_perp = Axis::measuredPerp(*measured);
+      const int fixed_perp = Axis::perpAxis(v->getFixedSize());
+      if (fixed_perp > 0) {
+        child_perp = resolvePerpendicularSize(v, fixed_perp, available_perp, max_perp_view);
+      } else if (info.measuredSize) {
+        // Reuse cached measurement only when the main-axis size matches —
+        // otherwise re-measure with the final main-axis size, exactly as
+        // layout() does, so wrapping text reports the correct height.
+        const bool main_axis_matches =
+            direction == ALayoutDirection::VERTICAL ||
+            Axis::measuredOur(*info.measuredSize) == view_size_our;
+
+        if (main_axis_matches) {
+          child_perp = resolvePerpendicularSize(v, Axis::measuredPerp(*info.measuredSize), available_perp, max_perp_view);
+        } else {
+          child_perp = computePerpendicularSize(v, view_size_our, available_perp, max_perp_view);
+        }
       } else {
-        child_perp = Axis::measuredPerp(v->measure(Axis::fixedOur(child_our)));
+        child_perp = computePerpendicularSize(v, view_size_our, available_perp, max_perp_view);
       }
 
-      total_our += child_our + Axis::ourAxis(v->getMargin().occupiedSize()) + spacing;
+      total_our += view_size_our + Axis::ourAxis(v->getMargin().occupiedSize()) + spacing;
       max_perp = std::max(max_perp, child_perp + Axis::perpAxis(v->getMargin().occupiedSize()));
     }
 
@@ -404,11 +436,11 @@ public:
 
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
       const int width = constraints.isUnlimitedInline() ? std::max(total_our, constraints.minInline)
-                                                        : std::clamp(total_our, constraints.minInline, constraints.maxInline);
+                                                  : std::max(total_our, constraints.minInline);
       return { width, std::max(max_perp, constraints.minBlock) };
     } else {
       const int height = constraints.isUnlimitedBlock() ? std::max(total_our, constraints.minBlock)
-                                                        : std::clamp(total_our, constraints.minBlock, constraints.maxBlock);
+                                                  : std::max(total_our, constraints.minBlock);
       return { std::max(max_perp, constraints.minInline), height };
     }
   }
