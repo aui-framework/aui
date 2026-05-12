@@ -161,8 +161,10 @@ public:
   [[nodiscard]] static T getPerpAxisValue(const glm::tvec2<T>& v) { return Axis::perpAxis(v); }
 
   static int resolvePerpendicularSize(const auto& view, int measured_perp, int available_perp_size, int max_perp_size) {
-    const bool perp_expanding = Axis::perpAxis(view->getExpanding()) != 0 && Axis::perpAxis(view->getFixedSize()) == 0;
-    const int resolved_perp = perp_expanding ? glm::max(available_perp_size, measured_perp) : measured_perp;
+    // TODO(Nelonn): think about it, kept for compatibility with existing layouts
+    //const bool perp_expanding = Axis::perpAxis(view->getExpanding()) != 0 && Axis::perpAxis(view->getFixedSize()) == 0;
+    //const int resolved_perp = perp_expanding ? glm::max(available_perp_size, measured_perp) : measured_perp;
+    const int resolved_perp = glm::max(available_perp_size, measured_perp);
     return max_perp_size > 0 ? glm::min(resolved_perp, max_perp_size) : resolved_perp;
   }
 
