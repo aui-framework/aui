@@ -31,6 +31,10 @@ struct AxisAdapter<ALayoutDirection::HORIZONTAL> {
     return AConstraints { .minInline = our, .maxInline = our, .maxBlock = max_perp };
   }
 
+  static AConstraints cappedPerp(int max_perp) {
+    return AConstraints { .maxBlock = max_perp };
+  }
+
   template <typename T>
   static T& ourAxis(glm::tvec2<T>& v) { return v.x; }
   template <typename T>
@@ -49,7 +53,11 @@ struct AxisAdapter<ALayoutDirection::VERTICAL> {
   static AConstraints fixedPerp(int v) { return AConstraints::fixedInline(v); }
   static AConstraints fixedOur(int v) { return AConstraints::fixedBlock(v); }
   static AConstraints fixedOurCappedPerp(int our, int max_perp) {
-    return AConstraints { .minBlock = our, .maxInline = max_perp, .maxBlock = our };
+    return AConstraints { .maxInline = max_perp, .minBlock = our, .maxBlock = our };
+  }
+
+  static AConstraints cappedPerp(int max_perp) {
+    return AConstraints { .maxInline = max_perp };
   }
 
   template <typename T>
@@ -177,14 +185,14 @@ public:
   static std::pair<int, std::optional<glm::ivec2>> computePreferredMainAxisSize(const auto& view, int perp_constraint) {
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
       if (perp_constraint != -1) {
-        auto measured = view->measure(Axis::fixedPerp(perp_constraint));
+        auto measured = view->measure(Axis::cappedPerp(perp_constraint));
         return { Axis::measuredOur(measured), measured };
       }
       return { view->computeMinMaxAxis().max, std::nullopt };
     } else {
       const int intrinsic_max = view->computeMinMaxAxis().max;
       const int fixed_perp = (perp_constraint == -1) ? intrinsic_max : glm::min(perp_constraint, intrinsic_max);
-      auto measured = view->measure(Axis::fixedPerp(fixed_perp));
+      auto measured = view->measure(Axis::cappedPerp(fixed_perp));
       return { Axis::measuredOur(measured), measured };
     }
   }
