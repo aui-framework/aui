@@ -178,8 +178,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
     addView(Horizontal {
       _new<ADrawableView>(IDrawable::fromUrl(":img/logo.svg")) AUI_OVERRIDE_STYLE { FixedSize { 32_dp } },
       AText::fromString("Building beautiful programs in pure C++ without chromium embedded framework") AUI_OVERRIDE_STYLE {
-            Expanding(1, 1),
-          },
+        Expanding(1, 1),
+      },
       Horizontal {} AUI_LET {
               mAsync << AUI_THREADPOOL {
                   auto drawable = IDrawable::fromUrl(
