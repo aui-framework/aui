@@ -567,3 +567,23 @@ TEST(HVLayout, VerticalExpandingChildDoesNotOverflow) {
     // If it's 1174, the test fails.
     EXPECT_EQ(bottom->getSize().y, 673);
 }
+
+TEST(HVLayout, VerticalMeasurementConsistency) {
+    auto child = _new<FakeLayoutItem>();
+    child->preferredWidth = [](int) { return 143; };
+    child->preferredHeight = [](int) { return 10; };
+
+    AVector<_<AView>> views { child };
+
+    // This should return 143 as the max width
+    const auto minMax = VerticalHVLayout::computeIntrinsicMinMaxSizes(views, 0);
+    EXPECT_EQ(minMax.min, 0);
+    EXPECT_EQ(minMax.max, 143);
+
+    // When measured with 512, it should still respect its intrinsic max of 143
+    AConstraints constraints;
+    constraints.maxInline = 512;
+    constraints.maxBlock = 512;
+    const auto measured = VerticalHVLayout::onIntrinsicMeasure(views, 0, constraints);
+    EXPECT_EQ(measured.x, 143);
+}
