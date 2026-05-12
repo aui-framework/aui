@@ -180,7 +180,8 @@ public:
       }
       return { view->computeMinMaxAxis().max, std::nullopt };
     } else {
-      const int fixed_perp = (perp_constraint == -1) ? view->computeMinMaxAxis().max : perp_constraint;
+      const int intrinsic_max = view->computeMinMaxAxis().max;
+      const int fixed_perp = (perp_constraint == -1) ? intrinsic_max : glm::min(perp_constraint, intrinsic_max);
       auto measured = view->measure(Axis::fixedPerp(fixed_perp));
       return { Axis::measuredOur(measured), measured };
     }
