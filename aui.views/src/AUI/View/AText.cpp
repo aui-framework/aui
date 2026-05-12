@@ -307,13 +307,13 @@ void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
   for (auto& charEntry: mCharEntries) {
     auto c = charEntry.getChar();
     if (c != ' ') {
-        AString str(1, c);
-        canvas->addString(charEntry.getPosition() + ascender, str);
+      AString str(1, c);
+      canvas->addString(charEntry.getPosition() + ascender, str);
     }
   }
 }
 void AText::onLayout(int w, int h) {
-  AViewContainerBase::onLayout(w, h);
+  ATextBase::onLayout(w, h);
 
   int y = 0;
   const int textHeight =
