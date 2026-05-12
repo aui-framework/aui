@@ -205,6 +205,7 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                         if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
                             AUI_NULLSAFE(window->getRenderingContext())->beginResize(*window);
                             window->AViewContainer::setSize(size);
+                            window->requestLayout();
                             AUI_NULLSAFE(window->getRenderingContext())->endResize(*window);
                         }
                         if (auto w = _cast<ACustomWindow>(window)) {
