@@ -32,8 +32,7 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_AuiView_handleResize(JNIEnv *env, jclass clazz, jint width, jint height) {
     runOnGLThread([=] {
-        AUI_NULLSAFE(ASurface::current())->setSize({width, height});
-        AUI_NULLSAFE(ASurface::current())->requestLayout();
+        AUI_NULLSAFE(ASurface::current())->onResize({width, height});
     });
 }
 

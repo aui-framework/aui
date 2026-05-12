@@ -167,6 +167,8 @@ public:
     return mBeforeFrameQueue;
   }
 
+  void onResize(int width, int height);
+
   void updateDpi();
 
   /**

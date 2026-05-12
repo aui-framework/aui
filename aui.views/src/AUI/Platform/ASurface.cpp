@@ -52,6 +52,11 @@ float ASurface::fetchDpiFromSystem() const {
   return 1.0f;
 }
 
+void ASurface::onResize(int width, int height) {
+  setSize({width, height});
+  requestLayout();
+}
+
 void ASurface::updateDpi() {
   float newDpi = [&]() -> float {
     float systemDpi = fetchDpiFromSystem();

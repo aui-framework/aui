@@ -153,8 +153,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 GetClientRect(mHandle, &clientRect);
                 AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
                 mPosition = getWindowPosition();
-                AViewContainer::setSize({LOWORD(lParam), HIWORD(lParam)});
-                requestLayout();
+                onResize(LOWORD(lParam), HIWORD(lParam));
 
                 switch (wParam) {
                     case SIZE_MAXIMIZED:

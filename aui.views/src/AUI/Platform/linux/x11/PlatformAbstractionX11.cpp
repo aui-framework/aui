@@ -204,8 +204,7 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                         glm::ivec2 size = { ev.xconfigure.width, ev.xconfigure.height };
                         if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
                             AUI_NULLSAFE(window->getRenderingContext())->beginResize(*window);
-                            window->AViewContainer::setSize(size);
-                            window->requestLayout();
+                            window->onResize(size.x, size.y);
                             AUI_NULLSAFE(window->getRenderingContext())->endResize(*window);
                         }
                         if (auto w = _cast<ACustomWindow>(window)) {
