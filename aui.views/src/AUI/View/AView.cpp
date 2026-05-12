@@ -302,9 +302,9 @@ glm::ivec2 AView::measure(AConstraints constraints) {
     unlimitedInline = false;
   } else {
     effective.minInline = std::max(effective.minInline, mMinSize.x);
-    if (effective.minInline == 0 && effective.maxInline == 0) {
-      effective.minInline = computeMinMaxAxis(passUnlimitedBlock ? -1 : effective.maxBlock).min;
-    }
+    //if (effective.minInline == 0 && effective.maxInline == 0) {
+    //  effective.minInline = computeMinMaxAxis(passUnlimitedBlock ? -1 : effective.maxBlock).min;
+    //}
     if (mMaxSize.x != -1) {
       effective.maxInline = unlimitedInline ? mMaxSize.x : std::min(effective.maxInline, mMaxSize.x);
       unlimitedInline = false;
