@@ -247,6 +247,7 @@ void OpenGLRenderingContextGtk::allocateTexture(GtkWidget* widget) {
         gdk_gl_texture_builder_set_height(mTexture->builder, height);
 
         mWindow.AViewContainer::setSize({width, height});
+        mWindow.requestLayout();
     }
 }
 
