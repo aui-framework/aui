@@ -11,13 +11,18 @@
 
 #include <gtest/gtest.h>
 #include <AUI/Layout/AStackedLayout.h>
+#include <AUI/View/AViewContainer.h>
 #include <AUI/View/AView.h>
+#include <AUI/View/ALabel.h>
+#include <AUI/Util/Declarative/Containers.h>
 #include <functional>
 
 template<typename T>
 inline std::ostream& operator<<(std::ostream& o, const glm::tvec2<T>& v) {
     return o << "{ " << v.x << ", " << v.y << " }";
 }
+
+using namespace declarative;
 
 namespace {
 
@@ -52,20 +57,43 @@ void expectRect(const _<T>& item, glm::ivec2 position, glm::ivec2 size) {
 }   // namespace
 
 TEST(AStackedLayout, IgnoresHiddenViewsInLayout) {
-    auto visible = _new<FakeLayoutItem>();
-    visible->preferredWidth = [](int) { return 20; };
-    visible->preferredHeight = [](int) { return 10; };
+  auto visible = _new<FakeLayoutItem>();
+  visible->preferredWidth = [](int) { return 20; };
+  visible->preferredHeight = [](int) { return 10; };
 
-    auto hidden = _new<FakeLayoutItem>();
-    hidden->preferredWidth = [](int) { return 100; };
-    hidden->preferredHeight = [](int) { return 50; };
-    hidden->setVisibility(Visibility::GONE);
+  auto hidden = _new<FakeLayoutItem>();
+  hidden->preferredWidth = [](int) { return 100; };
+  hidden->preferredHeight = [](int) { return 50; };
+  hidden->setVisibility(Visibility::GONE);
+  hidden->setSize(glm::ivec2());
 
-    AStackedLayout layout;
-    layout.addView(visible, std::nullopt);
-    layout.addView(hidden, std::nullopt);
-    layout.layout(0, 0, 100, 100);
+  AStackedLayout layout;
+  layout.addView(visible, std::nullopt);
+  layout.addView(hidden, std::nullopt);
+  layout.layout(0, 0, 100, 100);
 
-    expectRect(visible, { 40, 45 }, { 20, 10 });
-    EXPECT_EQ(hidden->getSize(), glm::ivec2());
+  expectRect(visible, { 40, 45 }, { 20, 10 });
+  EXPECT_EQ(hidden->getSize(), glm::ivec2());
+}
+
+TEST(AStackedLayout, ConsistencyTest) {
+  _<AView> container = Stacked {
+    Label { "Some Long Label" }
+  } AUI_OVERRIDE_STYLE {
+    MinSize { 60_px, 22_px },
+    Padding { 12_px, 4_px },
+  };
+
+  auto minMax = container->computeMinMaxAxis();
+  int minWidth = minMax.min;
+
+  // Measure with maxInline = -1
+  auto sizeUnlimited = container->measure(AConstraints { .minInline = 0, .maxInline = -1 });
+  EXPECT_GE(sizeUnlimited.x, minWidth);
+
+  // Measure with maxInline = 0
+  // According to AView::measure, if minInline=0 and maxInline=0, it should use computeMinMaxAxis().min
+  auto sizeZeroMax = container->measure(AConstraints { .minInline = 0, .maxInline = 0 });
+
+  EXPECT_EQ(sizeZeroMax.x, minWidth) << "Width with maxInline=0 should be equal to minWidth";
 }
