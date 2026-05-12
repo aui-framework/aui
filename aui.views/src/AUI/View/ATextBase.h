@@ -178,31 +178,29 @@ public:
   }
 
   glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
-    int max = 0;
-    int accumulator = 0;
-    for (const auto& e : mEngine.entries()) {
-      if (e->forcesNextLine()) {
-        max = glm::max(max, accumulator);
-        accumulator = 0;
-        continue;
-      }
-      accumulator += e->getSize().x;
+    const auto minMax = onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedBlock() ? -1 : constraints.maxBlock);
+    int width = minMax.max;
+    if (!constraints.isUnlimitedInline()) {
+      width = std::min(width, constraints.maxInline);
     }
-    const int preferredWidth = glm::max(max, accumulator);
-
-    const int width =
-        constraints.isUnlimitedInline()
-            ? glm::max(preferredWidth, constraints.minInline)
-            : glm::clamp(preferredWidth, constraints.minInline, constraints.maxInline);
+    width = std::max({ width, minMax.min, constraints.minInline });
 
     int height = 0;
     if (auto engineHeight = measureLayoutForWidth(width)) {
       height = *engineHeight + getFontStyle().getDescenderHeight();
     }
-    return { width, height };
+    return { width, glm::max(height, constraints.minBlock) };
   }
 
   AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override {
+    int preferredWidth = getPreferredWidth();
+    return {
+      .min = preferredWidth,
+      .max = preferredWidth,
+    };
+  }
+
+  int getPreferredWidth() {
     int max = 0;
     int accumulator = 0;
     for (const auto& e : mEngine.entries()) {
@@ -213,11 +211,7 @@ public:
       }
       accumulator += e->getSize().x;
     }
-    const int preferredWidth = glm::max(max, accumulator);
-    return {
-      .min = preferredWidth,
-      .max = preferredWidth,
-    };
+    return glm::max(max, accumulator);
   }
 
   void invalidateFont() override {
