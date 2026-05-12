@@ -82,8 +82,6 @@ public:
 
     void onDataCountChanged() override;
     void onDataChanged() override;
-    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
-    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
 signals:
     emits<AListModelSelection<AString>> selectionChanged;

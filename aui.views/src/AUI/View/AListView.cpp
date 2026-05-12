@@ -162,30 +162,6 @@ void AListView::onDataCountChanged() { requestLayout(); }
 
 void AListView::onDataChanged() { redraw(); }
 
-glm::ivec2 AListView::onIntrinsicMeasure(AConstraints constraints) {
-  if (!mContent) {
-    return { 0, 0 };
-  }
-  const int width = constraints.isUnlimitedInline()
-      ? constraints.minInline
-      : constraints.maxInline;
-  const int contentWidth = glm::max(0, width);
-  const auto contentMeasured = mContent->measure(AConstraints::fixedInline(contentWidth));
-  const int maxWidth = constraints.isUnlimitedInline() ? std::numeric_limits<int>::max() : constraints.maxInline;
-  const int maxHeight = constraints.isUnlimitedBlock() ? std::numeric_limits<int>::max() : constraints.maxBlock;
-  return {
-    std::clamp(width, constraints.minInline, maxWidth),
-    std::clamp(contentMeasured.y, constraints.minBlock, maxHeight),
-  };
-}
-
-AMinMaxAxis AListView::onComputeIntrinsicMinMaxAxis(int) {
-    return {
-        .min = 0,
-        .max = 0,
-    };
-}
-
 void AListView::updateSelectionOnItem(size_t i, AListView::SelectAction action) {
     switch (action) {
         case SelectAction::CLEAR_SELECTION_AND_SET:
