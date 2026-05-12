@@ -46,8 +46,10 @@ glm::ivec2 ALayout::measure(AConstraints constraints) {
   effectiveConstraints.maxBlock = unlimitedBlock ? -1 : effectiveMaxBlock;
 
   auto measuredSize = onIntrinsicMeasure(effectiveConstraints);
-  measuredSize.x = std::clamp(measuredSize.x, effectiveConstraints.minInline, effectiveMaxInline);
-  measuredSize.y = std::clamp(measuredSize.y, effectiveConstraints.minBlock, effectiveMaxBlock);
+  //measuredSize.x = std::clamp(measuredSize.x, effectiveConstraints.minInline, effectiveMaxInline);
+  //measuredSize.y = std::clamp(measuredSize.y, effectiveConstraints.minBlock, effectiveMaxBlock);
+  measuredSize.x = std::max(measuredSize.x, effectiveConstraints.minInline);
+  measuredSize.y = std::max(measuredSize.y, effectiveConstraints.minBlock);
 
   return mMeasureCache.put(constraints, measuredSize);
 }

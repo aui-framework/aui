@@ -340,8 +340,10 @@ glm::ivec2 AView::measure(AConstraints constraints) {
   glm::ivec2 content_size = onIntrinsicMeasure(content);
 
   glm::ivec2 measured;
-  measured.x = std::clamp(content_size.x + hPadding, effective.minInline,  effectiveMaxInline);
-  measured.y = std::clamp(content_size.y + vPadding, effective.minBlock, effectiveMaxBlock);
+  //measured.x = std::clamp(content_size.x + hPadding, effective.minInline, effectiveMaxInline);
+  //measured.y = std::clamp(content_size.y + vPadding, effective.minBlock, effectiveMaxBlock);
+  measured.x = std::max(content_size.x + hPadding, effective.minInline);
+  measured.y = std::max(content_size.y + vPadding, effective.minBlock);
 
   return mMeasureCache.put(constraints, measured);
 }
