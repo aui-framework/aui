@@ -358,7 +358,7 @@ macro(_aui_import_google_benchmark)
 endmacro()
 
 macro(aui_enable_benchmarks AUI_MODULE_NAME)
-    if (NOT CMAKE_CROSSCOMPILING)
+    if (NOT CMAKE_CROSSCOMPILING AND NOT AUI_DISABLE_BENCHMARKS)
         _aui_import_gtest()
         _aui_import_google_benchmark()
         if (NOT TARGET benchmark::benchmark)
