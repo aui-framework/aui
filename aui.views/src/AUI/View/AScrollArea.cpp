@@ -166,8 +166,17 @@ AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSiz
 }
 
 glm::ivec2 AScrollArea::onIntrinsicMeasure(AConstraints constraints) {
-  const int maxWidth = constraints.isUnlimitedInline() ? std::numeric_limits<int>::max() : constraints.maxInline;
-  const int maxHeight = constraints.isUnlimitedBlock() ? std::numeric_limits<int>::max() : constraints.maxBlock;
+  const bool zeroSizedViewportProbe =
+      constraints.isInlineTight() && constraints.maxInline == 0 &&
+      constraints.isBlockTight() && constraints.maxBlock == 0;
+  const int minimumChromeWidth = measureVerticalScrollbarWidth(-1) * 2;
+  const int minimumChromeHeight = measureHorizontalScrollbarHeight(-1) * 2;
+  const int maxWidth = constraints.isUnlimitedInline()
+      ? std::numeric_limits<int>::max()
+      : (zeroSizedViewportProbe ? minimumChromeWidth : constraints.maxInline);
+  const int maxHeight = constraints.isUnlimitedBlock()
+      ? std::numeric_limits<int>::max()
+      : (zeroSizedViewportProbe ? minimumChromeHeight : constraints.maxBlock);
   if (!contents()) {
     return {
       std::clamp(0, constraints.minInline, maxWidth),
@@ -178,14 +187,20 @@ glm::ivec2 AScrollArea::onIntrinsicMeasure(AConstraints constraints) {
   const auto margins = contents()->getMargin().occupiedSize();
   const auto contentMinMax = contents()->computeMinMaxAxis();
   const int naturalContentWidth = glm::max(0, contentMinMax.max + margins.x);
-  const int naturalMeasuredHeight =
-      contents()->measure(AConstraints::fixedInline(glm::max(0, naturalContentWidth - margins.x))).y + margins.y;
   const bool widthBounded = !constraints.isUnlimitedInline();
   const bool heightBounded = !constraints.isUnlimitedBlock();
+  const int preferredOuterWidth = zeroSizedViewportProbe
+      ? maxWidth
+      : (widthBounded ? std::min(std::max(0, maxWidth), naturalContentWidth) : naturalContentWidth);
+  const int preferredMeasuredHeight =
+      contents()->measure(AConstraints::fixedInline(glm::max(0, preferredOuterWidth - margins.x))).y + margins.y;
+  const int preferredOuterHeight = zeroSizedViewportProbe
+      ? maxHeight
+      : (heightBounded ? std::min(std::max(0, maxHeight), preferredMeasuredHeight) : preferredMeasuredHeight);
   const auto layout = calculateLayout(
     {
-        widthBounded ? std::max(0, constraints.maxInline) : naturalContentWidth,
-        heightBounded ? std::max(0, constraints.maxBlock) : naturalMeasuredHeight,
+        preferredOuterWidth,
+        preferredOuterHeight,
     },
     widthBounded,
     heightBounded);

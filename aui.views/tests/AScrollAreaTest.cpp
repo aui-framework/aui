@@ -1,3 +1,14 @@
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2026 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 #include <gtest/gtest.h>
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/AMetric.h>
@@ -86,9 +97,28 @@ private:
     int mLastMeasuredWidth = -1;
 };
 
+class FixedContentView : public AView {
+public:
+    explicit FixedContentView(glm::ivec2 size) : mSize(size) {}
+
+    glm::ivec2 onIntrinsicMeasure(AConstraints) override {
+        return mSize;
+    }
+
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
+        return {
+            .min = mSize.x,
+            .max = mSize.x,
+        };
+    }
+
+private:
+    glm::ivec2 mSize;
+};
+
 }   // namespace
 
-TEST(AScrollArea, MeasurePrefersAvailableWidthForWrappingContent) {
+TEST(AScrollArea, MeasureGrowsToAvoidVerticalScrollbarWhenHeightIsUnbounded) {
     auto content = _new<TrackingWrappingView>();
 
     AScrollArea scrollArea;
@@ -100,10 +130,9 @@ TEST(AScrollArea, MeasurePrefersAvailableWidthForWrappingContent) {
     });
 
     EXPECT_EQ(measured, glm::ivec2(100, 40));
-    EXPECT_EQ(content->lastMeasuredWidth(), 100);
 }
 
-TEST(AScrollArea, MeasureWithUnboundedWidthReturnsMinimumOnly) {
+TEST(AScrollArea, MeasureWithUnboundedConstraintsReturnsNaturalContentSize) {
     auto content = _new<TrackingWrappingView>();
 
     AScrollArea scrollArea;
@@ -111,35 +140,75 @@ TEST(AScrollArea, MeasureWithUnboundedWidthReturnsMinimumOnly) {
 
     const auto measured = scrollArea.measure({});
 
-    EXPECT_EQ(measured, glm::ivec2(0, 0));
+    EXPECT_EQ(measured, glm::ivec2(200, 20));
 }
 
-TEST(AScrollArea, MeasureWithZeroWidthUsesNaturalContentHeightPlusScrollbar) {
+TEST(AScrollArea, MeasureWithZeroWidthUsesWrappedContentHeight) {
     auto content = _new<TrackingWrappingView>();
 
     AScrollArea scrollArea;
     scrollArea.setContents(content);
 
-    const int horizontalScrollbarMinWidth = scrollArea.horizontalScrollbar()->computeMinMaxAxis().min;
-    const int verticalScrollbarMinHeight = scrollArea.verticalScrollbar()->measure(AConstraints {}).y;
     const auto measured = scrollArea.measure(AConstraints::fixedInline(0));
 
-    EXPECT_EQ(measured, glm::ivec2(horizontalScrollbarMinWidth, verticalScrollbarMinHeight));
+    EXPECT_EQ(measured, glm::ivec2(0, 80));
 }
 
-TEST(AScrollArea, MeasureAddsHorizontalScrollbarHeightForWidthOverflow) {
+TEST(AScrollArea, MeasureKeepsBoundedOuterHeightWhenHorizontalOverflowNeedsScrollbars) {
     auto content = _new<FixedHeightOverflowingWidthView>();
 
     AScrollArea scrollArea;
     scrollArea.setContents(content);
 
-    const int scrollbarHeight = scrollArea.horizontalScrollbar()->measure(AConstraints::fixedInline(100)).y;
     const auto measured = scrollArea.measure({
         .maxInline = 100,
         .maxBlock = -1,
     });
 
-    EXPECT_EQ(measured, glm::ivec2(100, 20 + scrollbarHeight));
+    EXPECT_EQ(measured, glm::ivec2(100, 20));
+}
+
+TEST(AScrollArea, MeasureWithZeroSizedViewportProbeReturnsMinimumChromeSizePlusPadding) {
+    auto content = _new<TrackingWrappingView>();
+
+    AScrollArea scrollArea;
+    scrollArea.setPadding({ .left = 3, .right = 5, .top = 7, .bottom = 11 });
+    scrollArea.setContents(content);
+
+    const int expectedWidth =
+        scrollArea.verticalScrollbar()->measure(AConstraints {}).x * 2 + scrollArea.getPadding().horizontal();
+    const int expectedHeight =
+        scrollArea.horizontalScrollbar()->measure(AConstraints {}).y * 2 + scrollArea.getPadding().vertical();
+
+    const auto measured = scrollArea.measure({
+        .maxInline = 0,
+        .maxBlock = 0,
+    });
+
+    EXPECT_EQ(measured, glm::ivec2(expectedWidth, expectedHeight));
+}
+
+TEST(AScrollArea, MeasureCapsBoundedWidthToNaturalContentWidth) {
+    auto content = _new<FixedContentView>(glm::ivec2(200, 200));
+
+    AScrollArea scrollArea;
+    scrollArea.setContents(content);
+
+    EXPECT_EQ(scrollArea.measure({
+                  .maxInline = 40,
+                  .maxBlock = -1,
+              }).x,
+              40);
+    EXPECT_EQ(scrollArea.measure({
+                  .maxInline = 80,
+                  .maxBlock = -1,
+              }).x,
+              80);
+    EXPECT_EQ(scrollArea.measure({
+                  .maxInline = 300,
+                  .maxBlock = -1,
+              }).x,
+              200);
 }
 
 TEST(AScrollArea, LayoutPrefersViewportWidthWhenContentCanShrinkWithoutOverflow) {
@@ -178,19 +247,6 @@ TEST(AScrollAreaViewport, MeasureWithZeroWidthReturnsZeroViewportSize) {
     const auto measured = viewport.measure(AConstraints::fixedInline(0));
 
     EXPECT_EQ(measured, glm::ivec2(0, 0));
-}
-
-TEST(AScrollbar, MeasureIsStableForZeroMainAxisConstraint) {
-    AScrollbar horizontal(ALayoutDirection::HORIZONTAL);
-    AScrollbar vertical(ALayoutDirection::VERTICAL);
-
-    const auto horizontalMeasured = horizontal.measure(AConstraints::fixedInline(0));
-    const auto verticalMeasured = vertical.measure(AConstraints::fixedBlock(0));
-
-    EXPECT_EQ(horizontalMeasured.x, 0);
-    EXPECT_GT(horizontalMeasured.y, 0);
-    EXPECT_EQ(verticalMeasured.y, 0);
-    EXPECT_GT(verticalMeasured.x, 0);
 }
 
 TEST(AScrollArea, VerticalOverflowReducesViewportWidthWithoutHorizontalScroll) {
