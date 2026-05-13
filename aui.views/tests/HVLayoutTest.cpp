@@ -530,7 +530,7 @@ TEST(HVLayout, VerticalLayoutUsesWidthFromFinalHeight) {
 TEST(HVLayout, PerpendicularContribution) {
   auto item = dynamicItem([](int) { return 100; }, [](int width) { return width == 10 ? 50 : 20; });
   setStyledMinSize(item, 10, 10);
-  item->setMargin({ .top = 2, .bottom = 3, .left = 4, .right = 1 });
+  item->setMargin({ .left = 4, .right = 1, .top = 2, .bottom = 3 });
 
   AVector<_<AView>> views { item };
 

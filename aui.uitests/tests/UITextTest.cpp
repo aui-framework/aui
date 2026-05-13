@@ -154,7 +154,7 @@ TEST_F(UIText, MeasureHeightGrowsWhenWidthShrinks) {
 TEST_F(UIText, MeasureIncludesPadding) {
     auto plain = AText::fromString("padding probe");
     auto padded = AText::fromString("padding probe");
-    padded->setPadding({ .left = 7, .top = 3, .right = 11, .bottom = 5 });
+    padded->setPadding({ .left = 7, .right = 11, .top = 3, .bottom = 5 });
 
     const auto plainMeasured = plain->measure(AConstraints {});
     const auto paddedMeasured = padded->measure(AConstraints {});
