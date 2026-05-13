@@ -33,8 +33,8 @@ glm::ivec2 AAbsoluteLayout::onIntrinsicMeasure(AConstraints constraints) {
         const int y = i.pivotY.valueOr(AMetric(0)).getValuePx();
         const auto measured = i.view->measure({
             .minInline = 0,
-            .minBlock = 0,
             .maxInline = i.sizeX ? static_cast<int>(i.sizeX->getValuePx()) : constraints.maxInline,
+            .minBlock = 0,
             .maxBlock = i.sizeY ? static_cast<int>(i.sizeY->getValuePx()) : constraints.maxBlock,
         });
         size.x = glm::max(size.x, x + (i.sizeX ? static_cast<int>(i.sizeX->getValuePx()) : measured.x));
