@@ -64,7 +64,6 @@ AStylesheet::AStylesheet() {
             FontSize {10_pt},
             FontRendering::SUBPIXEL,
             ImageRendering::SMOOTH,
-            MaxSize { 9999999_dp, 9999999_dp },
         },
 
         // AWindow
