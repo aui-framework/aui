@@ -89,6 +89,12 @@ void expectRect(const _<T>& item, glm::ivec2 position, glm::ivec2 size) {
     EXPECT_EQ(item->getSize(), size);
 }
 
+void dragSplitter(const _<ASplitter>& splitter, glm::vec2 from, glm::vec2 to) {
+    splitter->onPointerPressed({ .position = from });
+    splitter->onPointerMove(to, {});
+    splitter->onPointerReleased({ .position = to });
+}
+
 }   // namespace
 
 TEST(ASplitterHelper, ReclaimSpaceUsesViewMinimumSize) {
@@ -161,6 +167,34 @@ TEST(ASplitterHelper, OverridenSizeMasksFixedSizeOnMainAxis) {
     EXPECT_EQ(injected.computeMinMaxAxis().min, 20);
 }
 
+TEST(ASplitterHelper, MouseDragAccumulatesPendingOverrideSizes) {
+    auto left = _new<FakeLayoutItem>();
+    left->setPosition({ 0, 0 });
+    left->setSize({ 50, 20 });
+
+    auto right = _new<FakeLayoutItem>();
+    right->setPosition({ 50, 0 });
+    right->setSize({ 50, 20 });
+
+    ASplitterHelper helper(ALayoutDirection::HORIZONTAL);
+    helper.setItems(AVector<ASplitterHelper::Item> {
+        { .view = left },
+        { .view = right },
+    });
+
+    helper.beginDrag({ 50, 10 });
+
+    EXPECT_TRUE(helper.mouseDrag({ 60, 10 }));
+    ASSERT_TRUE(helper.items()[0].overridedSize.hasValue());
+    ASSERT_TRUE(helper.items()[1].overridedSize.hasValue());
+    EXPECT_EQ(*helper.items()[0].overridedSize, 60);
+    EXPECT_EQ(*helper.items()[1].overridedSize, 40);
+
+    EXPECT_TRUE(helper.mouseDrag({ 70, 10 }));
+    EXPECT_EQ(*helper.items()[0].overridedSize, 70);
+    EXPECT_EQ(*helper.items()[1].overridedSize, 30);
+}
+
 TEST(ASplitter, DefaultsToEqualHorizontalExpansionWhenChildrenAreNotExpanding) {
     auto left = _new<FakeLayoutItem>();
     left->preferredWidth = [](int) { return 40; };
@@ -174,10 +208,116 @@ TEST(ASplitter, DefaultsToEqualHorizontalExpansionWhenChildrenAreNotExpanding) {
         .withItems({ left, right })
         .build());
 
+    EXPECT_EQ(splitter->getExpanding(), glm::ivec2(1, 0));
+
     splitter->layout(0, 0, 100, 20);
 
-    expectRect(left, { 0, 0 }, { 50, 10 });
-    expectRect(right, { 50, 0 }, { 50, 10 });
+    expectRect(left, { 0, 0 }, { 50, 20 });
+    expectRect(right, { 50, 0 }, { 50, 20 });
+}
+
+TEST(ASplitter, HorizontalDragResizesChildren) {
+    auto left = _new<FakeLayoutItem>();
+    left->preferredWidth = [](int) { return 40; };
+    left->preferredHeight = [](int) { return 10; };
+    left->setMinSize({ 10, 0 });
+
+    auto right = _new<FakeLayoutItem>();
+    right->preferredWidth = [](int) { return 40; };
+    right->preferredHeight = [](int) { return 10; };
+    right->setMinSize({ 10, 0 });
+
+    auto splitter = _cast<ASplitter>(ASplitter::Horizontal()
+        .withItems({ left, right })
+        .build());
+
+    splitter->layout(0, 0, 100, 20);
+    dragSplitter(splitter, { 50, 10 }, { 70, 10 });
+    splitter->layout(0, 0, 100, 20);
+
+    expectRect(left, { 0, 0 }, { 70, 20 });
+    expectRect(right, { 70, 0 }, { 30, 20 });
+}
+
+TEST(ASplitter, HorizontalRelayoutKeepsDraggedRatios) {
+    auto left = _new<FakeLayoutItem>();
+    left->preferredWidth = [](int) { return 40; };
+    left->preferredHeight = [](int) { return 10; };
+    left->setMinSize({ 10, 0 });
+
+    auto right = _new<FakeLayoutItem>();
+    right->preferredWidth = [](int) { return 40; };
+    right->preferredHeight = [](int) { return 10; };
+    right->setMinSize({ 10, 0 });
+
+    auto splitter = _cast<ASplitter>(ASplitter::Horizontal()
+        .withItems({ left, right })
+        .build());
+
+    splitter->layout(0, 0, 100, 20);
+    dragSplitter(splitter, { 50, 10 }, { 70, 10 });
+    splitter->layout(0, 0, 100, 20);
+
+    splitter->layout(0, 0, 60, 20);
+    expectRect(left, { 0, 0 }, { 42, 20 });
+    expectRect(right, { 42, 0 }, { 18, 20 });
+
+    splitter->layout(0, 0, 140, 20);
+    expectRect(left, { 0, 0 }, { 98, 20 });
+    expectRect(right, { 98, 0 }, { 42, 20 });
+}
+
+TEST(ASplitter, HorizontalDragAfterGrowthDoesNotRememberAbsoluteWidth) {
+    auto left = _new<FakeLayoutItem>();
+    left->preferredWidth = [](int) { return 40; };
+    left->preferredHeight = [](int) { return 10; };
+    left->setMinSize({ 10, 0 });
+
+    auto right = _new<FakeLayoutItem>();
+    right->preferredWidth = [](int) { return 40; };
+    right->preferredHeight = [](int) { return 10; };
+    right->setMinSize({ 10, 0 });
+
+    auto splitter = _cast<ASplitter>(ASplitter::Horizontal()
+        .withItems({ left, right })
+        .build());
+
+    splitter->layout(0, 0, 100, 20);
+    splitter->layout(0, 0, 140, 20);
+    dragSplitter(splitter, { 70, 10 }, { 84, 10 });
+    splitter->layout(0, 0, 140, 20);
+    expectRect(left, { 0, 0 }, { 84, 20 });
+    expectRect(right, { 84, 0 }, { 56, 20 });
+
+    splitter->layout(0, 0, 100, 20);
+    expectRect(left, { 0, 0 }, { 60, 20 });
+    expectRect(right, { 60, 0 }, { 40, 20 });
+}
+
+TEST(ASplitter, HorizontalMeasureAfterDragUsesCurrentConstraintInsteadOfStoredWidth) {
+    auto left = _new<FakeLayoutItem>();
+    left->preferredWidth = [](int) { return 40; };
+    left->preferredHeight = [](int) { return 10; };
+
+    auto right = _new<FakeLayoutItem>();
+    right->preferredWidth = [](int) { return 40; };
+    right->preferredHeight = [](int) { return 10; };
+
+    auto splitter = _cast<ASplitter>(ASplitter::Horizontal()
+        .withItems({ left, right })
+        .build());
+
+    splitter->layout(0, 0, 100, 20);
+    splitter->layout(0, 0, 140, 20);
+    dragSplitter(splitter, { 70, 10 }, { 84, 10 });
+    splitter->layout(0, 0, 140, 20);
+
+    const auto measured = splitter->measure({
+        .maxInline = 100,
+        .maxBlock = 20,
+    });
+
+    EXPECT_EQ(measured.x, 100);
 }
 
 TEST(ASplitter, HorizontalMinHeightUsesChildHeightAtMinimumWidths) {
