@@ -212,9 +212,10 @@ glm::ivec2 AScrollArea::onIntrinsicMeasure(AConstraints constraints) {
 }
 
 AMinMaxAxis AScrollArea::onComputeIntrinsicMinMaxAxis(int height) {
+  int min = measureVerticalScrollbarWidth(-1) * 2;
   return {
-    .min = measureVerticalScrollbarWidth(-1) * 2,
-    .max = contents()->computeMinMaxAxis().max,
+    .min = min,
+    .max = contents() ? contents()->computeMinMaxAxis().max : min,
   };
 }
 
