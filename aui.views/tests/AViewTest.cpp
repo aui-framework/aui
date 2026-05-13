@@ -101,8 +101,7 @@ public:
 TEST(AView, MeasureUsesPaddingAdjustedConstraints) {
   MeasureTestView view;
   view.setPadding({ .left = 3, .right = 5, .top = 7, .bottom = 11 });
-  view.intrinsicWidth = 10;
-  view.intrinsicHeight = 9;
+  view.measuredContentSize = { 10, 9 };
 
   EXPECT_EQ(view.measure(AConstraints::fixedBlock(40)).x, 18);
   EXPECT_EQ(view.lastHeightConstraint, 22);

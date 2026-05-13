@@ -296,8 +296,6 @@ glm::ivec2 AView::measure(AConstraints constraints) {
   AConstraints effective = constraints;
   const bool requestedUnlimitedInline = effective.maxInline == -1;
   const bool requestedUnlimitedBlock = effective.maxBlock == -1;
-  const bool passUnlimitedInline = requestedUnlimitedInline && mFixedSize.x == 0;
-  const bool passUnlimitedBlock = requestedUnlimitedBlock && mFixedSize.y == 0;
   bool unlimitedInline = requestedUnlimitedInline;
   bool unlimitedBlock = requestedUnlimitedBlock;
 
@@ -306,9 +304,6 @@ glm::ivec2 AView::measure(AConstraints constraints) {
     unlimitedInline = false;
   } else {
     effective.minInline = std::max(effective.minInline, mMinSize.x);
-    //if (effective.minInline == 0 && effective.maxInline == 0) {
-    //  effective.minInline = computeMinMaxAxis(passUnlimitedBlock ? -1 : effective.maxBlock).min;
-    //}
     if (mMaxSize.x != -1) {
       effective.maxInline = unlimitedInline ? mMaxSize.x : std::min(effective.maxInline, mMaxSize.x);
       unlimitedInline = false;
@@ -337,17 +332,21 @@ glm::ivec2 AView::measure(AConstraints constraints) {
 
   AConstraints content;
   content.minInline = std::max(0, effective.minInline - hPadding);
-  content.maxInline = passUnlimitedInline ? -1 : (unlimitedInline ? -1 : std::max(0, effectiveMaxInline - hPadding));
+  content.maxInline = unlimitedInline ? -1 : std::max(0, effectiveMaxInline - hPadding);
   content.minBlock = std::max(0, effective.minBlock - vPadding);
-  content.maxBlock = passUnlimitedBlock ? -1 : (unlimitedBlock ? -1 : std::max(0, effectiveMaxBlock - vPadding));
+  content.maxBlock = unlimitedBlock ? -1 : std::max(0, effectiveMaxBlock - vPadding);
 
   glm::ivec2 content_size = onIntrinsicMeasure(content);
 
   glm::ivec2 measured;
-  //measured.x = std::clamp(content_size.x + hPadding, effective.minInline, effectiveMaxInline);
-  //measured.y = std::clamp(content_size.y + vPadding, effective.minBlock, effectiveMaxBlock);
   measured.x = std::max(content_size.x + hPadding, effective.minInline);
   measured.y = std::max(content_size.y + vPadding, effective.minBlock);
+  if (mMaxSize.x != -1) {
+    measured.x = std::min(measured.x, effectiveMaxInline);
+  }
+  if (mMaxSize.y != -1) {
+    measured.y = std::min(measured.y, effectiveMaxBlock);
+  }
 
   return mMeasureCache.put(constraints, measured);
 }
