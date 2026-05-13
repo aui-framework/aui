@@ -2,7 +2,7 @@
 #include <AUI/Model/AListModel.h>
 #include <AUI/View/AListView.h>
 
-TEST(AListView, MeasureUpdatesWhenModelSizeChanges) {
+TEST(AListView, MeasureWidthStaysStableWhenModelSizeChanges) {
     auto model = _new<AListModel<AString>>();
     (*model) << "First item";
 
@@ -16,9 +16,9 @@ TEST(AListView, MeasureUpdatesWhenModelSizeChanges) {
     model->pop_back();
     const auto oneItemAgain = listView.measure(AConstraints::fixedInline(0));
 
-    EXPECT_EQ(oneItem.x, 0);
-    EXPECT_EQ(twoItems.x, 0);
-    EXPECT_EQ(oneItemAgain.x, 0);
+    EXPECT_EQ(oneItem.x, 4);
+    EXPECT_EQ(twoItems.x, oneItem.x);
+    EXPECT_EQ(oneItemAgain.x, oneItem.x);
     EXPECT_GT(twoItems.y, oneItem.y);
     EXPECT_EQ(oneItemAgain.y, oneItem.y);
 }
