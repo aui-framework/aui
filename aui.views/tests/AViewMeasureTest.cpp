@@ -118,8 +118,8 @@ TEST(AViewMeasure, MeasurePassesContentConstraintsAndAddsPaddingBack) {
 
     auto measured = view.measure({
         .minInline = 30,
-        .minBlock = 25,
         .maxInline = 40,
+        .minBlock = 25,
         .maxBlock = 60,
     });
 
