@@ -179,7 +179,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     connect(mModel->dataChanged, [this](ATreeModelIndex) { rebuildContents(); });
   }
   requestLayout();
-  ASurface::current()->flagRedraw();
+  redraw();
 }
 
 void ATreeView::rebuildContents() {
