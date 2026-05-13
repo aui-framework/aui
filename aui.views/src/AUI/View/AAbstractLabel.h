@@ -136,8 +136,7 @@ private:
 
     AString getTransformedText();
 
-    void processTextOverflow(AString& text, int maxWidth);
-
+    bool processTextOverflow(AString& text, int maxWidth);
 };
 
 

@@ -161,11 +161,11 @@ Iterator findTruncationPoint(Iterator begin, Iterator end, int maxWidth, ATextOv
     return findFirstOverflowedIndex(begin, end, availableWidth, fontStyle);
 }
 
-void AAbstractLabel::processTextOverflow(AString& text, int maxWidth) {
-    if (mTextOverflow == ATextOverflow::NONE) return;
+bool AAbstractLabel::processTextOverflow(AString& text, int maxWidth) {
+    if (mTextOverflow == ATextOverflow::NONE) return false;
 
-    mIsTextTooLarge = getFontStyle().getWidth(text) > maxWidth;
-    if (!mIsTextTooLarge) return;
+    bool isTextTooLarge = getFontStyle().getWidth(text) > maxWidth;
+    if (!isTextTooLarge) return false;
 
     auto truncation_point = findTruncationPoint(text.begin(), text.end(), maxWidth, mTextOverflow, getFontStyle());
     text.erase(truncation_point, text.end());
@@ -174,13 +174,14 @@ void AAbstractLabel::processTextOverflow(AString& text, int maxWidth) {
         auto ending = AChar(ELLIPSIS).toUtf8();
         text.append(AStringView(ending.begin(), ending.end()));
     }
+    return true;
 }
 
 void AAbstractLabel::doPrerender(IRenderer& render, int maxWidth) {
     auto fs = getFontStyle();
     if (!mText.empty()) {
         AString transformedText = getTransformedText();
-        processTextOverflow(transformedText, maxWidth);
+        mIsTextTooLarge = processTextOverflow(transformedText, maxWidth);
         mPrerendered = render.prerenderString({0, 0}, transformedText, fs);
     }
 }
