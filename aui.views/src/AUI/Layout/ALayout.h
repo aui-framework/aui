@@ -290,35 +290,27 @@ class AViewContainer;
  *
  * The process of applying position and size involves several key functions:
  * ```
- * AWindow::redraw()
- * └─> AWindow::applyGeometryToChildrenIfNecessary()
- *     └─> AWindow::applyGeometryToChildren()
- *         └─> ALayout::layout()                                                    ┐
- *             └─> AViewContainerBase::measure()                     ┐              │
- *                 └─> AViewContainerBase::onIntrinsicMeasure()      │              │
- *                     └─> ALayout::onIntrinsicMeasure()             │              │
- *                         └─> AView::measure()                      │ cached       │
- *                 └─> AViewContainerBase::onComputeIntrinsicMinMaxAxis() │        │ potentially
- *                     └─> ALayout::onComputeIntrinsicMinMaxAxis()        │        │ recursive
- *                         └─> AView::computeMinMaxAxis()                 ┘        │
- *             └─> AViewContainerBase::setGeometry()                                │
- *                 └─> AViewContainerBase::setSize()                                │
- *                     └─> AViewContainerBase::applyGeometryToChildrenIfNecessary() │
- *                         └─> AViewContainerBase::applyGeometryToChildren()        │
- *                             └─> ALayout::layout()                                ┘
- *                                 └─> AView::setGeometry()
+ * ASurface::redraw()
+ * └─> AView::layout()                                                          ┐
+ *     └─> AView::onLayout()                                                    │
+ *         └─> ALayout::layout()                                                │
+ *             └─> AView::measure()                              ┐              │
+ *                 └─> AView::onIntrinsicMeasure()               │              │
+ *                     └─> AView::onComputeIntrinsicMinMaxAxis() │ cached       │
+ *             └─> AView::computeMinMaxAxis()                    │              │ potentially
+ *                 └─> AView::onComputeIntrinsicMinMaxAxis()     ┘              │ recursive
+ *             └─> AView::layout()                                              ┘
+ *                 └─> ...
  * ```
  *
  * ### Applying size
  *
- * - Size of each view in tree is [calculated](#SIZE_CALCULATION) on this phase
- * - [AView::redraw](AWindow::redraw) - geometry is applied before rendering
- * - [applyGeometryToChildrenIfNecessary](AViewContainerBase::applyGeometryToChildrenIfNecessary) - applies geometry
- *   only if really needed (i.e., if there were a resize event, or views were added or removed)
- * - [applyGeometryToChildren](AViewContainerBase::applyGeometryToChildren) - applies geometry to its children with
- *   no preconditions
- * - [ALayout::layout] - implemented by layout manager, whose have their own algorithms of arranging views
- * - [AView::setGeometry] - sets geometry of a view (which might be a container)
+ * - Size of each view in tree is [calculated](#SIZE_CALCULATION) during this phase.
+ * - [AView::redraw] - triggers surface redraw. Surface applies layout before rendering.
+ * - [AView::layout] - entry point for positioning and sizing a view. Performs layout only if really needed (i.e., if
+ *   there was a resize event, or [requestLayout] was called). Sets position and size.
+ * - [AView::onLayout] - virtual method called by [AView::layout] to perform actual layout of children (for containers).
+ * - [ALayout::layout] - implemented by layout manager to arrange children by calling their [AView::layout].
  *
  * ### Size calculation { #SIZE_CALCULATION }
  *

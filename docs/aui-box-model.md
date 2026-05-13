@@ -5,10 +5,10 @@ elements to create a visual container, defining the outer appearance of each AVi
 
 ## Box key components
 
-- **View's content box**: the area are whose size is defined by [AView::getContentMinimumSize()] and
-  [AView::getContentSize()]. The content area is the innermost area, wrapping view's specific contents only (i.e,
-  label's text); control it by implementing [AView::getContentMinimumWidth()] and
-  [AView::getContentMinimumHeight()].
+- **View's content box**: the area are whose size is defined by [AView::measure()] and
+  [AView::computeMinMaxAxis()]. The content area is the innermost area, wrapping view's specific contents only (i.e,
+  label's text); control it by implementing [AView::onIntrinsicMeasure()] and
+  [AView::onComputeIntrinsicMinMaxAxis()].
 - **View's box**: the area whose size is defined by AView::size(). Use [ass::FixedSize], [ass::MinSize] and
   [ass::MaxSize] to define an acceptable size range. Use [ass::Padding] to add a blank space between view's box
   and view's context box.
