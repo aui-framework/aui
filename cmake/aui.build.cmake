@@ -267,7 +267,10 @@ macro(aui_enable_tests AUI_MODULE_NAME)
         if (NOT EXISTS ${_source_dir}/tests)
             message(FATAL_ERROR "aui_enable_tests expects ${_source_dir}/tests to exist")
         endif()
-        file(GLOB_RECURSE TESTS_SRCS ${_source_dir}/tests/*.cpp)
+        file(GLOB_RECURSE TESTS_SRCS
+                ${_source_dir}/src/*.test.cpp
+                ${_source_dir}/tests/*.cpp
+        )
 
         if (NOT TARGET Tests)
             set(TESTS_MODULE_NAME Tests)
