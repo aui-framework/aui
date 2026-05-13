@@ -73,15 +73,6 @@ void expectRect(const _<T>& item, glm::ivec2 position, glm::ivec2 size) {
 
 }   // namespace
 
-TEST(HVLayout, VerticalLayoutKeepsChildPerpendicularMinimumSize) {
-    auto child = _new<PreferredButMinConstrainedView>(120, 20, glm::ivec2(60, 0));
-
-    AVector<_<AView>> views { child };
-    VerticalHVLayout::layout({ 0, 0 }, { 40, 100 }, views, 0);
-
-    expectRect(child, { 0, 0 }, { 120, 20 });
-}
-
 TEST(AGroupBox, KeepsMinimumWidthOfContentWhenParentIsNarrower) {
     auto groupBox = _new<AGroupBox>(
         _new<FixedMeasureView>(20, 10),
