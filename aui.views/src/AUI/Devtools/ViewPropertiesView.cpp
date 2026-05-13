@@ -83,21 +83,22 @@ AMinMaxAxis ViewPropertiesView::onComputeIntrinsicMinMaxAxis(int height) {
     return result;
 }
 
-void ViewPropertiesView::onLayout(int w, int h) {
-    const auto start = high_resolution_clock::now();
-    AScrollArea::onLayout(w, h);
-    logDurationIfNonZero("layout", start);
-}
-
-void ViewPropertiesView::render(ARenderContext context) {
-    const auto start = high_resolution_clock::now();
-    AScrollArea::render(context);
-    logDurationIfNonZero("render", start);
-}
-
-void ViewPropertiesView::requestLayout() {
-  AScrollArea::requestLayout();
-}
+// TODO(Nelonn): delete finally
+//void ViewPropertiesView::onLayout(int w, int h) {
+//    const auto start = high_resolution_clock::now();
+//    AScrollArea::onLayout(w, h);
+//    logDurationIfNonZero("layout", start);
+//}
+//
+//void ViewPropertiesView::render(ARenderContext context) {
+//    const auto start = high_resolution_clock::now();
+//    AScrollArea::render(context);
+//    logDurationIfNonZero("render", start);
+//}
+//
+//void ViewPropertiesView::requestLayout() {
+//  AScrollArea::requestLayout();
+//}
 
 void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
   if (!targetView) {

@@ -19,6 +19,10 @@ class FixedWidthTreeItemView : public AView {
 public:
     FixedWidthTreeItemView(int width, int height) : mWidth(width), mHeight(height) {}
 
+    glm::ivec2 onIntrinsicMeasure(AConstraints) override {
+        return { mWidth, mHeight };
+    }
+
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
         return {
             .min = mWidth,
@@ -32,11 +36,11 @@ private:
 };
 
 const _<AScrollbar>& verticalScrollbar(ATreeView& treeView) {
-    return _cast<AScrollbar>(treeView.getViews().at(1));
+    return treeView.verticalScrollbar();
 }
 
 const _<AScrollbar>& horizontalScrollbar(ATreeView& treeView) {
-    return _cast<AScrollbar>(treeView.getViews().at(2));
+    return treeView.horizontalScrollbar();
 }
 
 }   // namespace
@@ -51,7 +55,7 @@ TEST(ATreeView, ShowsHorizontalScrollbarForWideRows) {
         return _new<FixedWidthTreeItemView>(150, 20);
     });
     treeView.setModel(model);
-    treeView.setSize({ 100, 40 });
+    treeView.layout({ 0, 0 }, { 100, 40 });
 
     EXPECT_TRUE(static_cast<bool>(horizontalScrollbar(treeView)->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
     EXPECT_FALSE(static_cast<bool>(verticalScrollbar(treeView)->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
@@ -69,7 +73,7 @@ TEST(ATreeView, SelectScrollsHorizontallyToRevealWideRows) {
         return _new<FixedWidthTreeItemView>(150, 20);
     });
     treeView.setModel(model);
-    treeView.setSize({ 100, 40 });
+    treeView.layout({ 0, 0 }, { 100, 40 });
 
     treeView.select(model->indexOfChild(0, 0, ATreeModelIndex::ROOT));
 
