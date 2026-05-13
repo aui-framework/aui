@@ -983,10 +983,9 @@ protected:
    */
   bool mSkipUntilLayoutUpdate = true;
 
-public:
   virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints);
   virtual AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height);
-protected:
+
   virtual void onLayout(int w, int h);
 
   /**
