@@ -210,7 +210,7 @@ TEST(HVLayout, HorizontalFixedExpandingFixedKeepsTrailingChildInside) {
   EXPECT_RECT(trailing, 96, 0, 24, 24);
 }
 
-TEST(HVLayout, HorizontalIntrinsicHeightUsesAllocatedWidthForExpandingChildren) {
+TEST(HVLayout, HorizontalPreferredHeightUsesBaselineHeightForExpandingChildrenWithoutBlockConstraint) {
   auto fixed = fixedItem(20, 10);
 
   auto wrapped = dynamicItem(
@@ -225,7 +225,7 @@ TEST(HVLayout, HorizontalIntrinsicHeightUsesAllocatedWidthForExpandingChildren) 
 
   AVector<_<AView>> views { fixed, wrapped };
 
-  EXPECT_EQ(HorizontalHVLayout::preferredHeight(views, 0, 40), 40);
+  EXPECT_EQ(HorizontalHVLayout::preferredHeight(views, 0, 40), 10);
 }
 
 TEST(HVLayout, HorizontalIntrinsicWidthUsesMinimumForExpandingChildrenWhenUnbounded) {
@@ -243,7 +243,7 @@ TEST(HVLayout, HorizontalIntrinsicWidthUsesMinimumForExpandingChildrenWhenUnboun
   EXPECT_EQ(HorizontalHVLayout::preferredWidth(views, 0, -1), 34);
 }
 
-TEST(HVLayout, HorizontalIntrinsicHeightTightWidthSkipsGoneExpander) {
+TEST(HVLayout, HorizontalPreferredHeightWithoutBlockConstraintSkipsGoneExpander) {
   auto fixed = fixedItem(20, 10);
 
   auto gone = fixedItem(100, 100);
@@ -262,7 +262,7 @@ TEST(HVLayout, HorizontalIntrinsicHeightTightWidthSkipsGoneExpander) {
 
   AVector<_<AView>> views { fixed, gone, wrapped };
 
-  EXPECT_EQ(HorizontalHVLayout::preferredHeight(views, 0, 40), 40);
+  EXPECT_EQ(HorizontalHVLayout::preferredHeight(views, 0, 40), 10);
 }
 
 TEST(HVLayout, HorizontalComputeMinMaxSizesUsesChildrenAndSpacing) {
@@ -546,7 +546,7 @@ TEST(HVLayout, PerpendicularContribution) {
 }
 
 TEST(HVLayout, HorizontalPerpendicularMaxSizeCapsExpandingHeight) {
-  auto item = fixedItem(40, 10);
+  auto item = dynamicItem(40, 10);
   item->setExpanding({ 0, 1 });
   item->setMaxSize({ -1, 15 });
 
@@ -557,7 +557,7 @@ TEST(HVLayout, HorizontalPerpendicularMaxSizeCapsExpandingHeight) {
 }
 
 TEST(HVLayout, VerticalPerpendicularMaxSizeCapsExpandingWidth) {
-  auto item = fixedItem(10, 40);
+  auto item = dynamicItem(10, 40);
   item->setExpanding({ 1, 0 });
   item->setMaxSize({ 15, -1 });
 
