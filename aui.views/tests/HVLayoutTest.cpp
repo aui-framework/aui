@@ -619,5 +619,3 @@ TEST(HVLayout, VerticalMeasurementConsistency) {
     const auto measured = VerticalHVLayout::onIntrinsicMeasure(views, 0, constraints);
     EXPECT_EQ(measured.x, 143);
 }
-
-#undef EXPECT_RECT
