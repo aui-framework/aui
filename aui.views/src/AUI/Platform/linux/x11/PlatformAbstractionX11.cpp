@@ -648,8 +648,8 @@ void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
         sizeHints->flags = PMinSize | PMaxSize;
         sizeHints->min_width = window.getMinSize().x;
         sizeHints->min_height = window.getMinSize().y;
-        sizeHints->max_width = window.getMaxSize().x;
-        sizeHints->max_height = window.getMaxSize().y;
+        sizeHints->max_width = window.getMaxSize().x == -1 ? 100000 : window.getMaxSize().x;
+        sizeHints->max_height = window.getMaxSize().y == -1 ? 100000 : window.getMaxSize().y;
         XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizeHints.get());
     }
 }

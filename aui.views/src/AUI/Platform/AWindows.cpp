@@ -98,7 +98,13 @@ void AWindow::redraw() {
     if (mWantsLayoutUpdate) {
       ensureAssUpdated();
 #if AUI_PLATFORM_WIN
-      setSize(glm::clamp(getSize(), getMinSize(), getMaxSize()));
+      auto minSize = getMinSize();
+      auto maxSize = getMaxSize();
+      auto currentSize = getSize();
+      if (maxSize.x != -1) currentSize.x = glm::min(currentSize.x, maxSize.x);
+      if (maxSize.y != -1) currentSize.y = glm::min(currentSize.y, maxSize.y);
+      currentSize = glm::max(currentSize, minSize);
+      setSize(currentSize);
 #endif
       auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
       layout(getPosition(), getSize());

@@ -243,7 +243,7 @@ public:
       const int raw_max    = Axis::ourAxis(view->getMaxSize());
       const int child_perp = glm::max(0, Axis::perpAxis(padded_size - view->getMargin().occupiedSize()));
 
-      info.maxSize = (raw_max > 0) ? raw_max : 1000000000;
+      info.maxSize = (raw_max != -1) ? raw_max : 1000000000;
       info.measured_perp_constraint = child_perp;
 
       if (fixed_size > 0) {

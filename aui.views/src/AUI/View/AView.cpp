@@ -221,7 +221,7 @@ void AView::invalidateStateStylesImpl() {
     mMinSize = {};
     mBorderRadius = 0.f;
     //mForceStencilForBackground = false;
-    mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+    mMaxSize = { -1, -1 };
     mOpacity = 1;
     mTextColor = AColor::BLACK;
     aui::zero(mAss);
