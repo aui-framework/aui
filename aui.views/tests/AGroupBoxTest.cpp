@@ -65,15 +65,9 @@ private:
     int mPreferredHeight;
 };
 
-template<typename T>
-void expectRect(const _<T>& item, glm::ivec2 position, glm::ivec2 size) {
-    EXPECT_EQ(item->getPosition(), position);
-    EXPECT_EQ(item->getSize(), size);
-}
+} // namespace
 
-}   // namespace
-
-TEST(AGroupBox, KeepsMinimumWidthOfContentWhenParentIsNarrower) {
+TEST(AGroupBox, KeepsStyledMinimumWidthOfContentWhenParentIsNarrower) {
     auto groupBox = _new<AGroupBox>(
         _new<FixedMeasureView>(20, 10),
         _new<PreferredButMinConstrainedView>(120, 20, glm::ivec2(60, 0)));
@@ -84,10 +78,10 @@ TEST(AGroupBox, KeepsMinimumWidthOfContentWhenParentIsNarrower) {
 
     parent->layout(0, 0, 60, 100);
 
-    EXPECT_EQ(groupBox->getWidth(), 136);
+    EXPECT_EQ(groupBox->getWidth(), 76);
 }
 
-TEST(AGroupBox, KeepsMinimumWidthThroughExpandingParentLayout) {
+TEST(AGroupBox, KeepsStyledMinimumWidthThroughExpandingParentLayout) {
     auto groupBox = _new<AGroupBox>(
         _new<FixedMeasureView>(20, 10),
         _new<PreferredButMinConstrainedView>(120, 20, glm::ivec2(60, 0)));
@@ -99,5 +93,5 @@ TEST(AGroupBox, KeepsMinimumWidthThroughExpandingParentLayout) {
 
     parent->layout(0, 0, 40, 100);
 
-    EXPECT_EQ(groupBox->getWidth(), 136);
+    EXPECT_EQ(groupBox->getWidth(), 76);
 }
