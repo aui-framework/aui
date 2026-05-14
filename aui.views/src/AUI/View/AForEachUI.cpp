@@ -16,12 +16,15 @@ static constexpr auto RENDER_TO_TEXTURE_TILE_SIZE = 256;
 static constexpr auto INFLATE_THRESHOLD_PX = RENDER_TO_TEXTURE_TILE_SIZE / 2;
 static constexpr auto INFLATE_STEP_PX = RENDER_TO_TEXTURE_TILE_SIZE * 2;
 static constexpr auto POTENTIAL_PERFORMANCE_ISSUE_VIEWS_COUNT_THRESHOLD = 100;
+static constexpr auto INITIAL_MEASUREMENT_VIEWS_COUNT_LIMIT = 64;
 static constexpr auto LOG_TAG = "AForEachUIBase";
 
 void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
     putOurViewsToSharedCache();
     mViewsModelCapabilities = model.capabilities();
     mViewsModel = std::move(model);
+    mLastInflatedScroll.reset();
+    mLastOnLayoutSize = {};
 }
 
 void AForEachUIBase::putOurViewsToSharedCache() {
@@ -55,17 +58,13 @@ glm::ivec2 AForEachUIBase::onIntrinsicMeasure(AConstraints constraints) {
     }
 
     ensureViewport();
-    if (mViewport.lock()) {
-        if (measurementRequiresFullMaterialization(constraints)) {
-            materializeAllViewsForMeasurement();
-            AUI_DEFER {
-                restoreLazyViewportAfterMeasurement();
-            };
-        } else {
-            ensureViewsForMeasurement();
-        }
+    if (measurementRequiresFullMaterialization(constraints)) {
+        materializeAllViewsForMeasurement();
+        AUI_DEFER {
+            restoreLazyViewportAfterMeasurement();
+        };
     } else {
-        ensureViewsForMeasurement();
+        ensureViewsForMeasurement(constraints);
     }
 
     const auto minMax =
@@ -89,13 +88,10 @@ AMinMaxAxis AForEachUIBase::onComputeIntrinsicMinMaxAxis(int height) {
 
     ensureViewport();
     if (mViewport.lock()) {
-        materializeAllViewsForMeasurement();
-        AUI_DEFER {
-            restoreLazyViewportAfterMeasurement();
-        };
+        ensureViewsForMeasurement({});
         return AViewContainerBase::onComputeIntrinsicMinMaxAxis(height);
     }
-    ensureViewsForMeasurement();
+    materializeAllViewsForMeasurement();
     return AViewContainerBase::onComputeIntrinsicMinMaxAxis(height);
 }
 
@@ -396,11 +392,11 @@ void AForEachUIBase::ensureViewport() {
     mViewport = findViewport();
 }
 
-void AForEachUIBase::ensureViewsForMeasurement() {
+void AForEachUIBase::ensureViewsForMeasurement(AConstraints constraints) {
     ensureViewport();
 
     if (mViewport.lock()) {
-        materializeAllViewsForMeasurement();
+        ensureViewsForLazyMeasurement(constraints);
         return;
     }
 
@@ -415,6 +411,67 @@ void AForEachUIBase::ensureViewsForMeasurement() {
 
     for (auto i = mViewsModel.begin(); i != mViewsModel.end(); ++i) {
         addView(i);
+    }
+}
+
+void AForEachUIBase::ensureViewsForLazyMeasurement(AConstraints constraints) {
+    if (mCache) {
+        if (!getViews().empty()) {
+            return;
+        }
+        mCache->items.clear();
+    } else {
+        mCache.emplace();
+    }
+
+    auto it = mViewsModel.begin();
+    const auto end = mViewsModel.end();
+    if (it == end) {
+        return;
+    }
+
+    const auto direction = getLayout()
+        ? getLayout()->getLayoutDirection()
+        : ALayoutDirection::VERTICAL;
+    const int targetPrimarySpan = [&] {
+        auto viewport = mViewport.lock();
+        switch (direction) {
+            case ALayoutDirection::HORIZONTAL:
+                if (viewport && viewport->getWidth() > 0) {
+                    return viewport->getWidth() + INFLATE_STEP_PX;
+                }
+                if (!constraints.isUnlimitedInline()) {
+                    return constraints.maxInline + INFLATE_STEP_PX;
+                }
+                return INFLATE_STEP_PX;
+
+            case ALayoutDirection::VERTICAL:
+                if (viewport && viewport->getHeight() > 0) {
+                    return viewport->getHeight() + INFLATE_STEP_PX;
+                }
+                if (!constraints.isUnlimitedBlock()) {
+                    return constraints.maxBlock + INFLATE_STEP_PX;
+                }
+                return INFLATE_STEP_PX;
+
+            case ALayoutDirection::NONE:
+                break;
+        }
+        return INFLATE_STEP_PX;
+    }();
+
+    for (std::size_t added = 0; it != end && added < INITIAL_MEASUREMENT_VIEWS_COUNT_LIMIT; ++it, ++added) {
+        addView(it);
+
+        if (targetPrimarySpan <= 0) {
+            break;
+        }
+
+        const auto measured = AViewContainerBase::onIntrinsicMeasure(constraints);
+        const int primarySpan = direction == ALayoutDirection::HORIZONTAL ? measured.x : measured.y;
+        if (primarySpan >= targetPrimarySpan) {
+            break;
+        }
     }
 }
 
@@ -442,6 +499,9 @@ void AForEachUIBase::restoreLazyViewportAfterMeasurement() {
 }
 
 bool AForEachUIBase::measurementRequiresFullMaterialization(AConstraints constraints) const {
+    if (mViewport.lock()) {
+        return false;
+    }
     if (!getLayout()) {
         return true;
     }

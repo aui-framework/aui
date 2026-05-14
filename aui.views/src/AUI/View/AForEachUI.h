@@ -100,7 +100,8 @@ private:
     aui::dyn_range_capabilities mViewsModelCapabilities;
     AOptional<glm::ivec2> mLastInflatedScroll {};
 
-    void ensureViewsForMeasurement();
+    void ensureViewsForMeasurement(AConstraints constraints);
+    void ensureViewsForLazyMeasurement(AConstraints constraints);
     void materializeAllViewsForMeasurement();
     void restoreLazyViewportAfterMeasurement();
     bool measurementRequiresFullMaterialization(AConstraints constraints) const;
