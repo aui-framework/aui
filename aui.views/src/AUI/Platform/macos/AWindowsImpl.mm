@@ -136,7 +136,7 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     float dpi = getDpiRatio();
     [s setMinSize:NSSizeFromCGSize({getMinSize().x / dpi, getMinSize().y / dpi})];
     [s setMaxSize:NSSizeFromCGSize({getMaxSize().x / dpi, getMaxSize().y / dpi})];
-    [s setContentSize:NSSizeFromCGSize({size.x / dpi, size.y / dpi})];
+    [s setContentSize:NSSizeFromCGSize({width / dpi, height / dpi})];
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
