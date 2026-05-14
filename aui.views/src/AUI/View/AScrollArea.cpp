@@ -221,7 +221,7 @@ AMinMaxAxis AScrollArea::onComputeIntrinsicMinMaxAxis(int height) {
 
 void AScrollArea::onLayout(int w, int h) {
   const glm::ivec2 paddedPosition = { mPadding.left, mPadding.top };
-  const glm::ivec2 paddedSize = glm::ivec2(w, h);
+  const glm::ivec2 paddedSize = glm::max(glm::ivec2(w, h) - mPadding.occupiedSize(), glm::ivec2(0));
 
   auto layout = calculateLayout(paddedSize, true, true);
 
