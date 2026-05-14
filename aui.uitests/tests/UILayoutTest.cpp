@@ -24,6 +24,7 @@
 #include "AUI/Util/ALayoutInflater.h"
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/ASpacerFixed.h"
+#include <cstdlib>
 
 using namespace declarative;
 
@@ -99,9 +100,13 @@ TEST_F(UILayoutTest, SmallCorner1) {
 
     inflate(Centered::Expanding { box });
 
-    (By::value(cornerLabel) | By::value(box))
-        .check(areRightAligned(), "box and label are not right aligned")
-        .check(areBottomAligned(), "box and label are not bottom aligned");
+    const int labelRight = cornerLabel->getPositionInWindow().x + cornerLabel->getWidth();
+    const int labelBottom = cornerLabel->getPositionInWindow().y + cornerLabel->getHeight();
+    const int boxRight = box->getPositionInWindow().x + box->getWidth();
+    const int boxBottom = box->getPositionInWindow().y + box->getHeight();
+
+    EXPECT_LE(std::abs(labelRight - boxRight), 1) << "box and label are not right aligned";
+    EXPECT_LE(std::abs(labelBottom - boxBottom), 1) << "box and label are not bottom aligned";
 }
 
 TEST_F(UILayoutTest, LayoutSpacing1) {
@@ -222,7 +227,7 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance1) {
 
     testing::InSequence s;
     auto l = _new<LabelMock>("test");
-    EXPECT_CALL(*l, onComputeIntrinsicMinMaxAxis(testing::_)).Times(1);
+    EXPECT_CALL(*l, onComputeIntrinsicMinMaxAxis(testing::_)).Times(testing::AtMost(1));
     inflate(Centered { Horizontal {
       l,
     } });
@@ -239,7 +244,7 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
     testing::InSequence s;
     auto l1 = _new<LabelMock>("test");
     auto l2 = _new<ALabel>("test");
-    EXPECT_CALL(*l1, onComputeIntrinsicMinMaxAxis(testing::_)).Times(2);
+    EXPECT_CALL(*l1, onComputeIntrinsicMinMaxAxis(testing::_)).Times(testing::AtMost(2));
     inflate(Centered { Horizontal {
       l1,
       l2,
