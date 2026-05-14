@@ -18,21 +18,32 @@
 static constexpr auto CLICK_BIAS = 4_dp;
 
 AOptional<size_t> ASplitterHelper::dividerIndexAt(glm::ivec2 position) const {
-  if (mItems.empty()) {
+  if (mItems.size() < 2) {
     return std::nullopt;
   }
-  int cursor = getAxisValue(position);
-  size_t dividerIndex = 0;
-  for (const auto& v : mItems) {
-    if (getAxisValue(v.view->getPosition()) + getAxisValue(v.view->getSize()) / 2 > cursor) {
-      break;
+
+  const int cursor = getAxisValue(position);
+  const int hitBias = CLICK_BIAS.getValuePx();
+
+  for (size_t i = 0; i + 1 < mItems.size(); ++i) {
+    const auto& current = mItems[i].view;
+    const auto& next = mItems[i + 1].view;
+
+    if (!static_cast<bool>(current->getVisibility() & Visibility::FLAG_CONSUME_SPACE) ||
+        !static_cast<bool>(next->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+      continue;
     }
-    dividerIndex += 1;
+
+    const int currentEnd = getAxisValue(current->getPosition()) + getAxisValue(current->getSize());
+    const int nextBegin = getAxisValue(next->getPosition());
+    const int dividerPos = (currentEnd + nextBegin) / 2;
+
+    if (glm::abs(cursor - dividerPos) <= hitBias) {
+      return i;
+    }
   }
-  if (dividerIndex == 0 || dividerIndex >= mItems.size()) {
-    return std::nullopt;
-  }
-  return dividerIndex - 1;
+
+  return std::nullopt;
 }
 
 void ASplitterHelper::beginDrag(const glm::ivec2& mousePos) {
@@ -115,32 +126,7 @@ bool ASplitterHelper::mouseDrag(const glm::ivec2& mousePos) {
 }
 
 bool ASplitterHelper::isDraggingArea(glm::ivec2 position) {
-  if (mItems.empty()) {
-    return false;
-  }
-  if (getAxisValue(position) <= getAxisValue(mItems.first().view->getPosition()) + CLICK_BIAS.getValuePx()) {
-    // position is before first view.
-    return false;
-  }
-  if (getAxisValue(position) >=
-      getAxisValue(mItems.last().view->getPosition() + mItems.last().view->getSize()) - CLICK_BIAS.getValuePx() * 2) {
-    // position is after last view.
-    return false;
-  }
-
-  for (auto& v : mItems) {
-    auto viewPos = getAxisValue(v.view->getPosition()) + CLICK_BIAS.getValuePx();
-    auto viewSize = getAxisValue(v.view->getSize()) - CLICK_BIAS.getValuePx() * 2.f;
-
-    if (getAxisValue(position) > viewPos && getAxisValue(position) < viewPos + viewSize) {
-      return false;
-    }
-
-    if (getAxisValue(position) <= viewPos) {
-      break;
-    }
-  }
-  return true;
+  return dividerIndexAt(position).hasValue();
 }
 int ASplitterHelper::reclaimSpace(int space, size_t dividerIndex) {
   AUI_ASSERT(space != 0);

@@ -195,6 +195,28 @@ TEST(ASplitterHelper, MouseDragAccumulatesPendingOverrideSizes) {
     EXPECT_EQ(*helper.items()[1].overridedSize, 30);
 }
 
+TEST(ASplitterHelper, DividerHitTestRequiresProximityToDividerLine) {
+    auto left = _new<FakeLayoutItem>();
+    left->setPosition({ 0, 0 });
+    left->setSize({ 50, 20 });
+
+    auto right = _new<FakeLayoutItem>();
+    right->setPosition({ 50, 0 });
+    right->setSize({ 50, 20 });
+
+    ASplitterHelper helper(ALayoutDirection::HORIZONTAL);
+    helper.setItems(AVector<ASplitterHelper::Item> {
+        { .view = left },
+        { .view = right },
+    });
+
+    EXPECT_FALSE(helper.dividerIndexAt({ 20, 10 }).hasValue());
+    EXPECT_FALSE(helper.isDraggingArea({ 20, 10 }));
+
+    EXPECT_EQ(helper.dividerIndexAt({ 50, 10 }), 0u);
+    EXPECT_TRUE(helper.isDraggingArea({ 50, 10 }));
+}
+
 TEST(ASplitter, DefaultsToEqualHorizontalExpansionWhenChildrenAreNotExpanding) {
     auto left = _new<FakeLayoutItem>();
     left->preferredWidth = [](int) { return 40; };
