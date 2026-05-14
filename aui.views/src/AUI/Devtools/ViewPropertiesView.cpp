@@ -76,14 +76,14 @@ glm::ivec2 ViewPropertiesView::onIntrinsicMeasure(AConstraints constraints) {
     return result;
 }
 
-AMinMaxAxis ViewPropertiesView::onComputeIntrinsicMinMaxAxis(int height) {
-    const auto start = high_resolution_clock::now();
-    auto result = AScrollArea::onComputeIntrinsicMinMaxAxis(height);
-    logDurationIfNonZero(("min max " + std::to_string(height)).c_str(), start);
-    return result;
-}
-
 // TODO(Nelonn): delete finally
+//AMinMaxAxis ViewPropertiesView::onComputeIntrinsicMinMaxAxis(int height) {
+//    const auto start = high_resolution_clock::now();
+//    auto result = AScrollArea::onComputeIntrinsicMinMaxAxis(height);
+//    logDurationIfNonZero(("min max " + std::to_string(height)).c_str(), start);
+//    return result;
+//}
+//
 //void ViewPropertiesView::onLayout(int w, int h) {
 //    const auto start = high_resolution_clock::now();
 //    AScrollArea::onLayout(w, h);
