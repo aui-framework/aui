@@ -50,72 +50,70 @@ namespace {
 
 class ViewMock: public ALabel {
 public:
-    ViewMock(): ALabel("Test") {
-        connect(geometryChanged, this, [this](glm::ivec2 position) {
-            setPosition2(position.x, position.y);
-        });
-    }
-
-    MOCK_METHOD(void, setPosition2, (int x, int y));
+    ViewMock(): ALabel("Test") {}
 };
 }
 
 TEST_F(UIText, Basic) {
     auto w = _new<AWindow>();
     auto mock = _new<ViewMock>();
-
-    EXPECT_CALL(
-        *mock,
-        setPosition2(testing::AllOf(testing::Ge(25), testing::Le(35)), testing::AllOf(testing::Ge(0), testing::Le(5)))).Times(1);
+    auto text = AText::fromItems({
+        "Hello", mock, "World", "Test"
+    }) AUI_OVERRIDE_STYLE {
+        FixedSize { 200_dp }
+    };
 
     w->setContents(Centered {
-        AText::fromItems({
-            "Hello", mock, "World", "Test"
-        }) AUI_OVERRIDE_STYLE {
-            FixedSize { 200_dp }
-        },
+        text,
     });
     w->pack();
     w->show();
+    uitest::frame();
+
+    const auto position = mock->getPosition();
+    const int helloWidth = text->getFontStyle().getWidth(U"Hello");
+    EXPECT_THAT(position.x, testing::AllOf(testing::Ge(helloWidth - 1), testing::Le(helloWidth + 1)));
+    EXPECT_THAT(position.y, testing::AllOf(testing::Ge(0), testing::Le(5)));
 }
 
 TEST_F(UIText, Visibility) {
     auto w = _new<AWindow>();
     _<AView> label = Label { "Hello" };
     auto mock = _new<ViewMock>();
+    auto text = AText::fromItems({
+        label, mock,
+    }) AUI_OVERRIDE_STYLE {
+        FixedSize { 200_dp }
+    };
+    const int labelWidth = label->computeMinMaxAxis().max + label->getMargin().horizontal();
 
     testing::InSequence s;
 
-    EXPECT_CALL(
-        *mock,
-        setPosition2(testing::AllOf(testing::Ge(25), testing::Le(35)), testing::AllOf(testing::Ge(0), testing::Le(5)))).Times(1);
-
     w->setContents(Centered {
-        AText::fromItems({
-            label, mock,
-        }) AUI_OVERRIDE_STYLE {
-            FixedSize { 200_dp }
-        },
+        text,
     });
     w->pack();
     w->show();
+    uitest::frame();
+
+    EXPECT_THAT(mock->getPosition().x, testing::AllOf(testing::Ge(labelWidth - 1), testing::Le(labelWidth + 1)));
+    EXPECT_THAT(mock->getPosition().y, testing::AllOf(testing::Ge(0), testing::Le(5)));
 
     saveScreenshot("initial");
-
-    EXPECT_CALL(
-        *mock,
-        setPosition2(testing::AllOf(testing::Ge(0), testing::Le(5)), testing::AllOf(testing::Ge(0), testing::Le(5)))).Times(1);
 
     label->setVisibility(Visibility::GONE);
     uitest::frame();
 
+    EXPECT_THAT(mock->getPosition().x, testing::AllOf(testing::Ge(0), testing::Le(5)));
+    EXPECT_THAT(mock->getPosition().y, testing::AllOf(testing::Ge(0), testing::Le(5)));
+
     saveScreenshot("label gone");
 
-    EXPECT_CALL(
-        *mock,
-        setPosition2(testing::AllOf(testing::Ge(25), testing::Le(35)), testing::AllOf(testing::Ge(0), testing::Le(5)))).Times(1);
     label->setVisibility(Visibility::VISIBLE);
     uitest::frame();
+
+    EXPECT_THAT(mock->getPosition().x, testing::AllOf(testing::Ge(labelWidth - 1), testing::Le(labelWidth + 1)));
+    EXPECT_THAT(mock->getPosition().y, testing::AllOf(testing::Ge(0), testing::Le(5)));
 
     saveScreenshot("label visible");
 }
@@ -171,7 +169,7 @@ TEST_F(UIText, BreakAllAllowsNarrowIntrinsicWidthAndWrapping) {
         .maxInline = std::max(1, unconstrained.x / 2),
     });
 
-    EXPECT_LT(text->computeMinMaxAxis().max, unconstrained.x);
+    EXPECT_LT(text->computeMinMaxAxis().min, unconstrained.x);
     EXPECT_EQ(constrained.x, std::max(1, unconstrained.x / 2));
     EXPECT_GT(constrained.y, unconstrained.y);
 }

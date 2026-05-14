@@ -789,17 +789,18 @@ void AView::onViewGraphSubtreeChanged() {
     invalidateAssHelper();
     emit viewGraphSubtreeChanged;
 }
-void AView::setVisibility(Visibility visibility) noexcept
-{
-    if (mVisibility == visibility) {
-        return;
-    }
-    auto prev = std::exchange(mVisibility, visibility);
-    if ((mVisibility & Visibility::FLAG_CONSUME_SPACE) != (prev & Visibility::FLAG_CONSUME_SPACE)) {
-        requestLayout();
-    }
-    redraw();
-    emit mVisibilityChanged(visibility);
+
+void AView::setVisibility(Visibility visibility) noexcept {
+  if (mVisibility == visibility) {
+    return;
+  }
+  auto prev = std::exchange(mVisibility, visibility);
+  if ((mVisibility & Visibility::FLAG_CONSUME_SPACE) != (prev & Visibility::FLAG_CONSUME_SPACE)) {
+    requestLayout();
+    AUI_NULLSAFE(mParent)->requestLayout();
+  }
+  redraw();
+  emit mVisibilityChanged(visibility);
 }
 
 namespace aui::view::impl {
