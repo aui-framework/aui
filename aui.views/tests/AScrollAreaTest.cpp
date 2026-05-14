@@ -223,6 +223,40 @@ TEST(AScrollArea, LayoutPrefersViewportWidthWhenContentCanShrinkWithoutOverflow)
     EXPECT_EQ(content->getWidth(), 100);
 }
 
+TEST(AScrollArea, LayoutRespectsPadding) {
+    auto content = _new<TrackingWrappingView>();
+
+    AScrollArea scrollArea;
+    scrollArea.setPadding({ .left = 3, .right = 5, .top = 7, .bottom = 11 });
+    scrollArea.setContents(content);
+    scrollArea.layout({ 0, 0 }, { 100, 58 });
+
+    auto viewport = _cast<AScrollAreaViewport>(scrollArea.getViews()[0]);
+    ASSERT_NE(viewport, nullptr);
+    EXPECT_EQ(viewport->getPosition(), glm::ivec2(3, 7));
+    EXPECT_EQ(viewport->getSize(), glm::ivec2(92, 40));
+    EXPECT_EQ(content->lastMeasuredWidth(), 92);
+    EXPECT_EQ(content->getWidth(), 92);
+}
+
+TEST(AScrollArea, VerticalOverflowRespectsPadding) {
+    auto content = _new<TrackingWrappingView>();
+
+    AScrollArea scrollArea;
+    scrollArea.setPadding({ .left = 3, .right = 5, .top = 7, .bottom = 11 });
+    scrollArea.setContents(content);
+    scrollArea.layout({ 0, 0 }, { 100, 30 });
+
+    EXPECT_TRUE(bool(scrollArea.verticalScrollbar()->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
+    EXPECT_FALSE(bool(scrollArea.horizontalScrollbar()->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
+
+    const glm::ivec2 contentBoxSize = glm::ivec2(100, 30) - scrollArea.getPadding().occupiedSize();
+    const int viewportWidth = contentBoxSize.x - scrollArea.verticalScrollbar()->getWidth();
+    EXPECT_EQ(content->lastMeasuredWidth(), viewportWidth);
+    EXPECT_EQ(scrollArea.verticalScrollbar()->getPosition(), glm::ivec2(3 + viewportWidth, 7));
+    EXPECT_EQ(scrollArea.verticalScrollbar()->getHeight(), contentBoxSize.y);
+}
+
 TEST(AScrollAreaViewport, MeasureUsesContentSize) {
     auto content = _new<TrackingWrappingView>();
 
