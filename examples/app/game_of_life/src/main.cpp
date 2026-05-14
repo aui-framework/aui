@@ -150,9 +150,9 @@ public:
         updateTexture();
     }
 
-    int getContentMinimumWidth() override { return mCells->size().x * SCALE; }
-
-    int getContentMinimumHeight() override { return mCells->size().y * SCALE; }
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
+      return mCells->size() * int(SCALE);
+    }
 
 private:
     _<Cells> mCells;
