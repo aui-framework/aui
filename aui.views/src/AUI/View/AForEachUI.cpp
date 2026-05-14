@@ -20,26 +20,43 @@ static constexpr auto INITIAL_MEASUREMENT_VIEWS_COUNT_LIMIT = 64;
 static constexpr auto LOG_TAG = "AForEachUIBase";
 
 void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
+    if (auto w = getWindow()) {
+        mLastKnownWindow = w;
+    }
     putOurViewsToSharedCache();
     mViewsModelCapabilities = model.capabilities();
     mViewsModel = std::move(model);
-    mLastInflatedScroll.reset();
     mLastOnLayoutSize = {};
+
+    ensureViewport();
+    if (auto viewport = mViewport.lock();
+        viewport && getLayout() && getParent() != nullptr && !isModelEmpty() && getWidth() > 0 && getHeight() > 0) {
+        mCache.emplace();
+        mLastInflatedScroll = glm::ivec2(*viewport->scroll());
+        inflate();
+        clearUnusedSharedCacheEntries();
+    } else {
+        mLastInflatedScroll.reset();
+    }
+
+    requestLayout();
+    redraw();
 }
 
 void AForEachUIBase::putOurViewsToSharedCache() {
     removeAllViews();
+    mPendingSharedCacheKeys.clear();
     if (!mCache) {
         return;
     }
     if (auto viewsCache = getViewsCache()) {
         for (auto& e : mCache->items) {
             (*viewsCache)[e.id] = std::move(e.view);
+            mPendingSharedCacheKeys << e.id;
 //            ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") Cached view for id: " << e.id;
         }
-
-        if (auto w = ASurface::current()) {
-            connect(w->layoutUpdateComplete, AObject::GENERIC_OBSERVER, [viewsCache] {
+        if (!mPendingSharedCacheKeys.empty()) {
+            getThread()->enqueue([viewsCache] {
                 viewsCache->clear();
             });
         }
@@ -98,6 +115,9 @@ AMinMaxAxis AForEachUIBase::onComputeIntrinsicMinMaxAxis(int height) {
 void AForEachUIBase::onViewGraphSubtreeChanged() {
 //    ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") onViewGraphSubtreeChanged";
     AViewContainerBase::onViewGraphSubtreeChanged();
+    if (auto w = getWindow()) {
+        mLastKnownWindow = w;
+    }
 
     AUI_DEFER {
         // if parent [AUI_DECLARATIVE_FOR] was invalidated, it would call ours onViewGraphSubtreeChanged. We might depend
@@ -139,8 +159,12 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
 }
 
 void AForEachUIBase::onLayout(int w, int h) {
+    if (auto window = getWindow()) {
+        mLastKnownWindow = window;
+    }
     if (!getLayout()) {
         AViewContainerBase::onLayout(w, h);
+        clearUnusedSharedCacheEntries();
         mLastOnLayoutSize = {w, h};
         return;
     }
@@ -155,6 +179,7 @@ void AForEachUIBase::onLayout(int w, int h) {
             }
         }
         AViewContainerBase::onLayout(w, h);
+        clearUnusedSharedCacheEntries();
         mLastOnLayoutSize = {w, h};
         return;
     }
@@ -170,6 +195,7 @@ void AForEachUIBase::onLayout(int w, int h) {
 
     if (getViews().empty()) {
         AViewContainerBase::onLayout(w, h);
+        clearUnusedSharedCacheEntries();
         mLastOnLayoutSize = {w, h};
         return;
     }
@@ -189,11 +215,13 @@ void AForEachUIBase::onLayout(int w, int h) {
     }();
     if (diff == 0) {
         AViewContainerBase::onLayout(w, h);
+        clearUnusedSharedCacheEntries();
         mLastOnLayoutSize = {w, h};
         return;
     }
     inflate({ .backward = diff < 0, .forward = diff > 0 });
     AViewContainerBase::onLayout(w, h);
+    clearUnusedSharedCacheEntries();
     mLastOnLayoutSize = {w, h};
 }
 
@@ -496,6 +524,27 @@ void AForEachUIBase::restoreLazyViewportAfterMeasurement() {
     mCache.emplace();
     mLastInflatedScroll.reset();
     inflate();
+}
+
+void AForEachUIBase::clearUnusedSharedCacheEntries() {
+    if (mPendingSharedCacheKeys.empty() && !mCache) {
+        return;
+    }
+    if (auto viewsCache = getViewsCache()) {
+        if (mCache) {
+            for (const auto& item : mCache->items) {
+                if (auto cached = viewsCache->contains(item.id)) {
+                    viewsCache->erase(*cached);
+                }
+            }
+        }
+        for (const auto key : mPendingSharedCacheKeys) {
+            if (auto cached = viewsCache->contains(key)) {
+                viewsCache->erase(*cached);
+            }
+        }
+    }
+    mPendingSharedCacheKeys.clear();
 }
 
 bool AForEachUIBase::measurementRequiresFullMaterialization(AConstraints constraints) const {

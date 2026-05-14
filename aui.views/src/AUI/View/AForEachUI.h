@@ -96,14 +96,17 @@ protected:
 
 private:
     _weak<AScrollAreaViewport> mViewport;
+    ASurface* mLastKnownWindow = nullptr;
     List mViewsModel;
     aui::dyn_range_capabilities mViewsModelCapabilities;
     AOptional<glm::ivec2> mLastInflatedScroll {};
+    AVector<aui::for_each_ui::Key> mPendingSharedCacheKeys;
 
     void ensureViewsForMeasurement(AConstraints constraints);
     void ensureViewsForLazyMeasurement(AConstraints constraints);
     void materializeAllViewsForMeasurement();
     void restoreLazyViewportAfterMeasurement();
+    void clearUnusedSharedCacheEntries();
     bool measurementRequiresFullMaterialization(AConstraints constraints) const;
     bool isModelEmpty() const;
 
@@ -265,9 +268,7 @@ public:
     using KeyFunction = std::function<aui::for_each_ui::Key(const T&)>;
 
     AForEachUI() {}
-    ~AForEachUI() override {
-        putOurViewsToSharedCache();
-    }
+    ~AForEachUI() override = default;
 
     template <aui::detail::RangeFactory<T> RangeFactory>
     AForEachUI(RangeFactory&& rangeFactory) {
@@ -301,7 +302,7 @@ public:
                                if (view != nullptr) {
                                    ALOG_TRACE("AForEachUIBase")
                                        << this << "(" << AReflect::name(this) << ") (HIT) Taken view from cache: " << key;
-                                   mViewsSharedCache->erase(c);
+                                   mViewsSharedCache->erase(*c);
                                    return AForEachUIBase::Entry { .view = std::move(view), .id = key };
                                }
                            }
