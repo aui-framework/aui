@@ -24,9 +24,12 @@ class API_AUI_VIEWS AScrollbar;
 
 class AScrollbarButton: public AView {
 public:
-    AScrollbarButton() {
+    explicit AScrollbarButton(AScrollbar& scrollbar) : mScrollbar(scrollbar) {}
 
-    }
+    void onLayout(int w, int h) override;
+
+private:
+    AScrollbar& mScrollbar;
 };
 class AScrollbarHandle: public AView {friend class API_AUI_VIEWS AScrollbar;
 private:
@@ -75,6 +78,7 @@ public:
  */
 class API_AUI_VIEWS AScrollbar: public AViewContainerBase {
     friend class AScrollbarHandle;
+    friend class AScrollbarButton;
 public:
 
     explicit AScrollbar(ALayoutDirection direction = ALayoutDirection::VERTICAL);

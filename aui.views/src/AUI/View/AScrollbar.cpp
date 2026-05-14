@@ -34,8 +34,8 @@ const _<ATimer>& AScrollbar::buttonTimer() {
 AScrollbar::AScrollbar(ALayoutDirection direction) :
     mDirection(direction) {
 
-    mForwardButton = _new<AScrollbarButton>();
-    mBackwardButton = _new<AScrollbarButton>();
+    mForwardButton = _new<AScrollbarButton>(*this);
+    mBackwardButton = _new<AScrollbarButton>(*this);
 
     connect(mForwardButton->pressed, me::scrollForward);
     connect(mBackwardButton->pressed, me::scrollBackward);
@@ -390,6 +390,26 @@ float AScrollbar::getAvailableSpaceForSpacer() {
     return 0;
 }
 
+void AScrollbarButton::onLayout(int w, int h) {
+  auto size = glm::ivec2(w, h);
+  const auto margins = getMargin().occupiedSize();
+  switch (mScrollbar.mDirection) {
+    case ALayoutDirection::HORIZONTAL:
+      size.y = glm::max(0, mScrollbar.getHeight() - margins.y);
+      break;
+
+    case ALayoutDirection::VERTICAL:
+      size.x = glm::max(0, mScrollbar.getWidth() - margins.x);
+      break;
+
+    case ALayoutDirection::NONE:
+      break;
+  }
+
+  AView::setSize(size);
+  AView::onLayout(getWidth(), getHeight());
+}
+
 void AScrollbarHandle::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
   AView::onPointerMove(pos, event);
   if (mDragging) {
@@ -458,13 +478,14 @@ glm::ivec2 AScrollbarHandle::onIntrinsicMeasure(AConstraints constraints) {
 
 void AScrollbarHandle::onLayout(int w, int h) {
   glm::ivec2 size {w, h};
+  const auto margins = getMargin().occupiedSize();
   switch (mScrollbar.mDirection) {
     case ALayoutDirection::VERTICAL:
-      size = {static_cast<int>((15_dp).getValuePx()), mOverridenSize};
+      size = {glm::max(0, mScrollbar.getWidth() - margins.x), mOverridenSize};
       break;
 
     case ALayoutDirection::HORIZONTAL:
-      size = {mOverridenSize, static_cast<int>((15_dp).getValuePx())};
+      size = {mOverridenSize, glm::max(0, mScrollbar.getHeight() - margins.y)};
       break;
     case ALayoutDirection::NONE:
       break;
@@ -475,6 +496,29 @@ void AScrollbarHandle::onLayout(int w, int h) {
 }
 
 void AScrollbar::onLayout(int w, int h) {
+  switch (mDirection) {
+    case ALayoutDirection::HORIZONTAL: {
+      auto backwardFixedSize = mBackwardButton->getFixedSize();
+      mBackwardButton->setFixedSize({ backwardFixedSize.x, glm::max(0, h - mBackwardButton->getMargin().vertical()) });
+      auto forwardFixedSize = mForwardButton->getFixedSize();
+      mForwardButton->setFixedSize({ forwardFixedSize.x, glm::max(0, h - mForwardButton->getMargin().vertical()) });
+      mHandle->setFixedSize({ 0, glm::max(0, h - mHandle->getMargin().vertical()) });
+      break;
+    }
+
+    case ALayoutDirection::VERTICAL: {
+      auto backwardFixedSize = mBackwardButton->getFixedSize();
+      mBackwardButton->setFixedSize({ glm::max(0, w - mBackwardButton->getMargin().horizontal()), backwardFixedSize.y });
+      auto forwardFixedSize = mForwardButton->getFixedSize();
+      mForwardButton->setFixedSize({ glm::max(0, w - mForwardButton->getMargin().horizontal()), forwardFixedSize.y });
+      mHandle->setFixedSize({ glm::max(0, w - mHandle->getMargin().horizontal()), 0 });
+      break;
+    }
+
+    case ALayoutDirection::NONE:
+      break;
+  }
+
   updateScrollHandleSize();
   AViewContainerBase::onLayout(w, h);
 }

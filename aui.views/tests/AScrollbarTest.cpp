@@ -28,3 +28,31 @@ TEST(AScrollbar, MeasureIsStableForZeroMainAxisConstraint) {
   EXPECT_EQ(verticalMeasured.y, 0);
   EXPECT_GT(verticalMeasured.x, 0);
 }
+
+TEST(AScrollbar, VerticalChildrenStayWithinCrossAxisBounds) {
+  AScrollbar vertical(ALayoutDirection::VERTICAL);
+  vertical.setScrollDimensions(50, 100);
+  vertical.layout({ 0, 0 }, { 13, 100 });
+
+  for (const auto& child : vertical.getViews()) {
+    if (!(child->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+      continue;
+    }
+    EXPECT_GE(child->getPosition().x, 0);
+    EXPECT_LE(child->getPosition().x + child->getWidth(), vertical.getWidth());
+  }
+}
+
+TEST(AScrollbar, HorizontalChildrenStayWithinCrossAxisBounds) {
+  AScrollbar horizontal(ALayoutDirection::HORIZONTAL);
+  horizontal.setScrollDimensions(50, 100);
+  horizontal.layout({ 0, 0 }, { 100, 13 });
+
+  for (const auto& child : horizontal.getViews()) {
+    if (!(child->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+      continue;
+    }
+    EXPECT_GE(child->getPosition().y, 0);
+    EXPECT_LE(child->getPosition().y + child->getHeight(), horizontal.getHeight());
+  }
+}
