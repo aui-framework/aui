@@ -14,7 +14,7 @@
 #include <AUI/Util/ALayoutDirection.h>
 #include <AUI/View/AView.h>
 
-class ASplitterHelper {
+class API_AUI_VIEWS ASplitterHelper {
   friend class ASplitter;
 
 public:
