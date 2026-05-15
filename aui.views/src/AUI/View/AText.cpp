@@ -314,10 +314,10 @@ void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
 }
 void AText::onLayout(int w, int h) {
   ATextBase::onLayout(w, h);
+  performLayout();
 
   int y = 0;
-  const int textHeight =
-      this->onIntrinsicMeasure(AConstraints::fixedInline(getContentWidth())).y;
+  const int textHeight = mEngine.height().valueOr(0) + getFontStyle().getDescenderHeight();
   if (mVerticalAlign == VerticalAlign::MIDDLE) {
     y += (getContentHeight() - textHeight) / 2;
   }

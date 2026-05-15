@@ -245,7 +245,6 @@ protected:
 
   void requestLayout() override {
     AViewContainerBase::requestLayout();
-    mPrerenderedString = nullptr;
   }
 
   void onLayout(int w, int h) override {
