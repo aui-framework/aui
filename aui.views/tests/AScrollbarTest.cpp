@@ -56,3 +56,36 @@ TEST(AScrollbar, HorizontalChildrenStayWithinCrossAxisBounds) {
     EXPECT_LE(child->getPosition().y + child->getHeight(), horizontal.getHeight());
   }
 }
+
+TEST(AScrollbar, DraggingIsStable) {
+    AScrollbar vertical(ALayoutDirection::VERTICAL);
+    vertical.setScrollDimensions(100, 1000); // max scroll 900
+    vertical.setSize({ 20, 100 });
+    vertical.layout({ 0, 0 }, { 20, 100 });
+
+    auto handle = vertical.getViews()[2];
+
+    // Press at some point in the handle
+    float initialPosRelToHandle = 5.f;
+    APointerPressedEvent pressedEvent;
+    pressedEvent.position = { 10, initialPosRelToHandle };
+    pressedEvent.pointerIndex = APointerIndex::button(AInput::LBUTTON);
+    handle->onPointerPressed(pressedEvent);
+
+    float initialWindowY = handle->getPositionInWindow().y + initialPosRelToHandle;
+
+    // Move mouse by 10 pixels in window
+    float targetWindowY = initialWindowY + 10.f;
+    handle->onPointerMove({ 10, targetWindowY - handle->getPositionInWindow().y }, {});
+
+    int scrollAfterMove = vertical.getCurrentScroll();
+    EXPECT_GT(scrollAfterMove, 0);
+
+    // Update layout
+    vertical.layout({ 0, 0 }, { 20, 100 });
+
+    // Stay at targetWindowY
+    handle->onPointerMove({ 10, targetWindowY - handle->getPositionInWindow().y }, {});
+
+    EXPECT_EQ(vertical.getCurrentScroll(), scrollAfterMove);
+}

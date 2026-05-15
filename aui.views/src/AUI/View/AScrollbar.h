@@ -33,8 +33,9 @@ private:
 };
 class AScrollbarHandle: public AView {friend class API_AUI_VIEWS AScrollbar;
 private:
-    int mScrollOffset = 0;
     bool mDragging = false;
+    int mInitialScroll = 0;
+    glm::vec2 mInitialMousePos;
 
 public:
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
@@ -177,7 +178,7 @@ protected:
     void scrollForward();
     void scrollBackward();
 
-    void handleScrollbar(int s);
+    void handleScrollbar(float delta, int baseScroll);
 
 
 private:

@@ -243,12 +243,12 @@ void AScrollbar::onPointerPressed(const APointerPressedEvent& event) {
     AViewContainerBase::onPointerPressed(event);
 }
 
-void AScrollbar::handleScrollbar(int s) {
+void AScrollbar::handleScrollbar(float delta, int baseScroll) {
     auto availableSpace = getAvailableSpaceForSpacer();
     if (availableSpace <= 0.f) {
         return;
     }
-    setScroll(mCurrentScroll + s * int(getMaxScroll()) / availableSpace);
+    setScroll(baseScroll + delta * float(getMaxScroll()) / availableSpace);
 }
 
 int AScrollbar::getMeasuredButtonOccupiedSpace(const _<AView>& view) const {
@@ -413,12 +413,14 @@ void AScrollbarButton::onLayout(int w, int h) {
 void AScrollbarHandle::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
   AView::onPointerMove(pos, event);
   if (mDragging) {
+    auto currentMousePos = glm::vec2(getPositionInWindow()) + pos;
+    auto delta = currentMousePos - mInitialMousePos;
     switch (mScrollbar.mDirection) {
       case ALayoutDirection::HORIZONTAL:
-        mScrollbar.handleScrollbar(pos.x - mScrollOffset);
+        mScrollbar.handleScrollbar(delta.x, mInitialScroll);
         break;
       case ALayoutDirection::VERTICAL:
-        mScrollbar.handleScrollbar(pos.y - mScrollOffset);
+        mScrollbar.handleScrollbar(delta.y, mInitialScroll);
         break;
       case ALayoutDirection::NONE:
         break;
@@ -428,16 +430,8 @@ void AScrollbarHandle::onPointerMove(glm::vec2 pos, const APointerMoveEvent& eve
 
 void AScrollbarHandle::onPointerPressed(const APointerPressedEvent& event) {
   AView::onPointerPressed(event);
-  switch (mScrollbar.mDirection) {
-    case ALayoutDirection::HORIZONTAL:
-      mScrollOffset = event.position.x;
-      break;
-    case ALayoutDirection::VERTICAL:
-      mScrollOffset = event.position.y;
-      break;
-    case ALayoutDirection::NONE:
-      break;
-  }
+  mInitialMousePos = glm::vec2(getPositionInWindow()) + event.position;
+  mInitialScroll = mScrollbar.mCurrentScroll;
 
   mDragging = true;
   emit mScrollbar.triggeredManually;
