@@ -387,13 +387,16 @@ private:
     }
 
     int assigned = 0;
+    float cumulativeWeight = 0.f;
     for (size_t i = 0; i < active.size(); ++i) {
       const auto& child = active[i];
       int resolvedSize = 0;
       if (i + 1 == active.size()) {
         resolvedSize = remainingMain - assigned;
       } else {
-        resolvedSize = int(float(remainingMain) * child.weight / totalWeight);
+        cumulativeWeight += child.weight;
+        int targetAssigned = int(std::lround(float(remainingMain) * cumulativeWeight / totalWeight));
+        resolvedSize = targetAssigned - assigned;
         assigned += resolvedSize;
       }
       result[child.index] = resolvedSize;
