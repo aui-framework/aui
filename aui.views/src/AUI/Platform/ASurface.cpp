@@ -411,7 +411,8 @@ void ASurface::onKeyDown(AInput::Key key) {
   emit keyDown(key);
 
 //#if AUI_DEBUG // TODO(Nelonn): disable back
-  if (key == AInput::F12 && AInput::isKeyDown(AInput::LCONTROL)) {
+  if (key == AInput::F12 && AInput::isKeyDown(AInput::LCONTROL) ||
+      key == AInput::I && AInput::isKeyDown(AInput::LCONTROL) && AInput::isKeyDown(AInput::LSHIFT)) {
     createDevtoolsWindow();
   }
 //#endif
