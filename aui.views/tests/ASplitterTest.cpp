@@ -357,3 +357,59 @@ TEST(ASplitter, HorizontalMinHeightUsesChildHeightAtMinimumWidths) {
 
     EXPECT_EQ(minMax.min, 40);
 }
+
+TEST(ASplitter, DraggingDoesNotAffectUnrelatedElements) {
+    auto v1 = _new<FakeLayoutItem>();
+    v1->setMinSize({ 10, 0 });
+    auto v2 = _new<FakeLayoutItem>();
+    v2->setMinSize({ 10, 0 });
+    auto v3 = _new<FakeLayoutItem>();
+    v3->setMinSize({ 10, 0 });
+
+    auto splitter = _cast<ASplitter>(ASplitter::Horizontal()
+        .withItems({ v1, v2, v3 })
+        .build());
+
+    // Total width 150, each should be 50
+    splitter->layout(0, 0, 150, 20);
+    expectRect(v1, { 0, 0 }, { 50, 20 });
+    expectRect(v2, { 50, 0 }, { 50, 20 });
+    expectRect(v3, { 100, 0 }, { 50, 20 });
+
+    // Drag between v1 and v2: 50 -> 70
+    dragSplitter(splitter, { 50, 10 }, { 70, 10 });
+    splitter->layout(0, 0, 150, 20);
+
+    expectRect(v1, { 0, 0 }, { 70, 20 });
+    expectRect(v2, { 70, 0 }, { 30, 20 });
+    // v3 should remain 50
+    expectRect(v3, { 100, 0 }, { 50, 20 });
+}
+
+TEST(ASplitter, DraggingDoesNotDriftUnrelatedElements) {
+    auto v1 = _new<FakeLayoutItem>();
+    v1->setMinSize({ 10, 0 });
+    auto v2 = _new<FakeLayoutItem>();
+    v2->setMinSize({ 10, 0 });
+    auto v3 = _new<FakeLayoutItem>();
+    v3->setMinSize({ 10, 0 });
+
+    auto splitter = _cast<ASplitter>(ASplitter::Horizontal()
+        .withItems({ v1, v2, v3 })
+        .build());
+
+    // Total width 150, each should be 50
+    splitter->layout(0, 0, 150, 20);
+    int initialV3Width = v3->getWidth();
+
+    splitter->onPointerPressed({ .position = { 50, 10 } });
+    for (int i = 0; i < 100; ++i) {
+        splitter->onPointerMove({ 60, 10 }, {});
+        splitter->layout(0, 0, 150, 20);
+        splitter->onPointerMove({ 50, 10 }, {});
+        splitter->layout(0, 0, 150, 20);
+    }
+    splitter->onPointerReleased({ .position = { 50, 10 } });
+
+    EXPECT_EQ(v3->getWidth(), initialV3Width);
+}

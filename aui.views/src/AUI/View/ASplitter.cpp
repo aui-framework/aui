@@ -177,8 +177,6 @@ public:
       mViews[i]->layout(childPos.x, childPos.y, childSize.x, childSize.y);
       cursor += sizes[i] + info[i].marginMain + mSpacing;
     }
-
-    storeRelativeSizes(info, sizes);
   }
 
   glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
@@ -220,7 +218,7 @@ public:
         if (!consumesSpace(view)) {
           continue;
         }
-        const auto minMax = view->computeMinMaxAxis(-1);
+        const auto minMax = view->computeMinMaxAxis(height);
         result.min = glm::max(result.min, minMax.min + view->getMargin().horizontal());
         result.max = glm::max(result.max, minMax.max + view->getMargin().horizontal());
       }
@@ -335,19 +333,20 @@ private:
         continue;
       }
       const float weight = glm::max(0.f, weights[i]);
-      active.push_back({ .index = i, .weight = weight });
-      totalWeight += weight;
+      if (weight > 0.f) {
+        active.push_back({ .index = i, .weight = weight });
+        totalWeight += weight;
+      }
     }
 
     if (active.empty()) {
-      return result;
-    }
-
-    if (totalWeight <= 0.f) {
-      for (auto& child : active) {
-        child.weight = 1.f;
+      for (size_t i = 0; i < mViews.size(); ++i) {
+        if (!info[i].visible) {
+          continue;
+        }
+        active.push_back({ .index = i, .weight = 1.f });
+        totalWeight += 1.f;
       }
-      totalWeight = float(active.size());
     }
 
     while (true) {
@@ -422,7 +421,7 @@ private:
 
     const auto expandedSizes = resolveWeightedSizes(info, remainingMain, expandingWeights);
     for (size_t i = 0; i < mViews.size(); ++i) {
-      if (expandedSizes[i] != 0 || (info[i].visible && info[i].minMain == 0 && expandingWeights[i] > 0.f)) {
+      if (info[i].visible && info[i].expandingWeight > 0) {
         result[i] = expandedSizes[i];
       }
     }
@@ -475,27 +474,6 @@ private:
           result, childMeasuredCrossSize<Direction>(mViews[i], sizes[i], crossConstraint) + info[i].marginCross);
     }
     return result;
-  }
-
-  void storeRelativeSizes(const AVector<ChildInfo>& info, const AVector<int>& sizes) {
-    int total = 0;
-    for (size_t i = 0; i < mViews.size(); ++i) {
-      if (!info[i].visible) {
-        continue;
-      }
-      total += sizes[i];
-    }
-
-    if (total <= 0) {
-      mSplitter.resetRelativeSizes();
-      return;
-    }
-
-    mSplitter.mRelativeSizes.resize(mViews.size(), 0.f);
-    for (size_t i = 0; i < mViews.size(); ++i) {
-      mSplitter.mRelativeSizes[i] = info[i].visible ? float(sizes[i]) / float(total) : 0.f;
-    }
-    mSplitter.normalizeRelativeSizes();
   }
 };
 
@@ -623,8 +601,7 @@ bool ASplitter::dragDivider(glm::ivec2 mousePos) {
   }
 
   mRelativeSizes[mDraggingDividerIndex] = float(leftSize + actualDelta) / float(mDragContentSize);
-  mRelativeSizes[mDraggingDividerIndex + 1] = float(rightSize - actualDelta) / float(mDragContentSize);
-  normalizeRelativeSizes();
+  mRelativeSizes[mDraggingDividerIndex + 1] = pairRatio - mRelativeSizes[mDraggingDividerIndex];
   mDragOffset += actualDelta;
   return true;
 }
@@ -632,7 +609,9 @@ bool ASplitter::dragDivider(glm::ivec2 mousePos) {
 void ASplitter::onPointerPressed(const APointerPressedEvent& event) {
   if (auto dividerIndex = mHelper.dividerIndexAt(event.position)) {
     AView::onPointerPressed(event);   // NOLINT(*-parent-virtual-call)
-    syncRelativeSizesFromCurrentLayout();
+    if (mRelativeSizes.empty()) {
+      syncRelativeSizesFromCurrentLayout();
+    }
     mDraggingDividerIndex = *dividerIndex;
     mDragOffset = mHelper.getAxisValue(event.position);
     mDragContentSize = 0;
