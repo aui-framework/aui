@@ -625,6 +625,10 @@ void PlatformAbstractionX11::windowManagerInitNativeWindow(const IRenderingConte
     }
 }
 
+float PlatformAbstractionX11::windowGetDpiRatio(AWindow& window) {
+    return windowFetchDpiFromSystem(window);
+}
+
 void PlatformAbstractionX11::windowBlockUserInput(AWindow& window, bool blockUserInput) {
 }
 
