@@ -244,6 +244,7 @@ protected:
   virtual void clearContent() { mPrerenderedString = nullptr; }
 
   void requestLayout() override {
+    mPrerenderedString.reset();
     AViewContainerBase::requestLayout();
   }
 
