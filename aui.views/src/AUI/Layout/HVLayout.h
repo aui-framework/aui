@@ -16,6 +16,9 @@
 #include <AUI/Util/AMinMaxAxis.hpp>
 #include <AUI/Enum/Visibility.h>
 #include <range/v3/range.hpp>
+#include <algorithm>
+#include <limits>
+#include <optional>
 #include <vector>
 
 namespace aui {
@@ -78,11 +81,13 @@ struct HVLayout {
 private:
   using Axis = AxisAdapter<direction>;
 
-  static bool consumesSpace(const auto& view) {
+  template <typename View>
+  static bool consumesSpace(const View& view) {
     return static_cast<bool>(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE);
   }
 
-  static bool isLayoutParticipant(const auto& view) { return consumesSpace(view); }
+  template <typename View>
+  static bool isLayoutParticipant(const View& view) { return consumesSpace(view); }
 
   struct MainAxisSizeInfo {
     bool visible = false;
@@ -95,7 +100,8 @@ private:
     int measured_perp_constraint = -2;
   };
 
-  static void distributeRemainingSpace(ranges::range auto&& views, std::vector<MainAxisSizeInfo>& sizes, int remaining_space) {
+  template <ranges::range Views>
+  static void distributeRemainingSpace(Views&& views, std::vector<MainAxisSizeInfo>& sizes, int remaining_space) {
     bool changed = true;
 
     while (changed) {
@@ -168,7 +174,8 @@ public:
   template <typename T>
   [[nodiscard]] static T getPerpAxisValue(const glm::tvec2<T>& v) { return Axis::perpAxis(v); }
 
-  static int resolvePerpendicularSize(const auto& view, int measured_perp, int available_perp_size, int max_perp_size) {
+  template <typename View>
+  static int resolvePerpendicularSize(const View& view, int measured_perp, int available_perp_size, int max_perp_size) {
     // TODO(Nelonn): think about it, kept for compatibility with existing layouts
     //const bool perp_expanding = Axis::perpAxis(view->getExpanding()) != 0 && Axis::perpAxis(view->getFixedSize()) == 0;
     //const int resolved_perp = perp_expanding ? glm::max(available_perp_size, measured_perp) : measured_perp;
@@ -176,13 +183,15 @@ public:
     return max_perp_size > 0 ? glm::min(resolved_perp, max_perp_size) : resolved_perp;
   }
 
-  static int computePerpendicularSize(const auto& view, int our_axis_size, int available_perp_size, int max_perp_size) {
+  template <typename View>
+  static int computePerpendicularSize(const View& view, int our_axis_size, int available_perp_size, int max_perp_size) {
     const auto constraints = max_perp_size > 0 ? Axis::fixedOurCappedPerp(our_axis_size, max_perp_size) : Axis::fixedOur(our_axis_size);
     const int measured_perp = Axis::measuredPerp(view->measure(constraints));
     return resolvePerpendicularSize(view, measured_perp, available_perp_size, max_perp_size);
   }
 
-  static std::pair<int, std::optional<glm::ivec2>> computePreferredMainAxisSize(const auto& view, int perp_constraint) {
+  template <typename View>
+  static std::pair<int, std::optional<glm::ivec2>> computePreferredMainAxisSize(const View& view, int perp_constraint) {
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
       if (perp_constraint != -1) {
         auto measured = view->measure(Axis::cappedPerp(perp_constraint));
@@ -197,7 +206,8 @@ public:
     }
   }
 
-  static int computeMinimumPerpendicularContribution(const auto& view, glm::ivec2 margin) {
+  template <typename View>
+  static int computeMinimumPerpendicularContribution(const View& view, glm::ivec2 margin) {
     if (!isLayoutParticipant(view)) return 0;
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
       return Axis::measuredPerp(view->measure(Axis::fixedOur(view->computeMinMaxAxis().min))) + margin.y;
@@ -206,7 +216,8 @@ public:
     }
   }
 
-  static int computeMaximumPerpendicularContribution(const auto& view, glm::ivec2 margin) {
+  template <typename View>
+  static int computeMaximumPerpendicularContribution(const View& view, glm::ivec2 margin) {
     if (!isLayoutParticipant(view)) return 0;
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
       return Axis::measuredPerp(view->measure(Axis::fixedOur(view->computeMinMaxAxis().max))) + margin.y;
@@ -215,8 +226,9 @@ public:
     }
   }
 
+  template <ranges::range Views>
   static std::vector<MainAxisSizeInfo> resolveMainAxisSizes(
-      ranges::range auto&& views,
+      Views&& views,
       int spacing,
       glm::ivec2 padded_size) {
 
@@ -278,22 +290,23 @@ public:
     return result;
   }
 
+  template <ranges::range Views>
   static void layout(
       glm::ivec2 padded_position,
       glm::ivec2 padded_size,
-      ranges::range auto&& views,
+      Views&& views,
       int spacing) {
     if (views.empty()) return;
 
     const auto resolved = resolveMainAxisSizes(views, spacing, padded_size);
 
     int pos_our_axis = Axis::ourAxis(padded_position);
-    size_t index = 0;
+    auto info = resolved.begin();
 
     for (const auto& view : views) {
-      const auto& info = resolved[index++];
+      const auto& current_info = *info++;
 
-      if (!info.visible) continue;
+      if (!current_info.visible) continue;
 
       const auto margins        = view->getMargin();
       const int available_perp  = Axis::perpAxis(padded_size - margins.occupiedSize());
@@ -301,7 +314,7 @@ public:
 
       const int view_pos_our  = pos_our_axis + Axis::ourAxis(margins.leftTop());
       const int view_pos_perp = Axis::perpAxis(padded_position + margins.leftTop());
-      const int view_size_our = info.finalSize;
+      const int view_size_our = current_info.finalSize;
 
       int view_size_perp;
 
@@ -309,13 +322,13 @@ public:
 
       if (fixed_perp > 0) {
         view_size_perp = resolvePerpendicularSize(view, fixed_perp, available_perp, max_perp);
-      } else if (info.measuredSize) {
+      } else if (current_info.measuredSize) {
         const bool main_axis_matches =
             direction == ALayoutDirection::VERTICAL ||
-            Axis::measuredOur(*info.measuredSize) == view_size_our;
+            Axis::measuredOur(*current_info.measuredSize) == view_size_our;
 
         if (main_axis_matches) {
-          view_size_perp = resolvePerpendicularSize(view, Axis::measuredPerp(*info.measuredSize), available_perp, max_perp);
+          view_size_perp = resolvePerpendicularSize(view, Axis::measuredPerp(*current_info.measuredSize), available_perp, max_perp);
         } else {
           view_size_perp = computePerpendicularSize(view, view_size_our, available_perp, max_perp);
         }
@@ -333,17 +346,20 @@ public:
     }
   }
 
-  static int preferredWidth(ranges::range auto&& views, int spacing, int height) {
+  template <ranges::range Views>
+  static int preferredWidth(Views&& views, int spacing, int height) {
     if constexpr (direction == ALayoutDirection::HORIZONTAL) return preferredOurAxis(views, spacing, height);
     else return preferredPerpendicularAxis(views, spacing, height);
   }
 
-  static int preferredHeight(ranges::range auto&& views, int spacing, int width) {
+  template <ranges::range Views>
+  static int preferredHeight(Views&& views, int spacing, int width) {
     if constexpr (direction == ALayoutDirection::VERTICAL) return preferredOurAxis(views, spacing, width);
     else return preferredPerpendicularAxis(views, spacing, width);
   }
 
-  static AMinMaxAxis computeIntrinsicMinMaxSizes(ranges::range auto&& views, int spacing) {
+  template <ranges::range Views>
+  static AMinMaxAxis computeIntrinsicMinMaxSizes(Views&& views, int spacing) {
     AMinMaxAxis result;
     int visible_count = 0;
 
@@ -374,7 +390,8 @@ public:
     return result;
   }
 
-  static glm::ivec2 onIntrinsicMeasure(ranges::range auto&& views, int spacing, AConstraints constraints) {
+  template <ranges::range Views>
+  static glm::ivec2 onIntrinsicMeasure(Views&& views, int spacing, AConstraints constraints) {
     // Derive padded_size from constraints so we can reuse resolveMainAxisSizes.
     // For unbounded axes use a large sentinel value.
     const int our_limit  = (direction == ALayoutDirection::HORIZONTAL)
@@ -395,14 +412,14 @@ public:
     int total_our     = -spacing;
     int max_perp      = 0;
     int visible_count = 0;
-    size_t index      = 0;
+    auto info = resolved.begin();
 
     for (const auto& v : views) {
-      const auto& info = resolved[index++];
-      if (!info.visible) continue;
+      const auto& current_info = *info++;
+      if (!current_info.visible) continue;
       ++visible_count;
 
-      const int view_size_our  = info.finalSize;
+      const int view_size_our  = current_info.finalSize;
       //const int available_perp = std::max(0, Axis::perpAxis(padded_size) - Axis::perpAxis(v->getMargin().occupiedSize()));
       const int available_perp = 0;
       const int max_perp_view  = Axis::perpAxis(v->getMaxSize());
@@ -411,16 +428,16 @@ public:
       const int fixed_perp = Axis::perpAxis(v->getFixedSize());
       if (fixed_perp > 0) {
         child_perp = resolvePerpendicularSize(v, fixed_perp, available_perp, max_perp_view);
-      } else if (info.measuredSize) {
+      } else if (current_info.measuredSize) {
         // Reuse cached measurement only when the main-axis size matches —
         // otherwise re-measure with the final main-axis size, exactly as
         // layout() does, so wrapping text reports the correct height.
         const bool main_axis_matches =
             direction == ALayoutDirection::VERTICAL ||
-            Axis::measuredOur(*info.measuredSize) == view_size_our;
+            Axis::measuredOur(*current_info.measuredSize) == view_size_our;
 
         if (main_axis_matches) {
-          child_perp = resolvePerpendicularSize(v, Axis::measuredPerp(*info.measuredSize), available_perp, max_perp_view);
+          child_perp = resolvePerpendicularSize(v, Axis::measuredPerp(*current_info.measuredSize), available_perp, max_perp_view);
         } else {
           child_perp = computePerpendicularSize(v, view_size_our, available_perp, max_perp_view);
         }
@@ -446,14 +463,16 @@ public:
   }
 
 private:
-  static int preferredOurAxis(ranges::range auto&& views, int spacing, int perp_axis_constraint) {
+  template <ranges::range Views>
+  static int preferredOurAxis(Views&& views, int spacing, int perp_axis_constraint) {
     AConstraints constraints;
     if constexpr (direction == ALayoutDirection::HORIZONTAL) constraints.maxBlock = perp_axis_constraint;
     else constraints.maxInline = perp_axis_constraint;
     return Axis::ourAxis(onIntrinsicMeasure(views, spacing, constraints));
   }
 
-  static int preferredPerpendicularAxis(ranges::range auto&& views, int spacing, int our_axis_constraint) {
+  template <ranges::range Views>
+  static int preferredPerpendicularAxis(Views&& views, int spacing, int our_axis_constraint) {
     AConstraints constraints;
     if constexpr (direction == ALayoutDirection::HORIZONTAL) {
       constraints.maxInline = our_axis_constraint;
