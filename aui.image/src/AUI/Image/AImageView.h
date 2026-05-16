@@ -59,9 +59,43 @@ class API_AUI_IMAGE AImageView {
 public:
     using Color = AColor;
 
-    AImageView() : mSize(0, 0) {}
+    AImageView() : mSize(0, 0), mStride(0) {}
+
+    /**
+     * @brief Constructs an image view with an explicit row stride.
+     *
+     * This constructor creates a non-owning view over image data using the
+     * provided byte buffer and metadata. The stride (bytes per row)
+     * is explicitly specified, which allows the view to work with padded or
+     * externally aligned image memory.
+     *
+     * @param data   Non-owning byte buffer that contains the image pixels.
+     * @param stride Number of bytes between the start of consecutive rows.
+     * @param size   Image dimensions in pixels (width, height).
+     * @param format Pixel format describing how to interpret each pixel.
+     */
+    AImageView(AByteBufferView data, size_t stride, glm::uvec2 size, APixelFormat format)
+        : mData(data), mStride(stride), mSize(size), mFormat(format) {}
+
+    /**
+     * @brief Constructs an image view with tightly packed rows.
+     *
+     * This constructor assumes the image rows are tightly packed in memory
+     * (no padding between rows). The stride is automatically computed as:
+     *
+     *     stride = bytesPerPixel() * width()
+     *
+     * Use this overload only when the source image buffer has no row padding.
+     *
+     * @param data   Non-owning byte buffer that contains the image pixels.
+     * @param size   Image dimensions in pixels (width, height).
+     * @param format Pixel format describing how to interpret each pixel.
+     */
     AImageView(AByteBufferView data, glm::uvec2 size, APixelFormat format)
-      : mData(data), mSize(size), mFormat(format) {}
+        : mData(data), mSize(size), mFormat(format) {
+        mStride = bytesPerPixel() * width();
+    }
+
     AImageView(const AImage& v);
 
     /**
@@ -150,9 +184,12 @@ public:
     const char& rawDataAt(glm::uvec2 position) const noexcept {
         AUI_ASSERT(width() != 0);
         AUI_ASSERT(height() != 0);
+        AUI_ASSERT(mStride != 0);
         AUI_ASSERT(position.x < width());
         AUI_ASSERT(position.y < height());
-        return mData.at<char>((position.y * width() + position.x) * bytesPerPixel());
+        size_t index = (position.y * mStride) + (position.x * bytesPerPixel());
+        AUI_ASSERT(index < mData.size());
+        return mData.at<char>(index);
     }
 
     [[nodiscard]]
@@ -226,6 +263,7 @@ public:
 
 protected:
     AByteBufferView mData;
+    size_t mStride;
     glm::uvec2 mSize;
     APixelFormat mFormat = APixelFormat::UNKNOWN;
 };
