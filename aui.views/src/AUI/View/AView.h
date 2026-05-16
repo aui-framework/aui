@@ -504,8 +504,16 @@ public:
   void setSizeForced(glm::ivec2 size) { mSize = size; }
   void setSize(glm::ivec2 size);
 
+  /**
+   * @brief Returns cached min/max width for the given height.
+   * @details Includes padding and fixed/min/max size constraints; @p height is outer height, or -1 for unconstrained.
+   */
   AMinMaxAxis computeMinMaxAxis(int height = -1);
 
+  /**
+   * @brief Returns cached preferred outer size under constraints.
+   * @details Applies padding and fixed/min/max size constraints around onIntrinsicMeasure().
+   */
   glm::ivec2 measure(AConstraints constraints);
 
   /**
@@ -983,7 +991,17 @@ protected:
    */
   bool mSkipUntilLayoutUpdate = true;
 
+  /**
+   * @brief Computes content size under content constraints.
+   * @details Override for intrinsic measurement;
+   * padding and view-level size limits are handled by measure().
+   */
   virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints);
+
+  /**
+   * @brief Computes intrinsic content min/max width for a content height.
+   * @details Override for width-for-height logic; @p height is content height, or -1 for unconstrained.
+   */
   virtual AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height);
 
   virtual void onLayout(int w, int h);
