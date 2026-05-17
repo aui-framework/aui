@@ -175,7 +175,7 @@ private:
 
 // implementation of property modifier for APropertyDef (in comparison to AProperty) has to call getter, store a copy
 // within PropertyModifier and call setter upon destruction.
-// this behaviour described here - https://aui-framework.github.io/master/structAPropertyDef.html#declaration
+// this behaviour described here - https://aui-framework.github.io/master/apropertydef/#declaration
 template <
     typename M, aui::invocable<M&> Getter, aui::invocable<M&, std::invoke_result_t<Getter, M&>> Setter,
     typename SignalArg>
