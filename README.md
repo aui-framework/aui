@@ -17,7 +17,7 @@ programming languages and external compilers.
 
 **[<kbd> <br> Documentation <br> </kbd>](https://aui-framework.github.io)**
 **[<kbd> <br> Examples <br> </kbd>](https://aui-framework.github.io/master/examples/)**
-**[<kbd> <br> Getting started <br> </kbd>](https://aui-framework.github.io/master/getting-started/)**
+**[<kbd> <br> Getting Started <br> </kbd>](https://aui-framework.github.io/master/getting-started/)**
 **[<kbd> <br> Roadmap <br> </kbd>](https://github.com/orgs/aui-framework/projects/3/views/1)**
 **[<kbd> <br> News <br> </kbd>](https://github.com/aui-framework/aui/discussions/categories/announcements)**
 **[<kbd> <br> Discussions <br> </kbd>](https://github.com/aui-framework/aui/discussions)**
