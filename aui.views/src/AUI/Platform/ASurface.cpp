@@ -410,12 +410,12 @@ void ASurface::onKeyDown(AInput::Key key) {
   AViewContainer::onKeyDown(key);
   emit keyDown(key);
 
-//#if AUI_DEBUG // TODO(Nelonn): disable back
+#if AUI_DEBUG
   if (key == AInput::F12 && AInput::isKeyDown(AInput::LCONTROL) ||
       key == AInput::I && AInput::isKeyDown(AInput::LCONTROL) && AInput::isKeyDown(AInput::LSHIFT)) {
     createDevtoolsWindow();
   }
-//#endif
+#endif
 }
 
 void ASurface::onKeyRepeat(AInput::Key key) {

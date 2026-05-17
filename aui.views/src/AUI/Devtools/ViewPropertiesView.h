@@ -22,11 +22,6 @@ private:
 public:
   explicit ViewPropertiesView(const _<AView>& targetView);
   glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
-  // TODO(Nelonn): delete finally
-  //AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
-  //void onLayout(int w, int h) override;
-  //void render(ARenderContext context) override;
-  //void requestLayout() override;
   void displayApplicableRule(const _<AViewContainer>& dst,
                              ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
                              const ass::PropertyList* rule);

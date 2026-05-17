@@ -13,7 +13,6 @@
 #include "AUI/View/AButton.h"
 #include "AUI/View/AGroupBox.h"
 #include "AUI/View/AListView.h"
-#include "DemoListModel.h"
 
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
@@ -42,25 +41,6 @@ AUI_ENTRY {
     Vertical {
       minimalCheckBox(AUI_PTR_ALIAS(state, checked)),
       Label { AUI_REACT(state->checked ? "Checkbox is checked" : "Checkbox is not checked") },
-
-      // list view
-      // TODO(Nelonn): remove that
-      //GroupBox {
-      //  Label { "List view" },
-      //  [] {   // lambda style inlining
-      //      auto model = _new<DemoListModel>();
-      //
-      //      return Vertical {
-      //          Horizontal {
-      //            _new<AButton>("Add").connect(&AButton::clicked, AUI_SLOT(model)::addItem),
-      //            _new<AButton>("Remove").connect(&AButton::clicked, AUI_SLOT(model)::removeItem),
-      //          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-      //        _new<AListView>(model) AUI_OVERRIDE_STYLE {
-      //          //MinSize { 60_dp, 60_dp },
-      //        }
-      //      } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } };
-      //  }(),
-      //},
     }
   );
   window->show();
