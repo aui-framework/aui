@@ -23,7 +23,7 @@
 #   cmake -P aui.boot.cmake update [ver]  - update aui.boot.cmake to the latest version
 #   cmake -P aui.boot.cmake create        - create a new project from example_app
 #
-# For more information, see https://aui-framework.github.io/develop/getting-started
+# For more information, see https://aui-framework.github.io/master/getting-started
 # =====================================================================================================================
 #
 
@@ -54,17 +54,17 @@ if(CMAKE_SCRIPT_MODE_FILE)
         message("Commands:")
         message("  help                    Print this help message")
         message("  update [version]        Update aui.boot.cmake to the specified version")
-        message("                          (default: develop branch)")
+        message("                          (default: master branch)")
         message("  create                  Create a new project in the current directory")
         message("")
-        message("For more information, see https://aui-framework.github.io/develop/getting-started")
+        message("For more information, see https://aui-framework.github.io/master/getting-started")
         message("")
     elseif("${_auib_cli_command}" STREQUAL "update")
-        # Determine version: use CMAKE_ARGV4 if provided, otherwise "develop"
+        # Determine version: use CMAKE_ARGV4 if provided, otherwise "master"
         if(NOT "${CMAKE_ARGV4}" STREQUAL "")
             set(_auib_update_version "${CMAKE_ARGV4}")
         else()
-            set(_auib_update_version "develop")
+            set(_auib_update_version "master")
         endif()
 
         set(_auib_update_url "https://raw.githubusercontent.com/aui-framework/aui/${_auib_update_version}/aui.boot.cmake")

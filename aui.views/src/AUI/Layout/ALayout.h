@@ -178,7 +178,7 @@ class AViewContainer;
  *       );
  *       ```
  *     </td>
- *     <td><img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/Screenshot_20250625_011101.png" /></td>
+ *     <td><img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20250625_011101.png" /></td>
  *   </tr>
  * </table>
  *
