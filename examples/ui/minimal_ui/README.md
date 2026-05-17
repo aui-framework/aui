@@ -30,7 +30,7 @@ set(AUI_VERSION v8.0.0-rc.8)
 # Use AUI.Boot
 #
 # Download aui.boot.cmake (one-time):
-#   curl https://raw.githubusercontent.com/aui-framework/aui/refs/heads/develop/aui.boot.cmake -o aui.boot.cmake
+#   curl https://raw.githubusercontent.com/aui-framework/aui/refs/heads/master/aui.boot.cmake -o aui.boot.cmake
 #
 # Or use CLI mode:
 #   cmake -P aui.boot.cmake update

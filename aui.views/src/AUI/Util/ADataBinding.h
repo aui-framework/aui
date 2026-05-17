@@ -154,8 +154,8 @@ public:
  * <p>This code will bind ATextField with username field in the User model.</p>
  *
  * <p>Another example:</p>
- * <img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/Screenshot_20230705_173329.png">
- * <img src="https://github.com/aui-framework/aui/raw/develop/docs/imgs/Recording_20230705_at_17.51.14.gif">
+ * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Screenshot_20230705_173329.png">
+ * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/Recording_20230705_at_17.51.14.gif">
  * ```cpp
  * class MyWindow: public AWindow {
  * public:

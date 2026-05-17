@@ -186,7 +186,7 @@ to free you from dependency management and focus you right to development of you
         Download AUI.Boot (one-time):
 
         ```bash
-        curl https://raw.githubusercontent.com/aui-framework/aui/refs/heads/develop/aui.boot.cmake -o aui.boot.cmake
+        curl https://raw.githubusercontent.com/aui-framework/aui/refs/heads/master/aui.boot.cmake -o aui.boot.cmake
         ```
 
         Create `CMakeLists.txt`:
