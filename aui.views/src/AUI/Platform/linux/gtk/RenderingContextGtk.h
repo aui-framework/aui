@@ -28,7 +28,9 @@ public:
 
     ASurface& window() const { return mWindow; }
     aui::gtk4_fake::GtkWidget* auiWidget() const { return mAUIWidget; }
+    const AString& getWindowClass() const { return mWindowClass; }
 
+    AString mWindowClass;
 
 protected:
     ASurface& mWindow;

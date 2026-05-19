@@ -13,6 +13,7 @@
 #include "PlatformAbstractionGtk.h"
 #include "RenderingContextGtk.h"
 #include "gtk_functions.h"
+#include <AUI/AppInfo.h>
 
 // hack: we sort of implementing g_application_run here.
 // particularly:
@@ -44,7 +45,11 @@ PlatformAbstractionGtk::PlatformAbstractionGtk() : mMainContext(g_main_context_d
 
 void PlatformAbstractionGtk::init() {
     if (!mApplication) {
-        mApplication = G_APPLICATION(gtk_application_new(nullptr, static_cast<GApplicationFlags>(0)));
+        // Use app_id from AppInfo as the application identifier for GTK
+        // This will be used as the WM_CLASS on X11 and app-id on Wayland
+        mApplication = G_APPLICATION(gtk_application_new(
+            aui::app_info::app_id.toStdString().c_str(),
+            static_cast<GApplicationFlags>(0)));
     }
     g_signal_connect(
         mApplication, "activate",
