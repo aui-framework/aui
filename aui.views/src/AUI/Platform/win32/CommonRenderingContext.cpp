@@ -18,6 +18,8 @@
 #include <AUI/Platform/win32/Theme.h>
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Platform/ARenderingContextOptions.h>
+#include <AUI/AppInfo.h>
+#include <algorithm>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto window = reinterpret_cast<AWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
@@ -41,10 +43,15 @@ void CommonRenderingContext::init(const Init& init) {
     // CREATE WINDOW
     WNDCLASSEX winClass;
 
-
+    // Generate window class name from app_id with random suffix for uniqueness
+    // On Windows, multiple instances need unique class names
     ARandom r;
     for (;;) {
-        mWindowClass = "AUI-" + AString::number(r.nextInt());
+        // Use app_id as base, replacing dots with underscores for Windows compatibility
+        AString baseClass = aui::app_info::app_id;
+        std::replace(baseClass.begin(), baseClass.end(), '.', '_');
+        // Add random suffix to ensure uniqueness per instance
+        mWindowClass = baseClass + "_" + AString::number(r.nextInt());
         auto u16windowClass = aui::win32::toWchar(mWindowClass);
         winClass.lpszClassName = u16windowClass.c_str();
         winClass.cbSize = sizeof(WNDCLASSEX);
@@ -91,11 +98,9 @@ void CommonRenderingContext::init(const Init& init) {
     RECT clientRect;
     GetClientRect(init.window.mHandle, &clientRect);
     init.window.mSize = {clientRect.right - clientRect.left, clientRect.bottom - clientRect.top};
-
-    IRenderingContext::init(init);
 }
 
-void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
+void CommonRenderingContext::destroyNativeWindow(ASurface& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         ReleaseDC(w->mHandle, mWindowDC);
 
@@ -105,7 +110,7 @@ void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
     UnregisterClass(u16windowClass.c_str(), GetModuleHandle(nullptr));
 }
 
-void CommonRenderingContext::beginPaint(AWindowBase& window) {
+void CommonRenderingContext::beginPaint(ASurface& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         if (mSmoothResize) {
             AUI_ASSERT(mPainterDC == nullptr);
@@ -114,7 +119,7 @@ void CommonRenderingContext::beginPaint(AWindowBase& window) {
     }
 }
 
-void CommonRenderingContext::endPaint(AWindowBase& window) {
+void CommonRenderingContext::endPaint(ASurface& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         if (mSmoothResize) {
             EndPaint(w->mHandle, &mPaintstruct);

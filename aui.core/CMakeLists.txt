@@ -1,7 +1,15 @@
 cmake_minimum_required(VERSION 3.16)
 
 option(AUI_CATCH_UNHANDLED "Catch segfault" ON)
-option(AUI_COROUTINES "Use C++20 coroutines" OFF)
+
+set(_use_coroutines ON)
+if (AUI_COMPILER_CLANG)
+    if (CMAKE_CXX_COMPILER_VERSION VERSION_LESS 21.0.0) # compiler crashes
+        set(_use_coroutines OFF)
+    endif ()
+endif()
+
+option(AUI_COROUTINES "Use C++20 coroutines" ${_use_coroutines})
 option(AUI_ENABLE_ASAN "Enable AddressSanitizer" OFF)
 option(AUI_ENABLE_DEATH_TESTS "Enable GTest death tests" ON)
 
@@ -170,7 +178,7 @@ if(AUIB_DISABLE)
     find_package(range-v3 REQUIRED CONFIG)
 else()
     auib_import(fmt https://github.com/fmtlib/fmt
-                VERSION 11.2.0
+                VERSION 12.1.0
                 CMAKE_ARGS -DFMT_TEST=FALSE -DFMT_DOC=FALSE)
 
     auib_import(range-v3 https://github.com/ericniebler/range-v3

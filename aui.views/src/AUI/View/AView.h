@@ -52,7 +52,7 @@
 
 
 class AWindow;
-class AWindowBase;
+class ASurface;
 class AViewContainerBase;
 class AAnimator;
 class AAssHelper;
@@ -176,7 +176,7 @@ public:
      * @brief Determines window which this AView belongs to.
      * @return window which this AView belongs to. Could be nullptr
      */
-    AWindowBase* getWindow() const;
+    ASurface* getWindow() const;
 
     virtual void drawStencilMask(ARenderContext ctx);
 
@@ -866,7 +866,7 @@ public:
     }
 
     /**
-     * @brief Called on AWindowBase::preventClickOnPointerRelease.
+     * @brief Called on ASurface::preventClickOnPointerRelease.
      */
     virtual void onClickPrevented();
 

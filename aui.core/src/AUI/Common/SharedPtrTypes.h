@@ -444,7 +444,7 @@ public:
      * undefined.
      */
     [[nodiscard]]
-    std::add_lvalue_reference_t<T> value() const noexcept {
+    std::add_lvalue_reference_t<T> value() const {
 #if AUI_DEBUG
         AUI_ASSERTX(super::get() != nullptr, "an attempt to dereference a null pointer");
 #endif
@@ -458,7 +458,7 @@ public:
      * undefined.
      */
     [[nodiscard]]
-    std::add_lvalue_reference_t<T> operator*() const noexcept {
+    std::add_lvalue_reference_t<T> operator*() const {
         return value();
     }
 
@@ -469,7 +469,7 @@ public:
      * undefined.
      */
     [[nodiscard]]
-    std::add_pointer_t<T> operator->() const noexcept {
+    std::add_pointer_t<T> operator->() const {
         return &value();
     }
 

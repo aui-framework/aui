@@ -30,14 +30,14 @@ public:
 
 #if !AUI_PLATFORM_LINUX
     // to be implemented by IPlatformAbstraction
-    void init(const Init& init) override;
-    void destroyNativeWindow(AWindowBase& window) override;
+    void init(const Init& init);
+    void destroyNativeWindow(ASurface& window) override;
 #endif
 
-    void beginPaint(AWindowBase& window) override;
-    void endPaint(AWindowBase& window) override;
-    void beginResize(AWindowBase& window) override;
-    void endResize(AWindowBase& window) override;
+    void beginPaint(ASurface& window) override;
+    void endPaint(ASurface& window) override;
+    void beginResize(ASurface& window) override;
+    void endResize(ASurface& window) override;
 
     [[nodiscard]]
     uint32_t getDefaultFb() const noexcept;

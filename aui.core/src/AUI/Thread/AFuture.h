@@ -356,6 +356,9 @@ namespace aui::impl::future {
             }
         };
 
+        using Ptr = _<CancellationWrapper<Inner>>;
+        using PtrWeak = _weak<CancellationWrapper<Inner>>;
+
 #if AUI_COROUTINES
         /**
          * @brief promise_type for C++ coroutines TS.
@@ -364,7 +367,7 @@ namespace aui::impl::future {
 #endif
 
     protected:
-        _<CancellationWrapper<Inner>> mInner;
+        Ptr mInner;
 
 
     public:
@@ -374,8 +377,15 @@ namespace aui::impl::future {
          */
         Future(TaskCallback task = nullptr): mInner(_new<CancellationWrapper<Inner>>((_unique<Inner>)(new Inner(std::move(task))))) {}
 
+        Future(Ptr ptr) noexcept: mInner(std::move(ptr)) {} // construct AFuture from internal shared_ptr.
+
+        Future(const Future&) = default;
+        Future(Future&&) noexcept = default;
+        Future& operator=(const Future&) = default;
+        Future& operator=(Future&&) noexcept = default;
+
         [[nodiscard]]
-        const _<CancellationWrapper<Inner>>& inner() const noexcept {
+        const Ptr& inner() const noexcept {
             return mInner;
         }
 
@@ -578,7 +588,7 @@ namespace aui::impl::future {
  *     AFuture<int> longOperation();
  *     AFuture<int> myFunction() {
  *       int resultOfLongOperation = co_await longOperation();
- *       return resultOfLongOperation + 1;
+ *       co_return resultOfLongOperation + 1;
  *     }
  *     ```
  *
@@ -621,13 +631,15 @@ namespace aui::impl::future {
  * AFuture may execute the task (if not default-constructed) on the caller thread instead of waiting. See AFuture::wait
  * for details.
  */
-template<typename T = void>
+template<typename T>
 class AFuture final: public aui::impl::future::Future<T> {
 private:
     using super = typename aui::impl::future::Future<T>;
 
 public:
     using Task = typename super::TaskCallback;
+    using Ptr = typename super::Ptr;
+    using PtrWeak = typename super::PtrWeak;
 #if AUI_COROUTINES
     using promise_type = typename super::CoPromiseType;
 #endif
@@ -638,6 +650,7 @@ public:
         inner->value = std::move(immediateValue);
     }
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
+    AFuture(Ptr ptr) noexcept: super(std::move(ptr)) {} // construct AFuture from internal shared_ptr.
     ~AFuture() = default;
 
     AFuture(const AFuture&) = default;
@@ -775,12 +788,15 @@ private:
 
 public:
     using Task = typename super::TaskCallback;
+    using Ptr = typename super::Ptr;
+    using PtrWeak = typename super::PtrWeak;
 #if AUI_COROUTINES
     using promise_type = typename super::CoPromiseType;
 #endif
     using Inner = decltype(std::declval<super>().inner());
 
     AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
+    AFuture(Ptr ptr) noexcept: super(std::move(ptr)) {} // construct AFuture from internal shared_ptr.
     ~AFuture() = default;
 
     AFuture(const AFuture&) = default;
@@ -938,57 +954,5 @@ void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapp
 }
 
 #if AUI_COROUTINES
-template<typename Value>
-struct aui::impl::future::Future<Value>::CoPromiseType {
-    AFuture<Value> future;
-    auto initial_suspend() const noexcept
-    {
-        return std::suspend_never{};
-    }
-
-    auto final_suspend() const noexcept
-    {
-        return std::suspend_never{};
-    }
-    auto unhandled_exception() const noexcept {
-        future.supplyException();
-    }
-
-    const AFuture<Value>& get_return_object() const noexcept {
-        return future; 
-    }
-
-    void return_value(Value v) const noexcept {
-        future.supplyValue(std::move(v));
-    }
-};
-
-template<typename T>
-auto operator co_await(AFuture<T> future) {
-    struct Awaitable {
-        AFuture<T> future;
-
-        bool await_ready() const noexcept {
-            return future.hasResult();
-        }
-
-        T await_resume() {
-            return *future;
-        }
-
-
-        void await_suspend(std::coroutine_handle<> h)
-        {
-            future.onSuccess([h](const int&) {
-                h.resume();
-            });
-            
-            future.onError([h](const AException&) {
-                h.resume();
-            });
-        }
-    };
-
-    return Awaitable{ std::move(future) };
-}
+#include "AFutureCpp20Coro.h"
 #endif

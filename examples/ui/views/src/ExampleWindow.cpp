@@ -706,7 +706,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
         [tabView](bool checked) { tabView->enabled() = checked; },
         Label { "Enabled" },
       },
-      _new<ALabel>("\u00a9 Alex2772, 2025, alex2772.ru") AUI_LET {
+      _new<ALabel>("\u00a9 Alex2772, 2026, alex2772.ru") AUI_LET {
               it << "#copyright";
               it->setEnabled(false);
           },
@@ -714,7 +714,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
 }
 
 void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
-    AWindowBase::onDragDrop(event);
+    ASurface::onDragDrop(event);
 
     for (const auto& [k, v] : event.data.data()) {
         ALogger::info("Drop") << "[" << k << "] = " << AString::fromUtf8(v);

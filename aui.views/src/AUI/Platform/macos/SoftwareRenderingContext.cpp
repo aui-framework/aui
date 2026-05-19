@@ -23,19 +23,19 @@ SoftwareRenderingContext::~SoftwareRenderingContext() {
     }
 }
 
-void SoftwareRenderingContext::destroyNativeWindow(AWindowBase &window) {
+void SoftwareRenderingContext::destroyNativeWindow(ASurface &window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void SoftwareRenderingContext::beginPaint(AWindowBase &window) {
+void SoftwareRenderingContext::beginPaint(ASurface &window) {
     CommonRenderingContext::beginPaint(window);
 }
 
-void SoftwareRenderingContext::endPaint(AWindowBase &window) {
+void SoftwareRenderingContext::endPaint(ASurface &window) {
     CommonRenderingContext::endPaint(window);
 }
 
-void SoftwareRenderingContext::beginResize(AWindowBase &window) {
+void SoftwareRenderingContext::beginResize(ASurface &window) {
 
 }
 
@@ -43,14 +43,14 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     CommonRenderingContext::init(init);
 }
 
-void SoftwareRenderingContext::endResize(AWindowBase &window) {
+void SoftwareRenderingContext::endResize(ASurface &window) {
 
 }
 AImage SoftwareRenderingContext::makeScreenshot() {
     return AImage{};
 }
 
-void SoftwareRenderingContext::reallocate(const AWindowBase& window) {
+void SoftwareRenderingContext::reallocate(const ASurface& window) {
     mBitmapSize = window.getSize();
     reallocate();
 }

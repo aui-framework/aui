@@ -20,10 +20,20 @@ using namespace aui::gtk4_fake;
 using namespace aui::adw1_fake;
 
 PlatformAbstractionAdw::PlatformAbstractionAdw() {
-    handle = dlopen("libadwaita-1.so", RTLD_LAZY | RTLD_GLOBAL);
-    if (!handle) {
-        throw AException("failed to load libadwaita-1.so: {}"_format(dlerror()));
+    // Try multiple library names to support different distributions
+    static const auto libNames = {
+        "libadwaita-1.so",      // Standard name (Debian/Ubuntu)
+        "libadwaita-1.so.0",    // Versioned name (Fedora, Fedora Silverblue)
+    };
+    
+    for (const auto* libName : libNames) {
+        handle = dlopen(libName, RTLD_LAZY | RTLD_GLOBAL);
+        if (handle) {
+            return;
+        }
     }
+    
+    throw AException("failed to load libadwaita-1.so: {}"_format(dlerror()));
 }
 
 void PlatformAbstractionAdw::init() {

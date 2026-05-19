@@ -510,7 +510,7 @@ public:
     }
 
     void addString(const glm::ivec2& position, AStringView text) noexcept override {
-        addStringT(position, text);
+        addStringT(position, text.utf8());
     }
 
     void addString(const glm::ivec2& position, std::u32string_view text) noexcept override {
@@ -552,7 +552,7 @@ _<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AF
     return _new<SoftwareMultiStringCanvas>(this, style);
 }
 
-void SoftwareRenderer::setWindow(AWindowBase* window) {
+void SoftwareRenderer::setWindow(ASurface* window) {
     IRenderer::setWindow(window);
     if (auto context = dynamic_cast<SoftwareRenderingContext*>(window->getRenderingContext().get())) {
         mContext = context;

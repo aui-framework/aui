@@ -21,6 +21,8 @@
 #include "AUI/Thread/AFuture.h"
 #include "AUI/Thread/AMutexWrapper.h"
 #include "IEventLoop.h"
+#include "AUI/Common/ATimer.h"
+
 #include <AUI/Thread/AConditionVariable.h>
 #include <cstdint>
 #include <functional>
@@ -288,4 +290,12 @@ bool AAbstractThread::messageQueueEmpty() noexcept { return mMessageQueue.messag
 const _<AAbstractThread>& AThread::main() noexcept {
     static auto main = current(); // initialized by AUI_ENTRY.
     return main;
+}
+
+AFuture<> AThread::asyncSleep(std::chrono::milliseconds duration) {
+    AFuture<> future;
+    ATimer::scheduler().enqueue(duration, [future] {
+        future.supplyValue();
+    });
+    return future;
 }

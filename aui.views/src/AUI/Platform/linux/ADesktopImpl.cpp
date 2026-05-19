@@ -32,7 +32,7 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
 }
 
 AFuture<APath>
-ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, const AVector<FileExtension>& extensions) {
+ADesktop::browseForFile(ASurface *parent, const APath &startingLocation, const AVector<FileExtension>& extensions) {
     AUI_NULLSAFE(parent)->blockUserInput();
     AUI_DEFER { AUI_NULLSAFE(parent)->blockUserInput(false); };
 
@@ -40,7 +40,7 @@ ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, cons
 
     if (!startingLocation.empty()) {
         AVector<std::uint8_t> locationBytes;
-        for (const AByteBufferView buffer(startingLocation.data(), startingLocation.sizeBytes()); const auto& byte : buffer) {
+        for (const AByteBufferView buffer(startingLocation.data(), startingLocation.size()); const auto& byte : buffer) {
             locationBytes.push_back(byte);
         }
 
@@ -108,7 +108,7 @@ ADesktop::browseForFile(AWindowBase *parent, const APath &startingLocation, cons
     return f;
 }
 
-AFuture<APath> ADesktop::browseForDir(AWindowBase *parent, const APath &startingLocation) {
+AFuture<APath> ADesktop::browseForDir(ASurface *parent, const APath &startingLocation) {
     AUI_NULLSAFE(parent)->blockUserInput();
 
     AMap<std::string, aui::dbus::Variant> options;
@@ -116,7 +116,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase *parent, const APath &starting
 
     if (!startingLocation.empty()) {
         AVector<std::uint8_t> locationBytes;
-        for (const AByteBufferView buffer(startingLocation.data(), startingLocation.sizeBytes()); const auto &byte : buffer) {
+        for (const AByteBufferView buffer(startingLocation.data(), startingLocation.size()); const auto &byte : buffer) {
             locationBytes.push_back(byte);
         }
 

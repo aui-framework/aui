@@ -16,6 +16,8 @@
 #include "AUI/Platform/linux/IPlatformAbstraction.h"
 #include "AUI/Platform/linux/AGlibPtr.h"
 
+class RenderingContextGtk;
+
 class PlatformAbstractionGtk: public IPlatformAbstraction {
 public:
     static aui::gtk4_fake::GtkWindow*& nativeHandle(AWindow& window) {
@@ -27,11 +29,10 @@ public:
     void init() override;
     _<ACursor::Custom> createCustomCursor(AImageView image) override;
     void applyNativeCursor(const ACursor &cursor, AWindow *pWindow) override;
-    void copyToClipboard(const AString &text) override;
-    AString pasteFromClipboard() override;
+    void setClipboardText(const AString &text) override;
+    AString getClipboardText() override;
     glm::ivec2 desktopGetMousePosition() override;
     void desktopSetMousePosition(glm::ivec2 pos) override;
-    float platformGetDpiRatio() override;
     AInput::Key inputFromNative(int k) override;
     int inputToNative(AInput::Key key) override;
     bool inputIsKeyDown(AInput::Key k) override;
@@ -71,7 +72,10 @@ protected:
     AGlibPtr<GApplication> mApplication;
     aui::gtk4_fake::GtkWidget* windowManagerInitGtkBox(const IRenderingContext::Init &init) const;
     void windowManagerInitCommon(const IRenderingContext::Init &init, aui::gtk4_fake::GtkWindow* window);
+    void gtkSetWindowClassHint(RenderingContextGtk* context, aui::gtk4_fake::GtkWindow* gtkWindow);
 
 private:
     GMainContext* mMainContext;
+    
+    void setupDpiChangeMonitoring();
 };
