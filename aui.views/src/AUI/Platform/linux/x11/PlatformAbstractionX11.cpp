@@ -171,9 +171,11 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                                 case 127:
                                     break;   // del
                                 default:
-                                    AString s(buf);
+                                    AStringView s(buf);
                                     AUI_ASSERT(!s.empty());
-                                    window->onCharEntered(s.utf8().first());
+                                    for (const auto& c : s.utf8()) {
+                                      window->onChatEntered(c);
+                                    }
                             }
                         }
                         window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
