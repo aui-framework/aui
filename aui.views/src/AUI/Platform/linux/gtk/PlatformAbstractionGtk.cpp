@@ -14,6 +14,8 @@
 #include "RenderingContextGtk.h"
 #include "gtk_functions.h"
 #include <AUI/AppInfo.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/Platform/ASurface.h>
 
 // hack: we sort of implementing g_application_run here.
 // particularly:
@@ -66,6 +68,10 @@ void PlatformAbstractionGtk::init() {
         AUI_DEFER { g_error_free(error); };
         throw AException("failed to register GApplication: {}"_format(error->message));
     }
+    
+    // Monitor gtk-xft-dpi changes
+    setupDpiChangeMonitoring();
+    
     // maybe we might want to delegate command line handling to GApplication
     while (g_main_context_iteration (mMainContext, false));
 }
@@ -92,7 +98,13 @@ void PlatformAbstractionGtk::windowSetStyle(AWindow &window, WindowStyle ws) {
         gtk_window_set_transient_for(nativeHandle(window), nullptr);
     }
 }
-float PlatformAbstractionGtk::windowFetchDpiFromSystem(AWindow &window) { return 0; }
+float PlatformAbstractionGtk::windowFetchDpiFromSystem(AWindow &window) {
+    auto surface = gtk_native_get_surface(gtk_widget_get_native(GTK_WIDGET(nativeHandle(window))));
+    if (surface == nullptr) {
+        return 1.0f;
+    }
+    return float(gdk_surface_get_scale(surface));
+}
 void PlatformAbstractionGtk::windowRestore(AWindow &window) {}
 void PlatformAbstractionGtk::windowMinimize(AWindow &window) {}
 bool PlatformAbstractionGtk::windowIsMinimized(AWindow &window) const { return false; }
@@ -126,9 +138,52 @@ void PlatformAbstractionGtk::windowQuit(AWindow &window) {
 void PlatformAbstractionGtk::windowAnnounceMinMaxSize(AWindow &window) {}
 
 float PlatformAbstractionGtk::windowGetDpiRatio(AWindow &window) {
+    float scale = 1.0f;
+    
+    // Try to get surface scale first
     auto surface = gtk_native_get_surface(gtk_widget_get_native(GTK_WIDGET(nativeHandle(window))));
-    if (surface == nullptr) {
-        return 1.0;
+    if (surface != nullptr) {
+        scale = gdk_surface_get_scale(surface);
     }
-    return gdk_surface_get_scale(surface);
+    
+    // Also apply GTK text scale settings
+    auto settings = gtk_settings_get_default();
+    if (settings != nullptr) {
+        gint xft_dpi = 0;
+        g_object_get(settings, "gtk-xft-dpi", &xft_dpi, nullptr);
+        if (xft_dpi > 0) {
+            // gtk-xft-dpi is in units of 1/1024 of an inch, normalize to 96 dpi base
+            float text_scale = xft_dpi / 1024.0f / 96.0f;
+            scale *= text_scale;
+        }
+    }
+    
+    return scale;
+}
+
+void PlatformAbstractionGtk::setupDpiChangeMonitoring() {
+    auto settings = gtk_settings_get_default();
+    if (settings == nullptr) {
+        return;
+    }
+    
+    // Listen to changes in gtk-xft-dpi setting
+    g_signal_connect(
+        settings, "notify::gtk-xft-dpi",
+        G_CALLBACK(+[](GObject* object, GParamSpec* pspec, gpointer user_data) {
+            // Trigger updateDpi() on all open windows to handle system-wide DPI changes
+            try {
+                auto& windowManager = ASurface::getWindowManager();
+                for (auto& window : windowManager.getWindows()) {
+                    if (window) {
+                        window->getThread()->enqueue([window]() {
+                            window->updateDpi();
+                        });
+                    }
+                }
+            } catch (...) {
+                // Window manager may not be initialized yet
+            }
+        }),
+        nullptr);
 }

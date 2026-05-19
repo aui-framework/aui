@@ -76,4 +76,6 @@ protected:
 
 private:
     GMainContext* mMainContext;
+    
+    void setupDpiChangeMonitoring();
 };
