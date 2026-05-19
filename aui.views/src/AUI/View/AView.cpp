@@ -253,6 +253,11 @@ void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
         }
     }
     applyAssRule(mCustomStyleRule);
+
+    for (const auto& i : mAppliedModifier.elements()) {
+        i(*this);
+    }
+    
     commitStyle();
 
     if (prevMinimumSizePlusField != getMinimumSizePlusMargin()) {
@@ -680,8 +685,9 @@ void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     invalidateStateStylesImpl(prevMinSize);
 }
 
-void AView::applyModifier(ass::Modifier modifier) {
-    for (const auto& i : modifier.elements()) {
+void AView::setModifier(ass::Modifier modifier) {
+    mAppliedModifier = std::move(modifier);
+    for (const auto& i : mAppliedModifier.elements()) {
         i(*this);
     }
 }

@@ -775,7 +775,6 @@ public:
     }
 
     void setCustomStyle(ass::PropertyListRecursive rule);
-    void applyModifier(ass::Modifier modifier);
 
     void ensureAssUpdated();
 
@@ -935,6 +934,14 @@ public:
     {
         return mFloating;
     }
+
+    /**
+     * @brief Apply a modifier to this view.
+     * @param modifier modifier to apply
+     * @details
+     * Stores the modifier and re-applies it after style updates to ensure it takes precedence over ASS styles.
+     */
+    void setModifier(ass::Modifier modifier);
 
 signals:
     /**
@@ -1212,6 +1219,13 @@ private:
      * Extra stylesheet overrides the global stylesheet on conflicts.
      */
     _<AStylesheet> mExtraStylesheet;
+
+    /**
+     * @brief Applied modifier that takes precedence over ASS styles.
+     * @details
+     * Stored and re-applied after style updates to ensure it always takes effect.
+     */
+    ass::Modifier mAppliedModifier;
 
     /**
      * @brief Called when parent's enable state is changed. Overridden in AViewContainer.
