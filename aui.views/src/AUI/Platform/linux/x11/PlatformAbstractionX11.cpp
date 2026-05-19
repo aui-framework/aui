@@ -174,7 +174,7 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                                     AStringView s(buf);
                                     AUI_ASSERT(!s.empty());
                                     for (const auto& c : s.utf8()) {
-                                      window->onChatEntered(c);
+                                      window->onCharEntered(c);
                                     }
                             }
                         }
