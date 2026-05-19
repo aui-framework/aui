@@ -15,4 +15,6 @@
 
 #include "AppInfo.h"
 
+// weak data - will be overridden by aui_app if linked together, otherwise defaults to these values
 AString aui::app_info::name = "unknown";
+AString aui::app_info::app_id = "com.unknown.aui-application";
