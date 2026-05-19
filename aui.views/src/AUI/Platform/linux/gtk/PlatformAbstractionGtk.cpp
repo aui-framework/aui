@@ -15,6 +15,7 @@
 #include "gtk_functions.h"
 #include <AUI/AppInfo.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Platform/ASurface.h>
 
 // hack: we sort of implementing g_application_run here.
 // particularly:
@@ -170,11 +171,18 @@ void PlatformAbstractionGtk::setupDpiChangeMonitoring() {
     g_signal_connect(
         settings, "notify::gtk-xft-dpi",
         G_CALLBACK(+[](GObject* object, GParamSpec* pspec, gpointer user_data) {
-            // Trigger updateDpi() on current window
-            if (auto currentWindow = dynamic_cast<AWindow*>(AWindow::current())) {
-                currentWindow->getThread()->enqueue([currentWindow]() {
-                    currentWindow->updateDpi();
-                });
+            // Trigger updateDpi() on all open windows to handle system-wide DPI changes
+            try {
+                auto& windowManager = ASurface::getWindowManager();
+                for (auto& window : windowManager.getWindows()) {
+                    if (window) {
+                        window->getThread()->enqueue([window]() {
+                            window->updateDpi();
+                        });
+                    }
+                }
+            } catch (...) {
+                // Window manager may not be initialized yet
             }
         }),
         nullptr);
