@@ -92,7 +92,9 @@ public:
     //}
     AWindow(const AString& name = "My window", AMetric width = 854_dp, AMetric height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
         windowNativePreInit(name, width.getRawValue(), height.getRawValue(), parent, ws);
-        setSize(glm::ivec2(width, height));
+        setSize(glm::ivec2(
+            width.getUnit() == AMetric::T_DP ? width.getRawValue() * fetchDpiFromSystem() : width.getRawValue(),
+            height.getUnit() == AMetric::T_DP ? height.getRawValue() * fetchDpiFromSystem() : height.getRawValue()));
     }
     ~AWindow() override;
 
