@@ -173,7 +173,7 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                                 default:
                                     AString s(buf);
                                     AUI_ASSERT(!s.empty());
-                                    window->onCharEntered(s[0]);
+                                    window->onCharEntered(s.utf8().first());
                             }
                         }
                         window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
