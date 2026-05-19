@@ -1368,7 +1368,8 @@ macro(aui_app)
         set(APP_ID "com.unknown.aui-application")
     endif()
 
-    file(WRITE "${CMAKE_BINARY_DIR}/appinfo.cpp" "#include <AUI/AppInfo.h>
+    set(_appinfo_cpp "${CMAKE_CURRENT_BINARY_DIR}/appinfo_${APP_TARGET}.cpp")
+    file(WRITE "${_appinfo_cpp}" "#include <AUI/AppInfo.h>
     struct AUIAppInfo {
         AUIAppInfo() {
             aui::app_info::name = \"${APP_NAME}\";
@@ -1376,7 +1377,7 @@ macro(aui_app)
         }
     }; AUIAppInfo auiAppInfo;")
 
-    target_sources(${APP_TARGET} PUBLIC ${CMAKE_BINARY_DIR}/appinfo.cpp)
+    target_sources(${APP_TARGET} PUBLIC ${_appinfo_cpp})
 
     # defaults
     # ios

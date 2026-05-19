@@ -28,7 +28,7 @@ extern API_AUI_CORE AString name;
 
 /**
  * @brief application identifier (app-id) for X11 WM_CLASS, Wayland app-id and Windows' class.
- * @details If not set via aui_app, defaults to "com.example.AUI" format
+ * @details If not set via aui_app, defaults to "com.unknown.aui-application"
  */
 extern API_AUI_CORE AString app_id;
 }
