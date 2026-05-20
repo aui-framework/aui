@@ -909,7 +909,7 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
 
     # [[BUILD_SPECIFIER]]
-    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_TRIPLET}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${AUIB_IMPORT_CMAKE_ARGS}")
+    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_TRIPLET}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_C_FLAGS}+${CMAKE_CXX_FLAGS}")
     string(REPLACE ";" " " BUILD_SPECIFIER "${BUILD_SPECIFIER}")
 
     # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
@@ -984,7 +984,7 @@ function(auib_import AUI_MODULE_NAME URL)
     if(AUI_BOOT_SOURCEDIR_COMPAT)
         unset(SOURCE_BINARY_DIRS_ARG)
     else()
-        if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT AND NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG) # recursive deadlock fix
+        if (NOT AUI_BOOT_INSIDE AND NOT AUIB_SKIP_REPOSITORY_WAIT AND NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG) # recursive deadlock fix
             if (NOT _locked)
                 set(_locked TRUE)
                 file(LOCK "${AUIB_CACHE_DIR}/repo.lock" RESULT_VARIABLE _error TIMEOUT 1) # try lock without the message
@@ -1099,6 +1099,7 @@ function(auib_import AUI_MODULE_NAME URL)
                 endforeach()
                 set(FINAL_CMAKE_ARGS
                         -DAUI_BOOT=TRUE
+                        -DAUI_BOOT_INSIDE=TRUE
                         --no-warn-unused-cli # zaebalo
                         ${FORWARDED_LIBS}
                         ${AUIB_IMPORT_CMAKE_ARGS}
