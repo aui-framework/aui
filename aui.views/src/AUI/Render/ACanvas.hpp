@@ -37,7 +37,7 @@ public:
     virtual ~ACanvas() = default;
 
     virtual void save() {
-        mStates.push_back(State{mTransform, mColorMultiplier, mOpacity});
+        mStates.push_back(State{mTransform, mColorMultiplier, mOpacity, mBlending});
     }
 
     virtual void restore() {
@@ -47,6 +47,7 @@ public:
             mTransform = s.transform;
             mColorMultiplier = s.colorMultiplier;
             mOpacity = s.opacity;
+            mBlending = s.blending;
         }
     }
 
@@ -61,7 +62,9 @@ public:
         mColorMultiplier = mColorMultiplier * color;
     }
 
-    virtual void setBlending(Blending blending) = 0;
+    virtual void setBlending(Blending blending) {
+        mBlending = blending;
+    }
 
     virtual void rectangle(const APaint& paint,
                            glm::vec2 position,
@@ -126,27 +129,49 @@ public:
 
     virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) = 0;
 
+    virtual _<ITexture> getNewTexture() = 0;
+
+    virtual float getRenderScale() const noexcept = 0;
+    virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
+    virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
+
     const glm::mat4& getTransform() const noexcept { return mTransform; }
-    void setTransformForced(const glm::mat4& transform) noexcept { mTransform = transform; }
+    virtual void setTransformForced(const glm::mat4& transform) noexcept { mTransform = transform; }
 
     const AColor& getColorMultiplier() const noexcept { return mColorMultiplier; }
     void setColorMultiplier(const AColor& color) noexcept { mColorMultiplier = color; }
+
+    virtual void setColorForced(const AColor& color) noexcept { mColorMultiplier = color; }
+    const AColor& getColor() const noexcept { return mColorMultiplier; }
+
+    void translate(const glm::vec2& offset) {
+        setTransformForced(glm::translate(getTransform(), glm::vec3(offset, 0.f)));
+    }
+    void rotate(const glm::vec3& axis, AAngleRadians angle) {
+        setTransformForced(glm::rotate(getTransform(), angle.radians(), axis));
+    }
+    void rotate(AAngleRadians angle) {
+        rotate({0.f, 0.f, 1.f}, angle);
+    }
 
     float getOpacity() const noexcept { return mOpacity; }
     void setOpacity(float opacity) noexcept { mOpacity = opacity; }
 
     std::uint8_t getStencilDepth() const noexcept { return mStencilDepth; }
+    void setStencilDepth(std::uint8_t stencilDepth) noexcept { mStencilDepth = stencilDepth; }
 
 protected:
     struct State {
         glm::mat4 transform;
         AColor colorMultiplier;
         float opacity;
+        Blending blending;
     };
     std::vector<State> mStates;
     glm::mat4 mTransform = glm::mat4(1.0f);
     AColor mColorMultiplier = AColor::WHITE;
     float mOpacity = 1.0f;
+    Blending mBlending = Blending::NORMAL;
     std::uint8_t mStencilDepth = 0;
 };
 
