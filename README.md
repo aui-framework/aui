@@ -16,8 +16,8 @@ programming languages and external compilers.
 <div align = center>
 
 **[<kbd> <br> Documentation <br> </kbd>](https://aui-framework.github.io)**
-**[<kbd> <br> Examples <br> </kbd>](https://aui-framework.github.io/master/examples.html)**
-**[<kbd> <br> Getting started <br> </kbd>](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html)**
+**[<kbd> <br> Examples <br> </kbd>](https://aui-framework.github.io/master/examples/)**
+**[<kbd> <br> Getting Started <br> </kbd>](https://aui-framework.github.io/master/getting-started/)**
 **[<kbd> <br> Roadmap <br> </kbd>](https://github.com/orgs/aui-framework/projects/3/views/1)**
 **[<kbd> <br> News <br> </kbd>](https://github.com/aui-framework/aui/discussions/categories/announcements)**
 **[<kbd> <br> Discussions <br> </kbd>](https://github.com/aui-framework/aui/discussions)**
@@ -49,7 +49,7 @@ Use our setup-free repository templates for quick start:
 
 1. [Minimal UI](https://github.com/aui-framework/example_minimal_ui) - an absolute minimum to start a graphical UI application, without any boilerplate.
 2. [Minimal UI with assets](https://github.com/aui-framework/example_assets_ui) - same as above but with assets.
-3. [Full-fledged App Template](https://aui-framework.github.io/master/example_app_template.html) - a complete template to create a GitHub-hosted app project with CI/CD building,
+3. [Full-fledged App Template](https://aui-framework.github.io/master/app-template/) - a complete template to create a GitHub-hosted app project with CI/CD building,
    testing, releasing, auto updating, code quality checking and more.
 
 ## Integrating AUI to existing CMake project
@@ -202,7 +202,7 @@ Result:
 
 ## IDE Plugins
 
-[Refer to documentation page](https://aui-framework.github.io/master/md_docs_2IDE_01Plugins.html)
+[Refer to documentation page](https://aui-framework.github.io/master/ide-plugins/)
 
 ## Projects using AUI
 
@@ -215,7 +215,7 @@ Result:
 
 ## Examples
 
-Check the [examples](https://aui-framework.github.io/master/examples.html) page in our
+Check the [examples](https://aui-framework.github.io/master/examples/) page in our
 [docs](https://aui-framework.github.io) or [examples/](https://github.com/aui-framework/aui/tree/master/examples) dir in
 our repo.
 

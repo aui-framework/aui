@@ -1365,14 +1365,22 @@ macro(aui_app)
     cmake_parse_arguments(APP "${options}" "${oneValueArgs}"
             "${multiValueArgs}" ${ARGN} )
 
-    file(WRITE "${CMAKE_BINARY_DIR}/appinfo.cpp" "#include <AUI/AppInfo.h>
+    # Generate app_id from vendor and name if not explicitly set
+    if (NOT APP_ID)
+        # Default app_id
+        set(APP_ID "com.unknown.aui-application")
+    endif()
+
+    set(_appinfo_cpp "${CMAKE_CURRENT_BINARY_DIR}/appinfo_${APP_TARGET}.cpp")
+    file(WRITE "${_appinfo_cpp}" "#include <AUI/AppInfo.h>
     struct AUIAppInfo {
         AUIAppInfo() {
             aui::app_info::name = \"${APP_NAME}\";
+            aui::app_info::app_id = \"${APP_ID}\";
         }
     }; AUIAppInfo auiAppInfo;")
 
-    target_sources(${APP_TARGET} PUBLIC ${CMAKE_BINARY_DIR}/appinfo.cpp)
+    target_sources(${APP_TARGET} PUBLIC ${_appinfo_cpp})
 
     # defaults
     # ios
