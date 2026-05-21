@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -16,33 +16,60 @@
 #include <AUI/Common/AColor.h>
 #include <AUI/GL/gl.h>
 #include "IRenderer.h"
+#include <variant>
+#include <AUI/Render/ACanvas.hpp>
 
 namespace RenderHints {
-    /**
-     * @brief Increases mask stack. Used by AView.
-     * @param render renderer
-     * @param maskRenderer function - mask renderer
-     * @details
-     * This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
-     * wrapper class instead.
-     */
+    class CanvasOrRenderer {
+    public:
+        CanvasOrRenderer(IRenderer& renderer) : mVal(&renderer) {}
+        CanvasOrRenderer(ACanvas& canvas) : mVal(&canvas) {}
+
+        glm::mat4 getTransform() const {
+            if (auto* r = std::get_if<IRenderer*>(&mVal)) return (*r)->getTransform();
+            return std::get<ACanvas*>(mVal)->getTransform();
+        }
+        void setTransformForced(const glm::mat4& t) {
+            if (auto* r = std::get_if<IRenderer*>(&mVal)) (*r)->setTransformForced(t);
+            else std::get<ACanvas*>(mVal)->setTransformForced(t);
+        }
+        AColor getColor() const {
+            if (auto* r = std::get_if<IRenderer*>(&mVal)) return (*r)->getColor();
+            return std::get<ACanvas*>(mVal)->getColor();
+        }
+        void setColorForced(const AColor& c) {
+            if (auto* r = std::get_if<IRenderer*>(&mVal)) (*r)->setColorForced(c);
+            else std::get<ACanvas*>(mVal)->setColorForced(c);
+        }
+        void pushMaskBefore() {
+            if (auto* r = std::get_if<IRenderer*>(&mVal)) (*r)->pushMaskBefore();
+            else std::get<ACanvas*>(mVal)->pushMaskBefore();
+        }
+        void pushMaskAfter() {
+            if (auto* r = std::get_if<IRenderer*>(&mVal)) (*r)->pushMaskAfter();
+            else std::get<ACanvas*>(mVal)->pushMaskAfter();
+        }
+        void popMaskBefore() {
+            if (auto* r = std::get_if<IRenderer*>(&mVal)) (*r)->popMaskBefore();
+            else std::get<ACanvas*>(mVal)->popMaskBefore();
+        }
+        void popMaskAfter() {
+            if (auto* r = std::get_if<IRenderer*>(&mVal)) (*r)->popMaskAfter();
+            else std::get<ACanvas*>(mVal)->popMaskAfter();
+        }
+    private:
+        std::variant<IRenderer*, ACanvas*> mVal;
+    };
+
     template<aui::invocable Callable>
-    static void pushMask(IRenderer& render, Callable&& maskRenderer) {
+    static void pushMask(CanvasOrRenderer render, Callable&& maskRenderer) {
         render.pushMaskBefore();
         maskRenderer();
         render.pushMaskAfter();
     }
 
-    /**
-     * @brief Decreases mask stack. Used by AView.
-     * @param render renderer
-     * @param maskRenderer function - mask renderer
-     * @details
-     * This function is unsafe. It is faster, simpler and safer to use the <code>RenderHints::PushMask</code>
-     * wrapper class instead.
-     */
     template<aui::invocable Callable>
-    static void popMask(IRenderer& render, Callable&& maskRenderer) {
+    static void popMask(CanvasOrRenderer render, Callable&& maskRenderer) {
         render.popMaskBefore();
         maskRenderer();
         render.popMaskAfter();
@@ -51,7 +78,7 @@ namespace RenderHints {
     template<aui::invocable Callable>
     struct PushMask {
     public:
-        inline explicit PushMask(IRenderer& render, Callable&& maskRenderer) :
+        inline explicit PushMask(CanvasOrRenderer render, Callable&& maskRenderer) :
                 render(render),
                 maskRenderer(std::forward<Callable>(maskRenderer)) {
             pushMask(render, std::forward<Callable>(maskRenderer));
@@ -62,13 +89,13 @@ namespace RenderHints {
         }
 
     private:
-        IRenderer& render;
+        CanvasOrRenderer render;
         Callable maskRenderer;
     };
 
     struct PushMatrix {
     public:
-        inline explicit PushMatrix(IRenderer& render) : render(render), stored(render.getTransform()) {
+        inline explicit PushMatrix(CanvasOrRenderer render) : render(render), stored(render.getTransform()) {
         }
 
         inline ~PushMatrix() {
@@ -76,13 +103,13 @@ namespace RenderHints {
         }
 
     private:
-        IRenderer& render;
+        CanvasOrRenderer render;
         glm::mat4 stored;
     };
 
     struct PushColor {
     public:
-        inline explicit PushColor(IRenderer& render): render(render), stored(render.getColor()) {
+        inline explicit PushColor(CanvasOrRenderer render): render(render), stored(render.getColor()) {
         }
 
         inline ~PushColor() {
@@ -90,12 +117,12 @@ namespace RenderHints {
         }
 
     private:
-        IRenderer& render;
+        CanvasOrRenderer render;
         AColor stored;
     };
 
     class PushState : PushColor, PushMatrix {
     public:
-        inline explicit PushState(IRenderer& render): PushColor(render), PushMatrix(render) {}
+        inline explicit PushState(CanvasOrRenderer render): PushColor(render), PushMatrix(render) {}
     };
 }

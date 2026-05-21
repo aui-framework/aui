@@ -17,6 +17,7 @@
 #include <AUI/Render/ARenderContext.h>
 
 class IRenderer;
+class ACanvas;
 class AView;
 
 /**
@@ -107,12 +108,7 @@ public:
      */
     virtual void end(IRenderer& renderer) = 0;
 
-    /**
-     * @brief Draws contents of the surface.
-     * @param renderer renderer to draw with. IRenderViewToTexture is expected to be associated with the renderer
-     * it's created with and normally this parameter is used to assert check the used renderer is the same.
-     */
-    virtual void draw(IRenderer& renderer) = 0;
+    virtual void draw(ACanvas& canvas) = 0;
 
     virtual ~IRenderViewToTexture() = default;
 

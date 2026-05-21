@@ -15,8 +15,8 @@
 #include <glm/glm.hpp>
 #include <AUI/Geometry2D/ARect.h>
 #include <AUI/Common/AStaticVector.h>
-#include <AUI/Render/ACanvas.hpp>
 
+class ACanvas;
 class IRenderer;
 
 /**

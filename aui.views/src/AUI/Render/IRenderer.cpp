@@ -12,24 +12,27 @@
 #include <range/v3/all.hpp>
 #include "IRenderer.h"
 
-void IRenderer::stub(glm::vec2 position, glm::vec2 size) { rectangle(ASolidBrush { 0xa0a0a0_rgb }, { 0, 0 }, size); }
+void IRenderer::stub(glm::vec2 position, glm::vec2 size) {
+    rectangle(ADisplayList::Rectangle{{ 0, 0 }, size}, APaint{ASolidBrush{0xa0a0a0_rgb}});
+}
 
-void IRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops) {
+void IRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {
     stub(position, size);
 }
-void IRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) {
+
+void IRenderer::backdrops(const ADisplayList::Backdrop& v, const APaint& paint) {
     using Preprocessed = ass::Backdrop::Preprocessed;
     auto preprocessed =
-        backdrops | ranges::views::transform([](const ass::Backdrop::Any& v) -> Preprocessed {
+        v.backdrops | ranges::views::transform([](const ass::Backdrop::Any& val) -> Preprocessed {
             return std::visit(
                 aui::lambda_overloaded {
-                  [](const ass::Backdrop::GaussianBlur& v) -> Preprocessed {
-                      return v.findOptimalParams();
+                  [](const ass::Backdrop::GaussianBlur& b) -> Preprocessed {
+                      return b.findOptimalParams();
                   },
-                  [](const auto& v) -> Preprocessed { return v; },
+                  [](const auto& b) -> Preprocessed { return b; },
                 },
-                v);
+                val);
         }) |
         ranges::to_vector;
-    this->backdrops(position, size, std::span<Preprocessed>(preprocessed.data(), preprocessed.size()));
+    this->backdrops(v.position, v.size, std::span<const Preprocessed>(preprocessed.data(), preprocessed.size()));
 }
