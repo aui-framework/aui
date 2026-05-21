@@ -13,8 +13,10 @@
 
 #include <AUI/Common/AColor.h>
 #include <AUI/Render/Blending.h>
+#include <AUI/Render/ABrush.h>
 
 struct APaint {
+    ABrush brush = ASolidBrush{AColor::WHITE};
     AColor color = AColor::WHITE;
     Blending blending = Blending::NORMAL;
     float opacity = 1.0f;
