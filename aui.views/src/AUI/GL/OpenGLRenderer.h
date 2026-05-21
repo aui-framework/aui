@@ -124,7 +124,7 @@ private:
      */
     FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
 
-    void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops) override;
+    void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
 protected:
     _unique<ITexture> createNewTexture() override;
@@ -135,64 +135,22 @@ public:
     void identityUv();
     bool isVaoAvailable() const noexcept;
 
-    void rectangle(const ABrush& brush,
-                   glm::vec2 position,
-                   glm::vec2 size) override;
-
-    void roundedRectangle(const ABrush& brush,
-                          glm::vec2 position,
-                          glm::vec2 size,
-                          float radius) override;
-
-    void rectangleBorder(const ABrush& brush,
-                         glm::vec2 position,
-                         glm::vec2 size,
-                         float lineWidth) override;
-
-    void roundedRectangleBorder(const ABrush& brush,
-                                glm::vec2 position,
-                                glm::vec2 size,
-                                float radius,
-                                int borderWidth) override;
-
-    void boxShadow(glm::vec2 position,
-                   glm::vec2 size,
-                   float blurRadius,
-                   const AColor& color) override;
-        
-    void boxShadowInner(glm::vec2 position,
-                        glm::vec2 size,
-                        float blurRadius,
-                        float spreadRadius,
-                        float borderRadius,
-                        const AColor& color,
-                        glm::vec2 offset) override;
-
-    void string(glm::vec2 position,
-                const AString& string,
-                const AFontStyle& fs) override;
-
+    void rectangle(const ADisplayList::Rectangle& v, const APaint& paint) override;
+    void roundedRectangle(const ADisplayList::RoundedRectangle& v, const APaint& paint) override;
+    void rectangleBorder(const ADisplayList::RectangleBorder& v, const APaint& paint) override;
+    void roundedRectangleBorder(const ADisplayList::RoundedRectangleBorder& v, const APaint& paint) override;
+    void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint) override;
+    void boxShadowInner(const ADisplayList::BoxShadowInner& v, const APaint& paint) override;
+    void string(const ADisplayList::Text& v, const APaint& paint) override;
     _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
-
     void drawRectImpl(glm::vec2 position, glm::vec2 size);
-
     void setBlending(Blending blending) override;
-
     _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
-
     glm::mat4 getProjectionMatrix() const override;
-
-    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;
-
-    void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) override;
-
-    void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) override;
-
-    void squareSector(const ABrush& brush,
-                      const glm::vec2& position,
-                      const glm::vec2& size,
-                      AAngleRadians begin,
-                      AAngleRadians end) override;
+    void lines(const ADisplayList::Lines& v, const APaint& paint) override;
+    void lines(const ADisplayList::LineBatches& v, const APaint& paint) override;
+    void points(const ADisplayList::Points& v, const APaint& paint) override;
+    void squareSector(const ADisplayList::SquareSector& v, const APaint& paint) override;
 
     void pushMaskBefore() override;
     void pushMaskAfter() override;

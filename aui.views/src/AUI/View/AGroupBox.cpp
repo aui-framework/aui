@@ -30,10 +30,10 @@ namespace {
         void drawStencilMask(ARenderContext ctx) override {
             AView::drawStencilMask(ctx);
 
-            RenderHints::PushMatrix transform(ctx.render);
+            RenderHints::PushMatrix transform(ctx.canvas);
             auto d = mTitle->getPositionInWindow() - getPositionInWindow();
-            AUI_REPEAT(2) { // render twice to definitely avoid stencil issues
-                ctx.render.rectangle(ASolidBrush{},
+            AUI_REPEAT(2) {
+                ctx.canvas.rectangle(APaint{ASolidBrush{}},
                                      d,
                                      mTitle->getSize());
             }

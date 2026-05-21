@@ -14,9 +14,11 @@
 #include <AUI/Image/IDrawable.h>
 #include <AUI/Render/ITexture.h>
 
+class ACanvas;
+
 class ANoiseDrawable: public IDrawable {
 public:
-    void draw(IRenderer& render, const Params& params) override;
+    void draw(ACanvas& render, const Params& params) override;
     glm::ivec2 getSizeHint() override;
 
 private:

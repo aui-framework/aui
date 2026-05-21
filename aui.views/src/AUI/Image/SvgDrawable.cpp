@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -18,6 +18,7 @@
 
 #include <AUI/Common/AString.h>
 #include <AUI/Render/IRenderer.h>
+#include <AUI/Render/ACanvas.hpp>
 
 
 inline uint64_t asKey(const glm::ivec2 size) {
@@ -38,20 +39,20 @@ glm::ivec2 AVectorDrawable::getSizeHint() {
     return mFactory->getSizeHint();
 }
 
-void AVectorDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
+void AVectorDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
     auto& size = params.size;
     if (size.x < 1 || size.y < 1) {
         return;
     }
     auto key = asKey(size);
     auto doDraw = [&](const _<ITexture>& texture) {
-        render.rectangle(ATexturedBrush{
+        render.rectangle(APaint{ATexturedBrush{
                                      .texture = texture,
                                      .uv1 = params.cropUvTopLeft,
                                      .uv2 = params.cropUvBottomRight,
                                      .imageRendering = ImageRendering::PIXELATED,
                                      .repeat = params.repeat,
-                             },
+                             }},
                              params.offset,
                              size);
     };
@@ -74,7 +75,6 @@ void AVectorDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
         textureSize.y = getSizeHint().y;
     }
 
-    // rasterization
     auto texture = render.getNewTexture();
     texture->setImage(mFactory->provideImage(glm::max(textureSize, glm::ivec2(0))));
     mRasterized.push_back({key, texture});

@@ -15,7 +15,7 @@
 //
 
 #include "AUI/Common/AException.h"
-#include "AUI/Render/IRenderer.h"
+#include <AUI/Render/ACanvas.hpp>
 #include "AImageDrawable.h"
 #include "AUI/Render/ITexture.h"
 #include <AUI/Platform/AWindow.h>
@@ -33,7 +33,7 @@ glm::ivec2 AImageDrawable::getSizeHint() {
 }
 
 
-void AImageDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
+void AImageDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
     if (auto asImage = std::get_if<_<AImage>>(&mStorage)) {
         auto texture = render.getNewTexture();
         texture->setImage(**asImage);
@@ -41,12 +41,14 @@ void AImageDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
     }
     const auto& texture = std::get<_<ITexture>>(mStorage);
 
-    render.rectangle(ATexturedBrush{
+    render.rectangle(APaint {
+        ATexturedBrush {
             .texture = texture,
             .uv1 = params.cropUvTopLeft,
             .uv2 = params.cropUvBottomRight,
             .imageRendering = params.imageRendering,
             .repeat = params.repeat,
+        }
     }, params.offset, params.size);
 }
 

@@ -37,34 +37,30 @@ public:
             _<IRenderer::IPrerenderedString> finalize() noexcept override { return _new<StubPrerenderedString>(); }
         };
     }
-    void rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) override {}
-    void roundedRectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius) override {}
-    void rectangleBorder(const ABrush& brush, glm::vec2 position, glm::vec2 size, float lineWidth) override {}
+    void rectangle(const ADisplayList::Rectangle& v, const APaint& paint) override {}
+    void roundedRectangle(const ADisplayList::RoundedRectangle& v, const APaint& paint) override {}
+    void rectangleBorder(const ADisplayList::RectangleBorder& v, const APaint& paint) override {}
     void roundedRectangleBorder(
-        const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius, int borderWidth) override {}
-    void boxShadow(glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) override {}
+        const ADisplayList::RoundedRectangleBorder& v, const APaint& paint) override {}
+    void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint) override {}
     void boxShadowInner(
-        glm::vec2 position, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius,
-        const AColor& color, glm::vec2 offset) override {}
-    void string(glm::vec2 position, const AString& string, const AFontStyle& fs) override {}
+        const ADisplayList::BoxShadowInner& v, const APaint& paint) override {}
+    void string(const ADisplayList::Text& v, const APaint& paint) override {}
     _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override {
         return _new<StubPrerenderedString>();
     }
-    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override {}
-    void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) override {}
-    void
-    lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style,
-          AMetric width) override {}
+    void lines(const ADisplayList::Lines& v, const APaint& paint) override {}
+    void points(const ADisplayList::Points& v, const APaint& paint) override {}
+    void lines(const ADisplayList::LineBatches& v, const APaint& paint) override {}
     void squareSector(
-        const ABrush& brush, const glm::vec2& position, const glm::vec2& size, AAngleRadians begin,
-        AAngleRadians end) override {}
+        const ADisplayList::SquareSector& v, const APaint& paint) override {}
     void pushMaskBefore() override {}
     void pushMaskAfter() override {}
     void popMaskBefore() override {}
     void popMaskAfter() override {}
     void setBlending(Blending blending) override {}
     [[nodiscard]] _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override { return nullptr; }
-    void setWindow(AWindowBase* window) override {}
+    void setWindow(ASurface* window) override {}
     glm::mat4 getProjectionMatrix() const override { return glm::mat4(1.0f); }
 
 protected:
@@ -76,7 +72,7 @@ protected:
         };
         return std::make_unique<Stub>();
     }
-    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops) override {}
+    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override {}
 };
 
 }   // namespace

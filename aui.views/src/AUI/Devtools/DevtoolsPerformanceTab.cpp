@@ -67,10 +67,10 @@ namespace {
         void render(ARenderContext ctx) override {
             AView::render(ctx);
             if (mTexture == nullptr) {
-                mTexture = ctx.render.getNewTexture();
+                mTexture = ctx.canvas.getNewTexture();
             }
 
-            ctx.render.rectangle(ATexturedBrush {
+            ctx.canvas.rectangle(ATexturedBrush {
                 .texture = mTexture,
                 .imageRendering = ImageRendering::PIXELATED,
             }, {0, 0}, mImage.size() * plotScale());
@@ -80,11 +80,11 @@ namespace {
             }
 
             if (mHoveredFrameIndex && !mSelectedFrameIndex) {
-                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.canvas.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
 
             if (mSelectedFrameIndex) {
-                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.canvas.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
         }
 

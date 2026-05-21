@@ -217,8 +217,8 @@ public:
             prerenderString(context);
         }
         if (mPrerenderedString) {
-            RenderHints::PushColor c(context.render);
-            context.render.setColor(textColor());
+            RenderHints::PushColor c(context.canvas);
+            context.canvas.setColor(textColor());
             mPrerenderedString->draw();
         }
     }
@@ -294,7 +294,7 @@ protected:
     void prerenderString(ARenderContext ctx) {
         performLayout();
         {
-            auto multiStringCanvas = ctx.render.newMultiStringCanvas(getFontStyle());
+            auto multiStringCanvas = ctx.canvas.newMultiStringCanvas(getFontStyle());
             fillStringCanvas(multiStringCanvas);
             /*
             */

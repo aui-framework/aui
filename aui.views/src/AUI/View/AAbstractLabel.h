@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -45,7 +45,7 @@ public:
     explicit AAbstractLabel(AString text) noexcept: mText(std::move(text)) {}
 
     void render(ARenderContext context) override;
-    void doRenderText(IRenderer& render);
+    void doRenderText(ACanvas& render);
     int getContentMinimumWidth() override;
     int getContentMinimumHeight() override;
 
@@ -66,7 +66,7 @@ public:
         mIconColor = iconColor;
     }
 
-    void doPrerender(IRenderer& render);
+    void doPrerender(ACanvas& render);
 
     void onDpiChanged() override;
 

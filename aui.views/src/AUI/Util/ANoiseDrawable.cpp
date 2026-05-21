@@ -10,10 +10,10 @@
  */
 
 #include "ANoiseDrawable.h"
-#include <AUI/Render/IRenderer.h>
+#include <AUI/Render/ACanvas.hpp>
 #include <AUI/Util/ARandom.h>
 
-void ANoiseDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
+void ANoiseDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
     if (!mNoise) {
         mNoise = render.getNewTexture();
 
@@ -27,12 +27,14 @@ void ANoiseDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
         mNoise->setImage(AImageView(data));
     }
 
-    render.rectangle(ATexturedBrush {
-      .texture = mNoise,
-      .uv1 = glm::vec2(0),
-      .uv2 = glm::vec2(params.size) * glm::vec2(0.37390528174893522421f, 0.37577434667f),
-      .imageRendering = ImageRendering::SMOOTH,
-      .repeat = Repeat::X_Y,
+    render.rectangle(APaint {
+        ATexturedBrush {
+            .texture = mNoise,
+            .uv1 = glm::vec2(0),
+            .uv2 = glm::vec2(params.size) * glm::vec2(0.37390528174893522421f, 0.37577434667f),
+            .imageRendering = ImageRendering::SMOOTH,
+            .repeat = Repeat::X_Y,
+        }
     }, params.offset, params.size);
 }
 

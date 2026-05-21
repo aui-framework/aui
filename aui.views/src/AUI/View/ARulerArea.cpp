@@ -20,6 +20,7 @@
 #include "AScrollbar.h"
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/Declarative/Containers.h>
+#include <AUI/Render/ACanvas.hpp>
 
 using namespace ass;
 using namespace declarative;
@@ -86,32 +87,32 @@ void ARulerArea::render(ARenderContext ctx) {
         glm::ivec2 tp = mMousePos - (getTargetPosition() + rulerOffset);
 
         AFontStyle fs = getFontStyle();
-        auto prX = ctx.render.prerenderString({0, 0 }, AString::number(int(operator ""_px(tp.x).getValueDp())), fs);
-        auto prY = ctx.render.prerenderString({0, 0 }, AString::number(int(operator ""_px(tp.y).getValueDp())), fs);
+        auto prX = ctx.canvas.prerenderString({0, 0 }, AString::number(int(operator ""_px(tp.x).getValueDp())), fs);
+        auto prY = ctx.canvas.prerenderString({0, 0 }, AString::number(int(operator ""_px(tp.y).getValueDp())), fs);
 
         glm::vec2 maxNumbersPos = glm::vec2(getSize() - rulerOffset) - glm::vec2(prX->getWidth(), fs.size) - glm::vec2(4_dp);
 
         {
-            RenderHints::PushMatrix m(ctx.render);
-            ctx.render.translate({glm::min(mMousePos.x + 2_dp, maxNumbersPos.x), 18_dp });
+            RenderHints::PushMatrix m(ctx.canvas);
+            ctx.canvas.translate({glm::min(mMousePos.x + 2_dp, maxNumbersPos.x), 18_dp });
             prX->draw();
         }
         {
-            RenderHints::PushMatrix m(ctx.render);
-            ctx.render.translate({18_dp, glm::min(mMousePos.y + 2_dp, maxNumbersPos.y) });
+            RenderHints::PushMatrix m(ctx.canvas);
+            ctx.canvas.translate({18_dp, glm::min(mMousePos.y + 2_dp, maxNumbersPos.y) });
             prY->draw();
         }
 
-        ctx.render.setBlending(Blending::INVERSE_DST);
-        ctx.render.rectangle(ASolidBrush{},
+        ctx.canvas.setBlending(Blending::INVERSE_DST);
+        ctx.canvas.rectangle(APaint{ASolidBrush{}},
                              {mMousePos.x, 0.f},
                              {1, mMousePos.y});
-        ctx.render.rectangle(ASolidBrush{},
+        ctx.canvas.rectangle(APaint{ASolidBrush{}},
                              {0.f, mMousePos.y},
                              {mMousePos.x, 1});
 
 
-        ctx.render.setBlending(Blending::NORMAL);
+        ctx.canvas.setBlending(Blending::NORMAL);
     }
 
     glEnable(GL_STENCIL_TEST);

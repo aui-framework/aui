@@ -15,11 +15,12 @@
 
 #include "AAnimatedDrawable.h"
 #include "AUI/Image/gif/GifImageFactory.h"
+#include "AUI/Render/ACanvas.hpp"
 
 AAnimatedDrawable::AAnimatedDrawable(_<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
 }
 
-void AAnimatedDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
+void AAnimatedDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
     APerformanceSection s("AAnimatedDrawable::draw");
     if (!mTexture)
         mTexture = render.getNewTexture();
@@ -37,12 +38,12 @@ void AAnimatedDrawable::draw(IRenderer& render, const IDrawable::Params& params)
     }
 
     APerformanceSection s2("draw");
-    render.rectangle(ATexturedBrush{
+    render.rectangle(APaint{ATexturedBrush{
             mTexture,
             params.cropUvTopLeft,
             params.cropUvBottomRight,
             params.imageRendering,
-    }, params.offset, params.size);
+    }}, params.offset, params.size);
 }
 
 glm::ivec2 AAnimatedDrawable::getSizeHint() {

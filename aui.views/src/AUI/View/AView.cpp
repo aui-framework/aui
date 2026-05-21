@@ -16,6 +16,9 @@
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
+#include <AUI/Platform/IRenderingContext.h>
+#include <AUI/Render/ADisplayList.h>
+#include <AUI/Render/ADisplayListCanvas.hpp>
 #include "AUI/Url/AUrl.h"
 #include "AUI/Render/RenderHints.h"
 #include "AUI/Animator/AAnimator.h"
@@ -103,12 +106,12 @@ void AView::drawStencilMask(ARenderContext ctx)
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
             if (mBorderRadius > 0) {
-                ctx.render.roundedRectangle(ASolidBrush{},
+                ctx.canvas.roundedRectangle(APaint{ASolidBrush{}},
                                      {mPadding.left, mPadding.top},
                                      {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
                                      glm::max(mBorderRadius - std::min(mPadding.horizontal(), mPadding.vertical()), 0.f));
             } else {
-                ctx.render.rectangle(ASolidBrush{},
+                ctx.canvas.rectangle(APaint{ASolidBrush{}},
                                      {mPadding.left, mPadding.top},
                                      {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
             }
@@ -124,7 +127,7 @@ void AView::drawStencilMask(ARenderContext ctx)
 
 void AView::postRender(ARenderContext ctx) {
     if (mAnimator)
-        mAnimator->postRender(this, ctx.render);
+        mAnimator->postRender(this, ctx.canvas);
     popStencilIfNeeded(ctx);
 
     emit redrawn;
@@ -139,7 +142,7 @@ void AView::popStencilIfNeeded(ARenderContext ctx) {
          * apply mask AFTER transform updated and BEFORE rendering AView content. The only way to return the stencil
          * back is place it here, after rendering AView.
          */
-        RenderHints::popMask(ctx.render, [&] {
+        RenderHints::popMask(ctx.canvas, [&] {
             drawStencilMask(ctx);
         });
     }
@@ -147,7 +150,7 @@ void AView::popStencilIfNeeded(ARenderContext ctx) {
 void AView::render(ARenderContext ctx)
 {
     if (mAnimator)
-        mAnimator->animate(this, ctx.render);
+        mAnimator->animate(this, ctx.canvas);
 
     ensureAssUpdated();
 
@@ -162,7 +165,7 @@ void AView::render(ARenderContext ctx)
     //draw before drawing this element
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
     {
-        RenderHints::pushMask(ctx.render, [&] {
+        RenderHints::pushMask(ctx.canvas, [&] {
             drawStencilMask(ctx);
         });
     }
@@ -180,7 +183,7 @@ void AView::render(ARenderContext ctx)
     //draw stencil before drawing children elements
     if (mOverflow == AOverflow::HIDDEN)
     {
-        RenderHints::pushMask(ctx.render, [&] {
+        RenderHints::pushMask(ctx.canvas, [&] {
             drawStencilMask(ctx);
         });
     }
@@ -754,37 +757,30 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
         }
         // temporary disable drawing from texture. this will be set back to true by the callback below.
         mRenderToTexture->drawFromTexture = false;
-        AWindow::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](IRenderer& renderer) {
+        AWindow::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](ACanvas&) {
             if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
-                // dead interface?
                 return;
             }
 
             if (mRenderToTexture->skipRedrawUntilTextureIsPresented) {
-                // last frame we draw here was not used.
-                // we might want to skip drawing a new frame until AViewContainer::drawView flags that the rasterization
-                // results are actually displayed.
                 mRedrawRequested = false;
                 return;
             }
 
             if (glm::any(glm::equal(getSize(), glm::ivec2(0)))) {
-                // unable to render to zero-area texture
                 mRedrawRequested = false;
                 mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Empty{};
                 return;
             }
 
             if (mRenderToTexture->invalidArea.empty()) {
-                // if we weren't check, begin would throw assertion failed. Theoretically, that should not happen.
-                // but why not safe check?
                 return;
             }
 
             APerformanceSection s("Render-to-texture rasterization", {}, debugString().toStdString());
             auto invalidArea = std::exchange(mRenderToTexture->invalidArea, IRenderViewToTexture::InvalidArea::Empty{});
+            auto& renderer = AWindow::current()->getRenderingContext()->renderer();
             if (!mRenderToTexture->rendererInterface->begin(renderer, size(), invalidArea)) {
-                // unsuccessful
                 mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
                 return;
             }
@@ -792,10 +788,13 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
                 mRenderToTexture->rendererInterface->end(renderer);
             };
 
+            ADisplayList offscreenDl;
+            ADisplayListCanvas offscreenCanvas(offscreenDl, renderer);
+
             ARenderContext contextOfTheView {
                 .clippingRects = invalidArea.rectangles() ? ARenderContext::Rectangles(invalidArea.rectangles()->begin(),
                                                                                        invalidArea.rectangles()->end()) : ARenderContext::Rectangles{},
-                .render = renderer,
+                .render = offscreenCanvas,
             };
             ARect<int> initialRect {
                 .p1 = { 0, 0 },
@@ -806,7 +805,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
             } else {
                 contextOfTheView.clip(initialRect);
             }
-            RenderHints::PushState state(renderer);
+            RenderHints::PushState state(offscreenCanvas);
             try {
                 render(contextOfTheView);
                 postRender(contextOfTheView);
@@ -815,6 +814,8 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
                 ALogger::err("AView") << "Unable to render view: " << e;
                 return;
             }
+            offscreenDl.optimize();
+            offscreenDl.draw(renderer);
             mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
             mRenderToTexture->drawFromTexture = true;
         });

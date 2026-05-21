@@ -19,28 +19,28 @@
 
 void ass::prop::Property<ass::TextBorder>::renderFor(AView* view, const ARenderContext& ctx) {
     if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
-        RenderHints::PushColor c(ctx.render);
-        ctx.render.setColor(mInfo.borderColor);
+        RenderHints::PushColor c(ctx.canvas);
+        ctx.canvas.setColor(mInfo.borderColor);
 
         {
-            RenderHints::PushMatrix m(ctx.render);
-            ctx.render.translate({-1, 0});
-            label->doRenderText(ctx.render);
+            RenderHints::PushMatrix m(ctx.canvas);
+            ctx.canvas.translate({-1, 0});
+            label->doRenderText(ctx.canvas);
         }
         {
-            RenderHints::PushMatrix m(ctx.render);
-            ctx.render.translate({1, 0});
-            label->doRenderText(ctx.render);
+            RenderHints::PushMatrix m(ctx.canvas);
+            ctx.canvas.translate({1, 0});
+            label->doRenderText(ctx.canvas);
         }
         {
-            RenderHints::PushMatrix m(ctx.render);
-            ctx.render.translate({0, -1});
-            label->doRenderText(ctx.render);
+            RenderHints::PushMatrix m(ctx.canvas);
+            ctx.canvas.translate({0, -1});
+            label->doRenderText(ctx.canvas);
         }
         {
-            RenderHints::PushMatrix m(ctx.render);
-            ctx.render.translate({0, 1});
-            label->doRenderText(ctx.render);
+            RenderHints::PushMatrix m(ctx.canvas);
+            ctx.canvas.translate({0, 1});
+            label->doRenderText(ctx.canvas);
         }
     }
 }

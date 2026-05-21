@@ -18,7 +18,7 @@
 #include <AUI/Enum/ImageRendering.h>
 #include <AUI/Image/AImage.h>
 
-class IRenderer;
+class ACanvas;
 
 /**
  * @brief An abstract image that determines itself how it is displayed. Essentially an abstraction from vector and
@@ -64,7 +64,7 @@ public:
      * @brief Called when the image needs to be displayed. It is assumed that the renderer is already set to the
      *        desired state (coordinates, color, etc.)
      */
-    virtual void draw(IRenderer& render, const IDrawable::Params& params) = 0;
+    virtual void draw(ACanvas& render, const IDrawable::Params& params) = 0;
 
     /**
      * @return Size of the stored image. Can be ignored by the renderer. If the size is unknown, it can be {0, 0}

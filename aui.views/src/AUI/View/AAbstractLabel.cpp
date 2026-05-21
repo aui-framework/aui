@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -184,7 +184,7 @@ void AAbstractLabel::processTextOverflow(AString& text) {
     }
 }
 
-void AAbstractLabel::doPrerender(IRenderer& render) {
+void AAbstractLabel::doPrerender(ACanvas& render) {
     auto fs = getFontStyle();
     if (!mText.empty()) {
         AString transformedText = getTransformedText();
@@ -193,7 +193,7 @@ void AAbstractLabel::doPrerender(IRenderer& render) {
     }
 }
 
-void AAbstractLabel::doRenderText(IRenderer& render) {
+void AAbstractLabel::doRenderText(ACanvas& render) {
     if (!mPrerendered) {
         doPrerender(render);
     }

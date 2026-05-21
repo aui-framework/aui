@@ -128,7 +128,7 @@ public:
     void render(ARenderContext ctx) override {
         AView::render(ctx);
         if (mTexture) {
-            ctx.render.rectangle(ATexturedBrush { mTexture }, { 0, 0 }, float(SCALE) * glm::vec2(mCells->size()));
+            ctx.canvas.rectangle(ATexturedBrush { mTexture }, { 0, 0 }, float(SCALE) * glm::vec2(mCells->size()));
         }
         auto drawGrid = [&] {
             ASmallVector<std::pair<glm::vec2, glm::vec2>, 128 * 2> points;
@@ -138,7 +138,7 @@ public:
             for (int i = 1; i < mCells->size().y; ++i) {
                 points << std::make_pair(glm::vec2(0.f, i * SCALE), glm::vec2(getSize().x, i * SCALE));
             }
-            ctx.render.lines(ASolidBrush { AColor::GRAY }, points);
+            ctx.canvas.lines(ASolidBrush { AColor::GRAY }, points);
         };
         drawGrid();
     }

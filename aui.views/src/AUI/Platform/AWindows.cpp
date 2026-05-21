@@ -15,6 +15,8 @@
 #include "AUI/Performance/APerformanceFrame.h"
 #include "AUI/Performance/APerformanceSection.h"
 #include "AUI/Platform/AWindow.h"
+#include <AUI/Render/ADisplayList.h>
+#include <AUI/Render/ADisplayListCanvas.hpp>
 #include "AUI/Thread/AThread.h"
 #include "SoftwareRenderingContext.h"
 #include "ARenderingContextOptions.h"
@@ -51,7 +53,11 @@ void AWindow::doDrawWindow() {
     APerformanceSection s("AWindow::doDrawWindow");
     auto& renderer = mRenderingContext->renderer();
     renderer.setWindow(this);
-    render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } }, .render = renderer });
+    ADisplayList dl;
+    ADisplayListCanvas canvas(dl, renderer);
+    render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } }, .render = canvas });
+    dl.optimize();
+    dl.draw(renderer);
 }
 
 void AWindow::createDevtoolsWindow() {

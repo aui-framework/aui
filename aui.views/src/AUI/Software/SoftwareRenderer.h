@@ -105,42 +105,19 @@ public:
     }
     _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
 
-    void rectangle(const ABrush& brush,
-                   glm::vec2 position,
-                   glm::vec2 size) override;
+    void rectangle(const ADisplayList::Rectangle& v, const APaint& paint) override;
 
-    void roundedRectangle(const ABrush& brush,
-                          glm::vec2 position,
-                          glm::vec2 size,
-                          float radius) override;
+    void roundedRectangle(const ADisplayList::RoundedRectangle& v, const APaint& paint) override;
 
-    void rectangleBorder(const ABrush& brush,
-                         glm::vec2 position,
-                         glm::vec2 size,
-                         float lineWidth) override;
+    void rectangleBorder(const ADisplayList::RectangleBorder& v, const APaint& paint) override;
 
-    void roundedRectangleBorder(const ABrush& brush,
-                                glm::vec2 position,
-                                glm::vec2 size,
-                                float radius,
-                                int borderWidth) override;
+    void roundedRectangleBorder(const ADisplayList::RoundedRectangleBorder& v, const APaint& paint) override;
 
-    void boxShadow(glm::vec2 position,
-                   glm::vec2 size,
-                   float blurRadius,
-                   const AColor& color) override;
+    void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint) override;
     
-    void boxShadowInner(glm::vec2 position,
-                        glm::vec2 size,
-                        float blurRadius,
-                        float spreadRadius,
-                        float borderRadius,
-                        const AColor& color,
-                        glm::vec2 offset) override;
+    void boxShadowInner(const ADisplayList::BoxShadowInner& v, const APaint& paint) override;
 
-    void string(glm::vec2 position,
-                const AString& string,
-                const AFontStyle& fs) override;
+    void string(const ADisplayList::Text& v, const APaint& paint) override;
 
     _<IPrerenderedString> prerenderString(glm::vec2 position,
                                           const AString& text,
@@ -159,20 +136,16 @@ public:
 
     _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
 
-    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;
-    void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) override;
+    void lines(const ADisplayList::Lines& v, const APaint& paint) override;
+    void points(const ADisplayList::Points& v, const APaint& paint) override;
 
-    void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) override;
+    void lines(const ADisplayList::LineBatches& v, const APaint& paint) override;
 
-    void squareSector(const ABrush& brush,
-                      const glm::vec2& position,
-                      const glm::vec2& size,
-                      AAngleRadians begin,
-                      AAngleRadians end) override;
+    void squareSector(const ADisplayList::SquareSector& v, const APaint& paint) override;
 protected:
     _unique<ITexture> createNewTexture() override;
 
-    void drawLine(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style, AMetric width);
+    void drawLine(const APaint& paint, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style, AMetric width);
 
 };
 

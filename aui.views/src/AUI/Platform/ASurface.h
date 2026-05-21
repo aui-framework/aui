@@ -30,6 +30,8 @@ namespace testing {
     class UITest;
 }
 
+class ACanvas;
+
 class API_AUI_VIEWS ASurface: public AViewContainer {
     friend class SoftwareRenderer;
     friend class IPlatformAbstraction;
@@ -37,7 +39,7 @@ class API_AUI_VIEWS ASurface: public AViewContainer {
     friend struct IRenderingContext::Init;
 
 public:
-    using BeforeFrameQueue = AMessageQueue<AFakeMutex, IRenderer&>;
+    using BeforeFrameQueue = AMessageQueue<AFakeMutex, ACanvas&>;
 
     ASurface();
 

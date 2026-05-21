@@ -18,10 +18,10 @@
 #include <AUI/Render/IRenderer.h>
 
 void ASpinner::render(ARenderContext ctx) {
-    using namespace std::chrono;
-    ctx.render.translate(glm::vec2(getSize()) / 2.f);
-    ctx.render.rotate(AAngleRadians(float(duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch()).count() % 1000) / 1000.f * 2 * glm::pi<float>()));
-    ctx.render.translate(-glm::vec2(getSize()) / 2.f);
+
+    ctx.canvas.translate(glm::vec2(getSize()) / 2.f);
+    ctx.canvas.rotate(AAngleRadians(float(duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch()).count() % 1000) / 1000.f * 2 * glm::pi<float>()));
+    ctx.canvas.translate(-glm::vec2(getSize()) / 2.f);
     AView::render(ctx);
     redraw();
 }

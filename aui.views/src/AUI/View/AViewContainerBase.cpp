@@ -13,6 +13,8 @@
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AView.h"
 #include "AUI/Render/IRenderer.h"
+#include <AUI/Render/APaint.hpp>
+#include <AUI/Render/ACanvas.hpp>
 #include <utility>
 
 #include "AUI/Platform/AWindow.h"
@@ -75,7 +77,7 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
       if (showRedraw) [[unlikely]] {
           auto c = contextOfTheView.render.getColor();
           AUI_DEFER { contextOfTheView.render.setColorForced(c); };
-          contextOfTheView.render.rectangle(ASolidBrush{0x40ff00ff_argb}, view->getPosition(), view->getSize());
+          contextOfTheView.render.rectangle(APaint{ .brush = ASolidBrush{0x40ff00ff_argb} }, view->getPosition(), view->getSize());
       }
     };
 

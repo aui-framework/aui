@@ -19,7 +19,8 @@
 #include <AUI/Image/IDrawable.h>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Image/AImage.h>
-#include <AUI/Render/IRenderer.h>
+
+class ACanvas;
 
 class AImageDrawable: public IDrawable {
 private:
@@ -30,7 +31,7 @@ public:
     explicit AImageDrawable(_<AImage> image);
     virtual ~AImageDrawable();
 
-    void draw(IRenderer& render, const IDrawable::Params& params) override;
+    void draw(ACanvas& render, const IDrawable::Params& params) override;
 
     AImage rasterize(glm::ivec2 imageSize) override;
 

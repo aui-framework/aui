@@ -9,10 +9,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 6/6/2021.
-//
-
 #include "AEmbedContext.h"
 
 #include <glm/fwd.hpp>
@@ -22,6 +18,8 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/Util/ALayoutInflater.h>
+#include <AUI/Render/ADisplayList.h>
+#include <AUI/Render/ADisplayListCanvas.hpp>
 
 class AEmbedContext::EmbedWindow: public ASurface {
     friend class AEmbedContext;
@@ -125,7 +123,11 @@ void AEmbedContext::windowRender() {
     }
     AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
-    mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .render = render });
+    ADisplayList dl;
+    ADisplayListCanvas canvas(dl, render);
+    mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .canvas = canvas, .renderer = render});
+    dl.optimize();
+    dl.draw(render);
     AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 

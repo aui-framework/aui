@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -33,7 +33,7 @@ public:
     explicit AVectorDrawable(_<IImageFactory> factory): mFactory(std::move(factory)) {}
     ~AVectorDrawable();
 
-	void draw(IRenderer& render, const IDrawable::Params& params) override;
+	void draw(ACanvas& render, const IDrawable::Params& params) override;
 	glm::ivec2 getSizeHint() override;
 
 	bool isDpiDependent() const override;

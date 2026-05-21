@@ -14,13 +14,14 @@
 //
 
 #include <AUI/Render/RenderHints.h>
+#include <AUI/Render/ACanvas.hpp>
 #include "BorderLeft.h"
 
 void ass::prop::Property<ass::BorderLeft>::renderFor(AView* view, const ARenderContext& ctx) {
-    RenderHints::PushColor x(ctx.render);
+    RenderHints::PushColor x(ctx.canvas);
     int w = mInfo.width;
 
-    ctx.render.rectangle(ASolidBrush{mInfo.color},
+    ctx.canvas.rectangle(APaint{ASolidBrush{mInfo.color}},
                          {0, 0},
                          {w, view->getHeight()});
 
