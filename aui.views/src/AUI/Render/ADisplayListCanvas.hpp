@@ -14,9 +14,17 @@
 #include <AUI/Render/ACanvas.hpp>
 #include <AUI/Render/ADisplayList.h>
 
+class IRenderer;
+
 class ADisplayListCanvas: public ACanvas {
 public:
-    explicit ADisplayListCanvas(ADisplayList& displayList) : mDisplayList(displayList) {}
+    ADisplayListCanvas(ADisplayList& displayList, IRenderer& renderer) : mDisplayList(displayList), mRenderer(renderer) {}
+
+    _<ITexture> getNewTexture() override;
+
+    float getRenderScale() const noexcept override;
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
 
     void pushLayer() override;
     void popLayer() override;
@@ -56,4 +64,5 @@ private:
     void add(ADisplayList::StoredCommand::Command command, const APaint& paint = {});
 
     ADisplayList& mDisplayList;
+    IRenderer& mRenderer;
 };

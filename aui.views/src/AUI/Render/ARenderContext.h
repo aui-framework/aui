@@ -15,6 +15,7 @@
 #include <glm/glm.hpp>
 #include <AUI/Geometry2D/ARect.h>
 #include <AUI/Common/AStaticVector.h>
+#include <AUI/Render/ACanvas.hpp>
 
 class IRenderer;
 
@@ -47,7 +48,8 @@ struct API_AUI_VIEWS ARenderContext
      * @brief Axis aligned bounding boxes where the rendering is performed in, used for optimization.
      */
     Rectangles clippingRects;
-    IRenderer& render;
+    ACanvas& canvas;
+    IRenderer& renderer;
 
     void clip(ARect<int> clipping);
 

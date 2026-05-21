@@ -13,6 +13,22 @@
 
 #include <utility>
 
+_<ITexture> ADisplayListCanvas::getNewTexture() {
+    return mRenderer.getNewTexture();
+}
+
+float ADisplayListCanvas::getRenderScale() const noexcept {
+    return mRenderer.getRenderScale();
+}
+
+_<IRenderer::IMultiStringCanvas> ADisplayListCanvas::newMultiStringCanvas(const AFontStyle& style) {
+    return mRenderer.newMultiStringCanvas(style);
+}
+
+_<IRenderer::IPrerenderedString> ADisplayListCanvas::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
+    return mRenderer.prerenderString(position, text, fs);
+}
+
 void ADisplayListCanvas::pushLayer() { add(ADisplayList::PushLayer{}); }
 
 void ADisplayListCanvas::popLayer() { add(ADisplayList::PopLayer{}); }
@@ -107,5 +123,6 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
     APaint combined = paint;
     combined.color *= mColorMultiplier;
     combined.opacity *= mOpacity;
+    combined.blending = mBlending;
     mDisplayList.add(std::move(command), getTransform(), combined, getStencilDepth());
 }

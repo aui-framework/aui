@@ -1,12 +1,18 @@
 #pragma once
 
 #include <variant>
+#include <AUI/Render/ABorderStyle.h>
+#include <AUI/ASS/Property/Backdrop.h>
+#include <AUI/Font/AFontStyle.h>
+#include <AUI/Util/AMetric.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Render/ABrush.h>
 #include <AUI/Render/APaint.hpp>
-#include <AUI/Render/IRenderer.h>
 #include <glm/glm.hpp>
 #include <AUI/Geometry2D/ARect.h>
+
+class IRenderer;
+class IPrerenderedString;
 
 class ADisplayList {
 public:
@@ -52,7 +58,7 @@ public:
     };
     struct PrerenderedString {
         glm::vec2 position;
-        _<IRenderer::IPrerenderedString> prerenderedString;
+        _<IPrerenderedString> prerenderedString;
     };
     struct Lines {
         AVector<glm::vec2> points;

@@ -9,6 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "ADisplayList.h"
+#include <AUI/Render/IRenderer.h>
 #include <AUI/Traits/callables.h>
 #include <limits>
 #include <stack>
@@ -37,21 +38,33 @@ void ADisplayList::resolveEntities() {
     for (const auto& cmd : mCommands) {
         std::visit(
             aui::lambda_overloaded {
-              [&](const PushLayer&) {},
-              [&](const PopLayer&) {},
-              [&](const MaskBefore&) {},
-              [&](const MaskAfter&) {},
-              [&](const PopMaskBefore&) {},
-              [&](const PopMaskAfter&) {},
+              [&](const PushLayer&) {
+                  mEntities << Entity{ .command = cmd.command, .transform = cmd.transform, .paint = cmd.paint };
+              },
+              [&](const PopLayer&) {
+                  mEntities << Entity{ .command = cmd.command, .transform = cmd.transform, .paint = cmd.paint };
+              },
+              [&](const MaskBefore&) {
+                  mEntities << Entity{ .command = cmd.command, .transform = cmd.transform, .paint = cmd.paint };
+              },
+              [&](const MaskAfter&) {
+                  mEntities << Entity{ .command = cmd.command, .transform = cmd.transform, .paint = cmd.paint };
+              },
+              [&](const PopMaskBefore&) {
+                  mEntities << Entity{ .command = cmd.command, .transform = cmd.transform, .paint = cmd.paint };
+              },
+              [&](const PopMaskAfter&) {
+                  mEntities << Entity{ .command = cmd.command, .transform = cmd.transform, .paint = cmd.paint };
+              },
               [&](const auto& v) {
                   using T = std::decay_t<decltype(v)>;
                   if constexpr (std::is_same_v<T, Rectangle> || std::is_same_v<T, RoundedRectangle> ||
-                                std::is_same_v<T, RectangleBorder> || std::is_same_v<T, RoundedRectangleBorder> ||
-                                std::is_same_v<T, BoxShadow> || std::is_same_v<T, BoxShadowInner> ||
-                                std::is_same_v<T, Text> || std::is_same_v<T, PrerenderedString> ||
-                                std::is_same_v<T, Lines> || std::is_same_v<T, LineBatches> ||
-                                std::is_same_v<T, Points> || std::is_same_v<T, SquareSector> ||
-                                std::is_same_v<T, Backdrop>) {
+                                 std::is_same_v<T, RectangleBorder> || std::is_same_v<T, RoundedRectangleBorder> ||
+                                 std::is_same_v<T, BoxShadow> || std::is_same_v<T, BoxShadowInner> ||
+                                 std::is_same_v<T, Text> || std::is_same_v<T, PrerenderedString> ||
+                                 std::is_same_v<T, Lines> || std::is_same_v<T, LineBatches> ||
+                                 std::is_same_v<T, Points> || std::is_same_v<T, SquareSector> ||
+                                 std::is_same_v<T, Backdrop>) {
                       glm::vec2 localPos(0.f);
                       glm::vec2 localSize(0.f);
                       if constexpr (std::is_same_v<T, Rectangle> || std::is_same_v<T, RoundedRectangle> ||
@@ -155,26 +168,23 @@ void ADisplayList::draw(IRenderer& renderer) const {
 
         std::visit(
             aui::lambda_overloaded {
-              [&](const Rectangle& v) { renderer.rectangle(entity.paint.brush, v.position, v.size); },
-              [&](const RoundedRectangle& v) { renderer.roundedRectangle(entity.paint.brush, v.position, v.size, v.radius); },
-              [&](const RectangleBorder& v) { renderer.rectangleBorder(entity.paint.brush, v.position, v.size, v.lineWidth); },
-              [&](const RoundedRectangleBorder& v) {
-                  renderer.roundedRectangleBorder(entity.paint.brush, v.position, v.size, v.radius, v.borderWidth);
-              },
-              [&](const BoxShadow& v) { renderer.boxShadow(v.position, v.size, v.blurRadius, v.color); },
-              [&](const BoxShadowInner& v) {
-                  renderer.boxShadowInner(
-                      v.position, v.size, v.blurRadius, v.spreadRadius, v.borderRadius, v.color, v.offset);
-              },
-              [&](const Text& v) { renderer.string(v.position, v.text, v.fs); },
+              [&](const Rectangle& v) { renderer.rectangle(v, entity.paint); },
+              [&](const RoundedRectangle& v) { renderer.roundedRectangle(v, entity.paint); },
+              [&](const RectangleBorder& v) { renderer.rectangleBorder(v, entity.paint); },
+              [&](const RoundedRectangleBorder& v) { renderer.roundedRectangleBorder(v, entity.paint); },
+              [&](const BoxShadow& v) { renderer.boxShadow(v, entity.paint); },
+              [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, entity.paint); },
+              [&](const Text& v) { renderer.string(v, entity.paint); },
               [&](const PrerenderedString& v) { v.prerenderedString->draw(); },
-              [&](const Lines& v) { renderer.lines(entity.paint.brush, v.points, v.style, v.width); },
-              [&](const LineBatches& v) { renderer.lines(entity.paint.brush, v.points, v.style, v.width); },
-              [&](const Points& v) { renderer.points(entity.paint.brush, v.points, v.size); },
-              [&](const SquareSector& v) { renderer.squareSector(entity.paint.brush, v.position, v.size, v.begin, v.end); },
-              [&](const Backdrop& v) {
-                  renderer.backdrops(v.position, v.size, std::span<const ass::Backdrop::Any>(v.backdrops.data(), v.backdrops.size()));
-              },
+              [&](const Lines& v) { renderer.lines(v, entity.paint); },
+              [&](const LineBatches& v) { renderer.lines(v, entity.paint); },
+              [&](const Points& v) { renderer.points(v, entity.paint); },
+              [&](const SquareSector& v) { renderer.squareSector(v, entity.paint); },
+              [&](const Backdrop& v) { renderer.backdrops(v, entity.paint); },
+              [&](const MaskBefore&) { renderer.pushMaskBefore(); },
+              [&](const MaskAfter&) { renderer.pushMaskAfter(); },
+              [&](const PopMaskBefore&) { renderer.popMaskBefore(); },
+              [&](const PopMaskAfter&) { renderer.popMaskAfter(); },
               [&](const auto&) {}
             },
             entity.command);
