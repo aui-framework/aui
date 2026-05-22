@@ -180,6 +180,8 @@ struct Button {
      */
     bool isDefault = false;
 
+    contract::In<Modifier> modifier = Modifier{};
+
     _<AButton> operator()() {
         auto button = _new<AButton>();
         onClick.bindTo(button->clicked);
@@ -187,6 +189,7 @@ struct Button {
             button->setDefault();
         }
         button->setContents(Centered { std::move(content) });
+        modifier.bindTo(ASlotDef{AUI_SLOT(button.get())::setModifier});
         return button;
     }
 };
