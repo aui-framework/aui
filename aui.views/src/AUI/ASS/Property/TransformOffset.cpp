@@ -29,3 +29,10 @@ ass::legacy::PropertySlot ass::legacy::Property<ass::TransformOffset>::getProper
 void ass::legacy::Property<ass::TransformOffset>::updateInvalidPixelRect(ARect<int>& invalidRect) const {
     invalidRect.translate(glm::ivec2{mInfo.offsetX, mInfo.offsetY});
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const TransformOffset& value) {
+    // TODO: TransformOffset is a render-time property
+    return thiz;
+}
+}   // namespace ass

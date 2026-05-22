@@ -17,6 +17,7 @@
 
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
     /**
@@ -33,6 +34,8 @@ namespace ass {
          */
         static LineHeight NORMAL;
     };
+
+    Modifier operator|(Modifier thiz, const LineHeight& value);
 
     namespace legacy {
         template<>

@@ -33,3 +33,9 @@ bool ass::legacy::Property<ass::BorderLeft>::isNone() {
 ass::legacy::PropertySlot ass::legacy::Property<ass::BorderLeft>::getPropertySlot() const {
     return ass::legacy::PropertySlot::BORDER;
 }
+namespace ass {
+Modifier operator|(Modifier thiz, const BorderLeft& value) {
+    // TODO: BorderLeft is a render-time property
+    return thiz;
+}
+}   // namespace ass

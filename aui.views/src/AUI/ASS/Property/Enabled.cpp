@@ -10,20 +10,20 @@
  */
 
 //
-// Created by alex2772 on 1/3/21.
+// Created by alex2 on 22.05.2026.
 //
 
-#include "Float.h"
+#include "Enabled.h"
+#include "AUI/View/AView.h"
 
-
-void ass::legacy::Property<AFloat>::applyFor(AView* view) {
-    view->setFloating(mInfo);
+void ass::legacy::Property<ass::Enabled>::applyFor(AView* view) {
+    view->setEnabled(mInfo.enabled);
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const AFloat& value) {
+Modifier operator|(Modifier thiz, const Enabled& value) {
     return thiz.then([value](AView& view) {
-        view.setFloating(value);
+        view.setEnabled(value.enabled);
     });
 }
 }   // namespace ass

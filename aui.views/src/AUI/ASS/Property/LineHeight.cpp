@@ -19,3 +19,11 @@
 void ass::legacy::Property<ass::LineHeight>::applyFor(AView* view) {
     AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().lineSpacing = mInfo.spacing;
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const LineHeight& value) {
+    return thiz.then([value](AView& view) {
+        AUI_NULLSAFE(dynamic_cast<IFontView*>(&view))->getFontStyle().lineSpacing = value.spacing;
+    });
+}
+}   // namespace ass

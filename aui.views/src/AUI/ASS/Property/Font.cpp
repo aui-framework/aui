@@ -22,3 +22,13 @@ void ass::legacy::Property<ass::Font>::applyFor(AView* view) {
     if (!font) font = AFontManager::inst().getDefaultFont();
     AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().font = std::move(font);
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const Font& value) {
+    return thiz.then([value](AView& view) {
+        auto font = AFontManager::inst().getFont(value.url);
+        if (!font) font = AFontManager::inst().getDefaultFont();
+        AUI_NULLSAFE(dynamic_cast<IFontView*>(&view))->getFontStyle().font = std::move(font);
+    });
+}
+}   // namespace ass

@@ -15,69 +15,54 @@
 
 #pragma once
 
-
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
+/**
+ * @brief Represents box shadow.
+ * @ingroup ass_properties
+ * @details
+ * Unlike CSS, box shadow is not affected by BorderRadius.
+ */
+struct BoxShadowInner {
+    AMetric offsetX;
+    AMetric offsetY;
+    AMetric blurRadius;
+    AMetric spreadRadius;
+    AColor color;
 
-    /**
-     * @brief Represents box shadow.
-     * @ingroup ass_properties
-     * @details
-     * Unlike CSS, box shadow is not affected by BorderRadius.
-     */
-    struct BoxShadowInner {
-        AMetric offsetX;
-        AMetric offsetY;
-        AMetric blurRadius;
-        AMetric spreadRadius;
-        AColor color;
+    BoxShadowInner(AMetric offsetX, AMetric offsetY, AMetric blurRadius, AMetric spreadRadius, const AColor& color)
+      : offsetX(offsetX), offsetY(offsetY), blurRadius(blurRadius), spreadRadius(spreadRadius), color(color) {}
 
-        BoxShadowInner(AMetric offsetX,
-                  AMetric offsetY,
-                  AMetric blurRadius,
-                  AMetric spreadRadius,
-                  const AColor& color):
-            offsetX(offsetX),
-            offsetY(offsetY),
-            blurRadius(blurRadius),
-            spreadRadius(spreadRadius),
-            color(color) {}
+    BoxShadowInner(AMetric offsetX, AMetric offsetY, AMetric blurRadius, const AColor& color)
+      : offsetX(offsetX), offsetY(offsetY), blurRadius(blurRadius), color(color) {}
 
-        BoxShadowInner(AMetric offsetX,
-                  AMetric offsetY,
-                  AMetric blurRadius,
-                  const AColor& color):
-            offsetX(offsetX),
-            offsetY(offsetY),
-            blurRadius(blurRadius),
-            color(color) {}
+    BoxShadowInner(std::nullptr_t) : color(0.f) {}
+};
 
-        BoxShadowInner(std::nullptr_t): color(0.f) {}
-    };
+namespace legacy {
+template <>
+struct API_AUI_VIEWS Property<BoxShadowInner> : IPropertyBase {
+private:
+    BoxShadowInner mInfo;
 
-    namespace legacy {
-        template<>
-        struct API_AUI_VIEWS Property<BoxShadowInner>: IPropertyBase {
-        private:
-            BoxShadowInner mInfo;
+public:
+    Property(const BoxShadowInner& info) : mInfo(info) {}
 
-        public:
-            Property(const BoxShadowInner& info) : mInfo(info) {
+    void renderFor(AView* view, const ARenderContext& ctx) override;
 
-            }
+    bool isNone() override;
 
-            void renderFor(AView* view, const ARenderContext& ctx) override;
+    PropertySlot getPropertySlot() const override;
 
-            bool isNone() override;
-
-            PropertySlot getPropertySlot() const override;
-
-            [[nodiscard]]
-            const auto& value() const noexcept {
-                return mInfo;
-            }
-        };
+    [[nodiscard]]
+    const auto& value() const noexcept {
+        return mInfo;
     }
-}
+};
+}   // namespace legacy
+
+Modifier operator|(Modifier thiz, const BoxShadowInner& value);
+}   // namespace ass

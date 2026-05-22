@@ -18,6 +18,7 @@
 #include <AUI/Traits/values.h>
 #include <AUI/Common/IStringable.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 #if defined(FMT_VERSION) && (FMT_VERSION >= 100000)
 template <> struct fmt::formatter<aui::float_within_0_1> : fmt::formatter<float> {
@@ -62,4 +63,6 @@ namespace ass {
             }
         };
     }
+
+    Modifier operator|(Modifier thiz, const Opacity& value);
 }

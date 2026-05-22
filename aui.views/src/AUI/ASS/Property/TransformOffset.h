@@ -13,44 +13,45 @@
 // Created by alex2 on 07.01.2021.
 //
 
-
 #pragma once
 
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
-    /**
-     * @brief Controls the rendering offset transform of AView.
-     * @ingroup ass_properties
-     */
-    struct TransformOffset {
-        AMetric offsetX;
-        AMetric offsetY;
+/**
+ * @brief Controls the rendering offset transform of AView.
+ * @ingroup ass_properties
+ */
+struct TransformOffset {
+    AMetric offsetX;
+    AMetric offsetY;
 
-        TransformOffset(const AMetric& offsetX, const AMetric& offsetY) : offsetX(offsetX), offsetY(offsetY) {}
-    };
+    TransformOffset(const AMetric& offsetX, const AMetric& offsetY) : offsetX(offsetX), offsetY(offsetY) {}
+};
 
+namespace legacy {
+template <>
+struct API_AUI_VIEWS Property<TransformOffset> : IPropertyBase {
+private:
+    TransformOffset mInfo;
 
-    namespace legacy {
-        template<>
-        struct API_AUI_VIEWS Property<TransformOffset>: IPropertyBase {
-        private:
-            TransformOffset mInfo;
+public:
+    Property(const TransformOffset& info) : mInfo(info) {}
+    void renderFor(AView* view, const ARenderContext& ctx) override;
 
-        public:
-            Property(const TransformOffset& info) : mInfo(info) {}
-            void renderFor(AView* view, const ARenderContext& ctx) override;
+    PropertySlot getPropertySlot() const override;
 
-            PropertySlot getPropertySlot() const override;
+    void updateInvalidPixelRect(ARect<int>& invalidRect) const override;
 
-            void updateInvalidPixelRect(ARect<int>& invalidRect) const override;
+    [[nodiscard]]
+    const auto& value() const noexcept {
+        return mInfo;
+    }
+};
+}   // namespace legacy
 
-            [[nodiscard]]
-            const auto& value() const noexcept {
-                return mInfo;
-            }
-        };
-}
-}
+Modifier operator|(Modifier thiz, const TransformOffset& value);
+}   // namespace ass

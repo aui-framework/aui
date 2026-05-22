@@ -17,6 +17,7 @@
 
 #include <AUI/ASS/Property/IProperty.h>
 #include <AUI/Util/AMetric.h>
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -56,4 +57,6 @@ namespace ass {
             }
         };
     }
+
+    Modifier operator|(Modifier thiz, const BorderLeft& value);
 }

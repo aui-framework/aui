@@ -39,3 +39,9 @@ void ass::legacy::Property<ass::BoxShadow>::updateInvalidPixelRect(ARect<int>& i
     invalidRect.p1 = glm::min(invalidRect.p1, shadowRect.p1);
     invalidRect.p2 = glm::max(invalidRect.p2, shadowRect.p2);
 }
+namespace ass {
+Modifier operator|(Modifier thiz, const BoxShadow& value) {
+    // TODO: BoxShadow is a render-time property
+    return thiz;
+}
+}   // namespace ass

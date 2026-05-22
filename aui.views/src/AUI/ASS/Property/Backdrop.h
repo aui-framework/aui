@@ -17,6 +17,7 @@
 
 #include <initializer_list>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -119,6 +120,7 @@ namespace ass {
                 return mInfo;
             }
         };
+    }   // namespace legacy
 
-    }
-}
+    Modifier operator|(Modifier thiz, const Backdrop& value);
+}   // namespace ass

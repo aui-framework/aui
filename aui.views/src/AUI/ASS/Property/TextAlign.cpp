@@ -20,3 +20,11 @@
 void ass::legacy::Property<ATextAlign>::applyFor(AView* view) {
     AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().align = mInfo;
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const ATextAlign& value) {
+    return thiz.then([value](AView& view) {
+        AUI_NULLSAFE(dynamic_cast<IFontView*>(&view))->getFontStyle().align = value;
+    });
+}
+}   // namespace ass

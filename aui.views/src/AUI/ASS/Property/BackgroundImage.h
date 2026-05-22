@@ -18,6 +18,7 @@
 #include <AUI/Render/IRenderer.h>
 #include <AUI/Common/IStringable.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 /**
@@ -166,6 +167,9 @@ public:
 };
 
 }   // namespace prop
+
+Modifier operator|(Modifier thiz, const ass::BackgroundImage& value);
+
 }   // namespace ass
 
 AUI_ENUM_VALUES(

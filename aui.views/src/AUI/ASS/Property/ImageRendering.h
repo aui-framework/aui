@@ -18,6 +18,7 @@
 #include <AUI/Util/ALayoutDirection.h>
 #include "IProperty.h"
 #include <AUI/Enum/ImageRendering.h> // defined here
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -42,4 +43,6 @@ namespace ass {
         };
 
     }
+
+    Modifier operator|(Modifier thiz, const ImageRendering& value);
 }

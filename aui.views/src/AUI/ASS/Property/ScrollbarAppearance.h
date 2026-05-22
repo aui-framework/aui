@@ -18,6 +18,7 @@
 #include <AUI/Platform/ACursor.h>
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 
 
@@ -83,4 +84,6 @@ namespace ass {
             }
         };
     }
+
+Modifier operator|(Modifier thiz, const ScrollbarAppearance& value);
 }

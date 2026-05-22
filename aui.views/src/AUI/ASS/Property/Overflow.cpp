@@ -24,3 +24,19 @@ void ass::legacy::Property<AOverflow>::applyFor(AView* view) {
 void ass::legacy::Property<AOverflowMask>::applyFor(AView* view) {
     view->setOverflowMask(mInfo);
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const AOverflow& value) {
+    return thiz.then([value](AView& view) {
+        view.setOverflow(value);
+    });
+}
+}   // namespace ass
+
+namespace ass {
+Modifier operator|(Modifier thiz, const AOverflowMask& value) {
+    return thiz.then([value](AView& view) {
+        view.setOverflowMask(value);
+    });
+}
+}   // namespace ass

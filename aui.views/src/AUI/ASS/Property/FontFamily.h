@@ -28,6 +28,8 @@ namespace ass {
         AString family;
     };
 
+    Modifier operator|(Modifier thiz, const FontFamily& value);
+
     namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<FontFamily>: IPropertyBase {

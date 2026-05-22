@@ -47,3 +47,9 @@ void ass::legacy::Property<ass::TextBorder>::renderFor(AView* view, const ARende
 ass::legacy::PropertySlot ass::legacy::Property<ass::TextBorder>::getPropertySlot() const {
     return ass::legacy::PropertySlot::TEXT_SHADOW;
 }
+namespace ass {
+Modifier operator|(Modifier thiz, const TextBorder& value) {
+    // TODO: TextBorder is a render-time property
+    return thiz;
+}
+}   // namespace ass

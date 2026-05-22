@@ -29,3 +29,10 @@ ass::legacy::PropertySlot ass::legacy::Property<ImageRendering>::getPropertySlot
 }
 
 
+
+namespace ass {
+Modifier operator|(Modifier thiz, const ImageRendering& value) {
+    // TODO: ImageRendering is a render-time property
+    return thiz;
+}
+}   // namespace ass

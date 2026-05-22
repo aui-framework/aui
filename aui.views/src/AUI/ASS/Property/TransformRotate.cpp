@@ -30,3 +30,10 @@ void ass::legacy::Property<ass::TransformRotate>::renderFor(AView* view, const A
 ass::legacy::PropertySlot ass::legacy::Property<ass::TransformRotate>::getPropertySlot() const {
     return ass::legacy::PropertySlot::TRANSFORM_ROTATE;
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const TransformRotate& value) {
+    // TODO: TransformRotate is a render-time property
+    return thiz;
+}
+}   // namespace ass

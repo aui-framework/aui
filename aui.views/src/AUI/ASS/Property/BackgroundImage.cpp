@@ -312,3 +312,10 @@ aui::lambda_overloaded {
   [](const AString& s) { return s; } },
 *mInfo.image));
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const ass::BackgroundImage& value) {
+    // TODO: BackgroundImage is a render-time property
+    return thiz;
+}
+}   // namespace ass

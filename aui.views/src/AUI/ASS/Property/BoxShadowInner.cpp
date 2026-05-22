@@ -13,8 +13,8 @@
 // Created by alex2 on 01.01.2021.
 //
 
-#include "BoxShadowInner.h"
 #include "AUI/Render/IRenderer.h"
+#include "BoxShadowInner.h"
 
 
 void ass::legacy::Property<ass::BoxShadowInner>::renderFor(AView* view, const ARenderContext& ctx) {
@@ -34,3 +34,9 @@ ass::legacy::PropertySlot ass::legacy::Property<ass::BoxShadowInner>::getPropert
 bool ass::legacy::Property<ass::BoxShadowInner>::isNone() {
     return mInfo.color.isFullyTransparent();
 }
+namespace ass {
+Modifier operator|(Modifier thiz, const BoxShadowInner& value) {
+    // TODO: BoxShadowInner is a render-time property
+    return thiz;
+}
+}   // namespace ass

@@ -15,6 +15,7 @@
 #include <AUI/Util/AMetric.h>
 #include <AUI/Enum/AOverflow.h>   // defined here
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 namespace legacy {
@@ -50,4 +51,7 @@ public:
     }
 };
 }   // namespace prop
+
+Modifier operator|(Modifier thiz, const AOverflow& value);
+Modifier operator|(Modifier thiz, const AOverflowMask& value);
 }   // namespace ass

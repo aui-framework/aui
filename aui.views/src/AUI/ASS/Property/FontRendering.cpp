@@ -15,6 +15,7 @@
 
 #include "FontRendering.h"
 #include "AUI/Font/IFontView.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 void ass::legacy::Property<FontRendering>::applyFor(AView* view){
     auto fontView = dynamic_cast<IFontView*>(view);
@@ -28,3 +29,20 @@ void ass::legacy::Property<FontRendering>::applyFor(AView* view){
     }
 #endif
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const FontRendering& value) {
+    return thiz.then([value](AView& view) {
+        auto fontView = dynamic_cast<IFontView*>(&view);
+        if (!fontView) {
+            return;
+        }
+        fontView->getFontStyle().fontRendering = value;
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+        if (fontView->getFontStyle().fontRendering == FontRendering::SUBPIXEL) {
+            fontView->getFontStyle().fontRendering = FontRendering::ANTIALIASING;
+        }
+#endif
+    });
+}
+}   // namespace ass

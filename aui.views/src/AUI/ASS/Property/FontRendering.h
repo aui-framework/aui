@@ -17,6 +17,7 @@
 
 #include "IProperty.h"
 #include <AUI/Render/FontRendering.h> // defined here
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
     namespace legacy {
@@ -39,4 +40,6 @@ namespace ass {
         };
 
     }
+
+    Modifier operator|(Modifier thiz, const FontRendering& value);
 }

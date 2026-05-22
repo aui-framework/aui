@@ -23,4 +23,11 @@ void ass::legacy::Property<ass::Opacity>::applyFor(AView* view) {
     view->setOpacity(mInfo.opacity);
 }
 
+namespace ass {
+Modifier operator|(Modifier thiz, const Opacity& value) {
+    return thiz.then([value](AView& view) {
+        view.setOpacity(value.opacity);
+    });
+}
+}   // namespace ass
 

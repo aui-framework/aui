@@ -17,6 +17,7 @@
 
 #include "AUI/Render/IRenderer.h"
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -59,6 +60,8 @@ namespace ass {
         };
 
     }
+
+    Modifier operator|(Modifier thiz, const BackgroundCropping& value);
 }
 
 inline const ass::BackgroundCropping ass::BackgroundCropping::H4_1 = { glm::vec2{0.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} };

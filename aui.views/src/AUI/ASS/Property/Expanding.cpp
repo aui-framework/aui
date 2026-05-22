@@ -22,3 +22,14 @@ void ass::legacy::Property<ass::Expanding>::applyFor(AView* view) {
                                mInfo.expandingY.orDefault(view->getExpandingVertical()),
     });
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const Expanding& value) {
+    return thiz.then([value](AView& view) {
+        view.setExpanding({
+            value.expandingX.orDefault(view.getExpandingHorizontal()),
+            value.expandingY.orDefault(view.getExpandingVertical()),
+        });
+    });
+}
+}   // namespace ass

@@ -34,5 +34,10 @@ void ass::legacy::Property<ass::BackgroundGradient>::renderFor(AView* view, cons
 ass::legacy::PropertySlot ass::legacy::Property<ass::BackgroundGradient>::getPropertySlot() const {
     return ass::legacy::PropertySlot::BACKGROUND_SOLID;
 }
-
+namespace ass {
+Modifier operator|(Modifier thiz, const BackgroundGradient& value) {
+    // TODO: BackgroundGradient is a render-time property
+    return thiz;
+}
+}   // namespace ass
 

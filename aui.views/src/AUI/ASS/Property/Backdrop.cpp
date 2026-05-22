@@ -40,3 +40,10 @@ ass::Backdrop::GaussianBlurCustom ass::Backdrop::GaussianBlur::findOptimalParams
         .downscale = downscale,
     };
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const Backdrop& value) {
+    // TODO: Backdrop is a render-time property
+    return thiz;
+}
+}   // namespace ass

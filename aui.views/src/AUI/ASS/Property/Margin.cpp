@@ -32,3 +32,16 @@ void ass::legacy::Property<ass::Margin>::updateInvalidPixelRect(ARect<int>& inva
     invalidRect.p2.x -= mInfo.right.orDefault(0).getValuePx();
     invalidRect.p2.y -= mInfo.bottom.orDefault(0).getValuePx();
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const Margin& value) {
+    return thiz.then([value](AView& view) {
+        auto margin = view.getMargin();
+        value.left.bindTo(margin.left);
+        value.top.bindTo(margin.top);
+        value.right.bindTo(margin.right);
+        value.bottom.bindTo(margin.bottom);
+        view.setMargin(margin);
+    });
+}
+}   // namespace ass

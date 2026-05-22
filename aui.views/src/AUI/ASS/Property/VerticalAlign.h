@@ -18,6 +18,7 @@
 
 #include <AUI/Enum/VerticalAlign.h> // defined here
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass::legacy {
     template<>
@@ -37,4 +38,6 @@ namespace ass::legacy {
             return mInfo;
         }
     };
+
+    Modifier operator|(Modifier thiz, const VerticalAlign& value);
 }

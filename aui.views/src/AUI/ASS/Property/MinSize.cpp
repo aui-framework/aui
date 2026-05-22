@@ -21,3 +21,14 @@ void ass::legacy::Property<ass::MinSize>::applyFor(AView* view) {
                                mInfo.height ? mInfo.height->getValuePx() : view->getMinSize().y
                        });
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const MinSize& value) {
+    return thiz.then([value](AView& view) {
+        view.setMinSize({
+            value.width ? value.width->getValuePx() : view.getMinSize().x,
+            value.height ? value.height->getValuePx() : view.getMinSize().y
+        });
+    });
+}
+}   // namespace ass

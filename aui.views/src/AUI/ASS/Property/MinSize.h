@@ -18,6 +18,7 @@
 #include <AUI/Util/AMetric.h>
 #include "AUI/Common/IStringable.h"
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -56,4 +57,6 @@ namespace ass {
             }
         };
     }
+
+    Modifier operator|(Modifier thiz, const MinSize& value);
 }

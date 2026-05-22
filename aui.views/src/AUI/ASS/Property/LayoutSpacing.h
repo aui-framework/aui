@@ -15,6 +15,7 @@
 #include <AUI/Platform/ACursor.h>
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -27,6 +28,8 @@ namespace ass {
     struct LayoutSpacing {
         AMetric spacing;
     };
+
+    Modifier operator|(Modifier thiz, const LayoutSpacing& value);
 
     namespace legacy {
         template<>

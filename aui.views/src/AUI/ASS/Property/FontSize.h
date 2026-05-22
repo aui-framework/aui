@@ -17,6 +17,7 @@
 
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -27,6 +28,8 @@ namespace ass {
     struct FontSize {
         AMetric size;
     };
+
+    Modifier operator|(Modifier thiz, const FontSize& value);
 
     namespace legacy {
         template<>

@@ -21,3 +21,14 @@ void ass::legacy::Property<ass::MaxSize>::applyFor(AView* view) {
                                mInfo.height ? mInfo.height->getValuePx() : view->getMaxSize().y
                        });
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const MaxSize& value) {
+    return thiz.then([value](AView& view) {
+        view.setMaxSize({
+            value.width ? value.width->getValuePx() : view.getMaxSize().x,
+            value.height ? value.height->getValuePx() : view.getMaxSize().y
+        });
+    });
+}
+}   // namespace ass

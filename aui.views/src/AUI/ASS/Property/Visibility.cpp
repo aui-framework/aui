@@ -15,3 +15,11 @@
 void ass::legacy::Property<Visibility>::applyFor(AView* view) {
     view->setVisibility(mInfo);
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const Visibility& value) {
+    return thiz.then([value](AView& view) {
+        view.setVisibility(value);
+    });
+}
+}   // namespace ass

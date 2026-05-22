@@ -13,6 +13,7 @@
 
 #include "IProperty.h"
 #include <AUI/Enum/Visibility.h> // defined here
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass::legacy {
     template<>
@@ -32,4 +33,6 @@ namespace ass::legacy {
             return mInfo;
         }
     };
+
+    Modifier operator|(Modifier thiz, const Visibility& value);
 }

@@ -21,3 +21,13 @@ void ass::legacy::Property<ass::ScrollbarAppearance>::applyFor(AView* view) {
         scrollArea->setScrollbarAppearance(mInfo);
     }
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const ScrollbarAppearance& value) {
+    return thiz.then([value](AView& view) {
+        if (auto scrollArea = _cast<AScrollArea>(aui::ptr::shared_from_this(&view))) {
+            scrollArea->setScrollbarAppearance(value);
+        }
+    });
+}
+}   // namespace ass

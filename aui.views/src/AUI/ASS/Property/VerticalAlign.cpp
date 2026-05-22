@@ -35,3 +35,22 @@ void ass::legacy::Property<VerticalAlign>::applyFor(AView* view) {
         return;
     }
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const VerticalAlign& value) {
+    return thiz.then([value](AView& view) {
+        if (auto v = dynamic_cast<AAbstractLabel*>(&view)) {
+            v->setVerticalAlign(value);
+            return;
+        }
+        if (auto v = dynamic_cast<AText*>(&view)) {
+            v->setVerticalAlign(value);
+            return;
+        }
+        if (auto v = dynamic_cast<ATextArea*>(&view)) {
+            v->setVerticalAlign(value);
+            return;
+        }
+    });
+}
+}   // namespace ass

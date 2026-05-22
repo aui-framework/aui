@@ -21,3 +21,11 @@ void ass::legacy::Property<ACursor>::applyFor(AView* view) {
     view->setCursor(mInfo);
 }
 
+namespace ass {
+Modifier operator|(Modifier thiz, const ACursor& value) {
+    return thiz.then([value](AView& view) {
+        view.setCursor(value);
+    });
+}
+}   // namespace ass
+

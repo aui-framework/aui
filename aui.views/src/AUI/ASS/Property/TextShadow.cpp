@@ -32,3 +32,9 @@ void ass::legacy::Property<ass::TextShadow>::renderFor(AView* view, const ARende
 ass::legacy::PropertySlot ass::legacy::Property<ass::TextShadow>::getPropertySlot() const {
     return ass::legacy::PropertySlot::TEXT_SHADOW;
 }
+namespace ass {
+Modifier operator|(Modifier thiz, const TextShadow& value) {
+    // TODO: TextShadow is a render-time property
+    return thiz;
+}
+}   // namespace ass

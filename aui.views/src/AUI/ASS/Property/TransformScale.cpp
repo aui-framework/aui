@@ -34,3 +34,10 @@ ass::legacy::PropertySlot ass::legacy::Property<ass::TransformScale>::getPropert
 void ass::legacy::Property<ass::TransformScale>::updateInvalidPixelRect(ARect<int>& invalidRect) const {
     invalidRect = ARect<int>::fromCenterPositionAndSize(invalidRect.center(), glm::vec2(invalidRect.size()) * mInfo.scale);
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const TransformScale& value) {
+    // TODO: TransformScale is a render-time property
+    return thiz;
+}
+}   // namespace ass

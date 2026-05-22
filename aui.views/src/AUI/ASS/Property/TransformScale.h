@@ -18,6 +18,7 @@
 
 
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -53,4 +54,6 @@ namespace ass {
             void updateInvalidPixelRect(ARect<int>& invalidRect) const override;
         };
     }
+
+    Modifier operator|(Modifier thiz, const TransformScale& value);
 }

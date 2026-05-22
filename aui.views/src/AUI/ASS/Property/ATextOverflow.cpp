@@ -20,3 +20,11 @@
 void ass::legacy::Property<ATextOverflow>::applyFor(AView* view) {
     AUI_NULLSAFE(dynamic_cast<AAbstractLabel*>(view))->setTextOverflow(mInfo);
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, const ATextOverflow& value) {
+    return thiz.then([value](AView& view) {
+        AUI_NULLSAFE(dynamic_cast<AAbstractLabel*>(&view))->setTextOverflow(value);
+    });
+}
+}   // namespace ass

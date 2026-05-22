@@ -42,4 +42,11 @@ ass::legacy::PropertySlot ass::legacy::Property<ass::BackgroundSolid>::getProper
     return ass::legacy::PropertySlot::BACKGROUND_SOLID;
 }
 
+namespace ass {
+Modifier operator|(Modifier thiz, const BackgroundSolid& value) {
+    // TODO: BackgroundSolid is a render-time property
+    return thiz;
+}
+}   // namespace ass
+
 

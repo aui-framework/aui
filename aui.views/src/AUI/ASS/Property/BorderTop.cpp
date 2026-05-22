@@ -27,3 +27,9 @@ bool ass::legacy::Property<ass::BorderTop>::isNone() {
 ass::legacy::PropertySlot ass::legacy::Property<ass::BorderTop>::getPropertySlot() const {
     return ass::legacy::PropertySlot::BORDER;
 }
+namespace ass {
+Modifier operator|(Modifier thiz, const BorderTop& value) {
+    // TODO: BorderTop is a render-time property
+    return thiz;
+}
+}   // namespace ass

@@ -17,6 +17,7 @@
 
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
     /**
@@ -50,4 +51,6 @@ namespace ass {
             }
         };
     }
+
+    Modifier operator|(Modifier thiz, const FixedSize& value);
 }
