@@ -661,7 +661,8 @@ protected:
      */
     void stub(glm::vec2 position, glm::vec2 size);
 
-    virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops);
+    virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops);
+
 
 private:
     bool mAllowRenderToTexture = false;

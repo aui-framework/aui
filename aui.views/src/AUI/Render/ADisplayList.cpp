@@ -9,6 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "ADisplayList.h"
+#include <AUI/Render/IRenderer.h>
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Traits/callables.h>
 #include <limits>

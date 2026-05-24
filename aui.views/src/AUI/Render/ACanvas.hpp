@@ -111,9 +111,17 @@ public:
 
     virtual void lines(const APaint& paint, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) = 0;
 
+    void lines(const APaint& paint, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}) {
+        lines(paint, points, style, 1_dp);
+    }
+
     virtual void points(const APaint& paint, AArrayView<glm::vec2> points, AMetric size) = 0;
 
     virtual void lines(const APaint& paint, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) = 0;
+
+    void lines(const APaint& paint, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style = ABorderStyle::Solid{}) {
+        lines(paint, points, style, 1_dp);
+    }
 
     virtual void squareSector(const APaint& paint,
                               const glm::vec2& position,

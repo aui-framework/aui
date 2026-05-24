@@ -10,9 +10,9 @@
 #include <AUI/Render/APaint.hpp>
 #include <glm/glm.hpp>
 #include <AUI/Geometry2D/ARect.h>
+#include <AUI/Render/IRenderer.h>
 
 class IRendererBackend;
-class IPrerenderedString;
 
 class ADisplayList {
 public:
@@ -58,7 +58,7 @@ public:
     };
     struct PrerenderedString {
         glm::vec2 position;
-        _<IPrerenderedString> prerenderedString;
+        _<IRenderer::IPrerenderedString> prerenderedString;
     };
     struct Lines {
         AVector<glm::vec2> points;
