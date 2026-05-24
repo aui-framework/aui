@@ -13,17 +13,17 @@
 #include "IRenderer.h"
 
 void IRenderer::stub(glm::vec2 position, glm::vec2 size) {
-    rectangle(ADisplayList::Rectangle{{ 0, 0 }, size}, APaint{ASolidBrush{0xa0a0a0_rgb}});
+    rectangle(ASolidBrush{0xa0a0a0_rgb}, position, size);
 }
 
 void IRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {
     stub(position, size);
 }
 
-void IRenderer::backdrops(const ADisplayList::Backdrop& v, const APaint& paint) {
+void IRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) {
     using Preprocessed = ass::Backdrop::Preprocessed;
     auto preprocessed =
-        v.backdrops | ranges::views::transform([](const ass::Backdrop::Any& val) -> Preprocessed {
+        backdrops | ranges::views::transform([](const ass::Backdrop::Any& val) -> Preprocessed {
             return std::visit(
                 aui::lambda_overloaded {
                   [](const ass::Backdrop::GaussianBlur& b) -> Preprocessed {
@@ -34,5 +34,5 @@ void IRenderer::backdrops(const ADisplayList::Backdrop& v, const APaint& paint) 
                 val);
         }) |
         ranges::to_vector;
-    this->backdrops(v.position, v.size, std::span<const Preprocessed>(preprocessed.data(), preprocessed.size()));
+    this->backdrops(position, size, std::span<const Preprocessed>(preprocessed.data(), preprocessed.size()));
 }

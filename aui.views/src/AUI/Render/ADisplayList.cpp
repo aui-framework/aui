@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "ADisplayList.h"
-#include <AUI/Render/IRenderer.h>
+#include <AUI/Render/IRendererBackend.h>
 #include <AUI/Traits/callables.h>
 #include <limits>
 #include <stack>
@@ -156,7 +156,7 @@ void ADisplayList::computeOverlaps() {
     }
 }
 
-void ADisplayList::draw(IRenderer& renderer) const {
+void ADisplayList::draw(IRendererBackend& renderer) const {
     for (const auto& entity : mEntities) {
         if (entity.isObscured) {
             continue;

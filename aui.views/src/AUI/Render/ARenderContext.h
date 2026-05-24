@@ -40,8 +40,7 @@ class IRenderer;
  *
  * See UIRenderOptimizationTest for tests.
  */
-struct API_AUI_VIEWS ARenderContext
-{
+struct API_AUI_VIEWS ARenderContext {
     using Rectangles = AStaticVector<ARect<int>, 8>;
 
     /**
@@ -49,7 +48,7 @@ struct API_AUI_VIEWS ARenderContext
      */
     Rectangles clippingRects;
     ACanvas& canvas;
-    IRenderer& renderer;
+    IRenderer& render;
 
     void clip(ARect<int> clipping);
 

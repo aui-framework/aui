@@ -14,13 +14,14 @@
 #include <AUI/Render/ACanvas.hpp>
 #include <AUI/Render/ADisplayList.h>
 
-class IRenderer;
+class IRendererBackend;
 
 class ADisplayListCanvas: public ACanvas {
 public:
-    ADisplayListCanvas(ADisplayList& displayList, IRenderer& renderer) : mDisplayList(displayList), mRenderer(renderer) {}
+    ADisplayListCanvas(ADisplayList& displayList, IRendererBackend& renderer) : mDisplayList(displayList), mRenderer(renderer) {}
 
     _<ITexture> getNewTexture() override;
+    _unique<ITexture> createNewTexture() override;
 
     float getRenderScale() const noexcept override;
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
@@ -64,5 +65,5 @@ private:
     void add(ADisplayList::StoredCommand::Command command, const APaint& paint = {});
 
     ADisplayList& mDisplayList;
-    IRenderer& mRenderer;
+    IRendererBackend& mRenderer;
 };

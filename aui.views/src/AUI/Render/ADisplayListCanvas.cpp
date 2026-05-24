@@ -10,11 +10,16 @@
  */
 
 #include "ADisplayListCanvas.hpp"
+#include <AUI/Render/IRendererBackend.h>
 
 #include <utility>
 
 _<ITexture> ADisplayListCanvas::getNewTexture() {
     return mRenderer.getNewTexture();
+}
+
+_unique<ITexture> ADisplayListCanvas::createNewTexture() {
+    return mRenderer.createNewTexture();
 }
 
 float ADisplayListCanvas::getRenderScale() const noexcept {

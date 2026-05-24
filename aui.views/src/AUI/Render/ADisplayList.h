@@ -11,7 +11,7 @@
 #include <glm/glm.hpp>
 #include <AUI/Geometry2D/ARect.h>
 
-class IRenderer;
+class IRendererBackend;
 class IPrerenderedString;
 
 class ADisplayList {
@@ -144,7 +144,7 @@ public:
 
     void resolveEntities();
 
-    void draw(IRenderer& renderer) const;
+    void draw(IRendererBackend& renderer) const;
 
 private:
     AVector<StoredCommand> mCommands;

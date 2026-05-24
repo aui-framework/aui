@@ -28,7 +28,6 @@
 #include <AUI/Util/AArrayView.h>
 #include <AUI/Common/AString.h>
 #include <AUI/ASS/Property/Backdrop.h>
-#include <AUI/Render/Blending.h>
 #include <AUI/Render/APaint.hpp>
 #include <AUI/Render/IRenderer.h>
 
@@ -130,6 +129,7 @@ public:
     virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) = 0;
 
     virtual _<ITexture> getNewTexture() = 0;
+    virtual _unique<ITexture> createNewTexture() = 0;
 
     virtual float getRenderScale() const noexcept = 0;
     virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;

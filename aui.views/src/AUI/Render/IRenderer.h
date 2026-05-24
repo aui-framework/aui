@@ -26,18 +26,118 @@
 #include "ITexture.h"
 #include "ATextLayoutHelper.h"
 #include "IRenderViewToTexture.h"
-#include "Blending.h"
-#include "ADisplayList.h"
 
 class AColor;
 class ASurface;
 
-class IPrerenderedString {
-public:
-    virtual void draw() = 0;
-    virtual ~IPrerenderedString() = default;
-    virtual int getWidth() = 0;
-    virtual int getHeight() = 0;
+
+
+/**
+ * @brief Blending mode.
+ * @details
+ * <p><b>Terminology used in this documentation</b>:</p>
+ * <dl>
+ *   <dt><b><u>S</u>ource color</b> (S)</dt>
+ *   <dd>
+ *      Source color is a color of the brush (i.e. texture color matching current position) multiplied by the current
+ *      renderer color, i.e. when drawing a black rectangle onto the white canvas the source color is black.
+ *   </dd>
+ *
+ *   <dt><b><u>D</u>estination color</b> (D)</dt>
+ *   <dd>
+ *      Destination color is a color of the framebuffer you're drawing to, i.e. when drawing a black
+ *      rectangle onto the white canvas the destination color is white.
+ *   </dd>
+ *
+ *   <dt><b><u>S</u>.rgb</b></dt>
+ *   <dd>Source color without the alpha component.</dd>
+ *
+ *   <dt><b><u>S</u>.a</b></dt>
+ *   <dd>Source's alpha component without the color itself.</dd>
+ *
+ *   <dt><b><u>D</u>.rgb</b></dt>
+ *   <dd>Destination color without the alpha component.</dd>
+ *
+ *   <dt><b><u>D</u>.a</b></dt>
+ *   <dd>Destination's alpha component without the color itself.</dd>
+ *
+ *   <dt><b>Alpha-based</b></dt>
+ *   <dd>Alpha-based blending mode is a blending mode that uses the alpha component in it's formula.</dd>
+ *
+ *   <dt><b>Color-based</b></dt>
+ *   <dd>Color-based blending mode is a blending mode that does not use the alpha component in it's formula.</dd>
+ * </dl>
+ * <!-- aui:no_dedicated_page -->
+ */
+enum class Blending {
+    /**
+     * @brief Normal blending.
+     * @details
+     * <dl>
+     *   <dt><b>Formula</b></dt>
+     *   <dd><code>S.rgb * S.a + D.rgb * (1 - S.a)</code></dd>
+     *   <dt><b>Type</b></dt>
+     *   <dd>Alpha-based</dd>
+     *   <dt><b>Behaviour</b></dt>
+     *   <dd>
+     *     <p>When <code>S.a</code> is 0, <code>NORMAL</code> does not drawElements anything.
+     *     <p>When <code>S.a</code> is 1, <code>NORMAL</code> ignores <code>D</code>.
+     *   </dd>
+     * </dl>
+     */
+    NORMAL,
+
+
+    /**
+     * @brief Simply sums <code>S</code> and <code>D</code> colors.
+     * @details
+     * <dl>
+     *   <dt><b>Formula</b></dt>
+     *   <dd><code>S.rgb + D.rgb</code></dd>
+     *   <dt><b>Type</b></dt>
+     *   <dd>Color-based</dd>
+     *   <dt><b>Behaviour</b></dt>
+     *   <dd>
+     *     <p>When <code>S</code> is black, <code>ADDITIVE</code> does not drawElements anything.</p>
+     *     <p>When <code>S</code> is white, <code>ADDITIVE</code> draws white.</p>
+     *   </dd>
+     * </dl>
+     */
+    ADDITIVE,
+
+    /**
+     * @brief Inverses destination color and multiplies it with the source color.
+     * @details
+     * <dl>
+     *   <dt><b>Formula</b></dt>
+     *   <dd><code>S.rgb * (1 - D.rgb)</code></dd>
+     *   <dt><b>Type</b></dt>
+     *   <dd>Color-based</dd>
+     *   <dt><b>Behaviour</b></dt>
+     *   <dd>
+     *     <p>When <code>S</code> is black, <code>INVERSE_DST</code> does not drawElements anything.</p>
+     *     <p>When <code>S</code> is white, <code>INVERSE_DST</code> does full inverse.</p>
+     *   </dd>
+     * </dl>
+     */
+    INVERSE_DST,
+
+    /**
+     * @brief Inverses source color and multiplies it with the destination color.
+     * @details
+     * <dl>
+     *   <dt><b>Formula</b></dt>
+     *   <dd><code>(1 - S.rgb) * D.rgb</code></dd>
+     *   <dt><b>Type</b></dt>
+     *   <dd>Color-based</dd>
+     *   <dt><b>Behaviour</b></dt>
+     *   <dd>
+     *     <p>When <code>S</code> is black, <code>INVERSE_SRC</code> does not drawElements anything.</p>
+     *     <p>When <code>S</code> is white, <code>INVERSE_SRC</code> draws black.</p>
+     *   </dd>
+     * </dl>
+     */
+    INVERSE_SRC,
 };
 
 /**
@@ -81,7 +181,13 @@ public:
  */
 class IRenderer: public aui::noncopyable {
 public:
-    using IPrerenderedString = ::IPrerenderedString;
+    class IPrerenderedString {
+    public:
+        virtual void draw() = 0;
+        virtual ~IPrerenderedString() = default;
+        virtual int getWidth() = 0;
+        virtual int getHeight() = 0;
+    };
     class IMultiStringCanvas {
     private:
         AOptional<ATextLayoutHelper::Symbols> mSymbols;
@@ -179,18 +285,178 @@ public:
      * @param position rectangle position (px)
      * @param size rectangle size (px)
      */
-    virtual void rectangle(const ADisplayList::Rectangle& v, const APaint& paint) = 0;
-    virtual void roundedRectangle(const ADisplayList::RoundedRectangle& v, const APaint& paint) = 0;
-    virtual void rectangleBorder(const ADisplayList::RectangleBorder& v, const APaint& paint) = 0;
-    virtual void roundedRectangleBorder(const ADisplayList::RoundedRectangleBorder& v, const APaint& paint) = 0;
-    virtual void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint) = 0;
-    virtual void boxShadowInner(const ADisplayList::BoxShadowInner& v, const APaint& paint) = 0;
-    virtual void string(const ADisplayList::Text& v, const APaint& paint) = 0;
+    virtual void rectangle(const ABrush& brush,
+                           glm::vec2 position,
+                           glm::vec2 size) = 0;
+
+
+    /**
+     * @brief Draws rounded rect (with antialiasing, if msaa enabled).
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @param radius corner radius (px)
+     */
+    virtual void roundedRectangle(const ABrush& brush,
+                                  glm::vec2 position,
+                                  glm::vec2 size,
+                                  float radius) = 0;
+
+    /**
+     * @brief Draws rectangle's border.
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @param lineWidth border line width (px)
+     */
+    virtual void rectangleBorder(const ABrush& brush,
+                                 glm::vec2 position,
+                                 glm::vec2 size,
+                                 float lineWidth = 1.f) = 0;
+    /**
+     * @brief Draws rounded rectangle's border.
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @param radius corner radius (px)
+     * @param borderWidth border line width (px)
+     */
+    virtual void roundedRectangleBorder(const ABrush& brush,
+                                        glm::vec2 position,
+                                        glm::vec2 size,
+                                        float radius,
+                                        int borderWidth) = 0;
+
+
+    /**
+     * @brief Draws a rectangle-shaped shadow.
+     * @param position position
+     * @param size rectangle size
+     * @param blurRadius blur radius
+     * @param color shadow color
+     */
+    virtual void boxShadow(glm::vec2 position,
+                           glm::vec2 size,
+                           float blurRadius,
+                           const AColor& color) = 0;
+
+    /**
+     * @brief Draws inner (inset) rectangle-shaped shadow.
+     * @param position position
+     * @param size rectangle size
+     * @param blurRadius blur radius
+     * @param spreadRadius spread (offset) radius
+     * @param borderRadius border radius of the rectangle.
+     * @param color shadow color
+     * @param offset shadow offset. Unlike outer shadow (ctx.render.boxShadow), the offset is passed to the shader instead
+     *               of a simple rectangle position offset.
+     */
+    virtual void boxShadowInner(glm::vec2 position,
+                                glm::vec2 size,
+                                float blurRadius,
+                                float spreadRadius,
+                                float borderRadius,
+                                const AColor& color,
+                                glm::vec2 offset) = 0;
+
+    /**
+     * @brief Draws string.
+     * @param position string baseline
+     * @param string string to render
+     * @param fs font style (optional)
+     * @details
+     * This function is dramatically inefficient since it does symbol lookup for every character is the
+     * <code>string</code> and does GPU buffer allocations. If you want to render the same string for several
+     * times (frames), consider using the IRenderer::prerenderString function or high level views (such as
+     * ALabel) instead.
+     */
+    virtual void string(glm::vec2 position,
+                        const AString& string,
+                        const AFontStyle& fs = {}) = 0;
+
+    /**
+     * @brief Analyzes string and creates an instance of <code>IRenderer::IPrerenderedString</code> which helps
+     * <code>IRenderer</code> to efficiently render the string.
+     * @param position string baseline
+     * @param text string to prerender
+     * @param fs font style
+     * @return an instance of IPrerenderedString
+     */
     virtual _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
-    virtual void lines(const ADisplayList::Lines& v, const APaint& paint) = 0;
-    virtual void points(const ADisplayList::Points& v, const APaint& paint) = 0;
-    virtual void lines(const ADisplayList::LineBatches& v, const APaint& paint) = 0;
-    virtual void squareSector(const ADisplayList::SquareSector& v, const APaint& paint) = 0;
+
+    /**
+    * @details
+    * <dl>
+    *   <dt><b>Performance note</b></dt>
+    *   <dd>if you want to drawElements multiple lines, consider using <code>ARender::lines</code> function instead.</dd>
+    * </dl>
+    */
+    void line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) {
+        glm::vec2 points[] = { p1, p2 };
+        lines(brush, points, style, width);
+    }
+
+    /**
+     * @brief Draws polyline (non-loop line strip).
+     * @param brush brush
+     * @param points polyline points
+     * @param style style
+     * @param width line width
+     */
+    virtual void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) = 0;
+
+    /**
+     * @brief Draws polyline (non-loop line strip).
+     * @param brush brush
+     * @param points polyline points
+     * @param style style
+     */
+    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}) {
+        lines(brush, points, style, 1_dp);
+    }
+
+    /**
+     * @brief Draws points list.
+     * @param brush brush
+     * @param points points
+     * @param size point size
+     */
+    virtual void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) = 0;
+
+    /**
+     * @brief Draws multiple individual lines in a batch.
+     * @param brush brush
+     * @param points line points
+     * @param style style
+     * @param width line width
+     */
+    virtual void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) = 0;
+
+    /**
+     * @brief Draws multiple individual lines in a batch.
+     * @param brush brush
+     * @param points line points
+     * @param style style
+     */
+    void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style = ABorderStyle::Solid{}) {
+        lines(brush, points, style, 1_dp);
+    }
+
+    /**
+     * @brief Draws sector in rectangle shape. The sector is drawn clockwise from begin to end angles.
+     * @param brush brush to use
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @param begin begin angle of the sector
+     * @param end end angle of the sector
+     * @details
+     * The method can be used as mask to ctx.render.roundedRect, creating arc shape.
+     */
+    virtual void squareSector(const ABrush& brush,
+                              const glm::vec2& position,
+                              const glm::vec2& size,
+                              AAngleRadians begin,
+                              AAngleRadians end) = 0;
  
     /**
      * @brief Sets the color which is multiplied with any brush.
@@ -368,7 +634,15 @@ public:
         return mRenderScale;
     }
 
-    virtual void backdrops(const ADisplayList::Backdrop& v, const APaint& paint);
+    /**
+     * @brief Draws rectangular backdrop effects.
+     * @param position rectangle position (px)
+     * @param size rectangle size (px)
+     * @param backdrops array of backdrop effects. Impl might apply optimizations on using several effects at once.
+     * @details
+     * Implementation might draw stub (i.e., gray rectangle) instead of drawing complex backdrop effects.
+     */
+    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops);
 
 protected:
     float mRenderScale = 1.0f;
@@ -387,11 +661,9 @@ protected:
      */
     void stub(glm::vec2 position, glm::vec2 size);
 
-    virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops);
+    virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops);
 
 private:
     bool mAllowRenderToTexture = false;
 
 };
-
-
