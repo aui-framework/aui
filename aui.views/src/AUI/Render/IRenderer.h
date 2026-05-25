@@ -140,6 +140,8 @@ enum class Blending {
     INVERSE_SRC,
 };
 
+class ACanvas;
+
 /**
  * @brief Base class for renderer.
  * @ingroup views
@@ -183,7 +185,7 @@ class IRenderer: public aui::noncopyable {
 public:
     class IPrerenderedString {
     public:
-        virtual void draw() = 0;
+        virtual void draw(ACanvas& canvas) = 0;
         virtual ~IPrerenderedString() = default;
         virtual int getWidth() = 0;
         virtual int getHeight() = 0;
