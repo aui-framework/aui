@@ -31,23 +31,19 @@ public:
     virtual _unique<ITexture> createNewTexture() = 0;
     virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
 
-    virtual void rectangles(const ADisplayList::Rectangles& v, const APaint& paint) = 0;
-    virtual void roundedRectangles(const ADisplayList::RoundedRectangles& v, const APaint& paint) = 0;
-    virtual void rectangleBorders(const ADisplayList::RectangleBorders& v, const APaint& paint) = 0;
-    virtual void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const APaint& paint) = 0;
-    virtual void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint) = 0;
-    virtual void boxShadowInner(const ADisplayList::BoxShadowInner& v, const APaint& paint) = 0;
-    virtual void string(const ADisplayList::Text& v, const APaint& paint) = 0;
+    virtual void rectangles(const ADisplayList::Rectangles& v, const APaint& paint, const glm::mat4& transform) = 0;
+    virtual void roundedRectangles(const ADisplayList::RoundedRectangles& v, const APaint& paint, const glm::mat4& transform) = 0;
+    virtual void rectangleBorders(const ADisplayList::RectangleBorders& v, const APaint& paint, const glm::mat4& transform) = 0;
+    virtual void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const APaint& paint, const glm::mat4& transform) = 0;
+    virtual void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint, const glm::mat4& transform) = 0;
+    virtual void boxShadowInner(const ADisplayList::BoxShadowInner& v, const APaint& paint, const glm::mat4& transform) = 0;
+    virtual void string(const ADisplayList::Text& v, const APaint& paint, const glm::mat4& transform) = 0;
     virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
-    virtual void lines(const ADisplayList::Lines& v, const APaint& paint) = 0;
-    virtual void points(const ADisplayList::Points& v, const APaint& paint) = 0;
-    virtual void lines(const ADisplayList::LineBatches& v, const APaint& paint) = 0;
-    virtual void squareSector(const ADisplayList::SquareSector& v, const APaint& paint) = 0;
+    virtual void lines(const ADisplayList::Lines& v, const APaint& paint, const glm::mat4& transform) = 0;
+    virtual void points(const ADisplayList::Points& v, const APaint& paint, const glm::mat4& transform) = 0;
+    virtual void lines(const ADisplayList::LineBatches& v, const APaint& paint, const glm::mat4& transform) = 0;
+    virtual void squareSector(const ADisplayList::SquareSector& v, const APaint& paint, const glm::mat4& transform) = 0;
 
-    virtual void setTransformForced(const glm::mat4& transform) = 0;
-    virtual const glm::mat4& getTransform() const = 0;
-    virtual void setColorForced(const AColor& color) = 0;
-    virtual const AColor& getColor() const = 0;
     virtual void setBlending(Blending blending) = 0;
 
     virtual void pushMaskBefore() = 0;
