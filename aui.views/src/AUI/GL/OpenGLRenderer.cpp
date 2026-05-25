@@ -259,11 +259,8 @@ void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& 
     for (const auto& inst : v.instances) {
         auto vertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = glm::vec4(inst.color);
-        mRectangleVao.insert(0, AArrayView(vertices), "gradientRectangles/positions");
-        mRectangleVao.insert(2, AArrayView<glm::vec4>(&color, 1), "gradientRectangles/colors"); // assuming same color for all vertices of instance
-        // Actually for Vao::insert with a single element we need to be careful. 
-        // Better pack 4 colors.
         glm::vec4 colors[4] = {color, color, color, color};
+        mRectangleVao.insert(0, AArrayView(vertices), "gradientRectangles/positions");
         mRectangleVao.insert(2, AArrayView(colors), "gradientRectangles/colors");
         mRectangleVao.drawElements();
     }

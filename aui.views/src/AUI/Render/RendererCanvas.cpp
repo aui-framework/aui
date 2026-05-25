@@ -128,6 +128,7 @@ _unique<ITexture> RendererCanvas::createNewTexture() {
 
 void RendererCanvas::sync() {
     mCanvas.setTransformForced(mTransform);
+    mCanvas.setBaseTransform(getProjectionMatrix());
     mCanvas.setColorMultiplier(mColor);
     mCanvas.setStencilDepth(mStencilDepth);
 }

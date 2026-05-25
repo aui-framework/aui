@@ -183,5 +183,121 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
     combined.color *= mColorMultiplier;
     combined.opacity *= mOpacity;
     combined.blending = mBlending;
-    mDisplayList.add(std::move(command), getTransform(), combined, getStencilDepth());
+    
+    auto st = mTransform;
+    auto bt = mBaseTransform;
+    
+    if (!isSimple(st)) {
+        // This shouldn't normally happen with setTransform(), but might with setTransformForced().
+        // Flush simple transform into base.
+        bt = bt * st;
+        st = glm::mat4(1.f);
+    }
+    
+    if (st != glm::mat4(1.f)) {
+        auto applyST = aui::lambda_overloaded {
+            [&](ADisplayList::SolidRectangles& v) {
+                for (auto& inst : v.instances) {
+                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
+                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+                    inst.position = glm::vec2(p1);
+                    inst.size = glm::vec2(p2) - inst.position;
+                }
+            },
+            [&](ADisplayList::GradientRectangles& v) {
+                for (auto& inst : v.instances) {
+                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
+                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+                    inst.position = glm::vec2(p1);
+                    inst.size = glm::vec2(p2) - inst.position;
+                }
+            },
+            [&](ADisplayList::TexturedRectangles& v) {
+                for (auto& inst : v.instances) {
+                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
+                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+                    inst.position = glm::vec2(p1);
+                    inst.size = glm::vec2(p2) - inst.position;
+                }
+            },
+            [&](ADisplayList::SolidRoundedRectangles& v) {
+                for (auto& inst : v.instances) {
+                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
+                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+                    inst.position = glm::vec2(p1);
+                    inst.size = glm::vec2(p2) - inst.position;
+                }
+            },
+            [&](ADisplayList::TexturedRoundedRectangles& v) {
+                for (auto& inst : v.instances) {
+                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
+                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+                    inst.position = glm::vec2(p1);
+                    inst.size = glm::vec2(p2) - inst.position;
+                }
+            },
+            [&](ADisplayList::RectangleBorders& v) {
+                for (auto& inst : v.instances) {
+                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
+                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+                    inst.position = glm::vec2(p1);
+                    inst.size = glm::vec2(p2) - inst.position;
+                }
+            },
+            [&](ADisplayList::RoundedRectangleBorders& v) {
+                for (auto& inst : v.instances) {
+                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
+                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+                    inst.position = glm::vec2(p1);
+                    inst.size = glm::vec2(p2) - inst.position;
+                }
+            },
+            [&](ADisplayList::Glyphs& v) {
+                for (auto& inst : v.instances) {
+                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
+                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+                    inst.position = glm::vec2(p1);
+                    inst.size = glm::vec2(p2) - inst.position;
+                }
+            },
+            [&](ADisplayList::BoxShadow& v) {
+                glm::vec4 p1 = st * glm::vec4(v.position, 0.f, 1.f);
+                glm::vec4 p2 = st * glm::vec4(v.position + v.size, 0.f, 1.f);
+                v.position = glm::vec2(p1);
+                v.size = glm::vec2(p2) - v.position;
+            },
+            [&](ADisplayList::BoxShadowInner& v) {
+                glm::vec4 p1 = st * glm::vec4(v.position, 0.f, 1.f);
+                glm::vec4 p2 = st * glm::vec4(v.position + v.size, 0.f, 1.f);
+                v.position = glm::vec2(p1);
+                v.size = glm::vec2(p2) - v.position;
+            },
+            [&](ADisplayList::SquareSector& v) {
+                glm::vec4 p1 = st * glm::vec4(v.position, 0.f, 1.f);
+                glm::vec4 p2 = st * glm::vec4(v.position + v.size, 0.f, 1.f);
+                v.position = glm::vec2(p1);
+                v.size = glm::vec2(p2) - v.position;
+            },
+            [&](ADisplayList::Lines& v) {
+                for (auto& p : v.points) {
+                    p = glm::vec2(st * glm::vec4(p, 0.f, 1.f));
+                }
+            },
+            [&](ADisplayList::LineBatches& v) {
+                for (auto& p : v.points) {
+                    p.first = glm::vec2(st * glm::vec4(p.first, 0.f, 1.f));
+                    p.second = glm::vec2(st * glm::vec4(p.second, 0.f, 1.f));
+                }
+            },
+            [&](ADisplayList::Points& v) {
+                for (auto& p : v.points) {
+                    p = glm::vec2(st * glm::vec4(p, 0.f, 1.f));
+                }
+            },
+            [&](auto&) {}
+        };
+        std::visit(applyST, command);
+    }
+    
+    mDisplayList.add(std::move(command), bt, combined, getStencilDepth());
 }

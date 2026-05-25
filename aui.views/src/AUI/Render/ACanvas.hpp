@@ -36,7 +36,7 @@ public:
     virtual ~ACanvas() = default;
 
     virtual void save() {
-        mStates.push_back(State{mTransform, mColorMultiplier, mOpacity, mBlending});
+        mStates.push_back(State{mTransform, mBaseTransform, mColorMultiplier, mOpacity, mBlending});
     }
 
     virtual void restore() {
@@ -44,6 +44,7 @@ public:
             State s = mStates.back();
             mStates.pop_back();
             mTransform = s.transform;
+            mBaseTransform = s.baseTransform;
             mColorMultiplier = s.colorMultiplier;
             mOpacity = s.opacity;
             mBlending = s.blending;
@@ -53,8 +54,19 @@ public:
     virtual void pushLayer() = 0;
     virtual void popLayer() = 0;
 
+    static bool isSimple(const glm::mat4& m) noexcept {
+        return glm::abs(m[0][1]) < 0.0001f && glm::abs(m[0][2]) < 0.0001f && glm::abs(m[0][3]) < 0.0001f &&
+               glm::abs(m[1][0]) < 0.0001f && glm::abs(m[1][2]) < 0.0001f && glm::abs(m[1][3]) < 0.0001f &&
+               glm::abs(m[2][0]) < 0.0001f && glm::abs(m[2][1]) < 0.0001f && glm::abs(m[2][3]) < 0.0001f;
+    }
+
     virtual void setTransform(const glm::mat4& transform) {
-        mTransform = mTransform * transform;
+        if (isSimple(transform)) {
+            mTransform = mTransform * transform;
+        } else {
+            mBaseTransform = mBaseTransform * mTransform * transform;
+            mTransform = glm::mat4(1.0f);
+        }
     }
 
     virtual void setColor(const AColor& color) {
@@ -145,8 +157,16 @@ public:
     virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
     virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
 
-    const glm::mat4& getTransform() const noexcept { return mTransform; }
-    virtual void setTransformForced(const glm::mat4& transform) noexcept { mTransform = transform; }
+    const glm::mat4 getTransform() const noexcept { return mBaseTransform * mTransform; }
+    virtual void setTransformForced(const glm::mat4& transform) noexcept {
+        if (isSimple(transform)) {
+            mBaseTransform = glm::mat4(1.0f);
+            mTransform = transform;
+        } else {
+            mBaseTransform = transform;
+            mTransform = glm::mat4(1.0f);
+        }
+    }
 
     const AColor& getColorMultiplier() const noexcept { return mColorMultiplier; }
     void setColorMultiplier(const AColor& color) noexcept { mColorMultiplier = color; }
@@ -155,10 +175,11 @@ public:
     const AColor& getColor() const noexcept { return mColorMultiplier; }
 
     void translate(const glm::vec2& offset) {
-        setTransformForced(glm::translate(getTransform(), glm::vec3(offset, 0.f)));
+        mTransform = glm::translate(mTransform, glm::vec3(offset, 0.f));
     }
     void rotate(const glm::vec3& axis, AAngleRadians angle) {
-        setTransformForced(glm::rotate(getTransform(), angle.radians(), axis));
+        mBaseTransform = mBaseTransform * mTransform * glm::rotate(glm::mat4(1.f), angle.radians(), axis);
+        mTransform = glm::mat4(1.f);
     }
     void rotate(AAngleRadians angle) {
         rotate({0.f, 0.f, 1.f}, angle);
@@ -170,18 +191,22 @@ public:
     std::uint8_t getStencilDepth() const noexcept { return mStencilDepth; }
     void setStencilDepth(std::uint8_t stencilDepth) noexcept { mStencilDepth = stencilDepth; }
 
+    const glm::mat4& getBaseTransform() const noexcept { return mBaseTransform; }
+    void setBaseTransform(const glm::mat4& transform) noexcept { mBaseTransform = transform; }
+
 protected:
     struct State {
         glm::mat4 transform;
+        glm::mat4 baseTransform;
         AColor colorMultiplier;
         float opacity;
         Blending blending;
     };
     std::vector<State> mStates;
     glm::mat4 mTransform = glm::mat4(1.0f);
+    glm::mat4 mBaseTransform = glm::mat4(1.0f);
     AColor mColorMultiplier = AColor::WHITE;
     float mOpacity = 1.0f;
     Blending mBlending = Blending::NORMAL;
     std::uint8_t mStencilDepth = 0;
 };
-

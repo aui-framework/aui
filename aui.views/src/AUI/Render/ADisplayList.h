@@ -169,9 +169,7 @@ public:
         bool isObscured = false;
     };
 
-    void add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint, std::uint8_t stencilDepth) {
-        mCommands << StoredCommand{std::move(cmd), transform, std::move(paint), stencilDepth};
-    }
+    void add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint, std::uint8_t stencilDepth);
 
     void clear() {
         mCommands.clear();

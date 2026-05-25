@@ -33,6 +33,87 @@ bool isOpaque(const ABrush& brush, const AColor& globalColor) {
 }
 }   // namespace
 
+void ADisplayList::add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint, std::uint8_t stencilDepth) {
+    if (!mCommands.empty()) {
+        auto& last = mCommands.last();
+        if (last.transform == transform && last.stencilDepth == stencilDepth && last.paint.blending == paint.blending) {
+            bool merged = std::visit(aui::lambda_overloaded {
+                [&](SolidRectangles& l, SolidRectangles& r) {
+                    l.instances << std::move(r.instances);
+                    return true;
+                },
+                [&](TexturedRectangles& l, TexturedRectangles& r) {
+                    if (l.texture == r.texture) {
+                        l.instances << std::move(r.instances);
+                        return true;
+                    }
+                    return false;
+                },
+                [&](SolidRoundedRectangles& l, SolidRoundedRectangles& r) {
+                    if (l.radius == r.radius) {
+                        l.instances << std::move(r.instances);
+                        return true;
+                    }
+                    return false;
+                },
+                [&](TexturedRoundedRectangles& l, TexturedRoundedRectangles& r) {
+                    if (l.radius == r.radius && l.texture == r.texture) {
+                        l.instances << std::move(r.instances);
+                        return true;
+                    }
+                    return false;
+                },
+                [&](RectangleBorders& l, RectangleBorders& r) {
+                    if (l.lineWidth == r.lineWidth) {
+                        l.instances << std::move(r.instances);
+                        return true;
+                    }
+                    return false;
+                },
+                [&](RoundedRectangleBorders& l, RoundedRectangleBorders& r) {
+                    if (l.radius == r.radius && l.borderWidth == r.borderWidth) {
+                        l.instances << std::move(r.instances);
+                        return true;
+                    }
+                    return false;
+                },
+                [&](Glyphs& l, Glyphs& r) {
+                    if (l.texture == r.texture) {
+                        l.instances << std::move(r.instances);
+                        return true;
+                    }
+                    return false;
+                },
+                [&](Lines& l, Lines& r) {
+                    if (l.style == r.style && l.width == r.width) {
+                        l.points << std::move(r.points);
+                        return true;
+                    }
+                    return false;
+                },
+                [&](LineBatches& l, LineBatches& r) {
+                    if (l.style == r.style && l.width == r.width) {
+                        l.points << std::move(r.points);
+                        return true;
+                    }
+                    return false;
+                },
+                [&](Points& l, Points& r) {
+                    if (l.size == r.size) {
+                        l.points << std::move(r.points);
+                        return true;
+                    }
+                    return false;
+                },
+                [&](auto&, auto&) { return false; }
+            }, last.command, cmd);
+
+            if (merged) return;
+        }
+    }
+    mCommands << StoredCommand{std::move(cmd), transform, std::move(paint), stencilDepth};
+}
+
 void ADisplayList::resolveEntities() {
     mEntities.clear();
     for (const auto& cmd : mCommands) {
