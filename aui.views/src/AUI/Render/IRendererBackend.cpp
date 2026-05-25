@@ -11,8 +11,9 @@
 
 #include "IRendererBackend.h"
 #include <range/v3/all.hpp>
+#include <AUI/Traits/callables.h>
 
-void IRendererBackend::backdrops(const ADisplayList::Backdrop& v, const APaint& paint) {
+void IRendererBackend::backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) {
     using Preprocessed = ass::Backdrop::Preprocessed;
     auto preprocessed =
         v.backdrops | ranges::views::transform([](const ass::Backdrop::Any& val) -> Preprocessed {

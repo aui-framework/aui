@@ -43,6 +43,7 @@ public:
     virtual void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) = 0;
     virtual void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) = 0;
     virtual void string(const ADisplayList::Text& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) = 0;
     virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
     virtual void lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) = 0;
     virtual void points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) = 0;
@@ -59,6 +60,6 @@ public:
     virtual void setAllowRenderToTexture(bool allow) = 0;
     virtual bool allowRenderToTexture() const noexcept = 0;
 
-    virtual void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) = 0;
+    virtual void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform);
     virtual void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) = 0;
 };

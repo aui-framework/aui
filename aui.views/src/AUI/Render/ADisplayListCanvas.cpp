@@ -112,15 +112,11 @@ void ADisplayListCanvas::string(const APaint& paint, glm::vec2 position, const A
 
 void ADisplayListCanvas::prerenderedString(const APaint& paint, glm::vec2 position, const _<IRenderer::IPrerenderedString>& prerenderedString) {
     if (prerenderedString) {
-        // We temporarily store the current transform and paint so that glyphRect calls can use them.
-        // Actually, ps->draw(canvas) will call glyphRect.
         prerenderedString->draw(*this);
     }
 }
 
 void ADisplayListCanvas::glyphRect(const _<ITexture>& texture, glm::vec2 position, glm::vec2 size, glm::vec2 u1, glm::vec2 u2, const AColor& color) {
-    // We try to batch with the last command if it's Glyphs with same texture/color
-    // For now, implement simple adding.
     add(ADisplayList::Glyphs{{{position, size, u1, u2}}, texture, color * mColorMultiplier}, {});
 }
 
