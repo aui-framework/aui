@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "ADisplayListCanvas.hpp"
+#include "ADisplayListCanvas.h"
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Traits/callables.h>
 
@@ -40,12 +40,17 @@ void ADisplayListCanvas::pushLayer() { add(ADisplayList::PushLayer{}); }
 void ADisplayListCanvas::popLayer() { add(ADisplayList::PopLayer{}); }
 
 void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) {
+    AColor combinedColor = paint.color * mColorMultiplier;
+    combinedColor.a *= paint.opacity * mOpacity;
+
     std::visit(aui::lambda_overloaded {
         [&](const ASolidBrush& b) {
-            add(ADisplayList::SolidRectangles{{ {position, size} }, b.solidColor}, paint);
+            add(ADisplayList::SolidRectangles{{ {position, size} }, b.solidColor * combinedColor}, paint);
         },
         [&](const ALinearGradientBrush& b) {
-            add(ADisplayList::GradientRectangles{{ {position, size} }, b.colors, b.angle}, paint);
+            auto colors = b.colors;
+            for (auto& c : colors) c.color *= combinedColor;
+            add(ADisplayList::GradientRectangles{{ {position, size} }, std::move(colors), b.angle}, paint);
         },
         [&](const ATexturedBrush& b) {
             add(ADisplayList::TexturedRectangles{{ {position, size} }, b.texture}, paint);
@@ -55,12 +60,17 @@ void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm:
 }
 
 void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 position, glm::vec2 size, float radius) {
+    AColor combinedColor = paint.color * mColorMultiplier;
+    combinedColor.a *= paint.opacity * mOpacity;
+
     std::visit(aui::lambda_overloaded {
         [&](const ASolidBrush& b) {
-            add(ADisplayList::SolidRoundedRectangles{{ {position, size} }, radius, b.solidColor}, paint);
+            add(ADisplayList::SolidRoundedRectangles{{ {position, size} }, radius, b.solidColor * combinedColor}, paint);
         },
         [&](const ALinearGradientBrush& b) {
-            add(ADisplayList::GradientRoundedRectangles{{ {position, size} }, radius, b.colors, b.angle}, paint);
+            auto colors = b.colors;
+            for (auto& c : colors) c.color *= combinedColor;
+            add(ADisplayList::GradientRoundedRectangles{{ {position, size} }, radius, std::move(colors), b.angle}, paint);
         },
         [&](const ATexturedBrush& b) {
             add(ADisplayList::TexturedRoundedRectangles{{ {position, size} }, radius, b.texture}, paint);
@@ -82,7 +92,7 @@ void ADisplayListCanvas::roundedRectangleBorder(const APaint& paint,
 }
 
 void ADisplayListCanvas::boxShadow(const APaint& paint, glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) {
-    add(ADisplayList::BoxShadow{position, size, blurRadius, color}, paint);
+    add(ADisplayList::BoxShadow{position, size, blurRadius, color * mColorMultiplier}, paint);
 }
 
 void ADisplayListCanvas::boxShadowInner(const APaint& paint,
@@ -93,7 +103,7 @@ void ADisplayListCanvas::boxShadowInner(const APaint& paint,
                                         float borderRadius,
                                         const AColor& color,
                                         glm::vec2 offset) {
-    add(ADisplayList::BoxShadowInner{position, size, blurRadius, spreadRadius, borderRadius, color, offset}, paint);
+    add(ADisplayList::BoxShadowInner{position, size, blurRadius, spreadRadius, borderRadius, color * mColorMultiplier, offset}, paint);
 }
 
 void ADisplayListCanvas::string(const APaint& paint, glm::vec2 position, const AString& string, const AFontStyle& fs) {
@@ -128,20 +138,20 @@ void ADisplayListCanvas::squareSector(const APaint& paint,
 }
 
 void ADisplayListCanvas::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) {
-    add(ADisplayList::Backdrop{position, size, {backdrops.begin(), backdrops.end()}});
+    add(ADisplayList::Backdrop{position, size, {backdrops.begin(), backdrops.end()}}, {});
 }
 
-void ADisplayListCanvas::pushMaskBefore() { add(ADisplayList::MaskBefore{}); }
+void ADisplayListCanvas::pushMaskBefore() { add(ADisplayList::MaskBefore{}, {}); }
 
 void ADisplayListCanvas::pushMaskAfter() {
-    add(ADisplayList::MaskAfter{});
+    add(ADisplayList::MaskAfter{}, {});
     mStencilDepth++;
 }
 
-void ADisplayListCanvas::popMaskBefore() { add(ADisplayList::PopMaskBefore{}); }
+void ADisplayListCanvas::popMaskBefore() { add(ADisplayList::PopMaskBefore{}, {}); }
 
 void ADisplayListCanvas::popMaskAfter() {
-    add(ADisplayList::PopMaskAfter{});
+    add(ADisplayList::PopMaskAfter{}, {});
     if (mStencilDepth > 0) {
         mStencilDepth--;
     }

@@ -22,9 +22,9 @@
 #include <glm/glm.hpp>
 #include <AUI/Geometry2D/ARect.h>
 #include <AUI/Render/ITexture.h>
+#include <AUI/Render/IRenderer.h>
 
 class IRenderer;
-class IPrerenderedString;
 class IRendererBackend;
 
 class ADisplayList {
@@ -93,7 +93,7 @@ public:
     };
     struct PrerenderedString {
         glm::vec2 position;
-        _<IPrerenderedString> prerenderedString;
+        _<IRenderer::IPrerenderedString> prerenderedString;
     };
     struct Lines {
         AVector<glm::vec2> points;

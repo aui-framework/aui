@@ -10,6 +10,7 @@
  */
 #include "ADisplayList.h"
 #include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/IRenderer.h>
 #include <AUI/Traits/callables.h>
 #include <limits>
 #include <stack>
@@ -135,8 +136,7 @@ void ADisplayList::computeOverlaps() {
         } else {
             bool opaque = std::visit(
                 aui::lambda_overloaded {
-                  [&](const SolidRectangles& v) { return v.instances.size() == 1 && v.color.a >= 0.999f && it->paint.color.a >= 0.999f; },
-                  [&](const SolidRoundedRectangles& v) { return false; }, // corners are transparent
+                  [&](const SolidRectangles& v) { return v.instances.size() == 1 && v.color.a >= 0.999f; },
                   [&](const auto&) { return false; }
                 },
                 it->command);
@@ -155,23 +155,23 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
 
         std::visit(
             aui::lambda_overloaded {
-              [&](const SolidRectangles& v) { renderer.solidRectangles(v, entity.paint, entity.transform); },
-              [&](const GradientRectangles& v) { renderer.gradientRectangles(v, entity.paint, entity.transform); },
-              [&](const TexturedRectangles& v) { renderer.texturedRectangles(v, entity.paint, entity.transform); },
-              [&](const SolidRoundedRectangles& v) { renderer.solidRoundedRectangles(v, entity.paint, entity.transform); },
-              [&](const GradientRoundedRectangles& v) { renderer.gradientRoundedRectangles(v, entity.paint, entity.transform); },
-              [&](const TexturedRoundedRectangles& v) { renderer.texturedRoundedRectangles(v, entity.paint, entity.transform); },
-              [&](const RectangleBorders& v) { renderer.rectangleBorders(v, entity.paint, entity.transform); },
-              [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, entity.paint, entity.transform); },
-              [&](const BoxShadow& v) { renderer.boxShadow(v, entity.paint, entity.transform); },
-              [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, entity.paint, entity.transform); },
-              [&](const Text& v) { renderer.string(v, entity.paint, entity.transform); },
+              [&](const SolidRectangles& v) { renderer.solidRectangles(v, entity.transform, entity.paint.blending); },
+              [&](const GradientRectangles& v) { renderer.gradientRectangles(v, entity.transform, entity.paint.blending); },
+              [&](const TexturedRectangles& v) { renderer.texturedRectangles(v, entity.transform, entity.paint.blending); },
+              [&](const SolidRoundedRectangles& v) { renderer.solidRoundedRectangles(v, entity.transform, entity.paint.blending); },
+              [&](const GradientRoundedRectangles& v) { renderer.gradientRoundedRectangles(v, entity.transform, entity.paint.blending); },
+              [&](const TexturedRoundedRectangles& v) { renderer.texturedRoundedRectangles(v, entity.transform, entity.paint.blending); },
+              [&](const RectangleBorders& v) { renderer.rectangleBorders(v, entity.transform, entity.paint.blending); },
+              [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, entity.transform, entity.paint.blending); },
+              [&](const BoxShadow& v) { renderer.boxShadow(v, entity.transform, entity.paint.blending); },
+              [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, entity.transform, entity.paint.blending); },
+              [&](const Text& v) { renderer.string(v, entity.transform, entity.paint.blending); },
               [&](const PrerenderedString& v) { v.prerenderedString->draw(reinterpret_cast<ACanvas&>(renderer)); },
-              [&](const Lines& v) { renderer.lines(v, entity.paint, entity.transform); },
-              [&](const Points& v) { renderer.points(v, entity.paint, entity.transform); },
-              [&](const LineBatches& v) { renderer.lines(v, entity.paint, entity.transform); },
-              [&](const SquareSector& v) { renderer.squareSector(v, entity.paint, entity.transform); },
-              [&](const Backdrop& v) { renderer.backdrops(v, entity.paint, entity.transform); },
+              [&](const Lines& v) { renderer.lines(v, entity.transform, entity.paint.blending); },
+              [&](const Points& v) { renderer.points(v, entity.transform, entity.paint.blending); },
+              [&](const LineBatches& v) { renderer.lines(v, entity.transform, entity.paint.blending); },
+              [&](const SquareSector& v) { renderer.squareSector(v, entity.transform, entity.paint.blending); },
+              [&](const Backdrop& v) { renderer.backdrops(v, entity.transform); },
               [&](const auto&) {}
             },
             entity.command);
