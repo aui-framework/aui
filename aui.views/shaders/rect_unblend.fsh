@@ -1,10 +1,10 @@
 uniform {
-  vec4 color
   2D albedo
 }
 
 inter {
   vec2 uv
+  vec4 color
 }
 
 output {
@@ -14,5 +14,5 @@ output {
 entry {
     vec4 unblend = uniform.albedo[inter.uv]
     unblend.xyz = unblend.xyz / unblend.a
-    output.albedo = uniform.color * unblend
+    output.albedo = inter.color * unblend
 }

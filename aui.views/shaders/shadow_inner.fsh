@@ -1,7 +1,6 @@
 import rounded
 
 uniform {
-  vec4 color
   vec2 lower
   vec2 upper
   float sigma
@@ -16,6 +15,7 @@ output {
 inter {
   vec4 vertex
   vec2 uv 
+  vec4 color
 }
 
 vec4 erf(vec4 x) {
@@ -28,7 +28,7 @@ vec4 erf(vec4 x) {
 
 
 entry {
-  vec4 result = uniform.color
+  vec4 result = inter.color
 
   vec2 v = inter.vertex.xy
   vec4 query = vec4(v - vec2(uniform.lower), v - vec2(uniform.upper))

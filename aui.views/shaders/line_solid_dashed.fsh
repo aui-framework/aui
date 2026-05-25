@@ -1,11 +1,8 @@
 import dashed
 
-uniform {
-  vec4 color
-}
-
 inter {
   vec4 vertex
+  vec4 color
 }
 
 output {
@@ -13,5 +10,5 @@ output {
 }
 
 entry {
-    output.albedo = uniform.color * dashed(inter.vertex.z)
+    output.albedo = inter.color * dashed(inter.vertex.z)
 }

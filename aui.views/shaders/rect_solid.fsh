@@ -1,4 +1,4 @@
-uniform {
+inter {
   vec4 color
 }
 
@@ -7,5 +7,5 @@ output {
 }
 
 entry {
-    output.albedo = uniform.color
+    output.albedo = inter.color
 }

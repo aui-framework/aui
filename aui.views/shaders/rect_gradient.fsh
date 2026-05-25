@@ -2,9 +2,6 @@ import gradient
 
 inter {
   vec2 uv
-}
-
-uniform {
   vec4 color
 }
 
@@ -13,5 +10,5 @@ output {
 }
 
 entry {
-    output.albedo = uniform.color * gradient(inter.uv)
+    output.albedo = inter.color * gradient(inter.uv)
 }
