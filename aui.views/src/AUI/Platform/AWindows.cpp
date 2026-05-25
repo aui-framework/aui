@@ -17,6 +17,9 @@
 #include "AUI/Platform/AWindow.h"
 #include <AUI/Render/ADisplayList.h>
 #include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Platform/IRenderingContext.h>
+#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/CanvasRenderer.h>
 #include "AUI/Thread/AThread.h"
 #include "SoftwareRenderingContext.h"
 #include "ARenderingContextOptions.h"
@@ -51,13 +54,12 @@ void AWindow::onClosed() {
 
 void AWindow::doDrawWindow() {
     APerformanceSection s("AWindow::doDrawWindow");
-    auto& renderer = mRenderingContext->renderer();
-    renderer.setWindow(this);
-    ADisplayList dl;
-    ADisplayListCanvas canvas(dl, renderer);
-    render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } }, .render = canvas });
-    dl.optimize();
-    dl.draw(renderer);
+    auto& rc = *mRenderingContext;
+    auto& renderer = rc.renderer();
+    auto& backend = rc.backend();
+    auto& canvas = rc.canvas();
+    backend.setWindow(this);
+    render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } }, .canvas = canvas, .render = renderer });
 }
 
 void AWindow::createDevtoolsWindow() {

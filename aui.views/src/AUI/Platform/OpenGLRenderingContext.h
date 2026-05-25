@@ -19,10 +19,13 @@
 #include <AUI/Platform/CommonRenderingContext.h>
 #include "ARenderingContextOptions.h"
 #include "AUI/GL/OpenGLRenderer.h"
+#include <AUI/Render/ADisplayList.h>
+#include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Render/CanvasRenderer.h>
 
 class OpenGLRenderingContext: public CommonRenderingContext {
 public:
-    OpenGLRenderingContext(const ARenderingContextOptions::OpenGL& config) : mConfig(config) {}
+    OpenGLRenderingContext(const ARenderingContextOptions::OpenGL& config);
 
     ~OpenGLRenderingContext() override;
 
@@ -30,7 +33,7 @@ public:
 
 #if !AUI_PLATFORM_LINUX
     // to be implemented by IPlatformAbstraction
-    void init(const Init& init);
+    void init(const Init& init) override;
     void destroyNativeWindow(ASurface& window) override;
 #endif
 
@@ -61,13 +64,24 @@ public:
     }
 
     IRenderer& renderer() override {
+        return *mRendererWrapper;
+    }
+
+    IRendererBackend& backend() override {
         return *mRenderer;
+    }
+
+    ACanvas& canvas() override {
+        return *mCanvas;
     }
 
     static gl::Framebuffer newOffscreenRenderingFramebuffer(glm::uvec2 initialSize);
 
 protected:
     _<OpenGLRenderer> mRenderer;
+    ADisplayList mDisplayList;
+    _unique<ADisplayListCanvas> mCanvas;
+    _unique<CanvasRenderer> mRendererWrapper;
     glm::uvec2 mViewportSize;
     struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
     static _<OpenGLRenderer> ourRenderer() {

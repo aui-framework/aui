@@ -14,6 +14,8 @@
 #include <AUI/GL/gl.h>
 #include <AUI/GL/GLEnums.h>
 #include <glm/glm.hpp>
+#include <AUI/Common/AString.h>
+#include <AUI/GL/State.h>
 
 namespace gl {
     template<Multisampling multisampling = Multisampling::DISABLED>
@@ -42,6 +44,10 @@ namespace gl {
             } else {
                 glRenderbufferStorage(GL_RENDERBUFFER, (int)internalFormat, size.x, size.y);
             }
+        }
+
+        void label(const AString& name) {
+            gl::State::label(GL_RENDERBUFFER, mHandle, name);
         }
 
     private:

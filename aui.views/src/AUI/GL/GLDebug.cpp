@@ -58,6 +58,10 @@ static void GLAPIENTRY debugProc(GLenum source,
                                  const GLchar* message,
                                  const void* userParam)
 {
+    std::string_view msg(message);
+    if (msg.find("non-debug context") != std::string_view::npos) {
+        return;
+    }
     // filter out repeated messages; they are spamming and annoying
 #if AUI_PLATFORM_APPLE
     const auto h = std::hash<std::string>{}(std::string(message));

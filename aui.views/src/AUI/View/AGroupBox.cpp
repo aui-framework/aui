@@ -16,6 +16,7 @@
 #include "AGroupBox.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "ACheckBox.h"
+#include <AUI/Render/ACanvas.hpp>
 
 using namespace declarative;
 

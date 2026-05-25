@@ -17,8 +17,11 @@
 #include "AUI/Util/ATokenizer.h"
 #include "AUI/Platform/AWindow.h"
 #include <AUI/Platform/IRenderingContext.h>
+#include <AUI/Render/ACanvas.hpp>
 #include <AUI/Render/ADisplayList.h>
 #include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Render/CanvasRenderer.h>
+#include <AUI/Render/IRendererBackend.h>
 #include "AUI/Url/AUrl.h"
 #include "AUI/Render/RenderHints.h"
 #include "AUI/Animator/AAnimator.h"
@@ -779,7 +782,9 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
 
             APerformanceSection s("Render-to-texture rasterization", {}, debugString().toStdString());
             auto invalidArea = std::exchange(mRenderToTexture->invalidArea, IRenderViewToTexture::InvalidArea::Empty{});
-            auto& renderer = AWindow::current()->getRenderingContext()->renderer();
+            auto& rc = *AWindow::current()->getRenderingContext();
+            auto& renderer = rc.renderer();
+            auto& backend = rc.backend();
             if (!mRenderToTexture->rendererInterface->begin(renderer, size(), invalidArea)) {
                 mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
                 return;
@@ -789,12 +794,14 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
             };
 
             ADisplayList offscreenDl;
-            ADisplayListCanvas offscreenCanvas(offscreenDl, renderer);
+            ADisplayListCanvas offscreenCanvas(offscreenDl, backend);
+            CanvasRenderer offscreenRenderer(offscreenCanvas);
 
             ARenderContext contextOfTheView {
                 .clippingRects = invalidArea.rectangles() ? ARenderContext::Rectangles(invalidArea.rectangles()->begin(),
                                                                                        invalidArea.rectangles()->end()) : ARenderContext::Rectangles{},
-                .render = offscreenCanvas,
+                .canvas = offscreenCanvas,
+                .render = offscreenRenderer,
             };
             ARect<int> initialRect {
                 .p1 = { 0, 0 },
@@ -815,7 +822,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
                 return;
             }
             offscreenDl.optimize();
-            offscreenDl.draw(renderer);
+            offscreenDl.draw(backend);
             mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
             mRenderToTexture->drawFromTexture = true;
         });

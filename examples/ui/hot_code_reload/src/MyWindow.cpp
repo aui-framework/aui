@@ -16,6 +16,7 @@
 #include "MyWindow.h"
 #include "AUI/Platform/AMessageBox.h"
 #include "AUI/View/ACheckBox.h"
+#include <AUI/Render/ACanvas.hpp>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/AView.h>

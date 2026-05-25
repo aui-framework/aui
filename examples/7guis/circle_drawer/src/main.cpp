@@ -11,6 +11,7 @@
 
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Render/ACanvas.hpp>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "AUI/View/AProgressBar.h"
 #include "AUI/View/ASlider.h"

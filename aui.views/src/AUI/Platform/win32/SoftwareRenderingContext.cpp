@@ -10,6 +10,7 @@
  */
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include <AUI/Render/IRendererBackend.h>
 #include <AUI/Software/SoftwareRenderer.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext()
@@ -19,8 +20,15 @@ SoftwareRenderingContext::SoftwareRenderingContext()
 SoftwareRenderingContext::~SoftwareRenderingContext() {
 }
 
+IRendererBackend& SoftwareRenderingContext::backend() {
+    return *mRenderer;
+}
+
 void SoftwareRenderingContext::init(const IRenderingContext::Init& init) {
     CommonRenderingContext::init(init);
+    mRenderer = _new<SoftwareRenderer>();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
+    mRendererWrapper = std::make_unique<CanvasRenderer>(*mCanvas);
 }
 
 void SoftwareRenderingContext::destroyNativeWindow(ASurface& window) {
@@ -29,6 +37,8 @@ void SoftwareRenderingContext::destroyNativeWindow(ASurface& window) {
 
 void SoftwareRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
+    mRenderer->setWindow(&window);
+    mDisplayList.clear();
     std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
     for (size_t i = 0; i < mBitmapSize.x * mBitmapSize.y; ++i) {
         auto dataPtr = reinterpret_cast<uint32_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO) + i * 4);
@@ -37,6 +47,10 @@ void SoftwareRenderingContext::beginPaint(ASurface& window) {
 }
 
 void SoftwareRenderingContext::endPaint(ASurface& window) {
+    mDisplayList.optimize();
+    mDisplayList.draw(*mRenderer);
+    mDisplayList.clear();
+
     if (mPainterDC != 0) {
         StretchDIBits(mPainterDC,
                       0, 0,
@@ -89,9 +103,4 @@ AImage SoftwareRenderingContext::makeScreenshot() {
         data.at<std::uint8_t>(i + 3) = ptr[3];
     }
     return {std::move(data), mBitmapSize, APixelFormat::RGBA | APixelFormat::BYTE};
-}
-
-IRenderer& SoftwareRenderingContext::renderer() {
-    static SoftwareRenderer r;
-    return r;
 }

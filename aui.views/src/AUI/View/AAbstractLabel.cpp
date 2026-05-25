@@ -31,7 +31,7 @@ AAbstractLabel::AAbstractLabel() {
 void AAbstractLabel::render(ARenderContext context) {
     AView::render(context);
 
-    doRenderText(context.render);
+    doRenderText(context.canvas);
 }
 
 int AAbstractLabel::getContentMinimumWidth() {

@@ -10,7 +10,7 @@
  */
 
 #include "ATranslationAnimator.h"
-#include "AUI/Render/ACanvas.hpp"
+#include <AUI/Render/ACanvas.hpp>
 
 ATranslationAnimator::ATranslationAnimator(const glm::vec2& from, const glm::vec2& to) : mFrom(from), mTo(to) {}
 

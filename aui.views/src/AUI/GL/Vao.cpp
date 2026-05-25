@@ -46,6 +46,19 @@ void gl::Vao::bind() const noexcept { gl::State::bindVertexArray(mHandle); }
 
 void gl::Vao::unbind() noexcept { gl::State::bindVertexArray(0); }
 
+void gl::Vao::label(const AString& name) {
+    mLabel = name;
+    gl::State::label(GL_VERTEX_ARRAY, mHandle, name);
+    if (mIndicesBuffer != 0) {
+        gl::State::label(GL_BUFFER, mIndicesBuffer, name + "/Indices");
+    }
+    for (size_t i = 0; i < mBuffers.size(); ++i) {
+        if (mBuffers[i].handle != 0) {
+            gl::State::label(GL_BUFFER, mBuffers[i].handle, name + "/Buffer " + AString::number(i));
+        }
+    }
+}
+
 void gl::Vao::drawArrays(GLenum type, GLsizei count) {
     bind();
     glDrawArrays(type, 0, count);
@@ -72,9 +85,15 @@ void gl::Vao::insert(
         mBuffers.resize(index + 1);
         glGenBuffers(1, &mBuffers[index].handle);
         assert(mBuffers[index].handle);
+        if (!mLabel.empty()) {
+            gl::State::label(GL_BUFFER, mBuffers[index].handle, mLabel + "/Buffer " + AString::number(index));
+        }
     } else if (mBuffers[index].handle == 0) {
         glGenBuffers(1, &mBuffers[index].handle);
         assert(mBuffers[index].handle);
+        if (!mLabel.empty()) {
+            gl::State::label(GL_BUFFER, mBuffers[index].handle, mLabel + "/Buffer " + AString::number(index));
+        }
     } else {
         newFlag = false;
     }
@@ -91,12 +110,8 @@ void gl::Vao::insert(
 
     mBuffers[index].lastModifierKey = key;
 
-    auto signature = uint32_t(vertexSize) ^ dataType;
-    if (newFlag || mBuffers[index].signature != signature) {
-        glEnableVertexAttribArray(index);
-        glVertexAttribPointer(index, vertexSize, dataType, GL_FALSE, 0, nullptr);
-        mBuffers[index].signature = signature;
-    }
+    glEnableVertexAttribArray(index);
+    glVertexAttribPointer(index, vertexSize, dataType, GL_FALSE, 0, nullptr);
 }
 
 void gl::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize, GLuint vertexSize, GLenum dataType) {
@@ -106,9 +121,15 @@ void gl::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize,
         mBuffers.resize(index + 1);
         glGenBuffers(1, &mBuffers[index].handle);
         assert(mBuffers[index].handle);
+        if (!mLabel.empty()) {
+            gl::State::label(GL_BUFFER, mBuffers[index].handle, mLabel + "/Buffer " + AString::number(index));
+        }
     } else if (mBuffers[index].handle == 0) {
         glGenBuffers(1, &mBuffers[index].handle);
         assert(mBuffers[index].handle);
+        if (!mLabel.empty()) {
+            gl::State::label(GL_BUFFER, mBuffers[index].handle, mLabel + "/Buffer " + AString::number(index));
+        }
     } else {
         newFlag = false;
     }
@@ -120,12 +141,8 @@ void gl::Vao::insertInteger(GLuint index, const char* data, GLsizeiptr dataSize,
     // Complex UI tests showed better performance on glBufferData.
     glBufferData(GL_ARRAY_BUFFER, dataSize, data, newFlag ? GL_STATIC_DRAW : GL_DYNAMIC_DRAW);
 
-    auto signature = uint32_t(vertexSize) ^ dataType;
-    if (newFlag || mBuffers[index].signature != signature) {
-        glEnableVertexAttribArray(index);
-        glVertexAttribIPointer(index, vertexSize, dataType, GL_TRUE, 0);
-        mBuffers[index].signature = signature;
-    }
+    glEnableVertexAttribArray(index);
+    glVertexAttribIPointer(index, vertexSize, dataType, GL_TRUE, 0);
 }
 
 void gl::Vao::drawElements(GLenum type) {
@@ -140,6 +157,9 @@ void gl::Vao::indices(AArrayView<uint32_t> data) {
     if (mIndicesBuffer == 0) {
         glGenBuffers(1, &mIndicesBuffer);
         assert(mIndicesBuffer);
+        if (!mLabel.empty()) {
+            gl::State::label(GL_BUFFER, mIndicesBuffer, mLabel + "/Indices");
+        }
         drawType = GL_STATIC_DRAW;
     }
     mIndicesCount = static_cast<GLsizei>(data.size());
@@ -154,6 +174,9 @@ void gl::Vao::indices(AArrayView<uint16_t> data) {
     if (mIndicesBuffer == 0) {
         glGenBuffers(1, &mIndicesBuffer);
         assert(mIndicesBuffer);
+        if (!mLabel.empty()) {
+            gl::State::label(GL_BUFFER, mIndicesBuffer, mLabel + "/Indices");
+        }
         drawType = GL_STATIC_DRAW;
     }
     mIndicesCount = static_cast<GLsizei>(data.size());

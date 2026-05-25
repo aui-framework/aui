@@ -10,7 +10,10 @@
  */
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include <AUI/Render/IRendererBackend.h>
 #include <AUI/Software/SoftwareRenderer.h>
+#include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Render/CanvasRenderer.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext() {
 
@@ -23,15 +26,24 @@ SoftwareRenderingContext::~SoftwareRenderingContext() {
     }
 }
 
+IRendererBackend& SoftwareRenderingContext::backend() {
+    return *mRenderer;
+}
+
 void SoftwareRenderingContext::destroyNativeWindow(ASurface &window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
 void SoftwareRenderingContext::beginPaint(ASurface &window) {
     CommonRenderingContext::beginPaint(window);
+    mRenderer->setWindow(&window);
+    mDisplayList.clear();
 }
 
 void SoftwareRenderingContext::endPaint(ASurface &window) {
+    mDisplayList.optimize();
+    mDisplayList.draw(*mRenderer);
+    mDisplayList.clear();
     CommonRenderingContext::endPaint(window);
 }
 
@@ -41,6 +53,9 @@ void SoftwareRenderingContext::beginResize(ASurface &window) {
 
 void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     CommonRenderingContext::init(init);
+    mRenderer = _new<SoftwareRenderer>();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
+    mRendererWrapper = std::make_unique<CanvasRenderer>(*mCanvas);
 }
 
 void SoftwareRenderingContext::endResize(ASurface &window) {
@@ -62,9 +77,4 @@ void SoftwareRenderingContext::reallocate() {
     mBitmapBlob = static_cast<uint8_t *>(malloc(mBitmapSize.x * mBitmapSize.y * 4));
 
     mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
-}
-
-IRenderer& SoftwareRenderingContext::renderer() {
-    static SoftwareRenderer r;
-    return r;
 }

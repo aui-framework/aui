@@ -13,6 +13,11 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Render/ADisplayList.h>
+#include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Render/CanvasRenderer.h>
+
+class SoftwareRenderer;
 
 class API_AUI_VIEWS SoftwareRenderingContext: public aui::noncopyable, public CommonRenderingContext {
 public:
@@ -29,7 +34,15 @@ public:
     void endPaint(ASurface& window) override;
     void beginResize(ASurface& window) override;
 
-    IRenderer& renderer() override;
+    IRenderer& renderer() override {
+        return *mRendererWrapper;
+    }
+
+    IRendererBackend& backend() override;
+
+    ACanvas& canvas() override {
+        return *mCanvas;
+    }
 
     AImage makeScreenshot() override;
 
@@ -90,6 +103,11 @@ public:
     void endResize(ASurface& window) override;
 
 protected:
+    _<SoftwareRenderer> mRenderer;
+    ADisplayList mDisplayList;
+    _unique<ADisplayListCanvas> mCanvas;
+    _unique<CanvasRenderer> mRendererWrapper;
+
     AByteBuffer mStencilBlob;
     glm::uvec2 mBitmapSize;
 #if AUI_PLATFORM_LINUX

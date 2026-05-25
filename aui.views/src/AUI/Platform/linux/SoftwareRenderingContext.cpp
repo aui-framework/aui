@@ -10,10 +10,13 @@
  */
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include <AUI/Render/IRendererBackend.h>
 #include "AUI/Common/AByteBufferView.h"
 #include "AUI/Image/AImage.h"
 #include "AUI/Image/APixelFormat.h"
 #include "AUI/Software/SoftwareRenderer.h"
+#include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Render/CanvasRenderer.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext() {}
 
@@ -24,11 +27,29 @@ SoftwareRenderingContext::~SoftwareRenderingContext() {
     }
 }
 
+IRendererBackend& SoftwareRenderingContext::backend() {
+    return *mRenderer;
+}
+
+void SoftwareRenderingContext::init(const Init& init) {
+    CommonRenderingContext::init(init);
+    mRenderer = _new<SoftwareRenderer>();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
+    mRendererWrapper = std::make_unique<CanvasRenderer>(*mCanvas);
+}
+
 void SoftwareRenderingContext::beginPaint(ASurface &window) {
+    mRenderer->setWindow(&window);
+    mDisplayList.clear();
     std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
 }
 
-void SoftwareRenderingContext::endPaint(ASurface &window) { CommonRenderingContext::endPaint(window); }
+void SoftwareRenderingContext::endPaint(ASurface &window) {
+    mDisplayList.optimize();
+    mDisplayList.draw(*mRenderer);
+    mDisplayList.clear();
+    CommonRenderingContext::endPaint(window);
+}
 
 void SoftwareRenderingContext::beginResize(ASurface &window) {}
 
@@ -55,9 +76,4 @@ AImage SoftwareRenderingContext::makeScreenshot() {
     data.resize(s);
     std::memcpy(data.data(), mBitmapBlob, s);
     return AImageView(data, mBitmapSize, APixelFormat::BGRA | APixelFormat::BYTE).convert(APixelFormat::RGBA_BYTE);
-}
-
-IRenderer &SoftwareRenderingContext::renderer() {
-    static SoftwareRenderer r;
-    return r;
 }

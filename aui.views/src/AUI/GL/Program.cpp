@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -21,6 +21,17 @@
 #include <AUI/Logging/ALogger.h>
 
 gl::Program::Program() { mProgram = glCreateProgram(); }
+
+void gl::Program::label(const AString& name) {
+    mLabel = name;
+    gl::State::label(GL_PROGRAM, mProgram, name);
+    if (mVertex) {
+        gl::State::label(GL_SHADER, mVertex, name + "/Vertex");
+    }
+    if (mFragment) {
+        gl::State::label(GL_SHADER, mFragment, name + "/Fragment");
+    }
+}
 
 void gl::Program::load(
     const AString& vertex, const AString& fragment, const AVector<AString>& attribs, GLSLOptions options) {
@@ -70,6 +81,9 @@ uint32_t gl::Program::load(std::string code, uint32_t type, GLSLOptions options)
     };
 
     uint32_t shader = glCreateShader(type);
+    if (!mLabel.empty()) {
+        gl::State::label(GL_SHADER, shader, mLabel + (type == GL_VERTEX_SHADER ? "/Vertex" : "/Fragment"));
+    }
     glShaderSource(shader, 2, codeData, codeLen);
     glCompileShader(shader);
     GLint success;

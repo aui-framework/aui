@@ -15,6 +15,8 @@
 #include <AUI/GL/gl.h>
 #include <glm/glm.hpp>
 #include "ResourcePool.h"
+#include <AUI/Common/AString.h>
+#include <AUI/GL/State.h>
 
 namespace gl {
     namespace detail {
@@ -33,6 +35,9 @@ namespace gl {
 
             ~VboImpl();
 
+            void label(const AString& name) {
+                gl::State::label(GL_BUFFER, mHandle, name);
+            }
         };
     }
 

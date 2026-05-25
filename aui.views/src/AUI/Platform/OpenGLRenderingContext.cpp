@@ -14,6 +14,8 @@
 
 static constexpr auto LOG_TAG = "OpenGLRenderingContext";
 
+OpenGLRenderingContext::OpenGLRenderingContext(const ARenderingContextOptions::OpenGL& config) : mConfig(config) {}
+
 void OpenGLRenderingContext::tryEnableFramebuffer(glm::uvec2 windowSize) {
     try {
         mFramebuffer.emplace<gl::Framebuffer>(newOffscreenRenderingFramebuffer(windowSize));

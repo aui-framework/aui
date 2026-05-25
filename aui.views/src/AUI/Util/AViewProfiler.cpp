@@ -16,6 +16,7 @@
 
 #include "AViewProfiler.h"
 #include <AUI/Util/kAUI.h>
+#include <AUI/Render/ACanvas.hpp>
 #include <AUI/Render/RenderHints.h>
 #include <glm/ext/matrix_transform.hpp>
 #include <AUI/Util/AMetric.h>

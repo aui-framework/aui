@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -19,6 +19,7 @@
 #include <cstdint>
 #include "gl.h"
 #include "AUI/Views.h"
+#include <AUI/Common/AString.h>
 
 
 // comment this define in order to debug state machine cache failures
@@ -52,6 +53,7 @@ namespace gl {
 		static void useProgram(GLuint program);
 		static void bindFramebuffer(GLenum type, GLuint framebuffer);
 		static void bindVertexArray(GLuint handle);
+		static void label(GLenum identifier, GLuint name, const AString& labelText);
 	};
 }
 

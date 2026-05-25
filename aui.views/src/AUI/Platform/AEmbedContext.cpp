@@ -20,6 +20,9 @@
 #include <AUI/Util/ALayoutInflater.h>
 #include <AUI/Render/ADisplayList.h>
 #include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Platform/IRenderingContext.h>
+#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/CanvasRenderer.h>
 
 class AEmbedContext::EmbedWindow: public ASurface {
     friend class AEmbedContext;
@@ -115,20 +118,20 @@ void AEmbedContext::windowMakeCurrent() {
 
 void AEmbedContext::windowRender() {
     AThread::processMessages();
-    auto& render = mContainer->getRenderingContext()->renderer();
-    render.setWindow(mContainer.get());
+    auto renderingContext = mContainer->getRenderingContext().get();
+    if (!renderingContext) return;
+    auto& render = renderingContext->renderer();
+    auto& backend = renderingContext->backend();
+    auto& canvas = renderingContext->canvas();
+    backend.setWindow(mContainer.get());
     if (mContainer->mRequiresLayoutUpdate) {
         mContainer->mRequiresLayoutUpdate = false;
         mContainer->applyGeometryToChildrenIfNecessary();
     }
-    AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
+    renderingContext->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
-    ADisplayList dl;
-    ADisplayListCanvas canvas(dl, render);
-    mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .canvas = canvas, .renderer = render});
-    dl.optimize();
-    dl.draw(render);
-    AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
+    mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .canvas = canvas, .render = render});
+    renderingContext->endPaint(*mContainer);
 }
 
 void AEmbedContext::setContainer(const _<AViewContainer>& container) {

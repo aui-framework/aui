@@ -74,7 +74,7 @@ void ADropdownList::render(ARenderContext context) {
         IDrawable::Params p;
         p.size = size;
         p.offset = { getWidth() - size.x - getPadding().right, (getHeight() - size.y) / 2 };
-        arrow->draw(context.render, p);
+        arrow->draw(context.canvas, p);
     }
 }
 

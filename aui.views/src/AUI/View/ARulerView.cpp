@@ -16,6 +16,7 @@
 
 #include "ARulerView.h"
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Render/ACanvas.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 ARulerView::ARulerView(ALayoutDirection layoutDirection) : mLayoutDirection(layoutDirection) {
@@ -86,7 +87,7 @@ void ARulerView::render(ARenderContext ctx) {
     // number display
     {
         for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
-            ctx.canvas.string({mOffsetPx + operator ""_dp(i * delayLarge) + 2_dp, -1.f},
+            ctx.canvas.string({}, {mOffsetPx + operator ""_dp(i * delayLarge) + 2_dp, -1.f},
                             AString::number(i * delayLarge),
                             getFontStyle());
         }

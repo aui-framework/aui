@@ -16,6 +16,7 @@
 #include "TextShadow.h"
 #include <AUI/View/AAbstractLabel.h>
 #include <AUI/Render/RenderHints.h>
+#include <AUI/Render/ACanvas.hpp>
 
 void ass::prop::Property<ass::TextShadow>::renderFor(AView* view, const ARenderContext& ctx) {
     if (auto label = dynamic_cast<AAbstractLabel*>(view)) {

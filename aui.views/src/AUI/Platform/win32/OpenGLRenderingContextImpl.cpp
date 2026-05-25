@@ -210,6 +210,8 @@ void OpenGLRenderingContext::init(const Init& init) {
     }
 
     mRenderer = ourRenderer();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
+    mRendererWrapper = std::make_unique<CanvasRenderer>(*mCanvas);
     makeCurrent(mWindowDC);
     // vsync
     wglSwapIntervalEXT(!(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));
@@ -226,6 +228,8 @@ void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
 void OpenGLRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
 
+    mDisplayList.clear();
+
     makeCurrent(mSmoothResize ? mPainterDC : mWindowDC);
     beginFramebuffer(window.getSize());
     mRenderer->beginPaint(window.getSize());
@@ -240,6 +244,10 @@ void OpenGLRenderingContext::endResize(ASurface& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ASurface& window) {
+    mDisplayList.optimize();
+    mDisplayList.draw(*mRenderer);
+    mDisplayList.clear();
+
     endFramebuffer();
     mRenderer->endPaint();
     SwapBuffers(mSmoothResize ? mPainterDC : mWindowDC);

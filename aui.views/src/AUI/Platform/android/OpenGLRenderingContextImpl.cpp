@@ -28,6 +28,8 @@ void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
     gladLoadGLES2Loader(reinterpret_cast<GLADloadproc>(eglGetProcAddress));
     mRenderer = ourRenderer();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
+    mRendererWrapper = std::make_unique<CanvasRenderer>(*mCanvas);
 }
 
 void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
@@ -35,6 +37,7 @@ void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
 }
 
 void OpenGLRenderingContext::beginPaint(ASurface& window) {
+    mDisplayList.clear();
     beginFramebuffer(window.getSize());
     mRenderer->beginPaint(window.getSize());
 }
@@ -47,6 +50,10 @@ void OpenGLRenderingContext::endResize(ASurface& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ASurface& window) {
+    mDisplayList.optimize();
+    mDisplayList.draw(*mRenderer);
+    mDisplayList.clear();
+
     endFramebuffer();
     mRenderer->endPaint();
     CommonRenderingContext::endPaint(window);

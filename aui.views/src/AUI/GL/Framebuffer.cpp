@@ -10,6 +10,8 @@
  */
 
 #include <AUI/GL/Framebuffer.h>
+#include <AUI/GL/State.h>
+
 
 static gl::Framebuffer* gFramebufferCurrent = nullptr;
 
@@ -76,4 +78,8 @@ gl::Framebuffer* gl::Framebuffer::current() {
 
 void gl::Framebuffer::bindViewport() {
     glViewport(0, 0, supersampledSize().x, supersampledSize().y);
+}
+
+void gl::Framebuffer::label(const AString& name) {
+    gl::State::label(GL_FRAMEBUFFER, mHandle, name);
 }

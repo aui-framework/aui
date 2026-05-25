@@ -21,6 +21,8 @@
 class ASurface;
 class AWindow;
 class IRenderer;
+class IRendererBackend;
+class ACanvas;
 
 /**
  * @brief Glue between AWindow and IRenderer.
@@ -57,4 +59,6 @@ public:
     virtual void endResize(ASurface& window) = 0;
 
     virtual IRenderer& renderer() = 0;
-};
+    virtual IRendererBackend& backend() = 0;
+    virtual ACanvas& canvas() = 0;
+    };

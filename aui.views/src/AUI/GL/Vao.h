@@ -16,6 +16,7 @@
 #include "AUI/Common/AVector.h"
 #include "AUI/Util/AArrayView.h"
 #include "AUI/Views.h"
+#include <AUI/Common/AString.h>
 
 namespace gl {
 class API_AUI_VIEWS Vao {
@@ -38,6 +39,8 @@ public:
     Vao();
     ~Vao();
     Vao(const Vao&) = delete;
+
+    void label(const AString& name);
 
     [[nodiscard]]
     const AVector<Buffer>& getBuffers() const noexcept {
@@ -100,6 +103,7 @@ private:
     GLuint mIndicesBuffer = 0;
     GLsizei mIndicesCount = 0;
     GLuint mIndicesType = 0;
+    AString mLabel;
 
     /**
      * @brief Creates float point VBO or modifies existing one

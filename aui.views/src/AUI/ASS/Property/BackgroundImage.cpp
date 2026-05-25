@@ -17,6 +17,7 @@
 #include "BackgroundImage.h"
 #include <AUI/Platform/AWindow.h>
 #include "AUI/Platform/APlatform.h"
+#include <AUI/Render/ACanvas.hpp>
 #include <AUI/Render/RenderHints.h>
 #include <AUI/ASS/AAssHelper.h>
 #include <glm/gtc/matrix_transform.hpp>

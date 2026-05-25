@@ -16,12 +16,13 @@
 #include <AUI/GL/Framebuffer.h>
 #include <AUI/GL/Vao.h>
 #include "AUI/Render/ABorderStyle.h"
-#include "AUI/Render/IRenderer.h"
+#include "AUI/Render/IRendererBackend.h"
 #include "AUI/GL/RenderTarget/TextureRenderTarget.h"
 
-class API_AUI_VIEWS OpenGLRenderer final: public IRenderer {
+class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
     friend class OpenGLPrerenderedString;
     friend class OpenGLMultiStringCanvas;
+    friend class OpenGLRenderViewToTexture;
 public:
     struct FontEntryData: aui::noncopyable {
         Util::SimpleTexturePacker texturePacker;
@@ -142,15 +143,21 @@ public:
     void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint) override;
     void boxShadowInner(const ADisplayList::BoxShadowInner& v, const APaint& paint) override;
     void string(const ADisplayList::Text& v, const APaint& paint) override;
-    _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
     void drawRectImpl(glm::vec2 position, glm::vec2 size);
     void setBlending(Blending blending) override;
-    _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     glm::mat4 getProjectionMatrix() const override;
     void lines(const ADisplayList::Lines& v, const APaint& paint) override;
     void lines(const ADisplayList::LineBatches& v, const APaint& paint) override;
     void points(const ADisplayList::Points& v, const APaint& paint) override;
     void squareSector(const ADisplayList::SquareSector& v, const APaint& paint) override;
+
+    void setTransformForced(const glm::mat4& transform) override { mTransform = transform; }
+    void setColorForced(const AColor& color) override { mColor = color; }
+
+    const AColor& getColor() const override { return mColor; }
+    const glm::mat4& getTransform() const override { return mTransform; }
 
     void pushMaskBefore() override;
     void pushMaskAfter() override;
@@ -160,11 +167,40 @@ public:
 
     void popMaskAfter() override;
 
+    void setWindow(ASurface* window) override { mWindow = window; }
+    ASurface* getWindow() const noexcept override { return mWindow; }
+    float getRenderScale() const noexcept override { return mRenderScale; }
+    void setRenderScale(float renderScale) override { mRenderScale = renderScale; }
+
+    std::uint8_t getStencilDepth() const noexcept override { return mStencilDepth; }
+    void setStencilDepth(std::uint8_t stencilDepth) override { mStencilDepth = stencilDepth; }
+
+
+
+
+    void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
+    bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
+
+    _<ITexture> getNewTexture() override { return mTexturePool.get(); }
+
     void beginPaint(glm::uvec2 windowSize);
     void endPaint();
     
     uint32_t getDefaultFb() const noexcept;
     void bindTemporaryVao() const noexcept;
+
+    void pushColor(const AColor& color, size_t count = 4);
+
+    private:
+    glm::mat4 mTransform;
+    AColor mColor;
+    ASurface* mWindow = nullptr;
+    APool<ITexture> mTexturePool;
+    uint8_t mStencilDepth = 0;
+    float mRenderScale = 1.0f;
+    bool mAllowRenderToTexture = true;
+
+private:
 };
 
 

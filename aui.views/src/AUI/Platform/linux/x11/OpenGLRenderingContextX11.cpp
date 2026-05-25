@@ -195,6 +195,8 @@ void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
     }
 
     mRenderer = ourRenderer();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
+    mRendererWrapper = std::make_unique<CanvasRenderer>(*mCanvas);
 }
 
 void OpenGLRenderingContextX11::destroyNativeWindow(ASurface& window) { xDestroyNativeWindow(window); }

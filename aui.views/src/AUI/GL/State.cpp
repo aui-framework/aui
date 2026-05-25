@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -43,5 +43,12 @@ void State::bindFramebuffer(GLenum type, GLuint framebuffer) {
 }
 
 void State::bindVertexArray(GLuint handle) {
-	impl<4>(glBindVertexArray, handle);
+	glBindVertexArray(handle);
+}
+
+void State::label(GLenum identifier, GLuint name, const AString& labelText) {
+	if (glObjectLabel) {
+		std::string s = labelText.toStdString();
+		glObjectLabel(identifier, name, static_cast<GLsizei>(s.size()), s.data());
+	}
 }

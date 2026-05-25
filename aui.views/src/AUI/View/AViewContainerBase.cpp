@@ -77,7 +77,7 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
       if (showRedraw) [[unlikely]] {
           auto c = contextOfTheView.render.getColor();
           AUI_DEFER { contextOfTheView.render.setColorForced(c); };
-          contextOfTheView.render.rectangle(APaint{ .brush = ASolidBrush{0x40ff00ff_argb} }, view->getPosition(), view->getSize());
+          contextOfTheView.render.rectangle(ASolidBrush{0x40ff00ff_argb}, view->getPosition(), view->getSize());
       }
     };
 
@@ -93,7 +93,7 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
         // Unfortunately, we can't quickly refresh the texture here because aui's main render buffer is already in use
         // and contains uncommited data.
         if (view->mRenderToTexture->drawFromTexture) {
-            view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.render);
+            view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.canvas);
             return;
         }
     }

@@ -498,11 +498,11 @@ void ATextArea::render(ARenderContext context) {
                 break;
         }
     }
-    drawSelectionBeforeAndAfter(context.render, selectionRects, [&] {
+    drawSelectionBeforeAndAfter(context.canvas, selectionRects, [&] {
         doDrawString(context);
     });
 
-    drawCursor(context.render, mCursorPosition + mPadding.leftTop());
+    drawCursor(context.canvas, mCursorPosition + mPadding.leftTop());
 }
 
 bool ATextArea::capturesFocus() {

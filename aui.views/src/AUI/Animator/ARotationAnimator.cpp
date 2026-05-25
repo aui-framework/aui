@@ -10,7 +10,7 @@
  */
 
 #include "ARotationAnimator.h"
-#include "AUI/Render/ACanvas.hpp"
+#include <AUI/Render/ACanvas.hpp>
 
 void ARotationAnimator::doAnimation(AView* view, float theta, ACanvas& render) {
     translateToCenter(view, render);

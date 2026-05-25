@@ -59,6 +59,8 @@ namespace gl {
         static void unbind();
         void resize(glm::u32vec2 newSize);
 
+        void label(const AString& name);
+
         [[nodiscard]]
         std::uint32_t supersamlingRatio() const noexcept {
             return mSupersamplingRatio;

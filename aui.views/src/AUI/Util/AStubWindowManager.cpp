@@ -14,10 +14,13 @@
 //
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include <AUI/Software/SoftwareRenderer.h>
 #include "AStubWindowManager.h"
 
 static aui::lazy<AStubWindowManager::Config> gStubWindowManagerConfig = [] {
-    return AStubWindowManager::Config{};
+    return AStubWindowManager::Config{
+        .renderer = std::make_unique<SoftwareRenderer>()
+    };
 };
 
 class StubRenderingContext: public SoftwareRenderingContext {
@@ -30,6 +33,8 @@ public:
 #endif
     {
         reallocate(init.window);
+        mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *gStubWindowManagerConfig->renderer);
+        mRendererWrapper = std::make_unique<CanvasRenderer>(*mCanvas);
     }
 
     ~StubRenderingContext() override = default;
@@ -39,13 +44,21 @@ public:
     }
 
     void beginPaint(ASurface& window) override {
+        mDisplayList.clear();
         std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
     }
 
-    void endPaint(ASurface& window) override {}
+    void endPaint(ASurface& window) override {
+        mDisplayList.draw(*gStubWindowManagerConfig->renderer);
+        mDisplayList.clear();
+    }
 
-    IRenderer& renderer() override {
+    IRendererBackend& backend() override {
         return *gStubWindowManagerConfig->renderer;
+    }
+
+    ACanvas& canvas() override {
+        return *mCanvas;
     }
 
 private:

@@ -10,7 +10,7 @@
  */
 
 #pragma once
-#include "AUI/Software/SoftwareRenderer.h"
+#include "AUI/Render/IRendererBackend.h"
 
 /**
  * @brief Window manager used to stub the default window manager.
@@ -40,7 +40,7 @@ public:
         /**
          * @brief Renderer used for window manager.
          */
-        _unique<IRenderer> renderer = std::make_unique<SoftwareRenderer>();
+        _unique<IRendererBackend> renderer;
     };
 
     static void setConfig(Config config);

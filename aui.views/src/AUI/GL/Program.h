@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -77,6 +77,8 @@ public:
     ~Program();
     Program(const Program&) = delete;
 
+    void label(const AString& name);
+
     uint32_t handle() const { return mProgram; }
 
     int32_t getLocation(const Uniform& uniform) const;
@@ -104,6 +106,7 @@ public:
         mUniforms = std::exchange(program.mUniforms, {});
         mVertex = std::exchange(program.mVertex, 0);
         mFragment = std::exchange(program.mFragment, 0);
+        mLabel = std::exchange(program.mLabel, {});
 
         return *this;
     }
@@ -112,6 +115,7 @@ private:
     uint32_t mProgram;
     uint32_t mVertex = 0;
     uint32_t mFragment = 0;
+    AString mLabel;
 
     class UniformState {
     public:

@@ -16,9 +16,9 @@
 
 namespace {
 
-class StubRenderer : public IRenderer {
+class StubRenderer : public IRendererBackend {
 public:
-    class StubPrerenderedString : public IPrerenderedString {
+    class StubPrerenderedString : public IRenderer::IPrerenderedString {
     public:
         void draw() override {}
         ~StubPrerenderedString() override = default;
@@ -28,14 +28,15 @@ public:
 
     StubRenderer() = default;
     ~StubRenderer() override = default;
-    _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override {
-        class Stub : public IMultiStringCanvas {
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override {
+        class Stub : public IRenderer::IMultiStringCanvas {
         public:
             ~Stub() override = default;
             void addString(const glm::ivec2& position, AStringView text) noexcept override {}
             void addString(const glm::ivec2& position, std::u32string_view text) noexcept override {}
             _<IRenderer::IPrerenderedString> finalize() noexcept override { return _new<StubPrerenderedString>(); }
         };
+        return _new<Stub>();
     }
     void rectangle(const ADisplayList::Rectangle& v, const APaint& paint) override {}
     void roundedRectangle(const ADisplayList::RoundedRectangle& v, const APaint& paint) override {}
@@ -63,7 +64,16 @@ public:
     void setWindow(ASurface* window) override {}
     glm::mat4 getProjectionMatrix() const override { return glm::mat4(1.0f); }
 
-protected:
+    _<ITexture> getNewTexture() override { return createNewTexture(); }
+    float getRenderScale() const noexcept override { return 1.0f; }
+    void setRenderScale(float renderScale) override {}
+    void setAllowRenderToTexture(bool allow) override {}
+    bool allowRenderToTexture() const noexcept override { return true; }
+    void setTransformForced(const glm::mat4& transform) override {}
+    void setColorForced(const AColor& color) override {}
+    void backdrops(const ADisplayList::Backdrop& v, const APaint& paint) override {}
+    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override {}
+
     _unique<ITexture> createNewTexture() override {
         class Stub : public ITexture {
         public:
@@ -72,7 +82,6 @@ protected:
         };
         return std::make_unique<Stub>();
     }
-    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override {}
 };
 
 }   // namespace

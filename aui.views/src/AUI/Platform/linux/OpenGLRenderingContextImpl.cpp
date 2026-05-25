@@ -29,11 +29,15 @@ OpenGLRenderingContext::~OpenGLRenderingContext() {}
 
 void OpenGLRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
+    mDisplayList.clear();
     beginFramebuffer(window.getSize());
     mRenderer->beginPaint(window.getSize());
 }
 
 void OpenGLRenderingContext::endPaint(ASurface& window) {
+    mDisplayList.optimize();
+    mDisplayList.draw(*mRenderer);
+    mDisplayList.clear();
     CommonRenderingContext::endPaint(window);
     endFramebuffer();
     mRenderer->endPaint();

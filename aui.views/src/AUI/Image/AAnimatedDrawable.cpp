@@ -15,7 +15,7 @@
 
 #include "AAnimatedDrawable.h"
 #include "AUI/Image/gif/GifImageFactory.h"
-#include "AUI/Render/ACanvas.hpp"
+#include <AUI/Render/ACanvas.hpp>
 
 AAnimatedDrawable::AAnimatedDrawable(_<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
 }

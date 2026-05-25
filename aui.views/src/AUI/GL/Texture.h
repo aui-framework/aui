@@ -12,6 +12,8 @@
 #pragma once
 
 #include <cstdint>
+#include <AUI/Common/AString.h>
+#include <AUI/GL/State.h>
 
 namespace gl {
 constexpr uint32_t TEXTURE_1D = 0x0DE1;
@@ -42,6 +44,10 @@ public:
 
     void bind(uint8_t index = 0);
     static void unbind(uint8_t index = 0);
+
+    void label(const AString& name) {
+        gl::State::label(GL_TEXTURE, mTexture, name);
+    }
 
     operator bool() const { return mTexture; }
     uint32_t getHandle() const { return mTexture; }

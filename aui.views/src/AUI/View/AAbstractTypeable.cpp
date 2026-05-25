@@ -20,7 +20,7 @@
 
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/IRenderer.h"
-#include "AUI/Render/ACanvas.hpp"
+#include <AUI/Render/ACanvas.hpp>
 #include "AUI/Render/RenderHints.h"
 #include "AUI/Util/ARaiiHelper.h"
 #include <AUI/Util/AMetric.h>

@@ -40,9 +40,7 @@ struct BrushHelper {
     void operator()(const ASolidBrush& brush) noexcept {
         using namespace aui::sl_gen::rect_solid::fsh::software;
 
-        renderer->putPixel({x, y}, Shader::entry({}, Shader::Uniform {
-                .color = renderer->getColor() * brush.solidColor
-        }).albedo);
+        renderer->putPixel({x, y}, Shader::entry({.color = renderer->getColor() * brush.solidColor}, {}).albedo);
     }
 
     void operator()(const ATexturedBrush& brush) noexcept {
@@ -80,13 +78,12 @@ struct BrushHelper {
         using namespace aui::sl_gen::rect_gradient::fsh::software;
 
         aui::render::brush::gradient::Helper h(brush);
-        const auto output = Shader::entry({.uv = calculateUv()},
+        const auto output = Shader::entry({.uv = calculateUv(), .color = renderer->getColor()},
                                           {
                                             //.gradientMap = aui::sl_gen::Texture2D(h.gradientMap(), ImageRendering::SMOOTH),
                                             .color1 = h.colors[0],
                                             .color2 = h.colors[1],
                                             .matUv = h.matrix,
-                                            .color = renderer->getColor()
                                           });
         renderer->putPixel({ x, y }, output.albedo);
     }
@@ -263,7 +260,6 @@ void SoftwareRenderer::boxShadow(const ADisplayList::BoxShadow& v, const APaint&
 
     using namespace aui::sl_gen::shadow::fsh::software;
     const Shader::Uniform uniform{
-        .color = mColor * v.color,
         .lower = transformedPos + v.size,
         .upper = transformedPos,
         .sigma = v.blurRadius / 2.f,
@@ -273,6 +269,7 @@ void SoftwareRenderer::boxShadow(const ADisplayList::BoxShadow& v, const APaint&
         for (int x = 0; x < iSize.x; ++x) {
             const auto result = Shader::entry(Shader::Inter {
                 .vertex = glm::ivec4(iTransformedPos + glm::ivec2{x, y}, 0, 1),
+                .color = mColor * v.color,
             }, uniform).albedo;
 
             putPixel(iTransformedPos + glm::ivec2{ x, y }, result);
@@ -287,7 +284,6 @@ void SoftwareRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, con
 
     using namespace aui::sl_gen::shadow::fsh::software;
     const Shader::Uniform uniform{
-        .color = mColor * v.color,
         .lower = v.size,
         .upper = transformedPos,
         .sigma = v.blurRadius / 2.f,
@@ -297,6 +293,7 @@ void SoftwareRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, con
         for (int x = 0; x < iSize.x; ++x) {
             const auto result = Shader::entry(Shader::Inter {
                 .vertex = glm::vec4(transformedPos + glm::vec2{x, y}, 0.f, 1.f),
+                .color = mColor * v.color,
             }, uniform).albedo;
 
             putPixel(iTransformedPos + glm::ivec2{ x, y }, result);
@@ -513,8 +510,13 @@ _<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AF
     return _new<SoftwareMultiStringCanvas>(this, style);
 }
 
+SoftwareRenderer::SoftwareRenderer() : mTexturePool([this] { return createNewTexture(); }) {}
+
 void SoftwareRenderer::setWindow(ASurface* window) {
-    IRenderer::setWindow(window);
+    mWindow = window;
+    mColor = 1.f;
+    mTransform = getProjectionMatrix();
+    mStencilDepth = 0;
     if (auto context = dynamic_cast<SoftwareRenderingContext*>(window->getRenderingContext().get())) {
         mContext = context;
     } else {
@@ -555,6 +557,10 @@ void SoftwareRenderer::points(const ADisplayList::Points& v, const APaint& paint
 }
 
 void SoftwareRenderer::squareSector(const ADisplayList::SquareSector& v, const APaint& paint) {}
+
+void SoftwareRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {
+    rectangle(ADisplayList::Rectangle{position, size}, {ASolidBrush{0xa0a0a0_rgb}});
+}
 
 _unique<IRenderViewToTexture> SoftwareRenderer::newRenderViewToTexture() noexcept {
     return nullptr;

@@ -12,6 +12,8 @@
 #include "ASpinnerV2.h"
 
 #include <AUI/Render/IRenderer.h>
+#include <AUI/Render/ACanvas.hpp>
+#include <chrono>
 
 using namespace std::chrono;
 using namespace std::chrono_literals;

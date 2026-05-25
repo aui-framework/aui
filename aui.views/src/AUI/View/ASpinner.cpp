@@ -16,6 +16,10 @@
 #include "ASpinner.h"
 
 #include <AUI/Render/IRenderer.h>
+#include <AUI/Render/ACanvas.hpp>
+#include <chrono>
+
+using namespace std::chrono;
 
 void ASpinner::render(ARenderContext ctx) {
 

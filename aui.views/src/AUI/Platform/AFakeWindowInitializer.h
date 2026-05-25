@@ -29,8 +29,19 @@ public:
     void endPaint(ASurface& window) override;
 
     void beginResize(ASurface& window) override;
+    void endResize(ASurface& window) override;
 
     void destroyNativeWindow(ASurface& window) override;
+
+    AImage makeScreenshot() override { return {}; }
+
+    IRenderer& renderer() override;
+    IRendererBackend& backend() override;
+    ACanvas& canvas() override;
+
+private:
+    struct Data;
+    _unique<Data> mData;
 };
 
 

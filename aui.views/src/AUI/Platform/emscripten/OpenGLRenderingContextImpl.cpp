@@ -37,6 +37,8 @@ void OpenGLRenderingContext::init(const Init& init) {
     emscripten_webgl_make_context_current(emctx);
 
     mRenderer = ourRenderer();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
+    mRendererWrapper = std::make_unique<CanvasRenderer>(*mCanvas);
 }
 
 void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
@@ -44,6 +46,7 @@ void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
 }
 
 void OpenGLRenderingContext::beginPaint(ASurface& window) {
+    mDisplayList.clear();
     mViewportSize = window.getSize();
     bindViewport();
     mRenderer->beginPaint(window.getSize());
@@ -57,6 +60,10 @@ void OpenGLRenderingContext::endResize(ASurface& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ASurface& window) {
+    mDisplayList.optimize();
+    mDisplayList.draw(*mRenderer);
+    mDisplayList.clear();
+
     mRenderer->endPaint();
     CommonRenderingContext::endPaint(window);
 }

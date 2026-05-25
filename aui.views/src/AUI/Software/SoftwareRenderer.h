@@ -12,21 +12,14 @@
 #pragma once
 
 
-#include <AUI/Render/IRenderer.h>
+#include <AUI/Render/IRendererBackend.h>
 #include <AUI/Platform/ASurface.h>
 #include <AUI/Platform/SoftwareRenderingContext.h>
 
-class API_AUI_VIEWS SoftwareRenderer: public IRenderer {
-private:
-    SoftwareRenderingContext* mContext;
-    bool mDrawingToStencil = false;
-    enum {
-        INCREASE = 1,
-        DECREASE = -1
-    } mDrawingStencilDirection;
-    Blending mBlending = Blending::NORMAL;
-
+class API_AUI_VIEWS SoftwareRenderer: public IRendererBackend {
 public:
+    SoftwareRenderer();
+
     /**
      * Draws a pixel onto the software framebuffer following the stencil and blending rules.
      * <dl>
@@ -103,7 +96,7 @@ public:
             }
         }
     }
-    _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
 
     void rectangle(const ADisplayList::Rectangle& v, const APaint& paint) override;
 
@@ -119,13 +112,17 @@ public:
 
     void string(const ADisplayList::Text& v, const APaint& paint) override;
 
-    _<IPrerenderedString> prerenderString(glm::vec2 position,
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position,
                                           const AString& text,
                                           const AFontStyle& fs) override;
 
     void setBlending(Blending blending) override;
 
     void setWindow(ASurface* window) override;
+    ASurface* getWindow() const noexcept override { return mWindow; }
+
+    std::uint8_t getStencilDepth() const noexcept override { return mStencilDepth; }
+    void setStencilDepth(std::uint8_t stencilDepth) override { mStencilDepth = stencilDepth; }
 
     glm::mat4 getProjectionMatrix() const override;
 
@@ -142,11 +139,38 @@ public:
     void lines(const ADisplayList::LineBatches& v, const APaint& paint) override;
 
     void squareSector(const ADisplayList::SquareSector& v, const APaint& paint) override;
-protected:
+
+    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
+
+    _<ITexture> getNewTexture() override { return mTexturePool.get(); }
     _unique<ITexture> createNewTexture() override;
 
+    float getRenderScale() const noexcept override { return mRenderScale; }
+    void setRenderScale(float renderScale) override { mRenderScale = renderScale; }
+
+    void setTransformForced(const glm::mat4& transform) override { mTransform = transform; }
+    const glm::mat4& getTransform() const override { return mTransform; }
+    void setColorForced(const AColor& color) override { mColor = color; }
+    const AColor& getColor() const override { return mColor; }
+
+    void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
+    bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
+
+protected:
     void drawLine(const APaint& paint, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style, AMetric width);
 
+    SoftwareRenderingContext* mContext = nullptr;
+    bool mDrawingToStencil = false;
+    enum {
+        INCREASE = 1,
+        DECREASE = -1
+    } mDrawingStencilDirection = INCREASE;
+    Blending mBlending = Blending::NORMAL;
+    APool<ITexture> mTexturePool;
+    glm::mat4 mTransform = glm::mat4(1.0f);
+    AColor mColor = AColor::WHITE;
+    ASurface* mWindow = nullptr;
+    uint8_t mStencilDepth = 0;
+    float mRenderScale = 1.0f;
+    bool mAllowRenderToTexture = true;
 };
-
-

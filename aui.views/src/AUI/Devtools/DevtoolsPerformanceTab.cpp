@@ -37,6 +37,7 @@
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABrush.h"
+#include <AUI/Render/ACanvas.hpp>
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Render/ITexture.h"
 #include "AUI/Traits/values.h"
