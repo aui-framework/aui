@@ -190,6 +190,7 @@ public:
         virtual int getWidth() = 0;
         virtual int getHeight() = 0;
     };
+
     class IMultiStringCanvas {
     private:
         AOptional<ATextLayoutHelper::Symbols> mSymbols;
