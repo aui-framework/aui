@@ -22,7 +22,7 @@
 #include <AUI/Render/ADisplayListCanvas.hpp>
 #include <AUI/Platform/IRenderingContext.h>
 #include <AUI/Render/IRendererBackend.h>
-#include <AUI/Render/CanvasRenderer.h>
+#include <AUI/Render/RendererCanvas.h>
 
 class AEmbedContext::EmbedWindow: public ASurface {
     friend class AEmbedContext;

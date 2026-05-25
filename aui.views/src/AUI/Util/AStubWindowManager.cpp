@@ -34,7 +34,7 @@ public:
     {
         reallocate(init.window);
         mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *gStubWindowManagerConfig->renderer);
-        mRendererWrapper = std::make_unique<CanvasRenderer>(*mCanvas);
+        mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas);
     }
 
     ~StubRenderingContext() override = default;

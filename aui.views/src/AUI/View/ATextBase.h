@@ -219,7 +219,7 @@ public:
         if (mPrerenderedString) {
             RenderHints::PushColor c(context.canvas);
             context.canvas.setColor(textColor());
-            mPrerenderedString->draw();
+            mPrerenderedString->draw(context.canvas);
         }
     }
 

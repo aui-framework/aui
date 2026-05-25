@@ -20,7 +20,7 @@ class StubRenderer : public IRendererBackend {
 public:
     class StubPrerenderedString : public IRenderer::IPrerenderedString {
     public:
-        void draw() override {}
+        void draw(ACanvas& canvas) override {}
         ~StubPrerenderedString() override = default;
         int getWidth() override { return 1; }
         int getHeight() override { return 1; }
@@ -38,48 +38,45 @@ public:
         };
         return _new<Stub>();
     }
-    void rectangle(const ADisplayList::Rectangle& v, const APaint& paint) override {}
-    void roundedRectangle(const ADisplayList::RoundedRectangle& v, const APaint& paint) override {}
-    void rectangleBorder(const ADisplayList::RectangleBorder& v, const APaint& paint) override {}
-    void roundedRectangleBorder(
-        const ADisplayList::RoundedRectangleBorder& v, const APaint& paint) override {}
-    void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint) override {}
-    void boxShadowInner(
-        const ADisplayList::BoxShadowInner& v, const APaint& paint) override {}
-    void string(const ADisplayList::Text& v, const APaint& paint) override {}
+    void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) override {}
+    void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) override {}
+    void texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) override {}
+    void solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) override {}
+    void gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) override {}
+    void texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, Blending blending) override {}
+    void rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) override {}
+    void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) override {}
+    void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) override {}
+    void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) override {}
+    void string(const ADisplayList::Text& v, const glm::mat4& transform, Blending blending) override {}
+    void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) override {}
     _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override {
         return _new<StubPrerenderedString>();
     }
-    void lines(const ADisplayList::Lines& v, const APaint& paint) override {}
-    void points(const ADisplayList::Points& v, const APaint& paint) override {}
-    void lines(const ADisplayList::LineBatches& v, const APaint& paint) override {}
-    void squareSector(
-        const ADisplayList::SquareSector& v, const APaint& paint) override {}
-    void pushMaskBefore() override {}
-    void pushMaskAfter() override {}
-    void popMaskBefore() override {}
-    void popMaskAfter() override {}
-    void setBlending(Blending blending) override {}
+    void lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) override {}
+    void points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) override {}
+    void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, Blending blending) override {}
+    void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, Blending blending) override {}
+
     [[nodiscard]] _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override { return nullptr; }
     void setWindow(ASurface* window) override {}
+    ASurface* getWindow() const noexcept override { return nullptr; }
     glm::mat4 getProjectionMatrix() const override { return glm::mat4(1.0f); }
 
-    _<ITexture> getNewTexture() override { return createNewTexture(); }
+    _<ITexture> getNewTexture() override { return _unique<ITexture>(new Stub()); }
     float getRenderScale() const noexcept override { return 1.0f; }
     void setRenderScale(float renderScale) override {}
     void setAllowRenderToTexture(bool allow) override {}
     bool allowRenderToTexture() const noexcept override { return true; }
-    void setTransformForced(const glm::mat4& transform) override {}
-    void setColorForced(const AColor& color) override {}
-    void backdrops(const ADisplayList::Backdrop& v, const APaint& paint) override {}
+    void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) override {}
     void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override {}
 
+    class Stub : public ITexture {
+    public:
+        void setImage(AImageView image) override {}
+        ~Stub() override = default;
+    };
     _unique<ITexture> createNewTexture() override {
-        class Stub : public ITexture {
-        public:
-            void setImage(AImageView image) override {}
-            ~Stub() override = default;
-        };
         return std::make_unique<Stub>();
     }
 };

@@ -23,6 +23,23 @@
 #include <AUI/Render/IRendererBackend.h>
 #include "AUI/GL/RenderTarget/TextureRenderTarget.h"
 
+class API_AUI_VIEWS OpenGLTexture2D : public ITexture, public gl::Framebuffer::IRenderTarget {
+private:
+    gl::Texture2D mTexture;
+public:
+    void setImage(AImageView image) override { mTexture.tex2D(image); }
+    void bind() { mTexture.bind(); }
+    void bind(uint32_t unit) { mTexture.bind(unit); }
+    gl::Texture2D& texture() noexcept { return mTexture; }
+protected:
+    void onFramebufferResize(glm::u32vec2 size) override { mTexture.framebufferTex2D(size, gl::Type::UNSIGNED_BYTE); }
+    void attach(gl::Framebuffer& to, GLenum attachmentType) override {
+        to.bind();
+        onFramebufferResize(to.size());
+        glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, GL_TEXTURE_2D, mTexture.getHandle(), 0);
+    }
+};
+
 class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
     friend class OpenGLPrerenderedString;
     friend class OpenGLMultiStringCanvas;
@@ -30,11 +47,11 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
 public:
     struct FontEntryData: aui::noncopyable {
         OpenGLRenderer* renderer;
-        gl::Texture2D texture;
+        _<OpenGLTexture2D> texture;
         bool isTextureInvalid = true;
         Util::SimpleTexturePacker texturePacker;
 
-        explicit FontEntryData(OpenGLRenderer* renderer): renderer(renderer) {}
+        explicit FontEntryData(OpenGLRenderer* renderer): renderer(renderer), texture(_new<OpenGLTexture2D>()) {}
     };
 
     struct CharacterData {

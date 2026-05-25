@@ -44,13 +44,17 @@
 
 #define LOG_TAG "OpenGLRenderer"
 
-struct GLDebugGroup {
-    GLDebugGroup(const char* name) {
+// ---------------------------------------------------------------------------------------------------------------------
+// Helpers
+// ---------------------------------------------------------------------------------------------------------------------
+
+struct GLDebugGroupLocal {
+    GLDebugGroupLocal(const char* name) {
         if (glPushDebugGroup) {
             glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, name);
         }
     }
-    ~GLDebugGroup() {
+    ~GLDebugGroupLocal() {
         if (glPopDebugGroup) {
             glPopDebugGroup();
         }
@@ -62,10 +66,15 @@ static std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position, glm::vec2
     float y = position.y;
     float w = x + size.x;
     float h = y + size.y;
-    return { glm::vec2 { x, h }, glm::vec2 { w, h }, glm::vec2 { x, y }, glm::vec2 { w, y } };
+    return {
+        glm::vec2{x, h},
+        glm::vec2{w, h},
+        glm::vec2{x, y},
+        glm::vec2{w, y}
+    };
 }
 
-template <typename Vertex, typename Fragment>
+template<typename Vertex, typename Fragment>
 inline void useAuislShader(AOptional<gl::Program>& out) {
     out.emplace();
     out->loadBoth(Vertex::code(), Fragment::code());
@@ -95,18 +104,20 @@ private:
     OpenGLRenderer::FontEntryData* mEntryData;
 
 public:
-    OpenGLPrerenderedString(
-        OpenGLRenderer* renderer, AVector<CharacterGlyph> glyphs, int textWidth, int textHeight,
-        OpenGLRenderer::FontEntryData* entryData)
-      : mRenderer(renderer)
-      , mGlyphs(std::move(glyphs))
-      , mTextWidth(textWidth)
-      , mTextHeight(textHeight)
-      , mEntryData(entryData) {}
+    OpenGLPrerenderedString(OpenGLRenderer* renderer,
+                            AVector<CharacterGlyph> glyphs,
+                            int textWidth,
+                            int textHeight,
+                            OpenGLRenderer::FontEntryData* entryData) :
+        mRenderer(renderer),
+        mGlyphs(std::move(glyphs)),
+        mTextWidth(textWidth),
+        mTextHeight(textHeight),
+        mEntryData(entryData) {}
 
     void draw(ACanvas& canvas) override {
         for (const auto& g : mGlyphs) {
-            canvas.glyphRect(static_cast<_<ITexture>>(mEntryData->texture), g.position, g.size, g.u1, g.u2, g.color);
+            canvas.glyphRect(mEntryData->texture, g.position, g.size, g.u1, g.u2, g.color);
         }
     }
 
@@ -124,10 +135,13 @@ private:
     int mAdvanceY = 0;
 
 public:
-    OpenGLMultiStringCanvas(OpenGLRenderer* renderer, const AFontStyle& fontStyle)
-      : mRenderer(renderer), mFontStyle(fontStyle), mEntryData(renderer->getFontEntryData(fontStyle)) {}
+    OpenGLMultiStringCanvas(OpenGLRenderer* renderer, const AFontStyle& fontStyle) :
+        mRenderer(renderer),
+        mFontStyle(fontStyle),
+        mEntryData(renderer->getFontEntryData(fontStyle)) {
+    }
 
-    template <class UnicodeString>
+    template<class UnicodeString>
     void addStringT(const glm::ivec2& position, UnicodeString text) noexcept {
         auto& font = mFontStyle.font;
         auto& texturePacker = mEntryData->texturePacker;
@@ -137,14 +151,14 @@ public:
 
         int advanceX = position.x;
         int advanceY = position.y;
-        float advance = (float) advanceX;
+        float advance = (float)advanceX;
         for (auto i = text.begin(); i != text.end(); ++i) {
             AChar c = *i;
             if (c == ' ') {
                 advance += mFontStyle.getSpaceWidth();
             } else if (c == '\n') {
-                advanceX = (glm::max) (advanceX, int(glm::ceil(advance)));
-                advance = (float) position.x;
+                advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
+                advance = (float)position.x;
                 advanceY += mFontStyle.getLineHeight();
             } else {
                 AFont::Character& ch = font->getCharacter(fe, c);
@@ -152,8 +166,8 @@ public:
                     advance += mFontStyle.getSpaceWidth();
                     continue;
                 }
-
-                int posX = (int) advance + ch.horizontal.bearing.x;
+                
+                int posX = (int)advance + ch.horizontal.bearing.x;
                 int posY = advanceY - ch.horizontal.bearing.y;
                 int width = ch.image->width();
                 int height = ch.image->height();
@@ -162,56 +176,47 @@ public:
                 if (ch.rendererData == nullptr) {
                     uv = texturePacker.insert(*ch.image);
                     const float BIAS = 0.1f;
-                    uv.x += BIAS;
-                    uv.y += BIAS;
-                    uv.z -= BIAS;
-                    uv.w -= BIAS;
-                    mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData { uv });
+                    uv.x += BIAS; uv.y += BIAS; uv.z -= BIAS; uv.w -= BIAS;
+                    mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv});
                     ch.rendererData = &mRenderer->mCharData.last();
                     mEntryData->isTextureInvalid = true;
                 } else {
                     uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(ch.rendererData)->uv;
                 }
 
-                mGlyphs.push_back(
-                    { glm::vec2(posX, posY), glm::vec2(width, height), glm::vec2(uv.x, uv.y), glm::vec2(uv.z, uv.w),
-                      AColor::WHITE });
+                mGlyphs.push_back({
+                    glm::vec2(posX, posY),
+                    glm::vec2(width, height),
+                    glm::vec2(uv.x, uv.y),
+                    glm::vec2(uv.z, uv.w),
+                    AColor::WHITE
+                });
 
                 if (hasKerning) {
                     auto next = std::next(i);
                     if (next != text.end()) {
                         auto kerning = font->getKerning(c, *next);
-                        advance += (float) kerning.x;
+                        advance += (float)kerning.x;
                     }
                 }
-                advance += (float) ch.horizontal.advance;
+                advance += (float)ch.horizontal.advance;
             }
         }
-        mAdvanceX = (glm::max) (mAdvanceX, (glm::max) (advanceX, int(glm::ceil(advance))));
+        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
     }
 
-    void addString(const glm::ivec2& position, AStringView text) noexcept override {
-        addStringT(position, text.utf8());
-    }
-    void addString(const glm::ivec2& position, std::u32string_view text) noexcept override {
-        addStringT(position, text);
-    }
+    void addString(const glm::ivec2& position, AStringView text) noexcept override { addStringT(position, text.utf8()); }
+    void addString(const glm::ivec2& position, std::u32string_view text) noexcept override { addStringT(position, text); }
 
     _<IRenderer::IPrerenderedString> finalize() noexcept override {
         return _new<OpenGLPrerenderedString>(mRenderer, std::move(mGlyphs), mAdvanceX, mAdvanceY, mEntryData);
     }
 };
 
-// ---------------------------------------------------------------------------------------------------------------------
-// IRendererBackend implementation (Stateless)
-// ---------------------------------------------------------------------------------------------------------------------
-
-void OpenGLRenderer::solidRectangles(
-    const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) {
-    if (v.instances.empty())
-        return;
-    GLDebugGroup debugGroup("solidRectangles");
+void OpenGLRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) {
+    if (v.instances.empty()) return;
+    GLDebugGroupLocal debugGroup("solidRectangles");
     setBlending(blending);
     mSolidShader->use();
     mSolidShader->set(aui::ShaderUniforms::TRANSFORM, transform);
@@ -232,23 +237,20 @@ void OpenGLRenderer::solidRectangles(
     mBatchVao.drawElements();
 }
 
-void OpenGLRenderer::gradientRectangles(
-    const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) {
-    if (v.instances.empty())
-        return;
-    GLDebugGroup debugGroup("gradientRectangles");
+void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) {
+    if (v.instances.empty()) return;
+    GLDebugGroupLocal debugGroup("gradientRectangles");
     setBlending(blending);
     mGradientShader->use();
     mGradientShader->set(aui::ShaderUniforms::TRANSFORM, transform);
     for (const auto& inst : v.instances) {
-        drawRectImpl(inst.position, inst.size);
+        mRectangleVao.insert(0, AArrayView(getVerticesForRect(inst.position, inst.size)), "gradientRectangles/positions");
+        mRectangleVao.drawElements();
     }
 }
-void OpenGLRenderer::texturedRectangles(
-    const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) {
-    if (v.instances.empty())
-        return;
-    GLDebugGroup debugGroup("texturedRectangles");
+void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) {
+    if (v.instances.empty()) return;
+    GLDebugGroupLocal debugGroup("texturedRectangles");
     setBlending(blending);
     mTexturedShader->use();
     mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, transform);
@@ -257,11 +259,9 @@ void OpenGLRenderer::texturedRectangles(
         drawRectImpl(inst.position, inst.size);
     }
 }
-void OpenGLRenderer::solidRoundedRectangles(
-    const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) {
-    if (v.instances.empty())
-        return;
-    GLDebugGroup debugGroup("solidRoundedRectangles");
+void OpenGLRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) {
+    if (v.instances.empty()) return;
+    GLDebugGroupLocal debugGroup("solidRoundedRectangles");
     setBlending(blending);
     mRoundedSolidShader->use();
     mRoundedSolidShader->set(aui::ShaderUniforms::TRANSFORM, transform);
@@ -270,38 +270,33 @@ void OpenGLRenderer::solidRoundedRectangles(
         drawRectImpl(inst.position, inst.size);
     }
 }
-void OpenGLRenderer::gradientRoundedRectangles(
-    const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) {
-    if (v.instances.empty())
-        return;
+void OpenGLRenderer::gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) {
+    if (v.instances.empty()) return;
     setBlending(blending);
 }
-void OpenGLRenderer::texturedRoundedRectangles(
-    const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, Blending blending) {
-    if (v.instances.empty())
-        return;
+void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, Blending blending) {
+    if (v.instances.empty()) return;
     setBlending(blending);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 }
-void OpenGLRenderer::rectangleBorders(
-    const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) {
+void OpenGLRenderer::rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) {
     setBlending(blending);
+    for (const auto& inst : v.instances) { drawRectImpl(inst.position, inst.size); }
 }
-void OpenGLRenderer::roundedRectangleBorders(
-    const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) {
+void OpenGLRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) {
     setBlending(blending);
+    for (const auto& inst : v.instances) { drawRectImpl(inst.position, inst.size); }
 }
 void OpenGLRenderer::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) {
-    GLDebugGroup debugGroup("boxShadow");
+    GLDebugGroupLocal debugGroup("boxShadow");
     setBlending(blending);
     mBoxShadowShader->use();
     mBoxShadowShader->set(aui::ShaderUniforms::TRANSFORM, transform);
     mBoxShadowShader->set(aui::ShaderUniforms::COLOR, glm::vec4(v.color));
     drawRectImpl(v.position, v.size);
 }
-void OpenGLRenderer::boxShadowInner(
-    const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) {
-    GLDebugGroup debugGroup("boxShadowInner");
+void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) {
+    GLDebugGroupLocal debugGroup("boxShadowInner");
     setBlending(blending);
     mBoxShadowInnerShader->use();
     mBoxShadowInnerShader->set(aui::ShaderUniforms::TRANSFORM, transform);
@@ -312,9 +307,8 @@ void OpenGLRenderer::string(const ADisplayList::Text& v, const glm::mat4& transf
     setBlending(blending);
 }
 void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) {
-    if (v.instances.empty())
-        return;
-    GLDebugGroup debugGroup("glyphs");
+    if (v.instances.empty()) return;
+    GLDebugGroupLocal debugGroup("glyphs");
     setBlending(blending);
     mSymbolShader->use();
     mSymbolShader->set(aui::ShaderUniforms::TRANSFORM, transform);
@@ -329,8 +323,8 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
         GLuint offset = static_cast<GLuint>(i * 4);
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         for (auto rv : rectVertices) vertices << rv;
-        uvs << glm::vec2 { inst.u1.x, inst.u2.y } << glm::vec2 { inst.u2.x, inst.u2.y }
-            << glm::vec2 { inst.u1.x, inst.u1.y } << glm::vec2 { inst.u2.x, inst.u1.y };
+        uvs << glm::vec2{inst.u1.x, inst.u2.y} << glm::vec2{inst.u2.x, inst.u2.y} 
+            << glm::vec2{inst.u1.x, inst.u1.y} << glm::vec2{inst.u2.x, inst.u1.y};
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
     mBatchVao.bind();
@@ -344,43 +338,31 @@ void OpenGLRenderer::points(const ADisplayList::Points& v, const glm::mat4& tran
 void OpenGLRenderer::lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, Blending blending) {}
 void OpenGLRenderer::squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, Blending blending) {}
 void OpenGLRenderer::backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) {}
-void OpenGLRenderer::backdrops(
-    glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {}
+void OpenGLRenderer::backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {}
 
-OpenGLRenderer::OpenGLRenderer()
-  : mTexturePool([] { return std::unique_ptr<ITexture, APoolDeleter>(new OpenGLTexture2D()); }) {
-    useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader, aui::sl_gen::rect_solid::fsh::glsl120::Shader>(
-        mSolidShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_textured::fsh::glsl120::Shader>(
-        mTexturedShader);
+// ---------------------------------------------------------------------------------------------------------------------
+// Common / Internal
+// ---------------------------------------------------------------------------------------------------------------------
+
+OpenGLRenderer::OpenGLRenderer() : mTexturePool([]{ return std::unique_ptr<ITexture>(new OpenGLTexture2D()); }) {
+    useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader, aui::sl_gen::rect_solid::fsh::glsl120::Shader>(mSolidShader);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
     useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader, aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_solid_rounded::fsh::glsl120::Shader>(
-        mRoundedSolidShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::shadow::fsh::glsl120::Shader>(
-        mBoxShadowShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::shadow_inner::fsh::glsl120::Shader>(
-        mBoxShadowInnerShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_gradient::fsh::glsl120::Shader>(
-        mGradientShader);
-
-    constexpr GLuint INDICES[] = { 0, 1, 2, 2, 1, 3 };
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::shadow_inner::fsh::glsl120::Shader>(mBoxShadowInnerShader);
+    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_gradient::fsh::glsl120::Shader>(mGradientShader);
+    
+    constexpr GLuint INDICES[] = {0, 1, 2, 2, 1, 3};
     mRectangleVao.indices(INDICES);
 }
 void OpenGLRenderer::setBlending(Blending blending) {
     if (glBlendFuncSeparate) {
         switch (blending) {
-            case Blending::NORMAL:
-                glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
-                return;
-            case Blending::INVERSE_DST:
-                glBlendFuncSeparate(GL_ONE_MINUS_DST_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
-                return;
-            case Blending::ADDITIVE:
-                glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
-                return;
-            case Blending::INVERSE_SRC:
-                glBlendFuncSeparate(GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
-                return;
+            case Blending::NORMAL: glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
+            case Blending::INVERSE_DST: glBlendFuncSeparate(GL_ONE_MINUS_DST_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
+            case Blending::ADDITIVE: glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
+            case Blending::INVERSE_SRC: glBlendFuncSeparate(GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
         }
     }
 }
@@ -392,13 +374,11 @@ void OpenGLRenderer::drawRectImpl(glm::vec2 position, glm::vec2 size) {
     mRectangleVao.drawElements();
 }
 void OpenGLRenderer::identityUv() {
-    static constexpr glm::vec2 uvs[] = { { 0.f, 1.f }, { 1.f, 1.f }, { 0.f, 0.f }, { 1.f, 0.f } };
+    static constexpr glm::vec2 uvs[] = { {0.f, 1.f}, {1.f, 1.f}, {0.f, 0.f}, {1.f, 0.f} };
     mRectangleVao.insert(1, AArrayView(uvs), "identityUv");
 }
-_<IRenderer::IPrerenderedString>
-OpenGLRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
-    if (text.empty())
-        return nullptr;
+_<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
+    if (text.empty()) return nullptr;
     OpenGLMultiStringCanvas c(this, fs);
     c.addString(position, text);
     return c.finalize();
@@ -422,6 +402,4 @@ OpenGLRenderer::FontEntryData* OpenGLRenderer::getFontEntryData(const AFontStyle
     return reinterpret_cast<FontEntryData*>(fe.second.rendererData);
 }
 void OpenGLRenderer::FramebufferBackToPool::operator()(FramebufferWithTextureRT* framebuffer) const {}
-OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize) {
-    return nullptr;
-}
+OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize) { return nullptr; }

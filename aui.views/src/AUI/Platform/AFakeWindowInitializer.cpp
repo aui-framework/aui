@@ -9,104 +9,56 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by Alex2772 on 12/7/2021.
-//
-
-#include "AFakeWindowInitializer.h"
-#include "ASurface.h"
+#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/RendererCanvas.h>
 #include <AUI/Render/ADisplayList.h>
 #include <AUI/Render/ADisplayListCanvas.hpp>
-#include <AUI/Render/CanvasRenderer.h>
-#include <AUI/Render/IRendererBackend.h>
 
-
-struct AFakeWindowInitializer::Data {
+namespace {
     class FakeBackend: public IRendererBackend {
     public:
+        FakeBackend() = default;
+
+        // IRendererBackend implementation
+        void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) override {}
+        void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) override {}
+        void texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) override {}
+        void solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) override {}
+        void gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) override {}
+        void texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, Blending blending) override {}
+        void rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) override {}
+        void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) override {}
+        void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) override {}
+        void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) override {}
+        void string(const ADisplayList::Text& v, const glm::mat4& transform, Blending blending) override {}
+        void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) override {}
+        _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override { return nullptr; }
+        void lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) override {}
+        void points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) override {}
+        void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, Blending blending) override {}
+        void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, Blending blending) override {}
+        void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) override {}
+        void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override {}
+
         _<ITexture> getNewTexture() override { return nullptr; }
         _unique<ITexture> createNewTexture() override { return nullptr; }
-        _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override { return nullptr; }
-        void rectangle(const ADisplayList::Rectangle& v, const APaint& paint) override {}
-        void roundedRectangle(const ADisplayList::RoundedRectangle& v, const APaint& paint) override {}
-        void rectangleBorder(const ADisplayList::RectangleBorder& v, const APaint& paint) override {}
-        void roundedRectangleBorder(const ADisplayList::RoundedRectangleBorder& v, const APaint& paint) override {}
-        void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint) override {}
-        void boxShadowInner(const ADisplayList::BoxShadowInner& v, const APaint& paint) override {}
-        void string(const ADisplayList::Text& v, const APaint& paint) override {}
-        _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override { return nullptr; }
-        void lines(const ADisplayList::Lines& v, const APaint& paint) override {}
-        void points(const ADisplayList::Points& v, const APaint& paint) override {}
-        void lines(const ADisplayList::LineBatches& v, const APaint& paint) override {}
-        void squareSector(const ADisplayList::SquareSector& v, const APaint& paint) override {}
-        void setTransformForced(const glm::mat4& transform) override { mTransform = transform; }
-        const glm::mat4& getTransform() const override { return mTransform; }
-        void setColorForced(const AColor& color) override { mColor = color; }
-        const AColor& getColor() const override { return mColor; }
-        void setBlending(Blending blending) override {}
-        void pushMaskBefore() override {}
-        void pushMaskAfter() override {}
-        void popMaskBefore() override {}
-        void popMaskAfter() override {}
-        _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override { return nullptr; }
-        void setWindow(ASurface* window) override { mWindow = window; }
-        ASurface* getWindow() const noexcept override { return mWindow; }
-        glm::mat4 getProjectionMatrix() const override { return glm::mat4(1.0f); }
-        std::uint8_t getStencilDepth() const noexcept override { return mStencilDepth; }
-        void setStencilDepth(std::uint8_t stencilDepth) override { mStencilDepth = stencilDepth; }
         float getRenderScale() const noexcept override { return 1.0f; }
         void setRenderScale(float renderScale) override {}
         void setAllowRenderToTexture(bool allow) override {}
         bool allowRenderToTexture() const noexcept override { return true; }
-        void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override {}
-
-    private:
-        glm::mat4 mTransform = glm::mat4(1.0f);
-        AColor mColor = AColor::WHITE;
-        ASurface* mWindow = nullptr;
-        std::uint8_t mStencilDepth = 0;
+        _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override { return nullptr; }
+        _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override { return nullptr; }
+        void setWindow(ASurface* window) override {}
+        ASurface* getWindow() const noexcept override { return nullptr; }
+        glm::mat4 getProjectionMatrix() const override { return glm::mat4(1.0f); }
     };
+}
 
+struct AFakeWindowInitializer {
     FakeBackend backend;
-    ADisplayList displayList;
+    ADisplayList dl;
     ADisplayListCanvas canvas;
-    CanvasRenderer renderer;
-
-    Data(): canvas(displayList, backend), renderer(canvas) {}
+    RendererCanvas renderer;
+    AFakeWindowInitializer(): canvas(dl, backend), renderer(canvas) {}
 };
-
-void AFakeWindowInitializer::init(const IRenderingContext::Init& init) {
-    mData = std::make_unique<Data>();
-}
-
-void AFakeWindowInitializer::destroyNativeWindow(ASurface& window) {
-
-}
-
-void AFakeWindowInitializer::beginPaint(ASurface& window) {
-
-}
-
-void AFakeWindowInitializer::endPaint(ASurface& window) {
-
-}
-
-void AFakeWindowInitializer::beginResize(ASurface& window) {
-
-}
-
-void AFakeWindowInitializer::endResize(ASurface& window) {
-
-}
-
-IRenderer& AFakeWindowInitializer::renderer() {
-    return mData->renderer;
-}
-
-IRendererBackend& AFakeWindowInitializer::backend() {
-    return mData->backend;
-}
-
-ACanvas& AFakeWindowInitializer::canvas() {
-    return mData->canvas;
-}

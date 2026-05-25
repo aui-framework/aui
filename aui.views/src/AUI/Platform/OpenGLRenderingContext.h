@@ -21,7 +21,7 @@
 #include "AUI/GL/OpenGLRenderer.h"
 #include <AUI/Render/ADisplayList.h>
 #include <AUI/Render/ADisplayListCanvas.hpp>
-#include <AUI/Render/CanvasRenderer.h>
+#include <AUI/Render/RendererCanvas.h>
 
 class OpenGLRenderingContext: public CommonRenderingContext {
 public:
@@ -81,7 +81,7 @@ protected:
     _<OpenGLRenderer> mRenderer;
     ADisplayList mDisplayList;
     _unique<ADisplayListCanvas> mCanvas;
-    _unique<CanvasRenderer> mRendererWrapper;
+    _unique<RendererCanvas> mRendererWrapper;
     glm::uvec2 mViewportSize;
     struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
     static _<OpenGLRenderer> ourRenderer() {

@@ -19,7 +19,7 @@
 #include <AUI/Render/ADisplayListCanvas.hpp>
 #include <AUI/Platform/IRenderingContext.h>
 #include <AUI/Render/IRendererBackend.h>
-#include <AUI/Render/CanvasRenderer.h>
+#include <AUI/Render/RendererCanvas.h>
 #include "AUI/Thread/AThread.h"
 #include "SoftwareRenderingContext.h"
 #include "ARenderingContextOptions.h"

@@ -15,7 +15,7 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Render/ADisplayList.h>
 #include <AUI/Render/ADisplayListCanvas.hpp>
-#include <AUI/Render/CanvasRenderer.h>
+#include <AUI/Render/RendererCanvas.h>
 
 class SoftwareRenderer;
 
@@ -106,7 +106,7 @@ protected:
     _<SoftwareRenderer> mRenderer;
     ADisplayList mDisplayList;
     _unique<ADisplayListCanvas> mCanvas;
-    _unique<CanvasRenderer> mRendererWrapper;
+    _unique<RendererCanvas> mRendererWrapper;
 
     AByteBuffer mStencilBlob;
     glm::uvec2 mBitmapSize;

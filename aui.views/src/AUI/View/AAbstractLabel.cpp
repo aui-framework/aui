@@ -277,7 +277,7 @@ void AAbstractLabel::doRenderText(ACanvas& render) {
             RenderHints::PushMatrix m(render);
             render.translate({mTextLeftOffset + mPadding.left, y});
             render.setColor(textColor());
-            mPrerendered->draw();
+            mPrerendered->draw(render);
         }
     }
 }

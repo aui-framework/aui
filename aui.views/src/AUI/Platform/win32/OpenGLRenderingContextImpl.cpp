@@ -211,7 +211,7 @@ void OpenGLRenderingContext::init(const Init& init) {
 
     mRenderer = ourRenderer();
     mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
-    mRendererWrapper = std::make_unique<CanvasRenderer>(*mCanvas);
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas);
     makeCurrent(mWindowDC);
     // vsync
     wglSwapIntervalEXT(!(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));

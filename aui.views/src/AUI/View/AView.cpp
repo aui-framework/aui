@@ -20,7 +20,7 @@
 #include <AUI/Render/ACanvas.hpp>
 #include <AUI/Render/ADisplayList.h>
 #include <AUI/Render/ADisplayListCanvas.hpp>
-#include <AUI/Render/CanvasRenderer.h>
+#include <AUI/Render/RendererCanvas.h>
 #include <AUI/Render/IRendererBackend.h>
 #include "AUI/Url/AUrl.h"
 #include "AUI/Render/RenderHints.h"
@@ -795,7 +795,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
 
             ADisplayList offscreenDl;
             ADisplayListCanvas offscreenCanvas(offscreenDl, backend);
-            CanvasRenderer offscreenRenderer(offscreenCanvas);
+            RendererCanvas offscreenRenderer(offscreenCanvas);
 
             ARenderContext contextOfTheView {
                 .clippingRects = invalidArea.rectangles() ? ARenderContext::Rectangles(invalidArea.rectangles()->begin(),

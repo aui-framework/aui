@@ -16,7 +16,7 @@
 #include "AUI/Image/APixelFormat.h"
 #include "AUI/Software/SoftwareRenderer.h"
 #include <AUI/Render/ADisplayListCanvas.hpp>
-#include <AUI/Render/CanvasRenderer.h>
+#include <AUI/Render/RendererCanvas.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext() {}
 
@@ -35,7 +35,7 @@ void SoftwareRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
     mRenderer = _new<SoftwareRenderer>();
     mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
-    mRendererWrapper = std::make_unique<CanvasRenderer>(*mCanvas);
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas);
 }
 
 void SoftwareRenderingContext::beginPaint(ASurface &window) {

@@ -11,166 +11,64 @@
 
 #pragma once
 
-
+#include <AUI/Traits/values.h>
+#include <AUI/Util/APool.h>
+#include <AUI/Image/AImage.h>
 #include <AUI/Render/IRendererBackend.h>
-#include <AUI/Platform/ASurface.h>
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include <AUI/ASS/Property/Backdrop.h>
+#include <variant>
+#include <span>
 
-class API_AUI_VIEWS SoftwareRenderer: public IRendererBackend {
+class SoftwareRenderer : public IRendererBackend {
+    friend class SoftwarePrerenderedString;
+    friend class SoftwareMultiStringCanvas;
 public:
     SoftwareRenderer();
 
-    /**
-     * Draws a pixel onto the software framebuffer following the stencil and blending rules.
-     * <dl>
-     *   <dt><b>Sneaky assertions</b></dt>
-     *   <dd><code>position</code> is inside the framebuffer.</dd>
-     * </dl>
-     * @param position position. An assertion is triggered if position is not inside the framebuffer.
-     * @param color color.
-     * @param blending blending. Optional. Cheaper. When set, the one set by the <code>setBlending</code> function is
-     *        ignored.
-     */
-    inline void putPixel(glm::ivec2 position, AColor color, AOptional<Blending> blending = std::nullopt) noexcept {
-        AUI_ASSERTX(mContext != nullptr, "context is null");
-        color = glm::clamp(color, glm::vec4(0), glm::vec4(1));
-        auto actualBlending = blending ? *blending : mBlending;
-        glm::uvec2 uposition(position);
-        if (!glm::all(glm::lessThan(uposition, mContext->bitmapSize()))) return;
+    // IRendererBackend implementation
+    void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) override;
+    void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) override;
+    void texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) override;
+    void solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) override;
+    void gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) override;
+    void texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, Blending blending) override;
+    void rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) override;
+    void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) override;
+    void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) override;
+    void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) override;
+    void string(const ADisplayList::Text& v, const glm::mat4& transform, Blending blending) override;
+    void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) override;
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
+    void lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) override;
+    void points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) override;
+    void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, Blending blending) override;
+    void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, Blending blending) override;
 
-        if (mDrawingToStencil) {
-            if (color.a > 0.5f) {
-                mContext->stencil(position) += mDrawingStencilDirection;
-            }
-        } else {
-            auto bufferStencilValue = mContext->stencil(position);
-            if (bufferStencilValue == mStencilDepth)
-            {
-                switch (actualBlending) {
-                    case Blending::NORMAL:
-                        if (color.a >= 0.9999f) {
-                            mContext->putPixel(uposition, glm::u8vec4(glm::vec4(color) * 255.f));
-                        } else {
-                            // blending
-                            auto u8srcColor = mContext->getPixel(uposition);
-                            if (u8srcColor.a == 0) {
-                                // put the color "as is"
-                                mContext->putPixel(uposition, glm::u8vec4(color * 255.f));
-                            } else {
-                                auto srcColor = glm::vec3(u8srcColor.r, u8srcColor.g, u8srcColor.b);
-                                if (u8srcColor.a == 255) {
-                                    mContext->putPixel(uposition,
-                                                       glm::u8vec4(glm::mix(srcColor, glm::vec3(color) * 255.f, color.a), 255));
-                                } else {
-                                    // blend with the src color; calculate final alpha
-                                    auto dstColor = glm::vec3(color) * 255.f;
-                                    auto srcAlpha = float(u8srcColor.a) / 255.f;
-                                    float finalAlpha = srcAlpha + (1.f - srcAlpha) * color.a;
-                                    mContext->putPixel(uposition,
-                                                       glm::u8vec4(glm::u8vec3(srcColor * srcAlpha + dstColor * color.a), uint8_t(finalAlpha * 255.f)));
-                                }
-                            }
-                        }
-                        break;
-
-                    case Blending::ADDITIVE: {
-                        auto src = glm::uvec4(glm::vec4(color) * 255.f);
-                        src.a = (src.x + src.y + src.z) / 3.f;
-                        auto dst = glm::uvec4(mContext->getPixel(uposition));
-                        mContext->putPixel(uposition, glm::u8vec4((glm::min)(src + dst, glm::uvec4(255))));
-                        break;
-                    }
-                    case Blending::INVERSE_DST: {
-                        auto src = glm::vec3(color);
-                        auto dst = glm::vec3(mContext->getPixel(uposition)) / 255.f;
-                        mContext->putPixel(uposition, (glm::min)(glm::uvec3((src * (1.f - dst)) * 255.f), glm::uvec3(255)));
-                        break;
-                    }
-                    case Blending::INVERSE_SRC:
-                        auto src = glm::vec3(color);
-                        auto dstA = glm::vec4(mContext->getPixel(uposition)) / 255.f;
-                        auto dst = glm::vec3(dstA);
-                        mContext->putPixel(uposition, glm::u8vec4((glm::min)(glm::uvec3(((1.f - src) * dst) * 255.f), glm::uvec3(255)), glm::clamp(color.x + color.y + color.z, dstA.a, 1.f) * 255));
-                        break;
-                }
-            }
-        }
-    }
-    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
-
-    void rectangle(const ADisplayList::Rectangle& v, const APaint& paint) override;
-
-    void roundedRectangle(const ADisplayList::RoundedRectangle& v, const APaint& paint) override;
-
-    void rectangleBorder(const ADisplayList::RectangleBorder& v, const APaint& paint) override;
-
-    void roundedRectangleBorder(const ADisplayList::RoundedRectangleBorder& v, const APaint& paint) override;
-
-    void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint) override;
-    
-    void boxShadowInner(const ADisplayList::BoxShadowInner& v, const APaint& paint) override;
-
-    void string(const ADisplayList::Text& v, const APaint& paint) override;
-
-    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position,
-                                          const AString& text,
-                                          const AFontStyle& fs) override;
-
-    void setBlending(Blending blending) override;
-
-    void setWindow(ASurface* window) override;
-    ASurface* getWindow() const noexcept override { return mWindow; }
-
-    std::uint8_t getStencilDepth() const noexcept override { return mStencilDepth; }
-    void setStencilDepth(std::uint8_t stencilDepth) override { mStencilDepth = stencilDepth; }
-
-    glm::mat4 getProjectionMatrix() const override;
-
-    void pushMaskBefore() override;
-    void pushMaskAfter() override;
-    void popMaskBefore() override;
-    void popMaskAfter() override;
+    void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) override;
+    void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
     _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
-
-    void lines(const ADisplayList::Lines& v, const APaint& paint) override;
-    void points(const ADisplayList::Points& v, const APaint& paint) override;
-
-    void lines(const ADisplayList::LineBatches& v, const APaint& paint) override;
-
-    void squareSector(const ADisplayList::SquareSector& v, const APaint& paint) override;
-
-    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
-
-    _<ITexture> getNewTexture() override { return mTexturePool.get(); }
-    _unique<ITexture> createNewTexture() override;
+    void setWindow(ASurface* window) override;
+    ASurface* getWindow() const noexcept override { return mWindow; }
 
     float getRenderScale() const noexcept override { return mRenderScale; }
     void setRenderScale(float renderScale) override { mRenderScale = renderScale; }
 
-    void setTransformForced(const glm::mat4& transform) override { mTransform = transform; }
-    const glm::mat4& getTransform() const override { return mTransform; }
-    void setColorForced(const AColor& color) override { mColor = color; }
-    const AColor& getColor() const override { return mColor; }
-
     void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
 
+    _<ITexture> getNewTexture() override { return mTexturePool.get(); }
+    _unique<ITexture> createNewTexture() override;
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
+    glm::mat4 getProjectionMatrix() const override;
+
 protected:
-    void drawLine(const APaint& paint, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style, AMetric width);
+    void putPixel(glm::ivec2 pos, AColor color, Blending blending = Blending::NORMAL);
 
     SoftwareRenderingContext* mContext = nullptr;
-    bool mDrawingToStencil = false;
-    enum {
-        INCREASE = 1,
-        DECREASE = -1
-    } mDrawingStencilDirection = INCREASE;
-    Blending mBlending = Blending::NORMAL;
     APool<ITexture> mTexturePool;
-    glm::mat4 mTransform = glm::mat4(1.0f);
-    AColor mColor = AColor::WHITE;
     ASurface* mWindow = nullptr;
-    uint8_t mStencilDepth = 0;
     float mRenderScale = 1.0f;
     bool mAllowRenderToTexture = true;
 };

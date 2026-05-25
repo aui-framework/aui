@@ -69,6 +69,6 @@ void AViewProfiler::displayBoundsOn(AView& v, ARenderContext ctx) {
                                  {x, y},
                                  {s->getWidth() + 4_dp, fs.size * 2.5 + 2_dp});
         }
-        s->draw();
+        s->draw(ctx.canvas);
     }
 }

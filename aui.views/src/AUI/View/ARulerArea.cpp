@@ -95,12 +95,12 @@ void ARulerArea::render(ARenderContext ctx) {
         {
             RenderHints::PushMatrix m(ctx.canvas);
             ctx.canvas.translate({glm::min(mMousePos.x + 2_dp, maxNumbersPos.x), 18_dp });
-            prX->draw();
+            prX->draw(ctx.canvas);
         }
         {
             RenderHints::PushMatrix m(ctx.canvas);
             ctx.canvas.translate({18_dp, glm::min(mMousePos.y + 2_dp, maxNumbersPos.y) });
-            prY->draw();
+            prY->draw(ctx.canvas);
         }
 
         ctx.canvas.setBlending(Blending::INVERSE_DST);
