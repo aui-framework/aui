@@ -44,6 +44,7 @@ public:
                         glm::vec2 offset) override;
     void string(const APaint& paint, glm::vec2 position, const AString& string, const AFontStyle& fs = {}) override;
     void prerenderedString(const APaint& paint, glm::vec2 position, const _<IRenderer::IPrerenderedString>& prerenderedString) override;
+    void glyphRect(const _<ITexture>& texture, glm::vec2 position, glm::vec2 size, glm::vec2 u1, glm::vec2 u2, const AColor& color) override;
     void lines(const APaint& paint, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;
     void points(const APaint& paint, AArrayView<glm::vec2> points, AMetric size) override;
     void lines(const APaint& paint,

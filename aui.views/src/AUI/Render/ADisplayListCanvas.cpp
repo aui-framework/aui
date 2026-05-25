@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "ADisplayListCanvas.h"
+#include "ADisplayListCanvas.hpp"
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Traits/callables.h>
 
@@ -35,9 +35,9 @@ _<IRenderer::IPrerenderedString> ADisplayListCanvas::prerenderString(glm::vec2 p
     return mRenderer.prerenderString(position, text, fs);
 }
 
-void ADisplayListCanvas::pushLayer() { add(ADisplayList::PushLayer{}); }
+void ADisplayListCanvas::pushLayer() { add(ADisplayList::PushLayer{}, {}); }
 
-void ADisplayListCanvas::popLayer() { add(ADisplayList::PopLayer{}); }
+void ADisplayListCanvas::popLayer() { add(ADisplayList::PopLayer{}, {}); }
 
 void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) {
     AColor combinedColor = paint.color * mColorMultiplier;
@@ -50,7 +50,7 @@ void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm:
         [&](const ALinearGradientBrush& b) {
             auto colors = b.colors;
             for (auto& c : colors) c.color *= combinedColor;
-            add(ADisplayList::GradientRectangles{{ {position, size} }, std::move(colors), b.angle}, paint);
+            add(ADisplayList::GradientRectangles{{ {position, size} }, std::move(colors), b.rotation}, paint);
         },
         [&](const ATexturedBrush& b) {
             add(ADisplayList::TexturedRectangles{{ {position, size} }, b.texture}, paint);
@@ -70,7 +70,7 @@ void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 positio
         [&](const ALinearGradientBrush& b) {
             auto colors = b.colors;
             for (auto& c : colors) c.color *= combinedColor;
-            add(ADisplayList::GradientRoundedRectangles{{ {position, size} }, radius, std::move(colors), b.angle}, paint);
+            add(ADisplayList::GradientRoundedRectangles{{ {position, size} }, radius, std::move(colors), b.rotation}, paint);
         },
         [&](const ATexturedBrush& b) {
             add(ADisplayList::TexturedRoundedRectangles{{ {position, size} }, radius, b.texture}, paint);
@@ -111,7 +111,17 @@ void ADisplayListCanvas::string(const APaint& paint, glm::vec2 position, const A
 }
 
 void ADisplayListCanvas::prerenderedString(const APaint& paint, glm::vec2 position, const _<IRenderer::IPrerenderedString>& prerenderedString) {
-    add(ADisplayList::PrerenderedString{position, prerenderedString}, paint);
+    if (prerenderedString) {
+        // We temporarily store the current transform and paint so that glyphRect calls can use them.
+        // Actually, ps->draw(canvas) will call glyphRect.
+        prerenderedString->draw(*this);
+    }
+}
+
+void ADisplayListCanvas::glyphRect(const _<ITexture>& texture, glm::vec2 position, glm::vec2 size, glm::vec2 u1, glm::vec2 u2, const AColor& color) {
+    // We try to batch with the last command if it's Glyphs with same texture/color
+    // For now, implement simple adding.
+    add(ADisplayList::Glyphs{{{position, size, u1, u2}}, texture, color * mColorMultiplier}, {});
 }
 
 void ADisplayListCanvas::lines(const APaint& paint, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {

@@ -40,7 +40,7 @@ public:
     struct GradientRectangles {
         AVector<RectInstance> instances;
         AVector<ALinearGradientBrush::ColorEntry> colors;
-        AAngleRadians angle;
+        AAngleRadians rotation;
     };
     struct TexturedRectangles {
         AVector<RectInstance> instances;
@@ -55,7 +55,7 @@ public:
         AVector<RectInstance> instances;
         float radius;
         AVector<ALinearGradientBrush::ColorEntry> colors;
-        AAngleRadians angle;
+        AAngleRadians rotation;
     };
     struct TexturedRoundedRectangles {
         AVector<RectInstance> instances;
@@ -91,9 +91,16 @@ public:
         AString text;
         AFontStyle fs;
     };
-    struct PrerenderedString {
+    struct GlyphInstance {
         glm::vec2 position;
-        _<IRenderer::IPrerenderedString> prerenderedString;
+        glm::vec2 size;
+        glm::vec2 u1;
+        glm::vec2 u2;
+    };
+    struct Glyphs {
+        AVector<GlyphInstance> instances;
+        _<ITexture> texture;
+        AColor color;
     };
     struct Lines {
         AVector<glm::vec2> points;
@@ -140,7 +147,7 @@ public:
                                      BoxShadow,
                                      BoxShadowInner,
                                      Text,
-                                     PrerenderedString,
+                                     Glyphs,
                                      Lines,
                                      LineBatches,
                                      Points,
@@ -169,7 +176,7 @@ public:
     };
 
     void add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint, std::uint8_t stencilDepth) {
-        mCommands << StoredCommand{std::move(cmd), transform, paint, stencilDepth};
+        mCommands << StoredCommand{std::move(cmd), transform, std::move(paint), stencilDepth};
     }
 
     void clear() {

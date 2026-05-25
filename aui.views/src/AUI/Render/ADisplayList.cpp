@@ -10,7 +10,6 @@
  */
 #include "ADisplayList.h"
 #include <AUI/Render/IRendererBackend.h>
-#include <AUI/Render/IRenderer.h>
 #include <AUI/Traits/callables.h>
 #include <limits>
 #include <stack>
@@ -60,15 +59,23 @@ void ADisplayList::resolveEntities() {
                       }
                       localPos = min;
                       localSize = max - min;
+                  } else if constexpr (std::is_same_v<T, Glyphs>) {
+                      glm::vec2 min(std::numeric_limits<float>::max());
+                      glm::vec2 max(std::numeric_limits<float>::lowest());
+                      for (const auto& inst : v.instances) {
+                          min = glm::min(min, inst.position);
+                          min = glm::min(min, inst.position + inst.size);
+                          max = glm::max(max, inst.position);
+                          max = glm::max(max, inst.position + inst.size);
+                      }
+                      localPos = min;
+                      localSize = max - min;
                   } else if constexpr (std::is_same_v<T, BoxShadow>) {
                       localPos = v.position - glm::vec2(v.blurRadius);
                       localSize = v.size + glm::vec2(v.blurRadius * 2.f);
                   } else if constexpr (std::is_same_v<T, Text>) {
                       localPos = v.position;
                       localSize = {100, 20}; // simplified estimate
-                  } else if constexpr (std::is_same_v<T, PrerenderedString>) {
-                      localPos = v.position;
-                      localSize = {float(v.prerenderedString->getWidth()), float(v.prerenderedString->getHeight())};
                   } else if constexpr (std::is_same_v<T, Lines>) {
                       glm::vec2 min(std::numeric_limits<float>::max());
                       glm::vec2 max(std::numeric_limits<float>::lowest());
@@ -91,6 +98,7 @@ void ADisplayList::resolveEntities() {
                       localPos = glm::vec2(v.position);
                       localSize = glm::vec2(v.size);
                   } else {
+                      // Commands like PushLayer, PopLayer, etc.
                       mEntities << Entity{ .command = cmd.command, .transform = cmd.transform, .paint = cmd.paint };
                       return;
                   }
@@ -166,7 +174,7 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
               [&](const BoxShadow& v) { renderer.boxShadow(v, entity.transform, entity.paint.blending); },
               [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, entity.transform, entity.paint.blending); },
               [&](const Text& v) { renderer.string(v, entity.transform, entity.paint.blending); },
-              [&](const PrerenderedString& v) { v.prerenderedString->draw(reinterpret_cast<ACanvas&>(renderer)); },
+              [&](const Glyphs& v) { renderer.glyphs(v, entity.transform, entity.paint.blending); },
               [&](const Lines& v) { renderer.lines(v, entity.transform, entity.paint.blending); },
               [&](const Points& v) { renderer.points(v, entity.transform, entity.paint.blending); },
               [&](const LineBatches& v) { renderer.lines(v, entity.transform, entity.paint.blending); },
