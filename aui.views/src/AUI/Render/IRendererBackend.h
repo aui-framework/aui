@@ -42,7 +42,6 @@ public:
     virtual void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) = 0;
     virtual void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) = 0;
     virtual void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) = 0;
-    virtual void string(const ADisplayList::Text& v, const glm::mat4& transform, Blending blending) = 0;
     virtual void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) = 0;
     virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
     virtual void lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) = 0;

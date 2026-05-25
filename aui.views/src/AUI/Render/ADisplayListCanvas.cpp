@@ -107,7 +107,10 @@ void ADisplayListCanvas::boxShadowInner(const APaint& paint,
 }
 
 void ADisplayListCanvas::string(const APaint& paint, glm::vec2 position, const AString& string, const AFontStyle& fs) {
-    add(ADisplayList::Text{position, string, fs}, paint);
+    if (string.empty()) return;
+    auto canvas = newMultiStringCanvas(fs);
+    canvas->addString(position, string);
+    canvas->finalize()->draw(*this);
 }
 
 void ADisplayListCanvas::prerenderedString(const APaint& paint, glm::vec2 position, const _<IRenderer::IPrerenderedString>& prerenderedString) {
@@ -117,7 +120,7 @@ void ADisplayListCanvas::prerenderedString(const APaint& paint, glm::vec2 positi
 }
 
 void ADisplayListCanvas::glyphRect(const _<ITexture>& texture, glm::vec2 position, glm::vec2 size, glm::vec2 u1, glm::vec2 u2, const AColor& color) {
-    add(ADisplayList::Glyphs{{{position, size, u1, u2}}, texture, color * mColorMultiplier}, {});
+    add(ADisplayList::Glyphs{{{position, size, u1, u2, color * mColorMultiplier}}, texture, AColor::WHITE}, {});
 }
 
 void ADisplayListCanvas::lines(const APaint& paint, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {

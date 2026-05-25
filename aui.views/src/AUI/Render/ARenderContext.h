@@ -48,6 +48,7 @@ struct API_AUI_VIEWS ARenderContext {
      */
     Rectangles clippingRects;
     ACanvas& canvas;
+    [[deprecated("Use canvas instead")]]
     IRenderer& render;
 
     void clip(ARect<int> clipping);

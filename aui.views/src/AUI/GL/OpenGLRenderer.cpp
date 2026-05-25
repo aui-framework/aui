@@ -116,6 +116,12 @@ public:
         mEntryData(entryData) {}
 
     void draw(ACanvas& canvas) override {
+        if (mEntryData->isTextureInvalid) {
+            if (auto img = mEntryData->texturePacker.getImage()) {
+                mEntryData->texture->setImage(*img);
+            }
+            mEntryData->isTextureInvalid = false;
+        }
         for (const auto& g : mGlyphs) {
             canvas.glyphRect(mEntryData->texture, g.position, g.size, g.u1, g.u2, g.color);
         }
@@ -303,20 +309,17 @@ void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const
     mBoxShadowInnerShader->set(aui::ShaderUniforms::COLOR, glm::vec4(v.color));
     drawRectImpl(v.position, v.size);
 }
-void OpenGLRenderer::string(const ADisplayList::Text& v, const glm::mat4& transform, Blending blending) {
-    setBlending(blending);
-}
 void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) {
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("glyphs");
     setBlending(blending);
     mSymbolShader->use();
     mSymbolShader->set(aui::ShaderUniforms::TRANSFORM, transform);
-    mSymbolShader->set(aui::ShaderUniforms::COLOR, glm::vec4(v.color));
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
     AVector<glm::vec2> vertices;
     AVector<glm::vec2> uvs;
+    AVector<glm::vec4> colors;
     AVector<GLuint> indices;
     for (size_t i = 0; i < v.instances.size(); ++i) {
         const auto& inst = v.instances[i];
@@ -325,11 +328,16 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
         for (auto rv : rectVertices) vertices << rv;
         uvs << glm::vec2{inst.u1.x, inst.u2.y} << glm::vec2{inst.u2.x, inst.u2.y} 
             << glm::vec2{inst.u1.x, inst.u1.y} << glm::vec2{inst.u2.x, inst.u1.y};
+        
+        glm::vec4 color = glm::vec4(inst.color);
+        for (int j = 0; j < 4; ++j) colors << color;
+
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
     mBatchVao.bind();
     mBatchVao.insert(0, AArrayView(vertices), "glyphs/positions");
     mBatchVao.insert(1, AArrayView(uvs), "glyphs/uvs");
+    mBatchVao.insert(2, AArrayView(colors), "glyphs/colors");
     mBatchVao.indices(AArrayView(indices));
     mBatchVao.drawElements();
 }

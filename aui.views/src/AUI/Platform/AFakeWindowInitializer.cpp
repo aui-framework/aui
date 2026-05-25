@@ -31,7 +31,6 @@ namespace {
         void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) override {}
         void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) override {}
         void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) override {}
-        void string(const ADisplayList::Text& v, const glm::mat4& transform, Blending blending) override {}
         void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) override {}
         _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override { return nullptr; }
         void lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) override {}

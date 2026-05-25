@@ -146,10 +146,6 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, Blending blending)
     }
 }
 
-// ---------------------------------------------------------------------------------------------------------------------
-// IRendererBackend
-// ---------------------------------------------------------------------------------------------------------------------
-
 void SoftwareRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) {
     for (const auto& inst : v.instances) {
         auto p1 = transform * glm::vec4(inst.position, 1.f, 1.f);
@@ -170,7 +166,6 @@ void SoftwareRenderer::rectangleBorders(const ADisplayList::RectangleBorders& v,
 void SoftwareRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) {}
 void SoftwareRenderer::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) {}
 void SoftwareRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) {}
-void SoftwareRenderer::string(const ADisplayList::Text& v, const glm::mat4& transform, Blending blending) {}
 void SoftwareRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) {}
 void SoftwareRenderer::lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) {}
 void SoftwareRenderer::points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) {}
@@ -178,8 +173,6 @@ void SoftwareRenderer::lines(const ADisplayList::LineBatches& v, const glm::mat4
 void SoftwareRenderer::squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, Blending blending) {}
 void SoftwareRenderer::backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) {}
 void SoftwareRenderer::backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {}
-
-// ---------------------------------------------------------------------------------------------------------------------
 
 _<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
     if (text.empty()) return nullptr;

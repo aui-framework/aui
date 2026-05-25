@@ -86,16 +86,12 @@ public:
         AColor color;
         glm::vec2 offset;
     };
-    struct Text {
-        glm::vec2 position;
-        AString text;
-        AFontStyle fs;
-    };
     struct GlyphInstance {
         glm::vec2 position;
         glm::vec2 size;
         glm::vec2 u1;
         glm::vec2 u2;
+        AColor color;
     };
     struct Glyphs {
         AVector<GlyphInstance> instances;
@@ -146,7 +142,6 @@ public:
                                      RoundedRectangleBorders,
                                      BoxShadow,
                                      BoxShadowInner,
-                                     Text,
                                      Glyphs,
                                      Lines,
                                      LineBatches,
