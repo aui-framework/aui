@@ -1,3 +1,14 @@
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
 #pragma once
 
 #include <variant>
@@ -10,8 +21,10 @@
 #include <AUI/Render/APaint.hpp>
 #include <glm/glm.hpp>
 #include <AUI/Geometry2D/ARect.h>
-#include <AUI/Render/IRenderer.h>
+#include <AUI/Render/ITexture.h>
 
+class IRenderer;
+class IPrerenderedString;
 class IRendererBackend;
 
 class ADisplayList {
@@ -20,13 +33,34 @@ public:
         glm::vec2 position;
         glm::vec2 size;
     };
-    struct Rectangles {
+    struct SolidRectangles {
         AVector<RectInstance> instances;
+        AColor color;
     };
-    struct RoundedRectangles {
+    struct GradientRectangles {
+        AVector<RectInstance> instances;
+        AVector<ALinearGradientBrush::ColorEntry> colors;
+        AAngleRadians angle;
+    };
+    struct TexturedRectangles {
+        AVector<RectInstance> instances;
+        _<ITexture> texture;
+    };
+    struct SolidRoundedRectangles {
         AVector<RectInstance> instances;
         float radius;
-        glm::vec2 size;
+        AColor color;
+    };
+    struct GradientRoundedRectangles {
+        AVector<RectInstance> instances;
+        float radius;
+        AVector<ALinearGradientBrush::ColorEntry> colors;
+        AAngleRadians angle;
+    };
+    struct TexturedRoundedRectangles {
+        AVector<RectInstance> instances;
+        float radius;
+        _<ITexture> texture;
     };
     struct RectangleBorders {
         AVector<RectInstance> instances;
@@ -36,7 +70,6 @@ public:
         AVector<RectInstance> instances;
         float radius;
         int borderWidth;
-        glm::vec2 size;
     };
     struct BoxShadow {
         glm::vec2 position;
@@ -60,7 +93,7 @@ public:
     };
     struct PrerenderedString {
         glm::vec2 position;
-        _<IRenderer::IPrerenderedString> prerenderedString;
+        _<IPrerenderedString> prerenderedString;
     };
     struct Lines {
         AVector<glm::vec2> points;
@@ -96,8 +129,12 @@ public:
     struct PopMaskAfter {};
 
     struct StoredCommand {
-        using Command = std::variant<Rectangles,
-                                     RoundedRectangles,
+        using Command = std::variant<SolidRectangles,
+                                     GradientRectangles,
+                                     TexturedRectangles,
+                                     SolidRoundedRectangles,
+                                     GradientRoundedRectangles,
+                                     TexturedRoundedRectangles,
                                      RectangleBorders,
                                      RoundedRectangleBorders,
                                      BoxShadow,

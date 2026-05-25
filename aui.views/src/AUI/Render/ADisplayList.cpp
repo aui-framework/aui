@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 #include "ADisplayList.h"
-#include <AUI/Render/IRenderer.h>
+#include <AUI/Render/IRendererBackend.h>
 #include <AUI/Traits/callables.h>
 #include <limits>
 #include <stack>
@@ -46,7 +46,8 @@ void ADisplayList::resolveEntities() {
                   if constexpr (std::is_same_v<T, BoxShadowInner> || std::is_same_v<T, SquareSector>) {
                       localPos = v.position;
                       localSize = v.size;
-                  } else if constexpr (std::is_same_v<T, Rectangles> || std::is_same_v<T, RoundedRectangles> ||
+                  } else if constexpr (std::is_same_v<T, SolidRectangles> || std::is_same_v<T, GradientRectangles> || std::is_same_v<T, TexturedRectangles> ||
+                                       std::is_same_v<T, SolidRoundedRectangles> || std::is_same_v<T, GradientRoundedRectangles> || std::is_same_v<T, TexturedRoundedRectangles> ||
                                        std::is_same_v<T, RectangleBorders> || std::is_same_v<T, RoundedRectangleBorders>) {
                       glm::vec2 min(std::numeric_limits<float>::max());
                       glm::vec2 max(std::numeric_limits<float>::lowest());
@@ -63,10 +64,10 @@ void ADisplayList::resolveEntities() {
                       localSize = v.size + glm::vec2(v.blurRadius * 2.f);
                   } else if constexpr (std::is_same_v<T, Text>) {
                       localPos = v.position;
-                      localSize = {100, 20};
+                      localSize = {100, 20}; // simplified estimate
                   } else if constexpr (std::is_same_v<T, PrerenderedString>) {
                       localPos = v.position;
-                      localSize = {v.prerenderedString->getWidth(), v.prerenderedString->getHeight()};
+                      localSize = {float(v.prerenderedString->getWidth()), float(v.prerenderedString->getHeight())};
                   } else if constexpr (std::is_same_v<T, Lines>) {
                       glm::vec2 min(std::numeric_limits<float>::max());
                       glm::vec2 max(std::numeric_limits<float>::lowest());
@@ -134,7 +135,8 @@ void ADisplayList::computeOverlaps() {
         } else {
             bool opaque = std::visit(
                 aui::lambda_overloaded {
-                  [&](const Rectangles& v) { return v.instances.size() == 1 && isOpaque(it->paint.brush, it->paint.color); },
+                  [&](const SolidRectangles& v) { return v.instances.size() == 1 && v.color.a >= 0.999f && it->paint.color.a >= 0.999f; },
+                  [&](const SolidRoundedRectangles& v) { return false; }, // corners are transparent
                   [&](const auto&) { return false; }
                 },
                 it->command);
@@ -145,37 +147,31 @@ void ADisplayList::computeOverlaps() {
     }
 }
 
-void ADisplayList::draw(IRenderer& renderer) const {
+void ADisplayList::draw(IRendererBackend& renderer) const {
     for (const auto& entity : mEntities) {
         if (entity.isObscured) {
             continue;
         }
 
-        renderer.setTransformForced(entity.transform);
-        renderer.setColorForced(entity.paint.color);
-        renderer.setBlending(entity.paint.blending);
-
         std::visit(
             aui::lambda_overloaded {
-              [&](const Rectangles& v) { renderer.rectangles(v, entity.paint); },
-              [&](const RoundedRectangles& v) { renderer.roundedRectangles(v, entity.paint); },
-              [&](const RectangleBorders& v) { renderer.rectangleBorders(v, entity.paint); },
-              [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, entity.paint); },
-              [&](const BoxShadow& v) { renderer.boxShadow(v, entity.paint); },
-              [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, entity.paint); },
-              [&](const Text& v) { renderer.string(v, entity.paint); },
-              [&](const PrerenderedString& v) { v.prerenderedString->draw(); },
-              [&](const Lines& v) { renderer.lines(v, entity.paint); },
-              [&](const LineBatches& v) { renderer.lines(v, entity.paint); },
-              [&](const Points& v) { renderer.points(v, entity.paint); },
-              [&](const SquareSector& v) { renderer.squareSector(v, entity.paint); },
-              [&](const Backdrop& v) { renderer.backdrops(v, entity.paint); },
-              [&](const PushLayer&) {},
-              [&](const PopLayer&) {},
-              [&](const MaskBefore&) { renderer.pushMaskBefore(); },
-              [&](const MaskAfter&) { renderer.pushMaskAfter(); },
-              [&](const PopMaskBefore&) { renderer.popMaskBefore(); },
-              [&](const PopMaskAfter&) { renderer.popMaskAfter(); },
+              [&](const SolidRectangles& v) { renderer.solidRectangles(v, entity.paint, entity.transform); },
+              [&](const GradientRectangles& v) { renderer.gradientRectangles(v, entity.paint, entity.transform); },
+              [&](const TexturedRectangles& v) { renderer.texturedRectangles(v, entity.paint, entity.transform); },
+              [&](const SolidRoundedRectangles& v) { renderer.solidRoundedRectangles(v, entity.paint, entity.transform); },
+              [&](const GradientRoundedRectangles& v) { renderer.gradientRoundedRectangles(v, entity.paint, entity.transform); },
+              [&](const TexturedRoundedRectangles& v) { renderer.texturedRoundedRectangles(v, entity.paint, entity.transform); },
+              [&](const RectangleBorders& v) { renderer.rectangleBorders(v, entity.paint, entity.transform); },
+              [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, entity.paint, entity.transform); },
+              [&](const BoxShadow& v) { renderer.boxShadow(v, entity.paint, entity.transform); },
+              [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, entity.paint, entity.transform); },
+              [&](const Text& v) { renderer.string(v, entity.paint, entity.transform); },
+              [&](const PrerenderedString& v) { v.prerenderedString->draw(reinterpret_cast<ACanvas&>(renderer)); },
+              [&](const Lines& v) { renderer.lines(v, entity.paint, entity.transform); },
+              [&](const Points& v) { renderer.points(v, entity.paint, entity.transform); },
+              [&](const LineBatches& v) { renderer.lines(v, entity.paint, entity.transform); },
+              [&](const SquareSector& v) { renderer.squareSector(v, entity.paint, entity.transform); },
+              [&](const Backdrop& v) { renderer.backdrops(v, entity.paint, entity.transform); },
               [&](const auto&) {}
             },
             entity.command);

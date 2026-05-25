@@ -11,6 +11,7 @@
 
 #include "ADisplayListCanvas.hpp"
 #include <AUI/Render/IRendererBackend.h>
+#include <AUI/Traits/callables.h>
 
 #include <utility>
 
@@ -39,11 +40,33 @@ void ADisplayListCanvas::pushLayer() { add(ADisplayList::PushLayer{}); }
 void ADisplayListCanvas::popLayer() { add(ADisplayList::PopLayer{}); }
 
 void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) {
-    add(ADisplayList::Rectangles{{ {position, size} }}, paint);
+    std::visit(aui::lambda_overloaded {
+        [&](const ASolidBrush& b) {
+            add(ADisplayList::SolidRectangles{{ {position, size} }, b.solidColor}, paint);
+        },
+        [&](const ALinearGradientBrush& b) {
+            add(ADisplayList::GradientRectangles{{ {position, size} }, b.colors, b.angle}, paint);
+        },
+        [&](const ATexturedBrush& b) {
+            add(ADisplayList::TexturedRectangles{{ {position, size} }, b.texture}, paint);
+        },
+        [&](const auto&) {}
+    }, paint.brush);
 }
 
 void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 position, glm::vec2 size, float radius) {
-    add(ADisplayList::RoundedRectangles{{ {position, size} }, radius, size}, paint);
+    std::visit(aui::lambda_overloaded {
+        [&](const ASolidBrush& b) {
+            add(ADisplayList::SolidRoundedRectangles{{ {position, size} }, radius, b.solidColor}, paint);
+        },
+        [&](const ALinearGradientBrush& b) {
+            add(ADisplayList::GradientRoundedRectangles{{ {position, size} }, radius, b.colors, b.angle}, paint);
+        },
+        [&](const ATexturedBrush& b) {
+            add(ADisplayList::TexturedRoundedRectangles{{ {position, size} }, radius, b.texture}, paint);
+        },
+        [&](const auto&) {}
+    }, paint.brush);
 }
 
 void ADisplayListCanvas::rectangleBorder(const APaint& paint, glm::vec2 position, glm::vec2 size, float lineWidth) {
@@ -55,7 +78,7 @@ void ADisplayListCanvas::roundedRectangleBorder(const APaint& paint,
                                                 glm::vec2 size,
                                                 float radius,
                                                 int borderWidth) {
-    add(ADisplayList::RoundedRectangleBorders{{ {position, size} }, radius, borderWidth, size}, paint);
+    add(ADisplayList::RoundedRectangleBorders{{ {position, size} }, radius, borderWidth}, paint);
 }
 
 void ADisplayListCanvas::boxShadow(const APaint& paint, glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) {
