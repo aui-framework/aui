@@ -22,6 +22,7 @@ class ASurface;
 
 /**
  * @brief Actual renderer interface.
+ * Stateless batch-oriented rendering backend.
  */
 class API_AUI_VIEWS IRendererBackend {
 public:
