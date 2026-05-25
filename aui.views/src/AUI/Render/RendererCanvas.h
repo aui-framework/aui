@@ -14,9 +14,9 @@
 #include <AUI/Render/IRenderer.h>
 #include <AUI/Render/ACanvas.hpp>
 
-class API_AUI_VIEWS CanvasRenderer : public IRenderer {
+class API_AUI_VIEWS RendererCanvas : public IRenderer {
 public:
-    CanvasRenderer(ACanvas& canvas);
+    RendererCanvas(ACanvas& canvas);
 
     ACanvas& getCanvas() const { return mCanvas; }
 
