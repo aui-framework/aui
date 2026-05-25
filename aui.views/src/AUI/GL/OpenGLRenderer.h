@@ -11,12 +11,16 @@
 
 #pragma once
 
-
 #include <AUI/GL/Program.h>
 #include <AUI/GL/Framebuffer.h>
 #include <AUI/GL/Vao.h>
+#include <AUI/GL/Texture2D.h>
+#include <AUI/Util/APool.h>
+#include <AUI/Common/AVector.h>
+#include <AUI/Common/ADeque.h>
+#include <AUI/Render/SimpleTexturePacker.h>
 #include "AUI/Render/ABorderStyle.h"
-#include "AUI/Render/IRendererBackend.h"
+#include <AUI/Render/IRendererBackend.h>
 #include "AUI/GL/RenderTarget/TextureRenderTarget.h"
 
 class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
@@ -25,182 +29,116 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
     friend class OpenGLRenderViewToTexture;
 public:
     struct FontEntryData: aui::noncopyable {
-        Util::SimpleTexturePacker texturePacker;
+        OpenGLRenderer* renderer;
         gl::Texture2D texture;
         bool isTextureInvalid = true;
+        Util::SimpleTexturePacker texturePacker;
 
-        FontEntryData() {
-            texture.bind();
-            texture.setupNearest();
-        }
+        explicit FontEntryData(OpenGLRenderer* renderer): renderer(renderer) {}
     };
-
-    using GLLoadProc = void* (*) (const char* name);
-
-    /**
-     * @brief Manually specify is ES or not
-     */
-    static bool loadGL(GLLoadProc load_proc, bool es);
-
-    /**
-     * @brief Automatically detects ES or not
-     */
-    static bool loadGL(GLLoadProc load_proc);
-
-
-private:
-    AOptional<gl::Program> mSolidShader;
-    AOptional<gl::Program> mGradientShader;
-    AOptional<gl::Program> mRoundedSolidShader;
-    AOptional<gl::Program> mRoundedSolidShaderBorder;
-    AOptional<gl::Program> mRoundedGradientShader;
-    AOptional<gl::Program> mBoxShadowShader;
-    AOptional<gl::Program> mBoxShadowInnerShader;
-    AOptional<gl::Program> mTexturedShader;
-    AOptional<gl::Program> mUnblendShader;
-    AOptional<gl::Program> mSymbolShader;
-    AOptional<gl::Program> mSymbolShaderSubPixel;
-    AOptional<gl::Program> mSquareSectorShader;
-    AOptional<gl::Program> mLineSolidDashedShader;
-    gl::Vao mRectangleVao;
-    gl::Vao mBorderVao;
-    gl::Texture2D mGradientTexture;
-
 
     struct CharacterData {
         glm::vec4 uv;
     };
 
-    ADeque<CharacterData> mCharData;
-    ADeque<FontEntryData> mFontEntryData;
-    IRenderViewToTexture* mRenderToTextureTarget = nullptr;
-
     struct FramebufferWithTextureRT {
         gl::Framebuffer framebuffer;
-        _<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>> rendertarget;
+        _<gl::Framebuffer::IRenderTarget> rendertarget;
     };
+
+    using OffscreenFramebufferPool = AVector<std::unique_ptr<FramebufferWithTextureRT>>;
 
     struct FramebufferBackToPool {
         OpenGLRenderer* renderer;
         void operator()(FramebufferWithTextureRT* framebuffer) const;
     };
 
-    using FramebufferFromPool = std::unique_ptr<FramebufferWithTextureRT, FramebufferBackToPool>;
-    using OffscreenFramebufferPool = AVector<FramebufferFromPool>;
+    using FramebufferFromPool = _unique<FramebufferWithTextureRT, FramebufferBackToPool>;
 
-    /**
-     * @brief use getFramebufferForMultiPassEffect
-     */
-    OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
-
-
-    static std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position, glm::vec2 size);
-
-    void uploadToShaderCommon();
-
-    FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
-
-    /**
-     * @return true, if the caller should compute distances
-     */
-    bool setupLineShader(const ABrush& brush, const ABorderStyle& style, float widthPx);
-
-
-    /**
-     * @brief get a framebuffer for rendering multi pass effects (i.e., blur)
-     * @param minRequiredSize minimum required size of the framebuffer
-     * @return framebuffer, or null if unsupported
-     * @details
-     * Returns a shared color-only framebuffer that can be used for rendering multi pass effects. The size of
-     * framebuffer is guaranteed to be no lower than minRequiredSize. Generally, the buffer would be larger than
-     * requested.
-     *
-     * Buffer may contain dirty data.
-     *
-     * The function acts like pool aggregator.
-     *
-     * The returned framebuffer object is wrapped by smart pointer. Caller takes unique ownership of the framebuffer.
-     * When smart pointer is destroyed, the framebuffer object is returned back to the pool. Thus, while caller owns
-     * framebuffer object, the function would never return the same object until caller releases ownership.
-     */
     FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
 
+    // IRendererBackend implementation
+    void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) override;
+    void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) override;
+    void texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) override;
+    void solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) override;
+    void gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) override;
+    void texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, Blending blending) override;
+    void rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) override;
+    void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) override;
+    void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) override;
+    void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) override;
+    void string(const ADisplayList::Text& v, const glm::mat4& transform, Blending blending) override;
+    void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) override;
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
+    void lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) override;
+    void points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) override;
+    void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, Blending blending) override;
+    void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, Blending blending) override;
+    void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) override;
     void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
-protected:
+    // Common
+    _<ITexture> getNewTexture() override { return mTexturePool.get(); }
     _unique<ITexture> createNewTexture() override;
+    float getRenderScale() const noexcept override { return mRenderScale; }
+    void setRenderScale(float renderScale) override { mRenderScale = renderScale; }
+    void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
+    bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
+    _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
+    void setWindow(ASurface* window) override { mWindow = window; }
+    ASurface* getWindow() const noexcept override { return mWindow; }
+    glm::mat4 getProjectionMatrix() const override;
 
-public:
+    typedef void* (*GLLoadProc)(const char* name);
+    static bool loadGL(GLLoadProc load_proc, bool es);
+    static bool loadGL(GLLoadProc load_proc);
+
     OpenGLRenderer();
     ~OpenGLRenderer() override = default;
     void identityUv();
     bool isVaoAvailable() const noexcept;
-
-    void rectangle(const ADisplayList::Rectangle& v, const APaint& paint) override;
-    void roundedRectangle(const ADisplayList::RoundedRectangle& v, const APaint& paint) override;
-    void rectangleBorder(const ADisplayList::RectangleBorder& v, const APaint& paint) override;
-    void roundedRectangleBorder(const ADisplayList::RoundedRectangleBorder& v, const APaint& paint) override;
-    void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint) override;
-    void boxShadowInner(const ADisplayList::BoxShadowInner& v, const APaint& paint) override;
-    void string(const ADisplayList::Text& v, const APaint& paint) override;
-    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
     void drawRectImpl(glm::vec2 position, glm::vec2 size);
-    void setBlending(Blending blending) override;
-    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
-    glm::mat4 getProjectionMatrix() const override;
-    void lines(const ADisplayList::Lines& v, const APaint& paint) override;
-    void lines(const ADisplayList::LineBatches& v, const APaint& paint) override;
-    void points(const ADisplayList::Points& v, const APaint& paint) override;
-    void squareSector(const ADisplayList::SquareSector& v, const APaint& paint) override;
-
-    void setTransformForced(const glm::mat4& transform) override { mTransform = transform; }
-    void setColorForced(const AColor& color) override { mColor = color; }
-
-    const AColor& getColor() const override { return mColor; }
-    const glm::mat4& getTransform() const override { return mTransform; }
-
-    void pushMaskBefore() override;
-    void pushMaskAfter() override;
-    void popMaskBefore() override;
-
-    _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
-
-    void popMaskAfter() override;
-
-    void setWindow(ASurface* window) override { mWindow = window; }
-    ASurface* getWindow() const noexcept override { return mWindow; }
-    float getRenderScale() const noexcept override { return mRenderScale; }
-    void setRenderScale(float renderScale) override { mRenderScale = renderScale; }
-
-    std::uint8_t getStencilDepth() const noexcept override { return mStencilDepth; }
-    void setStencilDepth(std::uint8_t stencilDepth) override { mStencilDepth = stencilDepth; }
-
-
-
-
-    void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
-    bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
-
-    _<ITexture> getNewTexture() override { return mTexturePool.get(); }
-
+    void setBlending(Blending blending);
     void beginPaint(glm::uvec2 windowSize);
     void endPaint();
-    
     uint32_t getDefaultFb() const noexcept;
     void bindTemporaryVao() const noexcept;
 
-    void pushColor(const AColor& color, size_t count = 4);
-
-    private:
-    glm::mat4 mTransform;
-    AColor mColor;
-    ASurface* mWindow = nullptr;
-    APool<ITexture> mTexturePool;
-    uint8_t mStencilDepth = 0;
-    float mRenderScale = 1.0f;
-    bool mAllowRenderToTexture = true;
+protected:
+    FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 
 private:
+    ASurface* mWindow = nullptr;
+    APool<ITexture> mTexturePool;
+    float mRenderScale = 1.0f;
+    bool mAllowRenderToTexture = true;
+    
+    AOptional<gl::Program> mSolidShader;
+    AOptional<gl::Program> mBoxShadowShader;
+    AOptional<gl::Program> mBoxShadowInnerShader;
+    AOptional<gl::Program> mRoundedSolidShader;
+    AOptional<gl::Program> mRoundedSolidShaderBorder;
+    AOptional<gl::Program> mGradientShader;
+    AOptional<gl::Program> mRoundedGradientShader;
+    AOptional<gl::Program> mTexturedShader;
+    AOptional<gl::Program> mUnblendShader;
+    AOptional<gl::Program> mSquareSectorShader;
+    AOptional<gl::Program> mSymbolShader;
+    AOptional<gl::Program> mSymbolShaderSubPixel;
+    AOptional<gl::Program> mLineSolidDashedShader;
+
+    gl::Vao mRectangleVao;
+    gl::Vao mBorderVao;
+    gl::Vao mBatchVao;
+    gl::Texture2D mGradientTexture;
+
+    ADeque<FontEntryData> mFontEntryData;
+    AVector<CharacterData> mCharData;
+    OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
+
+    struct {
+        IRenderViewToTexture* mRenderToTextureTarget = nullptr;
+    };
 };
-
-
