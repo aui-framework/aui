@@ -31,10 +31,10 @@ public:
     virtual _unique<ITexture> createNewTexture() = 0;
     virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
 
-    virtual void rectangle(const ADisplayList::Rectangle& v, const APaint& paint) = 0;
-    virtual void roundedRectangle(const ADisplayList::RoundedRectangle& v, const APaint& paint) = 0;
-    virtual void rectangleBorder(const ADisplayList::RectangleBorder& v, const APaint& paint) = 0;
-    virtual void roundedRectangleBorder(const ADisplayList::RoundedRectangleBorder& v, const APaint& paint) = 0;
+    virtual void rectangles(const ADisplayList::Rectangles& v, const APaint& paint) = 0;
+    virtual void roundedRectangles(const ADisplayList::RoundedRectangles& v, const APaint& paint) = 0;
+    virtual void rectangleBorders(const ADisplayList::RectangleBorders& v, const APaint& paint) = 0;
+    virtual void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const APaint& paint) = 0;
     virtual void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint) = 0;
     virtual void boxShadowInner(const ADisplayList::BoxShadowInner& v, const APaint& paint) = 0;
     virtual void string(const ADisplayList::Text& v, const APaint& paint) = 0;
