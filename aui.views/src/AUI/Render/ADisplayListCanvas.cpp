@@ -45,15 +45,15 @@ void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm:
 
     std::visit(aui::lambda_overloaded {
         [&](const ASolidBrush& b) {
-            add(ADisplayList::SolidRectangles{{ {position, size} }, b.solidColor * combinedColor}, paint);
+            add(ADisplayList::SolidRectangles{{ {position, size, b.solidColor * combinedColor} }}, paint);
         },
         [&](const ALinearGradientBrush& b) {
             auto colors = b.colors;
             for (auto& c : colors) c.color *= combinedColor;
-            add(ADisplayList::GradientRectangles{{ {position, size} }, std::move(colors), b.rotation}, paint);
+            add(ADisplayList::GradientRectangles{{ {position, size, AColor::WHITE} }, std::move(colors), b.rotation}, paint);
         },
         [&](const ATexturedBrush& b) {
-            add(ADisplayList::TexturedRectangles{{ {position, size} }, b.texture}, paint);
+            add(ADisplayList::TexturedRectangles{{ {position, size, combinedColor} }, b.texture}, paint);
         },
         [&](const auto&) {}
     }, paint.brush);
@@ -65,22 +65,28 @@ void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 positio
 
     std::visit(aui::lambda_overloaded {
         [&](const ASolidBrush& b) {
-            add(ADisplayList::SolidRoundedRectangles{{ {position, size} }, radius, b.solidColor * combinedColor}, paint);
+            add(ADisplayList::SolidRoundedRectangles{{ {position, size, b.solidColor * combinedColor} }, radius}, paint);
         },
         [&](const ALinearGradientBrush& b) {
             auto colors = b.colors;
             for (auto& c : colors) c.color *= combinedColor;
-            add(ADisplayList::GradientRoundedRectangles{{ {position, size} }, radius, std::move(colors), b.rotation}, paint);
+            add(ADisplayList::GradientRoundedRectangles{{ {position, size, AColor::WHITE} }, radius, std::move(colors), b.rotation}, paint);
         },
         [&](const ATexturedBrush& b) {
-            add(ADisplayList::TexturedRoundedRectangles{{ {position, size} }, radius, b.texture}, paint);
+            add(ADisplayList::TexturedRoundedRectangles{{ {position, size, combinedColor} }, radius, b.texture}, paint);
         },
         [&](const auto&) {}
     }, paint.brush);
 }
 
 void ADisplayListCanvas::rectangleBorder(const APaint& paint, glm::vec2 position, glm::vec2 size, float lineWidth) {
-    add(ADisplayList::RectangleBorders{{ {position, size} }, lineWidth}, paint);
+    AColor combinedColor = paint.color * mColorMultiplier;
+    combinedColor.a *= paint.opacity * mOpacity;
+    AColor brushColor = AColor::WHITE;
+    if (auto b = std::get_if<ASolidBrush>(&paint.brush)) {
+        brushColor = b->solidColor;
+    }
+    add(ADisplayList::RectangleBorders{{ {position, size, combinedColor * brushColor} }, lineWidth}, paint);
 }
 
 void ADisplayListCanvas::roundedRectangleBorder(const APaint& paint,
@@ -88,7 +94,13 @@ void ADisplayListCanvas::roundedRectangleBorder(const APaint& paint,
                                                 glm::vec2 size,
                                                 float radius,
                                                 int borderWidth) {
-    add(ADisplayList::RoundedRectangleBorders{{ {position, size} }, radius, borderWidth}, paint);
+    AColor combinedColor = paint.color * mColorMultiplier;
+    combinedColor.a *= paint.opacity * mOpacity;
+    AColor brushColor = AColor::WHITE;
+    if (auto b = std::get_if<ASolidBrush>(&paint.brush)) {
+        brushColor = b->solidColor;
+    }
+    add(ADisplayList::RoundedRectangleBorders{{ {position, size, combinedColor * brushColor} }, radius, borderWidth}, paint);
 }
 
 void ADisplayListCanvas::boxShadow(const APaint& paint, glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) {

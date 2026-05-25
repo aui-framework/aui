@@ -141,7 +141,7 @@ void ADisplayList::computeOverlaps() {
         } else {
             bool opaque = std::visit(
                 aui::lambda_overloaded {
-                  [&](const SolidRectangles& v) { return v.instances.size() == 1 && v.color.a >= 0.999f; },
+                  [&](const SolidRectangles& v) { return v.instances.size() == 1 && v.instances[0].color.a >= 0.999f; },
                   [&](const auto&) { return false; }
                 },
                 it->command);

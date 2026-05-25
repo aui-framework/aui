@@ -220,25 +220,32 @@ public:
     }
 };
 
+// ---------------------------------------------------------------------------------------------------------------------
+// IRendererBackend implementation (Stateless)
+// ---------------------------------------------------------------------------------------------------------------------
+
 void OpenGLRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) {
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("solidRectangles");
     setBlending(blending);
     mSolidShader->use();
     mSolidShader->set(aui::ShaderUniforms::TRANSFORM, transform);
-    mSolidShader->set(aui::ShaderUniforms::COLOR, glm::vec4(v.color));
 
     AVector<glm::vec2> vertices;
+    AVector<glm::vec4> colors;
     AVector<GLuint> indices;
     for (size_t i = 0; i < v.instances.size(); ++i) {
         const auto& inst = v.instances[i];
         GLuint offset = static_cast<GLuint>(i * 4);
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         for (auto rv : rectVertices) vertices << rv;
+        glm::vec4 color = glm::vec4(inst.color);
+        for (int j = 0; j < 4; ++j) colors << color;
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
     mBatchVao.bind();
     mBatchVao.insert(0, AArrayView(vertices), "solidRectangles/positions");
+    mBatchVao.insert(2, AArrayView(colors), "solidRectangles/colors");
     mBatchVao.indices(AArrayView(indices));
     mBatchVao.drawElements();
 }
@@ -250,7 +257,14 @@ void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& 
     mGradientShader->use();
     mGradientShader->set(aui::ShaderUniforms::TRANSFORM, transform);
     for (const auto& inst : v.instances) {
-        mRectangleVao.insert(0, AArrayView(getVerticesForRect(inst.position, inst.size)), "gradientRectangles/positions");
+        auto vertices = getVerticesForRect(inst.position, inst.size);
+        glm::vec4 color = glm::vec4(inst.color);
+        mRectangleVao.insert(0, AArrayView(vertices), "gradientRectangles/positions");
+        mRectangleVao.insert(2, AArrayView<glm::vec4>(&color, 1), "gradientRectangles/colors"); // assuming same color for all vertices of instance
+        // Actually for Vao::insert with a single element we need to be careful. 
+        // Better pack 4 colors.
+        glm::vec4 colors[4] = {color, color, color, color};
+        mRectangleVao.insert(2, AArrayView(colors), "gradientRectangles/colors");
         mRectangleVao.drawElements();
     }
 }
@@ -262,7 +276,12 @@ void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& 
     mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, transform);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
     for (const auto& inst : v.instances) {
-        drawRectImpl(inst.position, inst.size);
+        auto vertices = getVerticesForRect(inst.position, inst.size);
+        glm::vec4 color = glm::vec4(inst.color);
+        glm::vec4 colors[4] = {color, color, color, color};
+        mRectangleVao.insert(0, AArrayView(vertices), "texturedRectangles/positions");
+        mRectangleVao.insert(2, AArrayView(colors), "texturedRectangles/colors");
+        mRectangleVao.drawElements();
     }
 }
 void OpenGLRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) {
@@ -271,9 +290,13 @@ void OpenGLRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRect
     setBlending(blending);
     mRoundedSolidShader->use();
     mRoundedSolidShader->set(aui::ShaderUniforms::TRANSFORM, transform);
-    mRoundedSolidShader->set(aui::ShaderUniforms::COLOR, glm::vec4(v.color));
     for (const auto& inst : v.instances) {
-        drawRectImpl(inst.position, inst.size);
+        auto vertices = getVerticesForRect(inst.position, inst.size);
+        glm::vec4 color = glm::vec4(inst.color);
+        glm::vec4 colors[4] = {color, color, color, color};
+        mRectangleVao.insert(0, AArrayView(vertices), "solidRoundedRectangles/positions");
+        mRectangleVao.insert(2, AArrayView(colors), "solidRoundedRectangles/colors");
+        mRectangleVao.drawElements();
     }
 }
 void OpenGLRenderer::gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) {
@@ -287,27 +310,49 @@ void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRound
 }
 void OpenGLRenderer::rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) {
     setBlending(blending);
-    for (const auto& inst : v.instances) { drawRectImpl(inst.position, inst.size); }
+    for (const auto& inst : v.instances) {
+        auto vertices = getVerticesForRect(inst.position, inst.size);
+        glm::vec4 color = glm::vec4(inst.color);
+        glm::vec4 colors[4] = {color, color, color, color};
+        mRectangleVao.insert(0, AArrayView(vertices), "rectangleBorders/positions");
+        mRectangleVao.insert(2, AArrayView(colors), "rectangleBorders/colors");
+        mRectangleVao.drawElements();
+    }
 }
 void OpenGLRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) {
     setBlending(blending);
-    for (const auto& inst : v.instances) { drawRectImpl(inst.position, inst.size); }
+    for (const auto& inst : v.instances) {
+        auto vertices = getVerticesForRect(inst.position, inst.size);
+        glm::vec4 color = glm::vec4(inst.color);
+        glm::vec4 colors[4] = {color, color, color, color};
+        mRectangleVao.insert(0, AArrayView(vertices), "roundedRectangleBorders/positions");
+        mRectangleVao.insert(2, AArrayView(colors), "roundedRectangleBorders/colors");
+        mRectangleVao.drawElements();
+    }
 }
 void OpenGLRenderer::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) {
     GLDebugGroupLocal debugGroup("boxShadow");
     setBlending(blending);
     mBoxShadowShader->use();
     mBoxShadowShader->set(aui::ShaderUniforms::TRANSFORM, transform);
-    mBoxShadowShader->set(aui::ShaderUniforms::COLOR, glm::vec4(v.color));
-    drawRectImpl(v.position, v.size);
+    auto vertices = getVerticesForRect(v.position, v.size);
+    glm::vec4 color = glm::vec4(v.color);
+    glm::vec4 colors[4] = {color, color, color, color};
+    mRectangleVao.insert(0, AArrayView(vertices), "boxShadow/positions");
+    mRectangleVao.insert(2, AArrayView(colors), "boxShadow/colors");
+    mRectangleVao.drawElements();
 }
 void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) {
     GLDebugGroupLocal debugGroup("boxShadowInner");
     setBlending(blending);
     mBoxShadowInnerShader->use();
     mBoxShadowInnerShader->set(aui::ShaderUniforms::TRANSFORM, transform);
-    mBoxShadowInnerShader->set(aui::ShaderUniforms::COLOR, glm::vec4(v.color));
-    drawRectImpl(v.position, v.size);
+    auto vertices = getVerticesForRect(v.position, v.size);
+    glm::vec4 color = glm::vec4(v.color);
+    glm::vec4 colors[4] = {color, color, color, color};
+    mRectangleVao.insert(0, AArrayView(vertices), "boxShadowInner/positions");
+    mRectangleVao.insert(2, AArrayView(colors), "boxShadowInner/colors");
+    mRectangleVao.drawElements();
 }
 void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) {
     if (v.instances.empty()) return;

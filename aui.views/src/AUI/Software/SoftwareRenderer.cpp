@@ -148,11 +148,11 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, Blending blending)
 
 void SoftwareRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) {
     for (const auto& inst : v.instances) {
-        auto p1 = transform * glm::vec4(inst.position, 1.f, 1.f);
-        auto p2 = transform * glm::vec4(inst.position + inst.size, 1.f, 1.f);
+        auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
+        auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
         for (int y = (int)p1.y; y < (int)p2.y; ++y) {
             for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-                putPixel({x, y}, v.color, blending);
+                putPixel({x, y}, inst.color, blending);
             }
         }
     }

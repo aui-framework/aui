@@ -32,10 +32,10 @@ public:
     struct RectInstance {
         glm::vec2 position;
         glm::vec2 size;
+        AColor color;
     };
     struct SolidRectangles {
         AVector<RectInstance> instances;
-        AColor color;
     };
     struct GradientRectangles {
         AVector<RectInstance> instances;
@@ -49,7 +49,6 @@ public:
     struct SolidRoundedRectangles {
         AVector<RectInstance> instances;
         float radius;
-        AColor color;
     };
     struct GradientRoundedRectangles {
         AVector<RectInstance> instances;
