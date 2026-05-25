@@ -32,39 +32,33 @@ public:
     virtual _unique<ITexture> createNewTexture() = 0;
     virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
 
-    virtual void rectangles(const ADisplayList::Rectangles& v, const APaint& paint, const glm::mat4& transform) = 0;
-    virtual void roundedRectangles(const ADisplayList::RoundedRectangles& v, const APaint& paint, const glm::mat4& transform) = 0;
-    virtual void rectangleBorders(const ADisplayList::RectangleBorders& v, const APaint& paint, const glm::mat4& transform) = 0;
-    virtual void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const APaint& paint, const glm::mat4& transform) = 0;
-    virtual void boxShadow(const ADisplayList::BoxShadow& v, const APaint& paint, const glm::mat4& transform) = 0;
-    virtual void boxShadowInner(const ADisplayList::BoxShadowInner& v, const APaint& paint, const glm::mat4& transform) = 0;
-    virtual void string(const ADisplayList::Text& v, const APaint& paint, const glm::mat4& transform) = 0;
+    virtual void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void string(const ADisplayList::Text& v, const glm::mat4& transform, Blending blending) = 0;
     virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
-    virtual void lines(const ADisplayList::Lines& v, const APaint& paint, const glm::mat4& transform) = 0;
-    virtual void points(const ADisplayList::Points& v, const APaint& paint, const glm::mat4& transform) = 0;
-    virtual void lines(const ADisplayList::LineBatches& v, const APaint& paint, const glm::mat4& transform) = 0;
-    virtual void squareSector(const ADisplayList::SquareSector& v, const APaint& paint, const glm::mat4& transform) = 0;
-
-    virtual void setBlending(Blending blending) = 0;
-
-    virtual void pushMaskBefore() = 0;
-    virtual void pushMaskAfter() = 0;
-    virtual void popMaskBefore() = 0;
-    virtual void popMaskAfter() = 0;
+    virtual void lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, Blending blending) = 0;
+    virtual void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, Blending blending) = 0;
 
     virtual _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept = 0;
     virtual void setWindow(ASurface* window) = 0;
     virtual ASurface* getWindow() const noexcept = 0;
     virtual glm::mat4 getProjectionMatrix() const = 0;
 
-    virtual std::uint8_t getStencilDepth() const noexcept = 0;
-    virtual void setStencilDepth(std::uint8_t stencilDepth) = 0;
-
     virtual float getRenderScale() const noexcept = 0;
     virtual void setRenderScale(float renderScale) = 0;
     virtual void setAllowRenderToTexture(bool allow) = 0;
     virtual bool allowRenderToTexture() const noexcept = 0;
 
-    virtual void backdrops(const ADisplayList::Backdrop& v, const APaint& paint);
-    virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) = 0;
+    virtual void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) = 0;
+    virtual void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) = 0;
 };
