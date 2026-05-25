@@ -16,25 +16,27 @@ class IPrerenderedString;
 
 class ADisplayList {
 public:
-    struct Rectangle {
+    struct RectInstance {
         glm::vec2 position;
         glm::vec2 size;
     };
-    struct RoundedRectangle {
-        glm::vec2 position;
-        glm::vec2 size;
+    struct Rectangles {
+        AVector<RectInstance> instances;
+    };
+    struct RoundedRectangles {
+        AVector<RectInstance> instances;
         float radius;
-    };
-    struct RectangleBorder {
-        glm::vec2 position;
         glm::vec2 size;
+    };
+    struct RectangleBorders {
+        AVector<RectInstance> instances;
         float lineWidth;
     };
-    struct RoundedRectangleBorder {
-        glm::vec2 position;
-        glm::vec2 size;
+    struct RoundedRectangleBorders {
+        AVector<RectInstance> instances;
         float radius;
         int borderWidth;
+        glm::vec2 size;
     };
     struct BoxShadow {
         glm::vec2 position;
@@ -94,10 +96,10 @@ public:
     struct PopMaskAfter {};
 
     struct StoredCommand {
-        using Command = std::variant<Rectangle,
-                                     RoundedRectangle,
-                                     RectangleBorder,
-                                     RoundedRectangleBorder,
+        using Command = std::variant<Rectangles,
+                                     RoundedRectangles,
+                                     RectangleBorders,
+                                     RoundedRectangleBorders,
                                      BoxShadow,
                                      BoxShadowInner,
                                      Text,

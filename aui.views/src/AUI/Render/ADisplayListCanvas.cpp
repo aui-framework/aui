@@ -34,15 +34,15 @@ void ADisplayListCanvas::pushLayer() { add(ADisplayList::PushLayer{}); }
 void ADisplayListCanvas::popLayer() { add(ADisplayList::PopLayer{}); }
 
 void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) {
-    add(ADisplayList::Rectangle{position, size}, paint);
+    add(ADisplayList::Rectangles{{ {position, size} }}, paint);
 }
 
 void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 position, glm::vec2 size, float radius) {
-    add(ADisplayList::RoundedRectangle{position, size, radius}, paint);
+    add(ADisplayList::RoundedRectangles{{ {position, size} }, radius, size}, paint);
 }
 
 void ADisplayListCanvas::rectangleBorder(const APaint& paint, glm::vec2 position, glm::vec2 size, float lineWidth) {
-    add(ADisplayList::RectangleBorder{position, size, lineWidth}, paint);
+    add(ADisplayList::RectangleBorders{{ {position, size} }, lineWidth}, paint);
 }
 
 void ADisplayListCanvas::roundedRectangleBorder(const APaint& paint,
@@ -50,7 +50,7 @@ void ADisplayListCanvas::roundedRectangleBorder(const APaint& paint,
                                                 glm::vec2 size,
                                                 float radius,
                                                 int borderWidth) {
-    add(ADisplayList::RoundedRectangleBorder{position, size, radius, borderWidth}, paint);
+    add(ADisplayList::RoundedRectangleBorders{{ {position, size} }, radius, borderWidth, size}, paint);
 }
 
 void ADisplayListCanvas::boxShadow(const APaint& paint, glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) {
