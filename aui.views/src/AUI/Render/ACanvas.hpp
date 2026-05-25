@@ -109,6 +109,8 @@ public:
                                    glm::vec2 position,
                                    const _<IRenderer::IPrerenderedString>& prerenderedString) = 0;
 
+    virtual void glyphRect(const _<ITexture>& texture, glm::vec2 position, glm::vec2 size, glm::vec2 u1, glm::vec2 u2, const AColor& color) = 0;
+
     virtual void lines(const APaint& paint, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) = 0;
 
     void lines(const APaint& paint, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}) {
