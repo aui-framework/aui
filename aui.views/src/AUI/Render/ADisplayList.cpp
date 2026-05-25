@@ -32,6 +32,26 @@ bool isOpaque(const ABrush& brush, const AColor& globalColor) {
           [&](const auto&) { return false; } },
         brush);
 }
+
+bool operator==(const ASolidBrush& lhs, const ASolidBrush& rhs) {
+    return lhs.solidColor == rhs.solidColor;
+}
+bool operator==(const ACustomShaderBrush& lhs, const ACustomShaderBrush& rhs) {
+    return true;
+}
+bool operator==(const ALinearGradientBrush::ColorEntry& lhs, const ALinearGradientBrush::ColorEntry& rhs) {
+    return lhs.position == rhs.position && lhs.color == rhs.color;
+}
+bool operator==(const ALinearGradientBrush& lhs, const ALinearGradientBrush& rhs) {
+    return lhs.rotation == rhs.rotation && lhs.colors == rhs.colors;
+}
+bool operator==(const ATexturedBrush& lhs, const ATexturedBrush& rhs) {
+    return lhs.texture == rhs.texture && lhs.uv1 == rhs.uv1 && lhs.uv2 == rhs.uv2 &&
+           lhs.imageRendering == rhs.imageRendering && lhs.repeat == rhs.repeat;
+}
+bool operator==(const APaint& lhs, const APaint& rhs) {
+    return lhs.color == rhs.color && lhs.blending == rhs.blending && lhs.opacity == rhs.opacity && lhs.brush == rhs.brush;
+}
 }   // namespace
 
 void ADisplayList::resolveEntities() {
@@ -59,8 +79,8 @@ void ADisplayList::resolveEntities() {
               },
               [&](const auto& v) {
                   using T = std::decay_t<decltype(v)>;
-                  if constexpr (std::is_same_v<T, Rectangle> || std::is_same_v<T, RoundedRectangle> ||
-                                 std::is_same_v<T, RectangleBorder> || std::is_same_v<T, RoundedRectangleBorder> ||
+                  if constexpr (std::is_same_v<T, Rectangles> || std::is_same_v<T, RoundedRectangles> ||
+                                 std::is_same_v<T, RectangleBorders> || std::is_same_v<T, RoundedRectangleBorders> ||
                                  std::is_same_v<T, BoxShadow> || std::is_same_v<T, BoxShadowInner> ||
                                  std::is_same_v<T, Text> || std::is_same_v<T, PrerenderedString> ||
                                  std::is_same_v<T, Lines> || std::is_same_v<T, LineBatches> ||
@@ -68,11 +88,21 @@ void ADisplayList::resolveEntities() {
                                  std::is_same_v<T, Backdrop>) {
                       glm::vec2 localPos(0.f);
                       glm::vec2 localSize(0.f);
-                      if constexpr (std::is_same_v<T, Rectangle> || std::is_same_v<T, RoundedRectangle> ||
-                                    std::is_same_v<T, RectangleBorder> || std::is_same_v<T, RoundedRectangleBorder> ||
-                                    std::is_same_v<T, BoxShadowInner> || std::is_same_v<T, SquareSector>) {
+                      if constexpr (std::is_same_v<T, BoxShadowInner> || std::is_same_v<T, SquareSector>) {
                           localPos = v.position;
                           localSize = v.size;
+                      } else if constexpr (std::is_same_v<T, Rectangles> || std::is_same_v<T, RoundedRectangles> ||
+                                           std::is_same_v<T, RectangleBorders> || std::is_same_v<T, RoundedRectangleBorders>) {
+                          glm::vec2 min(std::numeric_limits<float>::max());
+                          glm::vec2 max(std::numeric_limits<float>::lowest());
+                          for (const auto& inst : v.instances) {
+                              min = glm::min(min, inst.position);
+                              min = glm::min(min, inst.position + inst.size);
+                              max = glm::max(max, inst.position);
+                              max = glm::max(max, inst.position + inst.size);
+                          }
+                          localPos = min;
+                          localSize = max - min;
                       } else if constexpr (std::is_same_v<T, BoxShadow>) {
                           localPos = v.position - glm::vec2(v.blurRadius);
                           localSize = v.size + glm::vec2(v.blurRadius * 2.f);
@@ -146,7 +176,12 @@ void ADisplayList::computeOverlaps() {
         } else {
             bool opaque = std::visit(
                 aui::lambda_overloaded {
-                  [&](const Rectangle& v) { return isOpaque(it->paint.brush, it->paint.color); },
+                  [&](const Rectangles& v) {
+                      if (v.instances.size() == 1) {
+                          return isOpaque(it->paint.brush, it->paint.color);
+                      }
+                      return false;
+                  },
                   [&](const auto&) { return false; }
                 },
                 it->command);
@@ -163,24 +198,26 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
             continue;
         }
 
-        renderer.setTransformForced(entity.transform);
-        renderer.setColorForced(entity.paint.color);
         renderer.setBlending(entity.paint.blending);
 
         std::visit(
             aui::lambda_overloaded {
-              [&](const Rectangle& v) { renderer.rectangle(v, entity.paint); },
-              [&](const RoundedRectangle& v) { renderer.roundedRectangle(v, entity.paint); },
-              [&](const RectangleBorder& v) { renderer.rectangleBorder(v, entity.paint); },
-              [&](const RoundedRectangleBorder& v) { renderer.roundedRectangleBorder(v, entity.paint); },
-              [&](const BoxShadow& v) { renderer.boxShadow(v, entity.paint); },
-              [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, entity.paint); },
-              [&](const Text& v) { renderer.string(v, entity.paint); },
-              [&](const PrerenderedString& v) { v.prerenderedString->draw(); },
-              [&](const Lines& v) { renderer.lines(v, entity.paint); },
-              [&](const LineBatches& v) { renderer.lines(v, entity.paint); },
-              [&](const Points& v) { renderer.points(v, entity.paint); },
-              [&](const SquareSector& v) { renderer.squareSector(v, entity.paint); },
+              [&](const Rectangle&) { AUI_ASSERT(false); },
+              [&](const RoundedRectangle&) { AUI_ASSERT(false); },
+              [&](const RectangleBorder&) { AUI_ASSERT(false); },
+              [&](const RoundedRectangleBorder&) { AUI_ASSERT(false); },
+              [&](const Rectangles& v) { renderer.rectangles(v, entity.paint, entity.transform); },
+              [&](const RoundedRectangles& v) { renderer.roundedRectangles(v, entity.paint, entity.transform); },
+              [&](const RectangleBorders& v) { renderer.rectangleBorders(v, entity.paint, entity.transform); },
+              [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, entity.paint, entity.transform); },
+              [&](const BoxShadow& v) { renderer.boxShadow(v, entity.paint, entity.transform); },
+              [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, entity.paint, entity.transform); },
+              [&](const Text& v) { renderer.string(v, entity.paint, entity.transform); },
+              [&](const PrerenderedString& v) { v.prerenderedString->draw(entity.transform, entity.paint.color); },
+              [&](const Lines& v) { renderer.lines(v, entity.paint, entity.transform); },
+              [&](const LineBatches& v) { renderer.lines(v, entity.paint, entity.transform); },
+              [&](const Points& v) { renderer.points(v, entity.paint, entity.transform); },
+              [&](const SquareSector& v) { renderer.squareSector(v, entity.paint, entity.transform); },
               [&](const Backdrop& v) { renderer.backdrops(v, entity.paint); },
               [&](const MaskBefore&) { renderer.pushMaskBefore(); },
               [&](const MaskAfter&) { renderer.pushMaskAfter(); },
