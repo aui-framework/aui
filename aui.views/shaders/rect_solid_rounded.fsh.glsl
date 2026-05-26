@@ -1,5 +1,5 @@
-varying vec2 vUv;
-varying vec4 vColor;
+in vec2 vUv;
+in vec4 vColor;
 uniform vec2 outerSize;
 
 float rounded(vec2 absolute, vec2 size) {

@@ -1,6 +1,6 @@
-varying vec4 vVertex;
-varying vec2 vUv;
-varying vec4 vColor;
+in vec4 vVertex;
+in vec2 vUv;
+in vec4 vColor;
 uniform vec2 lower;
 uniform vec2 upper;
 uniform float sigma;

@@ -1,5 +1,5 @@
-varying vec2 vUv;
-varying vec4 vColor;
+in vec2 vUv;
+in vec4 vColor;
 uniform float begin;
 uniform float end;
 void main() {

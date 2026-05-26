@@ -24,25 +24,15 @@
 #include <AUI/GL/State.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/GL/RenderTarget/TextureRenderTarget.h>
-#include <AUISL/Generated/basic.vsh.glsl120.h>
-#include <AUISL/Generated/basic_uv.vsh.glsl120.h>
-#include <AUISL/Generated/shadow.fsh.glsl120.h>
-#include <AUISL/Generated/shadow_inner.fsh.glsl120.h>
-#include <AUISL/Generated/rect_solid.fsh.glsl120.h>
-#include <AUISL/Generated/rect_solid_rounded.fsh.glsl120.h>
-#include <AUISL/Generated/rect_gradient.fsh.glsl120.h>
-#include <AUISL/Generated/rect_gradient_rounded.fsh.glsl120.h>
-#include <AUISL/Generated/rect_textured.fsh.glsl120.h>
-#include <AUISL/Generated/rect_unblend.fsh.glsl120.h>
-#include <AUISL/Generated/border_rounded.fsh.glsl120.h>
-#include <AUISL/Generated/symbol.vsh.glsl120.h>
-#include <AUISL/Generated/symbol.fsh.glsl120.h>
-#include <AUISL/Generated/symbol_sub.fsh.glsl120.h>
-#include <AUISL/Generated/line_solid_dashed.fsh.glsl120.h>
-#include <AUISL/Generated/square_sector.fsh.glsl120.h>
+#include <AUI/Util/ABuiltinFiles.h>
+#include <AUI/IO/IInputStream.h>
+#include <AUI/Common/AByteBuffer.h>
 #include <range/v3/all.hpp>
 
 #define LOG_TAG "OpenGLRenderer"
+
+bool OpenGLRenderer::mIsES = false;
+int OpenGLRenderer::mGLSLVersion = 100;
 
 OpenGLRenderer::TransientBuffer::TransientBuffer(GLenum target, size_t size) : mTarget(target), mSize(size) {
     glGenBuffers(1, &mHandle);
@@ -105,18 +95,65 @@ static std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 position, glm::vec2
     };
 }
 
-template<typename Vertex, typename Fragment>
-inline void useAuislShader(AOptional<gl::Program>& out) {
-    out.emplace();
-    out->loadBoth(Vertex::code(), Fragment::code());
-    Vertex::setup(out->handle());
-    Fragment::setup(out->handle());
-    out->compile();
+static std::string readShader(const char* name) {
+    auto is = ABuiltinFiles::open(name);
+    auto buf = AByteBuffer::fromStream(*is);
+    return std::string(buf.begin(), buf.end());
 }
 
-// ---------------------------------------------------------------------------------------------------------------------
-// Text rendering implementations
-// ---------------------------------------------------------------------------------------------------------------------
+inline void useShader(AOptional<gl::Program>& out, const char* vertex, const char* fragment) {
+    auto getPrefix = [](GLenum stage) {
+        std::string prefix;
+        if (OpenGLRenderer::mIsES) {
+            if (OpenGLRenderer::mGLSLVersion >= 300) {
+                prefix = fmt::format("#version {} es\n", OpenGLRenderer::mGLSLVersion);
+            } else {
+                prefix = fmt::format("#version {}\n", OpenGLRenderer::mGLSLVersion);
+            }
+        } else {
+            prefix = fmt::format("#version {}\n", OpenGLRenderer::mGLSLVersion >= 130 ? OpenGLRenderer::mGLSLVersion : 120);
+        }
+
+        prefix += R"(
+#if __VERSION__ >= 130
+#define texture2D texture
+#else
+#define texture texture2D
+#endif
+#if __VERSION__ < 130
+)";
+        if (stage == GL_VERTEX_SHADER) {
+            prefix += R"(
+#define in attribute
+#define out varying
+)";
+        } else {
+            prefix += R"(
+#define in varying
+)";
+        }
+        prefix += R"(
+#endif
+#ifndef GL_ES
+#define lowp
+#define mediump
+#define highp
+#else
+precision highp float;
+precision highp int;
+#endif
+)";
+        return prefix;
+    };
+
+    out.emplace();
+    out->loadVertexShader(getPrefix(GL_VERTEX_SHADER) + readShader(vertex), { .custom = true });
+    out->loadFragmentShader(getPrefix(GL_FRAGMENT_SHADER) + readShader(fragment), { .custom = true });
+    out->bindAttribute(0, "pos");
+    out->bindAttribute(1, "uv");
+    out->bindAttribute(2, "color");
+    out->compile();
+}
 
 struct CharacterGlyph {
     glm::vec2 position;
@@ -566,13 +603,19 @@ OpenGLRenderer::OpenGLRenderer() :
     mVertexBuffer(GL_ARRAY_BUFFER, 1024 * 1024 * 2),
     mIndexBuffer(GL_ELEMENT_ARRAY_BUFFER, 1024 * 1024 * 1)
 {
-    useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader, aui::sl_gen::rect_solid::fsh::glsl120::Shader>(mSolidShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
-    useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader, aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_solid_rounded::fsh::glsl120::Shader>(mRoundedSolidShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::shadow_inner::fsh::glsl120::Shader>(mBoxShadowInnerShader);
-    useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_gradient::fsh::glsl120::Shader>(mGradientShader);
+    useShader(mSolidShader, "basic.vsh.glsl", "rect_solid.fsh.glsl");
+    useShader(mTexturedShader, "basic_uv.vsh.glsl", "rect_textured.fsh.glsl");
+    useShader(mSymbolShader, "symbol.vsh.glsl", "symbol.fsh.glsl");
+    useShader(mRoundedSolidShader, "basic_uv.vsh.glsl", "rect_solid_rounded.fsh.glsl");
+    useShader(mBoxShadowShader, "basic_uv.vsh.glsl", "shadow.fsh.glsl");
+    useShader(mBoxShadowInnerShader, "basic_uv.vsh.glsl", "shadow_inner.fsh.glsl");
+    useShader(mGradientShader, "basic_uv.vsh.glsl", "rect_gradient.fsh.glsl");
+    useShader(mRoundedGradientShader, "basic_uv.vsh.glsl", "rect_gradient_rounded.fsh.glsl");
+    useShader(mRoundedSolidShaderBorder, "basic_uv.vsh.glsl", "border_rounded.fsh.glsl");
+    useShader(mUnblendShader, "basic_uv.vsh.glsl", "rect_unblend.fsh.glsl");
+    useShader(mSquareSectorShader, "basic_uv.vsh.glsl", "square_sector.fsh.glsl");
+    useShader(mSymbolShaderSubPixel, "symbol.vsh.glsl", "symbol_sub.fsh.glsl");
+    useShader(mLineSolidDashedShader, "basic_uv.vsh.glsl", "line_solid_dashed.fsh.glsl");
 
     mBatchVao.bind();
     mVertexBuffer.bind();
@@ -636,8 +679,19 @@ _<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFon
 }
 _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept { return nullptr; }
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const { return glm::mat4(1.0f); }
-bool OpenGLRenderer::loadGL(GLLoadProc load_proc, bool es) { return true; }
-bool OpenGLRenderer::loadGL(GLLoadProc load_proc) { return true; }
+bool OpenGLRenderer::loadGL(GLLoadProc load_proc, bool es) {
+    mIsES = es;
+    if (mIsES) {
+        if (GLAD_GL_ES_VERSION_3_0) mGLSLVersion = 300;
+        else mGLSLVersion = 100;
+    } else {
+        if (GLAD_GL_VERSION_3_3) mGLSLVersion = 330;
+        else if (GLAD_GL_VERSION_3_0) mGLSLVersion = 130;
+        else mGLSLVersion = 120;
+    }
+    return true;
+}
+bool OpenGLRenderer::loadGL(GLLoadProc load_proc) { return loadGL(load_proc, false); }
 uint32_t OpenGLRenderer::getDefaultFb() const noexcept { return 0; }
 OpenGLRenderer::FontEntryData* OpenGLRenderer::getFontEntryData(const AFontStyle& fontStyle) {
     auto fe = fontStyle.getFontEntry();

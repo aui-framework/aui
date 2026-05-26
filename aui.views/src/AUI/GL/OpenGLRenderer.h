@@ -116,6 +116,9 @@ public:
     static bool loadGL(GLLoadProc load_proc, bool es);
     static bool loadGL(GLLoadProc load_proc);
 
+    static bool mIsES;
+    static int mGLSLVersion;
+
     OpenGLRenderer();
     ~OpenGLRenderer() override = default;
     void identityUv();

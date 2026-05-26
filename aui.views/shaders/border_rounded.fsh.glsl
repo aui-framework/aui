@@ -1,5 +1,5 @@
-varying vec2 vUv;
-varying vec4 vColor;
+in vec2 vUv;
+in vec4 vColor;
 uniform vec2 innerSize;
 uniform vec2 outerToInner;
 uniform vec2 outerSize;

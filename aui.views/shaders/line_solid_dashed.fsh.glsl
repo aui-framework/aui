@@ -1,5 +1,5 @@
-varying vec4 vVertex;
-varying vec4 vColor;
+in vec4 vVertex;
+in vec4 vColor;
 uniform float divider;
 uniform float threshold;
 float dashed(float d) {
