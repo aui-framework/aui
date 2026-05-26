@@ -130,7 +130,16 @@ public:
     uint32_t getDefaultFb() const noexcept;
     void bindTemporaryVao() const noexcept { mBatchVao.bind(); }
 
-    struct Vertex {
+    struct VertexBasic {
+        glm::vec2 pos;
+        glm::vec4 color;
+    };
+    struct VertexBasicUv {
+        glm::vec2 pos;
+        glm::vec2 uv;
+        glm::vec4 color;
+    };
+    struct VertexSymbol {
         glm::vec2 pos;
         glm::vec2 uv;
         glm::vec4 color;
