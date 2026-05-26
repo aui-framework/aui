@@ -96,6 +96,7 @@ public:
         AVector<GlyphInstance> instances;
         _<ITexture> texture;
         AColor color;
+        bool isSubpixel;
     };
     struct Lines {
         AVector<glm::vec2> points;

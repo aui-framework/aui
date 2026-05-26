@@ -171,18 +171,21 @@ private:
     int mTextWidth;
     int mTextHeight;
     OpenGLRenderer::FontEntryData* mEntryData;
+    bool mIsSubpixel;
 
 public:
     OpenGLPrerenderedString(OpenGLRenderer* renderer,
                             AVector<CharacterGlyph> glyphs,
                             int textWidth,
                             int textHeight,
-                            OpenGLRenderer::FontEntryData* entryData) :
+                            OpenGLRenderer::FontEntryData* entryData,
+                            bool isSubpixel) :
         mRenderer(renderer),
         mGlyphs(std::move(glyphs)),
         mTextWidth(textWidth),
         mTextHeight(textHeight),
-        mEntryData(entryData) {}
+        mEntryData(entryData),
+        mIsSubpixel(isSubpixel) {}
 
     void draw(ACanvas& canvas) override {
         if (mEntryData->isTextureInvalid) {
@@ -192,7 +195,7 @@ public:
             mEntryData->isTextureInvalid = false;
         }
         for (const auto& g : mGlyphs) {
-            canvas.glyphRect(mEntryData->texture, g.position, g.size, g.u1, g.u2, g.color);
+            canvas.glyphRect(mEntryData->texture, g.position, g.size, g.u1, g.u2, g.color, mIsSubpixel);
         }
     }
 
@@ -208,12 +211,14 @@ private:
     OpenGLRenderer::FontEntryData* mEntryData;
     int mAdvanceX = 0;
     int mAdvanceY = 0;
+    bool mIsSubpixel;
 
 public:
     OpenGLMultiStringCanvas(OpenGLRenderer* renderer, const AFontStyle& fontStyle) :
         mRenderer(renderer),
         mFontStyle(fontStyle),
-        mEntryData(renderer->getFontEntryData(fontStyle)) {
+        mEntryData(renderer->getFontEntryData(fontStyle)),
+        mIsSubpixel(fontStyle.fontRendering == FontRendering::SUBPIXEL) {
     }
 
     template<class UnicodeString>
@@ -285,7 +290,7 @@ public:
     void addString(const glm::ivec2& position, std::u32string_view text) noexcept override { addStringT(position, text); }
 
     _<IRenderer::IPrerenderedString> finalize() noexcept override {
-        return _new<OpenGLPrerenderedString>(mRenderer, std::move(mGlyphs), mAdvanceX, mAdvanceY, mEntryData);
+        return _new<OpenGLPrerenderedString>(mRenderer, std::move(mGlyphs), mAdvanceX, mAdvanceY, mEntryData, mIsSubpixel);
     }
 };
 
@@ -559,8 +564,14 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("glyphs");
     setBlending(blending);
-    mSymbolShader->use();
-    mSymbolShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    
+    if (v.isSubpixel) {
+        mSymbolShaderSubPixel->use();
+        mSymbolShaderSubPixel->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    } else {
+        mSymbolShader->use();
+        mSymbolShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    }
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
     AVector<VertexSymbol> vertices;
@@ -631,13 +642,12 @@ _<ITexture> OpenGLRenderer::createTexture(glm::u32vec2 size) {
     return t;
 }
 void OpenGLRenderer::setBlending(Blending blending) {
-    if (glBlendFuncSeparate) {
-        switch (blending) {
-            case Blending::NORMAL: glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
-            case Blending::INVERSE_DST: glBlendFuncSeparate(GL_ONE_MINUS_DST_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
-            case Blending::ADDITIVE: glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
-            case Blending::INVERSE_SRC: glBlendFuncSeparate(GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
-        }
+    if (glBlendFuncSeparate) return;
+    switch (blending) {
+        case Blending::NORMAL: glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
+        case Blending::INVERSE_DST: glBlendFuncSeparate(GL_ONE_MINUS_DST_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
+        case Blending::ADDITIVE: glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
+        case Blending::INVERSE_SRC: glBlendFuncSeparate(GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
     }
 }
 void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {

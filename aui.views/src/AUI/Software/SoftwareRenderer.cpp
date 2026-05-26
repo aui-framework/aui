@@ -33,11 +33,19 @@ private:
     int mTextWidth;
     int mTextHeight;
     SoftwareRenderer::FontEntryData* mEntryData;
+    bool mIsSubpixel;
 
 public:
-    SoftwarePrerenderedString(
-        AVector<CharacterGlyph> glyphs, int textWidth, int textHeight, SoftwareRenderer::FontEntryData* entryData)
-      : mGlyphs(std::move(glyphs)), mTextWidth(textWidth), mTextHeight(textHeight), mEntryData(entryData) {}
+    SoftwarePrerenderedString(AVector<CharacterGlyph> glyphs,
+                            int textWidth,
+                            int textHeight,
+                            SoftwareRenderer::FontEntryData* entryData,
+                            bool isSubpixel) :
+        mGlyphs(std::move(glyphs)),
+        mTextWidth(textWidth),
+        mTextHeight(textHeight),
+        mEntryData(entryData),
+        mIsSubpixel(isSubpixel) {}
 
     void draw(ACanvas& canvas) override {
         if (mEntryData->isTextureInvalid) {
@@ -47,7 +55,7 @@ public:
             mEntryData->isTextureInvalid = false;
         }
         for (const auto& g : mGlyphs) {
-            canvas.glyphRect(mEntryData->texture, g.position, g.size, g.u1, g.u2, g.color);
+            canvas.glyphRect(mEntryData->texture, g.position, g.size, g.u1, g.u2, g.color, mIsSubpixel);
         }
     }
 
@@ -63,10 +71,15 @@ private:
     SoftwareRenderer* mRenderer;
     int mAdvanceX = 0;
     int mAdvanceY = 0;
+    bool mIsSubpixel;
 
-public:
-    SoftwareMultiStringCanvas(SoftwareRenderer* renderer, const AFontStyle& fontStyle)
-      : mFontStyle(fontStyle), mEntryData(renderer->getFontEntryData(fontStyle)), mRenderer(renderer) {}
+    public:
+    SoftwareMultiStringCanvas(SoftwareRenderer* renderer, const AFontStyle& fontStyle) :
+        mFontStyle(fontStyle),
+        mEntryData(renderer->getFontEntryData(fontStyle)),
+        mRenderer(renderer),
+        mIsSubpixel(fontStyle.fontRendering == FontRendering::SUBPIXEL) {
+    }
 
     template <class UnicodeString>
     void addStringT(const glm::ivec2& position, UnicodeString text) noexcept {
@@ -135,14 +148,12 @@ public:
     void addString(const glm::ivec2& position, AStringView text) noexcept override {
         addStringT(position, text.utf8());
     }
-    void addString(const glm::ivec2& position, std::u32string_view text) noexcept override {
-        addStringT(position, text);
-    }
+    void addString(const glm::ivec2& position, std::u32string_view text) noexcept override { addStringT(position, text); }
 
     _<IRenderer::IPrerenderedString> finalize() noexcept override {
-        return _new<SoftwarePrerenderedString>(std::move(mGlyphs), mAdvanceX, mAdvanceY, mEntryData);
+        return _new<SoftwarePrerenderedString>(std::move(mGlyphs), mAdvanceX, mAdvanceY, mEntryData, mIsSubpixel);
     }
-};
+    };
 
 SoftwareRenderer::SoftwareRenderer() {}
 
@@ -249,25 +260,21 @@ void SoftwareRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tr
                 float u = (x - (float) p1.x) / width;
                 float v_uv = (y - (float) p1.y) / height;
 
-                float tx = glm::mix(inst.u1.x, inst.u2.x, u);
-                float ty = glm::mix(inst.u1.y, inst.u2.y, v_uv);
+                float tx = glm::mix(inst.u1.x, inst.u2.x, u) * (float)img.width();
+                float ty = glm::mix(inst.u1.y, inst.u2.y, v_uv) * (float)img.height();
 
-                glm::uvec2 texPos((unsigned) (tx * (float) img.width()), (unsigned) (ty * (float) img.height()));
-                if (texPos.x >= img.width() || texPos.y >= img.height())
-                    continue;
+                glm::uvec2 texPos((unsigned)tx, (unsigned)ty);
+                if (texPos.x >= img.width() || texPos.y >= img.height()) continue;
 
                 AColor maskColor = img.get(texPos);
                 AColor finalColor = inst.color * v.color;
 
-                if (img.format() == APixelFormat::R) {
+                if (!v.isSubpixel) {
                     finalColor.a *= maskColor.r;
-                    putPixel({ x, y }, finalColor, blending);
-                } else if (img.format() == APixelFormat::RGB_BYTE || img.format() == APixelFormat::RGB) {
-                    if (!mContext)
-                        continue;
-                    if (x < 0 || y < 0 || (uint32_t) x >= mContext->bitmapSize().x ||
-                        (uint32_t) y >= mContext->bitmapSize().y)
-                        continue;
+                    putPixel({x, y}, finalColor, blending);
+                } else {
+                    if (!mContext) continue;
+                    if (x < 0 || y < 0 || (uint32_t)x >= mContext->bitmapSize().x || (uint32_t)y >= mContext->bitmapSize().y) continue;
 
                     auto dst = glm::vec4(mContext->getPixel(glm::uvec2(x, y))) / 255.f;
 
@@ -278,9 +285,6 @@ void SoftwareRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tr
                     res.a = dst.a;
 
                     mContext->putPixel(glm::uvec2(x, y), glm::u8vec4(res * 255.f));
-                } else {
-                    finalColor.a *= maskColor.a;
-                    putPixel({ x, y }, finalColor, blending);
                 }
             }
         }

@@ -27,7 +27,9 @@ class API_AUI_VIEWS OpenGLTexture2D : public ITexture, public gl::Framebuffer::I
 private:
     gl::Texture2D mTexture;
 public:
-    void setImage(AImageView image) override { mTexture.tex2D(image); }
+    void setImage(AImageView image) override { 
+        mTexture.tex2D(image); 
+    }
 
     [[nodiscard]]
     glm::u32vec2 getSize() const override {
