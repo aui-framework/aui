@@ -1,4 +1,3 @@
-#version 120
 varying vec2 vUv;
 varying vec4 vColor;
 uniform vec4 color1;

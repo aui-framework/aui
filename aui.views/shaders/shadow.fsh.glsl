@@ -1,4 +1,3 @@
-#version 120
 varying vec4 vVertex;
 varying vec4 vColor;
 uniform vec2 lower;

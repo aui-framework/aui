@@ -1,4 +1,3 @@
-#version 120
 attribute vec2 pos;
 attribute vec2 uv;
 attribute vec4 color;

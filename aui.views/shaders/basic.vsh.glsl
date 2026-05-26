@@ -1,4 +1,3 @@
-#version 120
 attribute vec2 pos;
 attribute vec4 color;
 varying vec4 vColor;
