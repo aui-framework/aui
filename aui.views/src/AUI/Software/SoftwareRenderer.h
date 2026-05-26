@@ -17,13 +17,29 @@
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Platform/SoftwareRenderingContext.h>
 #include <AUI/ASS/Property/Backdrop.h>
+#include <AUI/Render/SimpleTexturePacker.h>
+#include <AUI/Common/ADeque.h>
 #include <variant>
 #include <span>
+#include "SoftwareTexture.h"
 
 class SoftwareRenderer : public IRendererBackend {
     friend class SoftwarePrerenderedString;
     friend class SoftwareMultiStringCanvas;
 public:
+    struct FontEntryData: aui::noncopyable {
+        SoftwareRenderer* renderer;
+        _<SoftwareTexture> texture;
+        bool isTextureInvalid = true;
+        Util::SimpleTexturePacker texturePacker;
+
+        explicit FontEntryData(SoftwareRenderer* renderer): renderer(renderer), texture(_new<SoftwareTexture>()) {}
+    };
+
+    struct CharacterData {
+        glm::vec4 uv;
+    };
+
     SoftwareRenderer();
 
     // IRendererBackend implementation
@@ -63,9 +79,12 @@ public:
 
 protected:
     void putPixel(glm::ivec2 pos, AColor color, Blending blending = Blending::NORMAL);
+    FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 
     SoftwareRenderingContext* mContext = nullptr;
     ASurface* mWindow = nullptr;
     float mRenderScale = 1.0f;
     bool mAllowRenderToTexture = true;
+    ADeque<FontEntryData> mFontEntryData;
+    ADeque<CharacterData> mCharData;
 };

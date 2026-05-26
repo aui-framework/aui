@@ -32,18 +32,22 @@ private:
     AVector<CharacterGlyph> mGlyphs;
     int mTextWidth;
     int mTextHeight;
+    SoftwareRenderer::FontEntryData* mEntryData;
 
 public:
-    SoftwarePrerenderedString(AVector<CharacterGlyph> glyphs,
-                            int textWidth,
-                            int textHeight) :
-        mGlyphs(std::move(glyphs)),
-        mTextWidth(textWidth),
-        mTextHeight(textHeight) {}
+    SoftwarePrerenderedString(
+        AVector<CharacterGlyph> glyphs, int textWidth, int textHeight, SoftwareRenderer::FontEntryData* entryData)
+      : mGlyphs(std::move(glyphs)), mTextWidth(textWidth), mTextHeight(textHeight), mEntryData(entryData) {}
 
     void draw(ACanvas& canvas) override {
+        if (mEntryData->isTextureInvalid) {
+            if (auto img = mEntryData->texturePacker.getImage()) {
+                mEntryData->texture->setImage(*img);
+            }
+            mEntryData->isTextureInvalid = false;
+        }
         for (const auto& g : mGlyphs) {
-            canvas.glyphRect(nullptr, g.position, g.size, g.u1, g.u2, g.color);
+            canvas.glyphRect(mEntryData->texture, g.position, g.size, g.u1, g.u2, g.color);
         }
     }
 
@@ -55,31 +59,33 @@ class SoftwareMultiStringCanvas : public IRenderer::IMultiStringCanvas {
 private:
     AVector<CharacterGlyph> mGlyphs;
     AFontStyle mFontStyle;
+    SoftwareRenderer::FontEntryData* mEntryData;
+    SoftwareRenderer* mRenderer;
     int mAdvanceX = 0;
     int mAdvanceY = 0;
 
 public:
-    SoftwareMultiStringCanvas(const AFontStyle& fontStyle) :
-        mFontStyle(fontStyle) {
-    }
+    SoftwareMultiStringCanvas(SoftwareRenderer* renderer, const AFontStyle& fontStyle)
+      : mFontStyle(fontStyle), mEntryData(renderer->getFontEntryData(fontStyle)), mRenderer(renderer) {}
 
-    template<class UnicodeString>
+    template <class UnicodeString>
     void addStringT(const glm::ivec2& position, UnicodeString text) noexcept {
         auto& font = mFontStyle.font;
+        auto& texturePacker = mEntryData->texturePacker;
         auto fe = mFontStyle.getFontEntry();
 
         const bool hasKerning = font->isHasKerning();
 
         int advanceX = position.x;
         int advanceY = position.y;
-        float advance = (float)advanceX;
+        float advance = (float) advanceX;
         for (auto i = text.begin(); i != text.end(); ++i) {
             AChar c = *i;
             if (c == ' ') {
                 advance += mFontStyle.getSpaceWidth();
             } else if (c == '\n') {
-                advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
-                advance = (float)position.x;
+                advanceX = (glm::max) (advanceX, int(glm::ceil(advance)));
+                advance = (float) position.x;
                 advanceY += mFontStyle.getLineHeight();
             } else {
                 AFont::Character& ch = font->getCharacter(fe, c);
@@ -87,42 +93,56 @@ public:
                     advance += mFontStyle.getSpaceWidth();
                     continue;
                 }
-                
-                int posX = (int)advance + ch.horizontal.bearing.x;
+
+                int posX = (int) advance + ch.horizontal.bearing.x;
                 int posY = advanceY - ch.horizontal.bearing.y;
                 int width = ch.image->width();
                 int height = ch.image->height();
 
-                mGlyphs.push_back({
-                    glm::vec2(posX, posY),
-                    glm::vec2(width, height),
-                    glm::vec2(0.f, 0.f),
-                    glm::vec2(1.f, 1.f),
-                    AColor::WHITE
-                });
+                glm::vec4 uv;
+                if (ch.rendererData == nullptr) {
+                    uv = texturePacker.insert(*ch.image);
+                    const float BIAS = 0.1f;
+                    uv.x += BIAS;
+                    uv.y += BIAS;
+                    uv.z -= BIAS;
+                    uv.w -= BIAS;
+                    mRenderer->mCharData.push_back(SoftwareRenderer::CharacterData { uv });
+                    ch.rendererData = &mRenderer->mCharData.last();
+                    mEntryData->isTextureInvalid = true;
+                } else {
+                    uv = reinterpret_cast<SoftwareRenderer::CharacterData*>(ch.rendererData)->uv;
+                }
+
+                mGlyphs.push_back(
+                    { glm::vec2(posX, posY), glm::vec2(width, height), glm::vec2(uv.x, uv.y), glm::vec2(uv.z, uv.w),
+                      AColor::WHITE });
 
                 if (hasKerning) {
                     auto next = std::next(i);
                     if (next != text.end()) {
                         auto kerning = font->getKerning(c, *next);
-                        advance += (float)kerning.x;
+                        advance += (float) kerning.x;
                     }
                 }
-                advance += (float)ch.horizontal.advance;
+                advance += (float) ch.horizontal.advance;
             }
         }
-        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
+        mAdvanceX = (glm::max) (mAdvanceX, (glm::max) (advanceX, int(glm::ceil(advance))));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
     }
 
-    void addString(const glm::ivec2& position, AStringView text) noexcept override { addStringT(position, text.utf8()); }
-    void addString(const glm::ivec2& position, std::u32string_view text) noexcept override { addStringT(position, text); }
+    void addString(const glm::ivec2& position, AStringView text) noexcept override {
+        addStringT(position, text.utf8());
+    }
+    void addString(const glm::ivec2& position, std::u32string_view text) noexcept override {
+        addStringT(position, text);
+    }
 
     _<IRenderer::IPrerenderedString> finalize() noexcept override {
-        return _new<SoftwarePrerenderedString>(std::move(mGlyphs), mAdvanceX, mAdvanceY);
+        return _new<SoftwarePrerenderedString>(std::move(mGlyphs), mAdvanceX, mAdvanceY, mEntryData);
     }
 };
-
 
 SoftwareRenderer::SoftwareRenderer() {}
 
@@ -132,9 +152,12 @@ void SoftwareRenderer::setWindow(ASurface* window) {
 }
 
 void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, Blending blending) {
-    if (!mContext) return;
-    if (pos.x < 0 || pos.y < 0 || (uint32_t)pos.x >= mContext->bitmapSize().x || (uint32_t)pos.y >= mContext->bitmapSize().y) return;
-    
+    if (!mContext)
+        return;
+    if (pos.x < 0 || pos.y < 0 || (uint32_t) pos.x >= mContext->bitmapSize().x ||
+        (uint32_t) pos.y >= mContext->bitmapSize().y)
+        return;
+
     if (color.a >= 0.999f || blending == Blending::INVERSE_SRC) {
         mContext->putPixel(glm::uvec2(pos), glm::u8vec4(color * 255.f));
     } else {
@@ -144,72 +167,145 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, Blending blending)
     }
 }
 
-void SoftwareRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) {
+void SoftwareRenderer::solidRectangles(
+    const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) {
     for (const auto& inst : v.instances) {
         auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
         auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-        for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-            for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-                putPixel({x, y}, inst.color, blending);
+        for (int y = (int) p1.y; y < (int) p2.y; ++y) {
+            for (int x = (int) p1.x; x < (int) p2.x; ++x) {
+                putPixel({ x, y }, inst.color, blending);
             }
         }
     }
 }
-void SoftwareRenderer::gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) {}
-void SoftwareRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) {
+void SoftwareRenderer::gradientRectangles(
+    const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) {}
+void SoftwareRenderer::texturedRectangles(
+    const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) {
     auto texture = dynamic_cast<SoftwareTexture*>(v.texture.get());
-    if (!texture) return;
+    if (!texture)
+        return;
     const auto& img = texture->getImage();
-    if (img.size().x == 0 || img.size().y == 0) return;
+    if (img.size().x == 0 || img.size().y == 0)
+        return;
 
     for (const auto& inst : v.instances) {
         auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
         auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-        
+
         float width = p2.x - p1.x;
         float height = p2.y - p1.y;
 
-        for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-            for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-                float u = (x - (float)p1.x) / width;
-                float v_uv = (y - (float)p1.y) / height;
-                
-                glm::uvec2 texPos((unsigned)(u * glm::max(0.f, (float)img.width() - 1.f)), (unsigned)(v_uv * glm::max(0.f, (float)img.height() - 1.f)));
+        for (int y = (int) p1.y; y < (int) p2.y; ++y) {
+            for (int x = (int) p1.x; x < (int) p2.x; ++x) {
+                float u = (x - (float) p1.x) / width;
+                float v_uv = (y - (float) p1.y) / height;
+
+                glm::uvec2 texPos(
+                    (unsigned) (u * glm::max(0.f, (float) img.width() - 1.f)),
+                    (unsigned) (v_uv * glm::max(0.f, (float) img.height() - 1.f)));
                 AColor texColor;
                 if (texPos.x < img.width() && texPos.y < img.height()) {
                     texColor = img.get(texPos);
                 } else {
                     texColor = AColor::RED;
                 }
-                putPixel({x, y}, texColor * inst.color, blending);
+                putPixel({ x, y }, texColor * inst.color, blending);
             }
         }
     }
 }
-void SoftwareRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) {}
-void SoftwareRenderer::gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) {}
-void SoftwareRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, Blending blending) {}
-void SoftwareRenderer::rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) {}
-void SoftwareRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) {}
+void SoftwareRenderer::solidRoundedRectangles(
+    const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) {}
+void SoftwareRenderer::gradientRoundedRectangles(
+    const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) {}
+void SoftwareRenderer::texturedRoundedRectangles(
+    const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, Blending blending) {}
+void SoftwareRenderer::rectangleBorders(
+    const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) {}
+void SoftwareRenderer::roundedRectangleBorders(
+    const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) {}
 void SoftwareRenderer::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) {}
-void SoftwareRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) {}
-void SoftwareRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) {}
+void SoftwareRenderer::boxShadowInner(
+    const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) {}
+void SoftwareRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) {
+    auto texture = dynamic_cast<SoftwareTexture*>(v.texture.get());
+    if (!texture)
+        return;
+    const auto& img = texture->getImage();
+    if (img.width() == 0)
+        return;
+
+    for (const auto& inst : v.instances) {
+        auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
+        auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+
+        float width = p2.x - p1.x;
+        float height = p2.y - p1.y;
+
+        for (int y = (int) p1.y; y < (int) p2.y; ++y) {
+            for (int x = (int) p1.x; x < (int) p2.x; ++x) {
+                float u = (x - (float) p1.x) / width;
+                float v_uv = (y - (float) p1.y) / height;
+
+                float tx = glm::mix(inst.u1.x, inst.u2.x, u);
+                float ty = glm::mix(inst.u1.y, inst.u2.y, v_uv);
+
+                glm::uvec2 texPos((unsigned) (tx * (float) img.width()), (unsigned) (ty * (float) img.height()));
+                if (texPos.x >= img.width() || texPos.y >= img.height())
+                    continue;
+
+                AColor maskColor = img.get(texPos);
+                AColor finalColor = inst.color * v.color;
+
+                if (img.format() == APixelFormat::R) {
+                    finalColor.a *= maskColor.r;
+                    putPixel({ x, y }, finalColor, blending);
+                } else if (img.format() == APixelFormat::RGB_BYTE || img.format() == APixelFormat::RGB) {
+                    if (!mContext)
+                        continue;
+                    if (x < 0 || y < 0 || (uint32_t) x >= mContext->bitmapSize().x ||
+                        (uint32_t) y >= mContext->bitmapSize().y)
+                        continue;
+
+                    auto dst = glm::vec4(mContext->getPixel(glm::uvec2(x, y))) / 255.f;
+
+                    AColor res;
+                    res.r = glm::mix(dst.r, finalColor.r, maskColor.r * finalColor.a);
+                    res.g = glm::mix(dst.g, finalColor.g, maskColor.g * finalColor.a);
+                    res.b = glm::mix(dst.b, finalColor.b, maskColor.b * finalColor.a);
+                    res.a = dst.a;
+
+                    mContext->putPixel(glm::uvec2(x, y), glm::u8vec4(res * 255.f));
+                } else {
+                    finalColor.a *= maskColor.a;
+                    putPixel({ x, y }, finalColor, blending);
+                }
+            }
+        }
+    }
+}
 void SoftwareRenderer::lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) {}
 void SoftwareRenderer::points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) {}
 void SoftwareRenderer::lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, Blending blending) {}
-void SoftwareRenderer::squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, Blending blending) {}
+void SoftwareRenderer::squareSector(
+    const ADisplayList::SquareSector& v, const glm::mat4& transform, Blending blending) {}
 void SoftwareRenderer::backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) {}
-void SoftwareRenderer::backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {}
+void SoftwareRenderer::backdrops(
+    glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {}
 
-_<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
-    if (text.empty()) return nullptr;
-    SoftwareMultiStringCanvas c(fs);
+_<IRenderer::IPrerenderedString>
+SoftwareRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
+    if (text.empty())
+        return nullptr;
+    SoftwareMultiStringCanvas c(this, fs);
     c.addString(position, text);
     return c.finalize();
 }
 
 _<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style) {
-    return _new<SoftwareMultiStringCanvas>(style);
+    return _new<SoftwareMultiStringCanvas>(this, style);
 }
 
 glm::mat4 SoftwareRenderer::getProjectionMatrix() const { return glm::mat4(1.0f); }
@@ -221,3 +317,12 @@ _<ITexture> SoftwareRenderer::createTexture(glm::u32vec2 size) {
 }
 
 _unique<IRenderViewToTexture> SoftwareRenderer::newRenderViewToTexture() noexcept { return nullptr; }
+
+SoftwareRenderer::FontEntryData* SoftwareRenderer::getFontEntryData(const AFontStyle& fontStyle) {
+    auto fe = fontStyle.getFontEntry();
+    if (fe.second.rendererData == nullptr) {
+        mFontEntryData.emplace_back(this);
+        fe.second.rendererData = &mFontEntryData.last();
+    }
+    return reinterpret_cast<FontEntryData*>(fe.second.rendererData);
+}
