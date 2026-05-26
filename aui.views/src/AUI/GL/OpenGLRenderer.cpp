@@ -642,17 +642,28 @@ _<ITexture> OpenGLRenderer::createTexture(glm::u32vec2 size) {
     return t;
 }
 void OpenGLRenderer::setBlending(Blending blending) {
-    if (glBlendFuncSeparate) return;
+    if (!glBlendFuncSeparate) return;
+    glEnable(GL_BLEND);
     switch (blending) {
-        case Blending::NORMAL: glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
-        case Blending::INVERSE_DST: glBlendFuncSeparate(GL_ONE_MINUS_DST_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
-        case Blending::ADDITIVE: glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
-        case Blending::INVERSE_SRC: glBlendFuncSeparate(GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE); return;
+        case Blending::NORMAL:
+            glBlendFuncSeparate(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+            break;
+        case Blending::INVERSE_DST:
+            glBlendFuncSeparate(GL_ONE_MINUS_DST_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+            break;
+        case Blending::ADDITIVE:
+            glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+            break;
+        case Blending::INVERSE_SRC:
+            glBlendFuncSeparate(GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+            break;
     }
 }
 void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     mViewportSize = windowSize;
     mProjectionMatrix = glm::ortho(0.f, (float)mViewportSize.x, (float)mViewportSize.y, 0.f, -1.f, 1.f);
+    glDisable(GL_DEPTH_TEST);
+    glDisable(GL_CULL_FACE);
 }
 void OpenGLRenderer::endPaint() {}
 _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
