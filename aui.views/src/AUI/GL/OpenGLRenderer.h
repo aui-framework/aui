@@ -28,6 +28,12 @@ private:
     gl::Texture2D mTexture;
 public:
     void setImage(AImageView image) override { mTexture.tex2D(image); }
+
+    [[nodiscard]]
+    glm::u32vec2 getSize() const override {
+        return mTexture.getSize();
+    }
+
     void bind() { mTexture.bind(); }
     void bind(uint32_t unit) { mTexture.bind(unit); }
     gl::Texture2D& texture() noexcept { return mTexture; }
@@ -95,8 +101,7 @@ public:
     void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
     // Common
-    _<ITexture> getNewTexture() override { return mTexturePool.get(); }
-    _unique<ITexture> createNewTexture() override;
+    _<ITexture> createTexture(glm::u32vec2 size) override;
     float getRenderScale() const noexcept override { return mRenderScale; }
     void setRenderScale(float renderScale) override { mRenderScale = renderScale; }
     void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
@@ -127,7 +132,6 @@ protected:
 
 private:
     ASurface* mWindow = nullptr;
-    APool<ITexture> mTexturePool;
     float mRenderScale = 1.0f;
     bool mAllowRenderToTexture = true;
     

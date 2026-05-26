@@ -44,10 +44,6 @@
 
 #define LOG_TAG "OpenGLRenderer"
 
-// ---------------------------------------------------------------------------------------------------------------------
-// Helpers
-// ---------------------------------------------------------------------------------------------------------------------
-
 struct GLDebugGroupLocal {
     GLDebugGroupLocal(const char* name) {
         if (glPushDebugGroup) {
@@ -220,10 +216,6 @@ public:
     }
 };
 
-// ---------------------------------------------------------------------------------------------------------------------
-// IRendererBackend implementation (Stateless)
-// ---------------------------------------------------------------------------------------------------------------------
-
 void OpenGLRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) {
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("solidRectangles");
@@ -390,11 +382,7 @@ void OpenGLRenderer::squareSector(const ADisplayList::SquareSector& v, const glm
 void OpenGLRenderer::backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) {}
 void OpenGLRenderer::backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {}
 
-// ---------------------------------------------------------------------------------------------------------------------
-// Common / Internal
-// ---------------------------------------------------------------------------------------------------------------------
-
-OpenGLRenderer::OpenGLRenderer() : mTexturePool([]{ return std::unique_ptr<ITexture>(new OpenGLTexture2D()); }) {
+OpenGLRenderer::OpenGLRenderer() {
     useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader, aui::sl_gen::rect_solid::fsh::glsl120::Shader>(mSolidShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
     useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader, aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
@@ -402,9 +390,15 @@ OpenGLRenderer::OpenGLRenderer() : mTexturePool([]{ return std::unique_ptr<IText
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::shadow::fsh::glsl120::Shader>(mBoxShadowShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::shadow_inner::fsh::glsl120::Shader>(mBoxShadowInnerShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_gradient::fsh::glsl120::Shader>(mGradientShader);
-    
+
     constexpr GLuint INDICES[] = {0, 1, 2, 2, 1, 3};
     mRectangleVao.indices(INDICES);
+}
+
+_<ITexture> OpenGLRenderer::createTexture(glm::u32vec2 size) {
+    auto t = _new<OpenGLTexture2D>();
+    t->texture().framebufferTex2D(size, gl::Type::UNSIGNED_BYTE);
+    return t;
 }
 void OpenGLRenderer::setBlending(Blending blending) {
     if (glBlendFuncSeparate) {
@@ -437,7 +431,6 @@ _<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFon
     return _new<OpenGLMultiStringCanvas>(this, style);
 }
 _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept { return nullptr; }
-_unique<ITexture> OpenGLRenderer::createNewTexture() { return _unique<ITexture>(new OpenGLTexture2D()); }
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const { return glm::mat4(1.0f); }
 bool OpenGLRenderer::loadGL(GLLoadProc load_proc, bool es) { return true; }
 bool OpenGLRenderer::loadGL(GLLoadProc load_proc) { return true; }

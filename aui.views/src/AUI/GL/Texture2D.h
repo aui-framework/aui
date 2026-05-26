@@ -23,6 +23,11 @@ public:
     virtual ~Texture2D() = default;
     void framebufferTex2D(glm::u32vec2 size, gl::Type type);
 
+    [[nodiscard]]
+    glm::u32vec2 getSize() const noexcept {
+        return mSize;
+    }
+
 private:
     glm::u32vec2 mSize = { 0, 0 };
 };
