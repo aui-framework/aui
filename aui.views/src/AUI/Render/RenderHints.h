@@ -24,43 +24,35 @@
 namespace RenderHints {
     class CanvasOrRenderer {
     public:
-        CanvasOrRenderer(IRenderer& renderer) : mVal(&renderer) {}
-        CanvasOrRenderer(ACanvas& canvas) : mVal(&canvas) {}
+        CanvasOrRenderer(IRenderer& renderer) : mCanvas(renderer.canvas()) {}
+        CanvasOrRenderer(ACanvas& canvas) : mCanvas(canvas) {}
 
         glm::mat4 getTransform() const {
-            if (auto* r = std::get_if<IRenderer*>(&mVal)) return (*r)->getTransform();
-            return std::get<ACanvas*>(mVal)->getTransform();
+            return mCanvas.getTransform();
         }
         void setTransformForced(const glm::mat4& t) {
-            if (auto* r = std::get_if<IRenderer*>(&mVal)) (*r)->setTransformForced(t);
-            else std::get<ACanvas*>(mVal)->setTransformForced(t);
+            mCanvas.setTransformForced(t);
         }
         AColor getColor() const {
-            if (auto* r = std::get_if<IRenderer*>(&mVal)) return (*r)->getColor();
-            return std::get<ACanvas*>(mVal)->getColor();
+            return mCanvas.getColor();
         }
         void setColorForced(const AColor& c) {
-            if (auto* r = std::get_if<IRenderer*>(&mVal)) (*r)->setColorForced(c);
-            else std::get<ACanvas*>(mVal)->setColorForced(c);
+            mCanvas.setColorForced(c);
         }
         void pushMaskBefore() {
-            if (auto* r = std::get_if<IRenderer*>(&mVal)) (*r)->pushMaskBefore();
-            else std::get<ACanvas*>(mVal)->pushMaskBefore();
+            mCanvas.pushMaskBefore();
         }
         void pushMaskAfter() {
-            if (auto* r = std::get_if<IRenderer*>(&mVal)) (*r)->pushMaskAfter();
-            else std::get<ACanvas*>(mVal)->pushMaskAfter();
+            mCanvas.pushMaskAfter();
         }
         void popMaskBefore() {
-            if (auto* r = std::get_if<IRenderer*>(&mVal)) (*r)->popMaskBefore();
-            else std::get<ACanvas*>(mVal)->popMaskBefore();
+            mCanvas.popMaskBefore();
         }
         void popMaskAfter() {
-            if (auto* r = std::get_if<IRenderer*>(&mVal)) (*r)->popMaskAfter();
-            else std::get<ACanvas*>(mVal)->popMaskAfter();
+            mCanvas.popMaskAfter();
         }
     private:
-        std::variant<IRenderer*, ACanvas*> mVal;
+        ACanvas& mCanvas;
     };
 
     template<aui::invocable Callable>

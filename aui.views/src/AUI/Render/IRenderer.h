@@ -17,7 +17,6 @@
 #include <AUI/Common/ASide.h>
 #include <AUI/Common/AColor.h>
 #include <AUI/Render/ABrush.h>
-#include <AUI/Util/APool.h>
 #include <AUI/Util/AArrayView.h>
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Render/ABorderStyle.h"
@@ -385,10 +384,7 @@ public:
     *   <dd>if you want to drawElements multiple lines, consider using <code>ARender::lines</code> function instead.</dd>
     * </dl>
     */
-    void line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) {
-        glm::vec2 points[] = { p1, p2 };
-        lines(brush, points, style, width);
-    }
+    virtual void line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) = 0;
 
     /**
      * @brief Draws polyline (non-loop line strip).
@@ -405,9 +401,7 @@ public:
      * @param points polyline points
      * @param style style
      */
-    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}) {
-        lines(brush, points, style, 1_dp);
-    }
+    virtual void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}) = 0;
 
     /**
      * @brief Draws points list.
@@ -432,9 +426,7 @@ public:
      * @param points line points
      * @param style style
      */
-    void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style = ABorderStyle::Solid{}) {
-        lines(brush, points, style, 1_dp);
-    }
+    virtual void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style = ABorderStyle::Solid{}) = 0;
 
     /**
      * @brief Draws sector in rectangle shape. The sector is drawn clockwise from begin to end angles.
@@ -456,44 +448,29 @@ public:
      * @brief Sets the color which is multiplied with any brush.
      * @param color color
      */
-    void setColorForced(const AColor& color)
-    {
-        mColor = color;
-    }
+    virtual void setColorForced(const AColor& color) = 0;
 
     /**
      * @brief Sets the color which is multiplied with any brush. Unlike <code>setColorForced</code>, the new color is multiplied
      * by the previous color.
      * @param color color
      */
-    void setColor(const AColor& color)
-    {
-        setColorForced(mColor * color);
-    }
+    virtual void setColor(const AColor& color) = 0;
 
-    const AColor& getColor() const
-    {
-        return mColor;
-    }
+    virtual const AColor& getColor() const = 0;
 
     /**
      * @brief Sets the transform matrix which is applicable for any figure. Unlike <code>setTransformForced</code>, the new
      * matrix is multiplied by the previous matrix.
      * @param transform transform matrix
      */
-    void setTransform(const glm::mat4& transform)
-    {
-        mTransform *= transform;
-    }
+    virtual void setTransform(const glm::mat4& transform) = 0;
 
     /**
      * @brief Sets the transform matrix which is applicable for any figure.
      * @param transform transform matrix
      */
-    void setTransformForced(const glm::mat4& transform)
-    {
-        mTransform = transform;
-    }
+    virtual void setTransformForced(const glm::mat4& transform) = 0;
 
     /**
      * @brief witches drawing to the stencil buffer instead of color buffer.
@@ -551,82 +528,53 @@ public:
      * @brief Sets the window to render on.
      * @param window target window
      */
-    virtual void setWindow(ASurface* window)
-    {
-        mWindow = window;
-        setColorForced(1.f);
-        setTransformForced(getProjectionMatrix());
-        mStencilDepth = 0;
-    }
+    virtual void setWindow(ASurface* window) = 0;
 
     [[nodiscard]]
-    virtual ASurface* getWindow() const noexcept {
-        return mWindow;
-    }
+    virtual ASurface* getWindow() const noexcept = 0;
 
     virtual glm::mat4 getProjectionMatrix() const = 0;
 
-    const glm::mat4& getTransform()
-    {
-        return mTransform;
-    }
+    virtual glm::mat4 getTransform() = 0;
 
     [[nodiscard]]
-    std::uint8_t getStencilDepth() const noexcept {
-        return mStencilDepth;
-    }
+    virtual std::uint8_t getStencilDepth() const noexcept = 0;
 
-    void setStencilDepth(uint8_t stencilDepth) {
-        mStencilDepth = stencilDepth;
-    }
+    virtual void setStencilDepth(uint8_t stencilDepth) = 0;
 
 
     /**
      * @brief Wrapper for setTransform applying matrix translate transformation.
      * @param offset offset in pixels to translate.
      */
-    void translate(const glm::vec2& offset) {
-        setTransformForced(glm::translate(getTransform(), glm::vec3(offset, 0.f)));
-    }
+    virtual void translate(const glm::vec2& offset) = 0;
 
     /**
      * @brief wrapper for setTransform applying matrix rotation along the specified axis.
      * @param axis axis
      * @param angle angle to rotate
      */
-    void rotate(const glm::vec3& axis, AAngleRadians angle) {
-        setTransformForced(glm::rotate(getTransform(), angle.radians(), axis));
-    }
+    virtual void rotate(const glm::vec3& axis, AAngleRadians angle) = 0;
 
     /**
      * @brief wrapper for setTransform applying matrix rotation along z axis.
      * @param angle angle to rotate
      */
-    void rotate(AAngleRadians angle) {
-        rotate({0.f, 0.f, 1.f}, angle);
-    }
+    virtual void rotate(AAngleRadians angle) = 0;
 
-    void setAllowRenderToTexture(bool allowRenderToTexture) {
-        mAllowRenderToTexture = allowRenderToTexture;
-    }
+    virtual void setAllowRenderToTexture(bool allowRenderToTexture) = 0;
 
     [[nodiscard]]
-    bool allowRenderToTexture() const noexcept {
-        return mAllowRenderToTexture;
-    }
+    virtual bool allowRenderToTexture() const noexcept = 0;
 
     /**
      * @brief Controls the rendering scale of images for display only.
      * Does not affect the actual visual appearance or geometry of shapes.
      * Only impacts the sharpness and clarity of rendered images on screen.
      */
-    void setRenderScale(float render_scale) {
-        mRenderScale = render_scale;
-    }
+    virtual void setRenderScale(float render_scale) = 0;
 
-    float getRenderScale() const noexcept {
-        return mRenderScale;
-    }
+    virtual float getRenderScale() const noexcept = 0;
 
     /**
      * @brief Draws rectangular backdrop effects.
@@ -636,26 +584,16 @@ public:
      * @details
      * Implementation might draw stub (i.e., gray rectangle) instead of drawing complex backdrop effects.
      */
-    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops);
-
-protected:
-    float mRenderScale = 1.0f;
-    AColor mColor;
-    glm::mat4 mTransform;
-    ASurface* mWindow = nullptr;
-    uint8_t mStencilDepth = 0;
+    virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) = 0;
 
     /**
      * @brief Draws stub (i.e., gray rectangle)
      * @details
      * This can be used if implementation does not support or can't draw complex effects (i.e., blur)
      */
-    void stub(glm::vec2 position, glm::vec2 size);
+    virtual void stub(glm::vec2 position, glm::vec2 size) = 0;
 
-    virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops);
+    virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) = 0;
 
-
-private:
-    bool mAllowRenderToTexture = false;
-
+    virtual ACanvas& canvas() = 0;
 };

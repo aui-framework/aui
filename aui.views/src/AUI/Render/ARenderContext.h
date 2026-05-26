@@ -56,7 +56,9 @@ struct API_AUI_VIEWS ARenderContext {
     [[nodiscard]]
     ARenderContext withShiftedPosition(glm::ivec2 by) const noexcept{
         auto copy = *this;
-        for (auto& r : copy.clippingRects) r.translate(by);
+        for (auto& r : copy.clippingRects) {
+            r.translate(by);
+        }
         return copy;
     }
 };

@@ -18,7 +18,7 @@ class API_AUI_VIEWS RendererCanvas : public IRenderer {
 public:
     RendererCanvas(ACanvas& canvas);
 
-    ACanvas& getCanvas() const { return mCanvas; }
+    ACanvas& canvas() override { return mCanvas; }
 
     _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
 
@@ -61,11 +61,17 @@ public:
 
     _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
 
+    void line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) override;
+
     void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;
+
+    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}) override;
 
     void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) override;
 
     void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) override;
+
+    void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style = ABorderStyle::Solid{}) override;
 
     void squareSector(const ABrush& brush,
                               const glm::vec2& position,
@@ -73,7 +79,15 @@ public:
                               AAngleRadians begin,
                               AAngleRadians end) override;
 
-    void setBlending(Blending blending) override;
+    void setColorForced(const AColor& color) override;
+
+    void setColor(const AColor& color) override;
+
+    const AColor& getColor() const override;
+
+    void setTransform(const glm::mat4& transform) override;
+
+    void setTransformForced(const glm::mat4& transform) override;
 
     void pushMaskBefore() override;
 
@@ -83,12 +97,46 @@ public:
 
     void popMaskAfter() override;
 
+    void setBlending(Blending blending) override;
+
     _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
+
+    void setWindow(ASurface* window) override;
+
+    [[nodiscard]]
+    ASurface* getWindow() const noexcept override;
 
     glm::mat4 getProjectionMatrix() const override;
 
+    glm::mat4 getTransform() override;
+
+    [[nodiscard]]
+    std::uint8_t getStencilDepth() const noexcept override;
+
+    void setStencilDepth(uint8_t stencilDepth) override;
+
+    void translate(const glm::vec2& offset) override;
+
+    void rotate(const glm::vec3& axis, AAngleRadians angle) override;
+
+    void rotate(AAngleRadians angle) override;
+
+    void setAllowRenderToTexture(bool allowRenderToTexture) override;
+
+    [[nodiscard]]
+    bool allowRenderToTexture() const noexcept override;
+
+    void setRenderScale(float render_scale) override;
+
+    float getRenderScale() const noexcept override;
+
+    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) override;
+
+    void stub(glm::vec2 position, glm::vec2 size) override;
+
+    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
+
 private:
     ACanvas& mCanvas;
-
-    void sync();
+    ASurface* mWindow = nullptr;
 };
