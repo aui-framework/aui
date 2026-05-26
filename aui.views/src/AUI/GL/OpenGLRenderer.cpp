@@ -44,6 +44,41 @@
 
 #define LOG_TAG "OpenGLRenderer"
 
+OpenGLRenderer::TransientBuffer::TransientBuffer(GLenum target, size_t size) : mTarget(target), mSize(size) {
+    glGenBuffers(1, &mHandle);
+    glBindBuffer(mTarget, mHandle);
+    glBufferData(mTarget, mSize, nullptr, GL_STREAM_DRAW);
+}
+
+OpenGLRenderer::TransientBuffer::~TransientBuffer() {
+    if (mHandle) glDeleteBuffers(1, &mHandle);
+}
+
+size_t OpenGLRenderer::TransientBuffer::upload(const void* data, size_t size) {
+    if (mOffset + size > mSize) {
+        orphan();
+    }
+    size_t result = mOffset;
+    glBufferSubData(mTarget, mOffset, size, data);
+    mOffset += size;
+    mOffset = (mOffset + 63) & ~63;
+    return result;
+}
+
+void OpenGLRenderer::TransientBuffer::orphan() {
+    glBindBuffer(mTarget, mHandle);
+    glBufferData(mTarget, mSize, nullptr, GL_STREAM_DRAW);
+    mOffset = 0;
+}
+
+void OpenGLRenderer::TransientBuffer::bind() {
+    glBindBuffer(mTarget, mHandle);
+}
+
+void OpenGLRenderer::TransientBuffer::bindRange(GLuint index, size_t offset, size_t size) {
+    glBindBufferRange(mTarget, index, mHandle, offset, size);
+}
+
 struct GLDebugGroupLocal {
     GLDebugGroupLocal(const char* name) {
         if (glPushDebugGroup) {
@@ -223,23 +258,30 @@ void OpenGLRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, con
     mSolidShader->use();
     mSolidShader->set(aui::ShaderUniforms::TRANSFORM, transform);
 
-    AVector<glm::vec2> vertices;
-    AVector<glm::vec4> colors;
+    AVector<Vertex> vertices;
     AVector<GLuint> indices;
+    vertices.reserve(v.instances.size() * 4);
+    indices.reserve(v.instances.size() * 6);
     for (size_t i = 0; i < v.instances.size(); ++i) {
         const auto& inst = v.instances[i];
         GLuint offset = static_cast<GLuint>(i * 4);
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
-        for (auto rv : rectVertices) vertices << rv;
         glm::vec4 color = glm::vec4(inst.color);
-        for (int j = 0; j < 4; ++j) colors << color;
+        for (auto rv : rectVertices) {
+            vertices << Vertex{rv, {}, color};
+        }
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
+
+    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+    size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
+
     mBatchVao.bind();
-    mBatchVao.insert(0, AArrayView(vertices), "solidRectangles/positions");
-    mBatchVao.insert(2, AArrayView(colors), "solidRectangles/colors");
-    mBatchVao.indices(AArrayView(indices));
-    mBatchVao.drawElements();
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, color)));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
 void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) {
@@ -248,14 +290,34 @@ void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& 
     setBlending(blending);
     mGradientShader->use();
     mGradientShader->set(aui::ShaderUniforms::TRANSFORM, transform);
-    for (const auto& inst : v.instances) {
-        auto vertices = getVerticesForRect(inst.position, inst.size);
+
+    AVector<Vertex> vertices;
+    AVector<GLuint> indices;
+    vertices.reserve(v.instances.size() * 4);
+    indices.reserve(v.instances.size() * 6);
+    for (size_t i = 0; i < v.instances.size(); ++i) {
+        const auto& inst = v.instances[i];
+        GLuint offset = static_cast<GLuint>(i * 4);
+        auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = glm::vec4(inst.color);
-        glm::vec4 colors[4] = {color, color, color, color};
-        mRectangleVao.insert(0, AArrayView(vertices), "gradientRectangles/positions");
-        mRectangleVao.insert(2, AArrayView(colors), "gradientRectangles/colors");
-        mRectangleVao.drawElements();
+        
+        vertices << Vertex{rectVertices[0], {0.f, 1.f}, color};
+        vertices << Vertex{rectVertices[1], {1.f, 1.f}, color};
+        vertices << Vertex{rectVertices[2], {0.f, 0.f}, color};
+        vertices << Vertex{rectVertices[3], {1.f, 0.f}, color};
+
+        indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
+
+    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+    size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
+
+    mBatchVao.bind();
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, color)));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) {
     if (v.instances.empty()) return;
@@ -264,14 +326,34 @@ void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& 
     mTexturedShader->use();
     mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, transform);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
-    for (const auto& inst : v.instances) {
-        auto vertices = getVerticesForRect(inst.position, inst.size);
+
+    AVector<Vertex> vertices;
+    AVector<GLuint> indices;
+    vertices.reserve(v.instances.size() * 4);
+    indices.reserve(v.instances.size() * 6);
+    for (size_t i = 0; i < v.instances.size(); ++i) {
+        const auto& inst = v.instances[i];
+        GLuint offset = static_cast<GLuint>(i * 4);
+        auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = glm::vec4(inst.color);
-        glm::vec4 colors[4] = {color, color, color, color};
-        mRectangleVao.insert(0, AArrayView(vertices), "texturedRectangles/positions");
-        mRectangleVao.insert(2, AArrayView(colors), "texturedRectangles/colors");
-        mRectangleVao.drawElements();
+        
+        vertices << Vertex{rectVertices[0], {0.f, 1.f}, color};
+        vertices << Vertex{rectVertices[1], {1.f, 1.f}, color};
+        vertices << Vertex{rectVertices[2], {0.f, 0.f}, color};
+        vertices << Vertex{rectVertices[3], {1.f, 0.f}, color};
+
+        indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
+
+    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+    size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
+
+    mBatchVao.bind();
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, color)));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 void OpenGLRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) {
     if (v.instances.empty()) return;
@@ -279,14 +361,34 @@ void OpenGLRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRect
     setBlending(blending);
     mRoundedSolidShader->use();
     mRoundedSolidShader->set(aui::ShaderUniforms::TRANSFORM, transform);
-    for (const auto& inst : v.instances) {
-        auto vertices = getVerticesForRect(inst.position, inst.size);
+
+    AVector<Vertex> vertices;
+    AVector<GLuint> indices;
+    vertices.reserve(v.instances.size() * 4);
+    indices.reserve(v.instances.size() * 6);
+    for (size_t i = 0; i < v.instances.size(); ++i) {
+        const auto& inst = v.instances[i];
+        GLuint offset = static_cast<GLuint>(i * 4);
+        auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = glm::vec4(inst.color);
-        glm::vec4 colors[4] = {color, color, color, color};
-        mRectangleVao.insert(0, AArrayView(vertices), "solidRoundedRectangles/positions");
-        mRectangleVao.insert(2, AArrayView(colors), "solidRoundedRectangles/colors");
-        mRectangleVao.drawElements();
+        
+        vertices << Vertex{rectVertices[0], {0.f, 1.f}, color};
+        vertices << Vertex{rectVertices[1], {1.f, 1.f}, color};
+        vertices << Vertex{rectVertices[2], {0.f, 0.f}, color};
+        vertices << Vertex{rectVertices[3], {1.f, 0.f}, color};
+
+        indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
+
+    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+    size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
+
+    mBatchVao.bind();
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, color)));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 void OpenGLRenderer::gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) {
     if (v.instances.empty()) return;
@@ -298,50 +400,124 @@ void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRound
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 }
 void OpenGLRenderer::rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) {
+    if (v.instances.empty()) return;
     setBlending(blending);
-    for (const auto& inst : v.instances) {
-        auto vertices = getVerticesForRect(inst.position, inst.size);
+    mSolidShader->use();
+    mSolidShader->set(aui::ShaderUniforms::TRANSFORM, transform);
+
+    AVector<Vertex> vertices;
+    AVector<GLuint> indices;
+    vertices.reserve(v.instances.size() * 4);
+    indices.reserve(v.instances.size() * 6);
+    for (size_t i = 0; i < v.instances.size(); ++i) {
+        const auto& inst = v.instances[i];
+        GLuint offset = static_cast<GLuint>(i * 4);
+        auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = glm::vec4(inst.color);
-        glm::vec4 colors[4] = {color, color, color, color};
-        mRectangleVao.insert(0, AArrayView(vertices), "rectangleBorders/positions");
-        mRectangleVao.insert(2, AArrayView(colors), "rectangleBorders/colors");
-        mRectangleVao.drawElements();
+        
+        vertices << Vertex{rectVertices[0], {0.f, 1.f}, color};
+        vertices << Vertex{rectVertices[1], {1.f, 1.f}, color};
+        vertices << Vertex{rectVertices[2], {0.f, 0.f}, color};
+        vertices << Vertex{rectVertices[3], {1.f, 0.f}, color};
+
+        indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
+
+    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+    size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
+
+    mBatchVao.bind();
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, color)));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 void OpenGLRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) {
+    if (v.instances.empty()) return;
     setBlending(blending);
-    for (const auto& inst : v.instances) {
-        auto vertices = getVerticesForRect(inst.position, inst.size);
+    mRoundedSolidShader->use();
+    mRoundedSolidShader->set(aui::ShaderUniforms::TRANSFORM, transform);
+
+    AVector<Vertex> vertices;
+    AVector<GLuint> indices;
+    vertices.reserve(v.instances.size() * 4);
+    indices.reserve(v.instances.size() * 6);
+    for (size_t i = 0; i < v.instances.size(); ++i) {
+        const auto& inst = v.instances[i];
+        GLuint offset = static_cast<GLuint>(i * 4);
+        auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = glm::vec4(inst.color);
-        glm::vec4 colors[4] = {color, color, color, color};
-        mRectangleVao.insert(0, AArrayView(vertices), "roundedRectangleBorders/positions");
-        mRectangleVao.insert(2, AArrayView(colors), "roundedRectangleBorders/colors");
-        mRectangleVao.drawElements();
+        
+        vertices << Vertex{rectVertices[0], {0.f, 1.f}, color};
+        vertices << Vertex{rectVertices[1], {1.f, 1.f}, color};
+        vertices << Vertex{rectVertices[2], {0.f, 0.f}, color};
+        vertices << Vertex{rectVertices[3], {1.f, 0.f}, color};
+
+        indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
+
+    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+    size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
+
+    mBatchVao.bind();
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, color)));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 void OpenGLRenderer::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) {
     GLDebugGroupLocal debugGroup("boxShadow");
     setBlending(blending);
     mBoxShadowShader->use();
     mBoxShadowShader->set(aui::ShaderUniforms::TRANSFORM, transform);
-    auto vertices = getVerticesForRect(v.position, v.size);
+    auto rectVertices = getVerticesForRect(v.position, v.size);
     glm::vec4 color = glm::vec4(v.color);
-    glm::vec4 colors[4] = {color, color, color, color};
-    mRectangleVao.insert(0, AArrayView(vertices), "boxShadow/positions");
-    mRectangleVao.insert(2, AArrayView(colors), "boxShadow/colors");
-    mRectangleVao.drawElements();
+
+    Vertex vertices[] = {
+        {rectVertices[0], {0.f, 1.f}, color},
+        {rectVertices[1], {1.f, 1.f}, color},
+        {rectVertices[2], {0.f, 0.f}, color},
+        {rectVertices[3], {1.f, 0.f}, color}
+    };
+    GLuint indices[] = {0, 1, 2, 2, 1, 3};
+
+    size_t vOffset = mVertexBuffer.upload(vertices, sizeof(Vertex) * 4);
+    size_t iOffset = mIndexBuffer.upload(indices, sizeof(GLuint) * 6);
+
+    mBatchVao.bind();
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, color)));
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }
 void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) {
     GLDebugGroupLocal debugGroup("boxShadowInner");
     setBlending(blending);
     mBoxShadowInnerShader->use();
     mBoxShadowInnerShader->set(aui::ShaderUniforms::TRANSFORM, transform);
-    auto vertices = getVerticesForRect(v.position, v.size);
+    auto rectVertices = getVerticesForRect(v.position, v.size);
     glm::vec4 color = glm::vec4(v.color);
-    glm::vec4 colors[4] = {color, color, color, color};
-    mRectangleVao.insert(0, AArrayView(vertices), "boxShadowInner/positions");
-    mRectangleVao.insert(2, AArrayView(colors), "boxShadowInner/colors");
-    mRectangleVao.drawElements();
+
+    Vertex vertices[] = {
+        {rectVertices[0], {0.f, 1.f}, color},
+        {rectVertices[1], {1.f, 1.f}, color},
+        {rectVertices[2], {0.f, 0.f}, color},
+        {rectVertices[3], {1.f, 0.f}, color}
+    };
+    GLuint indices[] = {0, 1, 2, 2, 1, 3};
+
+    size_t vOffset = mVertexBuffer.upload(vertices, sizeof(Vertex) * 4);
+    size_t iOffset = mIndexBuffer.upload(indices, sizeof(GLuint) * 6);
+
+    mBatchVao.bind();
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, color)));
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }
 void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) {
     if (v.instances.empty()) return;
@@ -351,29 +527,33 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
     mSymbolShader->set(aui::ShaderUniforms::TRANSFORM, transform);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
-    AVector<glm::vec2> vertices;
-    AVector<glm::vec2> uvs;
-    AVector<glm::vec4> colors;
+    AVector<Vertex> vertices;
     AVector<GLuint> indices;
+    vertices.reserve(v.instances.size() * 4);
+    indices.reserve(v.instances.size() * 6);
     for (size_t i = 0; i < v.instances.size(); ++i) {
         const auto& inst = v.instances[i];
         GLuint offset = static_cast<GLuint>(i * 4);
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
-        for (auto rv : rectVertices) vertices << rv;
-        uvs << glm::vec2{inst.u1.x, inst.u2.y} << glm::vec2{inst.u2.x, inst.u2.y} 
-            << glm::vec2{inst.u1.x, inst.u1.y} << glm::vec2{inst.u2.x, inst.u1.y};
-        
         glm::vec4 color = glm::vec4(inst.color);
-        for (int j = 0; j < 4; ++j) colors << color;
+        
+        vertices << Vertex{rectVertices[0], {inst.u1.x, inst.u2.y}, color};
+        vertices << Vertex{rectVertices[1], {inst.u2.x, inst.u2.y}, color};
+        vertices << Vertex{rectVertices[2], {inst.u1.x, inst.u1.y}, color};
+        vertices << Vertex{rectVertices[3], {inst.u2.x, inst.u1.y}, color};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
+
+    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+    size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
+
     mBatchVao.bind();
-    mBatchVao.insert(0, AArrayView(vertices), "glyphs/positions");
-    mBatchVao.insert(1, AArrayView(uvs), "glyphs/uvs");
-    mBatchVao.insert(2, AArrayView(colors), "glyphs/colors");
-    mBatchVao.indices(AArrayView(indices));
-    mBatchVao.drawElements();
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, color)));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 void OpenGLRenderer::lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) {}
 void OpenGLRenderer::points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) {}
@@ -382,7 +562,10 @@ void OpenGLRenderer::squareSector(const ADisplayList::SquareSector& v, const glm
 void OpenGLRenderer::backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) {}
 void OpenGLRenderer::backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {}
 
-OpenGLRenderer::OpenGLRenderer() {
+OpenGLRenderer::OpenGLRenderer() : 
+    mVertexBuffer(GL_ARRAY_BUFFER, 1024 * 1024 * 2),
+    mIndexBuffer(GL_ELEMENT_ARRAY_BUFFER, 1024 * 1024 * 1)
+{
     useAuislShader<aui::sl_gen::basic::vsh::glsl120::Shader, aui::sl_gen::rect_solid::fsh::glsl120::Shader>(mSolidShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_textured::fsh::glsl120::Shader>(mTexturedShader);
     useAuislShader<aui::sl_gen::symbol::vsh::glsl120::Shader, aui::sl_gen::symbol::fsh::glsl120::Shader>(mSymbolShader);
@@ -391,8 +574,16 @@ OpenGLRenderer::OpenGLRenderer() {
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::shadow_inner::fsh::glsl120::Shader>(mBoxShadowInnerShader);
     useAuislShader<aui::sl_gen::basic_uv::vsh::glsl120::Shader, aui::sl_gen::rect_gradient::fsh::glsl120::Shader>(mGradientShader);
 
-    constexpr GLuint INDICES[] = {0, 1, 2, 2, 1, 3};
-    mRectangleVao.indices(INDICES);
+    mBatchVao.bind();
+    mVertexBuffer.bind();
+    mIndexBuffer.bind();
+
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, pos));
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, uv));
+    glEnableVertexAttribArray(2);
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)offsetof(Vertex, color));
 }
 
 _<ITexture> OpenGLRenderer::createTexture(glm::u32vec2 size) {
@@ -413,13 +604,26 @@ void OpenGLRenderer::setBlending(Blending blending) {
 void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {}
 void OpenGLRenderer::endPaint() {}
 void OpenGLRenderer::drawRectImpl(glm::vec2 position, glm::vec2 size) {
-    mRectangleVao.bind();
-    mRectangleVao.insert(0, AArrayView(getVerticesForRect(position, size)), "drawRectImpl");
-    mRectangleVao.drawElements();
+    auto rectVertices = getVerticesForRect(position, size);
+    Vertex vertices[] = {
+        {rectVertices[0], {0.f, 1.f}, AColor::WHITE},
+        {rectVertices[1], {1.f, 1.f}, AColor::WHITE},
+        {rectVertices[2], {0.f, 0.f}, AColor::WHITE},
+        {rectVertices[3], {1.f, 0.f}, AColor::WHITE}
+    };
+    GLuint indices[] = {0, 1, 2, 2, 1, 3};
+
+    size_t vOffset = mVertexBuffer.upload(vertices, sizeof(Vertex) * 4);
+    size_t iOffset = mIndexBuffer.upload(indices, sizeof(GLuint) * 6);
+
+    mBatchVao.bind();
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(Vertex), (void*)(vOffset + offsetof(Vertex, color)));
+
+    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }
 void OpenGLRenderer::identityUv() {
-    static constexpr glm::vec2 uvs[] = { {0.f, 1.f}, {1.f, 1.f}, {0.f, 0.f}, {1.f, 0.f} };
-    mRectangleVao.insert(1, AArrayView(uvs), "identityUv");
 }
 _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
     if (text.empty()) return nullptr;
@@ -434,7 +638,6 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const { return glm::mat4(1.0f); }
 bool OpenGLRenderer::loadGL(GLLoadProc load_proc, bool es) { return true; }
 bool OpenGLRenderer::loadGL(GLLoadProc load_proc) { return true; }
-void OpenGLRenderer::bindTemporaryVao() const noexcept { mRectangleVao.bind(); }
 uint32_t OpenGLRenderer::getDefaultFb() const noexcept { return 0; }
 OpenGLRenderer::FontEntryData* OpenGLRenderer::getFontEntryData(const AFontStyle& fontStyle) {
     auto fe = fontStyle.getFontEntry();

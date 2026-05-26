@@ -125,7 +125,32 @@ public:
     void beginPaint(glm::uvec2 windowSize);
     void endPaint();
     uint32_t getDefaultFb() const noexcept;
-    void bindTemporaryVao() const noexcept;
+    void bindTemporaryVao() const noexcept { mBatchVao.bind(); }
+
+    struct Vertex {
+        glm::vec2 pos;
+        glm::vec2 uv;
+        glm::vec4 color;
+    };
+
+    class TransientBuffer {
+    public:
+        TransientBuffer(GLenum target, size_t size);
+        ~TransientBuffer();
+        TransientBuffer(const TransientBuffer&) = delete;
+
+        size_t upload(const void* data, size_t size);
+        void orphan();
+        void bind();
+        void bindRange(GLuint index, size_t offset, size_t size);
+        [[nodiscard]] GLuint handle() const { return mHandle; }
+
+    private:
+        GLenum mTarget;
+        GLuint mHandle = 0;
+        size_t mSize;
+        size_t mOffset = 0;
+    };
 
 protected:
     FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
@@ -149,10 +174,11 @@ private:
     AOptional<gl::Program> mSymbolShaderSubPixel;
     AOptional<gl::Program> mLineSolidDashedShader;
 
-    gl::Vao mRectangleVao;
-    gl::Vao mBorderVao;
     gl::Vao mBatchVao;
     gl::Texture2D mGradientTexture;
+
+    TransientBuffer mVertexBuffer;
+    TransientBuffer mIndexBuffer;
 
     ADeque<FontEntryData> mFontEntryData;
     AVector<CharacterData> mCharData;
