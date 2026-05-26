@@ -28,8 +28,7 @@ class API_AUI_VIEWS IRendererBackend {
 public:
     virtual ~IRendererBackend() = default;
 
-    virtual _<ITexture> getNewTexture() = 0;
-    virtual _unique<ITexture> createNewTexture() = 0;
+    virtual _<ITexture> createTexture(glm::u32vec2 size) = 0;
     virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
 
     virtual void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) = 0;
