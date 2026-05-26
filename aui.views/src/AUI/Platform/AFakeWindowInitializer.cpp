@@ -40,8 +40,7 @@ namespace {
         void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) override {}
         void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override {}
 
-        _<ITexture> getNewTexture() override { return nullptr; }
-        _unique<ITexture> createNewTexture() override { return nullptr; }
+        _<ITexture> createTexture(glm::u32vec2 size) override { return nullptr; }
         float getRenderScale() const noexcept override { return 1.0f; }
         void setRenderScale(float renderScale) override {}
         void setAllowRenderToTexture(bool allow) override {}
