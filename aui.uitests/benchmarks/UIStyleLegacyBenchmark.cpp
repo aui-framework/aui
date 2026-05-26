@@ -63,22 +63,20 @@ public:
     ASurface* getWindow() const noexcept override { return nullptr; }
     glm::mat4 getProjectionMatrix() const override { return glm::mat4(1.0f); }
 
-    _<ITexture> getNewTexture() override { return _unique<ITexture>(new Stub()); }
-    float getRenderScale() const noexcept override { return 1.0f; }
-    void setRenderScale(float renderScale) override {}
-    void setAllowRenderToTexture(bool allow) override {}
-    bool allowRenderToTexture() const noexcept override { return true; }
-    void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) override {}
-    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override {}
-
     class Stub : public ITexture {
     public:
-        void setImage(AImageView image) override {}
+        void setImage(AImageView image) override { mSize = image.size(); }
+        [[nodiscard]] glm::u32vec2 getSize() const override { return mSize; }
         ~Stub() override = default;
+    private:
+        glm::u32vec2 mSize = { 0, 0 };
     };
-    _unique<ITexture> createNewTexture() override {
-        return std::make_unique<Stub>();
+
+    _<ITexture> createTexture(glm::u32vec2 size) override {
+        auto t = _new<Stub>();
+        return t;
     }
+    float getRenderScale() const noexcept override { return 1.0f; }
 };
 
 }   // namespace
