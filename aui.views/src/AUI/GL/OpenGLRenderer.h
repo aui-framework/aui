@@ -108,7 +108,7 @@ public:
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
-    void setWindow(ASurface* window) override { mWindow = window; }
+    void setWindow(ASurface* window) override;
     ASurface* getWindow() const noexcept override { return mWindow; }
     glm::mat4 getProjectionMatrix() const override;
 
@@ -121,9 +121,8 @@ public:
 
     OpenGLRenderer();
     ~OpenGLRenderer() override = default;
-    void identityUv();
+
     bool isVaoAvailable() const noexcept;
-    void drawRectImpl(glm::vec2 position, glm::vec2 size);
     void setBlending(Blending blending);
     void beginPaint(glm::uvec2 windowSize);
     void endPaint();
@@ -195,6 +194,9 @@ private:
     ADeque<FontEntryData> mFontEntryData;
     AVector<CharacterData> mCharData;
     OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
+
+    glm::uvec2 mViewportSize = { 1, 1 };
+    glm::mat4 mProjectionMatrix = glm::mat4(1.0f);
 
     struct {
         IRenderViewToTexture* mRenderToTextureTarget = nullptr;

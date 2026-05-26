@@ -294,7 +294,7 @@ void OpenGLRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, con
     GLDebugGroupLocal debugGroup("solidRectangles");
     setBlending(blending);
     mSolidShader->use();
-    mSolidShader->set(aui::ShaderUniforms::TRANSFORM, transform);
+    mSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
 
     AVector<VertexBasic> vertices;
     AVector<GLuint> indices;
@@ -326,7 +326,7 @@ void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& 
     GLDebugGroupLocal debugGroup("gradientRectangles");
     setBlending(blending);
     mGradientShader->use();
-    mGradientShader->set(aui::ShaderUniforms::TRANSFORM, transform);
+    mGradientShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
 
     AVector<VertexBasicUv> vertices;
     AVector<GLuint> indices;
@@ -361,7 +361,7 @@ void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& 
     GLDebugGroupLocal debugGroup("texturedRectangles");
     setBlending(blending);
     mTexturedShader->use();
-    mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, transform);
+    mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
     AVector<VertexBasicUv> vertices;
@@ -397,7 +397,7 @@ void OpenGLRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRect
     GLDebugGroupLocal debugGroup("solidRoundedRectangles");
     setBlending(blending);
     mRoundedSolidShader->use();
-    mRoundedSolidShader->set(aui::ShaderUniforms::TRANSFORM, transform);
+    mRoundedSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
 
     AVector<VertexBasicUv> vertices;
     AVector<GLuint> indices;
@@ -474,7 +474,7 @@ void OpenGLRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangl
     if (v.instances.empty()) return;
     setBlending(blending);
     mRoundedSolidShader->use();
-    mRoundedSolidShader->set(aui::ShaderUniforms::TRANSFORM, transform);
+    mRoundedSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
 
     AVector<VertexBasicUv> vertices;
     AVector<GLuint> indices;
@@ -508,7 +508,7 @@ void OpenGLRenderer::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4
     GLDebugGroupLocal debugGroup("boxShadow");
     setBlending(blending);
     mBoxShadowShader->use();
-    mBoxShadowShader->set(aui::ShaderUniforms::TRANSFORM, transform);
+    mBoxShadowShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
     auto rectVertices = getVerticesForRect(v.position, v.size);
     glm::vec4 color = glm::vec4(v.color);
 
@@ -533,7 +533,7 @@ void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const
     GLDebugGroupLocal debugGroup("boxShadowInner");
     setBlending(blending);
     mBoxShadowInnerShader->use();
-    mBoxShadowInnerShader->set(aui::ShaderUniforms::TRANSFORM, transform);
+    mBoxShadowInnerShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
     auto rectVertices = getVerticesForRect(v.position, v.size);
     glm::vec4 color = glm::vec4(v.color);
 
@@ -560,7 +560,7 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
     GLDebugGroupLocal debugGroup("glyphs");
     setBlending(blending);
     mSymbolShader->use();
-    mSymbolShader->set(aui::ShaderUniforms::TRANSFORM, transform);
+    mSymbolShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
     AVector<VertexSymbol> vertices;
@@ -640,40 +640,31 @@ void OpenGLRenderer::setBlending(Blending blending) {
         }
     }
 }
-void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {}
+void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
+    mViewportSize = windowSize;
+    mProjectionMatrix = glm::ortho(0.f, (float)mViewportSize.x, (float)mViewportSize.y, 0.f, -1.f, 1.f);
+}
 void OpenGLRenderer::endPaint() {}
-void OpenGLRenderer::drawRectImpl(glm::vec2 position, glm::vec2 size) {
-    auto rectVertices = getVerticesForRect(position, size);
-    VertexBasic vertices[] = {
-        {rectVertices[0], AColor::WHITE},
-        {rectVertices[1], AColor::WHITE},
-        {rectVertices[2], AColor::WHITE},
-        {rectVertices[3], AColor::WHITE}
-    };
-    GLuint indices[] = {0, 1, 2, 2, 1, 3};
-
-    size_t vOffset = mVertexBuffer.upload(vertices, sizeof(VertexBasic) * 4);
-    size_t iOffset = mIndexBuffer.upload(indices, sizeof(GLuint) * 6);
-
-    mBatchVao.bind();
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasic), (void*)(vOffset + offsetof(VertexBasic, pos)));
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasic), (void*)(vOffset + offsetof(VertexBasic, color)));
-
-    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
-}
-void OpenGLRenderer::identityUv() {
-}
 _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
     if (text.empty()) return nullptr;
     OpenGLMultiStringCanvas c(this, fs);
     c.addString(position, text);
     return c.finalize();
 }
+void OpenGLRenderer::setWindow(ASurface* window) {
+    mWindow = window;
+    if (mWindow) {
+        mViewportSize = mWindow->getSize();
+        mProjectionMatrix = glm::ortho(0.f, (float)mViewportSize.x, (float)mViewportSize.y, 0.f, -1.f, 1.f);
+    }
+}
 _<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle& style) {
     return _new<OpenGLMultiStringCanvas>(this, style);
 }
 _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept { return nullptr; }
-glm::mat4 OpenGLRenderer::getProjectionMatrix() const { return glm::mat4(1.0f); }
+glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
+    return mProjectionMatrix;
+}
 bool OpenGLRenderer::loadGL(GLLoadProc load_proc, bool es) {
     mIsES = es;
     if (mIsES) {
