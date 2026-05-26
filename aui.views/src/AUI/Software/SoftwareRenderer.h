@@ -24,23 +24,9 @@
 #include "SoftwareTexture.h"
 
 class SoftwareRenderer : public IRendererBackend {
-    friend class SoftwarePrerenderedString;
-    friend class SoftwareMultiStringCanvas;
 public:
-    struct FontEntryData: aui::noncopyable {
-        SoftwareRenderer* renderer;
-        _<SoftwareTexture> texture;
-        bool isTextureInvalid = true;
-        Util::SimpleTexturePacker texturePacker;
-
-        explicit FontEntryData(SoftwareRenderer* renderer): renderer(renderer), texture(_new<SoftwareTexture>()) {}
-    };
-
-    struct CharacterData {
-        glm::vec4 uv;
-    };
-
     SoftwareRenderer();
+    ~SoftwareRenderer() override = default;
 
     // IRendererBackend implementation
     void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) override;
@@ -54,7 +40,6 @@ public:
     void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) override;
     void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) override;
     void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) override;
-    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
     void lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) override;
     void points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) override;
     void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, Blending blending) override;
@@ -73,18 +58,19 @@ public:
     void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
 
-    _<ITexture> createTexture(glm::u32vec2 size) override;
-    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
+    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE) override;
     glm::mat4 getProjectionMatrix() const override;
+
+    ADeque<aui::font_rendering::FontEntryData>& getFontEntryDataCache() override { return mFontEntryData; }
+    ADeque<aui::font_rendering::CharacterData>& getCharacterDataCache() override { return mCharData; }
 
 protected:
     void putPixel(glm::ivec2 pos, AColor color, Blending blending = Blending::NORMAL);
-    FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
 
     SoftwareRenderingContext* mContext = nullptr;
     ASurface* mWindow = nullptr;
     float mRenderScale = 1.0f;
     bool mAllowRenderToTexture = true;
-    ADeque<FontEntryData> mFontEntryData;
-    ADeque<CharacterData> mCharData;
+    ADeque<aui::font_rendering::FontEntryData> mFontEntryData;
+    ADeque<aui::font_rendering::CharacterData> mCharData;
 };

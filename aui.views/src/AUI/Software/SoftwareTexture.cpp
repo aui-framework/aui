@@ -15,6 +15,6 @@
 
 #include "SoftwareTexture.h"
 
-void SoftwareTexture::setImage(AImageView image) {
+void SoftwareTexture::upload(AImageView image) {
     mImage = AImage(image);
 }

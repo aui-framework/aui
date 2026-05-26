@@ -18,8 +18,8 @@ private:
     AImage mImage;
 
 public:
-    void setImage(AImageView image) override;
-    void setImage(AImage&& image) {
+    void upload(AImageView image) override;
+    void upload(AImage&& image) {
         mImage = std::move(image);
     }
 
