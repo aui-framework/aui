@@ -77,8 +77,9 @@ void AVectorDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
     }
 
     auto& backend = render.renderer();
-    auto texture = backend.createTexture(glm::max(textureSize, glm::ivec2(0)));
-    texture->setImage(mFactory->provideImage(glm::max(textureSize, glm::ivec2(0))));
+    auto img = mFactory->provideImage(glm::max(textureSize, glm::ivec2(0)));
+    auto texture = backend.createTexture(img.size(), img.format());
+    texture->upload(img);
     mRasterized.push_back({key, texture});
     doDraw(texture);
 }

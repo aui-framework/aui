@@ -70,7 +70,7 @@ namespace {
             AView::render(ctx);
             if (mTexture == nullptr) {
                 auto& backend = ctx.canvas.renderer();
-                mTexture = backend.createTexture(mImage.size());
+                mTexture = backend.createTexture(mImage.size(), mImage.format());
             }
 
             ctx.canvas.rectangle(ATexturedBrush {
@@ -151,7 +151,7 @@ namespace {
             mImage.setWithPositionCheck(glm::uvec2{mFrameIndex, mImage.size().y - timeToY(6'250us) - 1}, AFormattedColorConverter(AColor::RED)); // 160 fps
 
             // nullsafe lol?
-            AUI_NULLSAFE(mTexture)->setImage(mImage);
+            AUI_NULLSAFE(mTexture)->upload(mImage);
             mFrameIndex++;
             mFrameIndex %= mImage.size().x;
             redraw();

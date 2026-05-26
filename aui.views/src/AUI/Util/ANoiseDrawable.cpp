@@ -17,7 +17,7 @@
 void ANoiseDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
     if (!mNoise) {
         auto& backend = render.renderer();
-        mNoise = backend.createTexture({ 32, 32 });
+        mNoise = backend.createTexture({ 32, 32 }, APixelFormat::RGBA_BYTE);
 
         AFormattedImage<APixelFormat::RGBA_BYTE> data({ 32, 32 });
         ARandom r;
@@ -25,9 +25,8 @@ void ANoiseDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
             color.r = color.g = color.b = uint8_t(r.nextInt());
             color.a = 255;
         }
-
-        mNoise->setImage(AImageView(data));
-    }
+        mNoise->upload(AImageView(data));
+        }
 
     render.rectangle(APaint {
         ATexturedBrush {

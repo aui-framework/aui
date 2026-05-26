@@ -22,7 +22,7 @@ public:
     /**
      * @brief Copies image to the texture image representation (i.e. to GPU memory).
      */
-    virtual void setImage(AImageView image) = 0;
+    virtual void upload(AImageView image) = 0;
 
     [[nodiscard]]
     virtual glm::u32vec2 getSize() const = 0;
