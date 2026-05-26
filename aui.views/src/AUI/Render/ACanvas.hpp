@@ -31,9 +31,13 @@
 #include <AUI/Render/APaint.hpp>
 #include <AUI/Render/IRenderer.h>
 
+class IRendererBackend;
+
 class ACanvas {
 public:
     virtual ~ACanvas() = default;
+
+    virtual IRendererBackend& renderer() = 0;
 
     virtual void save() {
         mStates.push_back(State{mTransform, mBaseTransform, mColorMultiplier, mOpacity, mBlending});
@@ -149,9 +153,6 @@ public:
     virtual void popMaskAfter() = 0;
 
     virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) = 0;
-
-    virtual _<ITexture> getNewTexture() = 0;
-    virtual _unique<ITexture> createNewTexture() = 0;
 
     virtual float getRenderScale() const noexcept = 0;
     virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
