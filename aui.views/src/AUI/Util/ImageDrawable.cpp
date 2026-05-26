@@ -18,7 +18,7 @@
 #include <AUI/Render/ACanvas.hpp>
 #include "AImageDrawable.h"
 #include "AUI/Render/ITexture.h"
-#include <AUI/Platform/AWindow.h>
+#include <AUI/Render/IRendererBackend.h>
 #include <variant>
 
 AImageDrawable::AImageDrawable(_<AImage> image): mSize(image->size()), mStorage(std::move(image)) {
@@ -35,7 +35,8 @@ glm::ivec2 AImageDrawable::getSizeHint() {
 
 void AImageDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
     if (auto asImage = std::get_if<_<AImage>>(&mStorage)) {
-        auto texture = render.getNewTexture();
+        auto& backend = render.renderer();
+        auto texture = backend.createTexture((*asImage)->size());
         texture->setImage(**asImage);
         mStorage = std::move(texture);
     }

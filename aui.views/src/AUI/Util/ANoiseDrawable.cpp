@@ -11,11 +11,13 @@
 
 #include "ANoiseDrawable.h"
 #include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/IRendererBackend.h>
 #include <AUI/Util/ARandom.h>
 
 void ANoiseDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
     if (!mNoise) {
-        mNoise = render.getNewTexture();
+        auto& backend = render.renderer();
+        mNoise = backend.createTexture({ 32, 32 });
 
         AFormattedImage<APixelFormat::RGBA_BYTE> data({ 32, 32 });
         ARandom r;

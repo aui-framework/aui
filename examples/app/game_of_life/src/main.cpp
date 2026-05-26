@@ -161,7 +161,8 @@ private:
 
     void updateTexture() {
         if (!mTexture) {
-            mTexture = AWindow::current()->getRenderingContext()->renderer().getNewTexture();
+            auto& backend = AWindow::current()->getRenderingContext()->backend();
+            mTexture = backend.createTexture(mCells->size());
         }
 
         CellsImage image(mCells->size());

@@ -38,6 +38,7 @@
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABrush.h"
 #include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/IRendererBackend.h>
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Render/ITexture.h"
 #include "AUI/Traits/values.h"
@@ -68,7 +69,8 @@ namespace {
         void render(ARenderContext ctx) override {
             AView::render(ctx);
             if (mTexture == nullptr) {
-                mTexture = ctx.canvas.getNewTexture();
+                auto& backend = ctx.canvas.renderer();
+                mTexture = backend.createTexture(mImage.size());
             }
 
             ctx.canvas.rectangle(ATexturedBrush {
