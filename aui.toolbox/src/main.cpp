@@ -46,7 +46,6 @@
 
 #include "Toolbox.h"
 #include "Command/Svg2png.h"
-#include "Command/Auisl.h"
 #include "Command/GenerateDlStubs.h"
 
 Toolbox toolbox;
@@ -63,7 +62,6 @@ Toolbox::Toolbox() {
     registerCommand<PackManual>();
     registerCommand<Svg2png>();
     registerCommand<Svg2ico>();
-    registerCommand<Auisl>();
     registerCommand<ConvertImage>();
     registerCommand<GenerateDlStubs>();
 }
