@@ -23,6 +23,11 @@ public:
         mImage = std::move(image);
     }
 
+    [[nodiscard]]
+    glm::u32vec2 getSize() const override {
+        return mImage.size();
+    }
+
     [[nodiscard]] const AImage& getImage() const noexcept {
         return mImage;
     }

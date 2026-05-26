@@ -57,8 +57,7 @@ public:
     void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
 
-    _<ITexture> getNewTexture() override { return mTexturePool.get(); }
-    _unique<ITexture> createNewTexture() override;
+    _<ITexture> createTexture(glm::u32vec2 size) override;
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     glm::mat4 getProjectionMatrix() const override;
 
@@ -66,7 +65,6 @@ protected:
     void putPixel(glm::ivec2 pos, AColor color, Blending blending = Blending::NORMAL);
 
     SoftwareRenderingContext* mContext = nullptr;
-    APool<ITexture> mTexturePool;
     ASurface* mWindow = nullptr;
     float mRenderScale = 1.0f;
     bool mAllowRenderToTexture = true;

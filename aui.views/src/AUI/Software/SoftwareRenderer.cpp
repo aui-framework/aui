@@ -16,10 +16,8 @@
 #include <AUI/ASS/Property/Backdrop.h>
 #include <AUI/Traits/values.h>
 #include <AUI/Render/ACanvas.hpp>
-
-// ---------------------------------------------------------------------------------------------------------------------
-// Text rendering implementations
-// ---------------------------------------------------------------------------------------------------------------------
+#include <AUI/Image/AImage.h>
+#include "SoftwareTexture.h"
 
 struct CharacterGlyph {
     glm::vec2 position;
@@ -126,7 +124,7 @@ public:
 };
 
 
-SoftwareRenderer::SoftwareRenderer() : mTexturePool([] { return nullptr; }) {}
+SoftwareRenderer::SoftwareRenderer() {}
 
 void SoftwareRenderer::setWindow(ASurface* window) {
     mWindow = window;
@@ -158,7 +156,36 @@ void SoftwareRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, c
     }
 }
 void SoftwareRenderer::gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) {}
-void SoftwareRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) {}
+void SoftwareRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) {
+    auto texture = dynamic_cast<SoftwareTexture*>(v.texture.get());
+    if (!texture) return;
+    const auto& img = texture->getImage();
+    if (img.size().x == 0 || img.size().y == 0) return;
+
+    for (const auto& inst : v.instances) {
+        auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
+        auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+        
+        float width = p2.x - p1.x;
+        float height = p2.y - p1.y;
+
+        for (int y = (int)p1.y; y < (int)p2.y; ++y) {
+            for (int x = (int)p1.x; x < (int)p2.x; ++x) {
+                float u = (x - (float)p1.x) / width;
+                float v_uv = (y - (float)p1.y) / height;
+                
+                glm::uvec2 texPos((unsigned)(u * glm::max(0.f, (float)img.width() - 1.f)), (unsigned)(v_uv * glm::max(0.f, (float)img.height() - 1.f)));
+                AColor texColor;
+                if (texPos.x < img.width() && texPos.y < img.height()) {
+                    texColor = img.get(texPos);
+                } else {
+                    texColor = AColor::RED;
+                }
+                putPixel({x, y}, texColor * inst.color, blending);
+            }
+        }
+    }
+}
 void SoftwareRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) {}
 void SoftwareRenderer::gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) {}
 void SoftwareRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, Blending blending) {}
@@ -186,5 +213,11 @@ _<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AF
 }
 
 glm::mat4 SoftwareRenderer::getProjectionMatrix() const { return glm::mat4(1.0f); }
-_unique<ITexture> SoftwareRenderer::createNewTexture() { return nullptr; }
+
+_<ITexture> SoftwareRenderer::createTexture(glm::u32vec2 size) {
+    auto t = _new<SoftwareTexture>();
+    t->setImage(AImage(size, APixelFormat::RGBA_BYTE));
+    return t;
+}
+
 _unique<IRenderViewToTexture> SoftwareRenderer::newRenderViewToTexture() noexcept { return nullptr; }
