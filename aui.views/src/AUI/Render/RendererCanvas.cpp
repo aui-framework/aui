@@ -122,10 +122,6 @@ glm::mat4 RendererCanvas::getProjectionMatrix() const {
     return glm::mat4(1.0f);
 }
 
-_unique<ITexture> RendererCanvas::createNewTexture() {
-    return mCanvas.createNewTexture();
-}
-
 void RendererCanvas::sync() {
     mCanvas.setTransformForced(mTransform);
     mCanvas.setBaseTransform(getProjectionMatrix());

@@ -87,9 +87,6 @@ public:
 
     glm::mat4 getProjectionMatrix() const override;
 
-protected:
-    _unique<ITexture> createNewTexture() override;
-
 private:
     ACanvas& mCanvas;
 

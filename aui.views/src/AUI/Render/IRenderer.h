@@ -23,7 +23,6 @@
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/ASS/Property/Backdrop.h"
 #include "AUI/Util/AMetric.h"
-#include "ITexture.h"
 #include "ATextLayoutHelper.h"
 #include "IRenderViewToTexture.h"
 
@@ -171,7 +170,6 @@ class ACanvas;
  * - Transformation matrix (mTransform)
  * - Target window (mWindow)
  * - Stencil depth for masking (mStencilDepth)
- * - Texture pool for resource management (mTexturePool)
  *
  * ## HiDPI (High‑DPI) support
  *
@@ -266,15 +264,8 @@ public:
     };
 
 public:
-    IRenderer(): mTexturePool([this] { return createNewTexture(); }) {}
+    IRenderer() = default;
     virtual ~IRenderer() = default;
-
-    /**
-     * @brief Creates new texture (image representation optimized for GPU rendering).
-     */
-    _<ITexture> getNewTexture() {
-        return mTexturePool.get();
-    }
 
     /**
      * @brief Creates new canvas for batching multiple <code>prerender</code> string calls.
@@ -569,7 +560,7 @@ public:
     }
 
     [[nodiscard]]
-    ASurface* getWindow() const noexcept {
+    virtual ASurface* getWindow() const noexcept {
         return mWindow;
     }
 
@@ -652,10 +643,7 @@ protected:
     AColor mColor;
     glm::mat4 mTransform;
     ASurface* mWindow = nullptr;
-    APool<ITexture> mTexturePool;
     uint8_t mStencilDepth = 0;
-
-    virtual _unique<ITexture> createNewTexture() = 0;
 
     /**
      * @brief Draws stub (i.e., gray rectangle)
