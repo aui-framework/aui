@@ -19,6 +19,7 @@
 #include <AUI/Common/AString.h>
 #include <AUI/Render/IRenderer.h>
 #include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/IRendererBackend.h>
 
 
 inline uint64_t asKey(const glm::ivec2 size) {
@@ -75,7 +76,8 @@ void AVectorDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
         textureSize.y = getSizeHint().y;
     }
 
-    auto texture = render.getNewTexture();
+    auto& backend = render.renderer();
+    auto texture = backend.createTexture(glm::max(textureSize, glm::ivec2(0)));
     texture->setImage(mFactory->provideImage(glm::max(textureSize, glm::ivec2(0))));
     mRasterized.push_back({key, texture});
     doDraw(texture);

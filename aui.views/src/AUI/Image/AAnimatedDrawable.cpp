@@ -16,20 +16,25 @@
 #include "AAnimatedDrawable.h"
 #include "AUI/Image/gif/GifImageFactory.h"
 #include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/IRendererBackend.h>
 
 AAnimatedDrawable::AAnimatedDrawable(_<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
 }
 
 void AAnimatedDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
     APerformanceSection s("AAnimatedDrawable::draw");
-    if (!mTexture)
-        mTexture = render.getNewTexture();
 
     if (mFactory->isNewImageAvailable()) {
         auto img = [&] {
             APerformanceSection s2("provideImage");
             return mFactory->provideImage(params.size);
         }();
+
+        if (!mTexture || mTexture->getSize() != glm::u32vec2(img.size())) {
+            auto& backend = render.renderer();
+            mTexture = backend.createTexture(img.size());
+        }
+
         if (mFactory->hasAnimationFinished()) {
             emit animationFinished;
         }
