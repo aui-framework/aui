@@ -136,10 +136,11 @@ void OpenGLRenderingContext::init(const Init& init) {
 
         // Check what extensions are actually exposed
         const GLubyte* exts = glGetString(GL_EXTENSIONS);
-        if (exts)
-            ALogger::info(LOG_TAG) << "GL_EXTENSIONS: " << exts;
-        else
+        if (exts) {
+            //ALogger::info(LOG_TAG) << "GL_EXTENSIONS: " << exts;
+        } else {
             ALogger::info(LOG_TAG) << "GL_EXTENSIONS is NULL – context/profile may be invalid";
+        }
 
 
         bool k;

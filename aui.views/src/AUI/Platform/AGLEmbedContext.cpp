@@ -41,7 +41,7 @@ void AGLEmbedContext::render(const ARenderContext& context) {
     gl::State::bindVertexArray(0);
     gl::State::bindTexture(GL_TEXTURE_2D, 0);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
     context.render.setColorForced(1.f);
     context.render.setTransformForced(glm::ortho(0.f,
