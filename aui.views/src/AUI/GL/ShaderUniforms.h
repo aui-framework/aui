@@ -25,9 +25,12 @@ namespace aui::ShaderUniforms {
     extern gl::Program::Uniform PIXEL_TO_UV;
     extern gl::Program::Uniform OUTER_SIZE;
     extern gl::Program::Uniform INNER_SIZE;
-    extern gl::Program::Uniform INNER_TEXEL_SIZE;
     extern gl::Program::Uniform OUTER_TEXEL_SIZE;
     extern gl::Program::Uniform OUTER_TO_INNER;
+    extern gl::Program::Uniform RADIUS;
+    extern gl::Program::Uniform RECT_POS;
+    extern gl::Program::Uniform RECT_SIZE;
+    extern gl::Program::Uniform BORDER_WIDTH;
     extern gl::Program::Uniform WHICH_ALGO;
     extern gl::Program::Uniform M1;
     extern gl::Program::Uniform M2;

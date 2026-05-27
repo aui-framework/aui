@@ -13,6 +13,8 @@ float rounded(vec2 absolute, vec2 size) {
 }
 
 void main() {
-    gl_FragColor = texture2D(albedo, vUv) * vColor * rounded(abs(vUv * 2.0 - 1.0), outerSize);
-    if (gl_FragColor.a < 0.1) discard;
+    vec4 tex = texture2D(albedo, vUv);
+    tex.rgb *= tex.a;
+    gl_FragColor = tex * vColor * rounded(abs(vUv * 2.0 - 1.0), outerSize);
+    if (gl_FragColor.a < 0.001) discard;
 }

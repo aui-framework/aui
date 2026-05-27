@@ -26,6 +26,10 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform OUTER_SIZE("outerSize");
     gl::Program::Uniform INNER_SIZE("innerSize");
     gl::Program::Uniform OUTER_TO_INNER("outerToInner");
+    gl::Program::Uniform RADIUS("uRadius");
+    gl::Program::Uniform RECT_POS("uRectPos");
+    gl::Program::Uniform RECT_SIZE("uRectSize");
+    gl::Program::Uniform BORDER_WIDTH("uBorderWidth");
     gl::Program::Uniform WHICH_ALGO("whichAlgo");
     gl::Program::Uniform M1("m1");
     gl::Program::Uniform M2("m2");
