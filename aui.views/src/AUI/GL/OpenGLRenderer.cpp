@@ -673,7 +673,7 @@ void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const
 }
 void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
-    GLDebugGroupLocal debugGroup("glyphs");
+    GLDebugGroupLocal debugGroup(v.isSubpixel ? "glyphsSubpixel" : "glyphsGrayscale");
     setBlending(paint);
 
     if (v.isSubpixel) {
