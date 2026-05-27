@@ -12,24 +12,27 @@
 #include "RendererCanvas.h"
 #include <AUI/Render/ACanvas.hpp>
 #include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/FontAtlas.hpp>
 #include <range/v3/all.hpp>
 
 RendererCanvas::RendererCanvas(ACanvas& canvas) : mCanvas(canvas) {}
 
 _<IRenderer::IMultiStringCanvas> RendererCanvas::newMultiStringCanvas(const AFontStyle& style) {
-    return mCanvas.newMultiStringCanvas(style);
+    auto& backend = mCanvas.renderer();
+    auto entryData = aui::getFontEntryData(backend, backend.getFontEntryDataCache(), style);
+    return _new<aui::MultiStringCanvas>(backend, entryData, backend.getCharacterDataCache(), style);
 }
 
 void RendererCanvas::rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
-    mCanvas.rectangle({brush}, position, size);
+    mCanvas.rectangle(paint(brush), position, size);
 }
 
 void RendererCanvas::roundedRectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius) {
-    mCanvas.roundedRectangle({brush}, position, size, radius);
+    mCanvas.roundedRectangle(paint(brush), position, size, radius);
 }
 
 void RendererCanvas::rectangleBorder(const ABrush& brush, glm::vec2 position, glm::vec2 size, float lineWidth) {
-    mCanvas.rectangleBorder({brush}, position, size, lineWidth);
+    mCanvas.rectangleBorder(paint(brush), position, size, lineWidth);
 }
 
 void RendererCanvas::roundedRectangleBorder(const ABrush& brush,
@@ -37,11 +40,11 @@ void RendererCanvas::roundedRectangleBorder(const ABrush& brush,
                                             glm::vec2 size,
                                             float radius,
                                             int borderWidth) {
-    mCanvas.roundedRectangleBorder({brush}, position, size, radius, borderWidth);
+    mCanvas.roundedRectangleBorder(paint(brush), position, size, radius, borderWidth);
 }
 
 void RendererCanvas::boxShadow(glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) {
-    mCanvas.boxShadow({}, position, size, blurRadius, color);
+    mCanvas.boxShadow(paint({}), position, size, blurRadius, color);
 }
 
 void RendererCanvas::boxShadowInner(glm::vec2 position,
@@ -51,15 +54,21 @@ void RendererCanvas::boxShadowInner(glm::vec2 position,
                                     float borderRadius,
                                     const AColor& color,
                                     glm::vec2 offset) {
-    mCanvas.boxShadowInner({}, position, size, blurRadius, spreadRadius, borderRadius, color, offset);
+    mCanvas.boxShadowInner(paint({}), position, size, blurRadius, spreadRadius, borderRadius, color, offset);
 }
 
 void RendererCanvas::string(glm::vec2 position, const AString& string, const AFontStyle& fs) {
-    mCanvas.string({}, position, string, fs);
+    if (string.empty()) return;
+    auto c = newMultiStringCanvas(fs);
+    c->addString(position, string);
+    c->finalize()->draw(mCanvas);
 }
 
 _<IRenderer::IPrerenderedString> RendererCanvas::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
-    return mCanvas.prerenderString(position, text, fs);
+    if (text.empty()) return nullptr;
+    auto c = newMultiStringCanvas(fs);
+    c->addString(position, text);
+    return c->finalize();
 }
 
 void RendererCanvas::line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style, AMetric width) {
@@ -68,7 +77,7 @@ void RendererCanvas::line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const
 }
 
 void RendererCanvas::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
-    mCanvas.lines({brush}, points, style, width);
+    mCanvas.lines(paint(brush), points, style, width);
 }
 
 void RendererCanvas::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style) {
@@ -76,14 +85,14 @@ void RendererCanvas::lines(const ABrush& brush, AArrayView<glm::vec2> points, co
 }
 
 void RendererCanvas::points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) {
-    mCanvas.points({brush}, points, size);
+    mCanvas.points(paint(brush), points, size);
 }
 
 void RendererCanvas::lines(const ABrush& brush,
                            AArrayView<std::pair<glm::vec2, glm::vec2>> points,
                            const ABorderStyle& style,
                            AMetric width) {
-    mCanvas.lines({brush}, points, style, width);
+    mCanvas.lines(paint(brush), points, style, width);
 }
 
 void RendererCanvas::lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style) {
@@ -95,7 +104,7 @@ void RendererCanvas::squareSector(const ABrush& brush,
                                   const glm::vec2& size,
                                   AAngleRadians begin,
                                   AAngleRadians end) {
-    mCanvas.squareSector({brush}, position, size, begin, end);
+    mCanvas.squareSector(paint(brush), position, size, begin, end);
 }
 
 void RendererCanvas::setColorForced(const AColor& color) {
@@ -135,7 +144,7 @@ void RendererCanvas::popMaskAfter() {
 }
 
 void RendererCanvas::setBlending(Blending blending) {
-    mCanvas.setBlending(blending);
+    mBlending = blending;
 }
 
 _unique<IRenderViewToTexture> RendererCanvas::newRenderViewToTexture() noexcept {
@@ -195,27 +204,10 @@ float RendererCanvas::getRenderScale() const noexcept {
     return mCanvas.renderer().getRenderScale();
 }
 
-void RendererCanvas::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) {
-    using Preprocessed = ass::Backdrop::Preprocessed;
-    auto preprocessed =
-        backdrops | ranges::views::transform([](const ass::Backdrop::Any& val) -> Preprocessed {
-            return std::visit(
-                aui::lambda_overloaded {
-                  [](const ass::Backdrop::GaussianBlur& b) -> Preprocessed {
-                      return b.findOptimalParams();
-                  },
-                  [](const auto& b) -> Preprocessed { return b; },
-                },
-                val);
-        }) |
-        ranges::to_vector;
-    this->backdrops(position, size, std::span<const Preprocessed>(preprocessed.data(), preprocessed.size()));
+void RendererCanvas::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) {
+    mCanvas.backdrops(position, size, backdrops);
 }
 
 void RendererCanvas::stub(glm::vec2 position, glm::vec2 size) {
-    rectangle(ASolidBrush{0xa0a0a0_rgb}, position, size);
-}
-
-void RendererCanvas::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {
-    stub(position, size);
+    mCanvas.rectangle(paint(ASolidBrush{0xa0a0a0_rgb}), position, size);
 }

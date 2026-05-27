@@ -11,7 +11,7 @@
 
 #include "ADisplayListCanvas.hpp"
 #include <AUI/Render/IRendererBackend.h>
-#include <AUI/Render/FontAtlas.h>
+#include <AUI/Render/FontAtlas.hpp>
 #include <AUI/Traits/callables.h>
 
 #include <utility>
@@ -21,8 +21,8 @@ float ADisplayListCanvas::getRenderScale() const noexcept {
 }
 
 _<IRenderer::IMultiStringCanvas> ADisplayListCanvas::newMultiStringCanvas(const AFontStyle& style) {
-    auto entryData = aui::font_rendering::getFontEntryData(mRenderer, mRenderer.getFontEntryDataCache(), style);
-    return _new<aui::font_rendering::MultiStringCanvas>(mRenderer, entryData, mRenderer.getCharacterDataCache(), style);
+    auto entryData = aui::getFontEntryData(mRenderer, mRenderer.getFontEntryDataCache(), style);
+    return _new<aui::MultiStringCanvas>(mRenderer, entryData, mRenderer.getCharacterDataCache(), style);
 }
 
 _<IRenderer::IPrerenderedString> ADisplayListCanvas::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {

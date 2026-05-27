@@ -57,7 +57,7 @@ public:
 
     void string(glm::vec2 position,
                         const AString& string,
-                        const AFontStyle& fs = {}) override;
+                        const AFontStyle& fs) override;
 
     _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
 
@@ -130,13 +130,16 @@ public:
 
     float getRenderScale() const noexcept override;
 
-    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops) override;
+    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) override;
 
     void stub(glm::vec2 position, glm::vec2 size) override;
 
-    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
-
 private:
+    APaint paint(const ABrush& brush) const {
+        return {brush, AColor::WHITE, mBlending, 1.0f};
+    }
+
     ACanvas& mCanvas;
     ASurface* mWindow = nullptr;
+    Blending mBlending = Blending::NORMAL;
 };
