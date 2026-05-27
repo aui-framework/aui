@@ -98,7 +98,7 @@ namespace aui::impl::json {
 
         void operator()(const AJson::Object& object) {
             if (auto c = object.contains(name)) {
-                aui::impl::json::PathSegmentGuard _guard{AString(name)};
+                aui::impl::json::PathSegmentGuard _guard{name};
                 aui::from_json<T>(c->second, value);
             } else {
                 if (!(flags & AJsonFieldFlags::OPTIONAL)) {

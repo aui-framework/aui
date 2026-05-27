@@ -12,6 +12,7 @@
 #include <vector>
 #include <variant>
 #include <AUI/Common/AString.h>
+#include <AUI/Common/AStringView.h>
 
 namespace aui::impl::json {
 
@@ -20,14 +21,14 @@ namespace aui::impl::json {
  * @details Each segment is either a string (object key) or a size_t (array index).
  * The stack is maintained automatically via PathSegmentGuard — no user code changes needed.
  */
-inline thread_local std::vector<std::variant<AString, size_t>> gPathStack;
+inline thread_local std::vector<std::variant<AStringView, size_t>> gPathStack;
 
 /**
  * @brief RAII guard that pushes a path segment on construction and pops it on destruction.
  * @details Used inside Field::operator(), AJsonConv for ranges/maps, etc.
  */
 struct PathSegmentGuard {
-    explicit PathSegmentGuard(AString key) { gPathStack.emplace_back(std::move(key)); }
+    explicit PathSegmentGuard(AStringView key) { gPathStack.emplace_back(std::move(key)); }
     explicit PathSegmentGuard(size_t index)   { gPathStack.emplace_back(index); }
     ~PathSegmentGuard() noexcept           { gPathStack.pop_back(); }
     PathSegmentGuard(const PathSegmentGuard&) = delete;
@@ -43,7 +44,7 @@ struct PathSegmentGuard {
         std::visit([&](const auto& v) {
             using T = std::decay_t<decltype(v)>;
             if constexpr (std::is_same_v<T, size_t>) {
-                result += '[' + AString::number(v) + ']';
+                result += "[{}]"_format(v);
             } else {
                 if (!result.empty()) result += '.';
                 result += v;
