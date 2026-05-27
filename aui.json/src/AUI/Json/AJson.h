@@ -17,7 +17,6 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/IO/IInputStream.h"
 #include "AJson.h"
-#include "AJsonRef.h"
 #include "Path.h"
 #include "AUI/Common/AByteBufferView.h"
 
@@ -337,19 +336,8 @@ public:
     }
 
     const AJson& operator[](int arrayIndex) const {
-        return const_cast<AJson&>(*this)[arrayIndex];
+        return as<Array>().at(arrayIndex);
     }
-
-    /**
-     * @brief Returns a path-tracking accessor for chained access with error path reporting.
-     * @details Use this instead of operator[] when you want type-mismatch exceptions to
-     * include the full json path, e.g.:
-     * @code
-     * json.at("messages").at(0).at("content").asString(); // throws with "messages[0].content"
-     * @endcode
-     */
-    [[nodiscard]] AJsonRef at(const AString& key) const;
-    [[nodiscard]] AJsonRef at(int index) const;
 
     void push_back(AJson elem) {
         asArray().push_back(std::move(elem));
