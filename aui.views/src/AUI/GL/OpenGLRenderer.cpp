@@ -24,7 +24,7 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/GL/ShaderUniforms.h>
 #include <AUI/Render/Brush/Gradient.h>
-#include <AUI/Render/FontAtlas.h>
+#include <AUI/Render/FontAtlas.hpp>
 
 #ifdef AUI_PLATFORM_WIN32
 #include <windows.h>
@@ -55,42 +55,6 @@ namespace {
 #endif
         }
     };
-
-    struct LineVertex {
-        glm::vec2 position;
-        float distance;
-        float unused;
-    };
-
-    std::string getShaderPrefix(GLenum stage) {
-        std::string prefix = "#version " + std::to_string(OpenGLRenderer::mGLSLVersion) + "\n";
-        if (OpenGLRenderer::mGLSLVersion < 130) {
-            if (stage == GL_VERTEX_SHADER) {
-                prefix += "#define in attribute\n#define out varying\n";
-            } else {
-                prefix += "#define in varying\n#define fragColor gl_FragColor\n";
-            }
-        } else {
-            if (stage == GL_FRAGMENT_SHADER) {
-                prefix += "out vec4 fragColor;\n";
-            }
-        }
-        prefix += R"(
-#ifdef GL_ES
-precision mediump float;
-#define mediump
-#define highp
-#else
-#if __VERSION__ >= 130
-precision highp float;
-precision highp int;
-#endif
-#define mediump
-#define highp
-#endif
-)";
-        return prefix;
-    }
 }
 
 OpenGLRenderer::OpenGLRenderer() :
@@ -102,7 +66,7 @@ OpenGLRenderer::OpenGLRenderer() :
         return std::string(buffer.begin(), buffer.end());
     };
 
-    auto useShader = [&](AOptional<gl::Program>& out, const AString& vertex, const AString& fragment, std::initializer_list<const char*> attrs) {
+    auto useShader = [&](AOptional<gl::Program>& out, const AString& vertex, const AString& fragment, std::initializer_list<std::pair<int, const char*>> attrs) {
         auto getPrefix = [](GLenum stage) -> std::string {
             std::string prefix = "#version " + std::to_string(mGLSLVersion) + "\n";
             if (mGLSLVersion < 130) {
@@ -137,37 +101,30 @@ precision highp int;
         out->loadVertexShader(getPrefix(GL_VERTEX_SHADER) + readShader(vertex), { .custom = true });
         out->loadFragmentShader(getPrefix(GL_FRAGMENT_SHADER) + readShader(fragment), { .custom = true });
 
-        int i = 0;
-        for (auto attr : attrs) {
-            out->bindAttribute(i++, attr);
+        for (auto [index, name] : attrs) {
+            out->bindAttribute(index, name);
         }
         out->compile();
     };
 
-    useShader(mSolidShader, "basic.vsh", "rect_solid.fsh", {"pos", "color"});
-    useShader(mBoxShadowShader, "basic_uv.vsh", "shadow.fsh", {"pos", "uv", "color"});
-    useShader(mBoxShadowInnerShader, "basic_uv.vsh", "shadow_inner.fsh", {"pos", "uv", "color"});
-    useShader(mRoundedSolidShader, "basic_uv.vsh", "rect_solid_rounded.fsh", {"pos", "uv", "color"});
-    useShader(mRoundedSolidShaderBorder, "basic_uv.vsh", "border_rounded.fsh", {"pos", "uv", "color"});
-    useShader(mGradientShader, "basic_uv.vsh", "rect_gradient.fsh", {"pos", "uv", "color"});
-    useShader(mRoundedGradientShader, "basic_uv.vsh", "rect_gradient_rounded.fsh", {"pos", "uv", "color"});
-    useShader(mTexturedShader, "basic_uv.vsh", "rect_textured.fsh", {"pos", "uv", "color"});
-    useShader(mRoundedTexturedShader, "basic_uv.vsh", "rect_textured_rounded.fsh", {"pos", "uv", "color"});
-    useShader(mUnblendShader, "basic_uv.vsh", "rect_unblend.fsh", {"pos", "uv", "color"});
-    useShader(mSquareSectorShader, "basic_uv.vsh", "square_sector.fsh", {"pos", "uv", "color"});
-    useShader(mSymbolShader, "symbol.vsh", "symbol.fsh", {"pos", "uv", "color"});
-    useShader(mSymbolShaderSubPixel, "symbol.vsh", "symbol_sub.fsh", {"pos", "uv", "color"});
-    useShader(mLineSolidDashedShader, "basic_uv.vsh", "line_solid_dashed.fsh", {"pos", "uv", "color"});
+    useShader(mSolidShader, "basic.vsh", "rect_solid.fsh", {{0, "pos"}, {1, "color"}});
+    useShader(mBoxShadowShader, "basic_uv.vsh", "shadow.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
+    useShader(mBoxShadowInnerShader, "basic_uv.vsh", "shadow_inner.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}, {3, "outerSize"}});
+    useShader(mRoundedSolidShader, "basic_uv.vsh", "rect_solid_rounded.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}, {3, "outerSize"}});
+    useShader(mRoundedSolidShaderBorder, "basic_uv.vsh", "border_rounded.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}, {3, "outerSize"}, {4, "innerSize"}, {5, "outerToInner"}});
+    useShader(mGradientShader, "basic_uv.vsh", "rect_gradient.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
+    useShader(mRoundedGradientShader, "basic_uv.vsh", "rect_gradient_rounded.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}, {3, "outerSize"}, {6, "color1"}, {7, "color2"}});
+    useShader(mTexturedShader, "basic_uv.vsh", "rect_textured.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
+    useShader(mRoundedTexturedShader, "basic_uv.vsh", "rect_textured_rounded.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}, {3, "outerSize"}});
+    useShader(mUnblendShader, "basic_uv.vsh", "rect_unblend.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
+    useShader(mSquareSectorShader, "basic_uv.vsh", "square_sector.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
+    useShader(mSymbolShader, "symbol.vsh", "symbol.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
+    useShader(mSymbolShaderSubPixel, "symbol.vsh", "symbol_sub.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
+    useShader(mLineSolidDashedShader, "basic_uv.vsh", "line_solid_dashed.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
 
     mBatchVao.bind();
     mVertexBuffer.bind();
     mIndexBuffer.bind();
-
-    // Basic (pos=0, color=1)
-    // BasicUv/Symbol (pos=0, uv=1, color=2)
-    glEnableVertexAttribArray(0); // pos
-    glEnableVertexAttribArray(1); // uv
-    glEnableVertexAttribArray(2); // color
 }
 
 void OpenGLTexture2D::upload(AImageView image) {
@@ -466,14 +423,14 @@ void OpenGLRenderer::gradientRoundedRectangles(const ADisplayList::GradientRound
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
     glEnableVertexAttribArray(3);
-    glEnableVertexAttribArray(4);
-    glEnableVertexAttribArray(5);
+    glEnableVertexAttribArray(6);
+    glEnableVertexAttribArray(7);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, pos)));
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, uv)));
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, color)));
     glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, outerSize)));
-    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, color1)));
-    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, color2)));
+    glVertexAttribPointer(6, 4, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, color1)));
+    glVertexAttribPointer(7, 4, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, color2)));
 
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
@@ -662,9 +619,11 @@ void OpenGLRenderer::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4
     size_t iOffset = mIndexBuffer.upload(indices, sizeof(indices));
 
     mBatchVao.bind();
+    glEnableVertexAttribArray(0);
+    glDisableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasic), (void*)(vOffset + offsetof(VertexBasic, pos)));
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasic), (void*)(vOffset + offsetof(VertexBasic, color)));
-    glDisableVertexAttribArray(1);
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }
@@ -682,13 +641,14 @@ void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const
     mBoxShadowInnerShader->set(aui::ShaderUniforms::SL_UNIFORM_LOWER, v.position + v.offset + v.spreadRadius);
     mBoxShadowInnerShader->set(aui::ShaderUniforms::SL_UNIFORM_UPPER, v.position + v.size + v.offset - v.spreadRadius);
     mBoxShadowInnerShader->set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, sigma);
-    mBoxShadowInnerShader->set(aui::ShaderUniforms::OUTER_SIZE, glm::vec2(2.f * v.borderRadius) / v.size);
+    
+    glm::vec2 outerSize = glm::vec2(2.f * v.borderRadius) / v.size;
 
-    VertexBasicUv vertices[4] = {
-        {rectVertices[0], {0.f, 1.f}, color},
-        {rectVertices[1], {1.f, 1.f}, color},
-        {rectVertices[2], {0.f, 0.f}, color},
-        {rectVertices[3], {1.f, 0.f}, color},
+    VertexRounded vertices[4] = {
+        {rectVertices[0], {0.f, 1.f}, color, outerSize},
+        {rectVertices[1], {1.f, 1.f}, color, outerSize},
+        {rectVertices[2], {0.f, 0.f}, color, outerSize},
+        {rectVertices[3], {1.f, 0.f}, color, outerSize},
     };
     GLuint indices[6] = {0, 1, 2, 2, 1, 3};
 
@@ -699,9 +659,11 @@ void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, color)));
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRounded), (void*)(vOffset + offsetof(VertexRounded, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRounded), (void*)(vOffset + offsetof(VertexRounded, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexRounded), (void*)(vOffset + offsetof(VertexRounded, color)));
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRounded), (void*)(vOffset + offsetof(VertexRounded, outerSize)));
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }
@@ -741,17 +703,19 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
     size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
 
     mBatchVao.bind();
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
     glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
     glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, color)));
-    glEnableVertexAttribArray(1);
 
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
 _<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle& style) {
-    auto entryData = aui::font_rendering::getFontEntryData(*this, getFontEntryDataCache(), style);
-    return _new<aui::font_rendering::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style);
+    auto entryData = aui::getFontEntryData(*this, getFontEntryDataCache(), style);
+    return _new<aui::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style);
 }
 _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
     if (text.empty()) return nullptr;
@@ -834,10 +798,9 @@ void OpenGLRenderer::points(const ADisplayList::Points& v, const glm::mat4& tran
     mBatchVao.bind();
     glEnableVertexAttribArray(0);
     glDisableVertexAttribArray(1);
-    glEnableVertexAttribArray(2); // In VertexBasic, color is at index 1? Wait, no.
-                                 // mSolidShader: {"pos", "color"} -> 0=pos, 1=color.
+    glEnableVertexAttribArray(2);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasic), (void*)(vOffset + offsetof(VertexBasic, pos)));
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasic), (void*)(vOffset + offsetof(VertexBasic, color)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasic), (void*)(vOffset + offsetof(VertexBasic, color)));
 
     glDrawArrays(GL_POINTS, 0, (GLsizei)vertices.size());
 }
@@ -900,10 +863,10 @@ void OpenGLRenderer::squareSector(const ADisplayList::SquareSector& v, const glm
 
     mBatchVao.bind();
     glEnableVertexAttribArray(0);
-    glEnableVertexAttribArray(1);
-    glDisableVertexAttribArray(2);
+    glDisableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
     glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasic), (void*)(vOffset + offsetof(VertexBasic, pos)));
-    glVertexAttribPointer(1, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasic), (void*)(vOffset + offsetof(VertexBasic, color)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasic), (void*)(vOffset + offsetof(VertexBasic, color)));
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }

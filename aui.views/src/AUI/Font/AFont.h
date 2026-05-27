@@ -15,10 +15,10 @@
 #include <glm/glm.hpp>
 #include <AUI/Url/AUrl.h>
 #include <AUI/Font/FontRendering.hpp>
-#include <AUI/Render/FontAtlasDefs.h>
 #include <AUI/Common/AStringVector.h>
 #include <AUI/Font/AFontFamily.h>
 #include <AUI/Common/AByteBuffer.h>
+#include <AUI/Image/AImage.h>
 
 class AString;
 
@@ -82,7 +82,7 @@ public:
             return image == nullptr;
         }
 
-        aui::font_rendering::CharacterData* rendererData = nullptr;
+        void* rendererData = nullptr;
     };
 
     struct FontKey {
@@ -100,7 +100,7 @@ public:
 
     struct FontData {
         AVector<AOptional<Character>> characters;
-        aui::font_rendering::FontEntryData* rendererData = nullptr;
+        void* rendererData = nullptr;
     };
 
 

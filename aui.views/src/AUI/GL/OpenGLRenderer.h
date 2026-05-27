@@ -18,6 +18,7 @@
 #include <AUI/Util/APool.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/ADeque.h>
+#include <AUI/Render/FontAtlas.hpp>
 #include "AUI/Render/ABorderStyle.h"
 #include <AUI/Render/IRendererBackend.h>
 #include "AUI/GL/RenderTarget/TextureRenderTarget.h"
@@ -109,8 +110,8 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
     TransientBuffer mVertexBuffer;
     TransientBuffer mIndexBuffer;
 
-    ADeque<aui::font_rendering::FontEntryData> mFontEntryData;
-    ADeque<aui::font_rendering::CharacterData> mCharData;
+    ADeque<aui::FontAtlas> mFontEntryData;
+    ADeque<aui::CharacterData> mCharData;
     OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
 
     glm::uvec2 mViewportSize = { 1, 1 };
@@ -159,8 +160,8 @@ public:
     ASurface* getWindow() const noexcept override { return mWindow; }
     glm::mat4 getProjectionMatrix() const override;
 
-    ADeque<aui::font_rendering::FontEntryData>& getFontEntryDataCache() override { return mFontEntryData; }
-    ADeque<aui::font_rendering::CharacterData>& getCharacterDataCache() override { return mCharData; }
+    ADeque<aui::FontAtlas>& getFontEntryDataCache() override { return mFontEntryData; }
+    ADeque<aui::CharacterData>& getCharacterDataCache() override { return mCharData; }
 
     bool isVaoAvailable() const noexcept;
     void setBlending(const APaint& paint);
