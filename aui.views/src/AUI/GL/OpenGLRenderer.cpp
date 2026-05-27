@@ -34,27 +34,31 @@ bool OpenGLRenderer::mIsES = false;
 int OpenGLRenderer::mGLSLVersion = 120;
 
 namespace {
-    std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 pos, glm::vec2 size) {
-        return {
-            pos,
-            pos + glm::vec2(size.x, 0.f),
-            pos + glm::vec2(0.f, size.y),
-            pos + size
-        };
-    }
-
-    struct GLDebugGroupLocal {
-        GLDebugGroupLocal(const char* name) {
-#if defined(GL_KHR_debug) || defined(GL_VERSION_4_3)
-            if (glPushDebugGroup) glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, name);
-#endif
-        }
-        ~GLDebugGroupLocal() {
-#if defined(GL_KHR_debug) || defined(GL_VERSION_4_3)
-            if (glPopDebugGroup) glPopDebugGroup();
-#endif
-        }
+std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 pos, glm::vec2 size) {
+    return {
+        pos,
+        pos + glm::vec2(size.x, 0.f),
+        pos + glm::vec2(0.f, size.y),
+        pos + size
     };
+}
+
+struct GLDebugGroupLocal {
+    GLDebugGroupLocal(const char* name) {
+#if defined(GL_KHR_debug) || defined(GL_VERSION_4_3)
+        if (glPushDebugGroup) {
+            glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, name);
+        }
+#endif
+    }
+    ~GLDebugGroupLocal() {
+#if defined(GL_KHR_debug) || defined(GL_VERSION_4_3)
+        if (glPopDebugGroup) {
+            glPopDebugGroup();
+        }
+#endif
+    }
+};
 }
 
 OpenGLRenderer::OpenGLRenderer() :
@@ -260,10 +264,10 @@ void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& 
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = inst.color.premultiply();
 
-        vertices << VertexBasicUv{rectVertices[0], {0.f, 1.f}, color};
-        vertices << VertexBasicUv{rectVertices[1], {1.f, 1.f}, color};
-        vertices << VertexBasicUv{rectVertices[2], {0.f, 0.f}, color};
-        vertices << VertexBasicUv{rectVertices[3], {1.f, 0.f}, color};
+        vertices << VertexBasicUv{rectVertices[0], {0.f, 0.f}, color};
+        vertices << VertexBasicUv{rectVertices[1], {1.f, 0.f}, color};
+        vertices << VertexBasicUv{rectVertices[2], {0.f, 1.f}, color};
+        vertices << VertexBasicUv{rectVertices[3], {1.f, 1.f}, color};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
@@ -299,10 +303,10 @@ void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& 
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = inst.color.premultiply();
 
-        vertices << VertexBasicUv{rectVertices[0], {0.f, 1.f}, color};
-        vertices << VertexBasicUv{rectVertices[1], {1.f, 1.f}, color};
-        vertices << VertexBasicUv{rectVertices[2], {0.f, 0.f}, color};
-        vertices << VertexBasicUv{rectVertices[3], {1.f, 0.f}, color};
+        vertices << VertexBasicUv{rectVertices[0], {0.f, 0.f}, color};
+        vertices << VertexBasicUv{rectVertices[1], {1.f, 0.f}, color};
+        vertices << VertexBasicUv{rectVertices[2], {0.f, 1.f}, color};
+        vertices << VertexBasicUv{rectVertices[3], {1.f, 1.f}, color};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
@@ -347,10 +351,10 @@ void OpenGLRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRect
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = inst.color.premultiply();
 
-        vertices << VertexRounded{rectVertices[0], {0.f, 1.f}, color, outerSize};
-        vertices << VertexRounded{rectVertices[1], {1.f, 1.f}, color, outerSize};
-        vertices << VertexRounded{rectVertices[2], {0.f, 0.f}, color, outerSize};
-        vertices << VertexRounded{rectVertices[3], {1.f, 0.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[0], {0.f, 0.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[1], {1.f, 0.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[2], {0.f, 1.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[3], {1.f, 1.f}, color, outerSize};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
@@ -407,10 +411,10 @@ void OpenGLRenderer::gradientRoundedRectangles(const ADisplayList::GradientRound
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = inst.color.premultiply();
 
-        vertices << VertexRoundedGradient{rectVertices[0], {0.f, 1.f}, color, outerSize, c1, c2};
-        vertices << VertexRoundedGradient{rectVertices[1], {1.f, 1.f}, color, outerSize, c1, c2};
-        vertices << VertexRoundedGradient{rectVertices[2], {0.f, 0.f}, color, outerSize, c1, c2};
-        vertices << VertexRoundedGradient{rectVertices[3], {1.f, 0.f}, color, outerSize, c1, c2};
+        vertices << VertexRoundedGradient{rectVertices[0], {0.f, 0.f}, color, outerSize, c1, c2};
+        vertices << VertexRoundedGradient{rectVertices[1], {1.f, 0.f}, color, outerSize, c1, c2};
+        vertices << VertexRoundedGradient{rectVertices[2], {0.f, 1.f}, color, outerSize, c1, c2};
+        vertices << VertexRoundedGradient{rectVertices[3], {1.f, 1.f}, color, outerSize, c1, c2};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
@@ -462,10 +466,10 @@ void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRound
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = inst.color.premultiply();
 
-        vertices << VertexRounded{rectVertices[0], {0.f, 1.f}, color, outerSize};
-        vertices << VertexRounded{rectVertices[1], {1.f, 1.f}, color, outerSize};
-        vertices << VertexRounded{rectVertices[2], {0.f, 0.f}, color, outerSize};
-        vertices << VertexRounded{rectVertices[3], {1.f, 0.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[0], {0.f, 0.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[1], {1.f, 0.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[2], {0.f, 1.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[3], {1.f, 1.f}, color, outerSize};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
@@ -566,10 +570,10 @@ void OpenGLRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangl
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = inst.color.premultiply();
 
-        vertices << VertexRoundedBorder{rectVertices[0], {0.f, 1.f}, color, outerSize, innerSize, outerToInner};
-        vertices << VertexRoundedBorder{rectVertices[1], {1.f, 1.f}, color, outerSize, innerSize, outerToInner};
-        vertices << VertexRoundedBorder{rectVertices[2], {0.f, 0.f}, color, outerSize, innerSize, outerToInner};
-        vertices << VertexRoundedBorder{rectVertices[3], {1.f, 0.f}, color, outerSize, innerSize, outerToInner};
+        vertices << VertexRoundedBorder{rectVertices[0], {0.f, 0.f}, color, outerSize, innerSize, outerToInner};
+        vertices << VertexRoundedBorder{rectVertices[1], {1.f, 0.f}, color, outerSize, innerSize, outerToInner};
+        vertices << VertexRoundedBorder{rectVertices[2], {0.f, 1.f}, color, outerSize, innerSize, outerToInner};
+        vertices << VertexRoundedBorder{rectVertices[3], {1.f, 1.f}, color, outerSize, innerSize, outerToInner};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
@@ -645,10 +649,10 @@ void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const
     glm::vec2 outerSize = glm::vec2(2.f * v.borderRadius) / v.size;
 
     VertexRounded vertices[4] = {
-        {rectVertices[0], {0.f, 1.f}, color, outerSize},
-        {rectVertices[1], {1.f, 1.f}, color, outerSize},
-        {rectVertices[2], {0.f, 0.f}, color, outerSize},
-        {rectVertices[3], {1.f, 0.f}, color, outerSize},
+        {rectVertices[0], {0.f, 0.f}, color, outerSize},
+        {rectVertices[1], {1.f, 0.f}, color, outerSize},
+        {rectVertices[2], {0.f, 1.f}, color, outerSize},
+        {rectVertices[3], {1.f, 1.f}, color, outerSize},
     };
     GLuint indices[6] = {0, 1, 2, 2, 1, 3};
 
@@ -691,10 +695,10 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = inst.color.premultiply();
 
-        vertices << VertexBasicUv{rectVertices[0], {inst.u1.x, inst.u2.y}, color};
-        vertices << VertexBasicUv{rectVertices[1], {inst.u2.x, inst.u2.y}, color};
-        vertices << VertexBasicUv{rectVertices[2], {inst.u1.x, inst.u1.y}, color};
-        vertices << VertexBasicUv{rectVertices[3], {inst.u2.x, inst.u1.y}, color};
+        vertices << VertexBasicUv{rectVertices[0], {inst.u1.x, inst.u1.y}, color};
+        vertices << VertexBasicUv{rectVertices[1], {inst.u2.x, inst.u1.y}, color};
+        vertices << VertexBasicUv{rectVertices[2], {inst.u1.x, inst.u2.y}, color};
+        vertices << VertexBasicUv{rectVertices[3], {inst.u2.x, inst.u2.y}, color};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
@@ -938,10 +942,10 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<c
     auto uvSize = glm::vec2(areaOfInterest->size) / glm::vec2(areaOfInterest->framebuffer->framebuffer.size());
 
     VertexBasicUv vertices[4] = {
-        {rectVertices[0], {0.f, uvSize.y}, glm::vec4(1.f)},
-        {rectVertices[1], {uvSize.x, uvSize.y}, glm::vec4(1.f)},
-        {rectVertices[2], {0.f, 0.f}, glm::vec4(1.f)},
-        {rectVertices[3], {uvSize.x, 0.f}, glm::vec4(1.f)},
+        {rectVertices[0], {0.f, 0.f}, glm::vec4(1.f)},
+        {rectVertices[1], {uvSize.x, 0.f}, glm::vec4(1.f)},
+        {rectVertices[2], {0.f, uvSize.y}, glm::vec4(1.f)},
+        {rectVertices[3], {uvSize.x, uvSize.y}, glm::vec4(1.f)},
     };
     GLuint indices[6] = {0, 1, 2, 2, 1, 3};
 
