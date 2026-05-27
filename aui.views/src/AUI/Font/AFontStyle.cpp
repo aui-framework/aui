@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -11,18 +11,8 @@
 
 #include "AFontStyle.h"
 
-#include "AUI/Platform/AFontManager.h"
+#include <AUI/Platform/AFontManager.h>
 
-size_t AFontStyle::getWidth(AStringView text) const
-{
-	return font->length(*this, text);
-}
+int AFontStyle::getWidth(AStringView text) const { return font->length(getFontEntry(), text); }
 
-size_t AFontStyle::getWidth(std::u32string_view text) const
-{
-	return font->length(*this, text);
-}
-
-size_t AFontStyle::getLineHeight() const {
-    return font->getAscenderHeight(size) * (1.f + lineSpacing);
-}
+int AFontStyle::getWidth(std::u32string_view text) const { return font->length(getFontEntry(), text); }

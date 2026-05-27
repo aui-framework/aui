@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -14,13 +14,10 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <AUI/Url/AUrl.h>
-
-#include "AUI/Render/FontRendering.h"
-
-#include "AUI/Render/SimpleTexturePacker.h"
-
-#include "AUI/Common/AStringVector.h"
-#include "AFontFamily.h"
+#include <AUI/Font/FontRendering.hpp>
+#include <AUI/Render/FontAtlasDefs.h>
+#include <AUI/Common/AStringVector.h>
+#include <AUI/Font/AFontFamily.h>
 #include <AUI/Common/AByteBuffer.h>
 
 class AString;
@@ -85,7 +82,7 @@ public:
             return image == nullptr;
         }
 
-        void* rendererData = nullptr;
+        aui::font_rendering::CharacterData* rendererData = nullptr;
     };
 
     struct FontKey {
@@ -103,7 +100,7 @@ public:
 
     struct FontData {
         AVector<AOptional<Character>> characters;
-        void* rendererData = nullptr;
+        aui::font_rendering::FontEntryData* rendererData = nullptr;
     };
 
 
