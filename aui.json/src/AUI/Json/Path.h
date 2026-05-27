@@ -10,6 +10,7 @@
 #pragma once
 
 #include <vector>
+#include <variant>
 #include <AUI/Common/AString.h>
 
 namespace aui::impl::json {
