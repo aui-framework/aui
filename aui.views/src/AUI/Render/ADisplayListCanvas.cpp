@@ -11,6 +11,7 @@
 
 #include "ADisplayListCanvas.hpp"
 #include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/FontAtlas.h>
 #include <AUI/Traits/callables.h>
 
 #include <utility>
@@ -20,11 +21,15 @@ float ADisplayListCanvas::getRenderScale() const noexcept {
 }
 
 _<IRenderer::IMultiStringCanvas> ADisplayListCanvas::newMultiStringCanvas(const AFontStyle& style) {
-    return mRenderer.newMultiStringCanvas(style);
+    auto entryData = aui::font_rendering::getFontEntryData(mRenderer, mRenderer.getFontEntryDataCache(), style);
+    return _new<aui::font_rendering::MultiStringCanvas>(mRenderer, entryData, mRenderer.getCharacterDataCache(), style);
 }
 
 _<IRenderer::IPrerenderedString> ADisplayListCanvas::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
-    return mRenderer.prerenderString(position, text, fs);
+    if (text.empty()) return nullptr;
+    auto c = newMultiStringCanvas(fs);
+    c->addString(position, text);
+    return c->finalize();
 }
 
 void ADisplayListCanvas::pushLayer() { add(ADisplayList::PushLayer{}, {}); }
@@ -112,9 +117,9 @@ void ADisplayListCanvas::boxShadowInner(const APaint& paint,
 
 void ADisplayListCanvas::string(const APaint& paint, glm::vec2 position, const AString& string, const AFontStyle& fs) {
     if (string.empty()) return;
-    auto canvas = newMultiStringCanvas(fs);
-    canvas->addString(position, string);
-    canvas->finalize()->draw(*this);
+    auto c = newMultiStringCanvas(fs);
+    c->addString(position, string);
+    c->finalize()->draw(*this);
 }
 
 void ADisplayListCanvas::prerenderedString(const APaint& paint, glm::vec2 position, const _<IRenderer::IPrerenderedString>& prerenderedString) {
@@ -124,11 +129,7 @@ void ADisplayListCanvas::prerenderedString(const APaint& paint, glm::vec2 positi
 }
 
 void ADisplayListCanvas::glyphRect(const _<ITexture>& texture, glm::vec2 position, glm::vec2 size, glm::vec2 u1, glm::vec2 u2, const AColor& color, bool isSubpixel) {
-    glm::vec2 texSize(1.f);
-    if (texture) {
-        texSize = texture->getSize();
-    }
-    add(ADisplayList::Glyphs{{{position, size, u1 / texSize, u2 / texSize, color * mColorMultiplier}}, texture, AColor::WHITE, isSubpixel}, {});
+    add(ADisplayList::Glyphs{{{position, size, u1, u2, color * mColorMultiplier}}, texture, AColor::WHITE, isSubpixel}, {});
 }
 
 void ADisplayListCanvas::lines(const APaint& paint, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
@@ -178,7 +179,6 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
     APaint combined = paint;
     combined.color *= mColorMultiplier;
     combined.opacity *= mOpacity;
-    combined.blending = mBlending;
     
     auto st = mTransform;
     auto bt = mBaseTransform;

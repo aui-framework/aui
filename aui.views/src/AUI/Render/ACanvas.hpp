@@ -40,7 +40,7 @@ public:
     virtual IRendererBackend& renderer() = 0;
 
     virtual void save() {
-        mStates.push_back(State{mTransform, mBaseTransform, mColorMultiplier, mOpacity, mBlending});
+        mStates.push_back(State{mTransform, mBaseTransform, mColorMultiplier, mOpacity});
     }
 
     virtual void restore() {
@@ -51,7 +51,6 @@ public:
             mBaseTransform = s.baseTransform;
             mColorMultiplier = s.colorMultiplier;
             mOpacity = s.opacity;
-            mBlending = s.blending;
         }
     }
 
@@ -75,10 +74,6 @@ public:
 
     virtual void setColor(const AColor& color) {
         mColorMultiplier = mColorMultiplier * color;
-    }
-
-    virtual void setBlending(Blending blending) {
-        mBlending = blending;
     }
 
     virtual void rectangle(const APaint& paint,
@@ -201,13 +196,11 @@ protected:
         glm::mat4 baseTransform;
         AColor colorMultiplier;
         float opacity;
-        Blending blending;
     };
     std::vector<State> mStates;
     glm::mat4 mTransform = glm::mat4(1.0f);
     glm::mat4 mBaseTransform = glm::mat4(1.0f);
     AColor mColorMultiplier = AColor::WHITE;
     float mOpacity = 1.0f;
-    Blending mBlending = Blending::NORMAL;
     std::uint8_t mStencilDepth = 0;
 };
