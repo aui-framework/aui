@@ -24,11 +24,9 @@ float rounded(vec2 absolute, vec2 size) {
 }
 
 void main() {
-    vec4 result = vColor;
     vec2 v = vVertex.xy;
     vec4 query = vec4(v - lower, v - upper);
     vec4 integral = 0.5 + 0.5 * erf(query * (sqrt(0.5) / sigma));
-    result.a = result.a * (1.0 - clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0));
-    result.a = result.a * rounded(abs(vUv * 2.0 - 1.0), outerSize);
-    gl_FragColor = result;
+    float factor = (1.0 - clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0)) * rounded(abs(vUv * 2.0 - 1.0), outerSize);
+    gl_FragColor = vColor * factor;
 }

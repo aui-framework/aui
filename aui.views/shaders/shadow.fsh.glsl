@@ -13,10 +13,9 @@ vec4 erf(vec4 x) {
 }
 
 void main() {
-    vec4 result = vColor;
     vec2 v = vVertex.xy;
     vec4 query = vec4(v - lower, v - upper);
     vec4 integral = 0.5 + 0.5 * erf(query * (sqrt(0.5) / sigma));
-    result.a = result.a * clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0);
-    gl_FragColor = result;
+    float shadowFactor = clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0);
+    gl_FragColor = vColor * shadowFactor;
 }

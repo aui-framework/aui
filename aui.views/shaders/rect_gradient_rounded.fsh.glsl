@@ -21,6 +21,6 @@ float rounded(vec2 absolute, vec2 size) {
 }
 
 void main() {
-    gl_FragColor = vColor * gradient(vUv) * vec4(1.0, 1.0, 1.0, rounded(abs(vUv * 2.0 - 1.0), outerSize));
+    gl_FragColor = vColor * gradient(vUv) * rounded(abs(vUv * 2.0 - 1.0), outerSize);
     if (gl_FragColor.a < 0.1) discard;
 }
