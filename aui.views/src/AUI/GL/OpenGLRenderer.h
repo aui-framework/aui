@@ -18,7 +18,6 @@
 #include <AUI/Util/APool.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/ADeque.h>
-#include <AUI/Render/SimpleTexturePacker.h>
 #include "AUI/Render/ABorderStyle.h"
 #include <AUI/Render/IRendererBackend.h>
 #include "AUI/GL/RenderTarget/TextureRenderTarget.h"
@@ -27,11 +26,8 @@ class API_AUI_VIEWS OpenGLTexture2D : public ITexture, public gl::Framebuffer::I
 private:
     gl::Texture2D mTexture;
 public:
-    void setImage(AImageView image) override { 
-        mTexture.tex2D(image); 
-    }
+    void upload(AImageView image) override;
 
-    [[nodiscard]]
     glm::u32vec2 getSize() const override {
         return mTexture.getSize();
     }
@@ -49,40 +45,11 @@ protected:
 };
 
 class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
-    friend class OpenGLPrerenderedString;
-    friend class OpenGLMultiStringCanvas;
     friend class OpenGLRenderViewToTexture;
 public:
-    struct FontEntryData: aui::noncopyable {
-        OpenGLRenderer* renderer;
-        _<OpenGLTexture2D> texture;
-        bool isTextureInvalid = true;
-        Util::SimpleTexturePacker texturePacker;
+    OpenGLRenderer();
+    ~OpenGLRenderer() override = default;
 
-        explicit FontEntryData(OpenGLRenderer* renderer): renderer(renderer), texture(_new<OpenGLTexture2D>()) {}
-    };
-
-    struct CharacterData {
-        glm::vec4 uv;
-    };
-
-    struct FramebufferWithTextureRT {
-        gl::Framebuffer framebuffer;
-        _<gl::Framebuffer::IRenderTarget> rendertarget;
-    };
-
-    using OffscreenFramebufferPool = AVector<std::unique_ptr<FramebufferWithTextureRT>>;
-
-    struct FramebufferBackToPool {
-        OpenGLRenderer* renderer;
-        void operator()(FramebufferWithTextureRT* framebuffer) const;
-    };
-
-    using FramebufferFromPool = _unique<FramebufferWithTextureRT, FramebufferBackToPool>;
-
-    FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
-
-    // IRendererBackend implementation
     void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) override;
     void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) override;
     void texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) override;
@@ -94,7 +61,7 @@ public:
     void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) override;
     void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) override;
     void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) override;
-    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
+
     void lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) override;
     void points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) override;
     void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, Blending blending) override;
@@ -102,13 +69,11 @@ public:
     void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) override;
     void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
-    // Common
-    _<ITexture> createTexture(glm::u32vec2 size) override;
+    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE) override;
     float getRenderScale() const noexcept override { return mRenderScale; }
     void setRenderScale(float renderScale) override { mRenderScale = renderScale; }
     void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
-    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
     void setWindow(ASurface* window) override;
     ASurface* getWindow() const noexcept override { return mWindow; }
@@ -121,8 +86,8 @@ public:
     static bool mIsES;
     static int mGLSLVersion;
 
-    OpenGLRenderer();
-    ~OpenGLRenderer() override = default;
+    ADeque<aui::font_rendering::FontEntryData>& getFontEntryDataCache() override { return mFontEntryData; }
+    ADeque<aui::font_rendering::CharacterData>& getCharacterDataCache() override { return mCharData; }
 
     bool isVaoAvailable() const noexcept;
     void setBlending(Blending blending);
@@ -165,8 +130,21 @@ public:
         size_t mOffset = 0;
     };
 
-protected:
-    FontEntryData* getFontEntryData(const AFontStyle& fontStyle);
+    struct FramebufferWithTextureRT {
+        gl::Framebuffer framebuffer;
+        _<gl::Framebuffer::IRenderTarget> rendertarget;
+    };
+
+    using OffscreenFramebufferPool = AVector<std::unique_ptr<FramebufferWithTextureRT>>;
+
+    struct FramebufferBackToPool {
+        OpenGLRenderer* renderer;
+        void operator()(FramebufferWithTextureRT* framebuffer) const;
+    };
+
+    using FramebufferFromPool = _unique<FramebufferWithTextureRT, FramebufferBackToPool>;
+
+    FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
 
 private:
     ASurface* mWindow = nullptr;
@@ -193,8 +171,8 @@ private:
     TransientBuffer mVertexBuffer;
     TransientBuffer mIndexBuffer;
 
-    ADeque<FontEntryData> mFontEntryData;
-    AVector<CharacterData> mCharData;
+    ADeque<aui::font_rendering::FontEntryData> mFontEntryData;
+    ADeque<aui::font_rendering::CharacterData> mCharData;
     OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
 
     glm::uvec2 mViewportSize = { 1, 1 };
