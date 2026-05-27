@@ -22,7 +22,7 @@
 #include <glm/glm.hpp>
 #include <AUI/Geometry2D/ARect.h>
 #include <AUI/Render/ITexture.h>
-#include <AUI/Render/IRenderer.h>
+#include <AUI/Render/IRendererInterfaces.h>
 
 class IRenderer;
 class IRendererBackend;
@@ -178,12 +178,12 @@ public:
         mEntities.clear();
     }
 
-    void computeOverlaps();
     void optimize();
 
-    void resolveEntities();
-
     void draw(IRendererBackend& renderer) const;
+
+    void resolveEntities();
+    void computeOverlaps();
 
 private:
     AVector<StoredCommand> mCommands;
