@@ -28,22 +28,23 @@ public:
     SoftwareRenderer();
     ~SoftwareRenderer() override = default;
 
-    // IRendererBackend implementation
-    void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) override;
-    void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) override;
-    void texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) override;
-    void solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) override;
-    void gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) override;
-    void texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, Blending blending) override;
-    void rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) override;
-    void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) override;
-    void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) override;
-    void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) override;
-    void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) override;
-    void lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) override;
-    void points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) override;
-    void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, Blending blending) override;
-    void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, Blending blending) override;
+    void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) override;
+    void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) override;
+    void texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, const APaint& paint) override;
+    void solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override;
+    void gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override;
+    void texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override;
+    void rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) override;
+    void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, const APaint& paint) override;
+    void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) override;
+    void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) override;
+    void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) override;
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
+    void lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) override;
+    void points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) override;
+    void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) override;
+    void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, const APaint& paint) override;
 
     void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) override;
     void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
@@ -65,7 +66,7 @@ public:
     ADeque<aui::font_rendering::CharacterData>& getCharacterDataCache() override { return mCharData; }
 
 protected:
-    void putPixel(glm::ivec2 pos, AColor color, Blending blending = Blending::NORMAL);
+    void putPixel(glm::ivec2 pos, AColor color, const APaint& paint);
 
     SoftwareRenderingContext* mContext = nullptr;
     ASurface* mWindow = nullptr;
