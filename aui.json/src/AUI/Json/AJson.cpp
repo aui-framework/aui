@@ -66,3 +66,11 @@ AJson& aui::impl::JsonObject::at(const AString& key) {
     }
     throw AException("no such key: {}"_format(key));
 }
+
+AJsonRef AJson::at(const AString& key) const {
+    return AJsonRef{*this, {key}};
+}
+
+AJsonRef AJson::at(int index) const {
+    return AJsonRef{*this, {static_cast<size_t>(index)}};
+}

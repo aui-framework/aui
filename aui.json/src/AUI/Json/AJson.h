@@ -17,6 +17,8 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/IO/IInputStream.h"
 #include "AJson.h"
+#include "AJsonRef.h"
+#include "Path.h"
 #include "AUI/Common/AByteBufferView.h"
 
 #include <AUI/Common/AUuid.h>
@@ -96,7 +98,9 @@ private:
         if (auto p = std::get_if<T>(this)) {
             return *p;
         }
-        throw AJsonTypeMismatchException("not a " + AClass<T>::name());
+        auto path = aui::impl::json::currentPath();
+        auto prefix = path.empty() ? AString{} : path + ": ";
+        throw AJsonTypeMismatchException(prefix + "not a " + AClass<T>::name());
     }
 
     template<typename T>
@@ -105,12 +109,14 @@ private:
         if (auto p = std::get_if<T>(this)) {
             return *p;
         }
+        auto path = aui::impl::json::currentPath();
+        auto prefix = path.empty() ? AString{} : path + ": ";
         if constexpr(std::is_same_v<T, aui::impl::JsonObject>) {
-            throw AJsonTypeMismatchException("not an object");
+            throw AJsonTypeMismatchException(prefix + "not an object");
         } else if constexpr(std::is_same_v<T, aui::impl::JsonArray>) {
-            throw AJsonTypeMismatchException("not an array");
+            throw AJsonTypeMismatchException(prefix + "not an array");
         } else {
-            throw AJsonTypeMismatchException("not a " + AClass<T>::name());
+            throw AJsonTypeMismatchException(prefix + "not a " + AClass<T>::name());
         }
     }
 public:
@@ -333,6 +339,17 @@ public:
     const AJson& operator[](int arrayIndex) const {
         return const_cast<AJson&>(*this)[arrayIndex];
     }
+
+    /**
+     * @brief Returns a path-tracking accessor for chained access with error path reporting.
+     * @details Use this instead of operator[] when you want type-mismatch exceptions to
+     * include the full json path, e.g.:
+     * @code
+     * json.at("messages").at(0).at("content").asString(); // throws with "messages[0].content"
+     * @endcode
+     */
+    [[nodiscard]] AJsonRef at(const AString& key) const;
+    [[nodiscard]] AJsonRef at(int index) const;
 
     void push_back(AJson elem) {
         asArray().push_back(std::move(elem));
