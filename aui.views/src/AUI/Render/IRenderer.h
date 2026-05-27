@@ -22,7 +22,7 @@
 #include <AUI/Util/AMetric.h>
 #include "ATextLayoutHelper.h"
 #include <AUI/Font/FontRendering.hpp>
-#include <AUI/Render/IRendererInterfaces.h>
+#include <AUI/Render/IRendererText.hpp>
 #include <AUI/Render/IRenderViewToTexture.h>
 #include <AUI/ASS/Property/Backdrop.h>
 
