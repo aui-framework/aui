@@ -16,8 +16,9 @@
 #include <AUI/Common/ADeque.h>
 #include <AUI/Common/SharedPtr.h>
 #include <AUI/Image/APixelFormat.h>
-#include <AUI/Render/SimpleTexturePacker.h>
+#include <AUI/Image/AImage.h>
 #include <AUI/Image/AImageView.h>
+#include <AUI/Render/RectPacker.hpp>
 
 class ITexture;
 class IRendererBackend;
@@ -29,7 +30,8 @@ namespace aui {
 class API_AUI_VIEWS Atlas: public aui::noncopyable {
     struct Page {
         _<ITexture> texture;
-        Util::SimpleTexturePacker texturePacker;
+        AImage image;
+        RectPacker packer;
         bool isTextureInvalid = true;
 
         Page(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize);

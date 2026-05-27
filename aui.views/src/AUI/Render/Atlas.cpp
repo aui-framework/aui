@@ -13,53 +13,53 @@
 
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Render/ITexture.h>
-#include <AUI/Image/AImage.h>
 
 namespace aui {
-    Atlas::Atlas(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize) :
-        mRenderer(renderer), mFormat(format), mPageSize(pageSize) {}
+Atlas::Atlas(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize) :
+    mRenderer(renderer), mFormat(format), mPageSize(pageSize) {}
 
-    Atlas::Page::Page(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize) :
-        texture(renderer.createTexture(pageSize, format)) {
-        AImage dummy({ 1, 1 }, format);
-        texturePacker.resize(dummy, pageSize.x);
-    }
+Atlas::Page::Page(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize) :
+    texture(renderer.createTexture(pageSize, format)),
+    image({ pageSize.x, pageSize.y }, format),
+    packer(pageSize.x, pageSize.y) {
+}
 
-    Atlas::Handle Atlas::insert(AImageView image) {
-        glm::vec4 uv;
-        Page* targetPage = nullptr;
-        for (auto& page : mPages) {
-            if (page->texturePacker.tryInsert(image, uv)) {
-                targetPage = page.get();
-                break;
-            }
-        }
-        if (targetPage == nullptr) {
-            auto& page = mPages.emplace_back(std::make_unique<Page>(mRenderer, mFormat, mPageSize));
-            if (!page->texturePacker.tryInsert(image, uv)) {
-                return { {}, nullptr };
-            }
+Atlas::Handle Atlas::insert(AImageView image) {
+    Rect r;
+    Page* targetPage = nullptr;
+    for (auto& page : mPages) {
+        if (page->packer.allocateRect(r, image.width(), image.height())) {
             targetPage = page.get();
-        }
-
-        const float BIAS = 0.1f;
-        uv.x += BIAS; uv.y += BIAS; uv.z -= BIAS; uv.w -= BIAS;
-
-        // Normalize UV
-        uv /= glm::vec4(mPageSize.x, mPageSize.y, mPageSize.x, mPageSize.y);
-
-        targetPage->isTextureInvalid = true;
-        return { uv, targetPage->texture };
-    }
-
-    void Atlas::syncWithGpu() {
-        for (auto& page : mPages) {
-            if (page->isTextureInvalid) {
-                if (auto img = page->texturePacker.getImage()) {
-                    page->texture->upload(*img);
-                }
-                page->isTextureInvalid = false;
-            }
+            break;
         }
     }
+    if (targetPage == nullptr) {
+        auto& page = mPages.emplace_back(std::make_unique<Page>(mRenderer, mFormat, mPageSize));
+        if (!page->packer.allocateRect(r, image.width(), image.height())) {
+            return { {}, nullptr };
+        }
+        targetPage = page.get();
+    }
+
+    targetPage->image.insert({r.x, r.y}, image);
+
+    const float BIAS = 0.1f;
+    glm::vec4 uv(r.x, r.y, r.x + r.width, r.y + r.height);
+    uv.x += BIAS; uv.y += BIAS; uv.z -= BIAS; uv.w -= BIAS;
+
+    // Normalize UV
+    uv /= glm::vec4(mPageSize.x, mPageSize.y, mPageSize.x, mPageSize.y);
+
+    targetPage->isTextureInvalid = true;
+    return { uv, targetPage->texture };
+}
+
+void Atlas::syncWithGpu() {
+    for (auto& page : mPages) {
+        if (page->isTextureInvalid) {
+            page->texture->upload(page->image);
+            page->isTextureInvalid = false;
+        }
+    }
+}
 }
