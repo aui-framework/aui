@@ -46,7 +46,86 @@ protected:
 
 class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
     friend class OpenGLRenderViewToTexture;
+
+    class TransientBuffer {
+    public:
+        TransientBuffer(GLenum target, size_t size);
+        ~TransientBuffer();
+        TransientBuffer(const TransientBuffer&) = delete;
+
+        size_t upload(const void* data, size_t size);
+        void orphan();
+        void bind();
+        void bindRange(GLuint index, size_t offset, size_t size);
+        [[nodiscard]] GLuint handle() const { return mHandle; }
+
+    private:
+        GLenum mTarget;
+        GLuint mHandle = 0;
+        size_t mSize;
+        size_t mOffset = 0;
+    };
+
+    struct FramebufferWithTextureRT {
+        gl::Framebuffer framebuffer;
+        _<gl::Framebuffer::IRenderTarget> renderTarget;
+    };
+
+    using OffscreenFramebufferPool = AVector<std::unique_ptr<FramebufferWithTextureRT>>;
+
+    struct FramebufferBackToPool {
+        OpenGLRenderer* renderer;
+        void operator()(FramebufferWithTextureRT* framebuffer) const;
+    };
+
+    using FramebufferFromPool = _unique<FramebufferWithTextureRT, FramebufferBackToPool>;
+
+    void drawRect(glm::vec2 position, glm::vec2 size, const glm::vec4& color, const glm::vec2* uvs = nullptr);
+    bool setupLineShader(const glm::mat4& transform, const ABorderStyle& style, float widthPx);
+    std::uint8_t mStencilDepth = 0;
+
+    ASurface* mWindow = nullptr;
+    float mRenderScale = 1.0f;
+    bool mAllowRenderToTexture = true;
+
+    AOptional<gl::Program> mSolidShader;
+    AOptional<gl::Program> mBoxShadowShader;
+    AOptional<gl::Program> mBoxShadowInnerShader;
+    AOptional<gl::Program> mRoundedSolidShader;
+    AOptional<gl::Program> mRoundedSolidShaderBorder;
+    AOptional<gl::Program> mGradientShader;
+    AOptional<gl::Program> mRoundedGradientShader;
+    AOptional<gl::Program> mTexturedShader;
+    AOptional<gl::Program> mRoundedTexturedShader;
+    AOptional<gl::Program> mUnblendShader;
+    AOptional<gl::Program> mSquareSectorShader;
+    AOptional<gl::Program> mSymbolShader;
+    AOptional<gl::Program> mSymbolShaderSubPixel;
+    AOptional<gl::Program> mLineSolidDashedShader;
+
+    gl::Vao mBatchVao;
+    gl::Texture2D mGradientTexture;
+
+    TransientBuffer mVertexBuffer;
+    TransientBuffer mIndexBuffer;
+
+    ADeque<aui::font_rendering::FontEntryData> mFontEntryData;
+    ADeque<aui::font_rendering::CharacterData> mCharData;
+    OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
+
+    glm::uvec2 mViewportSize = { 1, 1 };
+    glm::mat4 mProjectionMatrix = glm::mat4(1.0f);
+
+    IRenderViewToTexture* mRenderToTextureTarget = nullptr;
+
 public:
+    typedef void* (*GLLoadProc)(const char* name);
+    static bool loadGL(GLLoadProc load_proc, bool es);
+    static bool loadGL(GLLoadProc load_proc);
+
+    static bool mIsES;
+    static int mGLSLVersion;
+
     OpenGLRenderer();
     ~OpenGLRenderer() override = default;
 
@@ -79,13 +158,6 @@ public:
     void setWindow(ASurface* window) override;
     ASurface* getWindow() const noexcept override { return mWindow; }
     glm::mat4 getProjectionMatrix() const override;
-
-    typedef void* (*GLLoadProc)(const char* name);
-    static bool loadGL(GLLoadProc load_proc, bool es);
-    static bool loadGL(GLLoadProc load_proc);
-
-    static bool mIsES;
-    static int mGLSLVersion;
 
     ADeque<aui::font_rendering::FontEntryData>& getFontEntryDataCache() override { return mFontEntryData; }
     ADeque<aui::font_rendering::CharacterData>& getCharacterDataCache() override { return mCharData; }
@@ -129,79 +201,5 @@ public:
         glm::vec4 color2;
     };
 
-    class TransientBuffer {
-    public:
-        TransientBuffer(GLenum target, size_t size);
-        ~TransientBuffer();
-        TransientBuffer(const TransientBuffer&) = delete;
-
-        size_t upload(const void* data, size_t size);
-        void orphan();
-        void bind();
-        void bindRange(GLuint index, size_t offset, size_t size);
-        [[nodiscard]] GLuint handle() const { return mHandle; }
-
-    private:
-        GLenum mTarget;
-        GLuint mHandle = 0;
-        size_t mSize;
-        size_t mOffset = 0;
-    };
-
-    struct FramebufferWithTextureRT {
-        gl::Framebuffer framebuffer;
-        _<gl::Framebuffer::IRenderTarget> rendertarget;
-    };
-
-    using OffscreenFramebufferPool = AVector<std::unique_ptr<FramebufferWithTextureRT>>;
-
-    struct FramebufferBackToPool {
-        OpenGLRenderer* renderer;
-        void operator()(FramebufferWithTextureRT* framebuffer) const;
-    };
-
-    using FramebufferFromPool = _unique<FramebufferWithTextureRT, FramebufferBackToPool>;
-
     FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
-
-private:
-    void drawRect(glm::vec2 position, glm::vec2 size, const glm::vec4& color, const glm::vec2* uvs = nullptr);
-    bool setupLineShader(const glm::mat4& transform, const ABorderStyle& style, float widthPx);
-    std::uint8_t mStencilDepth = 0;
-
-    ASurface* mWindow = nullptr;
-    float mRenderScale = 1.0f;
-    bool mAllowRenderToTexture = true;
-    
-    AOptional<gl::Program> mSolidShader;
-    AOptional<gl::Program> mBoxShadowShader;
-    AOptional<gl::Program> mBoxShadowInnerShader;
-    AOptional<gl::Program> mRoundedSolidShader;
-    AOptional<gl::Program> mRoundedSolidShaderBorder;
-    AOptional<gl::Program> mGradientShader;
-    AOptional<gl::Program> mRoundedGradientShader;
-    AOptional<gl::Program> mTexturedShader;
-    AOptional<gl::Program> mRoundedTexturedShader;
-    AOptional<gl::Program> mUnblendShader;
-    AOptional<gl::Program> mSquareSectorShader;
-    AOptional<gl::Program> mSymbolShader;
-    AOptional<gl::Program> mSymbolShaderSubPixel;
-    AOptional<gl::Program> mLineSolidDashedShader;
-
-    gl::Vao mBatchVao;
-    gl::Texture2D mGradientTexture;
-
-    TransientBuffer mVertexBuffer;
-    TransientBuffer mIndexBuffer;
-
-    ADeque<aui::font_rendering::FontEntryData> mFontEntryData;
-    ADeque<aui::font_rendering::CharacterData> mCharData;
-    OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
-
-    glm::uvec2 mViewportSize = { 1, 1 };
-    glm::mat4 mProjectionMatrix = glm::mat4(1.0f);
-
-    struct {
-        IRenderViewToTexture* mRenderToTextureTarget = nullptr;
-    };
 };
