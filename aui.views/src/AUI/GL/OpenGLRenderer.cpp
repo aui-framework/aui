@@ -43,27 +43,6 @@ namespace {
         };
     }
 
-    AImage premultiplyImage(AImageView image) {
-        AImage img(image.size(), image.format());
-        auto comp = image.format() & APixelFormat::COMPONENT_BITS;
-        bool hasAlpha = (comp == APixelFormat::RGBA || comp == APixelFormat::BGRA || comp == APixelFormat::ARGB);
-        image.visit([&](const auto& source) {
-            img.visit([&](auto& destination) {
-                for (uint32_t y = 0; y < img.height(); ++y) {
-                    for (uint32_t x = 0; x < img.width(); ++x) {
-                        AColor c(source.get({x, y}));
-                        if (hasAlpha) {
-                            destination.set({x, y}, AFormattedColorConverter(c.premultiply()));
-                        } else {
-                            destination.set({x, y}, AFormattedColorConverter(c));
-                        }
-                    }
-                }
-            });
-        });
-        return img;
-    }
-
     struct GLDebugGroupLocal {
         GLDebugGroupLocal(const char* name) {
 #if defined(GL_KHR_debug) || defined(GL_VERSION_4_3)
@@ -192,7 +171,7 @@ precision highp int;
 }
 
 void OpenGLTexture2D::upload(AImageView image) {
-    mTexture.tex2D(premultiplyImage(image));
+    mTexture.tex2D(image);
 }
 
 _<ITexture> OpenGLRenderer::createTexture(glm::u32vec2 size, APixelFormat format) {
@@ -200,6 +179,7 @@ _<ITexture> OpenGLRenderer::createTexture(glm::u32vec2 size, APixelFormat format
     t->texture().tex2D(AImage(size, format));
     return t;
 }
+
 void OpenGLRenderer::setBlending(const APaint& paint) {
     if (!glBlendFuncSeparate) return;
     glEnable(GL_BLEND);
@@ -218,13 +198,16 @@ void OpenGLRenderer::setBlending(const APaint& paint) {
             break;
     }
 }
+
 void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     mViewportSize = windowSize;
     mProjectionMatrix = glm::ortho(0.f, (float)mViewportSize.x, (float)mViewportSize.y, 0.f, -1.f, 1.f);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
 }
+
 void OpenGLRenderer::endPaint() {}
+
 void OpenGLRenderer::setWindow(ASurface* window) {
     mWindow = window;
     if (mWindow) {
@@ -232,10 +215,13 @@ void OpenGLRenderer::setWindow(ASurface* window) {
         mProjectionMatrix = glm::ortho(0.f, (float)mViewportSize.x, (float)mViewportSize.y, 0.f, -1.f, 1.f);
     }
 }
+
 _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept { return nullptr; }
+
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
     return mProjectionMatrix;
 }
+
 bool OpenGLRenderer::loadGL(GLLoadProc load_proc, bool es) {
     mIsES = es;
     if (mIsES) {
