@@ -106,10 +106,27 @@ public:
         glm::vec2 uv;
         glm::vec4 color;
     };
-    struct VertexSymbol {
+    struct VertexRounded {
         glm::vec2 pos;
         glm::vec2 uv;
         glm::vec4 color;
+        glm::vec2 outerSize;
+    };
+    struct VertexRoundedBorder {
+        glm::vec2 pos;
+        glm::vec2 uv;
+        glm::vec4 color;
+        glm::vec2 outerSize;
+        glm::vec2 innerSize;
+        glm::vec2 outerToInner;
+    };
+    struct VertexRoundedGradient {
+        glm::vec2 pos;
+        glm::vec2 uv;
+        glm::vec4 color;
+        glm::vec2 outerSize;
+        glm::vec4 color1;
+        glm::vec4 color2;
     };
 
     class TransientBuffer {

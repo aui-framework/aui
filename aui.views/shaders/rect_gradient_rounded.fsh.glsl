@@ -1,13 +1,13 @@
 in vec2 vUv;
 in vec4 vColor;
-uniform vec2 outerSize;
-uniform vec4 color1;
-uniform vec4 color2;
+in vec2 vOuterSize;
+in vec4 vColor1;
+in vec4 vColor2;
 uniform mat3 matUv;
 
 vec4 gradient(vec2 uv) {
     vec3 transformedUv = matUv * vec3(uv, 1.0);
-    vec4 c = mix(color1, color2, clamp(transformedUv.x, 0.0, 1.0));
+    vec4 c = mix(vColor1, vColor2, clamp(transformedUv.x, 0.0, 1.0));
     return c;
 }
 
@@ -21,6 +21,6 @@ float rounded(vec2 absolute, vec2 size) {
 }
 
 void main() {
-    gl_FragColor = vColor * gradient(vUv) * rounded(abs(vUv * 2.0 - 1.0), outerSize);
+    gl_FragColor = vColor * gradient(vUv) * rounded(abs(vUv * 2.0 - 1.0), vOuterSize);
     if (gl_FragColor.a < 0.001) discard;
 }

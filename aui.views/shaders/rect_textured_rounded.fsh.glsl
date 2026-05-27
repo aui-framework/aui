@@ -1,7 +1,7 @@
 in vec2 vUv;
 in vec4 vColor;
+in vec2 vOuterSize;
 uniform sampler2D albedo;
-uniform vec2 outerSize;
 
 float rounded(vec2 absolute, vec2 size) {
     vec2 circleCenter = 1.0 - size;
@@ -15,6 +15,6 @@ float rounded(vec2 absolute, vec2 size) {
 void main() {
     vec4 tex = texture2D(albedo, vUv);
     tex.rgb *= tex.a;
-    gl_FragColor = tex * vColor * rounded(abs(vUv * 2.0 - 1.0), outerSize);
+    gl_FragColor = tex * vColor * rounded(abs(vUv * 2.0 - 1.0), vOuterSize);
     if (gl_FragColor.a < 0.001) discard;
 }

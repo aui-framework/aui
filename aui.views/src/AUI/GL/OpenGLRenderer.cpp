@@ -385,39 +385,47 @@ void OpenGLRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRect
     mRoundedSolidShader->use();
     mRoundedSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
 
-    for (const auto& inst : v.instances) {
+    AVector<VertexRounded> vertices;
+    AVector<GLuint> indices;
+    vertices.reserve(v.instances.size() * 4);
+    indices.reserve(v.instances.size() * 6);
+
+    for (size_t i = 0; i < v.instances.size(); ++i) {
+        const auto& inst = v.instances[i];
+        GLuint offset = static_cast<GLuint>(i * 4);
+        
         float radius = v.radius;
         float maxRadius = std::min(inst.size.x, inst.size.y) * 0.5f;
         if (radius > maxRadius) {
             radius = maxRadius;
         }
         glm::vec2 outerSize = { 2.0f * radius / inst.size.x, 2.0f * radius / inst.size.y };
-        mRoundedSolidShader->set(aui::ShaderUniforms::OUTER_SIZE, outerSize);
-
+        
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = inst.color.premultiply();
 
-        VertexBasicUv vertices[4] = {
-            {rectVertices[0], {0.f, 1.f}, color},
-            {rectVertices[1], {1.f, 1.f}, color},
-            {rectVertices[2], {0.f, 0.f}, color},
-            {rectVertices[3], {1.f, 0.f}, color}
-        };
-        GLuint indices[6] = { 0, 1, 2, 2, 1, 3 };
-
-        size_t vOffset = mVertexBuffer.upload(vertices, sizeof(vertices));
-        size_t iOffset = mIndexBuffer.upload(indices, sizeof(indices));
-
-        mBatchVao.bind();
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
-        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, color)));
-
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
+        vertices << VertexRounded{rectVertices[0], {0.f, 1.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[1], {1.f, 1.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[2], {0.f, 0.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[3], {1.f, 0.f}, color, outerSize};
+        
+        indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
+
+    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+    size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
+
+    mBatchVao.bind();
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRounded), (void*)(vOffset + offsetof(VertexRounded, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRounded), (void*)(vOffset + offsetof(VertexRounded, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexRounded), (void*)(vOffset + offsetof(VertexRounded, color)));
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRounded), (void*)(vOffset + offsetof(VertexRounded, outerSize)));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
 void OpenGLRenderer::gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
@@ -434,44 +442,54 @@ void OpenGLRenderer::gradientRoundedRectangles(const ADisplayList::GradientRound
     aui::render::brush::gradient::Helper helper(brush);
     mRoundedGradientShader->set(aui::ShaderUniforms::GRADIENT_MAT_UV, helper.matrix);
 
+    AVector<VertexRoundedGradient> vertices;
+    AVector<GLuint> indices;
+    vertices.reserve(v.instances.size() * 4);
+    indices.reserve(v.instances.size() * 6);
+
     glm::vec4 c1 = v.colors.size() > 0 ? v.colors[0].color.premultiply() : glm::vec4(0.f);
     glm::vec4 c2 = v.colors.size() > 1 ? v.colors[1].color.premultiply() : (v.colors.size() > 0 ? v.colors[0].color.premultiply() : glm::vec4(0.f));
-    mRoundedGradientShader->set(aui::ShaderUniforms::COLOR1, c1);
-    mRoundedGradientShader->set(aui::ShaderUniforms::COLOR2, c2);
 
-    for (const auto& inst : v.instances) {
+    for (size_t i = 0; i < v.instances.size(); ++i) {
+        const auto& inst = v.instances[i];
+        GLuint offset = static_cast<GLuint>(i * 4);
+        
         float radius = v.radius;
         float maxRadius = std::min(inst.size.x, inst.size.y) * 0.5f;
         if (radius > maxRadius) {
             radius = maxRadius;
         }
         glm::vec2 outerSize = { 2.0f * radius / inst.size.x, 2.0f * radius / inst.size.y };
-        mRoundedGradientShader->set(aui::ShaderUniforms::OUTER_SIZE, outerSize);
 
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = inst.color.premultiply();
 
-        VertexBasicUv vertices[4] = {
-            {rectVertices[0], {0.f, 1.f}, color},
-            {rectVertices[1], {1.f, 1.f}, color},
-            {rectVertices[2], {0.f, 0.f}, color},
-            {rectVertices[3], {1.f, 0.f}, color}
-        };
-        GLuint indices[6] = { 0, 1, 2, 2, 1, 3 };
+        vertices << VertexRoundedGradient{rectVertices[0], {0.f, 1.f}, color, outerSize, c1, c2};
+        vertices << VertexRoundedGradient{rectVertices[1], {1.f, 1.f}, color, outerSize, c1, c2};
+        vertices << VertexRoundedGradient{rectVertices[2], {0.f, 0.f}, color, outerSize, c1, c2};
+        vertices << VertexRoundedGradient{rectVertices[3], {1.f, 0.f}, color, outerSize, c1, c2};
 
-        size_t vOffset = mVertexBuffer.upload(vertices, sizeof(vertices));
-        size_t iOffset = mIndexBuffer.upload(indices, sizeof(indices));
-
-        mBatchVao.bind();
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
-        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, color)));
-
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
+        indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
+
+    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+    size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
+
+    mBatchVao.bind();
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
+    glEnableVertexAttribArray(4);
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, color)));
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, outerSize)));
+    glVertexAttribPointer(4, 4, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, color1)));
+    glVertexAttribPointer(5, 4, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedGradient), (void*)(vOffset + offsetof(VertexRoundedGradient, color2)));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
 void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
@@ -482,39 +500,47 @@ void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRound
     mRoundedTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
-    for (const auto& inst : v.instances) {
+    AVector<VertexRounded> vertices;
+    AVector<GLuint> indices;
+    vertices.reserve(v.instances.size() * 4);
+    indices.reserve(v.instances.size() * 6);
+
+    for (size_t i = 0; i < v.instances.size(); ++i) {
+        const auto& inst = v.instances[i];
+        GLuint offset = static_cast<GLuint>(i * 4);
+        
         float radius = v.radius;
         float maxRadius = std::min(inst.size.x, inst.size.y) * 0.5f;
         if (radius > maxRadius) {
             radius = maxRadius;
         }
         glm::vec2 outerSize = { 2.0f * radius / inst.size.x, 2.0f * radius / inst.size.y };
-        mRoundedTexturedShader->set(aui::ShaderUniforms::OUTER_SIZE, outerSize);
 
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = inst.color.premultiply();
 
-        VertexBasicUv vertices[4] = {
-            {rectVertices[0], {0.f, 1.f}, color},
-            {rectVertices[1], {1.f, 1.f}, color},
-            {rectVertices[2], {0.f, 0.f}, color},
-            {rectVertices[3], {1.f, 0.f}, color}
-        };
-        GLuint indices[6] = { 0, 1, 2, 2, 1, 3 };
+        vertices << VertexRounded{rectVertices[0], {0.f, 1.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[1], {1.f, 1.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[2], {0.f, 0.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[3], {1.f, 0.f}, color, outerSize};
 
-        size_t vOffset = mVertexBuffer.upload(vertices, sizeof(vertices));
-        size_t iOffset = mIndexBuffer.upload(indices, sizeof(indices));
-
-        mBatchVao.bind();
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
-        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, color)));
-
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
+        indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
+
+    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+    size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
+
+    mBatchVao.bind();
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRounded), (void*)(vOffset + offsetof(VertexRounded, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRounded), (void*)(vOffset + offsetof(VertexRounded, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexRounded), (void*)(vOffset + offsetof(VertexRounded, color)));
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRounded), (void*)(vOffset + offsetof(VertexRounded, outerSize)));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 void OpenGLRenderer::rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
@@ -564,7 +590,15 @@ void OpenGLRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangl
     mRoundedSolidShaderBorder->use();
     mRoundedSolidShaderBorder->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
 
-    for (const auto& inst : v.instances) {
+    AVector<VertexRoundedBorder> vertices;
+    AVector<GLuint> indices;
+    vertices.reserve(v.instances.size() * 4);
+    indices.reserve(v.instances.size() * 6);
+
+    for (size_t i = 0; i < v.instances.size(); ++i) {
+        const auto& inst = v.instances[i];
+        GLuint offset = static_cast<GLuint>(i * 4);
+        
         float radius = v.radius;
         float maxRadius = std::min(inst.size.x, inst.size.y) * 0.5f;
         if (radius > maxRadius) {
@@ -582,38 +616,38 @@ void OpenGLRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangl
             innerSize = { 2.0f * innerRadius / innerRectSize.x, 2.0f * innerRadius / innerRectSize.y };
             outerToInner = inst.size / innerRectSize;
         } else {
-            // Inner rect is empty, outerToInner should be huge to make it disappear
             outerToInner = glm::vec2(1000.f);
         }
-
-        mRoundedSolidShaderBorder->set(aui::ShaderUniforms::OUTER_SIZE, outerSize);
-        mRoundedSolidShaderBorder->set(aui::ShaderUniforms::INNER_SIZE, innerSize);
-        mRoundedSolidShaderBorder->set(aui::ShaderUniforms::OUTER_TO_INNER, outerToInner);
 
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = inst.color.premultiply();
         
-        VertexBasicUv vertices[4] = {
-            {rectVertices[0], {0.f, 1.f}, color},
-            {rectVertices[1], {1.f, 1.f}, color},
-            {rectVertices[2], {0.f, 0.f}, color},
-            {rectVertices[3], {1.f, 0.f}, color},
-        };
-        GLuint indices[6] = {0, 1, 2, 2, 1, 3};
+        vertices << VertexRoundedBorder{rectVertices[0], {0.f, 1.f}, color, outerSize, innerSize, outerToInner};
+        vertices << VertexRoundedBorder{rectVertices[1], {1.f, 1.f}, color, outerSize, innerSize, outerToInner};
+        vertices << VertexRoundedBorder{rectVertices[2], {0.f, 0.f}, color, outerSize, innerSize, outerToInner};
+        vertices << VertexRoundedBorder{rectVertices[3], {1.f, 0.f}, color, outerSize, innerSize, outerToInner};
 
-        size_t vOffset = mVertexBuffer.upload(vertices, sizeof(vertices));
-        size_t iOffset = mIndexBuffer.upload(indices, sizeof(indices));
-
-        mBatchVao.bind();
-        glEnableVertexAttribArray(0);
-        glEnableVertexAttribArray(1);
-        glEnableVertexAttribArray(2);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
-        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
-        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, color)));
-
-        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
+        indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
+
+    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+    size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
+
+    mBatchVao.bind();
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glEnableVertexAttribArray(2);
+    glEnableVertexAttribArray(3);
+    glEnableVertexAttribArray(4);
+    glEnableVertexAttribArray(5);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedBorder), (void*)(vOffset + offsetof(VertexRoundedBorder, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedBorder), (void*)(vOffset + offsetof(VertexRoundedBorder, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedBorder), (void*)(vOffset + offsetof(VertexRoundedBorder, color)));
+    glVertexAttribPointer(3, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedBorder), (void*)(vOffset + offsetof(VertexRoundedBorder, outerSize)));
+    glVertexAttribPointer(4, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedBorder), (void*)(vOffset + offsetof(VertexRoundedBorder, innerSize)));
+    glVertexAttribPointer(5, 2, GL_FLOAT, GL_FALSE, sizeof(VertexRoundedBorder), (void*)(vOffset + offsetof(VertexRoundedBorder, outerToInner)));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
 void OpenGLRenderer::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) {
@@ -698,7 +732,7 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
     }
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
-    AVector<VertexSymbol> vertices;
+    AVector<VertexBasicUv> vertices;
     AVector<GLuint> indices;
     vertices.reserve(v.instances.size() * 4);
     indices.reserve(v.instances.size() * 6);
@@ -708,10 +742,10 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = inst.color.premultiply();
         
-        vertices << VertexSymbol{rectVertices[0], {inst.u1.x, inst.u2.y}, color};
-        vertices << VertexSymbol{rectVertices[1], {inst.u2.x, inst.u2.y}, color};
-        vertices << VertexSymbol{rectVertices[2], {inst.u1.x, inst.u1.y}, color};
-        vertices << VertexSymbol{rectVertices[3], {inst.u2.x, inst.u1.y}, color};
+        vertices << VertexBasicUv{rectVertices[0], {inst.u1.x, inst.u2.y}, color};
+        vertices << VertexBasicUv{rectVertices[1], {inst.u2.x, inst.u2.y}, color};
+        vertices << VertexBasicUv{rectVertices[2], {inst.u1.x, inst.u1.y}, color};
+        vertices << VertexBasicUv{rectVertices[3], {inst.u2.x, inst.u1.y}, color};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
@@ -720,9 +754,9 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
     size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
 
     mBatchVao.bind();
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexSymbol), (void*)(vOffset + offsetof(VertexSymbol, pos)));
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexSymbol), (void*)(vOffset + offsetof(VertexSymbol, uv)));
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexSymbol), (void*)(vOffset + offsetof(VertexSymbol, color)));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, color)));
     glEnableVertexAttribArray(1);
 
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);

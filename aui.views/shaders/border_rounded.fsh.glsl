@@ -1,8 +1,8 @@
 in vec2 vUv;
 in vec4 vColor;
-uniform vec2 innerSize;
-uniform vec2 outerToInner;
-uniform vec2 outerSize;
+in vec2 vInnerSize;
+in vec2 vOuterToInner;
+in vec2 vOuterSize;
 
 float rounded(vec2 absolute, vec2 size) {
     vec2 circleCenter = 1.0 - size;
@@ -15,6 +15,6 @@ float rounded(vec2 absolute, vec2 size) {
 
 void main() {
     vec2 absolute = abs(vUv * 2.0 - 1.0);
-    gl_FragColor = vColor * (rounded(absolute, outerSize) - rounded(absolute * outerToInner, innerSize));
+    gl_FragColor = vColor * (rounded(absolute, vOuterSize) - rounded(absolute * vOuterToInner, vInnerSize));
     if (gl_FragColor.a < 0.001) discard;
 }
