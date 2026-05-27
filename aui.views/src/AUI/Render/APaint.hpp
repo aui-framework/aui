@@ -12,7 +12,6 @@
 #pragma once
 
 #include <AUI/Common/AColor.h>
-#include <AUI/Render/IRenderer.h>
 #include <AUI/Render/ABrush.h>
 
 /**
