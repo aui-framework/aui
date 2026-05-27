@@ -18,18 +18,14 @@
 
 class API_AUI_VIEWS AFontManager {
 public:
-	AFontManager();
+    AFontManager();
     AFontManager(const AFontManager&) = delete;
     virtual ~AFontManager();
 
     static AFontManager& inst();
 
-	[[nodiscard]] _<AFontFamily> getDefaultFamily() {
-        return mDefaultFamily;
-    }
-	[[nodiscard]] _<AFont> getDefaultFont() {
-        return mDefaultFont;
-    }
+    [[nodiscard]] _<AFontFamily> getDefaultFamily() { return mDefaultFamily; }
+    [[nodiscard]] _<AFont> getDefaultFont() { return mDefaultFont; }
 
     [[nodiscard]]
     _<AFontFamily> getFontFamily(const AString& name) const {
@@ -45,6 +41,7 @@ public:
         }
         return mLoadedFont[url] = loadFont(url);
     }
+
 private:
     AMap<AUrl, _<AFont>> mLoadedFont;
     AMap<AString, _<AFontFamily>> mFamilies;
@@ -52,10 +49,9 @@ private:
     _<AFontFamily> mDefaultFamily;
     _<AFont> mDefaultFont;
 
-	AString getPathToFont(const AString& family);
+    AString getPathToFont(const AString& family);
 
     _<AFont> loadFont(const AUrl& url);
 
-
-	friend class AFont;
+    friend class AFont;
 };
