@@ -159,6 +159,7 @@ private:
     AOptional<gl::Program> mGradientShader;
     AOptional<gl::Program> mRoundedGradientShader;
     AOptional<gl::Program> mTexturedShader;
+    AOptional<gl::Program> mRoundedTexturedShader;
     AOptional<gl::Program> mUnblendShader;
     AOptional<gl::Program> mSquareSectorShader;
     AOptional<gl::Program> mSymbolShader;
