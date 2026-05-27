@@ -685,36 +685,77 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
     }
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
-    AVector<VertexBasicUv> vertices;
     AVector<GLuint> indices;
-    vertices.reserve(v.instances.size() * 4);
     indices.reserve(v.instances.size() * 6);
     for (size_t i = 0; i < v.instances.size(); ++i) {
-        const auto& inst = v.instances[i];
         GLuint offset = static_cast<GLuint>(i * 4);
-        auto rectVertices = getVerticesForRect(inst.position, inst.size);
-        glm::vec4 color = inst.color.premultiply();
-
-        vertices << VertexBasicUv{rectVertices[0], {inst.u1.x, inst.u1.y}, color};
-        vertices << VertexBasicUv{rectVertices[1], {inst.u2.x, inst.u1.y}, color};
-        vertices << VertexBasicUv{rectVertices[2], {inst.u1.x, inst.u2.y}, color};
-        vertices << VertexBasicUv{rectVertices[3], {inst.u2.x, inst.u2.y}, color};
-
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
-
-    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
     size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
 
     mBatchVao.bind();
     glEnableVertexAttribArray(0);
     glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, color)));
 
-    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
+    if (v.isSubpixel) {
+        AVector<VertexBasicUv> pass1Vertices;
+        AVector<VertexBasicUv> pass2Vertices;
+        pass1Vertices.reserve(v.instances.size() * 4);
+        pass2Vertices.reserve(v.instances.size() * 4);
+
+        for (size_t i = 0; i < v.instances.size(); ++i) {
+            const auto& inst = v.instances[i];
+            auto rectVertices = getVerticesForRect(inst.position, inst.size);
+            glm::vec4 premulColor = inst.color.premultiply();
+            glm::vec4 pass1Color(1.f, 1.f, 1.f, premulColor.a);
+
+            pass1Vertices << VertexBasicUv{rectVertices[0], {inst.u1.x, inst.u1.y}, pass1Color};
+            pass1Vertices << VertexBasicUv{rectVertices[1], {inst.u2.x, inst.u1.y}, pass1Color};
+            pass1Vertices << VertexBasicUv{rectVertices[2], {inst.u1.x, inst.u2.y}, pass1Color};
+            pass1Vertices << VertexBasicUv{rectVertices[3], {inst.u2.x, inst.u2.y}, pass1Color};
+
+            pass2Vertices << VertexBasicUv{rectVertices[0], {inst.u1.x, inst.u1.y}, premulColor};
+            pass2Vertices << VertexBasicUv{rectVertices[1], {inst.u2.x, inst.u1.y}, premulColor};
+            pass2Vertices << VertexBasicUv{rectVertices[2], {inst.u1.x, inst.u2.y}, premulColor};
+            pass2Vertices << VertexBasicUv{rectVertices[3], {inst.u2.x, inst.u2.y}, premulColor};
+        }
+
+        size_t v1Offset = mVertexBuffer.upload(pass1Vertices.data(), pass1Vertices.sizeInBytes());
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(v1Offset + offsetof(VertexBasicUv, pos)));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(v1Offset + offsetof(VertexBasicUv, uv)));
+        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(v1Offset + offsetof(VertexBasicUv, color)));
+        glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_COLOR);
+        glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
+
+        size_t v2Offset = mVertexBuffer.upload(pass2Vertices.data(), pass2Vertices.sizeInBytes());
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(v2Offset + offsetof(VertexBasicUv, pos)));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(v2Offset + offsetof(VertexBasicUv, uv)));
+        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(v2Offset + offsetof(VertexBasicUv, color)));
+        glBlendFunc(GL_ONE, GL_ONE);
+        glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
+
+        glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+    } else {
+        AVector<VertexBasicUv> vertices;
+        vertices.reserve(v.instances.size() * 4);
+        for (size_t i = 0; i < v.instances.size(); ++i) {
+            const auto& inst = v.instances[i];
+            auto rectVertices = getVerticesForRect(inst.position, inst.size);
+            glm::vec4 color = inst.color.premultiply();
+
+            vertices << VertexBasicUv{rectVertices[0], {inst.u1.x, inst.u1.y}, color};
+            vertices << VertexBasicUv{rectVertices[1], {inst.u2.x, inst.u1.y}, color};
+            vertices << VertexBasicUv{rectVertices[2], {inst.u1.x, inst.u2.y}, color};
+            vertices << VertexBasicUv{rectVertices[3], {inst.u2.x, inst.u2.y}, color};
+        }
+
+        size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
+        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, color)));
+        glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
+    }
 }
 
 _<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle& style) {
