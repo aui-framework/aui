@@ -22,7 +22,7 @@
 #include <glm/glm.hpp>
 #include <AUI/Geometry2D/ARect.h>
 #include <AUI/Render/ITexture.h>
-#include <AUI/Render/IRendererInterfaces.h>
+#include <AUI/Render/IRendererText.hpp>
 
 class IRenderer;
 class IRendererBackend;
