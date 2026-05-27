@@ -34,6 +34,7 @@ bool OpenGLRenderer::mIsES = false;
 int OpenGLRenderer::mGLSLVersion = 120;
 
 namespace {
+
 std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 pos, glm::vec2 size) {
     return {
         pos,
@@ -59,6 +60,39 @@ struct GLDebugGroupLocal {
 #endif
     }
 };
+
+struct VertexBasic {
+    glm::vec2 pos;
+    glm::vec4 color;
+};
+struct VertexBasicUv {
+    glm::vec2 pos;
+    glm::vec2 uv;
+    glm::vec4 color;
+};
+struct VertexRounded {
+    glm::vec2 pos;
+    glm::vec2 uv;
+    glm::vec4 color;
+    glm::vec2 outerSize;
+};
+struct VertexRoundedBorder {
+    glm::vec2 pos;
+    glm::vec2 uv;
+    glm::vec4 color;
+    glm::vec2 outerSize;
+    glm::vec2 innerSize;
+    glm::vec2 outerToInner;
+};
+struct VertexRoundedGradient {
+    glm::vec2 pos;
+    glm::vec2 uv;
+    glm::vec4 color;
+    glm::vec2 outerSize;
+    glm::vec4 color1;
+    glm::vec4 color2;
+};
+
 }
 
 OpenGLRenderer::OpenGLRenderer() :
@@ -758,13 +792,13 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
     }
 }
 
-_<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle& style) {
+_<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle& style, float renderScale) {
     auto entryData = aui::getFontEntryData(*this, getFontEntryDataCache(), style);
-    return _new<aui::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style);
+    return _new<aui::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style, renderScale);
 }
-_<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
+_<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs, float renderScale) {
     if (text.empty()) return nullptr;
-    auto c = newMultiStringCanvas(fs);
+    auto c = newMultiStringCanvas(fs, renderScale);
     c->addString(position, text);
     return c->finalize();
 }
@@ -781,8 +815,6 @@ bool OpenGLRenderer::setupLineShader(const glm::mat4& transform, const ABorderSt
             mLineSolidDashedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
             float dashWidth = dashed.dashWidth.valueOr(1.f) * widthPx;
             float sumOfLengths = dashWidth + dashed.spaceBetweenDashes.valueOr(2.f) * widthPx;
-            dashWidth *= mRenderScale;
-            sumOfLengths *= mRenderScale;
             mLineSolidDashedShader->set(aui::ShaderUniforms::DIVIDER, sumOfLengths);
             mLineSolidDashedShader->set(aui::ShaderUniforms::THRESHOLD, dashWidth);
             return true;

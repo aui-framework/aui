@@ -31,7 +31,7 @@ public:
     virtual ~IRendererBackend() = default;
 
     virtual _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE) = 0;
-    virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
+    virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style, float renderScale = 1.0f) = 0;
 
     virtual void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) = 0;
     virtual void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) = 0;
@@ -44,7 +44,7 @@ public:
     virtual void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) = 0;
     virtual void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) = 0;
     virtual void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) = 0;
-    virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
+    virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs, float renderScale = 1.0f) = 0;
     virtual void lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) = 0;
     virtual void points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) = 0;
     virtual void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) = 0;
@@ -55,8 +55,6 @@ public:
     virtual ASurface* getWindow() const noexcept = 0;
     virtual glm::mat4 getProjectionMatrix() const = 0;
 
-    virtual float getRenderScale() const noexcept = 0;
-    virtual void setRenderScale(float renderScale) = 0;
     virtual void setAllowRenderToTexture(bool allow) = 0;
     virtual bool allowRenderToTexture() const noexcept = 0;
 

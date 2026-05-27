@@ -155,13 +155,13 @@ void SoftwareRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tr
     }
 }
 
-_<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style) {
+_<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style, float renderScale) {
     auto entryData = aui::getFontEntryData(*this, getFontEntryDataCache(), style);
-    return _new<aui::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style);
+    return _new<aui::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style, renderScale);
 }
-_<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
+_<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs, float renderScale) {
     if (text.empty()) return nullptr;
-    auto c = newMultiStringCanvas(fs);
+    auto c = newMultiStringCanvas(fs, renderScale);
     c->addString(position, text);
     return c->finalize();
 }void SoftwareRenderer::lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) {}

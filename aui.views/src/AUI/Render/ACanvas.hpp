@@ -149,7 +149,8 @@ public:
 
     virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) = 0;
 
-    virtual float getRenderScale() const noexcept = 0;
+    float getRenderScale() const noexcept { return mRenderScale; }
+    void setRenderScale(float renderScale) noexcept { mRenderScale = renderScale; }
     virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
     virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
 
@@ -203,4 +204,5 @@ protected:
     AColor mColorMultiplier = AColor::WHITE;
     float mOpacity = 1.0f;
     std::uint8_t mStencilDepth = 0;
+    float mRenderScale = 1.0f;
 };

@@ -39,8 +39,8 @@ public:
     void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) override;
     void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) override;
     void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) override;
-    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
-    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style, float renderScale = 1.0f) override;
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs, float renderScale = 1.0f) override;
     void lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) override;
     void points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) override;
     void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) override;
@@ -52,9 +52,6 @@ public:
     _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
     void setWindow(ASurface* window) override;
     ASurface* getWindow() const noexcept override { return mWindow; }
-
-    float getRenderScale() const noexcept override { return mRenderScale; }
-    void setRenderScale(float renderScale) override { mRenderScale = renderScale; }
 
     void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
@@ -70,7 +67,6 @@ public:
 
     SoftwareRenderingContext* mContext = nullptr;
     ASurface* mWindow = nullptr;
-    float mRenderScale = 1.0f;
     bool mAllowRenderToTexture = true;
     ADeque<aui::FontAtlas> mFontEntryData;
     ADeque<aui::CharacterData> mCharData;

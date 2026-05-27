@@ -20,7 +20,7 @@ RendererCanvas::RendererCanvas(ACanvas& canvas) : mCanvas(canvas) {}
 _<IRenderer::IMultiStringCanvas> RendererCanvas::newMultiStringCanvas(const AFontStyle& style) {
     auto& backend = mCanvas.renderer();
     auto entryData = aui::getFontEntryData(backend, backend.getFontEntryDataCache(), style);
-    return _new<aui::MultiStringCanvas>(backend, entryData, backend.getCharacterDataCache(), style);
+    return _new<aui::MultiStringCanvas>(backend, entryData, backend.getCharacterDataCache(), style, getRenderScale());
 }
 
 void RendererCanvas::rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
@@ -197,11 +197,11 @@ bool RendererCanvas::allowRenderToTexture() const noexcept {
 }
 
 void RendererCanvas::setRenderScale(float render_scale) {
-    mCanvas.renderer().setRenderScale(render_scale);
+    mCanvas.setRenderScale(render_scale);
 }
 
 float RendererCanvas::getRenderScale() const noexcept {
-    return mCanvas.renderer().getRenderScale();
+    return mCanvas.getRenderScale();
 }
 
 void RendererCanvas::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) {

@@ -23,7 +23,6 @@ public:
 
     IRendererBackend& renderer() override { return mRenderer; }
 
-    float getRenderScale() const noexcept override;
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
 

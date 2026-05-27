@@ -81,12 +81,10 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
 
     using FramebufferFromPool = _unique<FramebufferWithTextureRT, FramebufferBackToPool>;
 
-    void drawRect(glm::vec2 position, glm::vec2 size, const glm::vec4& color, const glm::vec2* uvs = nullptr);
     bool setupLineShader(const glm::mat4& transform, const ABorderStyle& style, float widthPx);
     std::uint8_t mStencilDepth = 0;
 
     ASurface* mWindow = nullptr;
-    float mRenderScale = 1.0f;
     bool mAllowRenderToTexture = true;
 
     AOptional<gl::Program> mSolidShader;
@@ -141,8 +139,8 @@ public:
     void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) override;
     void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) override;
     void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) override;
-    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
-    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style, float renderScale = 1.0f) override;
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs, float renderScale = 1.0f) override;
 
     void lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) override;
     void points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) override;
@@ -151,8 +149,6 @@ public:
     void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
     _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE) override;
-    float getRenderScale() const noexcept override { return mRenderScale; }
-    void setRenderScale(float renderScale) override { mRenderScale = renderScale; }
     void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
     _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
@@ -169,38 +165,6 @@ public:
     void endPaint();
     uint32_t getDefaultFb() const noexcept;
     void bindTemporaryVao() const noexcept { mBatchVao.bind(); }
-
-    struct VertexBasic {
-        glm::vec2 pos;
-        glm::vec4 color;
-    };
-    struct VertexBasicUv {
-        glm::vec2 pos;
-        glm::vec2 uv;
-        glm::vec4 color;
-    };
-    struct VertexRounded {
-        glm::vec2 pos;
-        glm::vec2 uv;
-        glm::vec4 color;
-        glm::vec2 outerSize;
-    };
-    struct VertexRoundedBorder {
-        glm::vec2 pos;
-        glm::vec2 uv;
-        glm::vec4 color;
-        glm::vec2 outerSize;
-        glm::vec2 innerSize;
-        glm::vec2 outerToInner;
-    };
-    struct VertexRoundedGradient {
-        glm::vec2 pos;
-        glm::vec2 uv;
-        glm::vec4 color;
-        glm::vec2 outerSize;
-        glm::vec4 color1;
-        glm::vec4 color2;
-    };
 
     FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
 };

@@ -16,13 +16,9 @@
 
 #include <utility>
 
-float ADisplayListCanvas::getRenderScale() const noexcept {
-    return mRenderer.getRenderScale();
-}
-
 _<IRenderer::IMultiStringCanvas> ADisplayListCanvas::newMultiStringCanvas(const AFontStyle& style) {
     auto entryData = aui::getFontEntryData(mRenderer, mRenderer.getFontEntryDataCache(), style);
-    return _new<aui::MultiStringCanvas>(mRenderer, entryData, mRenderer.getCharacterDataCache(), style);
+    return _new<aui::MultiStringCanvas>(mRenderer, entryData, mRenderer.getCharacterDataCache(), style, getRenderScale());
 }
 
 _<IRenderer::IPrerenderedString> ADisplayListCanvas::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
