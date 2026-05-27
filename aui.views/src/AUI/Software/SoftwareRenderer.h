@@ -17,8 +17,8 @@
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Platform/SoftwareRenderingContext.h>
 #include <AUI/ASS/Property/Backdrop.h>
-#include <AUI/Render/SimpleTexturePacker.h>
 #include <AUI/Common/ADeque.h>
+#include <AUI/Render/FontAtlas.hpp>
 #include <variant>
 #include <span>
 #include "SoftwareTexture.h"
@@ -62,16 +62,16 @@ public:
     _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE) override;
     glm::mat4 getProjectionMatrix() const override;
 
-    ADeque<aui::font_rendering::FontEntryData>& getFontEntryDataCache() override { return mFontEntryData; }
-    ADeque<aui::font_rendering::CharacterData>& getCharacterDataCache() override { return mCharData; }
+    ADeque<aui::FontAtlas>& getFontEntryDataCache() override { return mFontEntryData; }
+    ADeque<aui::CharacterData>& getCharacterDataCache() override { return mCharData; }
 
-protected:
+    protected:
     void putPixel(glm::ivec2 pos, AColor color, const APaint& paint);
 
     SoftwareRenderingContext* mContext = nullptr;
     ASurface* mWindow = nullptr;
     float mRenderScale = 1.0f;
     bool mAllowRenderToTexture = true;
-    ADeque<aui::font_rendering::FontEntryData> mFontEntryData;
-    ADeque<aui::font_rendering::CharacterData> mCharData;
-};
+    ADeque<aui::FontAtlas> mFontEntryData;
+    ADeque<aui::CharacterData> mCharData;
+    };

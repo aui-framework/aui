@@ -17,7 +17,7 @@
 #include <AUI/Traits/values.h>
 #include <AUI/Render/ACanvas.hpp>
 #include <AUI/Image/AImage.h>
-#include <AUI/Render/FontAtlas.h>
+#include <AUI/Render/FontAtlas.hpp>
 #include "SoftwareTexture.h"
 
 SoftwareRenderer::SoftwareRenderer() {}
@@ -156,8 +156,8 @@ void SoftwareRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tr
 }
 
 _<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style) {
-    auto entryData = aui::font_rendering::getFontEntryData(*this, getFontEntryDataCache(), style);
-    return _new<aui::font_rendering::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style);
+    auto entryData = aui::getFontEntryData(*this, getFontEntryDataCache(), style);
+    return _new<aui::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style);
 }
 _<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
     if (text.empty()) return nullptr;
