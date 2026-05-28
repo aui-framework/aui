@@ -309,9 +309,7 @@ void AAbstractTypeable::drawCursorImpl(ACanvas& canvas, glm::ivec2 position, uns
     if (!isCursorBlinkVisible()) {
         return;
     }
-    canvas.setBlending(Blending::INVERSE_DST);
-    AUI_DEFER { canvas.setBlending(Blending::NORMAL); };
-    canvas.rectangle(APaint{ASolidBrush{}}, position, {1, lineHeight});
+    canvas.rectangle(APaint{ASolidBrush{}, AColor::WHITE, Blending::INVERSE_DST}, position, {1, lineHeight});
 }
 
 void AAbstractTypeable::moveCursorLeft() {

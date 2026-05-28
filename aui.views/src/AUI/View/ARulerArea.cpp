@@ -103,16 +103,12 @@ void ARulerArea::render(ARenderContext ctx) {
             prY->draw(ctx.canvas);
         }
 
-        ctx.canvas.setBlending(Blending::INVERSE_DST);
-        ctx.canvas.rectangle(APaint{ASolidBrush{}},
+        ctx.canvas.rectangle(APaint{ASolidBrush{}, AColor::WHITE, Blending::INVERSE_DST},
                              {mMousePos.x, 0.f},
                              {1, mMousePos.y});
-        ctx.canvas.rectangle(APaint{ASolidBrush{}},
+        ctx.canvas.rectangle(APaint{ASolidBrush{}, AColor::WHITE, Blending::INVERSE_DST},
                              {0.f, mMousePos.y},
                              {mMousePos.x, 1});
-
-
-        ctx.canvas.setBlending(Blending::NORMAL);
     }
 
     glEnable(GL_STENCIL_TEST);
