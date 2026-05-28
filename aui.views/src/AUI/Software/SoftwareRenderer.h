@@ -22,6 +22,8 @@
 #include <variant>
 #include <span>
 #include "SoftwareTexture.h"
+#include <AUI/Render/IRenderViewToTexture.h>
+#include <AUI/Render/ACanvas.hpp>
 
 class SoftwareRenderViewToTexture;
 
@@ -52,7 +54,6 @@ public:
     void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) override;
     void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
-    _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
     void setWindow(ASurface* window) override;
     ASurface* getWindow() const noexcept override { return mWindow; }
 
@@ -62,14 +63,52 @@ public:
     _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE, TextureFilter filter = TextureFilter::LINEAR) override;
     glm::mat4 getProjectionMatrix() const override;
 
+    void pushMaskBefore() override {}
+    void pushMaskAfter() override {}
+    void popMaskBefore() override {}
+    void popMaskAfter() override {}
+
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 
     protected:
     void putPixel(glm::ivec2 pos, AColor color, const APaint& paint);
+    void drawLine(glm::ivec2 p0, glm::ivec2 p1, float width, AColor color, const APaint& paint);
 
     SoftwareRenderingContext* mContext = nullptr;
     AImage* mRenderTarget = nullptr;
     ASurface* mWindow = nullptr;
     bool mAllowRenderToTexture = true;
     _<aui::AFontCache> mFontCache;
-    };
+};
+
+class SoftwareRenderViewToTexture: public IRenderViewToTexture {
+public:
+    SoftwareRenderViewToTexture(SoftwareRenderer& renderer): mRenderer(renderer) {}
+
+    bool begin(IRenderer& renderer, glm::ivec2 surfaceSize, InvalidArea& invalidArea) override {
+        if (!mTexture || mTexture->getSize() != glm::u32vec2(surfaceSize)) {
+            mTexture = _cast<SoftwareTexture>(mRenderer.createTexture(surfaceSize));
+            invalidArea = InvalidArea::Full{};
+        }
+
+        mRenderer.mRenderTarget = const_cast<AImage*>(&mTexture->getImage());
+
+        if (invalidArea.full()) {
+            std::memset(mRenderer.mRenderTarget->modifiableBuffer().data(), 0, mRenderer.mRenderTarget->modifiableBuffer().getSize());
+        }
+
+        return true;
+    }
+
+    void end(IRenderer& renderer) override {
+        mRenderer.mRenderTarget = nullptr;
+    }
+
+    void draw(ACanvas& canvas) override {
+        canvas.rectangle(APaint{ATexturedBrush{mTexture}}, {0, 0}, mTexture->getSize());
+    }
+
+private:
+    SoftwareRenderer& mRenderer;
+    _<SoftwareTexture> mTexture;
+};
