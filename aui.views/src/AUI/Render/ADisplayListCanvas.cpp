@@ -62,7 +62,9 @@ void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 positio
         },
         [&](const ALinearGradientBrush& b) {
             auto colors = b.colors;
-            for (auto& c : colors) c.color *= combinedColor;
+            for (auto& c : colors) {
+                c.color *= combinedColor;
+            }
             add(ADisplayList::GradientRoundedRectangles{{ {position, size, AColor::WHITE} }, radius, std::move(colors), b.rotation}, paint);
         },
         [&](const ATexturedBrush& b) {
@@ -212,6 +214,14 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                 }
             },
             [&](ADisplayList::SolidRoundedRectangles& v) {
+                for (auto& inst : v.instances) {
+                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
+                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+                    inst.position = glm::vec2(p1);
+                    inst.size = glm::vec2(p2) - inst.position;
+                }
+            },
+            [&](ADisplayList::GradientRoundedRectangles& v) {
                 for (auto& inst : v.instances) {
                     glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
                     glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
