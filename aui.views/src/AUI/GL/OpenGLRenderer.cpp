@@ -26,6 +26,7 @@
 #include <AUI/Render/Brush/Gradient.h>
 #include <AUI/Render/FontAtlas.hpp>
 #include <AUI/Platform/AFontManager.h>
+#include <AUI/GL/RenderTarget/RenderbufferRenderTarget.h>
 
 #ifdef AUI_PLATFORM_WIN32
 #include <windows.h>
@@ -94,6 +95,31 @@ struct VertexRoundedGradient {
     glm::vec4 color2;
 };
 
+}
+
+OpenGLRenderer::TransientBuffer::TransientBuffer(GLenum target, size_t size) : mTarget(target), mSize(size) {
+    glGenBuffers(1, &mHandle);
+    bind();
+    glBufferData(target, size, nullptr, GL_STREAM_DRAW);
+}
+OpenGLRenderer::TransientBuffer::~TransientBuffer() {
+    if (mHandle) glDeleteBuffers(1, &mHandle);
+}
+void OpenGLRenderer::TransientBuffer::bind() {
+    glBindBuffer(mTarget, mHandle);
+}
+void OpenGLRenderer::TransientBuffer::orphan() {
+    bind();
+    glBufferData(mTarget, mSize, nullptr, GL_STREAM_DRAW);
+    mOffset = 0;
+}
+size_t OpenGLRenderer::TransientBuffer::upload(const void* data, size_t size) {
+    if (mOffset + size > mSize) orphan();
+    size_t res = mOffset;
+    bind();
+    glBufferSubData(mTarget, mOffset, size, data);
+    mOffset += (size + 15) & ~15; // align to 16 bytes
+    return res;
 }
 
 OpenGLRenderer::OpenGLRenderer() :
@@ -206,9 +232,52 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     mProjectionMatrix = glm::ortho(0.f, (float)mViewportSize.x, (float)mViewportSize.y, 0.f, -1.f, 1.f);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
+    glDisable(GL_STENCIL_TEST);
+    mStencilDepth = 0;
 }
 
 void OpenGLRenderer::endPaint() {}
+
+void OpenGLRenderer::pushMaskBefore() {
+    if (mStencilDepth == 0) {
+        glEnable(GL_STENCIL_TEST);
+        glClearStencil(0);
+        glClear(GL_STENCIL_BUFFER_BIT);
+    }
+    glStencilFunc(GL_EQUAL, mStencilDepth, 0xff);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_INCR);
+    glStencilMask(0xff);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+}
+
+void OpenGLRenderer::pushMaskAfter() {
+    mStencilDepth++;
+    glStencilFunc(GL_EQUAL, mStencilDepth, 0xff);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+    glStencilMask(0x00);
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+}
+
+void OpenGLRenderer::popMaskBefore() {
+    glStencilFunc(GL_EQUAL, mStencilDepth, 0xff);
+    glStencilOp(GL_KEEP, GL_KEEP, GL_DECR);
+    glStencilMask(0xff);
+    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
+}
+
+void OpenGLRenderer::popMaskAfter() {
+    if (mStencilDepth > 0) {
+        mStencilDepth--;
+    }
+    if (mStencilDepth == 0) {
+        glDisable(GL_STENCIL_TEST);
+    } else {
+        glStencilFunc(GL_EQUAL, mStencilDepth, 0xff);
+        glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+        glStencilMask(0x00);
+    }
+    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
+}
 
 void OpenGLRenderer::setWindow(ASurface* window) {
     mWindow = window;
@@ -216,52 +285,6 @@ void OpenGLRenderer::setWindow(ASurface* window) {
         mViewportSize = mWindow->getSize();
         mProjectionMatrix = glm::ortho(0.f, (float)mViewportSize.x, (float)mViewportSize.y, 0.f, -1.f, 1.f);
     }
-}
-
-class OpenGLRenderViewToTexture: public IRenderViewToTexture {
-public:
-    OpenGLRenderViewToTexture(OpenGLRenderer& renderer): mRenderer(renderer) {}
-
-    bool begin(IRenderer& renderer, glm::ivec2 surfaceSize, InvalidArea& invalidArea) override {
-        if (!mTexture || mTexture->getSize() != glm::u32vec2(surfaceSize)) {
-            mTexture = _cast<OpenGLTexture2D>(mRenderer.createTexture(surfaceSize));
-            mFramebuffer.attach(mTexture, GL_COLOR_ATTACHMENT0);
-            invalidArea = InvalidArea::Full{};
-        }
-
-        mFramebuffer.bind();
-        glViewport(0, 0, surfaceSize.x, surfaceSize.y);
-        mRenderer.mProjectionMatrix = glm::ortho(0.f, (float)surfaceSize.x, (float)surfaceSize.y, 0.f, -1.f, 1.f);
-
-        if (invalidArea.full()) {
-            glClearColor(0.f, 0.f, 0.f, 0.f);
-            glClear(GL_COLOR_BUFFER_BIT);
-        }
-
-        return true;
-    }
-
-    void end(IRenderer& renderer) override {
-        // Framebuffer unbinding is usually handled by the next bind or by binding 0
-        // But for safety:
-        glBindFramebuffer(GL_FRAMEBUFFER, mRenderer.getDefaultFb());
-        if (mRenderer.mWindow) {
-            mRenderer.beginPaint(mRenderer.mWindow->getSize());
-        }
-    }
-
-    void draw(ACanvas& canvas) override {
-        canvas.rectangle(APaint{ATexturedBrush{mTexture}}, {0, 0}, mTexture->getSize());
-    }
-
-private:
-    OpenGLRenderer& mRenderer;
-    gl::Framebuffer mFramebuffer;
-    _<OpenGLTexture2D> mTexture;
-};
-
-_unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept {
-    return std::make_unique<OpenGLRenderViewToTexture>(*this);
 }
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
@@ -1115,29 +1138,4 @@ OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEf
             return object.release();
         }(),
         FramebufferBackToPool { this });
-}
-
-OpenGLRenderer::TransientBuffer::TransientBuffer(GLenum target, size_t size) : mTarget(target), mSize(size) {
-    glGenBuffers(1, &mHandle);
-    bind();
-    glBufferData(target, size, nullptr, GL_STREAM_DRAW);
-}
-OpenGLRenderer::TransientBuffer::~TransientBuffer() {
-    if (mHandle) glDeleteBuffers(1, &mHandle);
-}
-void OpenGLRenderer::TransientBuffer::bind() {
-    glBindBuffer(mTarget, mHandle);
-}
-void OpenGLRenderer::TransientBuffer::orphan() {
-    bind();
-    glBufferData(mTarget, mSize, nullptr, GL_STREAM_DRAW);
-    mOffset = 0;
-}
-size_t OpenGLRenderer::TransientBuffer::upload(const void* data, size_t size) {
-    if (mOffset + size > mSize) orphan();
-    size_t res = mOffset;
-    bind();
-    glBufferSubData(mTarget, mOffset, size, data);
-    mOffset += (size + 15) & ~15; // align to 16 bytes
-    return res;
 }

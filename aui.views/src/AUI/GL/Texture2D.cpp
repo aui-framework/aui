@@ -28,6 +28,7 @@ class gl::Texture<gl::TEXTURE_2D>;
 
 void gl::Texture2D::framebufferTex2D(glm::u32vec2 size, gl::Type type) {
     bind();
+    mSize = size;
     glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, size.x, size.y, 0, GL_RGBA, static_cast<GLenum>(type), nullptr);
 }
 
