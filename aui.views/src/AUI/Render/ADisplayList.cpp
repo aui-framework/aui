@@ -207,8 +207,20 @@ void ADisplayList::resolveEntities() {
 
 void ADisplayList::computeOverlaps() {
     mOpaqueRects.clear();
+    bool insideMaskShape = false;
     for (auto it = mEntities.rbegin(); it != mEntities.rend(); ++it) {
         it->isObscured = false;
+        
+        std::visit(
+            aui::lambda_overloaded {
+              [&](const MaskAfter&) { insideMaskShape = true; },
+              [&](const PopMaskAfter&) { insideMaskShape = true; },
+              [&](const MaskBefore&) { insideMaskShape = false; },
+              [&](const PopMaskBefore&) { insideMaskShape = false; },
+              [&](const auto&) { }
+            },
+            it->command);
+
         bool isControl = std::visit(
             aui::lambda_overloaded {
               [&](const PushLayer&) { return true; },
@@ -223,6 +235,12 @@ void ADisplayList::computeOverlaps() {
         if (isControl) {
             continue;
         }
+
+        if (insideMaskShape) {
+            // Never obscure mask-drawing commands, as they modify the stencil buffer which affects subsequent draws.
+            continue;
+        }
+
         bool obscured = false;
         for (const auto& opaque : mOpaqueRects) {
             if (it->boundingBox.p1.x >= opaque.p1.x && it->boundingBox.p2.x <= opaque.p2.x &&
@@ -231,6 +249,7 @@ void ADisplayList::computeOverlaps() {
                 break;
             }
         }
+        
         if (obscured) {
             it->isObscured = true;
         } else {

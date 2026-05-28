@@ -34,7 +34,7 @@ namespace gl {
         void attach(Framebuffer& to, GLenum attachmentType) override {
             to.bind();
             glGetError();
-            onFramebufferResize(to.size());
+            onFramebufferResize(to.supersampledSize());
             glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, GL_TEXTURE_2D, mTexture.getHandle(), 0);
             if (glGetError() != GL_NO_ERROR) {
                 throw AException("unable to create texture target");

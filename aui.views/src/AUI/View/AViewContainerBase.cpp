@@ -53,9 +53,10 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
 
     auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
     ARect<int> rectOfTheView{ .p1 = {0, 0}, .p2 = view->getSize() };
-    if (!ranges::any_of(contextOfTheView.clippingRects, [&](const auto& r) {
+    bool intersects = ranges::any_of(contextOfTheView.clippingRects, [&](const auto& r) {
       return rectOfTheView.isIntersects(r);
-    })) {
+    });
+    if (!intersects) {
         return;
     }
 

@@ -45,7 +45,7 @@ protected:
     void onFramebufferResize(glm::u32vec2 size) override { mTexture.framebufferTex2D(size, gl::Type::UNSIGNED_BYTE); }
     void attach(gl::Framebuffer& to, GLenum attachmentType) override {
         to.bind();
-        onFramebufferResize(to.size());
+        onFramebufferResize(to.supersampledSize());
         glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, GL_TEXTURE_2D, mTexture.getHandle(), 0);
     }
 };
@@ -181,9 +181,15 @@ public:
     OpenGLRenderViewToTexture(OpenGLRenderer& renderer): mRenderer(renderer) {}
 
     bool begin(IRenderer& renderer, glm::ivec2 surfaceSize, InvalidArea& invalidArea) override {
-        if (!mTexture || mTexture->getSize() != glm::u32vec2(surfaceSize)) {
-            mTexture = _cast<OpenGLTexture2D>(mRenderer.createTexture(surfaceSize));
+        uint32_t ratio = 1;
+        if (auto currentFb = gl::Framebuffer::current()) {
+            ratio = currentFb->supersamlingRatio();
+        }
+        if (!mTexture || mFramebuffer.size() != glm::u32vec2(surfaceSize) || mFramebuffer.supersamlingRatio() != ratio) {
+            mTexture = _cast<OpenGLTexture2D>(mRenderer.createTexture(surfaceSize * int(ratio), APixelFormat::RGBA_BYTE, TextureFilter::NEAREST));
+            mTexture->texture().setupClampToEdge();
             mFramebuffer = gl::Framebuffer();
+            mFramebuffer.setSupersamplingRatio(ratio);
             mFramebuffer.resize(surfaceSize);
             mFramebuffer.attach(mTexture, GL_COLOR_ATTACHMENT0);
             auto stencil = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
@@ -191,15 +197,28 @@ public:
             invalidArea = InvalidArea::Full{};
         }
 
+        invalidArea = InvalidArea::Full{};
+
         mPrevFramebuffer = gl::Framebuffer::current();
+        mPrevViewportSize = mRenderer.mViewportSize;
+        mPrevProjectionMatrix = mRenderer.mProjectionMatrix;
+        mPrevStencilDepth = mRenderer.mStencilDepth;
+
         mFramebuffer.bind();
-        glViewport(0, 0, surfaceSize.x, surfaceSize.y);
+        glViewport(0, 0, surfaceSize.x * int(ratio), surfaceSize.y * int(ratio));
+        mRenderer.mViewportSize = glm::uvec2(surfaceSize * int(ratio));
         mRenderer.mProjectionMatrix = glm::ortho(0.f, (float)surfaceSize.x, (float)surfaceSize.y, 0.f, -1.f, 1.f);
 
-        if (invalidArea.full()) {
-            glClearColor(0.f, 0.f, 0.f, 0.f);
-            glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glDisable(GL_STENCIL_TEST);
+        mRenderer.mStencilDepth = 0;
+
+        if (glBlendFuncSeparate) {
+            glEnable(GL_BLEND);
+            glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         }
+
+        glClearColor(0.f, 0.f, 0.f, 0.f);
+        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
 
         return true;
     }
@@ -211,13 +230,28 @@ public:
             gl::Framebuffer::unbind();
         }
         mPrevFramebuffer = nullptr;
-        if (mRenderer.mWindow) {
-            mRenderer.beginPaint(mRenderer.mWindow->getSize());
+
+        mRenderer.mProjectionMatrix = mPrevProjectionMatrix;
+        mRenderer.mViewportSize = mPrevViewportSize;
+        mRenderer.mStencilDepth = mPrevStencilDepth;
+        glViewport(0, 0, mPrevViewportSize.x, mPrevViewportSize.y);
+
+        if (mPrevStencilDepth > 0) {
+            glEnable(GL_STENCIL_TEST);
+            glStencilFunc(GL_EQUAL, mPrevStencilDepth, 0xff);
+            glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
+            glStencilMask(0x00);
+        } else {
+            glDisable(GL_STENCIL_TEST);
+        }
+
+        if (glBlendFuncSeparate) {
+            glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
         }
     }
 
     void draw(ACanvas& canvas) override {
-        canvas.rectangle(APaint{ATexturedBrush{mTexture}}, {0, 0}, mTexture->getSize());
+        canvas.rectangle(APaint{ATexturedBrush{mTexture}}, {0, 0}, mFramebuffer.size());
     }
 
 private:
@@ -225,4 +259,7 @@ private:
     gl::Framebuffer mFramebuffer;
     _<OpenGLTexture2D> mTexture;
     gl::Framebuffer* mPrevFramebuffer = nullptr;
+    glm::uvec2 mPrevViewportSize = {1, 1};
+    glm::mat4 mPrevProjectionMatrix = glm::mat4(1.0f);
+    std::uint8_t mPrevStencilDepth = 0;
 };
