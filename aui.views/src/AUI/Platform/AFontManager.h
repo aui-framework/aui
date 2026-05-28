@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -16,6 +16,9 @@
 #include "AUI/Font/AFontFamily.h"
 #include "AUI/Font/AFont.h"
 
+class IRendererBackend;
+namespace aui { class AFontCache; }
+
 class API_AUI_VIEWS AFontManager {
 public:
     AFontManager();
@@ -23,6 +26,9 @@ public:
     virtual ~AFontManager();
 
     static AFontManager& inst();
+
+    [[nodiscard]]
+    _<aui::AFontCache> createCache(IRendererBackend* renderer);
 
     [[nodiscard]] _<AFontFamily> getDefaultFamily() { return mDefaultFamily; }
     [[nodiscard]] _<AFont> getDefaultFont() { return mDefaultFont; }

@@ -18,9 +18,11 @@
 #include <AUI/Render/ACanvas.hpp>
 #include <AUI/Image/AImage.h>
 #include <AUI/Render/FontAtlas.hpp>
+#include <AUI/Platform/AFontManager.h>
 #include "SoftwareTexture.h"
 
-SoftwareRenderer::SoftwareRenderer() {}
+SoftwareRenderer::SoftwareRenderer() :
+    mFontCache(AFontManager::inst().createCache(this)) {}
 
 void SoftwareRenderer::setWindow(ASurface* window) {
     mWindow = window;
@@ -155,13 +157,13 @@ void SoftwareRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tr
     }
 }
 
-_<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style, float renderScale) {
-    auto entryData = aui::getFontEntryData(*this, getFontEntryDataCache(), style);
-    return _new<aui::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style, renderScale);
+_<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style) {
+    auto entryData = aui::getFontEntryData(style, mFontCache);
+    return _new<aui::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style);
 }
-_<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs, float renderScale) {
+_<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
     if (text.empty()) return nullptr;
-    auto c = newMultiStringCanvas(fs, renderScale);
+    auto c = newMultiStringCanvas(fs);
     c->addString(position, text);
     return c->finalize();
 }void SoftwareRenderer::lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) {}

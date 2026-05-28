@@ -197,4 +197,6 @@ public:
 
     [[nodiscard]]
     bool isItalic() const;
+
+    void* mRendererData = nullptr;
 };

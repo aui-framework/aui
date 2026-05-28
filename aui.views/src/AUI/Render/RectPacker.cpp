@@ -15,71 +15,82 @@
 
 using namespace aui;
 
-RectPacker::RectPacker(int width, int height) : mWidth(width), mHeight(height) {
-    mSkyline.push_back({ 0, 0, width });
-}
+RectPacker::RectPacker(int width, int height) : mWidth(width), mHeight(height) { mSkyline.push_back({ 0, 0, width }); }
 
 int RectPacker::getMinY(int index, int width, int& outMaxY) const {
-    int x = mSkyline[index].x;
-    int y = mSkyline[index].y;
-    int remainingWidth = width;
-    outMaxY = y;
+    outMaxY = mSkyline[index].y;
+    int remaining_width = width;
 
     for (size_t i = index; i < mSkyline.size(); ++i) {
         outMaxY = std::max(outMaxY, mSkyline[i].y);
-        remainingWidth -= mSkyline[i].width;
-        if (remainingWidth <= 0) {
-            return outMaxY;
+        remaining_width -= mSkyline[i].width;
+        if (remaining_width <= 0) {
+            return outMaxY;   // fits; Y is the max of all covered nodes
         }
     }
-    return -1; // Should not happen if width is within limits
+    return -1;   // rect extends past the right edge of the atlas
 }
 
 bool RectPacker::allocateRect(Rect& r, int width, int height) {
-    int bestY = mHeight + 1;
-    int bestWidth = mWidth + 1;
-    int bestIndex = -1;
+    int best_y = mHeight + 1;
+    int best_waste = mWidth + 1;   // wasted width at the best candidate
+    int best_index = -1;
 
-    for (int i = 0; i < (int)mSkyline.size(); ++i) {
-        int maxY;
-        int y = getMinY(i, width, maxY);
-        if (y != -1 && y + height <= mHeight) {
-            if (y < bestY || (y == bestY && mSkyline[i].width < bestWidth)) {
-                bestY = y;
-                bestIndex = i;
-                bestWidth = mSkyline[i].width;
-            }
+    for (int i = 0; i < static_cast<int>(mSkyline.size()); ++i) {
+        // A rect starting here would overflow the right edge — skip.
+        if (mSkyline[i].x + width > mWidth)
+            continue;
+
+        int max_y;
+        int y = getMinY(i, width, max_y);
+        if (y == -1)
+            continue;   // does not fit horizontally
+        if (y + height > mHeight)
+            continue;   // does not fit vertically
+
+        // Skyline-BL tiebreaker: prefer lowest Y, then least wasted width.
+        // Wasted width = how much of the first node's width is unused by this rect.
+        int waste = mSkyline[i].width - width;
+        if (y < best_y || (y == best_y && waste < best_waste)) {
+            best_y = y;
+            best_waste = waste;
+            best_index = i;
         }
     }
 
-    if (bestIndex == -1) return false;
+    if (best_index == -1)
+        return false;
 
-    r = Rect(mSkyline[bestIndex].x, bestY, width, height);
+    r = Rect(mSkyline[best_index].x, best_y, width, height);
 
-    // Update skyline
-    Node newNode = { r.x, r.y + r.height, width };
-    
-    // Remove nodes that are fully covered by the new node
-    int remainingWidth = width;
-    while (remainingWidth > 0) {
-        if (mSkyline[bestIndex].width <= remainingWidth) {
-            remainingWidth -= mSkyline[bestIndex].width;
-            mSkyline.erase(mSkyline.begin() + bestIndex);
+    // Insert the new node before removing covered nodes so best_index stays valid.
+    Node new_node = { r.x, r.y + r.height, width };
+    mSkyline.insert(mSkyline.begin() + best_index, new_node);
+
+    // The inserted node sits at best_index; covered old nodes start at best_index+1.
+    int remaining_width = width;
+    int erase_pos = best_index + 1;
+    while (remaining_width > 0 && erase_pos < static_cast<int>(mSkyline.size())) {
+        if (mSkyline[erase_pos].width <= remaining_width) {
+            remaining_width -= mSkyline[erase_pos].width;
+            mSkyline.erase(mSkyline.begin() + erase_pos);
+            // erase_pos stays the same — next node slid into this position
         } else {
-            mSkyline[bestIndex].x += remainingWidth;
-            mSkyline[bestIndex].width -= remainingWidth;
-            remainingWidth = 0;
+            // Partially covered: shrink the surviving node from the left.
+            mSkyline[erase_pos].x += remaining_width;
+            mSkyline[erase_pos].width -= remaining_width;
+            remaining_width = 0;
         }
     }
-    
-    mSkyline.insert(mSkyline.begin() + bestIndex, newNode);
 
-    // Merge adjacent nodes with same height
-    for (int i = 0; i < (int)mSkyline.size() - 1; ++i) {
+    // Merge adjacent nodes that share the same Y (coalesce the skyline).
+    for (int i = 0; i < static_cast<int>(mSkyline.size()) - 1;) {
         if (mSkyline[i].y == mSkyline[i + 1].y) {
             mSkyline[i].width += mSkyline[i + 1].width;
             mSkyline.erase(mSkyline.begin() + i + 1);
-            --i;
+            // do not increment i — check merged node against its new neighbour
+        } else {
+            ++i;
         }
     }
 

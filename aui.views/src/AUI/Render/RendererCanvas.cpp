@@ -19,8 +19,8 @@ RendererCanvas::RendererCanvas(ACanvas& canvas) : mCanvas(canvas) {}
 
 _<IRenderer::IMultiStringCanvas> RendererCanvas::newMultiStringCanvas(const AFontStyle& style) {
     auto& backend = mCanvas.renderer();
-    auto entryData = aui::getFontEntryData(backend, backend.getFontEntryDataCache(), style);
-    return _new<aui::MultiStringCanvas>(backend, entryData, backend.getCharacterDataCache(), style, getRenderScale());
+    auto entryData = aui::getFontEntryData(style, backend.getFontCache());
+    return _new<aui::MultiStringCanvas>(backend, entryData, backend.getCharacterDataCache(), style);
 }
 
 void RendererCanvas::rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) {

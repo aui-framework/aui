@@ -108,7 +108,7 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
     TransientBuffer mVertexBuffer;
     TransientBuffer mIndexBuffer;
 
-    ADeque<aui::FontAtlas> mFontEntryData;
+    _<aui::AFontCache> mFontCache;
     ADeque<aui::CharacterData> mCharData;
     OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
 
@@ -139,8 +139,8 @@ public:
     void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) override;
     void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) override;
     void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) override;
-    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style, float renderScale = 1.0f) override;
-    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs, float renderScale = 1.0f) override;
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
 
     void lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) override;
     void points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) override;
@@ -156,7 +156,7 @@ public:
     ASurface* getWindow() const noexcept override { return mWindow; }
     glm::mat4 getProjectionMatrix() const override;
 
-    ADeque<aui::FontAtlas>& getFontEntryDataCache() override { return mFontEntryData; }
+    const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
     ADeque<aui::CharacterData>& getCharacterDataCache() override { return mCharData; }
 
     bool isVaoAvailable() const noexcept;

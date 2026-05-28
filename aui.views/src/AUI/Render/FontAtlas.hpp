@@ -16,6 +16,7 @@
 #include <AUI/Font/AFontStyle.h>
 #include <AUI/Font/AFont.h>
 #include <AUI/Render/IRendererInterfaces.h>
+#include <AUI/Common/AOptional.h>
 
 class IRendererBackend;
 class ITexture;
@@ -35,6 +36,20 @@ public:
 
 private:
     Atlas mAtlas;
+};
+
+class API_AUI_VIEWS AFontCache : public aui::noncopyable {
+private:
+    IRendererBackend& mRenderer;
+    AOptional<FontAtlas> mGrayscaleAtlas;
+    AOptional<FontAtlas> mSubpixelAtlas;
+
+public:
+    AFontCache(IRendererBackend& renderer);
+    ~AFontCache() = default;
+
+    FontAtlas& getGrayscaleFontAtlas();
+    FontAtlas& getSubpixelFontAtlas();
 };
 
 class API_AUI_VIEWS PrerenderedString : public IRenderer::IPrerenderedString {
@@ -83,8 +98,7 @@ public:
     _<IRenderer::IPrerenderedString> finalize() noexcept override;
 };
 
-API_AUI_VIEWS FontAtlas* getFontEntryData(IRendererBackend& renderer,
-                                ADeque<FontAtlas>& fontEntries,
-                                const AFontStyle& fontStyle);
+API_AUI_VIEWS FontAtlas* getFontEntryData(const AFontStyle& fontStyle,
+                                const _<AFontCache>& fontCache);
 
 }

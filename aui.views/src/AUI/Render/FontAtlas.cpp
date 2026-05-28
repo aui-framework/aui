@@ -86,10 +86,10 @@ void MultiStringCanvas::addStringT(const glm::ivec2& position, UnicodeString tex
             }
 
             AFont::Character& ch = font->getCharacter(fe, c);
-            int posX = (int) advance + ch.horizontal.bearing.x;
-            int posY = advanceY - ch.horizontal.bearing.y;
-            int width = ch.image->width();
-            int height = ch.image->height();
+            float posX = advance + ch.horizontal.bearing.x;
+            float posY = advanceY - ch.horizontal.bearing.y;
+            float width = ch.image->width();
+            float height = ch.image->height();
 
             mGlyphs.push_back(
                 { glm::vec2(posX, posY), glm::vec2(width, height), glm::vec2(data->uv.x, data->uv.y),
@@ -102,7 +102,7 @@ void MultiStringCanvas::addStringT(const glm::ivec2& position, UnicodeString tex
                     advance += (float) kerning.x;
                 }
             }
-            advance += (float) ch.horizontal.advance;
+            advance += ch.horizontal.advance;
         }
     }
     mAdvanceX = (glm::max) (mAdvanceX, (glm::max) (advanceX, int(glm::ceil(advance))));
@@ -120,15 +120,30 @@ _<IRenderer::IPrerenderedString> MultiStringCanvas::finalize() noexcept {
     return _new<PrerenderedString>(std::move(mGlyphs), mAdvanceX, mAdvanceY, mFontAtlas, mIsSubpixel);
 }
 
-FontAtlas* getFontEntryData(IRendererBackend& renderer, ADeque<FontAtlas>& fontEntries, const AFontStyle& fontStyle) {
-    auto fe = fontStyle.getFontEntry();
-    if (fe.second.rendererData == nullptr) {
-        APixelFormat format =
-            (fontStyle.fontRendering == FontRendering::SUBPIXEL) ? APixelFormat::RGB_BYTE : APixelFormat::R;
-        fontEntries.emplace_back(renderer, format);
-        fe.second.rendererData = &fontEntries.last();
+AFontCache::AFontCache(IRendererBackend& renderer) : mRenderer(renderer) {}
+
+FontAtlas& AFontCache::getGrayscaleFontAtlas() {
+    if (!mGrayscaleAtlas) {
+        mGrayscaleAtlas.emplace(mRenderer, APixelFormat::R);
     }
-    return static_cast<FontAtlas*>(fe.second.rendererData);
+    return *mGrayscaleAtlas;
+}
+
+FontAtlas& AFontCache::getSubpixelFontAtlas() {
+    if (!mSubpixelAtlas) {
+        mSubpixelAtlas.emplace(mRenderer, APixelFormat::RGB_BYTE);
+    }
+    return *mSubpixelAtlas;
+}
+
+FontAtlas* getFontEntryData(const AFontStyle& fontStyle, const _<AFontCache>& fontCache) {
+    if (fontStyle.font && fontStyle.font->mRendererData != nullptr) {
+        return static_cast<FontAtlas*>(fontStyle.font->mRendererData);
+    }
+    if (fontStyle.fontRendering == FontRendering::SUBPIXEL) {
+        return &fontCache->getSubpixelFontAtlas();
+    }
+    return &fontCache->getGrayscaleFontAtlas();
 }
 
 }   // namespace aui

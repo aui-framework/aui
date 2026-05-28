@@ -39,8 +39,8 @@ public:
     void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) override;
     void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) override;
     void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) override;
-    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style, float renderScale = 1.0f) override;
-    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs, float renderScale = 1.0f) override;
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
     void lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) override;
     void points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) override;
     void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) override;
@@ -59,7 +59,7 @@ public:
     _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE) override;
     glm::mat4 getProjectionMatrix() const override;
 
-    ADeque<aui::FontAtlas>& getFontEntryDataCache() override { return mFontEntryData; }
+    const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
     ADeque<aui::CharacterData>& getCharacterDataCache() override { return mCharData; }
 
     protected:
@@ -68,6 +68,6 @@ public:
     SoftwareRenderingContext* mContext = nullptr;
     ASurface* mWindow = nullptr;
     bool mAllowRenderToTexture = true;
-    ADeque<aui::FontAtlas> mFontEntryData;
+    _<aui::AFontCache> mFontCache;
     ADeque<aui::CharacterData> mCharData;
     };

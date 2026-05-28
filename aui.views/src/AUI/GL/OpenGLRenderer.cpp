@@ -25,6 +25,7 @@
 #include <AUI/GL/ShaderUniforms.h>
 #include <AUI/Render/Brush/Gradient.h>
 #include <AUI/Render/FontAtlas.hpp>
+#include <AUI/Platform/AFontManager.h>
 
 #ifdef AUI_PLATFORM_WIN32
 #include <windows.h>
@@ -97,7 +98,8 @@ struct VertexRoundedGradient {
 
 OpenGLRenderer::OpenGLRenderer() :
     mVertexBuffer(GL_ARRAY_BUFFER, 2 * 1024 * 1024),
-    mIndexBuffer(GL_ELEMENT_ARRAY_BUFFER, 1024 * 1024)
+    mIndexBuffer(GL_ELEMENT_ARRAY_BUFFER, 1024 * 1024),
+    mFontCache(AFontManager::inst().createCache(this))
 {
     auto readShader = [](const AString& name) {
         auto buffer = AByteBuffer::fromStream(ABuiltinFiles::open(name + ".glsl"));
@@ -792,13 +794,14 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
     }
 }
 
-_<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle& style, float renderScale) {
-    auto entryData = aui::getFontEntryData(*this, getFontEntryDataCache(), style);
-    return _new<aui::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style, renderScale);
+_<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle& style) {
+    auto entryData = aui::getFontEntryData(style, mFontCache);
+    return _new<aui::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style);
 }
-_<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs, float renderScale) {
+
+_<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
     if (text.empty()) return nullptr;
-    auto c = newMultiStringCanvas(fs, renderScale);
+    auto c = newMultiStringCanvas(fs);
     c->addString(position, text);
     return c->finalize();
 }

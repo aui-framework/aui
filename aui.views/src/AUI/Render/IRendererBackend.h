@@ -20,7 +20,7 @@
 #include "IRenderer.h"
 
 class ASurface;
-namespace aui { class FontAtlas; }
+namespace aui { class FontAtlas; class AFontCache; }
 
 /**
  * @brief Actual renderer interface.
@@ -31,7 +31,7 @@ public:
     virtual ~IRendererBackend() = default;
 
     virtual _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE) = 0;
-    virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style, float renderScale = 1.0f) = 0;
+    virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
 
     virtual void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) = 0;
     virtual void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) = 0;
@@ -44,7 +44,7 @@ public:
     virtual void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) = 0;
     virtual void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) = 0;
     virtual void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) = 0;
-    virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs, float renderScale = 1.0f) = 0;
+    virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
     virtual void lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) = 0;
     virtual void points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) = 0;
     virtual void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) = 0;
@@ -61,6 +61,6 @@ public:
     virtual void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform);
     virtual void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) = 0;
 
-    virtual ADeque<aui::FontAtlas>& getFontEntryDataCache() = 0;
+    virtual const _<aui::AFontCache>& getFontCache() = 0;
     virtual ADeque<aui::CharacterData>& getCharacterDataCache() = 0;
 };
