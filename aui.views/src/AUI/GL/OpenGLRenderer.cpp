@@ -218,7 +218,51 @@ void OpenGLRenderer::setWindow(ASurface* window) {
     }
 }
 
-_unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept { return nullptr; }
+class OpenGLRenderViewToTexture: public IRenderViewToTexture {
+public:
+    OpenGLRenderViewToTexture(OpenGLRenderer& renderer): mRenderer(renderer) {}
+
+    bool begin(IRenderer& renderer, glm::ivec2 surfaceSize, InvalidArea& invalidArea) override {
+        if (!mTexture || mTexture->getSize() != glm::u32vec2(surfaceSize)) {
+            mTexture = _cast<OpenGLTexture2D>(mRenderer.createTexture(surfaceSize));
+            mFramebuffer.attach(mTexture, GL_COLOR_ATTACHMENT0);
+            invalidArea = InvalidArea::Full{};
+        }
+
+        mFramebuffer.bind();
+        glViewport(0, 0, surfaceSize.x, surfaceSize.y);
+        mRenderer.mProjectionMatrix = glm::ortho(0.f, (float)surfaceSize.x, (float)surfaceSize.y, 0.f, -1.f, 1.f);
+
+        if (invalidArea.full()) {
+            glClearColor(0.f, 0.f, 0.f, 0.f);
+            glClear(GL_COLOR_BUFFER_BIT);
+        }
+
+        return true;
+    }
+
+    void end(IRenderer& renderer) override {
+        // Framebuffer unbinding is usually handled by the next bind or by binding 0
+        // But for safety:
+        glBindFramebuffer(GL_FRAMEBUFFER, mRenderer.getDefaultFb());
+        if (mRenderer.mWindow) {
+            mRenderer.beginPaint(mRenderer.mWindow->getSize());
+        }
+    }
+
+    void draw(ACanvas& canvas) override {
+        canvas.rectangle(APaint{ATexturedBrush{mTexture}}, {0, 0}, mTexture->getSize());
+    }
+
+private:
+    OpenGLRenderer& mRenderer;
+    gl::Framebuffer mFramebuffer;
+    _<OpenGLTexture2D> mTexture;
+};
+
+_unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept {
+    return std::make_unique<OpenGLRenderViewToTexture>(*this);
+}
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
     return mProjectionMatrix;

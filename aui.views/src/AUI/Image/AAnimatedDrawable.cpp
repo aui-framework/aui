@@ -32,7 +32,7 @@ void AAnimatedDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
 
         if (!mTexture || mTexture->getSize() != glm::u32vec2(img.size())) {
             auto& backend = render.renderer();
-            mTexture = backend.createTexture(img.size(), img.format());
+            mTexture = backend.createTexture(img.size(), img.format(), TextureFilter::NEAREST);
         }
 
         if (mFactory->hasAnimationFinished()) {

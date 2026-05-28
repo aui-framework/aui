@@ -23,7 +23,10 @@
 #include <span>
 #include "SoftwareTexture.h"
 
+class SoftwareRenderViewToTexture;
+
 class SoftwareRenderer : public IRendererBackend {
+    friend class SoftwareRenderViewToTexture;
 public:
     SoftwareRenderer();
     ~SoftwareRenderer() override = default;
@@ -65,6 +68,7 @@ public:
     void putPixel(glm::ivec2 pos, AColor color, const APaint& paint);
 
     SoftwareRenderingContext* mContext = nullptr;
+    AImage* mRenderTarget = nullptr;
     ASurface* mWindow = nullptr;
     bool mAllowRenderToTexture = true;
     _<aui::AFontCache> mFontCache;

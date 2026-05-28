@@ -13,6 +13,8 @@
 #include "UIBenchmarkScene.h"
 #include "AUI/UITest.h"
 #include "AUI/Util/AStubWindowManager.h"
+#include <AUI/Render/FontAtlas.hpp>
+#include <AUI/Platform/AFontManager.h>
 
 namespace {
 
@@ -26,7 +28,7 @@ public:
         int getHeight() override { return 1; }
     };
 
-    StubRenderer() = default;
+    StubRenderer() : mFontCache(AFontManager::inst().createCache(this)) {}
     ~StubRenderer() override = default;
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override {
         class Stub : public IRenderer::IMultiStringCanvas {
@@ -38,25 +40,24 @@ public:
         };
         return _new<Stub>();
     }
-    void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, Blending blending) override {}
-    void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, Blending blending) override {}
-    void texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, Blending blending) override {}
-    void solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, Blending blending) override {}
-    void gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, Blending blending) override {}
-    void texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, Blending blending) override {}
-    void rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, Blending blending) override {}
-    void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, Blending blending) override {}
-    void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, Blending blending) override {}
-    void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, Blending blending) override {}
-    void string(const ADisplayList::Text& v, const glm::mat4& transform, Blending blending) override {}
-    void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, Blending blending) override {}
+    void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+    void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+    void texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+    void solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+    void gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+    void texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+    void rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) override {}
+    void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, const APaint& paint) override {}
+    void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) override {}
+    void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) override {}
+    void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) override {}
     _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override {
         return _new<StubPrerenderedString>();
     }
-    void lines(const ADisplayList::Lines& v, const glm::mat4& transform, Blending blending) override {}
-    void points(const ADisplayList::Points& v, const glm::mat4& transform, Blending blending) override {}
-    void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, Blending blending) override {}
-    void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, Blending blending) override {}
+    void lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) override {}
+    void points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) override {}
+    void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) override {}
+    void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, const APaint& paint) override {}
 
     [[nodiscard]] _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override { return nullptr; }
     void setWindow(ASurface* window) override {}
@@ -65,18 +66,21 @@ public:
 
     class Stub : public ITexture {
     public:
-        void setImage(AImageView image) override { mSize = image.size(); }
+        void upload(AImageView image) override { mSize = image.size(); }
         [[nodiscard]] glm::u32vec2 getSize() const override { return mSize; }
         ~Stub() override = default;
     private:
         glm::u32vec2 mSize = { 0, 0 };
     };
 
-    _<ITexture> createTexture(glm::u32vec2 size) override {
+    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format, TextureFilter filter) override {
         auto t = _new<Stub>();
         return t;
     }
-    float getRenderScale() const noexcept override { return 1.0f; }
+    const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
+
+private:
+    _<aui::AFontCache> mFontCache;
 };
 
 }   // namespace

@@ -30,10 +30,24 @@ void SoftwareRenderer::setWindow(ASurface* window) {
 }
 
 void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& paint) {
-    if (!mContext) return;
-    if (pos.x < 0 || pos.y < 0 || (uint32_t)pos.x >= mContext->bitmapSize().x || (uint32_t)pos.y >= mContext->bitmapSize().y) return;
+    glm::uvec2 bitmapSize;
+    if (mRenderTarget) {
+        bitmapSize = mRenderTarget->size();
+    } else if (mContext) {
+        bitmapSize = mContext->bitmapSize();
+    } else {
+        return;
+    }
+
+    if (pos.x < 0 || pos.y < 0 || (uint32_t)pos.x >= bitmapSize.x || (uint32_t)pos.y >= bitmapSize.y) return;
     
-    auto dst = glm::vec4(mContext->getPixel(glm::uvec2(pos))) / 255.f;
+    glm::vec4 dst;
+    if (mRenderTarget) {
+        dst = glm::vec4(mRenderTarget->get(glm::uvec2(pos))) / 255.f;
+    } else {
+        dst = glm::vec4(mContext->getPixel(glm::uvec2(pos))) / 255.f;
+    }
+
     AColor combined;
     if (paint.blending == Blending::INVERSE_DST) {
         combined.r = color.r * (1.f - dst.r);
@@ -53,7 +67,12 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
     } else {
         combined = dst * (1.f - color.a) + color;
     }
-    mContext->putPixel(glm::uvec2(pos), glm::u8vec4(glm::clamp(combined, 0.f, 1.f) * 255.f));
+
+    if (mRenderTarget) {
+        mRenderTarget->set(glm::uvec2(pos), AColor(glm::clamp(combined, 0.f, 1.f)));
+    } else {
+        mContext->putPixel(glm::uvec2(pos), glm::u8vec4(glm::clamp(combined, 0.f, 1.f) * 255.f));
+    }
 }
 
 void SoftwareRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) {
@@ -181,4 +200,38 @@ _<ITexture> SoftwareRenderer::createTexture(glm::u32vec2 size, APixelFormat form
     return t;
 }
 
-_unique<IRenderViewToTexture> SoftwareRenderer::newRenderViewToTexture() noexcept { return nullptr; }
+class SoftwareRenderViewToTexture: public IRenderViewToTexture {
+public:
+    SoftwareRenderViewToTexture(SoftwareRenderer& renderer): mRenderer(renderer) {}
+
+    bool begin(IRenderer& renderer, glm::ivec2 surfaceSize, InvalidArea& invalidArea) override {
+        if (!mTexture || mTexture->getSize() != glm::u32vec2(surfaceSize)) {
+            mTexture = _cast<SoftwareTexture>(mRenderer.createTexture(surfaceSize));
+            invalidArea = InvalidArea::Full{};
+        }
+
+        mRenderer.mRenderTarget = const_cast<AImage*>(&mTexture->getImage());
+
+        if (invalidArea.full()) {
+            std::memset(mRenderer.mRenderTarget->modifiableBuffer().data(), 0, mRenderer.mRenderTarget->modifiableBuffer().getSize());
+        }
+
+        return true;
+    }
+
+    void end(IRenderer& renderer) override {
+        mRenderer.mRenderTarget = nullptr;
+    }
+
+    void draw(ACanvas& canvas) override {
+        canvas.rectangle(APaint{ATexturedBrush{mTexture}}, {0, 0}, mTexture->getSize());
+    }
+
+private:
+    SoftwareRenderer& mRenderer;
+    _<SoftwareTexture> mTexture;
+};
+
+_unique<IRenderViewToTexture> SoftwareRenderer::newRenderViewToTexture() noexcept {
+    return std::make_unique<SoftwareRenderViewToTexture>(*this);
+}
