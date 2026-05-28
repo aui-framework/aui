@@ -31,13 +31,20 @@ glm::vec4 erf(glm::vec4 x) {
     return s - s / (x * x);
 }
 
-float rounded(glm::vec2 absolute, glm::vec2 size) {
-    glm::vec2 circleCenter = glm::vec2(1.f) - size;
-    glm::vec2 rectangleShape = glm::step(absolute, circleCenter);
-    glm::vec2 circle = (absolute - circleCenter) / size;
-    float circles = glm::step(circle.x * circle.x + circle.y * circle.y, 1.f);
-    glm::vec2 rectCut = glm::step(glm::vec2(0.f), glm::vec2(1.f) - absolute);
-    return glm::clamp(rectangleShape.x + rectangleShape.y + circles, 0.f, 1.f) * rectCut.x * rectCut.y;
+float roundedRectSDF(glm::vec2 p, glm::vec2 size, float r) {
+    glm::vec2 d = glm::abs(p - size * 0.5f) - (size * 0.5f - glm::vec2(r));
+    return glm::length(glm::max(d, glm::vec2(0.f))) + glm::min(glm::max(d.x, d.y), 0.f) - r;
+}
+
+float roundedRectCoverage(glm::vec2 localPos, glm::vec2 size, float radius, float scale) {
+    float sdf = roundedRectSDF(localPos, size, radius) * scale;
+    return glm::clamp(0.5f - sdf, 0.f, 1.f);
+}
+
+float roundedRectBorderCoverage(glm::vec2 localPos, glm::vec2 size, float radius, float borderWidth, float scale) {
+    float sdf_outer = roundedRectSDF(localPos, size, radius);
+    float sdf_border = std::abs(sdf_outer + borderWidth * 0.5f) - borderWidth * 0.5f;
+    return glm::clamp(0.5f - sdf_border * scale, 0.f, 1.f);
 }
 }
 
@@ -208,16 +215,14 @@ void SoftwareRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRe
         if (radius > maxRadius) {
             radius = maxRadius;
         }
-        glm::vec2 outerSize = { 2.f * radius / inst.size.x, 2.f * radius / inst.size.y };
-        float width = p2.x - p1.x;
-        float height = p2.y - p1.y;
+        glm::mat4 invTransform = glm::inverse(transform);
+        float scale = (p2.x - p1.x) / inst.size.x;
 
         for (int y = (int)p1.y; y < (int)p2.y; ++y) {
             for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-                float uvX = (x - p1.x) / width;
-                float uvY = (y - p1.y) / height;
-                glm::vec2 absolute = glm::abs(glm::vec2(uvX, uvY) * 2.f - 1.f);
-                float a = rounded(absolute, outerSize);
+                glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+                glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y) - inst.position;
+                float a = roundedRectCoverage(localPos, inst.size, radius, scale);
                 if (a > 0.001f) {
                     putPixel({x, y}, color * a, paint);
                 }
@@ -244,18 +249,20 @@ void SoftwareRenderer::gradientRoundedRectangles(const ADisplayList::GradientRou
         if (radius > maxRadius) {
             radius = maxRadius;
         }
-        glm::vec2 outerSize = { 2.f * radius / inst.size.x, 2.f * radius / inst.size.y };
+        glm::mat4 invTransform = glm::inverse(transform);
+        float scale = (p2.x - p1.x) / inst.size.x;
         float width = p2.x - p1.x;
         float height = p2.y - p1.y;
 
         for (int y = (int)p1.y; y < (int)p2.y; ++y) {
             for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-                float uvX = (x - p1.x) / width;
-                float uvY = (y - p1.y) / height;
-                glm::vec2 uv(uvX, uvY);
-                glm::vec2 absolute = glm::abs(uv * 2.f - 1.f);
-                float a = rounded(absolute, outerSize);
+                glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+                glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y) - inst.position;
+                float a = roundedRectCoverage(localPos, inst.size, radius, scale);
                 if (a > 0.001f) {
+                    float uvX = (x - p1.x) / width;
+                    float uvY = (y - p1.y) / height;
+                    glm::vec2 uv(uvX, uvY);
                     glm::vec3 transformedUv = helper.matrix * glm::vec3(uv, 1.f);
                     float t = glm::clamp(transformedUv.x, 0.f, 1.f);
                     AColor gradColor = glm::mix(c1, c2, t);
@@ -280,17 +287,19 @@ void SoftwareRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRou
         if (radius > maxRadius) {
             radius = maxRadius;
         }
-        glm::vec2 outerSize = { 2.f * radius / inst.size.x, 2.f * radius / inst.size.y };
+        glm::mat4 invTransform = glm::inverse(transform);
+        float scale = (p2.x - p1.x) / inst.size.x;
         float width = p2.x - p1.x;
         float height = p2.y - p1.y;
 
         for (int y = (int)p1.y; y < (int)p2.y; ++y) {
             for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-                float uvX = (x - p1.x) / width;
-                float uvY = (y - p1.y) / height;
-                glm::vec2 absolute = glm::abs(glm::vec2(uvX, uvY) * 2.f - 1.f);
-                float a = rounded(absolute, outerSize);
+                glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+                glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y) - inst.position;
+                float a = roundedRectCoverage(localPos, inst.size, radius, scale);
                 if (a > 0.001f) {
+                    float uvX = (x - p1.x) / width;
+                    float uvY = (y - p1.y) / height;
                     glm::uvec2 texPos((unsigned)(uvX * glm::max(0.f, (float)img.width() - 1.f)),
                                       (unsigned)(uvY * glm::max(0.f, (float)img.height() - 1.f)));
                     AColor texColor;
@@ -332,34 +341,16 @@ void SoftwareRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectan
         if (radius > maxRadius) {
             radius = maxRadius;
         }
-        glm::vec2 outerSize = { 2.0f * radius / inst.size.x, 2.0f * radius / inst.size.y };
-
-        float innerRadius = std::max(0.0f, radius - (float)v.borderWidth);
-        glm::vec2 innerRectSize = inst.size - 2.0f * (float)v.borderWidth;
-
-        glm::vec2 innerSize(0.f);
-        glm::vec2 outerToInner(1.f);
-
-        if (innerRectSize.x > 0.0f && innerRectSize.y > 0.0f) {
-            innerSize = { 2.0f * innerRadius / innerRectSize.x, 2.0f * innerRadius / innerRectSize.y };
-            outerToInner = inst.size / innerRectSize;
-        } else {
-            outerToInner = glm::vec2(1000.f);
-        }
-
         auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
         auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-        float width = p2.x - p1.x;
-        float height = p2.y - p1.y;
+        glm::mat4 invTransform = glm::inverse(transform);
+        float scale = (p2.x - p1.x) / inst.size.x;
 
         for (int y = (int)p1.y; y < (int)p2.y; ++y) {
             for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-                float uvX = (x - p1.x) / width;
-                float uvY = (y - p1.y) / height;
-                glm::vec2 absolute = glm::abs(glm::vec2(uvX, uvY) * 2.f - 1.f);
-                float aOuter = rounded(absolute, outerSize);
-                float aInner = rounded(absolute * outerToInner, innerSize);
-                float a = aOuter - aInner;
+                glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+                glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y) - inst.position;
+                float a = roundedRectBorderCoverage(localPos, inst.size, radius, (float)v.borderWidth, scale);
                 if (a > 0.001f) {
                     putPixel({x, y}, color * a, paint);
                 }
@@ -396,26 +387,26 @@ void SoftwareRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, con
     float sigma = v.blurRadius / 2.f;
     glm::vec2 lower = v.position + v.offset + glm::vec2(v.spreadRadius);
     glm::vec2 upper = v.position + v.size + v.offset - glm::vec2(v.spreadRadius);
-    glm::vec2 outerSize = glm::vec2(2.f * v.borderRadius) / v.size;
 
     auto p1 = transform * glm::vec4(v.position, 0.f, 1.f);
     auto p2 = transform * glm::vec4(v.position + v.size, 0.f, 1.f);
     glm::mat4 invTransform = glm::inverse(transform);
+    float scale = (p2.x - p1.x) / v.size.x;
     AColor color = v.color.premultiply();
 
     for (int y = (int)p1.y; y < (int)p2.y; ++y) {
         for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-            glm::vec4 localPos = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
-            glm::vec2 val = glm::vec2(localPos.x, localPos.y);
+            glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+            glm::vec2 val = glm::vec2(localPos4.x, localPos4.y);
 
-            glm::vec2 uv = (val - v.position) / v.size;
-            glm::vec2 absolute = glm::abs(uv * 2.f - glm::vec2(1.f));
+            glm::vec2 localPos = val - v.position;
+            float a = roundedRectCoverage(localPos, v.size, (float)v.borderRadius, scale);
 
             glm::vec4 query = glm::vec4(val - lower, val - upper);
             glm::vec4 erfVal = erf(query * (std::sqrt(0.5f) / sigma));
             glm::vec4 integral = glm::vec4(0.5f) + glm::vec4(0.5f) * erfVal;
             float shadowFactor = glm::clamp((integral.z - integral.x) * (integral.w - integral.y), 0.f, 1.f);
-            float factor = (1.f - shadowFactor) * rounded(absolute, outerSize);
+            float factor = (1.f - shadowFactor) * a;
 
             if (factor > 0.001f) {
                 putPixel({x, y}, color * factor, paint);
