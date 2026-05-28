@@ -209,6 +209,20 @@ void ADisplayList::computeOverlaps() {
     mOpaqueRects.clear();
     for (auto it = mEntities.rbegin(); it != mEntities.rend(); ++it) {
         it->isObscured = false;
+        bool isControl = std::visit(
+            aui::lambda_overloaded {
+              [&](const PushLayer&) { return true; },
+              [&](const PopLayer&) { return true; },
+              [&](const MaskBefore&) { return true; },
+              [&](const MaskAfter&) { return true; },
+              [&](const PopMaskBefore&) { return true; },
+              [&](const PopMaskAfter&) { return true; },
+              [&](const auto&) { return false; }
+            },
+            it->command);
+        if (isControl) {
+            continue;
+        }
         bool obscured = false;
         for (const auto& opaque : mOpaqueRects) {
             if (it->boundingBox.p1.x >= opaque.p1.x && it->boundingBox.p2.x <= opaque.p2.x &&
@@ -234,32 +248,45 @@ void ADisplayList::computeOverlaps() {
 }
 
 void ADisplayList::draw(IRendererBackend& renderer) const {
-    for (const auto& entity : mEntities) {
-        if (entity.isObscured) {
-            continue;
-        }
-
+    auto dispatch = [&](const StoredCommand::Command& command, const glm::mat4& transform, const APaint& paint) {
         std::visit(
             aui::lambda_overloaded {
-              [&](const SolidRectangles& v) { renderer.solidRectangles(v, entity.transform, entity.paint); },
-              [&](const GradientRectangles& v) { renderer.gradientRectangles(v, entity.transform, entity.paint); },
-              [&](const TexturedRectangles& v) { renderer.texturedRectangles(v, entity.transform, entity.paint); },
-              [&](const SolidRoundedRectangles& v) { renderer.solidRoundedRectangles(v, entity.transform, entity.paint); },
-              [&](const GradientRoundedRectangles& v) { renderer.gradientRoundedRectangles(v, entity.transform, entity.paint); },
-              [&](const TexturedRoundedRectangles& v) { renderer.texturedRoundedRectangles(v, entity.transform, entity.paint); },
-              [&](const RectangleBorders& v) { renderer.rectangleBorders(v, entity.transform, entity.paint); },
-              [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, entity.transform, entity.paint); },
-              [&](const BoxShadow& v) { renderer.boxShadow(v, entity.transform, entity.paint); },
-              [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, entity.transform, entity.paint); },
-              [&](const Glyphs& v) { renderer.glyphs(v, entity.transform, entity.paint); },
-              [&](const Lines& v) { renderer.lines(v, entity.transform, entity.paint); },
-              [&](const Points& v) { renderer.points(v, entity.transform, entity.paint); },
-              [&](const LineBatches& v) { renderer.lines(v, entity.transform, entity.paint); },
-              [&](const SquareSector& v) { renderer.squareSector(v, entity.transform, entity.paint); },
-              [&](const Backdrop& v) { renderer.backdrops(v, entity.transform); },
+              [&](const SolidRectangles& v) { renderer.solidRectangles(v, transform, paint); },
+              [&](const GradientRectangles& v) { renderer.gradientRectangles(v, transform, paint); },
+              [&](const TexturedRectangles& v) { renderer.texturedRectangles(v, transform, paint); },
+              [&](const SolidRoundedRectangles& v) { renderer.solidRoundedRectangles(v, transform, paint); },
+              [&](const GradientRoundedRectangles& v) { renderer.gradientRoundedRectangles(v, transform, paint); },
+              [&](const TexturedRoundedRectangles& v) { renderer.texturedRoundedRectangles(v, transform, paint); },
+              [&](const RectangleBorders& v) { renderer.rectangleBorders(v, transform, paint); },
+              [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, transform, paint); },
+              [&](const BoxShadow& v) { renderer.boxShadow(v, transform, paint); },
+              [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, transform, paint); },
+              [&](const Glyphs& v) { renderer.glyphs(v, transform, paint); },
+              [&](const Lines& v) { renderer.lines(v, transform, paint); },
+              [&](const Points& v) { renderer.points(v, transform, paint); },
+              [&](const LineBatches& v) { renderer.lines(v, transform, paint); },
+              [&](const SquareSector& v) { renderer.squareSector(v, transform, paint); },
+              [&](const Backdrop& v) { renderer.backdrops(v, transform); },
+              [&](const MaskBefore&) { renderer.pushMaskBefore(); },
+              [&](const MaskAfter&) { renderer.pushMaskAfter(); },
+              [&](const PopMaskBefore&) { renderer.popMaskBefore(); },
+              [&](const PopMaskAfter&) { renderer.popMaskAfter(); },
               [&](const auto&) {}
             },
-            entity.command);
+            command);
+    };
+
+    if (!mEntities.empty()) {
+        for (const auto& entity : mEntities) {
+            if (entity.isObscured) {
+                continue;
+            }
+            dispatch(entity.command, entity.transform, entity.paint);
+        }
+    } else {
+        for (const auto& cmd : mCommands) {
+            dispatch(cmd.command, cmd.transform, cmd.paint);
+        }
     }
 }
 

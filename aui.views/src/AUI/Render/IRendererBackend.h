@@ -50,7 +50,6 @@ public:
     virtual void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) = 0;
     virtual void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, const APaint& paint) = 0;
 
-    virtual _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept = 0;
     virtual void setWindow(ASurface* window) = 0;
     virtual ASurface* getWindow() const noexcept = 0;
     virtual glm::mat4 getProjectionMatrix() const = 0;
@@ -60,6 +59,11 @@ public:
 
     virtual void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform);
     virtual void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) = 0;
+
+    virtual void pushMaskBefore() = 0;
+    virtual void pushMaskAfter() = 0;
+    virtual void popMaskBefore() = 0;
+    virtual void popMaskAfter() = 0;
 
     virtual const _<aui::AFontCache>& getFontCache() = 0;
 };

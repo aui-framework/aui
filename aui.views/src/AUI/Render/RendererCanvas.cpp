@@ -14,6 +14,8 @@
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Render/FontAtlas.hpp>
 #include <range/v3/all.hpp>
+#include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/Software/SoftwareRenderer.h>
 
 RendererCanvas::RendererCanvas(ACanvas& canvas) : mCanvas(canvas) {}
 
@@ -148,7 +150,13 @@ void RendererCanvas::setBlending(Blending blending) {
 }
 
 _unique<IRenderViewToTexture> RendererCanvas::newRenderViewToTexture() noexcept {
-    return mCanvas.renderer().newRenderViewToTexture();
+    if (auto glRenderer = dynamic_cast<OpenGLRenderer*>(&mCanvas.renderer())) {
+        return std::make_unique<OpenGLRenderViewToTexture>(*glRenderer);
+    }
+    if (auto swRenderer = dynamic_cast<SoftwareRenderer*>(&mCanvas.renderer())) {
+        return std::make_unique<SoftwareRenderViewToTexture>(*swRenderer);
+    }
+    return nullptr;
 }
 
 void RendererCanvas::setWindow(ASurface* window) {
