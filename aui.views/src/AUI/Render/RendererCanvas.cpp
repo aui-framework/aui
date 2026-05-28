@@ -20,7 +20,7 @@ RendererCanvas::RendererCanvas(ACanvas& canvas) : mCanvas(canvas) {}
 _<IRenderer::IMultiStringCanvas> RendererCanvas::newMultiStringCanvas(const AFontStyle& style) {
     auto& backend = mCanvas.renderer();
     auto entryData = aui::getFontEntryData(style, backend.getFontCache());
-    return _new<aui::MultiStringCanvas>(backend, entryData, backend.getFontCache()->getCharacterDataCache(), style);
+    return _new<aui::MultiStringCanvas>(backend, entryData, style);
 }
 
 void RendererCanvas::rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) {

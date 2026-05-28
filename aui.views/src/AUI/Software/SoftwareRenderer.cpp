@@ -159,7 +159,7 @@ void SoftwareRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tr
 
 _<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style) {
     auto entryData = aui::getFontEntryData(style, mFontCache);
-    return _new<aui::MultiStringCanvas>(*this, entryData, mFontCache->getCharacterDataCache(), style);
+    return _new<aui::MultiStringCanvas>(*this, entryData, style);
 }
 _<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
     if (text.empty()) return nullptr;

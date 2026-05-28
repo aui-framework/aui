@@ -41,7 +41,7 @@ namespace {
 
         _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override {
             auto entryData = aui::getFontEntryData(style, mFontCache);
-            return _new<aui::MultiStringCanvas>(*this, entryData, mFontCache->getCharacterDataCache(), style);
+            return _new<aui::MultiStringCanvas>(*this, entryData, style);
         }
         _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override {
             auto c = newMultiStringCanvas(fs);

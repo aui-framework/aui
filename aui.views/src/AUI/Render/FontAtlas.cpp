@@ -22,19 +22,18 @@ namespace aui {
 FontAtlas::FontAtlas(IRendererBackend& renderer, APixelFormat format) : mAtlas(renderer, format, { 1024, 1024 }) {}
 
 CharacterData* FontAtlas::getCharacter(
-    AChar character, const _<AFont>& font, const AFont::FontEntry& fe, ADeque<CharacterData>& cache) {
+    AChar character, const _<AFont>& font, const AFont::FontEntry& fe) {
     AFont::Character& ch = font->getCharacter(fe, character);
     if (ch.empty())
         return nullptr;
 
-    auto data = static_cast<CharacterData*>(ch.rendererData);
-    if (data == nullptr) {
+    GlyphKey key{ font.get(), fe.first.size, character };
+    auto it = mCharData.find(key);
+    if (it == mCharData.end()) {
         auto handle = mAtlas.insert(*ch.image);
-        cache.push_back(CharacterData { handle.uv, handle.texture });
-        data = &cache.last();
-        ch.rendererData = data;
+        it = mCharData.emplace(key, CharacterData{ handle.uv, handle.texture }).first;
     }
-    return data;
+    return &it->second;
 }
 
 PrerenderedString::PrerenderedString(
@@ -53,10 +52,9 @@ void PrerenderedString::draw(ACanvas& canvas) {
 }
 
 MultiStringCanvas::MultiStringCanvas(
-    IRendererBackend& renderer, FontAtlas* fontAtlas, ADeque<CharacterData>& charDataCache, const AFontStyle& fontStyle)
+    IRendererBackend& renderer, FontAtlas* fontAtlas, const AFontStyle& fontStyle)
   : mRenderer(renderer)
   , mFontAtlas(fontAtlas)
-  , mCharDataCache(charDataCache)
   , mFontStyle(fontStyle)
   , mIsSubpixel(fontStyle.fontRendering == FontRendering::SUBPIXEL) {}
 
@@ -79,7 +77,7 @@ void MultiStringCanvas::addStringT(const glm::ivec2& position, UnicodeString tex
             advance = (float) position.x;
             advanceY += mFontStyle.getLineHeight();
         } else {
-            auto data = mFontAtlas->getCharacter(c, font, fe, mCharDataCache);
+            auto data = mFontAtlas->getCharacter(c, font, fe);
             if (!data) {
                 advance += mFontStyle.getSpaceWidth();
                 continue;

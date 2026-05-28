@@ -18,7 +18,7 @@
 
 _<IRenderer::IMultiStringCanvas> ADisplayListCanvas::newMultiStringCanvas(const AFontStyle& style) {
     auto entryData = aui::getFontEntryData(style, mRenderer.getFontCache());
-    return _new<aui::MultiStringCanvas>(mRenderer, entryData, mRenderer.getFontCache()->getCharacterDataCache(), style);
+    return _new<aui::MultiStringCanvas>(mRenderer, entryData, style);
 }
 
 _<IRenderer::IPrerenderedString> ADisplayListCanvas::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {

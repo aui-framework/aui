@@ -17,26 +17,43 @@
 #include <AUI/Font/AFont.h>
 #include <AUI/Render/IRendererInterfaces.h>
 #include <AUI/Common/AOptional.h>
-#include <AUI/Common/ADeque.h>
+#include <unordered_map>
 
 class IRendererBackend;
 class ITexture;
 
 namespace aui {
 
-/**
- * @brief Paged texture atlas for a specific font style.
- */
+struct GlyphKey {
+    AFont* font;
+    unsigned int size;
+    AChar character;
+
+    bool operator==(const GlyphKey& o) const noexcept {
+        return font == o.font && size == o.size && character == o.character;
+    }
+};
+
+struct GlyphKeyHash {
+    std::size_t operator()(const GlyphKey& k) const noexcept {
+        std::size_t h1 = std::hash<AFont*>{}(k.font);
+        std::size_t h2 = std::hash<unsigned int>{}(k.size);
+        std::size_t h3 = std::hash<uint32_t>{}(k.character.codepoint());
+        return h1 ^ (h2 << 1) ^ (h3 << 2);
+    }
+};
+
 class API_AUI_VIEWS FontAtlas : public aui::noncopyable {
 public:
     FontAtlas(IRendererBackend& renderer, APixelFormat format);
 
-    CharacterData* getCharacter(AChar character, const _<AFont>& font, const AFont::FontEntry& fe, ADeque<CharacterData>& cache);
+    CharacterData* getCharacter(AChar character, const _<AFont>& font, const AFont::FontEntry& fe);
 
     void syncWithGpu() { mAtlas.syncWithGpu(); }
 
 private:
     Atlas mAtlas;
+    std::unordered_map<GlyphKey, CharacterData, GlyphKeyHash> mCharData;
 };
 
 class API_AUI_VIEWS AFontCache : public aui::noncopyable {
@@ -44,7 +61,6 @@ private:
     IRendererBackend& mRenderer;
     AOptional<FontAtlas> mGrayscaleAtlas;
     AOptional<FontAtlas> mSubpixelAtlas;
-    ADeque<CharacterData> mCharData;
 
 public:
     AFontCache(IRendererBackend& renderer);
@@ -52,7 +68,6 @@ public:
 
     FontAtlas& getGrayscaleFontAtlas();
     FontAtlas& getSubpixelFontAtlas();
-    ADeque<CharacterData>& getCharacterDataCache() { return mCharData; }
 };
 
 class API_AUI_VIEWS PrerenderedString : public IRenderer::IPrerenderedString {
@@ -81,7 +96,6 @@ private:
     AFontStyle mFontStyle;
     FontAtlas* mFontAtlas;
     IRendererBackend& mRenderer;
-    ADeque<CharacterData>& mCharDataCache;
     int mAdvanceX = 0;
     int mAdvanceY = 0;
     bool mIsSubpixel;
@@ -89,7 +103,6 @@ private:
 public:
     MultiStringCanvas(IRendererBackend& renderer,
                       FontAtlas* fontAtlas,
-                      ADeque<CharacterData>& charDataCache,
                       const AFontStyle& fontStyle);
 
     template<class UnicodeString>
