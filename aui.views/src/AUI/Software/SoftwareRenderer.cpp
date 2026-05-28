@@ -175,7 +175,7 @@ void SoftwareRenderer::backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<c
 
 glm::mat4 SoftwareRenderer::getProjectionMatrix() const { return glm::mat4(1.0f); }
 
-_<ITexture> SoftwareRenderer::createTexture(glm::u32vec2 size, APixelFormat format) {
+_<ITexture> SoftwareRenderer::createTexture(glm::u32vec2 size, APixelFormat format, TextureFilter filter) {
     auto t = _new<SoftwareTexture>();
     t->upload(AImage(size, format));
     return t;

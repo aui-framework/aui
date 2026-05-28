@@ -15,6 +15,14 @@
 
 
 /**
+ * @brief Texture filtering mode.
+ */
+enum class TextureFilter {
+    NEAREST,
+    LINEAR,
+};
+
+/**
  * @brief Renderer-friendly image representation.
  */
 class ITexture {

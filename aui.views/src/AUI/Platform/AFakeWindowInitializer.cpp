@@ -49,7 +49,7 @@ namespace {
             return c->finalize();
         }
 
-        _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format) override { return nullptr; }
+        _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format, TextureFilter filter) override { return nullptr; }
         void setAllowRenderToTexture(bool allow) override {}
         bool allowRenderToTexture() const noexcept override { return true; }
         _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override { return nullptr; }

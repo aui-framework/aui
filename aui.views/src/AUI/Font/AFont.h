@@ -81,8 +81,6 @@ public:
         bool empty() const {
             return image == nullptr;
         }
-
-        void* rendererData = nullptr;
     };
 
     struct FontKey {
@@ -100,7 +98,6 @@ public:
 
     struct FontData {
         AVector<AOptional<Character>> characters;
-        void* rendererData = nullptr;
     };
 
 

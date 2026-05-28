@@ -56,7 +56,7 @@ public:
     void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
 
-    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE) override;
+    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE, TextureFilter filter = TextureFilter::LINEAR) override;
     glm::mat4 getProjectionMatrix() const override;
 
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }

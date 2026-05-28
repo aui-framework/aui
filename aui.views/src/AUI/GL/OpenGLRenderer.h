@@ -147,7 +147,7 @@ public:
     void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, const APaint& paint) override;
     void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
-    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE) override;
+    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE, TextureFilter filter = TextureFilter::LINEAR) override;
     void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
     _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;

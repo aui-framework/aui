@@ -19,6 +19,7 @@
 #include <AUI/Image/AImage.h>
 #include <AUI/Image/AImageView.h>
 #include <AUI/Render/RectPacker.hpp>
+#include <AUI/Render/ITexture.h>
 
 class ITexture;
 class IRendererBackend;
@@ -34,12 +35,13 @@ class API_AUI_VIEWS Atlas: public aui::noncopyable {
         RectPacker packer;
         bool isTextureInvalid = true;
 
-        Page(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize);
+        Page(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize, TextureFilter filter);
     };
 
     IRendererBackend& mRenderer;
     APixelFormat mFormat;
     glm::u32vec2 mPageSize;
+    TextureFilter mFilter;
     ADeque<_unique<Page>> mPages;
 
 public:
@@ -48,7 +50,7 @@ public:
         _<ITexture> texture;
     };
 
-    Atlas(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize = { 1024, 1024 });
+    Atlas(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize = { 1024, 1024 }, TextureFilter filter = TextureFilter::LINEAR);
 
     Handle insert(AImageView image);
 

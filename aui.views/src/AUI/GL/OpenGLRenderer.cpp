@@ -171,8 +171,13 @@ void OpenGLTexture2D::upload(AImageView image) {
     mTexture.tex2D(image);
 }
 
-_<ITexture> OpenGLRenderer::createTexture(glm::u32vec2 size, APixelFormat format) {
+_<ITexture> OpenGLRenderer::createTexture(glm::u32vec2 size, APixelFormat format, TextureFilter filter) {
     auto t = _new<OpenGLTexture2D>();
+    if (filter == TextureFilter::NEAREST) {
+        t->texture().setupNearest();
+    } else {
+        t->texture().setupLinear();
+    }
     t->texture().tex2D(AImage(size, format));
     return t;
 }

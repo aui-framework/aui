@@ -15,32 +15,31 @@
 #include <AUI/Render/ITexture.h>
 
 namespace aui {
-Atlas::Atlas(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize) :
-    mRenderer(renderer), mFormat(format), mPageSize(pageSize) {}
+    Atlas::Atlas(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize, TextureFilter filter) :
+        mRenderer(renderer), mFormat(format), mPageSize(pageSize), mFilter(filter) {}
 
-Atlas::Page::Page(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize) :
-    texture(renderer.createTexture(pageSize, format)),
-    image({ pageSize.x, pageSize.y }, format),
-    packer(pageSize.x, pageSize.y) {
-}
+    Atlas::Page::Page(IRendererBackend& renderer, APixelFormat format, glm::u32vec2 pageSize, TextureFilter filter) :
+        texture(renderer.createTexture(pageSize, format, filter)),
+        image({ pageSize.x, pageSize.y }, format),
+        packer(pageSize.x, pageSize.y) {
+    }
 
-Atlas::Handle Atlas::insert(AImageView image) {
-    Rect r;
-    Page* targetPage = nullptr;
-    for (auto& page : mPages) {
-        if (page->packer.allocateRect(r, image.width(), image.height())) {
+    Atlas::Handle Atlas::insert(AImageView image) {
+        Rect r;
+        Page* targetPage = nullptr;
+        for (auto& page : mPages) {
+            if (page->packer.allocateRect(r, image.width(), image.height())) {
+                targetPage = page.get();
+                break;
+            }
+        }
+        if (targetPage == nullptr) {
+            auto& page = mPages.emplace_back(std::make_unique<Page>(mRenderer, mFormat, mPageSize, mFilter));
+            if (!page->packer.allocateRect(r, image.width(), image.height())) {
+                return { {}, nullptr };
+            }
             targetPage = page.get();
-            break;
         }
-    }
-    if (targetPage == nullptr) {
-        auto& page = mPages.emplace_back(std::make_unique<Page>(mRenderer, mFormat, mPageSize));
-        if (!page->packer.allocateRect(r, image.width(), image.height())) {
-            return { {}, nullptr };
-        }
-        targetPage = page.get();
-    }
-
     targetPage->image.insert({r.x, r.y}, image);
 
     const float BIAS = 0.1f;

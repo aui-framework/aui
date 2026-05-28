@@ -19,7 +19,7 @@
 
 namespace aui {
 
-FontAtlas::FontAtlas(IRendererBackend& renderer, APixelFormat format) : mAtlas(renderer, format, { 1024, 1024 }) {}
+FontAtlas::FontAtlas(IRendererBackend& renderer, APixelFormat format) : mAtlas(renderer, format, { 1024, 1024 }, (format == APixelFormat::RGBA_BYTE) ? TextureFilter::NEAREST : TextureFilter::LINEAR) {}
 
 CharacterData* FontAtlas::getCharacter(
     AChar character, const _<AFont>& font, const AFont::FontEntry& fe) {
@@ -129,7 +129,7 @@ FontAtlas& AFontCache::getGrayscaleFontAtlas() {
 
 FontAtlas& AFontCache::getSubpixelFontAtlas() {
     if (!mSubpixelAtlas) {
-        mSubpixelAtlas.emplace(mRenderer, APixelFormat::RGB_BYTE);
+        mSubpixelAtlas.emplace(mRenderer, APixelFormat::RGBA_BYTE);
     }
     return *mSubpixelAtlas;
 }
