@@ -34,7 +34,7 @@ void ADisplayListCanvas::popLayer() { add(ADisplayList::PopLayer{}, {}); }
 
 void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) {
     AColor combinedColor = paint.color * mColorMultiplier;
-    combinedColor.a *= paint.opacity * mOpacity;
+    combinedColor.a *= paint.opacity;
 
     std::visit(aui::lambda_overloaded {
         [&](const ASolidBrush& b) {
@@ -54,7 +54,7 @@ void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm:
 
 void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 position, glm::vec2 size, float radius) {
     AColor combinedColor = paint.color * mColorMultiplier;
-    combinedColor.a *= paint.opacity * mOpacity;
+    combinedColor.a *= paint.opacity;
 
     std::visit(aui::lambda_overloaded {
         [&](const ASolidBrush& b) {
@@ -74,7 +74,7 @@ void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 positio
 
 void ADisplayListCanvas::rectangleBorder(const APaint& paint, glm::vec2 position, glm::vec2 size, float lineWidth) {
     AColor combinedColor = paint.color * mColorMultiplier;
-    combinedColor.a *= paint.opacity * mOpacity;
+    combinedColor.a *= paint.opacity;
     AColor brushColor = AColor::WHITE;
     if (auto b = std::get_if<ASolidBrush>(&paint.brush)) {
         brushColor = b->solidColor;
@@ -88,7 +88,7 @@ void ADisplayListCanvas::roundedRectangleBorder(const APaint& paint,
                                                 float radius,
                                                 int borderWidth) {
     AColor combinedColor = paint.color * mColorMultiplier;
-    combinedColor.a *= paint.opacity * mOpacity;
+    combinedColor.a *= paint.opacity;
     AColor brushColor = AColor::WHITE;
     if (auto b = std::get_if<ASolidBrush>(&paint.brush)) {
         brushColor = b->solidColor;
@@ -174,7 +174,6 @@ void ADisplayListCanvas::popMaskAfter() {
 void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const APaint& paint) {
     APaint combined = paint;
     combined.color *= mColorMultiplier;
-    combined.opacity *= mOpacity;
     
     auto st = mTransform;
     auto bt = mBaseTransform;

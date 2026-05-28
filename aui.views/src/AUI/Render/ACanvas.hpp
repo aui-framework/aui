@@ -40,7 +40,7 @@ public:
     virtual IRendererBackend& renderer() = 0;
 
     virtual void save() {
-        mStates.push_back(State{mTransform, mBaseTransform, mColorMultiplier, mOpacity});
+        mStates.push_back(State{mTransform, mBaseTransform, mColorMultiplier});
     }
 
     virtual void restore() {
@@ -50,7 +50,6 @@ public:
             mTransform = s.transform;
             mBaseTransform = s.baseTransform;
             mColorMultiplier = s.colorMultiplier;
-            mOpacity = s.opacity;
         }
     }
 
@@ -182,9 +181,6 @@ public:
         rotate({0.f, 0.f, 1.f}, angle);
     }
 
-    float getOpacity() const noexcept { return mOpacity; }
-    void setOpacity(float opacity) noexcept { mOpacity = opacity; }
-
     std::uint8_t getStencilDepth() const noexcept { return mStencilDepth; }
     void setStencilDepth(std::uint8_t stencilDepth) noexcept { mStencilDepth = stencilDepth; }
 
@@ -196,13 +192,11 @@ protected:
         glm::mat4 transform;
         glm::mat4 baseTransform;
         AColor colorMultiplier;
-        float opacity;
     };
     std::vector<State> mStates;
     glm::mat4 mTransform = glm::mat4(1.0f);
     glm::mat4 mBaseTransform = glm::mat4(1.0f);
     AColor mColorMultiplier = AColor::WHITE;
-    float mOpacity = 1.0f;
     std::uint8_t mStencilDepth = 0;
     float mRenderScale = 1.0f;
 };
