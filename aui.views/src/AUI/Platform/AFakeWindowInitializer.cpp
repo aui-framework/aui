@@ -15,11 +15,12 @@
 #include <AUI/Render/ADisplayList.h>
 #include <AUI/Render/ADisplayListCanvas.hpp>
 #include <AUI/Render/FontAtlas.hpp>
+#include <AUI/Platform/AFontManager.h>
 
 namespace {
     class FakeBackend: public IRendererBackend {
     public:
-        FakeBackend() = default;
+        FakeBackend() : mFontCache(AFontManager::inst().createCache(this)) {}
 
         void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
         void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
@@ -39,8 +40,8 @@ namespace {
         void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override {}
 
         _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override {
-            auto entryData = aui::getFontEntryData(*this, getFontEntryDataCache(), style);
-            return _new<aui::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style);
+            auto entryData = aui::getFontEntryData(style, mFontCache);
+            return _new<aui::MultiStringCanvas>(*this, entryData, mFontCache->getCharacterDataCache(), style);
         }
         _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override {
             auto c = newMultiStringCanvas(fs);
@@ -49,8 +50,6 @@ namespace {
         }
 
         _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format) override { return nullptr; }
-        float getRenderScale() const noexcept override { return 1.0f; }
-        void setRenderScale(float renderScale) override {}
         void setAllowRenderToTexture(bool allow) override {}
         bool allowRenderToTexture() const noexcept override { return true; }
         _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override { return nullptr; }
@@ -58,12 +57,10 @@ namespace {
         ASurface* getWindow() const noexcept override { return nullptr; }
         glm::mat4 getProjectionMatrix() const override { return glm::mat4(1.0f); }
 
-        ADeque<aui::FontAtlas>& getFontEntryDataCache() override { return mFontEntryData; }
-        ADeque<aui::CharacterData>& getCharacterDataCache() override { return mCharData; }
+        const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 
     private:
-        ADeque<aui::FontAtlas> mFontEntryData;
-        ADeque<aui::CharacterData> mCharData;
+        _<aui::AFontCache> mFontCache;
     };
 }
 

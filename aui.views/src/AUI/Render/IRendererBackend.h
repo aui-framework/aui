@@ -62,5 +62,4 @@ public:
     virtual void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) = 0;
 
     virtual const _<aui::AFontCache>& getFontCache() = 0;
-    virtual ADeque<aui::CharacterData>& getCharacterDataCache() = 0;
 };

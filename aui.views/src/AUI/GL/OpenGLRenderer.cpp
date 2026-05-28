@@ -796,7 +796,7 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
 
 _<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle& style) {
     auto entryData = aui::getFontEntryData(style, mFontCache);
-    return _new<aui::MultiStringCanvas>(*this, entryData, getCharacterDataCache(), style);
+    return _new<aui::MultiStringCanvas>(*this, entryData, mFontCache->getCharacterDataCache(), style);
 }
 
 _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {

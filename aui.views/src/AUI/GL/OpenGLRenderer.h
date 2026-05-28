@@ -109,7 +109,6 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
     TransientBuffer mIndexBuffer;
 
     _<aui::AFontCache> mFontCache;
-    ADeque<aui::CharacterData> mCharData;
     OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
 
     glm::uvec2 mViewportSize = { 1, 1 };
@@ -157,7 +156,6 @@ public:
     glm::mat4 getProjectionMatrix() const override;
 
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
-    ADeque<aui::CharacterData>& getCharacterDataCache() override { return mCharData; }
 
     bool isVaoAvailable() const noexcept;
     void setBlending(const APaint& paint);

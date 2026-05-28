@@ -17,6 +17,7 @@
 #include <AUI/Font/AFont.h>
 #include <AUI/Render/IRendererInterfaces.h>
 #include <AUI/Common/AOptional.h>
+#include <AUI/Common/ADeque.h>
 
 class IRendererBackend;
 class ITexture;
@@ -43,6 +44,7 @@ private:
     IRendererBackend& mRenderer;
     AOptional<FontAtlas> mGrayscaleAtlas;
     AOptional<FontAtlas> mSubpixelAtlas;
+    ADeque<CharacterData> mCharData;
 
 public:
     AFontCache(IRendererBackend& renderer);
@@ -50,6 +52,7 @@ public:
 
     FontAtlas& getGrayscaleFontAtlas();
     FontAtlas& getSubpixelFontAtlas();
+    ADeque<CharacterData>& getCharacterDataCache() { return mCharData; }
 };
 
 class API_AUI_VIEWS PrerenderedString : public IRenderer::IPrerenderedString {

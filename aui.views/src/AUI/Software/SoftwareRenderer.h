@@ -60,7 +60,6 @@ public:
     glm::mat4 getProjectionMatrix() const override;
 
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
-    ADeque<aui::CharacterData>& getCharacterDataCache() override { return mCharData; }
 
     protected:
     void putPixel(glm::ivec2 pos, AColor color, const APaint& paint);
@@ -69,5 +68,4 @@ public:
     ASurface* mWindow = nullptr;
     bool mAllowRenderToTexture = true;
     _<aui::AFontCache> mFontCache;
-    ADeque<aui::CharacterData> mCharData;
     };
