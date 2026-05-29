@@ -6,6 +6,10 @@ uniform vec2 upper;
 uniform float sigma;
 uniform vec2 outerSize;
 
+uniform sampler2D u_mask;
+uniform bool u_useMask;
+uniform vec2 u_windowSize;
+
 vec4 erf(vec4 x) {
     vec4 s = sign(x);
     vec4 a = abs(x);
@@ -16,11 +20,21 @@ vec4 erf(vec4 x) {
 
 float rounded(vec2 absolute, vec2 size) {
     vec2 circleCenter = 1.0 - size;
-    vec2 rectangleShape = step(absolute, circleCenter);
-    vec2 circle = (absolute - circleCenter) / (size);
-    float circles = step(circle.x * circle.x + circle.y * circle.y, 1.0);
-    vec2 rectCut = step(vec2(0.0), vec2(1.0) - absolute);
-    return clamp(rectangleShape.x + rectangleShape.y + circles, 0.0, 1.0) * rectCut.x * rectCut.y;
+    
+#if defined(GL_ES) && !defined(GL_OES_standard_derivatives)
+    vec2 fw = vec2(0.01);
+#else
+    vec2 fw = fwidth(absolute);
+#endif
+
+    vec2 safeFw = max(fw, 1e-7);
+    vec2 d_corner = (absolute - circleCenter) / safeFw;
+    float radius_pixels = (size.x / safeFw.x + size.y / safeFw.y) * 0.5;
+    
+    vec2 max_d = max(d_corner, 0.0);
+    float dist_pixels = length(max_d) + min(max(d_corner.x, d_corner.y), 0.0) - radius_pixels;
+    
+    return smoothstep(0.5, -0.5, dist_pixels);
 }
 
 void main() {
@@ -29,4 +43,7 @@ void main() {
     vec4 integral = 0.5 + 0.5 * erf(query * (sqrt(0.5) / sigma));
     float factor = (1.0 - clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0)) * rounded(abs(vUv * 2.0 - 1.0), outerSize);
     gl_FragColor = vColor * factor;
+    if (u_useMask) {
+        gl_FragColor *= texture2D(u_mask, gl_FragCoord.xy / u_windowSize).r;
+    }
 }

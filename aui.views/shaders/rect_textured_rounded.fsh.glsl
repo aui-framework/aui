@@ -3,18 +3,35 @@ in vec4 vColor;
 in vec2 vOuterSize;
 uniform sampler2D albedo;
 
+uniform sampler2D u_mask;
+uniform bool u_useMask;
+uniform vec2 u_windowSize;
+
 float rounded(vec2 absolute, vec2 size) {
     vec2 circleCenter = 1.0 - size;
-    vec2 rectangleShape = step(absolute, circleCenter);
-    vec2 circle = (absolute - circleCenter) / (size);
-    float circles = step(circle.x * circle.x + circle.y * circle.y, 1.0);
-    vec2 rectCut = step(vec2(0.0), vec2(1.0) - absolute);
-    return clamp(rectangleShape.x + rectangleShape.y + circles, 0.0, 1.0) * rectCut.x * rectCut.y;
+    
+#if defined(GL_ES) && !defined(GL_OES_standard_derivatives)
+    vec2 fw = vec2(0.01);
+#else
+    vec2 fw = fwidth(absolute);
+#endif
+
+    vec2 safeFw = max(fw, 1e-7);
+    vec2 d_corner = (absolute - circleCenter) / safeFw;
+    float radius_pixels = (size.x / safeFw.x + size.y / safeFw.y) * 0.5;
+    
+    vec2 max_d = max(d_corner, 0.0);
+    float dist_pixels = length(max_d) + min(max(d_corner.x, d_corner.y), 0.0) - radius_pixels;
+    
+    return smoothstep(0.5, -0.5, dist_pixels);
 }
 
 void main() {
     vec4 tex = texture2D(albedo, vUv);
     tex.rgb *= tex.a;
     gl_FragColor = tex * vColor * rounded(abs(vUv * 2.0 - 1.0), vOuterSize);
+    if (u_useMask) {
+        gl_FragColor *= texture2D(u_mask, gl_FragCoord.xy / u_windowSize).r;
+    }
     if (gl_FragColor.a < 0.001) discard;
 }
