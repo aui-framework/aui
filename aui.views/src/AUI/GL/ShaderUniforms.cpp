@@ -25,6 +25,9 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform PIXEL_TO_UV("pixel_to_uv");
     gl::Program::Uniform OUTER_SIZE("outerSize");
     gl::Program::Uniform INNER_SIZE("innerSize");
+    gl::Program::Uniform WINDOW_SIZE("u_windowSize");
+    gl::Program::Uniform MASK("u_mask");
+    gl::Program::Uniform USE_MASK("u_useMask");
     gl::Program::Uniform OUTER_TO_INNER("outerToInner");
     gl::Program::Uniform RADIUS("uRadius");
     gl::Program::Uniform RECT_POS("uRectPos");

@@ -144,10 +144,12 @@ OpenGLRenderer::OpenGLRenderer() :
             } else {
                 if (stage == GL_FRAGMENT_SHADER) {
                     prefix += "out vec4 fragColor;\n";
+                    prefix += "#define gl_FragColor fragColor\n";
                 }
             }
             prefix += R"(
 #ifdef GL_ES
+#extension GL_OES_standard_derivatives : enable
 precision mediump float;
 #define mediump
 #define highp
@@ -182,16 +184,22 @@ precision highp int;
     useShader(mRoundedGradientShader, "basic_uv.vsh", "rect_gradient_rounded.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}, {3, "outerSize"}, {6, "color1"}, {7, "color2"}});
     useShader(mTexturedShader, "basic_uv.vsh", "rect_textured.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
     useShader(mRoundedTexturedShader, "basic_uv.vsh", "rect_textured_rounded.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}, {3, "outerSize"}});
-    useShader(mUnblendShader, "basic_uv.vsh", "rect_unblend.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
     useShader(mSquareSectorShader, "basic_uv.vsh", "square_sector.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
     useShader(mSymbolShader, "symbol.vsh", "symbol.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
     useShader(mSymbolShaderSubPixel, "symbol.vsh", "symbol_sub.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
     useShader(mLineSolidDashedShader, "basic_uv.vsh", "line_solid_dashed.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
+    useShader(mUnblendShader, "basic_uv.vsh", "rect_unblend.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
 
     mBatchVao.bind();
     mVertexBuffer.bind();
     mIndexBuffer.bind();
+
+    AImage whiteImg(glm::uvec2(1, 1), APixelFormat::RGBA_BYTE);
+    whiteImg.set({0, 0}, AColor::WHITE);
+    mWhiteTexture.tex2D(whiteImg);
+    mWhiteTexture.setupNearest();
 }
+
 
 void OpenGLTexture2D::upload(AImageView image) {
     mTexture.tex2D(image);
@@ -238,37 +246,6 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
 
 void OpenGLRenderer::endPaint() {}
 
-void OpenGLRenderer::pushMaskBefore() {
-    if (mStencilDepth == 0) {
-        glEnable(GL_STENCIL_TEST);
-        glClearStencil(0);
-        glClear(GL_STENCIL_BUFFER_BIT);
-    }
-    glStencilFunc(GL_ALWAYS, 0, 0xff);
-    glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
-    glStencilMask(0xff);
-    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-}
-
-void OpenGLRenderer::pushMaskAfter() {
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glStencilMask(0x00);
-    glStencilFunc(GL_EQUAL, ++mStencilDepth, 0xff);
-}
-
-void OpenGLRenderer::popMaskBefore() {
-    glStencilFunc(GL_ALWAYS, 0, 0xff);
-    glStencilOp(GL_KEEP, GL_DECR, GL_DECR);
-    glStencilMask(0xff);
-    glColorMask(GL_FALSE, GL_FALSE, GL_FALSE, GL_FALSE);
-}
-
-void OpenGLRenderer::popMaskAfter() {
-    glColorMask(GL_TRUE, GL_TRUE, GL_TRUE, GL_TRUE);
-    glStencilMask(0x00);
-    glStencilFunc(GL_EQUAL, --mStencilDepth, 0xff);
-}
-
 void OpenGLRenderer::setWindow(ASurface* window) {
     mWindow = window;
     if (mWindow) {
@@ -298,12 +275,25 @@ bool OpenGLRenderer::loadGL(GLLoadProc load_proc) { return loadGL(load_proc, fal
 uint32_t OpenGLRenderer::getDefaultFb() const noexcept { return 0; }
 void OpenGLRenderer::FramebufferBackToPool::operator()(FramebufferWithTextureRT* framebuffer) const {}
 
+void OpenGLRenderer::setupMask(gl::Program& shader, const APaint& paint) {
+    shader.set(aui::ShaderUniforms::WINDOW_SIZE, glm::vec2(mViewportSize));
+    shader.set(aui::ShaderUniforms::MASK, 1);
+    if (paint.mask) {
+        shader.set(aui::ShaderUniforms::USE_MASK, true);
+        static_cast<OpenGLTexture2D*>(paint.mask.get())->bind(1);
+    } else {
+        shader.set(aui::ShaderUniforms::USE_MASK, false);
+        mWhiteTexture.bind(1);
+    }
+}
+
 void OpenGLRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("solidRectangles");
     setBlending(paint);
     mSolidShader->use();
     mSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    setupMask(*mSolidShader, paint);
 
     AVector<VertexBasic> vertices;
     AVector<GLuint> indices;
@@ -339,6 +329,7 @@ void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& 
     setBlending(paint);
     mGradientShader->use();
     mGradientShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    setupMask(*mGradientShader, paint);
 
     ALinearGradientBrush brush {
         v.colors,
@@ -389,6 +380,7 @@ void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& 
     setBlending(paint);
     mTexturedShader->use();
     mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    setupMask(*mTexturedShader, paint);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
     AVector<VertexBasicUv> vertices;
@@ -429,6 +421,7 @@ void OpenGLRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRect
     setBlending(paint);
     mRoundedSolidShader->use();
     mRoundedSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    setupMask(*mRoundedSolidShader, paint);
 
     AVector<VertexRounded> vertices;
     AVector<GLuint> indices;
@@ -479,6 +472,7 @@ void OpenGLRenderer::gradientRoundedRectangles(const ADisplayList::GradientRound
     setBlending(paint);
     mRoundedGradientShader->use();
     mRoundedGradientShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    setupMask(*mRoundedGradientShader, paint);
 
     ALinearGradientBrush brush {
         v.colors,
@@ -543,6 +537,7 @@ void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRound
     setBlending(paint);
     mRoundedTexturedShader->use();
     mRoundedTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    setupMask(*mRoundedTexturedShader, paint);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
     AVector<VertexRounded> vertices;
@@ -593,6 +588,7 @@ void OpenGLRenderer::rectangleBorders(const ADisplayList::RectangleBorders& v, c
     setBlending(paint);
     mSolidShader->use();
     mSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    setupMask(*mSolidShader, paint);
 
     AVector<VertexBasic> vertices;
     AVector<GLuint> indices;
@@ -635,6 +631,7 @@ void OpenGLRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangl
     setBlending(paint);
     mRoundedSolidShaderBorder->use();
     mRoundedSolidShaderBorder->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    setupMask(*mRoundedSolidShaderBorder, paint);
 
     AVector<VertexRoundedBorder> vertices;
     AVector<GLuint> indices;
@@ -701,6 +698,7 @@ void OpenGLRenderer::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4
     setBlending(paint);
     mBoxShadowShader->use();
     mBoxShadowShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    setupMask(*mBoxShadowShader, paint);
 
     float sigma = v.blurRadius / 2.f;
     float padding = v.blurRadius * 2.f;
@@ -735,6 +733,7 @@ void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const
     setBlending(paint);
     mBoxShadowInnerShader->use();
     mBoxShadowInnerShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    setupMask(*mBoxShadowInnerShader, paint);
 
     float sigma = v.blurRadius / 2.f;
     auto rectVertices = getVerticesForRect(v.position, v.size);
@@ -777,9 +776,11 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
     if (v.isSubpixel) {
         mSymbolShaderSubPixel->use();
         mSymbolShaderSubPixel->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+        setupMask(*mSymbolShaderSubPixel, paint);
     } else {
         mSymbolShader->use();
         mSymbolShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+        setupMask(*mSymbolShader, paint);
     }
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
@@ -868,16 +869,18 @@ _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 posit
     return c->finalize();
 }
 
-bool OpenGLRenderer::setupLineShader(const glm::mat4& transform, const ABorderStyle& style, float widthPx) {
+bool OpenGLRenderer::setupLineShader(const glm::mat4& transform, const ABorderStyle& style, float widthPx, const APaint& paint) {
     return std::visit(aui::lambda_overloaded{
         [&](const ABorderStyle::Solid&) {
             mSolidShader->use();
             mSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+            setupMask(*mSolidShader, paint);
             return false;
         },
         [&](const ABorderStyle::Dashed& dashed) {
             mLineSolidDashedShader->use();
             mLineSolidDashedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+            setupMask(*mLineSolidDashedShader, paint);
             float dashWidth = dashed.dashWidth.valueOr(1.f) * widthPx;
             float sumOfLengths = dashWidth + dashed.spaceBetweenDashes.valueOr(2.f) * widthPx;
             mLineSolidDashedShader->set(aui::ShaderUniforms::DIVIDER, sumOfLengths);
@@ -893,7 +896,7 @@ void OpenGLRenderer::lines(const ADisplayList::Lines& v, const glm::mat4& transf
     setBlending(paint);
     float widthPx = v.width.getValuePx();
     glLineWidth(widthPx);
-    bool computeDistances = setupLineShader(transform, v.style, widthPx);
+    bool computeDistances = setupLineShader(transform, v.style, widthPx, paint);
 
     AVector<VertexBasicUv> vertices;
     vertices.reserve(v.points.size());
@@ -927,6 +930,7 @@ void OpenGLRenderer::points(const ADisplayList::Points& v, const glm::mat4& tran
     setBlending(paint);
     mSolidShader->use();
     mSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    setupMask(*mSolidShader, paint);
     glPointSize(v.size.getValuePx());
 
     AVector<VertexBasic> vertices;
@@ -953,7 +957,7 @@ void OpenGLRenderer::lines(const ADisplayList::LineBatches& v, const glm::mat4& 
     setBlending(paint);
     float widthPx = v.width.getValuePx();
     glLineWidth(widthPx);
-    bool computeDistances = setupLineShader(transform, v.style, widthPx);
+    bool computeDistances = setupLineShader(transform, v.style, widthPx, paint);
 
     AVector<VertexBasicUv> vertices;
     vertices.reserve(v.points.size() * 2);
@@ -981,6 +985,7 @@ void OpenGLRenderer::squareSector(const ADisplayList::SquareSector& v, const glm
     setBlending(paint);
     mSquareSectorShader->use();
     mSquareSectorShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    setupMask(*mSquareSectorShader, paint);
 
     auto calculateLineMatrix = [](AAngleRadians angle) {
         auto s = glm::sin(angle.radians());
@@ -1037,7 +1042,7 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<c
         std::array<glm::ivec2, 4> transformedVertices{};
         for (size_t i = 0; i < 4; ++i) {
             auto ndc = glm::vec2(mProjectionMatrix * glm::vec4(vertices[i], 0, 1));
-            transformedVertices[i] = glm::ivec2((ndc + 1.f) / 2.f * glm::vec2(source->supersampledSize()));
+            transformedVertices[i] = glm::ivec2((ndc + 1.f) / 2.f * glm::vec2(source->size()));
         }
 
         auto p1 = transformedVertices[0];

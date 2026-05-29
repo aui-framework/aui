@@ -65,10 +65,9 @@ void gl::Framebuffer::resize(glm::u32vec2 newSize) {
     AUI_ASSERT(newSize.y != 0);
     mSize = newSize;
     bind();
-    auto o = supersampledSize();
     for (auto& t : mAttachedTargets)
     {
-        t->onFramebufferResize(o);
+        t->onFramebufferResize(mSize);
     }
 }
 
@@ -77,7 +76,7 @@ gl::Framebuffer* gl::Framebuffer::current() {
 }
 
 void gl::Framebuffer::bindViewport() {
-    glViewport(0, 0, supersampledSize().x, supersampledSize().y);
+    glViewport(0, 0, mSize.x, mSize.y);
 }
 
 void gl::Framebuffer::label(const AString& name) {

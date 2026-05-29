@@ -31,7 +31,7 @@ namespace gl {
     protected:
         void attach(Framebuffer& to, GLenum attachmentType) override {
             glGetError();
-            onFramebufferResize(to.supersampledSize());
+            onFramebufferResize(to.size());
             if (glGetError() != GL_NO_ERROR) {
                 throw AException("unable to initialize renderbuffer storage");
             }

@@ -25,6 +25,9 @@ namespace aui::ShaderUniforms {
     extern gl::Program::Uniform PIXEL_TO_UV;
     extern gl::Program::Uniform OUTER_SIZE;
     extern gl::Program::Uniform INNER_SIZE;
+    extern gl::Program::Uniform WINDOW_SIZE;
+    extern gl::Program::Uniform MASK;
+    extern gl::Program::Uniform USE_MASK;
     extern gl::Program::Uniform OUTER_TEXEL_SIZE;
     extern gl::Program::Uniform OUTER_TO_INNER;
     extern gl::Program::Uniform RADIUS;

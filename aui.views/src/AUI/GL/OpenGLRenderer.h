@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <AUI/GL/gl.h>
 #include <AUI/GL/Program.h>
 #include <AUI/GL/Framebuffer.h>
 #include <AUI/GL/Vao.h>
@@ -45,7 +46,7 @@ protected:
     void onFramebufferResize(glm::u32vec2 size) override { mTexture.framebufferTex2D(size, gl::Type::UNSIGNED_BYTE); }
     void attach(gl::Framebuffer& to, GLenum attachmentType) override {
         to.bind();
-        onFramebufferResize(to.supersampledSize());
+        onFramebufferResize(to.size());
         glFramebufferTexture2D(GL_FRAMEBUFFER, attachmentType, GL_TEXTURE_2D, mTexture.getHandle(), 0);
     }
 };
@@ -86,7 +87,6 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
 
     using FramebufferFromPool = _unique<FramebufferWithTextureRT, FramebufferBackToPool>;
 
-    bool setupLineShader(const glm::mat4& transform, const ABorderStyle& style, float widthPx);
     std::uint8_t mStencilDepth = 0;
 
     ASurface* mWindow = nullptr;
@@ -109,28 +109,50 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
 
     gl::Vao mBatchVao;
     gl::Texture2D mGradientTexture;
+    gl::Texture2D mWhiteTexture;
 
     TransientBuffer mVertexBuffer;
     TransientBuffer mIndexBuffer;
 
     _<aui::AFontCache> mFontCache;
+
+    struct MultiPassEffectData {
+        OffscreenFramebufferPool* pool;
+    };
+
     OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
 
-    glm::uvec2 mViewportSize = { 1, 1 };
-    glm::mat4 mProjectionMatrix = glm::mat4(1.0f);
+    FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 size);
 
-    IRenderViewToTexture* mRenderToTextureTarget = nullptr;
-
-public:
-    typedef void* (*GLLoadProc)(const char* name);
-    static bool loadGL(GLLoadProc load_proc, bool es);
-    static bool loadGL(GLLoadProc load_proc);
+    glm::uvec2 mViewportSize { 1, 1 };
+    glm::mat4 mProjectionMatrix { 1.f };
 
     static bool mIsES;
     static int mGLSLVersion;
 
+    void setBlending(const APaint& paint);
+
+    void setupMask(gl::Program& shader, const APaint& paint);
+    bool setupLineShader(const glm::mat4& transform, const ABorderStyle& style, float widthPx, const APaint& paint);
+
+public:
     OpenGLRenderer();
-    ~OpenGLRenderer() override = default;
+
+    typedef void* (*GLLoadProc)(const char* name);
+    static bool loadGL(GLLoadProc load_proc, bool es = false);
+    static bool loadGL(GLLoadProc load_proc);
+
+    void setWindow(ASurface* window) override;
+
+    [[nodiscard]]
+    ASurface* getWindow() const noexcept override { return mWindow; }
+
+    [[nodiscard]]
+    bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
+
+    void setAllowRenderToTexture(bool allowRenderToTexture) override { mAllowRenderToTexture = allowRenderToTexture; }
+
+    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE, TextureFilter filter = TextureFilter::LINEAR) override;
 
     void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) override;
     void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) override;
@@ -143,37 +165,26 @@ public:
     void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) override;
     void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) override;
     void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) override;
-    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
-    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
-
     void lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) override;
     void points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) override;
     void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) override;
     void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, const APaint& paint) override;
-    void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
-    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE, TextureFilter filter = TextureFilter::LINEAR) override;
-    void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
-    bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
-    void setWindow(ASurface* window) override;
-    ASurface* getWindow() const noexcept override { return mWindow; }
+    void beginPaint(glm::uvec2 windowSize);
+    void endPaint();
+
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
+
     glm::mat4 getProjectionMatrix() const override;
 
-    void pushMaskBefore() override;
-    void pushMaskAfter() override;
-    void popMaskBefore() override;
-    void popMaskAfter() override;
+    void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 
-    bool isVaoAvailable() const noexcept;
-    void setBlending(const APaint& paint);
-    void beginPaint(glm::uvec2 windowSize);
-    void endPaint();
-    uint32_t getDefaultFb() const noexcept;
-    void bindTemporaryVao() const noexcept { mBatchVao.bind(); }
+    _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept;
 
-    FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 minRequiredSize);
+    uint32_t getDefaultFb() const noexcept;
 };
 
 class OpenGLRenderViewToTexture: public IRenderViewToTexture {
@@ -181,15 +192,10 @@ public:
     OpenGLRenderViewToTexture(OpenGLRenderer& renderer): mRenderer(renderer) {}
 
     bool begin(IRenderer& renderer, glm::ivec2 surfaceSize, InvalidArea& invalidArea) override {
-        uint32_t ratio = 1;
-        if (auto currentFb = gl::Framebuffer::current()) {
-            ratio = currentFb->supersamlingRatio();
-        }
-        if (!mTexture || mFramebuffer.size() != glm::u32vec2(surfaceSize) || mFramebuffer.supersamlingRatio() != ratio) {
-            mTexture = _cast<OpenGLTexture2D>(mRenderer.createTexture(surfaceSize * int(ratio), APixelFormat::RGBA_BYTE, TextureFilter::NEAREST));
+        if (!mTexture || mFramebuffer.size() != glm::u32vec2(surfaceSize)) {
+            mTexture = _cast<OpenGLTexture2D>(mRenderer.createTexture(surfaceSize, APixelFormat::RGBA_BYTE, TextureFilter::NEAREST));
             mTexture->texture().setupClampToEdge();
             mFramebuffer = gl::Framebuffer();
-            mFramebuffer.setSupersamplingRatio(ratio);
             mFramebuffer.resize(surfaceSize);
             mFramebuffer.attach(mTexture, GL_COLOR_ATTACHMENT0);
             auto stencil = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
@@ -197,16 +203,14 @@ public:
             invalidArea = InvalidArea::Full{};
         }
 
-        invalidArea = InvalidArea::Full{};
-
         mPrevFramebuffer = gl::Framebuffer::current();
         mPrevViewportSize = mRenderer.mViewportSize;
         mPrevProjectionMatrix = mRenderer.mProjectionMatrix;
         mPrevStencilDepth = mRenderer.mStencilDepth;
 
         mFramebuffer.bind();
-        glViewport(0, 0, surfaceSize.x * int(ratio), surfaceSize.y * int(ratio));
-        mRenderer.mViewportSize = glm::uvec2(surfaceSize * int(ratio));
+        glViewport(0, 0, surfaceSize.x, surfaceSize.y);
+        mRenderer.mViewportSize = glm::uvec2(surfaceSize);
         mRenderer.mProjectionMatrix = glm::ortho(0.f, (float)surfaceSize.x, (float)surfaceSize.y, 0.f, -1.f, 1.f);
 
         glDisable(GL_STENCIL_TEST);
@@ -224,37 +228,29 @@ public:
     }
 
     void end(IRenderer& renderer) override {
+        glm::uvec2 viewportSize = mPrevViewportSize;
         if (mPrevFramebuffer) {
             mPrevFramebuffer->bind();
+            viewportSize = mPrevFramebuffer->size();
         } else {
             gl::Framebuffer::unbind();
         }
-        mPrevFramebuffer = nullptr;
-
-        mRenderer.mProjectionMatrix = mPrevProjectionMatrix;
+        glViewport(0, 0, viewportSize.x, viewportSize.y);
         mRenderer.mViewportSize = mPrevViewportSize;
+        mRenderer.mProjectionMatrix = mPrevProjectionMatrix;
         mRenderer.mStencilDepth = mPrevStencilDepth;
-        glViewport(0, 0, mPrevViewportSize.x, mPrevViewportSize.y);
-
-        if (mPrevStencilDepth > 0) {
-            glEnable(GL_STENCIL_TEST);
-            glStencilFunc(GL_EQUAL, mPrevStencilDepth, 0xff);
-            glStencilOp(GL_KEEP, GL_KEEP, GL_KEEP);
-            glStencilMask(0x00);
-        } else {
-            glDisable(GL_STENCIL_TEST);
-        }
-
-        if (glBlendFuncSeparate) {
-            glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        }
     }
 
     void draw(ACanvas& canvas) override {
-        canvas.rectangle(APaint{ATexturedBrush{mTexture}}, {0, 0}, mFramebuffer.size());
+        canvas.rectangle(APaint{ATexturedBrush{mTexture}}, {0, 0}, mTexture->getSize());
     }
 
-private:
+    [[nodiscard]]
+    _<ITexture> getTexture() const override {
+        return mTexture;
+    }
+
+    private:
     OpenGLRenderer& mRenderer;
     gl::Framebuffer mFramebuffer;
     _<OpenGLTexture2D> mTexture;
