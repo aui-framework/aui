@@ -127,4 +127,6 @@ struct APaint {
     AColor color = AColor::WHITE;
     Blending blending = Blending::NORMAL;
     float opacity = 1.0f;
+
+    bool operator==(const APaint&) const = default;
 };
