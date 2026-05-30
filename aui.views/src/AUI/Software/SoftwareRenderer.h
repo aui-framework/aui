@@ -66,6 +66,9 @@ const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 
 void setMask(const _<ITexture>& mask, const glm::vec4& maskRect = glm::vec4(0.f)) override;
 
+AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
+                       const _<ITexture>& mask2, const glm::vec4& mask2Rect) override;
+
 protected:
 void putPixel(glm::ivec2 pos, AColor color, const APaint& paint);
 void drawLine(glm::ivec2 p0, glm::ivec2 p1, float width, AColor color, const APaint& paint);

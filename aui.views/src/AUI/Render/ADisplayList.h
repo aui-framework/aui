@@ -130,6 +130,11 @@ public:
 
     struct PushLayer {};
     struct PopLayer {};
+    struct PushMask {
+        _<ITexture> mask;
+        glm::vec4 maskRect;
+    };
+    struct PopMask {};
 
     struct StoredCommand {
         using Command = std::variant<SolidRectangles,
@@ -149,27 +154,24 @@ public:
                                      SquareSector,
                                      Backdrop,
                                      PushLayer,
-                                     PopLayer>;
+                                     PopLayer,
+                                     PushMask,
+                                     PopMask>;
 
         Command command;
         glm::mat4 transform;
         APaint paint;
-        _<ITexture> mask;
-        glm::vec4 maskRect;
     };
 
-    struct Entity {
-        StoredCommand::Command command;
-        glm::mat4 transform;
-        APaint paint;
-        _<ITexture> mask;
-        glm::vec4 maskRect;
-        ARect<int> clipRect;
-        ARect<float> boundingBox;
-        bool isObscured = false;
-    };
+struct Entity {
+StoredCommand::Command command;
+glm::mat4 transform;
+APaint paint;
+ARect<float> boundingBox;
+bool isObscured = false;
+};
 
-    void add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint, _<ITexture> mask = nullptr, const glm::vec4& maskRect = glm::vec4(0.f));
+void add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint);
 
     void clear() {
         mCommands.clear();

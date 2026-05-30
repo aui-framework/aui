@@ -20,6 +20,7 @@ namespace gl {
 class API_AUI_VIEWS Texture2D final: public Texture<TEXTURE_2D> {
 public:
     void tex2D(AImageView image);
+    void tex2D(glm::u32vec2 size, APixelFormat format);
     virtual ~Texture2D() = default;
     void framebufferTex2D(glm::u32vec2 size, gl::Type type);
 

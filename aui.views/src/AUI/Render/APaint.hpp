@@ -121,7 +121,6 @@ enum class Blending {
      */
     INVERSE_SRC,
 };
-
 struct APaint {
     ABrush brush = ASolidBrush{AColor::WHITE};
     AColor color = AColor::WHITE;

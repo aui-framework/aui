@@ -36,5 +36,6 @@ struct TextureFormat {
     bool operator==(const TextureFormat& rhs) const = default;
 };
 
+API_AUI_VIEWS TextureFormat recognize(APixelFormat format);
 API_AUI_VIEWS TextureFormat recognize(AImageView image);
 }

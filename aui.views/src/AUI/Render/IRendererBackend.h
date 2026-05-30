@@ -62,5 +62,12 @@ public:
 
     virtual void setMask(const _<ITexture>& mask, const glm::vec4& maskRect = glm::vec4(0.f)) = 0;
 
+    struct AMergedMask {
+        _<ITexture> texture;
+        glm::vec4 rect;
+    };
+    virtual AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
+                                   const _<ITexture>& mask2, const glm::vec4& mask2Rect) = 0;
+
     virtual const _<aui::AFontCache>& getFontCache() = 0;
 };

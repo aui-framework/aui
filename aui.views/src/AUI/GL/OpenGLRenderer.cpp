@@ -191,6 +191,65 @@ precision highp int;
     useShader(mLineSolidDashedShader, "basic_uv.vsh", "line_solid_dashed.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
     useShader(mUnblendShader, "basic_uv.vsh", "rect_unblend.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
 
+    auto getPrefix = [&](GLenum stage) -> std::string {
+        std::string prefix = "#version " + std::to_string(mGLSLVersion) + "\n";
+        if (mGLSLVersion < 130) {
+            if (stage == GL_VERTEX_SHADER) {
+                prefix += "#define in attribute\n#define out varying\n";
+            } else {
+                prefix += "#define in varying\n#define fragColor gl_FragColor\n";
+            }
+        } else {
+            if (stage == GL_FRAGMENT_SHADER) {
+                prefix += "out vec4 fragColor;\n";
+                prefix += "#define gl_FragColor fragColor\n";
+            }
+        }
+        return prefix;
+    };
+
+    mMergeMasksShader.emplace();
+    mMergeMasksShader->loadVertexShader(getPrefix(GL_VERTEX_SHADER) + R"(
+in vec2 pos;
+in vec2 uv;
+out vec2 vUv;
+uniform mat4 transform;
+void main() {
+    gl_Position = transform * vec4(pos, 0.0, 1.0);
+    vUv = uv;
+}
+)", { .custom = true });
+    mMergeMasksShader->loadFragmentShader(getPrefix(GL_FRAGMENT_SHADER) + R"(
+uniform sampler2D u_mask1;
+uniform sampler2D u_mask2;
+uniform vec4 u_mask1Rect;
+uniform vec4 u_mask2Rect;
+uniform vec4 u_destRect;
+in vec2 vUv;
+void main() {
+    vec2 windowFragCoord = gl_FragCoord.xy + u_destRect.xy;
+    vec2 mask1Uv = (windowFragCoord - u_mask1Rect.xy) / u_mask1Rect.zw;
+    float m1 = 0.0;
+    if (mask1Uv.x >= 0.0 && mask1Uv.x <= 1.0 && mask1Uv.y >= 0.0 && mask1Uv.y <= 1.0) {
+        m1 = texture2D(u_mask1, mask1Uv).r;
+    }
+    vec2 mask2Uv = (windowFragCoord - u_mask2Rect.xy) / u_mask2Rect.zw;
+    float m2 = 0.0;
+    if (mask2Uv.x >= 0.0 && mask2Uv.x <= 1.0 && mask2Uv.y >= 0.0 && mask2Uv.y <= 1.0) {
+        m2 = texture2D(u_mask2, mask2Uv).r;
+    }
+    gl_FragColor = vec4(m1 * m2, 0.0, 0.0, 1.0);
+}
+)", { .custom = true });
+    mMergeMasksShader->bindAttribute(0, "pos");
+    mMergeMasksShader->bindAttribute(1, "uv");
+    mMergeMasksShader->compile();
+
+    mEmptyMask = createTexture({1, 1}, APixelFormat::R_BYTE);
+    AImage emptyImg({1, 1}, APixelFormat::R_BYTE);
+    std::memset(emptyImg.modifiableBuffer().data(), 0, emptyImg.modifiableBuffer().getSize());
+    static_cast<OpenGLTexture2D*>(mEmptyMask.get())->upload(emptyImg);
+
     mBatchVao.bind();
     mVertexBuffer.bind();
     mIndexBuffer.bind();
@@ -207,13 +266,12 @@ void OpenGLTexture2D::upload(AImageView image) {
 }
 
 _<ITexture> OpenGLRenderer::createTexture(glm::u32vec2 size, APixelFormat format, TextureFilter filter) {
-    auto t = _new<OpenGLTexture2D>();
+    auto t = _new<OpenGLTexture2D>(size, format);
     if (filter == TextureFilter::NEAREST) {
         t->texture().setupNearest();
     } else {
         t->texture().setupLinear();
     }
-    t->texture().tex2D(AImage(size, format));
     return t;
 }
 
@@ -242,7 +300,6 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glDisable(GL_STENCIL_TEST);
-    mStencilDepth = 0;
 }
 
 void OpenGLRenderer::endPaint() {}
@@ -298,6 +355,123 @@ void OpenGLRenderer::setupMask(gl::Program& shader) {
 void OpenGLRenderer::setMask(const _<ITexture>& mask, const glm::vec4& maskRect) {
     mMask = mask;
     mMaskRect = maskRect;
+}
+
+IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
+                                                         const _<ITexture>& mask2, const glm::vec4& mask2Rect) {
+    float x = std::max(mask1Rect.x, mask2Rect.x);
+    float y = std::max(mask1Rect.y, mask2Rect.y);
+    float w = std::min(mask1Rect.x + mask1Rect.z, mask2Rect.x + mask2Rect.z) - x;
+    float h = std::min(mask1Rect.y + mask1Rect.w, mask2Rect.y + mask2Rect.w) - y;
+
+    if (w <= 0.f || h <= 0.f) {
+        return { mEmptyMask, glm::vec4(0.f) };
+    }
+
+    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(w)), std::max(1u, (unsigned)std::ceil(h)));
+    auto destTexture = createTexture(size, APixelFormat::R_BYTE, TextureFilter::NEAREST);
+    static_cast<OpenGLTexture2D*>(destTexture.get())->texture().setupClampToEdge();
+
+    gl::Framebuffer framebuffer;
+    framebuffer.resize(size);
+    framebuffer.attach(_cast<OpenGLTexture2D>(destTexture), GL_COLOR_ATTACHMENT0);
+
+    gl::Framebuffer* prevFramebuffer = gl::Framebuffer::current();
+    glm::uvec2 prevViewportSize = mViewportSize;
+    glm::mat4 prevProjectionMatrix = mProjectionMatrix;
+    bool prevIsRenderingToMask = mIsRenderingToMask;
+
+    GLboolean prevBlend = glIsEnabled(GL_BLEND);
+
+    framebuffer.bind();
+    glViewport(0, 0, size.x, size.y);
+    mViewportSize = size;
+    mProjectionMatrix = glm::mat4(1.0f);
+    mIsRenderingToMask = true;
+
+    glDisable(GL_BLEND);
+
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    mMergeMasksShader->use();
+
+    glm::vec4 glMask1Rect;
+    glMask1Rect.x = mask1Rect.x;
+    glMask1Rect.y = (float)prevViewportSize.y - mask1Rect.y - mask1Rect.w;
+    glMask1Rect.z = mask1Rect.z;
+    glMask1Rect.w = mask1Rect.w;
+
+    glm::vec4 glMask2Rect;
+    glMask2Rect.x = mask2Rect.x;
+    glMask2Rect.y = (float)prevViewportSize.y - mask2Rect.y - mask2Rect.w;
+    glMask2Rect.z = mask2Rect.z;
+    glMask2Rect.w = mask2Rect.w;
+
+    glm::vec4 glDestRect;
+    glDestRect.x = x;
+    glDestRect.y = (float)prevViewportSize.y - y - (float)size.y;
+    glDestRect.z = (float)size.x;
+    glDestRect.w = (float)size.y;
+
+    static gl::Program::Uniform u_mask1("u_mask1");
+    static gl::Program::Uniform u_mask2("u_mask2");
+    static gl::Program::Uniform u_mask1Rect("u_mask1Rect");
+    static gl::Program::Uniform u_mask2Rect("u_mask2Rect");
+    static gl::Program::Uniform u_destRect("u_destRect");
+    static gl::Program::Uniform u_transform("transform");
+
+    mMergeMasksShader->set(u_mask1, 0);
+    mMergeMasksShader->set(u_mask2, 1);
+    mMergeMasksShader->set(u_mask1Rect, glMask1Rect);
+    mMergeMasksShader->set(u_mask2Rect, glMask2Rect);
+    mMergeMasksShader->set(u_destRect, glDestRect);
+    mMergeMasksShader->set(u_transform, glm::mat4(1.0f));
+
+    glActiveTexture(GL_TEXTURE0);
+    static_cast<OpenGLTexture2D*>(mask1.get())->bind();
+    glActiveTexture(GL_TEXTURE1);
+    static_cast<OpenGLTexture2D*>(mask2.get())->bind();
+
+    AVector<VertexBasicUv> vertices;
+    vertices << VertexBasicUv{{-1.f, -1.f}, {0.f, 0.f}, glm::vec4(1.f)};
+    vertices << VertexBasicUv{{ 1.f, -1.f}, {1.f, 0.f}, glm::vec4(1.f)};
+    vertices << VertexBasicUv{{-1.f,  1.f}, {0.f, 1.f}, glm::vec4(1.f)};
+    vertices << VertexBasicUv{{ 1.f,  1.f}, {1.f, 1.f}, glm::vec4(1.f)};
+
+    AVector<GLuint> indices;
+    indices << 0 << 1 << 2 << 2 << 1 << 3;
+
+    size_t vOffset = mVertexBuffer.upload(vertices.data(), vertices.sizeInBytes());
+    size_t iOffset = mIndexBuffer.upload(indices.data(), indices.sizeInBytes());
+
+    mBatchVao.bind();
+    glEnableVertexAttribArray(0);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
+
+    glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
+
+    glActiveTexture(GL_TEXTURE1);
+    glBindTexture(GL_TEXTURE_2D, 0);
+    glActiveTexture(GL_TEXTURE0);
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    if (prevFramebuffer) {
+        prevFramebuffer->bind();
+    } else {
+        gl::Framebuffer::unbind();
+    }
+
+    glViewport(0, 0, prevViewportSize.x, prevViewportSize.y);
+    mViewportSize = prevViewportSize;
+    mProjectionMatrix = prevProjectionMatrix;
+    mIsRenderingToMask = prevIsRenderingToMask;
+
+    if (prevBlend) glEnable(GL_BLEND); else glDisable(GL_BLEND);
+
+    return { destTexture, glm::vec4(x, y, (float)size.x, (float)size.y) };
 }
 
 void OpenGLRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) {
@@ -1068,11 +1242,9 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<c
     };
 
     {
-        glDisable(GL_STENCIL_TEST);
         AUI_DEFER {
             source->bind();
             source->bindViewport();
-            glEnable(GL_STENCIL_TEST);
         };
 
         for (const auto& backdrop : backdrops) {

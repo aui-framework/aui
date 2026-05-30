@@ -33,6 +33,10 @@ class API_AUI_VIEWS OpenGLTexture2D : public ITexture, public gl::Framebuffer::I
 private:
     gl::Texture2D mTexture;
 public:
+    OpenGLTexture2D() = default;
+    OpenGLTexture2D(glm::u32vec2 size, APixelFormat format) {
+        mTexture.tex2D(size, format);
+    }
     void upload(AImageView image) override;
 
     glm::u32vec2 getSize() const override {
@@ -87,8 +91,6 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
 
     using FramebufferFromPool = _unique<FramebufferWithTextureRT, FramebufferBackToPool>;
 
-    std::uint8_t mStencilDepth = 0;
-
     ASurface* mWindow = nullptr;
     bool mAllowRenderToTexture = true;
     bool mIsRenderingToMask = false;
@@ -109,6 +111,8 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
     AOptional<gl::Program> mSymbolShader;
     AOptional<gl::Program> mSymbolShaderSubPixel;
     AOptional<gl::Program> mLineSolidDashedShader;
+    AOptional<gl::Program> mMergeMasksShader;
+    _<ITexture> mEmptyMask;
 
     gl::Vao mBatchVao;
     gl::Texture2D mGradientTexture;
@@ -198,6 +202,9 @@ public:
 
     void setMask(const _<ITexture>& mask, const glm::vec4& maskRect = glm::vec4(0.f)) override;
 
+    AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
+                           const _<ITexture>& mask2, const glm::vec4& mask2Rect) override;
+
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 
     _unique<IRenderViewToTexture> newRenderViewToTexture(APixelFormat format = APixelFormat::RGBA_BYTE) noexcept;
@@ -216,23 +223,17 @@ public:
             mFramebuffer = gl::Framebuffer();
             mFramebuffer.resize(surfaceSize);
             mFramebuffer.attach(mTexture, GL_COLOR_ATTACHMENT0);
-            auto stencil = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
-            mFramebuffer.attach(stencil, GL_DEPTH_STENCIL_ATTACHMENT);
             invalidArea = InvalidArea::Full{};
         }
 
         mPrevFramebuffer = gl::Framebuffer::current();
         mPrevViewportSize = mRenderer.mViewportSize;
         mPrevProjectionMatrix = mRenderer.mProjectionMatrix;
-        mPrevStencilDepth = mRenderer.mStencilDepth;
 
         mFramebuffer.bind();
         glViewport(0, 0, surfaceSize.x, surfaceSize.y);
         mRenderer.mViewportSize = glm::uvec2(surfaceSize);
         mRenderer.mProjectionMatrix = glm::ortho(0.f, (float)surfaceSize.x, (float)surfaceSize.y, 0.f, -1.f, 1.f);
-
-        glDisable(GL_STENCIL_TEST);
-        mRenderer.mStencilDepth = 0;
 
         mRenderer.mIsRenderingToMask = (mFormat == APixelFormat::R_BYTE);
 
@@ -242,7 +243,7 @@ public:
         }
 
         glClearColor(0.f, 0.f, 0.f, 0.f);
-        glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT);
+        glClear(GL_COLOR_BUFFER_BIT);
 
         return true;
     }
@@ -258,7 +259,6 @@ public:
         glViewport(0, 0, viewportSize.x, viewportSize.y);
         mRenderer.mViewportSize = mPrevViewportSize;
         mRenderer.mProjectionMatrix = mPrevProjectionMatrix;
-        mRenderer.mStencilDepth = mPrevStencilDepth;
         mRenderer.mIsRenderingToMask = false;
     }
 
@@ -282,6 +282,9 @@ public:
     gl::Framebuffer* mPrevFramebuffer = nullptr;
     glm::uvec2 mPrevViewportSize = {1, 1};
     glm::mat4 mPrevProjectionMatrix = glm::mat4(1.0f);
-    std::uint8_t mPrevStencilDepth = 0;
     APixelFormat mFormat;
 };
+
+inline _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture(APixelFormat format) noexcept {
+    return std::make_unique<OpenGLRenderViewToTexture>(*this, format);
+}

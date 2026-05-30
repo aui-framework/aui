@@ -12,10 +12,10 @@
 #include "TextureFormatRecognition.h"
 #include <AUI/Logging/ALogger.h>
 
-aui::gl::impl::TextureFormat aui::gl::impl::recognize(AImageView image) {
+aui::gl::impl::TextureFormat aui::gl::impl::recognize(APixelFormat format) {
     TextureFormat r{};
-    const auto comps = (image.format() & APixelFormat::COMPONENT_BITS);
-    const auto type = (image.format() & APixelFormat::TYPE_BITS);
+    const auto comps = (format & APixelFormat::COMPONENT_BITS);
+    const auto type = (format & APixelFormat::TYPE_BITS);
     switch (comps) {
         case APixelFormat::R:
             r.format = GL_RED;
@@ -98,5 +98,9 @@ aui::gl::impl::TextureFormat aui::gl::impl::recognize(AImageView image) {
             break;
     }
     return r;
+}
+
+aui::gl::impl::TextureFormat aui::gl::impl::recognize(AImageView image) {
+    return recognize(image.format());
 }
 

@@ -32,6 +32,14 @@ void ADisplayListCanvas::pushLayer() { add(ADisplayList::PushLayer{}, {}); }
 
 void ADisplayListCanvas::popLayer() { add(ADisplayList::PopLayer{}, {}); }
 
+void ADisplayListCanvas::pushMask(const _<ITexture>& mask, const glm::vec4& maskRect) {
+    add(ADisplayList::PushMask{mask, maskRect}, {});
+}
+
+void ADisplayListCanvas::popMask() {
+    add(ADisplayList::PopMask{}, {});
+}
+
 void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) {
     AColor combinedColor = paint.color * mColorMultiplier;
     combinedColor.a *= paint.opacity;
@@ -284,5 +292,5 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
         std::visit(applyST, command);
     }
     
-    mDisplayList.add(std::move(command), bt, combined, getMask(), getMaskRect());
+    mDisplayList.add(std::move(command), bt, combined);
 }

@@ -26,6 +26,8 @@ public:
 
     void pushLayer() override;
     void popLayer() override;
+    void pushMask(const _<ITexture>& mask, const glm::vec4& maskRect) override;
+    void popMask() override;
     void rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) override;
     void roundedRectangle(const APaint& paint, glm::vec2 position, glm::vec2 size, float radius) override;
     void rectangleBorder(const APaint& paint, glm::vec2 position, glm::vec2 size, float lineWidth = 1.f) override;

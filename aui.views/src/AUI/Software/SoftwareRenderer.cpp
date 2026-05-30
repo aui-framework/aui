@@ -574,3 +574,66 @@ _<ITexture> SoftwareRenderer::createTexture(glm::u32vec2 size, APixelFormat form
 
 void SoftwareRenderer::setMask(const _<ITexture>& mask, const glm::vec4& maskRect) {}
 
+IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
+                                                           const _<ITexture>& mask2, const glm::vec4& mask2Rect) {
+    float x = std::max(mask1Rect.x, mask2Rect.x);
+    float y = std::max(mask1Rect.y, mask2Rect.y);
+    float w = std::min(mask1Rect.x + mask1Rect.z, mask2Rect.x + mask2Rect.z) - x;
+    float h = std::min(mask1Rect.y + mask1Rect.w, mask2Rect.y + mask2Rect.w) - y;
+
+    if (w <= 0.f || h <= 0.f) {
+        auto emptyTexture = createTexture({1, 1}, APixelFormat::R_BYTE);
+        AImage img({1, 1}, APixelFormat::R_BYTE);
+        std::memset(img.modifiableBuffer().data(), 0, img.modifiableBuffer().getSize());
+        _cast<SoftwareTexture>(emptyTexture)->upload(std::move(img));
+        return { emptyTexture, glm::vec4(0.f) };
+    }
+
+    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(w)), std::max(1u, (unsigned)std::ceil(h)));
+    auto destTexture = createTexture(size, APixelFormat::R_BYTE);
+    AImage destImg(size, APixelFormat::R_BYTE);
+    std::memset(destImg.modifiableBuffer().data(), 0, destImg.modifiableBuffer().getSize());
+
+    auto s1 = _cast<SoftwareTexture>(mask1);
+    auto s2 = _cast<SoftwareTexture>(mask2);
+
+    for (unsigned dy = 0; dy < size.y; ++dy) {
+        for (unsigned dx = 0; dx < size.x; ++dx) {
+            float ax = x + dx + 0.5f;
+            float ay = y + dy + 0.5f;
+
+            float val1 = 0.f;
+            if (ax >= mask1Rect.x && ax <= mask1Rect.x + mask1Rect.z &&
+                ay >= mask1Rect.y && ay <= mask1Rect.y + mask1Rect.w) {
+                if (s1) {
+                    glm::uvec2 m1Size = s1->getImage().size();
+                    float tx = (ax - mask1Rect.x) / mask1Rect.z * m1Size.x;
+                    float ty = (ay - mask1Rect.y) / mask1Rect.w * m1Size.y;
+                    unsigned px = glm::clamp((unsigned)tx, 0u, m1Size.x - 1);
+                    unsigned py = glm::clamp((unsigned)ty, 0u, m1Size.y - 1);
+                    val1 = glm::vec4(s1->getImage().get({px, py})).r / 255.f;
+                }
+            }
+
+            float val2 = 0.f;
+            if (ax >= mask2Rect.x && ax <= mask2Rect.x + mask2Rect.z &&
+                ay >= mask2Rect.y && ay <= mask2Rect.y + mask2Rect.w) {
+                if (s2) {
+                    glm::uvec2 m2Size = s2->getImage().size();
+                    float tx = (ax - mask2Rect.x) / mask2Rect.z * m2Size.x;
+                    float ty = (ay - mask2Rect.y) / mask2Rect.w * m2Size.y;
+                    unsigned px = glm::clamp((unsigned)tx, 0u, m2Size.x - 1);
+                    unsigned py = glm::clamp((unsigned)ty, 0u, m2Size.y - 1);
+                    val2 = glm::vec4(s2->getImage().get({px, py})).r / 255.f;
+                }
+            }
+
+            float finalVal = val1 * val2;
+            destImg.set({dx, dy}, AColor(finalVal, 0.f, 0.f, 1.f));
+        }
+    }
+
+    _cast<SoftwareTexture>(destTexture)->upload(std::move(destImg));
+    return { destTexture, glm::vec4(x, y, (float)size.x, (float)size.y) };
+}
+

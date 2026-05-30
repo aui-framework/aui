@@ -33,6 +33,14 @@ void gl::Texture2D::framebufferTex2D(glm::u32vec2 size, gl::Type type) {
 }
 
 
+void gl::Texture2D::tex2D(glm::u32vec2 size, APixelFormat format) {
+    AUI_ASSERT_UI_THREAD_ONLY();
+    bind();
+    auto types = aui::gl::impl::recognize(format);
+    mSize = size;
+    glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, size.x, size.y, 0, types.format, types.type, nullptr);
+}
+
 void gl::Texture2D::tex2D(AImageView image) {
     AUI_ASSERT_UI_THREAD_ONLY();
     bind();

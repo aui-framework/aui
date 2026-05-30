@@ -31,7 +31,7 @@
 #include <AUI/Render/APaint.hpp>
 #include <AUI/Render/IRenderer.h>
 
-class IRendererBackend;
+#include <AUI/Render/IRendererBackend.h>
 
 class ACanvas {
 public:
@@ -40,7 +40,7 @@ public:
     virtual IRendererBackend& renderer() = 0;
 
     virtual void save() {
-        mStates.push_back(State{mTransform, mBaseTransform, mColorMultiplier, mMask, mMaskRect});
+        mStates.push_back(State{mTransform, mBaseTransform, mColorMultiplier});
     }
 
     virtual void restore() {
@@ -50,25 +50,11 @@ public:
             mTransform = s.transform;
             mBaseTransform = s.baseTransform;
             mColorMultiplier = s.colorMultiplier;
-            mMask = s.mask;
-            mMaskRect = s.maskRect;
         }
     }
 
-    virtual void setMask(_<ITexture> mask, const glm::vec4& maskRect = glm::vec4(0.f)) {
-        mMask = std::move(mask);
-        mMaskRect = maskRect;
-    }
-
-    [[nodiscard]]
-    const _<ITexture>& getMask() const noexcept {
-        return mMask;
-    }
-
-    [[nodiscard]]
-    const glm::vec4& getMaskRect() const noexcept {
-        return mMaskRect;
-    }
+    virtual void pushMask(const _<ITexture>& mask, const glm::vec4& maskRect) = 0;
+    virtual void popMask() = 0;
 
     virtual void pushLayer() = 0;
     virtual void popLayer() = 0;
@@ -201,14 +187,10 @@ protected:
         glm::mat4 transform;
         glm::mat4 baseTransform;
         AColor colorMultiplier;
-        _<ITexture> mask;
-        glm::vec4 maskRect;
     };
     std::vector<State> mStates;
     glm::mat4 mTransform = glm::mat4(1.0f);
     glm::mat4 mBaseTransform = glm::mat4(1.0f);
     AColor mColorMultiplier = AColor::WHITE;
-    _<ITexture> mMask;
-    glm::vec4 mMaskRect = glm::vec4(0.f);
     float mRenderScale = 1.0f;
 };
