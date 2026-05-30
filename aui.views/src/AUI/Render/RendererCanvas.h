@@ -89,17 +89,9 @@ public:
 
     void setTransformForced(const glm::mat4& transform) override;
 
-    void pushMaskBefore() override;
-
-    void pushMaskAfter() override;
-
-    void popMaskBefore() override;
-
-    void popMaskAfter() override;
-
     void setBlending(Blending blending) override;
 
-    _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override;
+    _unique<IRenderViewToTexture> newRenderViewToTexture(APixelFormat format = APixelFormat::RGBA_BYTE) noexcept override;
 
     void setWindow(ASurface* window) override;
 
@@ -109,11 +101,6 @@ public:
     glm::mat4 getProjectionMatrix() const override;
 
     glm::mat4 getTransform() override;
-
-    [[nodiscard]]
-    std::uint8_t getStencilDepth() const noexcept override;
-
-    void setStencilDepth(uint8_t stencilDepth) override;
 
     void translate(const glm::vec2& offset) override;
 

@@ -46,7 +46,7 @@ void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm:
             add(ADisplayList::GradientRectangles{{ {position, size, AColor::WHITE} }, std::move(colors), b.rotation}, paint);
         },
         [&](const ATexturedBrush& b) {
-            add(ADisplayList::TexturedRectangles{{ {position, size, combinedColor} }, b.texture}, paint);
+            add(ADisplayList::TexturedRectangles{{ {position, size, combinedColor} }, b.texture, b.uv1.valueOr(glm::vec2(0.f)), b.uv2.valueOr(glm::vec2(1.f))}, paint);
         },
         [&](const auto&) {}
     }, paint.brush);
@@ -68,7 +68,7 @@ void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 positio
             add(ADisplayList::GradientRoundedRectangles{{ {position, size, AColor::WHITE} }, radius, std::move(colors), b.rotation}, paint);
         },
         [&](const ATexturedBrush& b) {
-            add(ADisplayList::TexturedRoundedRectangles{{ {position, size, combinedColor} }, radius, b.texture}, paint);
+            add(ADisplayList::TexturedRoundedRectangles{{ {position, size, combinedColor} }, radius, b.texture, b.uv1.valueOr(glm::vec2(0.f)), b.uv2.valueOr(glm::vec2(1.f))}, paint);
         },
         [&](const auto&) {}
     }, paint.brush);
@@ -155,22 +155,6 @@ void ADisplayListCanvas::squareSector(const APaint& paint,
 
 void ADisplayListCanvas::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) {
     add(ADisplayList::Backdrop{position, size, {backdrops.begin(), backdrops.end()}}, {});
-}
-
-void ADisplayListCanvas::pushMaskBefore() { add(ADisplayList::MaskBefore{}, {}); }
-
-void ADisplayListCanvas::pushMaskAfter() {
-    add(ADisplayList::MaskAfter{}, {});
-    mStencilDepth++;
-}
-
-void ADisplayListCanvas::popMaskBefore() { add(ADisplayList::PopMaskBefore{}, {}); }
-
-void ADisplayListCanvas::popMaskAfter() {
-    add(ADisplayList::PopMaskAfter{}, {});
-    if (mStencilDepth > 0) {
-        mStencilDepth--;
-    }
 }
 
 void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const APaint& paint) {
@@ -300,5 +284,5 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
         std::visit(applyST, command);
     }
     
-    mDisplayList.add(std::move(command), bt, combined, getStencilDepth());
+    mDisplayList.add(std::move(command), bt, combined, getMask(), getMaskRect());
 }

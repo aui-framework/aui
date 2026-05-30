@@ -33,17 +33,17 @@ bool isOpaque(const ABrush& brush, const AColor& globalColor) {
 }
 }   // namespace
 
-void ADisplayList::add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint, std::uint8_t stencilDepth) {
+void ADisplayList::add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint, _<ITexture> mask, const glm::vec4& maskRect) {
     if (!mCommands.empty()) {
         auto& last = mCommands.last();
-        if (last.transform == transform && last.stencilDepth == stencilDepth && last.paint.blending == paint.blending) {
+        if (last.transform == transform && last.paint == paint && last.mask == mask && last.maskRect == maskRect && last.command.index() == cmd.index()) {
             bool merged = std::visit(aui::lambda_overloaded {
                 [&](SolidRectangles& l, SolidRectangles& r) {
                     l.instances << std::move(r.instances);
                     return true;
                 },
                 [&](TexturedRectangles& l, TexturedRectangles& r) {
-                    if (l.texture == r.texture) {
+                    if (l.texture == r.texture && l.uv1 == r.uv1 && l.uv2 == r.uv2) {
                         l.instances << std::move(r.instances);
                         return true;
                     }
@@ -57,7 +57,7 @@ void ADisplayList::add(StoredCommand::Command cmd, const glm::mat4& transform, A
                     return false;
                 },
                 [&](TexturedRoundedRectangles& l, TexturedRoundedRectangles& r) {
-                    if (l.radius == r.radius && l.texture == r.texture) {
+                    if (l.radius == r.radius && l.texture == r.texture && l.uv1 == r.uv1 && l.uv2 == r.uv2) {
                         l.instances << std::move(r.instances);
                         return true;
                     }
@@ -111,7 +111,7 @@ void ADisplayList::add(StoredCommand::Command cmd, const glm::mat4& transform, A
             if (merged) return;
         }
     }
-    mCommands << StoredCommand{std::move(cmd), transform, std::move(paint), stencilDepth};
+    mCommands << StoredCommand{std::move(cmd), transform, std::move(paint), std::move(mask), maskRect};
 }
 
 void ADisplayList::resolveEntities() {
@@ -177,7 +177,7 @@ void ADisplayList::resolveEntities() {
                       localSize = glm::vec2(v.size);
                   } else {
                       // Commands like PushLayer, PopLayer, etc.
-                      mEntities << Entity{ .command = cmd.command, .transform = cmd.transform, .paint = cmd.paint };
+                       mEntities << Entity{ .command = cmd.command, .transform = cmd.transform, .paint = cmd.paint, .mask = cmd.mask, .maskRect = cmd.maskRect };
                       return;
                   }
                   
@@ -198,6 +198,8 @@ void ADisplayList::resolveEntities() {
                       .command = cmd.command,
                       .transform = cmd.transform,
                       .paint = cmd.paint,
+                      .mask = cmd.mask,
+                      .maskRect = cmd.maskRect,
                       .boundingBox = ARect<float>{ .p1 = min, .p2 = max }
                   };
               }
@@ -207,37 +209,17 @@ void ADisplayList::resolveEntities() {
 
 void ADisplayList::computeOverlaps() {
     mOpaqueRects.clear();
-    bool insideMaskShape = false;
     for (auto it = mEntities.rbegin(); it != mEntities.rend(); ++it) {
         it->isObscured = false;
         
-        std::visit(
-            aui::lambda_overloaded {
-              [&](const MaskAfter&) { insideMaskShape = true; },
-              [&](const PopMaskAfter&) { insideMaskShape = true; },
-              [&](const MaskBefore&) { insideMaskShape = false; },
-              [&](const PopMaskBefore&) { insideMaskShape = false; },
-              [&](const auto&) { }
-            },
-            it->command);
-
         bool isControl = std::visit(
             aui::lambda_overloaded {
               [&](const PushLayer&) { return true; },
               [&](const PopLayer&) { return true; },
-              [&](const MaskBefore&) { return true; },
-              [&](const MaskAfter&) { return true; },
-              [&](const PopMaskBefore&) { return true; },
-              [&](const PopMaskAfter&) { return true; },
               [&](const auto&) { return false; }
             },
             it->command);
         if (isControl) {
-            continue;
-        }
-
-        if (insideMaskShape) {
-            // Never obscure mask-drawing commands, as they modify the stencil buffer which affects subsequent draws.
             continue;
         }
 
@@ -286,10 +268,6 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
               [&](const LineBatches& v) { renderer.lines(v, transform, paint); },
               [&](const SquareSector& v) { renderer.squareSector(v, transform, paint); },
               [&](const Backdrop& v) { renderer.backdrops(v, transform); },
-              [&](const MaskBefore&) { renderer.pushMaskBefore(); },
-              [&](const MaskAfter&) { renderer.pushMaskAfter(); },
-              [&](const PopMaskBefore&) { renderer.popMaskBefore(); },
-              [&](const PopMaskAfter&) { renderer.popMaskAfter(); },
               [&](const auto&) {}
             },
             command);
@@ -300,10 +278,12 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
             if (entity.isObscured) {
                 continue;
             }
+            renderer.setMask(entity.mask, entity.maskRect);
             dispatch(entity.command, entity.transform, entity.paint);
         }
     } else {
         for (const auto& cmd : mCommands) {
+            renderer.setMask(cmd.mask, cmd.maskRect);
             dispatch(cmd.command, cmd.transform, cmd.paint);
         }
     }

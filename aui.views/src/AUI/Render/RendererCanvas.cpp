@@ -129,32 +129,16 @@ void RendererCanvas::setTransformForced(const glm::mat4& transform) {
     mCanvas.setTransformForced(transform);
 }
 
-void RendererCanvas::pushMaskBefore() {
-    mCanvas.pushMaskBefore();
-}
-
-void RendererCanvas::pushMaskAfter() {
-    mCanvas.pushMaskAfter();
-}
-
-void RendererCanvas::popMaskBefore() {
-    mCanvas.popMaskBefore();
-}
-
-void RendererCanvas::popMaskAfter() {
-    mCanvas.popMaskAfter();
-}
-
 void RendererCanvas::setBlending(Blending blending) {
     mBlending = blending;
 }
 
-_unique<IRenderViewToTexture> RendererCanvas::newRenderViewToTexture() noexcept {
+_unique<IRenderViewToTexture> RendererCanvas::newRenderViewToTexture(APixelFormat format) noexcept {
     if (auto glRenderer = dynamic_cast<OpenGLRenderer*>(&mCanvas.renderer())) {
-        return std::make_unique<OpenGLRenderViewToTexture>(*glRenderer);
+        return std::make_unique<OpenGLRenderViewToTexture>(*glRenderer, format);
     }
     if (auto swRenderer = dynamic_cast<SoftwareRenderer*>(&mCanvas.renderer())) {
-        return std::make_unique<SoftwareRenderViewToTexture>(*swRenderer);
+        return std::make_unique<SoftwareRenderViewToTexture>(*swRenderer, format);
     }
     return nullptr;
 }
@@ -174,14 +158,6 @@ glm::mat4 RendererCanvas::getProjectionMatrix() const {
 
 glm::mat4 RendererCanvas::getTransform() {
     return mCanvas.getTransform();
-}
-
-std::uint8_t RendererCanvas::getStencilDepth() const noexcept {
-    return mCanvas.getStencilDepth();
-}
-
-void RendererCanvas::setStencilDepth(uint8_t stencilDepth) {
-    mCanvas.setStencilDepth(stencilDepth);
 }
 
 void RendererCanvas::translate(const glm::vec2& offset) {

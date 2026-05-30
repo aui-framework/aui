@@ -45,6 +45,8 @@ public:
     struct TexturedRectangles {
         AVector<RectInstance> instances;
         _<ITexture> texture;
+        glm::vec2 uv1 = {0.f, 0.f};
+        glm::vec2 uv2 = {1.f, 1.f};
     };
     struct SolidRoundedRectangles {
         AVector<RectInstance> instances;
@@ -60,6 +62,8 @@ public:
         AVector<RectInstance> instances;
         float radius;
         _<ITexture> texture;
+        glm::vec2 uv1 = {0.f, 0.f};
+        glm::vec2 uv2 = {1.f, 1.f};
     };
     struct RectangleBorders {
         AVector<RectInstance> instances;
@@ -126,10 +130,6 @@ public:
 
     struct PushLayer {};
     struct PopLayer {};
-    struct MaskBefore {};
-    struct MaskAfter {};
-    struct PopMaskBefore {};
-    struct PopMaskAfter {};
 
     struct StoredCommand {
         using Command = std::variant<SolidRectangles,
@@ -149,28 +149,27 @@ public:
                                      SquareSector,
                                      Backdrop,
                                      PushLayer,
-                                     PopLayer,
-                                     MaskBefore,
-                                     MaskAfter,
-                                     PopMaskBefore,
-                                     PopMaskAfter>;
+                                     PopLayer>;
 
         Command command;
         glm::mat4 transform;
         APaint paint;
-        std::uint8_t stencilDepth;
+        _<ITexture> mask;
+        glm::vec4 maskRect;
     };
 
     struct Entity {
         StoredCommand::Command command;
         glm::mat4 transform;
         APaint paint;
+        _<ITexture> mask;
+        glm::vec4 maskRect;
         ARect<int> clipRect;
         ARect<float> boundingBox;
         bool isObscured = false;
     };
 
-    void add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint, std::uint8_t stencilDepth);
+    void add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint, _<ITexture> mask = nullptr, const glm::vec4& maskRect = glm::vec4(0.f));
 
     void clear() {
         mCommands.clear();

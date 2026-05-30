@@ -40,7 +40,7 @@ public:
     virtual IRendererBackend& renderer() = 0;
 
     virtual void save() {
-        mStates.push_back(State{mTransform, mBaseTransform, mColorMultiplier});
+        mStates.push_back(State{mTransform, mBaseTransform, mColorMultiplier, mMask, mMaskRect});
     }
 
     virtual void restore() {
@@ -50,7 +50,24 @@ public:
             mTransform = s.transform;
             mBaseTransform = s.baseTransform;
             mColorMultiplier = s.colorMultiplier;
+            mMask = s.mask;
+            mMaskRect = s.maskRect;
         }
+    }
+
+    virtual void setMask(_<ITexture> mask, const glm::vec4& maskRect = glm::vec4(0.f)) {
+        mMask = std::move(mask);
+        mMaskRect = maskRect;
+    }
+
+    [[nodiscard]]
+    const _<ITexture>& getMask() const noexcept {
+        return mMask;
+    }
+
+    [[nodiscard]]
+    const glm::vec4& getMaskRect() const noexcept {
+        return mMaskRect;
     }
 
     virtual void pushLayer() = 0;
@@ -141,11 +158,6 @@ public:
                               AAngleRadians begin,
                               AAngleRadians end) = 0;
 
-    virtual void pushMaskBefore() = 0;
-    virtual void pushMaskAfter() = 0;
-    virtual void popMaskBefore() = 0;
-    virtual void popMaskAfter() = 0;
-
     virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) = 0;
 
     float getRenderScale() const noexcept { return mRenderScale; }
@@ -181,9 +193,6 @@ public:
         rotate({0.f, 0.f, 1.f}, angle);
     }
 
-    std::uint8_t getStencilDepth() const noexcept { return mStencilDepth; }
-    void setStencilDepth(std::uint8_t stencilDepth) noexcept { mStencilDepth = stencilDepth; }
-
     const glm::mat4& getBaseTransform() const noexcept { return mBaseTransform; }
     void setBaseTransform(const glm::mat4& transform) noexcept { mBaseTransform = transform; }
 
@@ -192,11 +201,14 @@ protected:
         glm::mat4 transform;
         glm::mat4 baseTransform;
         AColor colorMultiplier;
+        _<ITexture> mask;
+        glm::vec4 maskRect;
     };
     std::vector<State> mStates;
     glm::mat4 mTransform = glm::mat4(1.0f);
     glm::mat4 mBaseTransform = glm::mat4(1.0f);
     AColor mColorMultiplier = AColor::WHITE;
-    std::uint8_t mStencilDepth = 0;
+    _<ITexture> mMask;
+    glm::vec4 mMaskRect = glm::vec4(0.f);
     float mRenderScale = 1.0f;
 };

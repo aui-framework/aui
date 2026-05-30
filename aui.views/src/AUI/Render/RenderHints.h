@@ -39,52 +39,8 @@ namespace RenderHints {
         void setColorForced(const AColor& c) {
             mCanvas.setColorForced(c);
         }
-        void pushMaskBefore() {
-            mCanvas.pushMaskBefore();
-        }
-        void pushMaskAfter() {
-            mCanvas.pushMaskAfter();
-        }
-        void popMaskBefore() {
-            mCanvas.popMaskBefore();
-        }
-        void popMaskAfter() {
-            mCanvas.popMaskAfter();
-        }
     private:
         ACanvas& mCanvas;
-    };
-
-    template<aui::invocable Callable>
-    static void pushMask(CanvasOrRenderer render, Callable&& maskRenderer) {
-        render.pushMaskBefore();
-        maskRenderer();
-        render.pushMaskAfter();
-    }
-
-    template<aui::invocable Callable>
-    static void popMask(CanvasOrRenderer render, Callable&& maskRenderer) {
-        render.popMaskBefore();
-        maskRenderer();
-        render.popMaskAfter();
-    }
-
-    template<aui::invocable Callable>
-    struct PushMask {
-    public:
-        inline explicit PushMask(CanvasOrRenderer render, Callable&& maskRenderer) :
-                render(render),
-                maskRenderer(std::forward<Callable>(maskRenderer)) {
-            pushMask(render, std::forward<Callable>(maskRenderer));
-        }
-
-        inline ~PushMask() {
-            popMask(render, std::forward<Callable>(maskRenderer));
-        }
-
-    private:
-        CanvasOrRenderer render;
-        Callable maskRenderer;
     };
 
     struct PushMatrix {

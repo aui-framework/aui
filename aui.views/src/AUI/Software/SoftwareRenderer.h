@@ -53,41 +53,38 @@ public:
 
     void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) override;
     void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
+void setWindow(ASurface* window) override;
+ASurface* getWindow() const noexcept override { return mWindow; }
 
-    void setWindow(ASurface* window) override;
-    ASurface* getWindow() const noexcept override { return mWindow; }
+void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
+bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
 
-    void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
-    bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
+_<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE, TextureFilter filter = TextureFilter::LINEAR) override;
+glm::mat4 getProjectionMatrix() const override;
 
-    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE, TextureFilter filter = TextureFilter::LINEAR) override;
-    glm::mat4 getProjectionMatrix() const override;
+const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 
-    void pushMaskBefore() override {}
-    void pushMaskAfter() override {}
-    void popMaskBefore() override {}
-    void popMaskAfter() override {}
+void setMask(const _<ITexture>& mask, const glm::vec4& maskRect = glm::vec4(0.f)) override;
 
-    const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
+protected:
+void putPixel(glm::ivec2 pos, AColor color, const APaint& paint);
+void drawLine(glm::ivec2 p0, glm::ivec2 p1, float width, AColor color, const APaint& paint);
 
-    protected:
-    void putPixel(glm::ivec2 pos, AColor color, const APaint& paint);
-    void drawLine(glm::ivec2 p0, glm::ivec2 p1, float width, AColor color, const APaint& paint);
-
-    SoftwareRenderingContext* mContext = nullptr;
-    AImage* mRenderTarget = nullptr;
-    ASurface* mWindow = nullptr;
-    bool mAllowRenderToTexture = true;
-    _<aui::AFontCache> mFontCache;
+SoftwareRenderingContext* mContext = nullptr;
+AImage* mRenderTarget = nullptr;
+ASurface* mWindow = nullptr;
+bool mAllowRenderToTexture = true;
+ADeque<aui::FontAtlas> mFontEntryData;
+ADeque<aui::CharacterData> mCharData;
+_<aui::AFontCache> mFontCache;
 };
-
 class SoftwareRenderViewToTexture: public IRenderViewToTexture {
 public:
-    SoftwareRenderViewToTexture(SoftwareRenderer& renderer): mRenderer(renderer) {}
+    SoftwareRenderViewToTexture(SoftwareRenderer& renderer, APixelFormat format): mRenderer(renderer), mFormat(format) {}
 
     bool begin(IRenderer& renderer, glm::ivec2 surfaceSize, InvalidArea& invalidArea) override {
-        if (!mTexture || mTexture->getSize() != glm::u32vec2(surfaceSize)) {
-            mTexture = _cast<SoftwareTexture>(mRenderer.createTexture(surfaceSize));
+        if (!mTexture || mTexture->getImage().size() != glm::u32vec2(surfaceSize)) {
+            mTexture = _cast<SoftwareTexture>(mRenderer.createTexture(surfaceSize, mFormat));
             invalidArea = InvalidArea::Full{};
         }
 
@@ -108,7 +105,13 @@ public:
         canvas.rectangle(APaint{ATexturedBrush{mTexture}}, {0, 0}, mTexture->getSize());
     }
 
+    [[nodiscard]]
+    _<ITexture> getTexture() const override {
+        return mTexture;
+    }
+
 private:
     SoftwareRenderer& mRenderer;
     _<SoftwareTexture> mTexture;
+    APixelFormat mFormat;
 };

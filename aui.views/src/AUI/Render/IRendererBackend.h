@@ -60,10 +60,7 @@ public:
     virtual void backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform);
     virtual void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) = 0;
 
-    virtual void pushMaskBefore() = 0;
-    virtual void pushMaskAfter() = 0;
-    virtual void popMaskBefore() = 0;
-    virtual void popMaskAfter() = 0;
+    virtual void setMask(const _<ITexture>& mask, const glm::vec4& maskRect = glm::vec4(0.f)) = 0;
 
     virtual const _<aui::AFontCache>& getFontCache() = 0;
 };

@@ -57,6 +57,9 @@ void SoftwareRenderer::setWindow(ASurface* window) {
 }
 
 void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& paint) {
+    if (mRenderTarget && mRenderTarget->format() == APixelFormat::R_BYTE) {
+        color = AColor(color.a, 0.f, 0.f, color.a);
+    }
     glm::uvec2 bitmapSize;
     if (mRenderTarget) {
         bitmapSize = mRenderTarget->size();
@@ -190,8 +193,8 @@ void SoftwareRenderer::texturedRectangles(const ADisplayList::TexturedRectangles
 
         for (int y = (int)p1.y; y < (int)p2.y; ++y) {
             for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-                float u = (x - (float)p1.x) / width;
-                float v_uv = (y - (float)p1.y) / height;
+                float u = glm::mix(v.uv1.x, v.uv2.x, (x - (float)p1.x) / width);
+                float v_uv = glm::mix(v.uv1.y, v.uv2.y, (y - (float)p1.y) / height);
                 
                 glm::uvec2 texPos((unsigned)(u * glm::max(0.f, (float)img.width() - 1.f)), (unsigned)(v_uv * glm::max(0.f, (float)img.height() - 1.f)));
                 AColor texColor;
@@ -298,8 +301,8 @@ void SoftwareRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRou
                 glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y) - inst.position;
                 float a = roundedRectCoverage(localPos, inst.size, radius, scale);
                 if (a > 0.001f) {
-                    float uvX = (x - p1.x) / width;
-                    float uvY = (y - p1.y) / height;
+                    float uvX = glm::mix(v.uv1.x, v.uv2.x, (x - p1.x) / width);
+                    float uvY = glm::mix(v.uv1.y, v.uv2.y, (y - p1.y) / height);
                     glm::uvec2 texPos((unsigned)(uvX * glm::max(0.f, (float)img.width() - 1.f)),
                                       (unsigned)(uvY * glm::max(0.f, (float)img.height() - 1.f)));
                     AColor texColor;
@@ -568,4 +571,6 @@ _<ITexture> SoftwareRenderer::createTexture(glm::u32vec2 size, APixelFormat form
     t->upload(AImage(size, format));
     return t;
 }
+
+void SoftwareRenderer::setMask(const _<ITexture>& mask, const glm::vec4& maskRect) {}
 

@@ -31,6 +31,7 @@
  */
 struct ASolidBrush {
     AColor solidColor = AColor::WHITE;
+    bool operator==(const ASolidBrush&) const = default;
 };
 
 
@@ -38,7 +39,7 @@ struct ASolidBrush {
  * The brush used with a custom graphics API shaders.
  */
 struct ACustomShaderBrush {
-
+    bool operator==(const ACustomShaderBrush&) const = default;
 };
 
 
@@ -49,6 +50,7 @@ struct ALinearGradientBrush {
     struct ColorEntry {
         aui::float_within_0_1 position;
         AColor color;
+        bool operator==(const ColorEntry&) const = default;
     };
     AVector<ColorEntry> colors;
 
@@ -60,6 +62,7 @@ struct ALinearGradientBrush {
      * direction.
      */
     AAngleRadians rotation = 180_deg;
+    bool operator==(const ALinearGradientBrush&) const = default;
 };
 
 class ITexture;
@@ -101,6 +104,10 @@ struct ATexturedBrush {
      * Optional. Controls how does the image behaves when it's size is not enough to cover the whole rect.
      */
     Repeat repeat = Repeat::NONE;
+
+    bool operator==(const ATexturedBrush& other) const {
+        return texture == other.texture && uv1 == other.uv1 && uv2 == other.uv2 && imageRendering == other.imageRendering && repeat == other.repeat;
+    }
 };
 
 

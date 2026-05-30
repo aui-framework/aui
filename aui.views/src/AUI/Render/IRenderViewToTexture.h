@@ -15,6 +15,7 @@
 #include <AUI/Common/AStaticVector.h>
 #include <AUI/Geometry2D/ARect.h>
 #include <AUI/Render/ARenderContext.h>
+#include <AUI/Render/ITexture.h>
 
 class IRenderer;
 class ACanvas;
@@ -109,6 +110,9 @@ public:
     virtual void end(IRenderer& renderer) = 0;
 
     virtual void draw(ACanvas& canvas) = 0;
+
+    [[nodiscard]]
+    virtual _<ITexture> getTexture() const = 0;
 
     virtual ~IRenderViewToTexture() = default;
 

@@ -11,13 +11,11 @@
 
 #pragma once
 
+#include <glm/glm.hpp>
 #include <AUI/Render/ACanvas.hpp>
 #include <AUI/Render/ADisplayList.h>
-#include <AUI/Render/IRendererBackend.h>
 
-class IRendererBackend;
-
-class ADisplayListCanvas: public ACanvas {
+class API_AUI_VIEWS ADisplayListCanvas : public ACanvas {
 public:
     ADisplayListCanvas(ADisplayList& displayList, IRendererBackend& renderer) : mDisplayList(displayList), mRenderer(renderer) {}
 
@@ -56,10 +54,6 @@ public:
                       AAngleRadians begin,
                       AAngleRadians end) override;
     void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) override;
-    void pushMaskBefore() override;
-    void pushMaskAfter() override;
-    void popMaskBefore() override;
-    void popMaskAfter() override;
 
 private:
     void add(ADisplayList::StoredCommand::Command command, const APaint& paint = {});

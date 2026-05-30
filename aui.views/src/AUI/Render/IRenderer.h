@@ -25,6 +25,7 @@
 #include <AUI/Render/IRendererText.hpp>
 #include <AUI/Render/IRenderViewToTexture.h>
 #include <AUI/ASS/Property/Backdrop.h>
+#include <AUI/Image/APixelFormat.h>
 
 class AColor;
 class ASurface;
@@ -169,18 +170,10 @@ public:
 
     virtual void setTransformForced(const glm::mat4& transform) = 0;
 
-    virtual void pushMaskBefore() = 0;
-
-    virtual void pushMaskAfter() = 0;
-
-    virtual void popMaskBefore() = 0;
-
-    virtual void popMaskAfter() = 0;
-
     virtual void setBlending(Blending blending) = 0;
 
     [[nodiscard]]
-    virtual _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept = 0;
+    virtual _unique<IRenderViewToTexture> newRenderViewToTexture(APixelFormat format = APixelFormat::RGBA_BYTE) noexcept = 0;
 
     virtual void setWindow(ASurface* window) = 0;
 
@@ -190,12 +183,6 @@ public:
     virtual glm::mat4 getProjectionMatrix() const = 0;
 
     virtual glm::mat4 getTransform() = 0;
-
-    [[nodiscard]]
-    virtual std::uint8_t getStencilDepth() const noexcept = 0;
-
-    virtual void setStencilDepth(uint8_t stencilDepth) = 0;
-
 
     virtual void translate(const glm::vec2& offset) = 0;
 
