@@ -10,6 +10,7 @@
  */
 
 #include "OpenGLRenderer.h"
+#include "TextureFormatRecognition.h"
 #include <AUI/Render/IRenderer.h>
 #include <AUI/Traits/callables.h>
 #include <AUI/Platform/ASurface.h>
@@ -230,7 +231,7 @@ void OpenGLRenderer::setBlending(const APaint& paint) {
             glBlendFuncSeparate(GL_ONE, GL_ONE, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
             break;
         case Blending::INVERSE_SRC:
-            glBlendFuncSeparate(GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE_MINUS_DST_ALPHA, GL_ONE);
+            glBlendFuncSeparate(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
             break;
     }
 }
@@ -275,16 +276,28 @@ bool OpenGLRenderer::loadGL(GLLoadProc load_proc) { return loadGL(load_proc, fal
 uint32_t OpenGLRenderer::getDefaultFb() const noexcept { return 0; }
 void OpenGLRenderer::FramebufferBackToPool::operator()(FramebufferWithTextureRT* framebuffer) const {}
 
-void OpenGLRenderer::setupMask(gl::Program& shader, const APaint& paint) {
+void OpenGLRenderer::setupMask(gl::Program& shader) {
     shader.set(aui::ShaderUniforms::WINDOW_SIZE, glm::vec2(mViewportSize));
     shader.set(aui::ShaderUniforms::MASK, 1);
-    if (paint.mask) {
+    if (mMask) {
         shader.set(aui::ShaderUniforms::USE_MASK, true);
-        static_cast<OpenGLTexture2D*>(paint.mask.get())->bind(1);
+        static_cast<OpenGLTexture2D*>(mMask.get())->bind(1);
+        glm::vec4 glMaskRect;
+        glMaskRect.x = mMaskRect.x;
+        glMaskRect.y = (float)mViewportSize.y - mMaskRect.y - mMaskRect.w;
+        glMaskRect.z = mMaskRect.z;
+        glMaskRect.w = mMaskRect.w;
+        shader.set(aui::ShaderUniforms::MASK_RECT, glMaskRect);
     } else {
         shader.set(aui::ShaderUniforms::USE_MASK, false);
         mWhiteTexture.bind(1);
     }
+    gl::State::activeTexture(0);
+}
+
+void OpenGLRenderer::setMask(const _<ITexture>& mask, const glm::vec4& maskRect) {
+    mMask = mask;
+    mMaskRect = maskRect;
 }
 
 void OpenGLRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) {
@@ -293,7 +306,7 @@ void OpenGLRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, con
     setBlending(paint);
     mSolidShader->use();
     mSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-    setupMask(*mSolidShader, paint);
+    setupMask(*mSolidShader);
 
     AVector<VertexBasic> vertices;
     AVector<GLuint> indices;
@@ -303,7 +316,7 @@ void OpenGLRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, con
         const auto& inst = v.instances[i];
         GLuint offset = static_cast<GLuint>(i * 4);
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
-        glm::vec4 color = inst.color.premultiply();
+        glm::vec4 color = maskColor(inst.color).premultiply();
         for (int j = 0; j < 4; ++j) {
             vertices << VertexBasic{rectVertices[j], color};
         }
@@ -329,7 +342,7 @@ void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& 
     setBlending(paint);
     mGradientShader->use();
     mGradientShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-    setupMask(*mGradientShader, paint);
+    setupMask(*mGradientShader);
 
     ALinearGradientBrush brush {
         v.colors,
@@ -338,8 +351,8 @@ void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& 
     aui::render::brush::gradient::Helper helper(brush);
     mGradientShader->set(aui::ShaderUniforms::GRADIENT_MAT_UV, helper.matrix);
 
-    glm::vec4 c1 = v.colors.size() > 0 ? v.colors[0].color.premultiply() : glm::vec4(0.f);
-    glm::vec4 c2 = v.colors.size() > 1 ? v.colors[1].color.premultiply() : (v.colors.size() > 0 ? v.colors[0].color.premultiply() : glm::vec4(0.f));
+    glm::vec4 c1 = v.colors.size() > 0 ? maskColor(v.colors[0].color).premultiply() : glm::vec4(0.f);
+    glm::vec4 c2 = v.colors.size() > 1 ? maskColor(v.colors[1].color).premultiply() : (v.colors.size() > 0 ? maskColor(v.colors[0].color).premultiply() : glm::vec4(0.f));
     mGradientShader->set(aui::ShaderUniforms::COLOR1, c1);
     mGradientShader->set(aui::ShaderUniforms::COLOR2, c2);
 
@@ -351,7 +364,7 @@ void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& 
         const auto& inst = v.instances[i];
         GLuint offset = static_cast<GLuint>(i * 4);
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
-        glm::vec4 color = inst.color.premultiply();
+        glm::vec4 color = maskColor(inst.color).premultiply();
 
         vertices << VertexBasicUv{rectVertices[0], {0.f, 1.f}, color};
         vertices << VertexBasicUv{rectVertices[1], {1.f, 1.f}, color};
@@ -380,7 +393,7 @@ void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& 
     setBlending(paint);
     mTexturedShader->use();
     mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-    setupMask(*mTexturedShader, paint);
+    setupMask(*mTexturedShader);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
     AVector<VertexBasicUv> vertices;
@@ -391,12 +404,12 @@ void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& 
         const auto& inst = v.instances[i];
         GLuint offset = static_cast<GLuint>(i * 4);
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
-        glm::vec4 color = inst.color.premultiply();
+        glm::vec4 color = maskColor(inst.color).premultiply();
 
-        vertices << VertexBasicUv{rectVertices[0], {0.f, 1.f}, color};
-        vertices << VertexBasicUv{rectVertices[1], {1.f, 1.f}, color};
-        vertices << VertexBasicUv{rectVertices[2], {0.f, 0.f}, color};
-        vertices << VertexBasicUv{rectVertices[3], {1.f, 0.f}, color};
+        vertices << VertexBasicUv{rectVertices[0], {v.uv1.x, v.uv1.y}, color};
+        vertices << VertexBasicUv{rectVertices[1], {v.uv2.x, v.uv1.y}, color};
+        vertices << VertexBasicUv{rectVertices[2], {v.uv1.x, v.uv2.y}, color};
+        vertices << VertexBasicUv{rectVertices[3], {v.uv2.x, v.uv2.y}, color};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
@@ -421,7 +434,7 @@ void OpenGLRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRect
     setBlending(paint);
     mRoundedSolidShader->use();
     mRoundedSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-    setupMask(*mRoundedSolidShader, paint);
+    setupMask(*mRoundedSolidShader);
 
     AVector<VertexRounded> vertices;
     AVector<GLuint> indices;
@@ -440,7 +453,7 @@ void OpenGLRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRect
         glm::vec2 outerSize = { 2.0f * radius / inst.size.x, 2.0f * radius / inst.size.y };
 
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
-        glm::vec4 color = inst.color.premultiply();
+        glm::vec4 color = maskColor(inst.color).premultiply();
 
         vertices << VertexRounded{rectVertices[0], {0.f, 1.f}, color, outerSize};
         vertices << VertexRounded{rectVertices[1], {1.f, 1.f}, color, outerSize};
@@ -472,7 +485,7 @@ void OpenGLRenderer::gradientRoundedRectangles(const ADisplayList::GradientRound
     setBlending(paint);
     mRoundedGradientShader->use();
     mRoundedGradientShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-    setupMask(*mRoundedGradientShader, paint);
+    setupMask(*mRoundedGradientShader);
 
     ALinearGradientBrush brush {
         v.colors,
@@ -486,8 +499,8 @@ void OpenGLRenderer::gradientRoundedRectangles(const ADisplayList::GradientRound
     vertices.reserve(v.instances.size() * 4);
     indices.reserve(v.instances.size() * 6);
 
-    glm::vec4 c1 = v.colors.size() > 0 ? v.colors[0].color.premultiply() : glm::vec4(0.f);
-    glm::vec4 c2 = v.colors.size() > 1 ? v.colors[1].color.premultiply() : (v.colors.size() > 0 ? v.colors[0].color.premultiply() : glm::vec4(0.f));
+    glm::vec4 c1 = v.colors.size() > 0 ? maskColor(v.colors[0].color).premultiply() : glm::vec4(0.f);
+    glm::vec4 c2 = v.colors.size() > 1 ? maskColor(v.colors[1].color).premultiply() : (v.colors.size() > 0 ? maskColor(v.colors[0].color).premultiply() : glm::vec4(0.f));
 
     for (size_t i = 0; i < v.instances.size(); ++i) {
         const auto& inst = v.instances[i];
@@ -501,7 +514,7 @@ void OpenGLRenderer::gradientRoundedRectangles(const ADisplayList::GradientRound
         glm::vec2 outerSize = { 2.0f * radius / inst.size.x, 2.0f * radius / inst.size.y };
 
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
-        glm::vec4 color = inst.color.premultiply();
+        glm::vec4 color = maskColor(inst.color).premultiply();
 
         vertices << VertexRoundedGradient{rectVertices[0], {0.f, 1.f}, color, outerSize, c1, c2};
         vertices << VertexRoundedGradient{rectVertices[1], {1.f, 1.f}, color, outerSize, c1, c2};
@@ -537,7 +550,7 @@ void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRound
     setBlending(paint);
     mRoundedTexturedShader->use();
     mRoundedTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-    setupMask(*mRoundedTexturedShader, paint);
+    setupMask(*mRoundedTexturedShader);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
     AVector<VertexRounded> vertices;
@@ -557,12 +570,12 @@ void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRound
         glm::vec2 outerSize = { 2.0f * radius / inst.size.x, 2.0f * radius / inst.size.y };
 
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
-        glm::vec4 color = inst.color.premultiply();
+        glm::vec4 color = maskColor(inst.color).premultiply();
 
-        vertices << VertexRounded{rectVertices[0], {0.f, 1.f}, color, outerSize};
-        vertices << VertexRounded{rectVertices[1], {1.f, 1.f}, color, outerSize};
-        vertices << VertexRounded{rectVertices[2], {0.f, 0.f}, color, outerSize};
-        vertices << VertexRounded{rectVertices[3], {1.f, 0.f}, color, outerSize};
+        vertices << VertexRounded{rectVertices[0], {v.uv1.x, v.uv1.y}, color, outerSize};
+        vertices << VertexRounded{rectVertices[1], {v.uv2.x, v.uv1.y}, color, outerSize};
+        vertices << VertexRounded{rectVertices[2], {v.uv1.x, v.uv2.y}, color, outerSize};
+        vertices << VertexRounded{rectVertices[3], {v.uv2.x, v.uv2.y}, color, outerSize};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
@@ -588,13 +601,13 @@ void OpenGLRenderer::rectangleBorders(const ADisplayList::RectangleBorders& v, c
     setBlending(paint);
     mSolidShader->use();
     mSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-    setupMask(*mSolidShader, paint);
+    setupMask(*mSolidShader);
 
     AVector<VertexBasic> vertices;
     AVector<GLuint> indices;
 
     for (const auto& inst : v.instances) {
-        glm::vec4 color = inst.color.premultiply();
+        glm::vec4 color = maskColor(inst.color).premultiply();
 
         // 4 lines
         auto v1 = getVerticesForRect(inst.position, {inst.size.x, v.lineWidth});
@@ -631,7 +644,7 @@ void OpenGLRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangl
     setBlending(paint);
     mRoundedSolidShaderBorder->use();
     mRoundedSolidShaderBorder->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-    setupMask(*mRoundedSolidShaderBorder, paint);
+    setupMask(*mRoundedSolidShaderBorder);
 
     AVector<VertexRoundedBorder> vertices;
     AVector<GLuint> indices;
@@ -663,7 +676,7 @@ void OpenGLRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangl
         }
 
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
-        glm::vec4 color = inst.color.premultiply();
+        glm::vec4 color = maskColor(inst.color).premultiply();
 
         vertices << VertexRoundedBorder{rectVertices[0], {0.f, 1.f}, color, outerSize, innerSize, outerToInner};
         vertices << VertexRoundedBorder{rectVertices[1], {1.f, 1.f}, color, outerSize, innerSize, outerToInner};
@@ -698,14 +711,14 @@ void OpenGLRenderer::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4
     setBlending(paint);
     mBoxShadowShader->use();
     mBoxShadowShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-    setupMask(*mBoxShadowShader, paint);
+    setupMask(*mBoxShadowShader);
 
     float sigma = v.blurRadius / 2.f;
     float padding = v.blurRadius * 2.f;
     glm::vec2 pos = v.position - padding;
     glm::vec2 size = v.size + padding * 2.f;
     auto rectVertices = getVerticesForRect(pos, size);
-    glm::vec4 color = v.color.premultiply();
+    glm::vec4 color = maskColor(v.color).premultiply();
 
     mBoxShadowShader->set(aui::ShaderUniforms::SL_UNIFORM_LOWER, v.position);
     mBoxShadowShader->set(aui::ShaderUniforms::SL_UNIFORM_UPPER, v.position + v.size);
@@ -733,11 +746,11 @@ void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const
     setBlending(paint);
     mBoxShadowInnerShader->use();
     mBoxShadowInnerShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-    setupMask(*mBoxShadowInnerShader, paint);
+    setupMask(*mBoxShadowInnerShader);
 
     float sigma = v.blurRadius / 2.f;
     auto rectVertices = getVerticesForRect(v.position, v.size);
-    glm::vec4 color = v.color.premultiply();
+    glm::vec4 color = maskColor(v.color).premultiply();
 
     mBoxShadowInnerShader->set(aui::ShaderUniforms::SL_UNIFORM_LOWER, v.position + v.offset + v.spreadRadius);
     mBoxShadowInnerShader->set(aui::ShaderUniforms::SL_UNIFORM_UPPER, v.position + v.size + v.offset - v.spreadRadius);
@@ -776,11 +789,11 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
     if (v.isSubpixel) {
         mSymbolShaderSubPixel->use();
         mSymbolShaderSubPixel->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-        setupMask(*mSymbolShaderSubPixel, paint);
+        setupMask(*mSymbolShaderSubPixel);
     } else {
         mSymbolShader->use();
         mSymbolShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-        setupMask(*mSymbolShader, paint);
+        setupMask(*mSymbolShader);
     }
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
@@ -806,7 +819,7 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
         for (size_t i = 0; i < v.instances.size(); ++i) {
             const auto& inst = v.instances[i];
             auto rectVertices = getVerticesForRect(inst.position, inst.size);
-            glm::vec4 premulColor = inst.color.premultiply();
+            glm::vec4 premulColor = maskColor(inst.color).premultiply();
             glm::vec4 pass1Color(1.f, 1.f, 1.f, premulColor.a);
 
             pass1Vertices << VertexBasicUv{rectVertices[0], {inst.u1.x, inst.u1.y}, pass1Color};
@@ -841,7 +854,7 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
         for (size_t i = 0; i < v.instances.size(); ++i) {
             const auto& inst = v.instances[i];
             auto rectVertices = getVerticesForRect(inst.position, inst.size);
-            glm::vec4 color = inst.color.premultiply();
+            glm::vec4 color = maskColor(inst.color).premultiply();
 
             vertices << VertexBasicUv{rectVertices[0], {inst.u1.x, inst.u1.y}, color};
             vertices << VertexBasicUv{rectVertices[1], {inst.u2.x, inst.u1.y}, color};
@@ -874,13 +887,13 @@ bool OpenGLRenderer::setupLineShader(const glm::mat4& transform, const ABorderSt
         [&](const ABorderStyle::Solid&) {
             mSolidShader->use();
             mSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-            setupMask(*mSolidShader, paint);
+            setupMask(*mSolidShader);
             return false;
         },
         [&](const ABorderStyle::Dashed& dashed) {
             mLineSolidDashedShader->use();
             mLineSolidDashedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-            setupMask(*mLineSolidDashedShader, paint);
+            setupMask(*mLineSolidDashedShader);
             float dashWidth = dashed.dashWidth.valueOr(1.f) * widthPx;
             float sumOfLengths = dashWidth + dashed.spaceBetweenDashes.valueOr(2.f) * widthPx;
             mLineSolidDashedShader->set(aui::ShaderUniforms::DIVIDER, sumOfLengths);
@@ -900,7 +913,7 @@ void OpenGLRenderer::lines(const ADisplayList::Lines& v, const glm::mat4& transf
 
     AVector<VertexBasicUv> vertices;
     vertices.reserve(v.points.size());
-    glm::vec4 color = paint.color.premultiply();
+    glm::vec4 color = maskColor(paint.color).premultiply();
 
     float distanceAccumulator = 0.f;
     vertices << VertexBasicUv{v.points[0], {0.f, 0.f}, color};
@@ -930,12 +943,12 @@ void OpenGLRenderer::points(const ADisplayList::Points& v, const glm::mat4& tran
     setBlending(paint);
     mSolidShader->use();
     mSolidShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-    setupMask(*mSolidShader, paint);
+    setupMask(*mSolidShader);
     glPointSize(v.size.getValuePx());
 
     AVector<VertexBasic> vertices;
     vertices.reserve(v.points.size());
-    glm::vec4 color = paint.color.premultiply();
+    glm::vec4 color = maskColor(paint.color).premultiply();
     for (const auto& p : v.points) {
         vertices << VertexBasic{p, color};
     }
@@ -961,7 +974,7 @@ void OpenGLRenderer::lines(const ADisplayList::LineBatches& v, const glm::mat4& 
 
     AVector<VertexBasicUv> vertices;
     vertices.reserve(v.points.size() * 2);
-    glm::vec4 color = paint.color.premultiply();
+    glm::vec4 color = maskColor(paint.color).premultiply();
 
     for (const auto& [p1, p2] : v.points) {
         float dist = computeDistances ? glm::distance(p1, p2) : 0.f;
@@ -985,7 +998,7 @@ void OpenGLRenderer::squareSector(const ADisplayList::SquareSector& v, const glm
     setBlending(paint);
     mSquareSectorShader->use();
     mSquareSectorShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
-    setupMask(*mSquareSectorShader, paint);
+    setupMask(*mSquareSectorShader);
 
     auto calculateLineMatrix = [](AAngleRadians angle) {
         auto s = glm::sin(angle.radians());
@@ -999,7 +1012,7 @@ void OpenGLRenderer::squareSector(const ADisplayList::SquareSector& v, const glm
     mSquareSectorShader->set(aui::ShaderUniforms::M2, calculateLineMatrix(v.end));
 
     auto rectVertices = getVerticesForRect(v.position, v.size);
-    glm::vec4 color = paint.color.premultiply();
+    glm::vec4 color = maskColor(paint.color).premultiply();
 
     VertexBasic vertices[4];
     for (int i = 0; i < 4; ++i) vertices[i] = {rectVertices[i], color};

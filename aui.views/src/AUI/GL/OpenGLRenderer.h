@@ -91,6 +91,9 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
 
     ASurface* mWindow = nullptr;
     bool mAllowRenderToTexture = true;
+    bool mIsRenderingToMask = false;
+    _<ITexture> mMask;
+    glm::vec4 mMaskRect = glm::vec4(0.f);
 
     AOptional<gl::Program> mSolidShader;
     AOptional<gl::Program> mBoxShadowShader;
@@ -132,8 +135,21 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
 
     void setBlending(const APaint& paint);
 
-    void setupMask(gl::Program& shader, const APaint& paint);
+    void setupMask(gl::Program& shader);
     bool setupLineShader(const glm::mat4& transform, const ABorderStyle& style, float widthPx, const APaint& paint);
+
+    glm::vec4 maskColor(glm::vec4 color) const noexcept {
+        if (mIsRenderingToMask) {
+            return glm::vec4(1.f, 0.f, 0.f, color.w);
+        }
+        return color;
+    }
+    AColor maskColor(AColor color) const noexcept {
+        if (mIsRenderingToMask) {
+            return AColor(1.f, 0.f, 0.f, color.a);
+        }
+        return color;
+    }
 
 public:
     OpenGLRenderer();
@@ -180,20 +196,22 @@ public:
 
     void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
+    void setMask(const _<ITexture>& mask, const glm::vec4& maskRect = glm::vec4(0.f)) override;
+
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 
-    _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept;
+    _unique<IRenderViewToTexture> newRenderViewToTexture(APixelFormat format = APixelFormat::RGBA_BYTE) noexcept;
 
     uint32_t getDefaultFb() const noexcept;
 };
 
 class OpenGLRenderViewToTexture: public IRenderViewToTexture {
 public:
-    OpenGLRenderViewToTexture(OpenGLRenderer& renderer): mRenderer(renderer) {}
+    OpenGLRenderViewToTexture(OpenGLRenderer& renderer, APixelFormat format): mRenderer(renderer), mFormat(format) {}
 
     bool begin(IRenderer& renderer, glm::ivec2 surfaceSize, InvalidArea& invalidArea) override {
         if (!mTexture || mFramebuffer.size() != glm::u32vec2(surfaceSize)) {
-            mTexture = _cast<OpenGLTexture2D>(mRenderer.createTexture(surfaceSize, APixelFormat::RGBA_BYTE, TextureFilter::NEAREST));
+            mTexture = _cast<OpenGLTexture2D>(mRenderer.createTexture(surfaceSize, mFormat, TextureFilter::NEAREST));
             mTexture->texture().setupClampToEdge();
             mFramebuffer = gl::Framebuffer();
             mFramebuffer.resize(surfaceSize);
@@ -215,6 +233,8 @@ public:
 
         glDisable(GL_STENCIL_TEST);
         mRenderer.mStencilDepth = 0;
+
+        mRenderer.mIsRenderingToMask = (mFormat == APixelFormat::R_BYTE);
 
         if (glBlendFuncSeparate) {
             glEnable(GL_BLEND);
@@ -239,10 +259,15 @@ public:
         mRenderer.mViewportSize = mPrevViewportSize;
         mRenderer.mProjectionMatrix = mPrevProjectionMatrix;
         mRenderer.mStencilDepth = mPrevStencilDepth;
+        mRenderer.mIsRenderingToMask = false;
     }
 
     void draw(ACanvas& canvas) override {
-        canvas.rectangle(APaint{ATexturedBrush{mTexture}}, {0, 0}, mTexture->getSize());
+        canvas.rectangle(APaint{ATexturedBrush{
+            .texture = mTexture,
+            .uv1 = glm::vec2(0.f, 1.f),
+            .uv2 = glm::vec2(1.f, 0.f)
+        }}, {0, 0}, mTexture->getSize());
     }
 
     [[nodiscard]]
@@ -258,4 +283,5 @@ public:
     glm::uvec2 mPrevViewportSize = {1, 1};
     glm::mat4 mPrevProjectionMatrix = glm::mat4(1.0f);
     std::uint8_t mPrevStencilDepth = 0;
+    APixelFormat mFormat;
 };
