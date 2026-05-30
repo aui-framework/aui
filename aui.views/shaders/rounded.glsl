@@ -1,10 +1,10 @@
-float rounded(vec2 absolute, vec2 size) {
+float rounded(vec2 absolute, vec2 size, vec2 absoluteDerivatives) {
     vec2 circleCenter = 1.0 - size;
     
 #if defined(GL_ES) && !defined(GL_OES_standard_derivatives)
     vec2 fw = vec2(0.01);
 #else
-    vec2 fw = fwidth(absolute);
+    vec2 fw = absoluteDerivatives;
 #endif
 
     vec2 safeFw = max(fw, 1e-7);

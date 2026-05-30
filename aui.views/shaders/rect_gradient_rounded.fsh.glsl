@@ -8,6 +8,7 @@ uniform mat3 matUv;
 uniform sampler2D u_mask;
 uniform bool u_useMask;
 uniform vec2 u_windowSize;
+uniform vec4 u_maskRect;
 
 vec4 gradient(vec2 uv) {
     vec3 transformedUv = matUv * vec3(uv, 1.0);
@@ -15,13 +16,13 @@ vec4 gradient(vec2 uv) {
     return c;
 }
 
-float rounded(vec2 absolute, vec2 size) {
+float rounded(vec2 absolute, vec2 size, vec2 absoluteDerivatives) {
     vec2 circleCenter = 1.0 - size;
     
 #if defined(GL_ES) && !defined(GL_OES_standard_derivatives)
     vec2 fw = vec2(0.01);
 #else
-    vec2 fw = fwidth(absolute);
+    vec2 fw = absoluteDerivatives;
 #endif
 
     vec2 safeFw = max(fw, 1e-7);
@@ -35,9 +36,14 @@ float rounded(vec2 absolute, vec2 size) {
 }
 
 void main() {
-    gl_FragColor = vColor * gradient(vUv) * rounded(abs(vUv * 2.0 - 1.0), vOuterSize);
+    gl_FragColor = vColor * gradient(vUv) * rounded(abs(vUv * 2.0 - 1.0), vOuterSize, fwidth(vUv) * 2.0);
     if (u_useMask) {
-        gl_FragColor *= texture2D(u_mask, gl_FragCoord.xy / u_windowSize).r;
+        vec2 maskUv = (gl_FragCoord.xy - u_maskRect.xy) / u_maskRect.zw;
+        if (maskUv.x < 0.0 || maskUv.x > 1.0 || maskUv.y < 0.0 || maskUv.y > 1.0) {
+            gl_FragColor *= 0.0;
+        } else {
+            gl_FragColor *= texture2D(u_mask, maskUv).r;
+        }
     }
     if (gl_FragColor.a < 0.001) discard;
 }
