@@ -11,6 +11,7 @@
 
 #include "OpenGLRenderingContext.h"
 #include "AUI/GL/RenderTarget/RenderbufferRenderTarget.h"
+#include <AUI/GL/gl.h>
 
 static constexpr auto LOG_TAG = "OpenGLRenderingContext";
 
@@ -27,7 +28,6 @@ void OpenGLRenderingContext::tryEnableFramebuffer(glm::uvec2 windowSize) {
 
 gl::Framebuffer OpenGLRenderingContext::newOffscreenRenderingFramebuffer(glm::uvec2 initialSize) {
     gl::Framebuffer framebuffer;
-    framebuffer.setSupersamplingRatio(2);
     framebuffer.resize(initialSize);
     auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
     framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
@@ -45,7 +45,7 @@ void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
             fb->resize(windowSize);
         }
         fb->bind();
-        mViewportSize = fb->supersampledSize();
+        mViewportSize = fb->size();
     } else {
         mViewportSize = windowSize;
     }
@@ -58,7 +58,7 @@ void OpenGLRenderingContext::endFramebuffer() {
         fb->bindForRead();
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
         glBlitFramebuffer(0, 0,                       // src pos
-                          fb->supersampledSize().x, fb->supersampledSize().y, // src size
+                          fb->size().x, fb->size().y, // src size
                           0, 0,                       // dst pos
                           fb->size().x, fb->size().y, // dst size
                           GL_COLOR_BUFFER_BIT,        // mask
@@ -80,8 +80,5 @@ uint32_t OpenGLRenderingContext::getDefaultFb() const noexcept {
 }
 
 uint32_t OpenGLRenderingContext::getSupersamplingRatio() const noexcept {
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        return fb->supersamlingRatio();
-    }
     return 1;
 }
