@@ -33,12 +33,6 @@ namespace RenderHints {
         void setTransformForced(const glm::mat4& t) {
             mCanvas.setTransformForced(t);
         }
-        AColor getColor() const {
-            return mCanvas.getColor();
-        }
-        void setColorForced(const AColor& c) {
-            mCanvas.setColorForced(c);
-        }
     private:
         ACanvas& mCanvas;
     };
@@ -57,22 +51,8 @@ namespace RenderHints {
         glm::mat4 stored;
     };
 
-    struct PushColor {
+    class PushState : public PushMatrix {
     public:
-        inline explicit PushColor(CanvasOrRenderer render): render(render), stored(render.getColor()) {
-        }
-
-        inline ~PushColor() {
-            render.setColorForced(stored);
-        }
-
-    private:
-        CanvasOrRenderer render;
-        AColor stored;
-    };
-
-    class PushState : PushColor, PushMatrix {
-    public:
-        inline explicit PushState(CanvasOrRenderer render): PushColor(render), PushMatrix(render) {}
+        inline explicit PushState(CanvasOrRenderer render): PushMatrix(render) {}
     };
 }

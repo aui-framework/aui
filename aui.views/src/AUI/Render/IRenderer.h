@@ -162,8 +162,6 @@ public:
  
     virtual void setColorForced(const AColor& color) = 0;
 
-    virtual void setColor(const AColor& color) = 0;
-
     virtual const AColor& getColor() const = 0;
 
     virtual void setTransform(const glm::mat4& transform) = 0;

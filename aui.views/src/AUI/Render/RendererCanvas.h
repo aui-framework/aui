@@ -81,8 +81,6 @@ public:
 
     void setColorForced(const AColor& color) override;
 
-    void setColor(const AColor& color) override;
-
     const AColor& getColor() const override;
 
     void setTransform(const glm::mat4& transform) override;
@@ -123,10 +121,11 @@ public:
 
 private:
     APaint paint(const ABrush& brush) const {
-        return {brush, AColor::WHITE, mBlending, 1.0f};
+        return {brush, mColorMultiplier, mBlending, 1.0f};
     }
 
     ACanvas& mCanvas;
     ASurface* mWindow = nullptr;
     Blending mBlending = Blending::NORMAL;
+    AColor mColorMultiplier = AColor::WHITE;
 };

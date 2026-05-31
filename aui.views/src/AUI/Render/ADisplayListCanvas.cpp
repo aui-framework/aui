@@ -41,7 +41,7 @@ void ADisplayListCanvas::popMask() {
 }
 
 void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) {
-    AColor combinedColor = paint.color * mColorMultiplier;
+    AColor combinedColor = paint.color;
     combinedColor.a *= paint.opacity;
 
     std::visit(aui::lambda_overloaded {
@@ -61,7 +61,7 @@ void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm:
 }
 
 void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 position, glm::vec2 size, float radius) {
-    AColor combinedColor = paint.color * mColorMultiplier;
+    AColor combinedColor = paint.color;
     combinedColor.a *= paint.opacity;
 
     std::visit(aui::lambda_overloaded {
@@ -83,7 +83,7 @@ void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 positio
 }
 
 void ADisplayListCanvas::rectangleBorder(const APaint& paint, glm::vec2 position, glm::vec2 size, float lineWidth) {
-    AColor combinedColor = paint.color * mColorMultiplier;
+    AColor combinedColor = paint.color;
     combinedColor.a *= paint.opacity;
     AColor brushColor = AColor::WHITE;
     if (auto b = std::get_if<ASolidBrush>(&paint.brush)) {
@@ -97,7 +97,7 @@ void ADisplayListCanvas::roundedRectangleBorder(const APaint& paint,
                                                 glm::vec2 size,
                                                 float radius,
                                                 int borderWidth) {
-    AColor combinedColor = paint.color * mColorMultiplier;
+    AColor combinedColor = paint.color;
     combinedColor.a *= paint.opacity;
     AColor brushColor = AColor::WHITE;
     if (auto b = std::get_if<ASolidBrush>(&paint.brush)) {
@@ -107,7 +107,7 @@ void ADisplayListCanvas::roundedRectangleBorder(const APaint& paint,
 }
 
 void ADisplayListCanvas::boxShadow(const APaint& paint, glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) {
-    add(ADisplayList::BoxShadow{position, size, blurRadius, color * mColorMultiplier}, paint);
+    add(ADisplayList::BoxShadow{position, size, blurRadius, color}, paint);
 }
 
 void ADisplayListCanvas::boxShadowInner(const APaint& paint,
@@ -118,7 +118,7 @@ void ADisplayListCanvas::boxShadowInner(const APaint& paint,
                                         float borderRadius,
                                         const AColor& color,
                                         glm::vec2 offset) {
-    add(ADisplayList::BoxShadowInner{position, size, blurRadius, spreadRadius, borderRadius, color * mColorMultiplier, offset}, paint);
+    add(ADisplayList::BoxShadowInner{position, size, blurRadius, spreadRadius, borderRadius, color, offset}, paint);
 }
 
 void ADisplayListCanvas::string(const APaint& paint, glm::vec2 position, const AString& string, const AFontStyle& fs) {
@@ -135,7 +135,7 @@ void ADisplayListCanvas::prerenderedString(const APaint& paint, glm::vec2 positi
 }
 
 void ADisplayListCanvas::glyphRect(const _<ITexture>& texture, glm::vec2 position, glm::vec2 size, glm::vec2 u1, glm::vec2 u2, const AColor& color, bool isSubpixel) {
-    add(ADisplayList::Glyphs{{{position, size, u1, u2, color * mColorMultiplier}}, texture, AColor::WHITE, isSubpixel}, {});
+    add(ADisplayList::Glyphs{{{position, size, u1, u2, color}}, texture, AColor::WHITE, isSubpixel}, {});
 }
 
 void ADisplayListCanvas::lines(const APaint& paint, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
@@ -167,7 +167,6 @@ void ADisplayListCanvas::backdrops(glm::ivec2 position, glm::ivec2 size, std::sp
 
 void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const APaint& paint) {
     APaint combined = paint;
-    combined.color *= mColorMultiplier;
     
     auto st = mTransform;
     auto bt = mBaseTransform;
@@ -286,6 +285,11 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                 for (auto& p : v.points) {
                     p = glm::vec2(st * glm::vec4(p, 0.f, 1.f));
                 }
+            },
+            [&](ADisplayList::PushMask& v) {
+                glm::vec4 p1 = st * glm::vec4(v.maskRect.x, v.maskRect.y, 0.f, 1.f);
+                glm::vec4 p2 = st * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0.f, 1.f);
+                v.maskRect = glm::vec4(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
             },
             [&](auto&) {}
         };

@@ -110,15 +110,11 @@ void RendererCanvas::squareSector(const ABrush& brush,
 }
 
 void RendererCanvas::setColorForced(const AColor& color) {
-    mCanvas.setColorForced(color);
-}
-
-void RendererCanvas::setColor(const AColor& color) {
-    mCanvas.setColor(color);
+    mColorMultiplier = color;
 }
 
 const AColor& RendererCanvas::getColor() const {
-    return mCanvas.getColor();
+    return mColorMultiplier;
 }
 
 void RendererCanvas::setTransform(const glm::mat4& transform) {

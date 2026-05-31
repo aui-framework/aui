@@ -35,12 +35,13 @@
 
 class ACanvas {
 public:
+
     virtual ~ACanvas() = default;
 
     virtual IRendererBackend& renderer() = 0;
 
     virtual void save() {
-        mStates.push_back(State{mTransform, mBaseTransform, mColorMultiplier});
+        mStates.push_back(State{mTransform, mBaseTransform});
     }
 
     virtual void restore() {
@@ -49,7 +50,6 @@ public:
             mStates.pop_back();
             mTransform = s.transform;
             mBaseTransform = s.baseTransform;
-            mColorMultiplier = s.colorMultiplier;
         }
     }
 
@@ -72,10 +72,6 @@ public:
             mBaseTransform = mBaseTransform * mTransform * transform;
             mTransform = glm::mat4(1.0f);
         }
-    }
-
-    virtual void setColor(const AColor& color) {
-        mColorMultiplier = mColorMultiplier * color;
     }
 
     virtual void rectangle(const APaint& paint,
@@ -162,12 +158,6 @@ public:
         }
     }
 
-    const AColor& getColorMultiplier() const noexcept { return mColorMultiplier; }
-    void setColorMultiplier(const AColor& color) noexcept { mColorMultiplier = color; }
-
-    virtual void setColorForced(const AColor& color) noexcept { mColorMultiplier = color; }
-    const AColor& getColor() const noexcept { return mColorMultiplier; }
-
     void translate(const glm::vec2& offset) {
         mTransform = glm::translate(mTransform, glm::vec3(offset, 0.f));
     }
@@ -186,11 +176,9 @@ protected:
     struct State {
         glm::mat4 transform;
         glm::mat4 baseTransform;
-        AColor colorMultiplier;
     };
     std::vector<State> mStates;
     glm::mat4 mTransform = glm::mat4(1.0f);
     glm::mat4 mBaseTransform = glm::mat4(1.0f);
-    AColor mColorMultiplier = AColor::WHITE;
     float mRenderScale = 1.0f;
 };
