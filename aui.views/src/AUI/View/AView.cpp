@@ -144,7 +144,7 @@ void AView::render(ARenderContext ctx)
             APaint maskPaint;
             maskPaint.brush = ASolidBrush{AColor::WHITE};
             offscreenCanvas.roundedRectangle(maskPaint, {0, 0}, getSize(), getBorderRadius());
-            offscreenDl.optimize();
+            offscreenDl.optimize(ctx.canvas.renderer());
             offscreenDl.draw(ctx.canvas.renderer());
             mMaskTexture->end(ctx.render);
         }
@@ -791,7 +791,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
                 ALogger::err("AView") << "Unable to render view: " << e;
                 return;
             }
-            offscreenDl.optimize();
+            offscreenDl.optimize(backend);
             offscreenDl.draw(backend);
             mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
             mRenderToTexture->drawFromTexture = true;

@@ -50,7 +50,6 @@ private:
         if (mCurrentValue <= 0) {
             return;
         }
-        RenderHints::PushColor s(ctx.canvas);
 
         auto color = AColor::WHITE;
         if (mCurrentValue < 5) {

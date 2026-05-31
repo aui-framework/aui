@@ -668,7 +668,7 @@ public:
         return mTextColor;
     }
 
-    void setTextColor(AColor color) {
+    virtual void setTextColor(AColor color) {
         mTextColor = color;
     }
 

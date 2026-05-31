@@ -45,8 +45,8 @@ public:
     struct TexturedRectangles {
         AVector<RectInstance> instances;
         _<ITexture> texture;
-        glm::vec2 uv1 = {0.f, 0.f};
-        glm::vec2 uv2 = {1.f, 1.f};
+        glm::vec2 uv1 = { 0.f, 0.f };
+        glm::vec2 uv2 = { 1.f, 1.f };
     };
     struct SolidRoundedRectangles {
         AVector<RectInstance> instances;
@@ -62,8 +62,8 @@ public:
         AVector<RectInstance> instances;
         float radius;
         _<ITexture> texture;
-        glm::vec2 uv1 = {0.f, 0.f};
-        glm::vec2 uv2 = {1.f, 1.f};
+        glm::vec2 uv1 = { 0.f, 0.f };
+        glm::vec2 uv2 = { 1.f, 1.f };
     };
     struct RectangleBorders {
         AVector<RectInstance> instances;
@@ -137,59 +137,44 @@ public:
     struct PopMask {};
 
     struct StoredCommand {
-        using Command = std::variant<SolidRectangles,
-                                     GradientRectangles,
-                                     TexturedRectangles,
-                                     SolidRoundedRectangles,
-                                     GradientRoundedRectangles,
-                                     TexturedRoundedRectangles,
-                                     RectangleBorders,
-                                     RoundedRectangleBorders,
-                                     BoxShadow,
-                                     BoxShadowInner,
-                                     Glyphs,
-                                     Lines,
-                                     LineBatches,
-                                     Points,
-                                     SquareSector,
-                                     Backdrop,
-                                     PushLayer,
-                                     PopLayer,
-                                     PushMask,
-                                     PopMask>;
+        using Command = std::variant<
+            SolidRectangles, GradientRectangles, TexturedRectangles, SolidRoundedRectangles, GradientRoundedRectangles,
+            TexturedRoundedRectangles, RectangleBorders, RoundedRectangleBorders, BoxShadow, BoxShadowInner, Glyphs,
+            Lines, LineBatches, Points, SquareSector, Backdrop, PushLayer, PopLayer, PushMask, PopMask>;
 
         Command command;
         glm::mat4 transform;
         APaint paint;
     };
 
-struct Entity {
-    StoredCommand::Command command;
-    glm::mat4 transform;
-    APaint paint;
-    ARect<float> boundingBox;
-    bool isObscured = false;
-    _<ITexture> mask;
-    glm::vec4 maskRect;
-};
+    struct Entity {
+        StoredCommand::Command command;
+        glm::mat4 transform;
+        APaint paint;
+        ARect<float> boundingBox;
+        bool isObscured = false;
+        _<ITexture> mask;
+        glm::vec4 maskRect;
+    };
 
-void add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint);
+    void add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint);
 
-void clear() {
-    mCommands.clear();
-    mOpaqueRects.clear();
-    mEntities.clear();
-}
+    void clear() {
+        mCommands.clear();
+        mOpaqueRects.clear();
+        mEntities.clear();
+    }
 
-/**
- * @brief Resolves all entities and their properties (like masks) beforehand.
- */
-void optimize(IRendererBackend& renderer);
+    /**
+     * @brief Resolves all entities and their properties (like masks) beforehand.
+     */
+    void optimize(IRendererBackend& renderer);
 
     void draw(IRendererBackend& renderer) const;
 
     void resolveEntities();
     void computeOverlaps();
+    void resolveMasks(IRendererBackend& renderer);
 
 private:
     AVector<StoredCommand> mCommands;

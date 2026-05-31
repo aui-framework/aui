@@ -207,7 +207,6 @@ void AAbstractLabel::doRenderText(ACanvas& render) {
             if (mIcon) {
                 requiredSpace *= getHeight() / requiredSpace.y;
                 RenderHints::PushState s(render);
-                render.setColor(mIconColor);
                 render.setTransform(glm::translate(glm::mat4(1.f),
                                                    glm::vec3(mPadding.left + mTextLeftOffset, iconY, 0)));
                 IDrawable::Params p;
@@ -229,7 +228,6 @@ void AAbstractLabel::doRenderText(ACanvas& render) {
                     if (mIcon) {
                         mTextLeftOffset += requiredSpace.x / 2;
                         RenderHints::PushState s(render);
-                        render.setColor(mIconColor);
                         render.setTransform(glm::translate(glm::mat4(1.f),
                                                            glm::vec3(mTextLeftOffset - (mPrerendered->getWidth()) / 2 -
                                                                      requiredSpace.x,
@@ -246,7 +244,6 @@ void AAbstractLabel::doRenderText(ACanvas& render) {
                     mTextLeftOffset += getContentWidth() - mPrerendered->getWidth();
                     if (mIcon) {
                         RenderHints::PushState s(render);
-                        render.setColor(mIconColor);
                         render.setTransform(glm::translate(glm::mat4(1.f),
                                                            glm::vec3(mPadding.left + mTextLeftOffset -
                                                                      (mPrerendered ? mPrerendered->getWidth() : 0) -
@@ -276,7 +273,6 @@ void AAbstractLabel::doRenderText(ACanvas& render) {
             }
             RenderHints::PushMatrix m(render);
             render.translate({mTextLeftOffset + mPadding.left, y});
-            render.setColor(textColor());
             mPrerendered->draw(render);
         }
     }
@@ -342,5 +338,6 @@ void AAbstractLabel::invalidateAllStyles() {
 
 void AAbstractLabel::commitStyle() {
     AView::commitStyle();
+    getFontStyle().color = textColor();
     commitStyleFont();
 }

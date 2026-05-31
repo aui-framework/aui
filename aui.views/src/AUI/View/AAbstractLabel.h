@@ -72,6 +72,11 @@ public:
 
     void setText(AString newText);
 
+    void setTextColor(AColor color) override {
+        AView::setTextColor(color);
+        invalidateFont();
+    }
+
     void invalidateFont() override;
 
     void setVerticalAlign(VerticalAlign verticalAlign) {
