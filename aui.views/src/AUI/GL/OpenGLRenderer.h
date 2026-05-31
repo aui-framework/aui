@@ -233,7 +233,7 @@ public:
         mFramebuffer.bind();
         glViewport(0, 0, surfaceSize.x, surfaceSize.y);
         mRenderer.mViewportSize = glm::uvec2(surfaceSize);
-        mRenderer.mProjectionMatrix = glm::ortho(0.f, (float)surfaceSize.x, 0.f, (float)surfaceSize.y, -1.f, 1.f);
+        mRenderer.mProjectionMatrix = glm::ortho(0.f, (float)surfaceSize.x, (float)surfaceSize.y, 0.f, -1.f, 1.f);
 
         glDisable(GL_STENCIL_TEST);
         mRenderer.mIsRenderingToMask = (mFormat == APixelFormat::R_BYTE);
@@ -264,7 +264,11 @@ public:
     }
 
     void draw(ACanvas& canvas) override {
-        canvas.rectangle(APaint{ATexturedBrush{mTexture}}, {0, 0}, mTexture->getSize());
+        ATexturedBrush b;
+        b.texture = mTexture;
+        b.uv1 = glm::vec2(0, 1);
+        b.uv2 = glm::vec2(1, 0);
+        canvas.rectangle(APaint{b}, {0, 0}, mTexture->getSize());
     }
 
     [[nodiscard]]
