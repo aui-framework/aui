@@ -82,7 +82,7 @@ protected:
     ADisplayList mDisplayList;
     _unique<ADisplayListCanvas> mCanvas;
     _unique<RendererCanvas> mRendererWrapper;
-    glm::uvec2 mViewportSize;
+    glm::uvec2 mViewportSize { 0, 0 };
     struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
     static _<OpenGLRenderer> ourRenderer() {
         static _weak<OpenGLRenderer> g;

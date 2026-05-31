@@ -52,12 +52,16 @@ namespace {
         _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format, TextureFilter filter) override { return nullptr; }
         void setAllowRenderToTexture(bool allow) override {}
         bool allowRenderToTexture() const noexcept override { return true; }
-        _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override { return nullptr; }
         void setWindow(ASurface* window) override {}
         ASurface* getWindow() const noexcept override { return nullptr; }
         glm::mat4 getProjectionMatrix() const override { return glm::mat4(1.0f); }
 
         const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
+        void setMask(const _<ITexture>& mask, const glm::vec4& maskRect) override {}
+        AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
+                               const _<ITexture>& mask2, const glm::vec4& mask2Rect) override {
+            return { nullptr, glm::vec4(0.f) };
+        }
 
     private:
         _<aui::AFontCache> mFontCache;

@@ -164,22 +164,27 @@ public:
     };
 
 struct Entity {
-StoredCommand::Command command;
-glm::mat4 transform;
-APaint paint;
-ARect<float> boundingBox;
-bool isObscured = false;
+    StoredCommand::Command command;
+    glm::mat4 transform;
+    APaint paint;
+    ARect<float> boundingBox;
+    bool isObscured = false;
+    _<ITexture> mask;
+    glm::vec4 maskRect;
 };
 
 void add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint);
 
-    void clear() {
-        mCommands.clear();
-        mOpaqueRects.clear();
-        mEntities.clear();
-    }
+void clear() {
+    mCommands.clear();
+    mOpaqueRects.clear();
+    mEntities.clear();
+}
 
-    void optimize();
+/**
+ * @brief Resolves all entities and their properties (like masks) beforehand.
+ */
+void optimize(IRendererBackend& renderer);
 
     void draw(IRendererBackend& renderer) const;
 

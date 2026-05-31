@@ -174,7 +174,7 @@ void ADisplayList::resolveEntities() {
                       localPos = glm::vec2(v.position);
                       localSize = glm::vec2(v.size);
                   } else {
-                      // Commands like PushLayer, PopLayer, etc.
+                      // Commands like PushLayer, PopLayer, PushMask, PopMask
                        mEntities << Entity{ .command = cmd.command, .transform = cmd.transform, .paint = cmd.paint };
                       return;
                   }
@@ -246,7 +246,7 @@ void ADisplayList::computeOverlaps() {
     }
 }
 
-void ADisplayList::draw(IRendererBackend& renderer) const {
+void ADisplayList::resolveMasks(IRendererBackend& renderer) {
     struct MaskStackEntry {
         _<ITexture> mask;
         glm::vec4 maskRect;
@@ -255,86 +255,80 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
     _<ITexture> currentMask;
     glm::vec4 currentMaskRect(0.f);
 
-    auto dispatch = [&](const StoredCommand::Command& command, const glm::mat4& transform, const APaint& paint) {
-        bool handled = std::visit(
+    for (auto& entity : mEntities) {
+        std::visit(aui::lambda_overloaded {
+            [&](const PushMask& v) {
+                // v.maskRect is local
+                // transform is Local-to-DisplayList transform
+                glm::vec2 p1 = glm::vec2(entity.transform * glm::vec4(v.maskRect.x, v.maskRect.y, 0, 1));
+                glm::vec2 p2 = glm::vec2(entity.transform * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0, 1));
+                glm::vec4 displayListRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+
+                if (!currentMask) {
+                    currentMask = v.mask;
+                    currentMaskRect = displayListRect;
+                } else {
+                    auto merged = renderer.mergeMasks(currentMask, currentMaskRect, v.mask, displayListRect);
+                    currentMask = merged.texture;
+                    currentMaskRect = merged.rect;
+                }
+                maskStack.push_back({currentMask, currentMaskRect});
+            },
+            [&](const PopMask&) {
+                if (!maskStack.empty()) {
+                    maskStack.pop_back();
+                }
+                if (!maskStack.empty()) {
+                    currentMask = maskStack.back().mask;
+                    currentMaskRect = maskStack.back().maskRect;
+                } else {
+                    currentMask = nullptr;
+                    currentMaskRect = glm::vec4(0.f);
+                }
+            },
+            [&](auto&) {}
+        }, entity.command);
+        
+        entity.mask = currentMask;
+        entity.maskRect = currentMaskRect;
+    }
+}
+
+void ADisplayList::draw(IRendererBackend& renderer) const {
+    auto dispatch = [&](const Entity& entity) {
+        bool isControl = std::visit(
             aui::lambda_overloaded {
-              [&](const SolidRectangles& v) { return false; },
-              [&](const GradientRectangles& v) { return false; },
-              [&](const TexturedRectangles& v) { return false; },
-              [&](const SolidRoundedRectangles& v) { return false; },
-              [&](const GradientRoundedRectangles& v) { return false; },
-              [&](const TexturedRoundedRectangles& v) { return false; },
-              [&](const RectangleBorders& v) { return false; },
-              [&](const RoundedRectangleBorders& v) { return false; },
-              [&](const BoxShadow& v) { return false; },
-              [&](const BoxShadowInner& v) { return false; },
-              [&](const Glyphs& v) { return false; },
-              [&](const Lines& v) { return false; },
-              [&](const Points& v) { return false; },
-              [&](const LineBatches& v) { return false; },
-              [&](const SquareSector& v) { return false; },
-              [&](const Backdrop& v) { return false; },
               [&](const PushLayer&) { return true; },
               [&](const PopLayer&) { return true; },
-              [&](const PushMask& v) {
-                  // v.maskRect is local
-                  // transform is Local-to-DisplayList transform
-                  glm::vec2 p1 = glm::vec2(transform * glm::vec4(v.maskRect.x, v.maskRect.y, 0, 1));
-                  glm::vec2 p2 = glm::vec2(transform * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0, 1));
-                  glm::vec4 displayListRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
-
-                  if (!currentMask) {
-                      currentMask = v.mask;
-                      currentMaskRect = displayListRect;
-                  } else {
-                      auto merged = renderer.mergeMasks(currentMask, currentMaskRect, v.mask, displayListRect);
-                      currentMask = merged.texture;
-                      currentMaskRect = merged.rect;
-                  }
-                  maskStack.push_back({currentMask, currentMaskRect});
-                  renderer.setMask(currentMask, currentMaskRect);
-                  return true;
-              },
-              [&](const PopMask&) {
-                  if (!maskStack.empty()) {
-                      maskStack.pop_back();
-                  }
-                  if (!maskStack.empty()) {
-                      currentMask = maskStack.back().mask;
-                      currentMaskRect = maskStack.back().maskRect;
-                  } else {
-                      currentMask = nullptr;
-                      currentMaskRect = glm::vec4(0.f);
-                  }
-                  renderer.setMask(currentMask, currentMaskRect);
-                  return true;
-              }
+              [&](const PushMask&) { return true; },
+              [&](const PopMask&) { return true; },
+              [&](const auto&) { return false; }
             },
-            command);
+            entity.command);
 
-        if (!handled) {
-            renderer.setMask(currentMask, currentMaskRect);
+        if (!isControl) {
+            renderer.setMask(entity.mask, entity.maskRect);
             std::visit(
                 aui::lambda_overloaded {
-                  [&](const SolidRectangles& v) { renderer.solidRectangles(v, transform, paint); },
-                  [&](const GradientRectangles& v) { renderer.gradientRectangles(v, transform, paint); },
-                  [&](const TexturedRectangles& v) { renderer.texturedRectangles(v, transform, paint); },
-                  [&](const SolidRoundedRectangles& v) { renderer.solidRoundedRectangles(v, transform, paint); },
-                  [&](const GradientRoundedRectangles& v) { renderer.gradientRoundedRectangles(v, transform, paint); },
-                  [&](const TexturedRoundedRectangles& v) { renderer.texturedRoundedRectangles(v, transform, paint); },
-                  [&](const RectangleBorders& v) { renderer.rectangleBorders(v, transform, paint); },
-                  [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, transform, paint); },
-                  [&](const BoxShadow& v) { renderer.boxShadow(v, transform, paint); },
-                  [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, transform, paint); },
-                  [&](const Glyphs& v) { renderer.glyphs(v, transform, paint); },
-                  [&](const Lines& v) { renderer.lines(v, transform, paint); },
-                  [&](const Points& v) { renderer.points(v, transform, paint); },
-                  [&](const LineBatches& v) { renderer.lines(v, transform, paint); },
-                  [&](const SquareSector& v) { renderer.squareSector(v, transform, paint); },
-                  [&](const Backdrop& v) { renderer.backdrops(v, transform); },
+                  [&](const SolidRectangles& v) { renderer.solidRectangles(v, entity.transform, entity.paint); },
+                  [&](const GradientRectangles& v) { renderer.gradientRectangles(v, entity.transform, entity.paint); },
+                  [&](const TexturedRectangles& v) { renderer.texturedRectangles(v, entity.transform, entity.paint); },
+                  [&](const SolidRoundedRectangles& v) { renderer.solidRoundedRectangles(v, entity.transform, entity.paint); },
+                  [&](const GradientRoundedRectangles& v) { renderer.gradientRoundedRectangles(v, entity.transform, entity.paint); },
+                  [&](const TexturedRoundedRectangles& v) { renderer.texturedRoundedRectangles(v, entity.transform, entity.paint); },
+                  [&](const RectangleBorders& v) { renderer.rectangleBorders(v, entity.transform, entity.paint); },
+                  [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, entity.transform, entity.paint); },
+                  [&](const BoxShadow& v) { renderer.boxShadow(v, entity.transform, entity.paint); },
+                  [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, entity.transform, entity.paint); },
+                  [&](const Glyphs& v) { renderer.glyphs(v, entity.transform, entity.paint); },
+                  [&](const Lines& v) { renderer.lines(v, entity.transform, entity.paint); },
+                  [&](const Points& v) { renderer.points(v, entity.transform, entity.paint); },
+                  [&](const LineBatches& v) { renderer.lines(v, entity.transform, entity.paint); },
+                  [&](const SquareSector& v) { renderer.squareSector(v, entity.transform, entity.paint); },
+                  [&](const Backdrop& v) { renderer.backdrops(v, entity.transform); },
                   [&](const auto&) {}
                 },
-                command);
+                entity.command);
         }
     };
 
@@ -343,16 +337,74 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
             if (entity.isObscured) {
                 continue;
             }
-            dispatch(entity.command, entity.transform, entity.paint);
+            dispatch(entity);
         }
     } else {
+        // Fallback for non-optimized draw (should we support this? User wants "at the shore")
+        struct MaskStackEntry {
+            _<ITexture> mask;
+            glm::vec4 maskRect;
+        };
+        std::vector<MaskStackEntry> maskStack;
+        _<ITexture> currentMask;
+        glm::vec4 currentMaskRect(0.f);
+
         for (const auto& cmd : mCommands) {
-            dispatch(cmd.command, cmd.transform, cmd.paint);
+            std::visit(aui::lambda_overloaded {
+                [&](const PushMask& v) {
+                    glm::vec2 p1 = glm::vec2(cmd.transform * glm::vec4(v.maskRect.x, v.maskRect.y, 0, 1));
+                    glm::vec2 p2 = glm::vec2(cmd.transform * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0, 1));
+                    glm::vec4 displayListRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+
+                    if (!currentMask) {
+                        currentMask = v.mask;
+                        currentMaskRect = displayListRect;
+                    } else {
+                        auto merged = renderer.mergeMasks(currentMask, currentMaskRect, v.mask, displayListRect);
+                        currentMask = merged.texture;
+                        currentMaskRect = merged.rect;
+                    }
+                    maskStack.push_back({currentMask, currentMaskRect});
+                },
+                [&](const PopMask&) {
+                    if (!maskStack.empty()) maskStack.pop_back();
+                    if (!maskStack.empty()) {
+                        currentMask = maskStack.back().mask;
+                        currentMaskRect = maskStack.back().maskRect;
+                    } else {
+                        currentMask = nullptr;
+                        currentMaskRect = glm::vec4(0.f);
+                    }
+                },
+                [&](const auto&) {
+                    renderer.setMask(currentMask, currentMaskRect);
+                    std::visit(aui::lambda_overloaded {
+                        [&](const SolidRectangles& v) { renderer.solidRectangles(v, cmd.transform, cmd.paint); },
+                        [&](const GradientRectangles& v) { renderer.gradientRectangles(v, cmd.transform, cmd.paint); },
+                        [&](const TexturedRectangles& v) { renderer.texturedRectangles(v, cmd.transform, cmd.paint); },
+                        [&](const SolidRoundedRectangles& v) { renderer.solidRoundedRectangles(v, cmd.transform, cmd.paint); },
+                        [&](const GradientRoundedRectangles& v) { renderer.gradientRoundedRectangles(v, cmd.transform, cmd.paint); },
+                        [&](const TexturedRoundedRectangles& v) { renderer.texturedRoundedRectangles(v, cmd.transform, cmd.paint); },
+                        [&](const RectangleBorders& v) { renderer.rectangleBorders(v, cmd.transform, cmd.paint); },
+                        [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, cmd.transform, cmd.paint); },
+                        [&](const BoxShadow& v) { renderer.boxShadow(v, cmd.transform, cmd.paint); },
+                        [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, cmd.transform, cmd.paint); },
+                        [&](const Glyphs& v) { renderer.glyphs(v, cmd.transform, cmd.paint); },
+                        [&](const Lines& v) { renderer.lines(v, cmd.transform, cmd.paint); },
+                        [&](const Points& v) { renderer.points(v, cmd.transform, cmd.paint); },
+                        [&](const LineBatches& v) { renderer.lines(v, cmd.transform, cmd.paint); },
+                        [&](const SquareSector& v) { renderer.squareSector(v, cmd.transform, cmd.paint); },
+                        [&](const Backdrop& v) { renderer.backdrops(v, cmd.transform); },
+                        [&](const auto&) {}
+                    }, cmd.command);
+                }
+            }, cmd.command);
         }
     }
 }
 
-void ADisplayList::optimize() {
+void ADisplayList::optimize(IRendererBackend& renderer) {
     resolveEntities();
     computeOverlaps();
+    resolveMasks(renderer);
 }
