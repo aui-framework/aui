@@ -442,7 +442,7 @@ void ASurface::render(ARenderContext context) {
 #endif
     {
         APerformanceSection root("before frame");
-        std::exchange(mBeforeFrameQueue, {}).processMessages(context.canvas);
+        std::exchange(mBeforeFrameQueue, {}).processMessages(context);
     }
     processTouchscreenKeyboardRequest();
 
