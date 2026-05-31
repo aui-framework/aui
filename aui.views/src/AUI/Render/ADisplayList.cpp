@@ -174,7 +174,7 @@ void ADisplayList::resolveEntities() {
                       localPos = glm::vec2(v.position);
                       localSize = glm::vec2(v.size);
                   } else {
-                      // Commands like PushLayer, PopLayer, PushMask, PopMask, PushRenderTarget, PopRenderTarget
+                      // Commands like PushLayer, PopLayer, PushMask, PopMask, PushRenderTarget, PopRenderTarget, Clear
                        mEntities << Entity{ .command = cmd.command, .transform = cmd.transform, .paint = cmd.paint };
                       return;
                   }
@@ -216,6 +216,7 @@ void ADisplayList::computeOverlaps() {
               [&](const PopMask&) { return true; },
               [&](const PushRenderTarget&) { return true; },
               [&](const PopRenderTarget&) { return true; },
+              [&](const Clear&) { return true; },
               [&](const auto&) { return false; }
             },
             it->command);
@@ -335,10 +336,6 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
         renderer.setRenderTarget(pass.target, pass.size);
         renderer.setRenderMaskMode(pass.target && pass.target->getFormat() == APixelFormat::R_BYTE);
         
-        if (pass.target) {
-            renderer.clear();
-        }
-
         for (const auto& entity : pass.entities) {
             bool isControl = std::visit(
                 aui::lambda_overloaded {
@@ -346,6 +343,7 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
                   [&](const PopLayer&) { return true; },
                   [&](const PushMask&) { return true; },
                   [&](const PopMask&) { return true; },
+                  [&](const Clear&) { renderer.clear(); return true; },
                   [&](const auto&) { return false; }
                 },
                 entity.command);

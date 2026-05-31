@@ -132,6 +132,7 @@ public:
         _<ITexture> texture;
     };
     struct PopRenderTarget {};
+    struct Clear {};
     struct PushLayer {};
     struct PopLayer {};
     struct PushMask {
@@ -144,7 +145,7 @@ public:
         using Command = std::variant<
             SolidRectangles, GradientRectangles, TexturedRectangles, SolidRoundedRectangles, GradientRoundedRectangles,
             TexturedRoundedRectangles, RectangleBorders, RoundedRectangleBorders, BoxShadow, BoxShadowInner, Glyphs,
-            Lines, LineBatches, Points, SquareSector, Backdrop, PushRenderTarget, PopRenderTarget, PushLayer, PopLayer, PushMask, PopMask>;
+            Lines, LineBatches, Points, SquareSector, Backdrop, PushRenderTarget, PopRenderTarget, Clear, PushLayer, PopLayer, PushMask, PopMask>;
 
         Command command;
         glm::mat4 transform;
@@ -164,6 +165,7 @@ public:
     struct RenderPass {
         _<ITexture> target;
         glm::uvec2 size;
+        bool shouldClear;
         AVector<Entity> entities;
     };
 

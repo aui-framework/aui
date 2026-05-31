@@ -32,6 +32,8 @@ public:
     void pushRenderTarget(_<ITexture> texture) override;
     void popRenderTarget() override;
 
+    void clear() override;
+
     void rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) override;
     void roundedRectangle(const APaint& paint, glm::vec2 position, glm::vec2 size, float radius) override;
     void rectangleBorder(const APaint& paint, glm::vec2 position, glm::vec2 size, float lineWidth = 1.f) override;

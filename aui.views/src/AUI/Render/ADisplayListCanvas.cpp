@@ -48,6 +48,10 @@ void ADisplayListCanvas::popRenderTarget() {
     add(ADisplayList::PopRenderTarget{}, {});
 }
 
+void ADisplayListCanvas::clear() {
+    add(ADisplayList::Clear{}, {});
+}
+
 void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) {
     AColor combinedColor = paint.color;
     combinedColor.a *= paint.opacity;

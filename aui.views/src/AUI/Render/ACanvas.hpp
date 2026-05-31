@@ -59,6 +59,8 @@ public:
     virtual void pushRenderTarget(_<ITexture> texture) = 0;
     virtual void popRenderTarget() = 0;
 
+    virtual void clear() = 0;
+
     virtual void pushLayer() = 0;
     virtual void popLayer() = 0;
 
