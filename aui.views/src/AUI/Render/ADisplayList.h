@@ -179,14 +179,14 @@ public:
     /**
      * @brief Resolves all entities and their properties (like masks) beforehand.
      */
-    void optimize(IRendererBackend& renderer);
+    void optimize(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 
     void draw(IRendererBackend& renderer) const;
 
     void resolveEntities();
     void computeOverlaps();
     void resolveMasks(IRendererBackend& renderer);
-    void resolvePasses(IRendererBackend& renderer);
+    void resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 
 private:
     AVector<StoredCommand> mCommands;

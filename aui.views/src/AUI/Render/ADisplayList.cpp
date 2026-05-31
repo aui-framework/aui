@@ -294,13 +294,13 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer) {
     }
 }
 
-void ADisplayList::resolvePasses(IRendererBackend& renderer) {
+void ADisplayList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
     mPasses.clear();
     struct TargetEntry {
         _<ITexture> texture;
         glm::uvec2 size;
     };
-    AVector<TargetEntry> targetStack = { {nullptr, renderer.getViewportSize()} };
+    AVector<TargetEntry> targetStack = { {windowTarget, windowTarget->getSize()} };
     
     auto getPass = [&](const TargetEntry& target) -> RenderPass& {
         if (mPasses.empty() || mPasses.last().target != target.texture) {
@@ -378,9 +378,9 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
     }
 }
 
-void ADisplayList::optimize(IRendererBackend& renderer) {
+void ADisplayList::optimize(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
     resolveEntities();
     computeOverlaps();
     resolveMasks(renderer);
-    resolvePasses(renderer);
+    resolvePasses(renderer, windowTarget);
 }
