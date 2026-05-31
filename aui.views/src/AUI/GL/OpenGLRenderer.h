@@ -58,6 +58,10 @@ protected:
 class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
     friend class OpenGLRenderViewToTexture;
 
+public:
+    typedef void* (*GLLoadProc)(const char* name);
+
+private:
     class TransientBuffer {
     public:
         TransientBuffer(GLenum target, size_t size);
@@ -91,6 +95,14 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
 
     using FramebufferFromPool = _unique<FramebufferWithTextureRT, FramebufferBackToPool>;
 
+    OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
+
+    FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 size);
+
+    void setupMask(gl::Program& shader);
+    bool setupLineShader(const glm::mat4& transform, const ABorderStyle& style, float widthPx, const APaint& paint);
+    std::uint8_t mStencilDepth = 0;
+
     ASurface* mWindow = nullptr;
     bool mAllowRenderToTexture = true;
     bool mIsRenderingToMask = false;
@@ -123,24 +135,13 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
 
     _<aui::AFontCache> mFontCache;
 
-    struct MultiPassEffectData {
-        OffscreenFramebufferPool* pool;
-    };
-
-    OffscreenFramebufferPool mFramebuffersForMultiPassEffectsPool;
-
-    FramebufferFromPool getFramebufferForMultiPassEffect(glm::uvec2 size);
+    void setBlending(const APaint& paint);
 
     glm::uvec2 mViewportSize { 1, 1 };
     glm::mat4 mProjectionMatrix { 1.f };
 
     static bool mIsES;
     static int mGLSLVersion;
-
-    void setBlending(const APaint& paint);
-
-    void setupMask(gl::Program& shader);
-    bool setupLineShader(const glm::mat4& transform, const ABorderStyle& style, float widthPx, const APaint& paint);
 
     glm::vec4 maskColor(glm::vec4 color) const noexcept {
         if (mIsRenderingToMask) {
@@ -158,7 +159,6 @@ class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
 public:
     OpenGLRenderer();
 
-    typedef void* (*GLLoadProc)(const char* name);
     static bool loadGL(GLLoadProc load_proc, bool es = false);
     static bool loadGL(GLLoadProc load_proc);
 
@@ -203,7 +203,7 @@ public:
     void setMask(const _<ITexture>& mask, const glm::vec4& maskRect = glm::vec4(0.f)) override;
 
     AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
-                           const _<ITexture>& mask2, const glm::vec4& mask2Rect) override;
+                                   const _<ITexture>& mask2, const glm::vec4& mask2Rect) override;
 
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 
@@ -233,8 +233,9 @@ public:
         mFramebuffer.bind();
         glViewport(0, 0, surfaceSize.x, surfaceSize.y);
         mRenderer.mViewportSize = glm::uvec2(surfaceSize);
-        mRenderer.mProjectionMatrix = glm::ortho(0.f, (float)surfaceSize.x, (float)surfaceSize.y, 0.f, -1.f, 1.f);
+        mRenderer.mProjectionMatrix = glm::ortho(0.f, (float)surfaceSize.x, 0.f, (float)surfaceSize.y, -1.f, 1.f);
 
+        glDisable(GL_STENCIL_TEST);
         mRenderer.mIsRenderingToMask = (mFormat == APixelFormat::R_BYTE);
 
         if (glBlendFuncSeparate) {
@@ -263,11 +264,7 @@ public:
     }
 
     void draw(ACanvas& canvas) override {
-        canvas.rectangle(APaint{ATexturedBrush{
-            .texture = mTexture,
-            .uv1 = glm::vec2(0.f, 1.f),
-            .uv2 = glm::vec2(1.f, 0.f)
-        }}, {0, 0}, mTexture->getSize());
+        canvas.rectangle(APaint{ATexturedBrush{mTexture}}, {0, 0}, mTexture->getSize());
     }
 
     [[nodiscard]]

@@ -277,11 +277,17 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
               [&](const PushLayer&) { return true; },
               [&](const PopLayer&) { return true; },
               [&](const PushMask& v) {
+                  // v.maskRect is local
+                  // transform is Local-to-DisplayList transform
+                  glm::vec2 p1 = glm::vec2(transform * glm::vec4(v.maskRect.x, v.maskRect.y, 0, 1));
+                  glm::vec2 p2 = glm::vec2(transform * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0, 1));
+                  glm::vec4 displayListRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+
                   if (!currentMask) {
                       currentMask = v.mask;
-                      currentMaskRect = v.maskRect;
+                      currentMaskRect = displayListRect;
                   } else {
-                      auto merged = renderer.mergeMasks(currentMask, currentMaskRect, v.mask, v.maskRect);
+                      auto merged = renderer.mergeMasks(currentMask, currentMaskRect, v.mask, displayListRect);
                       currentMask = merged.texture;
                       currentMaskRect = merged.rect;
                   }
@@ -307,6 +313,7 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
             command);
 
         if (!handled) {
+            renderer.setMask(currentMask, currentMaskRect);
             std::visit(
                 aui::lambda_overloaded {
                   [&](const SolidRectangles& v) { renderer.solidRectangles(v, transform, paint); },

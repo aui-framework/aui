@@ -339,12 +339,7 @@ void OpenGLRenderer::setupMask(gl::Program& shader) {
     if (mMask) {
         shader.set(aui::ShaderUniforms::USE_MASK, true);
         static_cast<OpenGLTexture2D*>(mMask.get())->bind(1);
-        glm::vec4 glMaskRect;
-        glMaskRect.x = mMaskRect.x;
-        glMaskRect.y = (float)mViewportSize.y - mMaskRect.y - mMaskRect.w;
-        glMaskRect.z = mMaskRect.z;
-        glMaskRect.w = mMaskRect.w;
-        shader.set(aui::ShaderUniforms::MASK_RECT, glMaskRect);
+        shader.set(aui::ShaderUniforms::MASK_RECT, mMaskRect);
     } else {
         shader.set(aui::ShaderUniforms::USE_MASK, false);
         mWhiteTexture.bind(1);
