@@ -15,6 +15,7 @@
 
 namespace aui::ShaderUniforms {
     extern ::gl::Program::Uniform COLOR;
+    extern ::gl::Program::Uniform ALBEDO;
     extern ::gl::Program::Uniform COLOR1;
     extern ::gl::Program::Uniform COLOR2;
     extern ::gl::Program::Uniform GRADIENT_MAT_UV;

@@ -13,6 +13,7 @@
 
 namespace aui::ShaderUniforms {
     gl::Program::Uniform COLOR("color");
+    gl::Program::Uniform ALBEDO("albedo");
     gl::Program::Uniform COLOR1("color1");
     gl::Program::Uniform COLOR2("color2");
     gl::Program::Uniform GRADIENT_MAT_UV("matUv");

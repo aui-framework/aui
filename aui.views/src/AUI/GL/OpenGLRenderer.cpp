@@ -281,12 +281,9 @@ uint32_t OpenGLRenderer::getDefaultFb() const noexcept { return 0; }
 void OpenGLRenderer::FramebufferBackToPool::operator()(FramebufferWithTextureRT* framebuffer) const {}
 
 void OpenGLRenderer::setupMask(gl::Program& shader) {
-    auto loc = shader.getLocation(aui::ShaderUniforms::MASK);
-    if (loc < 0) return;
-
     shader.set(aui::ShaderUniforms::WINDOW_SIZE, glm::vec2(mViewportSize));
-    shader.set(aui::ShaderUniforms::MASK, loc);
     if (mMask) {
+        shader.set(aui::ShaderUniforms::MASK, 1);
         shader.set(aui::ShaderUniforms::USE_MASK, true);
         glm::vec4 glMaskRect;
         glMaskRect.x = mMaskRect.x;
@@ -294,10 +291,10 @@ void OpenGLRenderer::setupMask(gl::Program& shader) {
         glMaskRect.z = mMaskRect.z;
         glMaskRect.w = -mMaskRect.w;
         shader.set(aui::ShaderUniforms::MASK_RECT, glMaskRect);
-        AUI_NULLSAFE(dynamic_cast<OpenGLTexture2D*>(mMask.get()))->bind(loc);
+        static_cast<OpenGLTexture2D*>(mMask.get())->bind(1);
     } else {
         shader.set(aui::ShaderUniforms::USE_MASK, false);
-        mWhiteTexture.bind(loc);
+        mWhiteTexture.bind(1);
     }
     gl::State::activeTexture(0);
 }
@@ -517,6 +514,7 @@ void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& 
     setBlending(paint);
     mTexturedShader->use();
     mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    mTexturedShader->set(aui::ShaderUniforms::ALBEDO, 0);
     setupMask(*mTexturedShader);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
@@ -674,6 +672,7 @@ void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRound
     setBlending(paint);
     mRoundedTexturedShader->use();
     mRoundedTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+    mRoundedTexturedShader->set(aui::ShaderUniforms::ALBEDO, 0);
     setupMask(*mRoundedTexturedShader);
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
@@ -913,10 +912,12 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
     if (v.isSubpixel) {
         mSymbolShaderSubPixel->use();
         mSymbolShaderSubPixel->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+        mSymbolShaderSubPixel->set(aui::ShaderUniforms::ALBEDO, 0);
         setupMask(*mSymbolShaderSubPixel);
     } else {
         mSymbolShader->use();
         mSymbolShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
+        mSymbolShader->set(aui::ShaderUniforms::ALBEDO, 0);
         setupMask(*mSymbolShader);
     }
     static_cast<OpenGLTexture2D*>(v.texture.get())->bind();

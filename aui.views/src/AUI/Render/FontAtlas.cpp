@@ -91,7 +91,7 @@ void MultiStringCanvas::addStringT(const glm::ivec2& position, UnicodeString tex
 
             mGlyphs.push_back(
                 { glm::vec2(posX, posY), glm::vec2(width, height), glm::vec2(data->uv.x, data->uv.y),
-                  glm::vec2(data->uv.z, data->uv.w), AColor::WHITE, data->texture });
+                  glm::vec2(data->uv.z, data->uv.w), mFontStyle.color, data->texture });
 
             if (hasKerning) {
                 auto next = std::next(i);

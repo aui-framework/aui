@@ -138,20 +138,16 @@ protected:
             return;
         }
 
-        auto drawRects = [&](Blending blending) {
+        auto drawRects = [&](Blending blending, const AColor& color) {
             for (auto r : rects) {
-                render.rectangle(APaint{ASolidBrush{}, AColor::WHITE, blending}, r.p1, r.size());
+                render.rectangle(APaint{ASolidBrush{}, color, blending}, r.p1, r.size());
             }
         };
-        {
-            RenderHints::PushColor c(render);
-            render.setColor(AColor(1.f) - AColor(0x0078d700u));
-            drawRects(Blending::NORMAL);
-        }
+        drawRects(Blending::NORMAL, AColor(1.f) - AColor(0x0078d700u));
 
         drawText();
 
-        drawRects(Blending::INVERSE_DST);
+        drawRects(Blending::INVERSE_DST, AColor::WHITE);
     }
 
 private:
