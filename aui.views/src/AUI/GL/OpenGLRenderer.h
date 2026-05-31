@@ -26,7 +26,6 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Platform/ASurface.h>
 #include <AUI/Render/ACanvas.hpp>
-#include <AUI/GL/RenderTarget/RenderbufferRenderTarget.h>
 
 class OpenGLRenderer;
 

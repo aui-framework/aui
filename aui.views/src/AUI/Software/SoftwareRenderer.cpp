@@ -51,11 +51,6 @@ float roundedRectBorderCoverage(glm::vec2 localPos, glm::vec2 size, float radius
 SoftwareRenderer::SoftwareRenderer() :
     mFontCache(AFontManager::inst().createCache(this)) {}
 
-void SoftwareRenderer::setWindow(ASurface* window) {
-    mWindow = window;
-    mContext = dynamic_cast<SoftwareRenderingContext*>(window->getRenderingContext().get());
-}
-
 void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& paint) {
     if (mRenderTarget && mRenderTarget->format() == APixelFormat::R_BYTE) {
         color = AColor(color.a, 0.f, 0.f, color.a);
@@ -561,8 +556,37 @@ void SoftwareRenderer::squareSector(const ADisplayList::SquareSector& v, const g
         }
     }
 }
-void SoftwareRenderer::backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) {}
 void SoftwareRenderer::backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {}
+
+namespace {
+class SoftwareFramebufferTexture : public ITexture {
+public:
+    SoftwareFramebufferTexture(glm::uvec2 size) : mSize(size) {}
+    glm::u32vec2 getSize() const override { return mSize; }
+    APixelFormat getFormat() const override { return APixelFormat::RGBA_BYTE; }
+    void upload(AImageView image) override {}
+private:
+    glm::uvec2 mSize;
+};
+}
+
+void SoftwareRenderer::setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) {
+    if (auto swTexture = dynamic_cast<SoftwareTexture*>(texture.get())) {
+        mRenderTarget = const_cast<AImage*>(&swTexture->getImage());
+    } else {
+        mRenderTarget = nullptr;
+    }
+}
+
+_<ITexture> SoftwareRenderer::createFramebufferWrapper(glm::uvec2 size) {
+    return _new<SoftwareFramebufferTexture>(size);
+}
+
+void SoftwareRenderer::clear() {
+    if (mRenderTarget) {
+        mRenderTarget->fill(AColor::TRANSPARENT_BLACK);
+    }
+}
 
 glm::mat4 SoftwareRenderer::getProjectionMatrix() const { return glm::mat4(1.0f); }
 

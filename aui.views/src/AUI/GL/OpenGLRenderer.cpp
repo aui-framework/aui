@@ -27,7 +27,6 @@
 #include <AUI/Render/Brush/Gradient.h>
 #include <AUI/Render/FontAtlas.hpp>
 #include <AUI/Platform/AFontManager.h>
-#include <AUI/GL/RenderTarget/RenderbufferRenderTarget.h>
 #include <AUI/View/AAbstractLabel.h>
 #include <AUI/Performance/APerformanceSection.h>
 

@@ -28,6 +28,11 @@ public:
         return mImage.size();
     }
 
+    [[nodiscard]]
+    APixelFormat getFormat() const override {
+        return mImage.format();
+    }
+
     [[nodiscard]] const AImage& getImage() const noexcept {
         return mImage;
     }
