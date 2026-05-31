@@ -35,5 +35,8 @@ public:
     [[nodiscard]]
     virtual glm::u32vec2 getSize() const = 0;
 
+    [[nodiscard]]
+    virtual APixelFormat getFormat() const = 0;
+
     virtual ~ITexture() = default;
 };

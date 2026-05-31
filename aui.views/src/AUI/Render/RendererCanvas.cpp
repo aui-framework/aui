@@ -129,25 +129,6 @@ void RendererCanvas::setBlending(Blending blending) {
     mBlending = blending;
 }
 
-_unique<IRenderViewToTexture> RendererCanvas::newRenderViewToTexture(APixelFormat format) noexcept {
-    if (auto glRenderer = dynamic_cast<OpenGLRenderer*>(&mCanvas.renderer())) {
-        return std::make_unique<OpenGLRenderViewToTexture>(*glRenderer, format);
-    }
-    if (auto swRenderer = dynamic_cast<SoftwareRenderer*>(&mCanvas.renderer())) {
-        return std::make_unique<SoftwareRenderViewToTexture>(*swRenderer, format);
-    }
-    return nullptr;
-}
-
-void RendererCanvas::setWindow(ASurface* window) {
-    mWindow = window;
-    mCanvas.renderer().setWindow(window);
-}
-
-ASurface* RendererCanvas::getWindow() const noexcept {
-    return mWindow;
-}
-
 glm::mat4 RendererCanvas::getProjectionMatrix() const {
     return mCanvas.renderer().getProjectionMatrix();
 }

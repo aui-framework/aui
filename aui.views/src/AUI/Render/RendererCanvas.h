@@ -89,13 +89,6 @@ public:
 
     void setBlending(Blending blending) override;
 
-    _unique<IRenderViewToTexture> newRenderViewToTexture(APixelFormat format = APixelFormat::RGBA_BYTE) noexcept override;
-
-    void setWindow(ASurface* window) override;
-
-    [[nodiscard]]
-    ASurface* getWindow() const noexcept override;
-
     glm::mat4 getProjectionMatrix() const override;
 
     glm::mat4 getTransform() override;
@@ -125,7 +118,6 @@ private:
     }
 
     ACanvas& mCanvas;
-    ASurface* mWindow = nullptr;
     Blending mBlending = Blending::NORMAL;
     AColor mColorMultiplier = AColor::WHITE;
 };

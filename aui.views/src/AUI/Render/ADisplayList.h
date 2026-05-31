@@ -128,6 +128,10 @@ public:
         AVector<ass::Backdrop::Any> backdrops;
     };
 
+    struct PushRenderTarget {
+        _<ITexture> texture;
+    };
+    struct PopRenderTarget {};
     struct PushLayer {};
     struct PopLayer {};
     struct PushMask {
@@ -140,7 +144,7 @@ public:
         using Command = std::variant<
             SolidRectangles, GradientRectangles, TexturedRectangles, SolidRoundedRectangles, GradientRoundedRectangles,
             TexturedRoundedRectangles, RectangleBorders, RoundedRectangleBorders, BoxShadow, BoxShadowInner, Glyphs,
-            Lines, LineBatches, Points, SquareSector, Backdrop, PushLayer, PopLayer, PushMask, PopMask>;
+            Lines, LineBatches, Points, SquareSector, Backdrop, PushRenderTarget, PopRenderTarget, PushLayer, PopLayer, PushMask, PopMask>;
 
         Command command;
         glm::mat4 transform;
@@ -157,12 +161,19 @@ public:
         glm::vec4 maskRect;
     };
 
+    struct RenderPass {
+        _<ITexture> target;
+        glm::uvec2 size;
+        AVector<Entity> entities;
+    };
+
     void add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint);
 
     void clear() {
         mCommands.clear();
         mOpaqueRects.clear();
         mEntities.clear();
+        mPasses.clear();
     }
 
     /**
@@ -175,9 +186,11 @@ public:
     void resolveEntities();
     void computeOverlaps();
     void resolveMasks(IRendererBackend& renderer);
+    void resolvePasses(IRendererBackend& renderer);
 
 private:
     AVector<StoredCommand> mCommands;
     AVector<ARect<float>> mOpaqueRects;
     AVector<Entity> mEntities;
+    AVector<RenderPass> mPasses;
 };

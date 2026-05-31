@@ -32,12 +32,20 @@ void ADisplayListCanvas::pushLayer() { add(ADisplayList::PushLayer{}, {}); }
 
 void ADisplayListCanvas::popLayer() { add(ADisplayList::PopLayer{}, {}); }
 
-void ADisplayListCanvas::pushMask(const _<ITexture>& mask, const glm::vec4& maskRect) {
-    add(ADisplayList::PushMask{mask, maskRect}, {});
+void ADisplayListCanvas::pushMask(_<ITexture> mask, const glm::vec4& maskRect) {
+    add(ADisplayList::PushMask{std::move(mask), maskRect}, {});
 }
 
 void ADisplayListCanvas::popMask() {
     add(ADisplayList::PopMask{}, {});
+}
+
+void ADisplayListCanvas::pushRenderTarget(_<ITexture> texture) {
+    add(ADisplayList::PushRenderTarget{std::move(texture)}, {});
+}
+
+void ADisplayListCanvas::popRenderTarget() {
+    add(ADisplayList::PopRenderTarget{}, {});
 }
 
 void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) {
