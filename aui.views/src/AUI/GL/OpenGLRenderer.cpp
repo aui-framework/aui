@@ -190,60 +190,7 @@ precision highp int;
     useShader(mSymbolShaderSubPixel, "symbol.vsh", "symbol_sub.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
     useShader(mLineSolidDashedShader, "basic_uv.vsh", "line_solid_dashed.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
     useShader(mUnblendShader, "basic_uv.vsh", "rect_unblend.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
-
-    auto getPrefix = [&](GLenum stage) -> std::string {
-        std::string prefix = "#version " + std::to_string(mGLSLVersion) + "\n";
-        if (mGLSLVersion < 130) {
-            if (stage == GL_VERTEX_SHADER) {
-                prefix += "#define in attribute\n#define out varying\n";
-            } else {
-                prefix += "#define in varying\n#define fragColor gl_FragColor\n";
-            }
-        } else {
-            if (stage == GL_FRAGMENT_SHADER) {
-                prefix += "out vec4 fragColor;\n";
-                prefix += "#define gl_FragColor fragColor\n";
-            }
-        }
-        return prefix;
-    };
-
-    mMergeMasksShader.emplace();
-    mMergeMasksShader->loadVertexShader(getPrefix(GL_VERTEX_SHADER) + R"(
-in vec2 pos;
-in vec2 uv;
-out vec2 vUv;
-uniform mat4 transform;
-void main() {
-    gl_Position = transform * vec4(pos, 0.0, 1.0);
-    vUv = uv;
-}
-)", { .custom = true });
-    mMergeMasksShader->loadFragmentShader(getPrefix(GL_FRAGMENT_SHADER) + R"(
-uniform sampler2D u_mask1;
-uniform sampler2D u_mask2;
-uniform vec4 u_mask1Rect;
-uniform vec4 u_mask2Rect;
-uniform vec4 u_destRect;
-in vec2 vUv;
-void main() {
-    vec2 windowFragCoord = gl_FragCoord.xy + u_destRect.xy;
-    vec2 mask1Uv = (windowFragCoord - u_mask1Rect.xy) / u_mask1Rect.zw;
-    float m1 = 0.0;
-    if (mask1Uv.x >= 0.0 && mask1Uv.x <= 1.0 && mask1Uv.y >= 0.0 && mask1Uv.y <= 1.0) {
-        m1 = texture2D(u_mask1, mask1Uv).r;
-    }
-    vec2 mask2Uv = (windowFragCoord - u_mask2Rect.xy) / u_mask2Rect.zw;
-    float m2 = 0.0;
-    if (mask2Uv.x >= 0.0 && mask2Uv.x <= 1.0 && mask2Uv.y >= 0.0 && mask2Uv.y <= 1.0) {
-        m2 = texture2D(u_mask2, mask2Uv).r;
-    }
-    gl_FragColor = vec4(m1 * m2, 0.0, 0.0, 1.0);
-}
-)", { .custom = true });
-    mMergeMasksShader->bindAttribute(0, "pos");
-    mMergeMasksShader->bindAttribute(1, "uv");
-    mMergeMasksShader->compile();
+    useShader(mMergeMasksShader, "merge_masks.vsh", "merge_masks.fsh", {{0, "pos"}, {1, "uv"}});
 
     mEmptyMask = createTexture({1, 1}, APixelFormat::R_BYTE);
     AImage emptyImg({1, 1}, APixelFormat::R_BYTE);
@@ -334,15 +281,23 @@ uint32_t OpenGLRenderer::getDefaultFb() const noexcept { return 0; }
 void OpenGLRenderer::FramebufferBackToPool::operator()(FramebufferWithTextureRT* framebuffer) const {}
 
 void OpenGLRenderer::setupMask(gl::Program& shader) {
+    auto loc = shader.getLocation(aui::ShaderUniforms::MASK);
+    if (loc < 0) return;
+
     shader.set(aui::ShaderUniforms::WINDOW_SIZE, glm::vec2(mViewportSize));
-    shader.set(aui::ShaderUniforms::MASK, 1);
+    shader.set(aui::ShaderUniforms::MASK, loc);
     if (mMask) {
         shader.set(aui::ShaderUniforms::USE_MASK, true);
-        static_cast<OpenGLTexture2D*>(mMask.get())->bind(1);
-        shader.set(aui::ShaderUniforms::MASK_RECT, mMaskRect);
+        glm::vec4 glMaskRect;
+        glMaskRect.x = mMaskRect.x;
+        glMaskRect.y = (float)mViewportSize.y - mMaskRect.y;
+        glMaskRect.z = mMaskRect.z;
+        glMaskRect.w = -mMaskRect.w;
+        shader.set(aui::ShaderUniforms::MASK_RECT, glMaskRect);
+        AUI_NULLSAFE(dynamic_cast<OpenGLTexture2D*>(mMask.get()))->bind(loc);
     } else {
         shader.set(aui::ShaderUniforms::USE_MASK, false);
-        mWhiteTexture.bind(1);
+        mWhiteTexture.bind(loc);
     }
     gl::State::activeTexture(0);
 }
@@ -393,15 +348,15 @@ IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask
 
     glm::vec4 glMask1Rect;
     glMask1Rect.x = mask1Rect.x;
-    glMask1Rect.y = (float)prevViewportSize.y - mask1Rect.y - mask1Rect.w;
+    glMask1Rect.y = (float)prevViewportSize.y - mask1Rect.y;
     glMask1Rect.z = mask1Rect.z;
-    glMask1Rect.w = mask1Rect.w;
+    glMask1Rect.w = -mask1Rect.w;
 
     glm::vec4 glMask2Rect;
     glMask2Rect.x = mask2Rect.x;
-    glMask2Rect.y = (float)prevViewportSize.y - mask2Rect.y - mask2Rect.w;
+    glMask2Rect.y = (float)prevViewportSize.y - mask2Rect.y;
     glMask2Rect.z = mask2Rect.z;
-    glMask2Rect.w = mask2Rect.w;
+    glMask2Rect.w = -mask2Rect.w;
 
     glm::vec4 glDestRect;
     glDestRect.x = x;
