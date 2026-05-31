@@ -23,24 +23,33 @@
 #include "AUI/Render/ABorderStyle.h"
 #include <AUI/Render/IRendererBackend.h>
 #include "AUI/GL/RenderTarget/TextureRenderTarget.h"
-#include <AUI/Render/IRenderViewToTexture.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Platform/ASurface.h>
 #include <AUI/Render/ACanvas.hpp>
 #include <AUI/GL/RenderTarget/RenderbufferRenderTarget.h>
 
+class OpenGLRenderer;
+
 class API_AUI_VIEWS OpenGLTexture2D : public ITexture, public gl::Framebuffer::IRenderTarget {
 private:
     gl::Texture2D mTexture;
+    APixelFormat mFormat;
+    _weak<OpenGLRenderer> mRenderer;
 public:
-    OpenGLTexture2D() = default;
-    OpenGLTexture2D(glm::u32vec2 size, APixelFormat format) {
+    OpenGLTexture2D(_weak<OpenGLRenderer> renderer) : mFormat(APixelFormat::RGBA_BYTE), mRenderer(std::move(renderer)) {}
+    OpenGLTexture2D(_weak<OpenGLRenderer> renderer, glm::u32vec2 size, APixelFormat format) : mFormat(format), mRenderer(std::move(renderer)) {
         mTexture.tex2D(size, format);
     }
+    ~OpenGLTexture2D() override;
     void upload(AImageView image) override;
 
     glm::u32vec2 getSize() const override {
         return mTexture.getSize();
+    }
+
+    [[nodiscard]]
+    APixelFormat getFormat() const override {
+        return mFormat;
     }
 
     void bind() { mTexture.bind(); }
@@ -55,13 +64,17 @@ protected:
     }
 };
 
-class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend {
+class API_AUI_VIEWS OpenGLRenderer final: public IRendererBackend, public std::enable_shared_from_this<OpenGLRenderer> {
     friend class OpenGLRenderViewToTexture;
+    friend class OpenGLTexture2D;
 
 public:
     typedef void* (*GLLoadProc)(const char* name);
 
 private:
+    void onTextureDestroyed(ITexture* texture);
+    gl::Framebuffer& getFbo(const _<OpenGLTexture2D>& texture);
+
     class TransientBuffer {
     public:
         TransientBuffer(GLenum target, size_t size);
@@ -101,9 +114,7 @@ private:
 
     void setupMask(gl::Program& shader);
     bool setupLineShader(const glm::mat4& transform, const ABorderStyle& style, float widthPx, const APaint& paint);
-    std::uint8_t mStencilDepth = 0;
 
-    ASurface* mWindow = nullptr;
     bool mAllowRenderToTexture = true;
     bool mIsRenderingToMask = false;
     _<ITexture> mMask;
@@ -162,17 +173,13 @@ public:
     static bool loadGL(GLLoadProc load_proc, bool es = false);
     static bool loadGL(GLLoadProc load_proc);
 
-    void setWindow(ASurface* window) override;
-
-    [[nodiscard]]
-    ASurface* getWindow() const noexcept override { return mWindow; }
-
     [[nodiscard]]
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
 
     void setAllowRenderToTexture(bool allowRenderToTexture) override { mAllowRenderToTexture = allowRenderToTexture; }
 
     _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE, TextureFilter filter = TextureFilter::LINEAR) override;
+    _<ITexture> createFramebufferWrapper(uint32_t handle, glm::uvec2 size);
 
     void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) override;
     void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) override;
@@ -200,6 +207,13 @@ public:
 
     void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
+    void setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) override;
+    [[nodiscard]]
+    _<ITexture> getRenderTarget() const { return mCurrentRenderTarget; }
+    [[nodiscard]]
+    glm::uvec2 getViewportSize() const override { return mViewportSize; }
+    void setRenderMaskMode(bool enabled) override { mIsRenderingToMask = enabled; }
+    void clear() override;
     void setMask(const _<ITexture>& mask, const glm::vec4& maskRect = glm::vec4(0.f)) override;
 
     AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
@@ -207,85 +221,9 @@ public:
 
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 
-    _unique<IRenderViewToTexture> newRenderViewToTexture(APixelFormat format = APixelFormat::RGBA_BYTE) noexcept;
-
     uint32_t getDefaultFb() const noexcept;
+
+private:
+    std::unordered_map<ITexture*, gl::Framebuffer> mFboCache;
+    _<ITexture> mCurrentRenderTarget;
 };
-
-class OpenGLRenderViewToTexture: public IRenderViewToTexture {
-public:
-    OpenGLRenderViewToTexture(OpenGLRenderer& renderer, APixelFormat format): mRenderer(renderer), mFormat(format) {}
-
-    bool begin(IRenderer& renderer, glm::ivec2 surfaceSize, InvalidArea& invalidArea) override {
-        if (!mTexture || mFramebuffer.size() != glm::u32vec2(surfaceSize)) {
-            mTexture = _cast<OpenGLTexture2D>(mRenderer.createTexture(surfaceSize, mFormat, TextureFilter::NEAREST));
-            mTexture->texture().setupClampToEdge();
-            mFramebuffer = gl::Framebuffer();
-            mFramebuffer.resize(surfaceSize);
-            mFramebuffer.attach(mTexture, GL_COLOR_ATTACHMENT0);
-            invalidArea = InvalidArea::Full{};
-        }
-
-        mPrevFramebuffer = gl::Framebuffer::current();
-        mPrevViewportSize = mRenderer.mViewportSize;
-        mPrevProjectionMatrix = mRenderer.mProjectionMatrix;
-
-        mFramebuffer.bind();
-        glViewport(0, 0, surfaceSize.x, surfaceSize.y);
-        mRenderer.mViewportSize = glm::uvec2(surfaceSize);
-        mRenderer.mProjectionMatrix = glm::ortho(0.f, (float)surfaceSize.x, (float)surfaceSize.y, 0.f, -1.f, 1.f);
-
-        glDisable(GL_STENCIL_TEST);
-        mRenderer.mIsRenderingToMask = (mFormat == APixelFormat::R_BYTE);
-
-        if (glBlendFuncSeparate) {
-            glEnable(GL_BLEND);
-            glBlendFuncSeparate(GL_ONE, GL_ONE_MINUS_SRC_ALPHA, GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-        }
-
-        glClearColor(0.f, 0.f, 0.f, 0.f);
-        glClear(GL_COLOR_BUFFER_BIT);
-
-        return true;
-    }
-
-    void end(IRenderer& renderer) override {
-        glm::uvec2 viewportSize = mPrevViewportSize;
-        if (mPrevFramebuffer) {
-            mPrevFramebuffer->bind();
-            viewportSize = mPrevFramebuffer->size();
-        } else {
-            gl::Framebuffer::unbind();
-        }
-        glViewport(0, 0, viewportSize.x, viewportSize.y);
-        mRenderer.mViewportSize = mPrevViewportSize;
-        mRenderer.mProjectionMatrix = mPrevProjectionMatrix;
-        mRenderer.mIsRenderingToMask = false;
-    }
-
-    void draw(ACanvas& canvas) override {
-        ATexturedBrush b;
-        b.texture = mTexture;
-        b.uv1 = glm::vec2(0, 1);
-        b.uv2 = glm::vec2(1, 0);
-        canvas.rectangle(APaint{b}, {0, 0}, mTexture->getSize());
-    }
-
-    [[nodiscard]]
-    _<ITexture> getTexture() const override {
-        return mTexture;
-    }
-
-    private:
-    OpenGLRenderer& mRenderer;
-    gl::Framebuffer mFramebuffer;
-    _<OpenGLTexture2D> mTexture;
-    gl::Framebuffer* mPrevFramebuffer = nullptr;
-    glm::uvec2 mPrevViewportSize = {1, 1};
-    glm::mat4 mPrevProjectionMatrix = glm::mat4(1.0f);
-    APixelFormat mFormat;
-};
-
-inline _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture(APixelFormat format) noexcept {
-    return std::make_unique<OpenGLRenderViewToTexture>(*this, format);
-}

@@ -210,10 +210,17 @@ precision highp int;
 
 void OpenGLTexture2D::upload(AImageView image) {
     mTexture.tex2D(image);
+    mFormat = image.format();
+}
+
+OpenGLTexture2D::~OpenGLTexture2D() {
+    if (auto r = mRenderer.lock()) {
+        r->onTextureDestroyed(this);
+    }
 }
 
 _<ITexture> OpenGLRenderer::createTexture(glm::u32vec2 size, APixelFormat format, TextureFilter filter) {
-    auto t = _new<OpenGLTexture2D>(size, format);
+    auto t = _new<OpenGLTexture2D>(weak_from_this(), size, format);
     if (filter == TextureFilter::NEAREST) {
         t->texture().setupNearest();
     } else {
@@ -249,15 +256,39 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     glDisable(GL_STENCIL_TEST);
 }
 
-void OpenGLRenderer::endPaint() {}
-
-void OpenGLRenderer::setWindow(ASurface* window) {
-    mWindow = window;
-    if (mWindow) {
-        mViewportSize = mWindow->getSize();
-        mProjectionMatrix = glm::ortho(0.f, (float)mViewportSize.x, (float)mViewportSize.y, 0.f, -1.f, 1.f);
-    }
+void OpenGLRenderer::onTextureDestroyed(ITexture* texture) {
+    mFboCache.erase(texture);
 }
+
+gl::Framebuffer& OpenGLRenderer::getFbo(const _<OpenGLTexture2D>& texture) {
+    auto it = mFboCache.find(texture.get());
+    if (it == mFboCache.end()) {
+        auto [newIt, inserted] = mFboCache.emplace(texture.get(), gl::Framebuffer());
+        newIt->second.bind();
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture->texture().getHandle(), 0);
+        it = newIt;
+    }
+    return it->second;
+}
+
+void OpenGLRenderer::setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) {
+    mCurrentRenderTarget = texture;
+    mViewportSize = size;
+    if (texture) {
+        auto glTexture = _cast<OpenGLTexture2D>(texture);
+        auto& fbo = getFbo(glTexture);
+        fbo.bind();
+    }
+    mProjectionMatrix = glm::ortho(0.f, static_cast<float>(mViewportSize.x), static_cast<float>(mViewportSize.y), 0.f, -1.f, 1.f);
+    glViewport(0, 0, static_cast<GLsizei>(mViewportSize.x), static_cast<GLsizei>(mViewportSize.y));
+}
+
+void OpenGLRenderer::clear() {
+    glClearColor(0.f, 0.f, 0.f, 0.f);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void OpenGLRenderer::endPaint() {}
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
     return mProjectionMatrix;
@@ -311,22 +342,21 @@ IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask
     float w = std::min(mask1Rect.x + mask1Rect.z, mask2Rect.x + mask2Rect.z) - x;
     float h = std::min(mask1Rect.y + mask1Rect.w, mask2Rect.y + mask2Rect.w) - y;
 
-    if (w <= 0.f || h <= 0.f) {
+    if (w <= 0.f || h <= 0.f || !mask1 || !mask2) {
         return { mEmptyMask, glm::vec4(0.f) };
     }
-
-    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(w)), std::max(1u, (unsigned)std::ceil(h)));
-    auto destTexture = createTexture(size, APixelFormat::R_BYTE, TextureFilter::NEAREST);
-    static_cast<OpenGLTexture2D*>(destTexture.get())->texture().setupClampToEdge();
-
-    gl::Framebuffer framebuffer;
-    framebuffer.resize(size);
-    framebuffer.attach(_cast<OpenGLTexture2D>(destTexture), GL_COLOR_ATTACHMENT0);
 
     gl::Framebuffer* prevFramebuffer = gl::Framebuffer::current();
     glm::uvec2 prevViewportSize = mViewportSize;
     glm::mat4 prevProjectionMatrix = mProjectionMatrix;
     bool prevIsRenderingToMask = mIsRenderingToMask;
+
+    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(w)), std::max(1u, (unsigned)std::ceil(h)));
+    auto destTexture = createTexture(size, APixelFormat::R_BYTE, TextureFilter::NEAREST);
+    auto glDestTexture = _cast<OpenGLTexture2D>(destTexture);
+    glDestTexture->texture().setupClampToEdge();
+
+    gl::Framebuffer& framebuffer = getFbo(glDestTexture);
 
     GLboolean prevBlend = glIsEnabled(GL_BLEND);
 
@@ -509,14 +539,14 @@ void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& 
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, const APaint& paint) {
-    if (v.instances.empty()) return;
+    if (v.instances.empty() || !v.texture) return;
     GLDebugGroupLocal debugGroup("texturedRectangles");
     setBlending(paint);
     mTexturedShader->use();
     mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
     mTexturedShader->set(aui::ShaderUniforms::ALBEDO, 0);
     setupMask(*mTexturedShader);
-    static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
+    dynamic_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
     AVector<VertexBasicUv> vertices;
     AVector<GLuint> indices;
@@ -667,7 +697,7 @@ void OpenGLRenderer::gradientRoundedRectangles(const ADisplayList::GradientRound
 }
 
 void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
-    if (v.instances.empty()) return;
+    if (v.instances.empty() || !v.texture) return;
     GLDebugGroupLocal debugGroup("texturedRoundedRectangles");
     setBlending(paint);
     mRoundedTexturedShader->use();
@@ -878,7 +908,7 @@ void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const
     mBoxShadowInnerShader->set(aui::ShaderUniforms::SL_UNIFORM_LOWER, v.position + v.offset + v.spreadRadius);
     mBoxShadowInnerShader->set(aui::ShaderUniforms::SL_UNIFORM_UPPER, v.position + v.size + v.offset - v.spreadRadius);
     mBoxShadowInnerShader->set(aui::ShaderUniforms::SL_UNIFORM_SIGMA, sigma);
-    
+
     glm::vec2 outerSize = glm::vec2(2.f * v.borderRadius) / v.size;
 
     VertexRounded vertices[4] = {
@@ -905,7 +935,7 @@ void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }
 void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) {
-    if (v.instances.empty()) return;
+    if (v.instances.empty() || !v.texture) return;
     GLDebugGroupLocal debugGroup(v.isSubpixel ? "glyphsSubpixel" : "glyphsGrayscale");
     setBlending(paint);
 
