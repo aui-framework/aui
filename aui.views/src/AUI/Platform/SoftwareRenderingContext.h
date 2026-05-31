@@ -46,10 +46,6 @@ public:
 
     AImage makeScreenshot() override;
 
-    inline uint8_t& stencil(const glm::uvec2& position) {
-        return mStencilBlob.at<uint8_t>(mBitmapSize.x * position.y + position.x);
-    }
-
     [[nodiscard]]
     glm::uvec2 bitmapSize() const {
         return mBitmapSize;
@@ -100,6 +96,11 @@ public:
     }
 #endif
 
+    [[nodiscard]]
+    const glm::uvec2& getBitmapSize() const noexcept {
+        return mBitmapSize;
+    }
+
     void endResize(ASurface& window) override;
 
 protected:
@@ -108,7 +109,7 @@ protected:
     _unique<ADisplayListCanvas> mCanvas;
     _unique<RendererCanvas> mRendererWrapper;
 
-    AByteBuffer mStencilBlob;
+    _<ITexture> mWindowTarget;
     glm::uvec2 mBitmapSize;
 #if AUI_PLATFORM_LINUX
     std::uint8_t* mBitmapBlob = nullptr;
