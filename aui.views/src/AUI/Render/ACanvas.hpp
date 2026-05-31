@@ -40,8 +40,10 @@ public:
 
     virtual IRendererBackend& renderer() = 0;
 
-    virtual void save() {
-        mStates.push_back(State{mTransform, mBaseTransform});
+    virtual size_t save() {
+        size_t res = mStates.size();
+        mStates.push_back(State{mTransform, mBaseTransform, mMaskStackDepth, mRenderTargetStackDepth, mLayerStackDepth});
+        return res;
     }
 
     virtual void restore() {
@@ -50,19 +52,56 @@ public:
             mStates.pop_back();
             mTransform = s.transform;
             mBaseTransform = s.baseTransform;
+            while (mMaskStackDepth > s.maskStackDepth) popMask();
+            while (mRenderTargetStackDepth > s.renderTargetStackDepth) popRenderTarget();
+            while (mLayerStackDepth > s.layerStackDepth) popLayer();
         }
     }
 
-    virtual void pushMask(_<ITexture> mask, const glm::vec4& maskRect) = 0;
-    virtual void popMask() = 0;
+    virtual void restore(size_t targetStackSize) {
+        while (mStates.size() > targetStackSize) {
+            restore();
+        }
+    }
 
-    virtual void pushRenderTarget(_<ITexture> texture) = 0;
-    virtual void popRenderTarget() = 0;
+    void pushMask(_<ITexture> mask, const glm::vec4& maskRect) {
+        mMaskStackDepth++;
+        pushMaskImpl(std::move(mask), maskRect);
+    }
+    void popMask() {
+        AUI_ASSERT(mMaskStackDepth > 0);
+        mMaskStackDepth--;
+        popMaskImpl();
+    }
+
+    void pushRenderTarget(_<ITexture> texture) {
+        mRenderTargetStackDepth++;
+        pushRenderTargetImpl(std::move(texture));
+    }
+    void popRenderTarget() {
+        AUI_ASSERT(mRenderTargetStackDepth > 0);
+        mRenderTargetStackDepth--;
+        popRenderTargetImpl();
+    }
 
     virtual void clear() = 0;
 
-    virtual void pushLayer() = 0;
-    virtual void popLayer() = 0;
+    void pushLayer() {
+        mLayerStackDepth++;
+        pushLayerImpl();
+    }
+    void popLayer() {
+        AUI_ASSERT(mLayerStackDepth > 0);
+        mLayerStackDepth--;
+        popLayerImpl();
+    }
+
+    virtual void pushMaskImpl(_<ITexture> mask, const glm::vec4& maskRect) = 0;
+    virtual void popMaskImpl() = 0;
+    virtual void pushRenderTargetImpl(_<ITexture> texture) = 0;
+    virtual void popRenderTargetImpl() = 0;
+    virtual void pushLayerImpl() = 0;
+    virtual void popLayerImpl() = 0;
 
     static bool isSimple(const glm::mat4& m) noexcept {
         return glm::abs(m[0][1]) < 0.0001f && glm::abs(m[0][2]) < 0.0001f && glm::abs(m[0][3]) < 0.0001f &&
@@ -181,9 +220,15 @@ protected:
     struct State {
         glm::mat4 transform;
         glm::mat4 baseTransform;
+        size_t maskStackDepth;
+        size_t renderTargetStackDepth;
+        size_t layerStackDepth;
     };
     std::vector<State> mStates;
     glm::mat4 mTransform = glm::mat4(1.0f);
     glm::mat4 mBaseTransform = glm::mat4(1.0f);
     float mRenderScale = 1.0f;
+    size_t mMaskStackDepth = 0;
+    size_t mRenderTargetStackDepth = 0;
+    size_t mLayerStackDepth = 0;
 };

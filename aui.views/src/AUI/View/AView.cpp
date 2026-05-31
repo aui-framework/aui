@@ -22,7 +22,6 @@
 #include <AUI/Render/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
 #include <AUI/Render/IRendererBackend.h>
-#include <AUI/Render/IRenderViewToTexture.h>
 #include <AUI/Render/ITexture.h>
 #include <AUI/Url/AUrl.h>
 #include "AUI/Render/RenderHints.h"
@@ -132,23 +131,23 @@ void AView::render(ARenderContext ctx)
         }
     }
 
+    // mask
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS || mOverflow == AOverflow::HIDDEN) {
-        if (!mMaskTexture) {
-            mMaskTexture = ctx.render.newRenderViewToTexture(APixelFormat::R_BYTE);
+        if (!mMaskTexture || mMaskTexture->getSize() != glm::u32vec2(getSize())) {
+            mMaskTexture = ctx.canvas.renderer().createTexture(getSize(), APixelFormat::R_BYTE);
+            mRedrawRequested = true;
         }
-        IRenderViewToTexture::InvalidArea invalidArea = IRenderViewToTexture::InvalidArea::Full{};
-        if (mMaskTexture->begin(ctx.render, getSize(), invalidArea)) {
-            ADisplayList offscreenDl;
-            ADisplayListCanvas offscreenCanvas(offscreenDl, ctx.canvas.renderer());
-            offscreenCanvas.setTransformForced(glm::mat4(1.0f));
+        if (mRedrawRequested) {
+            ctx.canvas.pushRenderTarget(mMaskTexture);
+            ctx.canvas.clear();
+            ctx.canvas.setTransformForced(glm::mat4(1.0f));
             APaint maskPaint;
             maskPaint.brush = ASolidBrush{AColor::WHITE};
-            offscreenCanvas.roundedRectangle(maskPaint, {0, 0}, getSize(), getBorderRadius());
-            offscreenDl.optimize(ctx.canvas.renderer());
-            offscreenDl.draw(ctx.canvas.renderer());
-            mMaskTexture->end(ctx.render);
+            ctx.canvas.roundedRectangle(maskPaint, {0, 0}, getSize(), getBorderRadius());
+            ctx.canvas.popRenderTarget();
+            mRedrawRequested = false;
         }
-        ctx.canvas.pushMask(mMaskTexture->getTexture(), glm::vec4(0.f, 0.f, getSize()));
+        ctx.canvas.pushMask(mMaskTexture, glm::vec4(0.f, 0.f, getSize()));
     }
 
     // draw list
@@ -719,19 +718,15 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
         invalidArea.p2 = glm::min(invalidArea.p2, getSize());
     }
     if (mRenderToTexture) {
-        if (glm::all(glm::lessThanEqual(invalidArea.p1, glm::ivec2(0, 0))) &&
-            glm::all(glm::greaterThanEqual(invalidArea.p2, getSize()))) {
-            mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Full{};
-        }
-        mRenderToTexture->invalidArea.addRectangle(invalidArea);
+        mRenderToTexture->invalidArea << invalidArea;
         if (std::exchange(mRedrawRequested, true)) {
             // this view already requested a redraw.
             return;
         }
         // temporary disable drawing from texture. this will be set back to true by the callback below.
         mRenderToTexture->drawFromTexture = false;
-        AWindow::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](ACanvas&) {
-            if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
+        AWindow::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](ARenderContext rc) {
+            if (!mRenderToTexture) {
                 return;
             }
 
@@ -742,7 +737,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
 
             if (glm::any(glm::equal(getSize(), glm::ivec2(0)))) {
                 mRedrawRequested = false;
-                mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Empty{};
+                mRenderToTexture->invalidArea.clear();
                 return;
             }
 
@@ -751,28 +746,22 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
             }
 
             APerformanceSection s("Render-to-texture rasterization", {}, debugString().toStdString());
-            auto invalidArea = std::exchange(mRenderToTexture->invalidArea, IRenderViewToTexture::InvalidArea::Empty{});
-            auto& rc = *AWindow::current()->getRenderingContext();
-            auto& renderer = rc.renderer();
-            auto& backend = rc.backend();
-            if (!mRenderToTexture->rendererInterface->begin(renderer, size(), invalidArea)) {
-                mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
-                return;
+            auto invalidArea = std::exchange(mRenderToTexture->invalidArea, {});
+
+            if (!mRenderToTexture->texture || mRenderToTexture->texture->getSize() != glm::u32vec2(getSize())) {
+                mRenderToTexture->texture = rc.canvas.renderer().createTexture(getSize());
             }
-            AUI_DEFER {
-                mRenderToTexture->rendererInterface->end(renderer);
-            };
 
-            ADisplayList offscreenDl;
-            ADisplayListCanvas offscreenCanvas(offscreenDl, backend);
-            RendererCanvas offscreenRenderer(offscreenCanvas);
+            auto saved = rc.canvas.save();
 
-            ARenderContext contextOfTheView {
-                .clippingRects = invalidArea.rectangles() ? ARenderContext::Rectangles(invalidArea.rectangles()->begin(),
-                                                                                       invalidArea.rectangles()->end()) : ARenderContext::Rectangles{},
-                .canvas = offscreenCanvas,
-                .render = offscreenRenderer,
-            };
+            rc.canvas.pushRenderTarget(mRenderToTexture->texture);
+            rc.canvas.clear();
+
+            ARenderContext contextOfTheView = rc;
+
+            for (const auto& r : invalidArea) {
+                contextOfTheView.clippingRects << r;
+            }
             ARect<int> initialRect {
                 .p1 = { 0, 0 },
                 .p2 = size(),
@@ -782,17 +771,16 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
             } else {
                 contextOfTheView.clip(initialRect);
             }
-            RenderHints::PushState state(offscreenCanvas);
             try {
                 render(contextOfTheView);
                 postRender(contextOfTheView);
-            }
-            catch (const AException& e) {
+            } catch (const AException& e) {
                 ALogger::err("AView") << "Unable to render view: " << e;
                 return;
             }
-            offscreenDl.optimize(backend);
-            offscreenDl.draw(backend);
+
+            rc.canvas.restore(saved);
+
             mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
             mRenderToTexture->drawFromTexture = true;
         });

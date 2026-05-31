@@ -28,23 +28,23 @@ _<IRenderer::IPrerenderedString> ADisplayListCanvas::prerenderString(glm::vec2 p
     return c->finalize();
 }
 
-void ADisplayListCanvas::pushLayer() { add(ADisplayList::PushLayer{}, {}); }
+void ADisplayListCanvas::pushLayerImpl() { add(ADisplayList::PushLayer{}, {}); }
 
-void ADisplayListCanvas::popLayer() { add(ADisplayList::PopLayer{}, {}); }
+void ADisplayListCanvas::popLayerImpl() { add(ADisplayList::PopLayer{}, {}); }
 
-void ADisplayListCanvas::pushMask(_<ITexture> mask, const glm::vec4& maskRect) {
+void ADisplayListCanvas::pushMaskImpl(_<ITexture> mask, const glm::vec4& maskRect) {
     add(ADisplayList::PushMask{std::move(mask), maskRect}, {});
 }
 
-void ADisplayListCanvas::popMask() {
+void ADisplayListCanvas::popMaskImpl() {
     add(ADisplayList::PopMask{}, {});
 }
 
-void ADisplayListCanvas::pushRenderTarget(_<ITexture> texture) {
+void ADisplayListCanvas::pushRenderTargetImpl(_<ITexture> texture) {
     add(ADisplayList::PushRenderTarget{std::move(texture)}, {});
 }
 
-void ADisplayListCanvas::popRenderTarget() {
+void ADisplayListCanvas::popRenderTargetImpl() {
     add(ADisplayList::PopRenderTarget{}, {});
 }
 

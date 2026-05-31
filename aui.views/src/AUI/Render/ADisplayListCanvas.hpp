@@ -24,13 +24,13 @@ public:
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
 
-    void pushLayer() override;
-    void popLayer() override;
-    void pushMask(_<ITexture> mask, const glm::vec4& maskRect) override;
-    void popMask() override;
+    void pushLayerImpl() override;
+    void popLayerImpl() override;
+    void pushMaskImpl(_<ITexture> mask, const glm::vec4& maskRect) override;
+    void popMaskImpl() override;
 
-    void pushRenderTarget(_<ITexture> texture) override;
-    void popRenderTarget() override;
+    void pushRenderTargetImpl(_<ITexture> texture) override;
+    void popRenderTargetImpl() override;
 
     void clear() override;
 

@@ -44,7 +44,6 @@
 #include <AUI/Event/APointerReleasedEvent.h>
 #include <AUI/Event/APointerMoveEvent.h>
 #include <AUI/Render/ITexture.h>
-#include <AUI/Render/IRenderViewToTexture.h>
 #include <AUI/Enum/AFloat.h>
 #include <AUI/Common/AProperty.h>
 
@@ -681,6 +680,14 @@ public:
         mMouseCollisionPolicy = mouseCollisionPolicy;
     }
 
+    void setRenderToTexture(bool enabled) {
+        if (enabled) {
+            if (!mRenderToTexture) mRenderToTexture.emplace();
+        } else {
+            mRenderToTexture.reset();
+        }
+    }
+
     /**
      * Simulates click on the view. Useful then you want to call clicked() slots of this view.
      */
@@ -1161,7 +1168,7 @@ private:
      */
     AOverflowMask mOverflowMask = AOverflowMask::ROUNDED_RECT;
 
-    _<IRenderViewToTexture> mMaskTexture;
+    _<ITexture> mMaskTexture;
 
     /**
      * @see Visibility
@@ -1255,8 +1262,8 @@ private:
     AFloat mFloating = AFloat::NONE;
 
     struct RenderToTexture {
-        _unique<IRenderViewToTexture> rendererInterface;
-        IRenderViewToTexture::InvalidArea invalidArea;
+        _<ITexture> texture;
+        AVector<ARect<int>> invalidArea;
 
         bool drawFromTexture = true;
 
