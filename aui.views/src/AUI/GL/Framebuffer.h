@@ -48,6 +48,9 @@ namespace gl {
         Framebuffer(Framebuffer&& rhs) noexcept: mHandle(rhs.mHandle),
                                                  mSize(rhs.mSize),
                                                  mAttachedTargets(std::move(rhs.mAttachedTargets)) {
+            if (current() == &rhs) {
+                gFramebufferCurrent = this;
+            }
             rhs.mHandle = 0;            
         }
         virtual ~Framebuffer();
@@ -74,13 +77,15 @@ namespace gl {
 
         void attach(_<IRenderTarget> renderTarget, GLenum attachmentType /* = GL_COLOR_ATTACHEMNT0 */) {
             renderTarget->attach(*this, attachmentType);
-            unbind();
             mAttachedTargets << std::move(renderTarget);
         }
 
         Framebuffer& operator=(Framebuffer&& rhs) noexcept {
             if (mHandle == rhs.mHandle) {
                 return *this;
+            }
+            if (current() == &rhs) {
+                gFramebufferCurrent = this;
             }
             std::swap(mHandle, rhs.mHandle);
             mSize = rhs.mSize;
@@ -93,6 +98,7 @@ namespace gl {
         void bindViewport();
 
     private:
+        static Framebuffer* gFramebufferCurrent;
         uint32_t mHandle = 0;
         glm::u32vec2 mSize{0, 0};
         AVector<_<IRenderTarget>> mAttachedTargets;

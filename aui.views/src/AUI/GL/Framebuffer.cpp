@@ -13,7 +13,7 @@
 #include <AUI/GL/State.h>
 
 
-static gl::Framebuffer* gFramebufferCurrent = nullptr;
+gl::Framebuffer* gl::Framebuffer::gFramebufferCurrent = nullptr;
 
 #if AUI_PLATFORM_LINUX
 int gl::Framebuffer::DEFAULT_FB = 0;

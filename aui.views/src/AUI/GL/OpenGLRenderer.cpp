@@ -28,6 +28,8 @@
 #include <AUI/Render/FontAtlas.hpp>
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/GL/RenderTarget/RenderbufferRenderTarget.h>
+#include <AUI/View/AAbstractLabel.h>
+#include <AUI/Performance/APerformanceSection.h>
 
 #ifdef AUI_PLATFORM_WIN32
 #include <windows.h>
@@ -37,6 +39,18 @@ bool OpenGLRenderer::mIsES = false;
 int OpenGLRenderer::mGLSLVersion = 120;
 
 namespace {
+
+class OpenGLFramebufferTexture : public ITexture {
+public:
+    OpenGLFramebufferTexture(uint32_t handle, glm::uvec2 size) : mHandle(handle), mSize(size) {}
+    glm::u32vec2 getSize() const override { return mSize; }
+    APixelFormat getFormat() const override { return APixelFormat::RGBA_BYTE; }
+    void upload(AImageView image) override {}
+    uint32_t handle() const noexcept { return mHandle; }
+private:
+    uint32_t mHandle;
+    glm::uvec2 mSize;
+};
 
 std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 pos, glm::vec2 size) {
     return {
@@ -103,17 +117,21 @@ OpenGLRenderer::TransientBuffer::TransientBuffer(GLenum target, size_t size) : m
     bind();
     glBufferData(target, size, nullptr, GL_STREAM_DRAW);
 }
+
 OpenGLRenderer::TransientBuffer::~TransientBuffer() {
     if (mHandle) glDeleteBuffers(1, &mHandle);
 }
+
 void OpenGLRenderer::TransientBuffer::bind() {
     glBindBuffer(mTarget, mHandle);
 }
+
 void OpenGLRenderer::TransientBuffer::orphan() {
     bind();
     glBufferData(mTarget, mSize, nullptr, GL_STREAM_DRAW);
     mOffset = 0;
 }
+
 size_t OpenGLRenderer::TransientBuffer::upload(const void* data, size_t size) {
     if (mOffset + size > mSize) orphan();
     size_t res = mOffset;
@@ -274,13 +292,20 @@ gl::Framebuffer& OpenGLRenderer::getFbo(const _<OpenGLTexture2D>& texture) {
 void OpenGLRenderer::setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) {
     mCurrentRenderTarget = texture;
     mViewportSize = size;
-    if (texture) {
-        auto glTexture = _cast<OpenGLTexture2D>(texture);
-        auto& fbo = getFbo(glTexture);
+    if (auto glTexture = dynamic_cast<OpenGLTexture2D*>(texture.get())) {
+        auto& fbo = getFbo(_cast<OpenGLTexture2D>(texture));
         fbo.bind();
+    } else if (auto fbTexture = dynamic_cast<OpenGLFramebufferTexture*>(texture.get())) {
+        glBindFramebuffer(GL_FRAMEBUFFER, fbTexture->handle());
+    } else {
+        gl::Framebuffer::unbind();
     }
     mProjectionMatrix = glm::ortho(0.f, static_cast<float>(mViewportSize.x), static_cast<float>(mViewportSize.y), 0.f, -1.f, 1.f);
     glViewport(0, 0, static_cast<GLsizei>(mViewportSize.x), static_cast<GLsizei>(mViewportSize.y));
+}
+
+_<ITexture> OpenGLRenderer::createFramebufferWrapper(uint32_t handle, glm::uvec2 size) {
+    return _new<OpenGLFramebufferTexture>(handle, size);
 }
 
 void OpenGLRenderer::clear() {
@@ -308,7 +333,9 @@ bool OpenGLRenderer::loadGL(GLLoadProc load_proc, bool es) {
 }
 
 bool OpenGLRenderer::loadGL(GLLoadProc load_proc) { return loadGL(load_proc, false); }
+
 uint32_t OpenGLRenderer::getDefaultFb() const noexcept { return 0; }
+
 void OpenGLRenderer::FramebufferBackToPool::operator()(FramebufferWithTextureRT* framebuffer) const {}
 
 void OpenGLRenderer::setupMask(gl::Program& shader) {
@@ -538,6 +565,7 @@ void OpenGLRenderer::gradientRectangles(const ADisplayList::GradientRectangles& 
 
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
+
 void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty() || !v.texture) return;
     GLDebugGroupLocal debugGroup("texturedRectangles");
@@ -546,7 +574,7 @@ void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& 
     mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
     mTexturedShader->set(aui::ShaderUniforms::ALBEDO, 0);
     setupMask(*mTexturedShader);
-    dynamic_cast<OpenGLTexture2D*>(v.texture.get())->bind();
+    static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
 
     AVector<VertexBasicUv> vertices;
     AVector<GLuint> indices;
@@ -748,6 +776,7 @@ void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRound
 
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
+
 void OpenGLRenderer::rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("rectangleBorders");
@@ -791,6 +820,7 @@ void OpenGLRenderer::rectangleBorders(const ADisplayList::RectangleBorders& v, c
 
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
+
 void OpenGLRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("roundedRectangleBorders");
@@ -934,6 +964,7 @@ void OpenGLRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }
+
 void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty() || !v.texture) return;
     GLDebugGroupLocal debugGroup(v.isSubpixel ? "glyphsSubpixel" : "glyphsGrayscale");
@@ -1148,6 +1179,7 @@ void OpenGLRenderer::lines(const ADisplayList::LineBatches& v, const glm::mat4& 
 
     glDrawArrays(GL_LINES, 0, (GLsizei)vertices.size());
 }
+
 void OpenGLRenderer::squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, const APaint& paint) {
     GLDebugGroupLocal debugGroup("squareSector");
     setBlending(paint);
@@ -1185,6 +1217,7 @@ void OpenGLRenderer::squareSector(const ADisplayList::SquareSector& v, const glm
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }
+
 void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {
     if (!glm::all(glm::greaterThan(size, glm::ivec2(0)))) return;
     if (backdrops.empty()) return;
