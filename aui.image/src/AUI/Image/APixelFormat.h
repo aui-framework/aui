@@ -40,6 +40,7 @@ public:
         RGB_BYTE = RGB | BYTE,
         RGBA_BYTE = RGBA | BYTE,
         RGBA_FLOAT = RGBA | FLOAT,
+        R_BYTE = R | BYTE,
 
         // WARNING! please handle AImageView::visit cases when adding new enum values
 
