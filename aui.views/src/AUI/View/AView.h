@@ -176,8 +176,6 @@ public:
      */
     ASurface* getWindow() const;
 
-    virtual void drawStencilMask(ARenderContext ctx);
-
     /**
      * @brief Draws this AView. Noone should call this function except rendering routine.
      * @see AView::drawView
@@ -192,8 +190,6 @@ public:
      * @see AView::drawView
      */
     virtual void postRender(ARenderContext ctx);
-
-    void popStencilIfNeeded(ARenderContext ctx);
 
     [[nodiscard]]
     const AVector<AString>& getAssNames() const noexcept {
@@ -1164,6 +1160,8 @@ private:
      * @brief Controls how does the overflow (stencil) mask is produced.
      */
     AOverflowMask mOverflowMask = AOverflowMask::ROUNDED_RECT;
+
+    _<IRenderViewToTexture> mMaskTexture;
 
     /**
      * @see Visibility

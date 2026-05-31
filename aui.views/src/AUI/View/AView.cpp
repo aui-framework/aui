@@ -22,7 +22,9 @@
 #include <AUI/Render/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
 #include <AUI/Render/IRendererBackend.h>
-#include "AUI/Url/AUrl.h"
+#include <AUI/Render/IRenderViewToTexture.h>
+#include <AUI/Render/ITexture.h>
+#include <AUI/Url/AUrl.h>
 #include "AUI/Render/RenderHints.h"
 #include "AUI/Animator/AAnimator.h"
 
@@ -104,52 +106,17 @@ void AView::markMinContentSizeInvalid()
     AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
 }
 
-void AView::drawStencilMask(ARenderContext ctx)
+void AView::postRender(ARenderContext ctx)
 {
-    switch (mOverflowMask) {
-        case AOverflowMask::ROUNDED_RECT:
-            if (mBorderRadius > 0) {
-                ctx.canvas.roundedRectangle(APaint{ASolidBrush{}},
-                                     {mPadding.left, mPadding.top},
-                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
-                                     glm::max(mBorderRadius - std::min(mPadding.horizontal(), mPadding.vertical()), 0.f));
-            } else {
-                ctx.canvas.rectangle(APaint{ASolidBrush{}},
-                                     {mPadding.left, mPadding.top},
-                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
-            }
-            break;
-
-        case AOverflowMask::BACKGROUND_IMAGE_ALPHA:
-            if (auto s = mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
-                s->renderFor(this, ctx);
-            }
-            break;
+    if (mOverflow == AOverflow::HIDDEN_FROM_THIS || mOverflow == AOverflow::HIDDEN) {
+        ctx.canvas.popMask();
     }
-}
-
-void AView::postRender(ARenderContext ctx) {
-    if (mAnimator)
+    if (mAnimator) {
         mAnimator->postRender(this, ctx.canvas);
-    popStencilIfNeeded(ctx);
-
+    }
     emit redrawn;
 }
 
-void AView::popStencilIfNeeded(ARenderContext ctx) {
-    if (getOverflow() == AOverflow::HIDDEN || getOverflow() == AOverflow::HIDDEN_FROM_THIS)
-    {
-        /*
-         * If the AView's Overflow set to Overflow::HIDDEN AView pushed it's mask into the stencil buffer but AView
-         * cannot return stencil buffer to the previous state by itself because of C++ restrictions. We should also
-         * apply mask AFTER transform updated and BEFORE rendering AView content. The only way to return the stencil
-         * back is place it here, after rendering AView.
-         */
-        RenderHints::popMask(ctx.canvas, [&] {
-            drawStencilMask(ctx);
-        });
-    }
-}
 void AView::render(ARenderContext ctx)
 {
     if (mAnimator)
@@ -165,12 +132,23 @@ void AView::render(ARenderContext ctx)
         }
     }
 
-    //draw before drawing this element
-    if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
-    {
-        RenderHints::pushMask(ctx.canvas, [&] {
-            drawStencilMask(ctx);
-        });
+    if (mOverflow == AOverflow::HIDDEN_FROM_THIS || mOverflow == AOverflow::HIDDEN) {
+        if (!mMaskTexture) {
+            mMaskTexture = ctx.render.newRenderViewToTexture(APixelFormat::R_BYTE);
+        }
+        IRenderViewToTexture::InvalidArea invalidArea = IRenderViewToTexture::InvalidArea::Full{};
+        if (mMaskTexture->begin(ctx.render, getSize(), invalidArea)) {
+            ADisplayList offscreenDl;
+            ADisplayListCanvas offscreenCanvas(offscreenDl, ctx.canvas.renderer());
+            offscreenCanvas.setTransformForced(glm::mat4(1.0f));
+            APaint maskPaint;
+            maskPaint.brush = ASolidBrush{AColor::WHITE};
+            offscreenCanvas.roundedRectangle(maskPaint, {0, 0}, getSize(), getBorderRadius());
+            offscreenDl.optimize();
+            offscreenDl.draw(ctx.canvas.renderer());
+            mMaskTexture->end(ctx.render);
+        }
+        ctx.canvas.pushMask(mMaskTexture->getTexture(), glm::vec4(0.f, 0.f, getSize()));
     }
 
     // draw list
@@ -181,14 +159,6 @@ void AView::render(ARenderContext ctx)
         if (auto w = mAss[i]) {
             w->renderFor(this, ctx);
         }
-    }
-
-    //draw stencil before drawing children elements
-    if (mOverflow == AOverflow::HIDDEN)
-    {
-        RenderHints::pushMask(ctx.canvas, [&] {
-            drawStencilMask(ctx);
-        });
     }
 
     if (auto w = mAss[int(ass::prop::PropertySlot::BACKGROUND_EFFECT)]) {
