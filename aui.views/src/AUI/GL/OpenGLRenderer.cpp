@@ -271,6 +271,8 @@ void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glDisable(GL_STENCIL_TEST);
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(0, 0, (GLsizei)windowSize.x, (GLsizei)windowSize.y);
 }
 
 void OpenGLRenderer::onTextureDestroyed(ITexture* texture) {
@@ -301,6 +303,20 @@ void OpenGLRenderer::setRenderTarget(const _<ITexture>& texture, glm::uvec2 size
     }
     mProjectionMatrix = glm::ortho(0.f, static_cast<float>(mViewportSize.x), static_cast<float>(mViewportSize.y), 0.f, -1.f, 1.f);
     glViewport(0, 0, static_cast<GLsizei>(mViewportSize.x), static_cast<GLsizei>(mViewportSize.y));
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(0, 0, static_cast<GLsizei>(mViewportSize.x), static_cast<GLsizei>(mViewportSize.y));
+}
+
+void OpenGLRenderer::setClipRect(const ARect<float>& rect) {
+    glm::vec2 p1 = rect.p1;
+    glm::vec2 p2 = rect.p2;
+
+    int x = (int)std::floor(p1.x);
+    int y = (int)std::floor((float)mViewportSize.y - p2.y);
+    int w = (int)std::ceil(p2.x - p1.x);
+    int h = (int)std::ceil(p2.y - p1.y);
+
+    glScissor(x, y, w, h);
 }
 
 _<ITexture> OpenGLRenderer::createFramebufferWrapper(uint32_t handle, glm::uvec2 size) {
