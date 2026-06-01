@@ -26,14 +26,11 @@
 #include <AUI/ASS/Property/Backdrop.h>
 #include <AUI/Render/APaint.hpp>
 #include <AUI/Render/IRenderer.h>
-#include <AUI/Render/IRendererBackend.h>
 
 class ACanvas {
 public:
 
     virtual ~ACanvas() = default;
-
-    virtual IRendererBackend& renderer() = 0;
 
     virtual size_t save() = 0;
     virtual void restore() = 0;

@@ -16,7 +16,7 @@
 
 class API_AUI_VIEWS RendererCanvas : public IRenderer {
 public:
-    RendererCanvas(ACanvas& canvas);
+    RendererCanvas(ACanvas& canvas, IRendererBackend& backend);
 
     ACanvas& canvas() override { return mCanvas; }
 
@@ -118,6 +118,7 @@ private:
     }
 
     ACanvas& mCanvas;
+    IRendererBackend& mBackend;
     Blending mBlending = Blending::NORMAL;
     AColor mColorMultiplier = AColor::WHITE;
 };

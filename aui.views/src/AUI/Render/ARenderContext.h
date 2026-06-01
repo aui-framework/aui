@@ -18,6 +18,7 @@
 
 class ACanvas;
 class IRenderer;
+class IRendererBackend;
 
 /**
  * @brief Render context passed to AView::render.
@@ -48,6 +49,7 @@ struct API_AUI_VIEWS ARenderContext {
      */
     Rectangles clippingRects;
     ACanvas& canvas;
+    IRendererBackend& backend;
     [[deprecated("Use canvas instead")]]
     IRenderer& render;
 

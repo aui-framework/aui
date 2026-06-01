@@ -17,12 +17,11 @@
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/Software/SoftwareRenderer.h>
 
-RendererCanvas::RendererCanvas(ACanvas& canvas) : mCanvas(canvas) {}
+RendererCanvas::RendererCanvas(ACanvas& canvas, IRendererBackend& backend) : mCanvas(canvas), mBackend(backend) {}
 
 _<IRenderer::IMultiStringCanvas> RendererCanvas::newMultiStringCanvas(const AFontStyle& style) {
-    auto& backend = mCanvas.renderer();
-    auto entryData = aui::getFontEntryData(style, backend.getFontCache());
-    return _new<aui::MultiStringCanvas>(backend, entryData, style);
+    auto entryData = aui::getFontEntryData(style, mBackend.getFontCache());
+    return _new<aui::MultiStringCanvas>(mBackend, entryData, style);
 }
 
 void RendererCanvas::rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
@@ -130,7 +129,7 @@ void RendererCanvas::setBlending(Blending blending) {
 }
 
 glm::mat4 RendererCanvas::getProjectionMatrix() const {
-    return mCanvas.renderer().getProjectionMatrix();
+    return mBackend.getProjectionMatrix();
 }
 
 glm::mat4 RendererCanvas::getTransform() {
@@ -150,11 +149,11 @@ void RendererCanvas::rotate(AAngleRadians angle) {
 }
 
 void RendererCanvas::setAllowRenderToTexture(bool allowRenderToTexture) {
-    mCanvas.renderer().setAllowRenderToTexture(allowRenderToTexture);
+    mBackend.setAllowRenderToTexture(allowRenderToTexture);
 }
 
 bool RendererCanvas::allowRenderToTexture() const noexcept {
-    return mCanvas.renderer().allowRenderToTexture();
+    return mBackend.allowRenderToTexture();
 }
 
 void RendererCanvas::setRenderScale(float render_scale) {

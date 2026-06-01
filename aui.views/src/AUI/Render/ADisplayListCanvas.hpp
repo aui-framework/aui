@@ -19,8 +19,6 @@ class API_AUI_VIEWS ADisplayListCanvas : public ACanvas {
 public:
     ADisplayListCanvas(ADisplayList& displayList, IRendererBackend& renderer) : mDisplayList(displayList), mRenderer(renderer) {}
 
-    IRendererBackend& renderer() override { return mRenderer; }
-
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
 
