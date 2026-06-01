@@ -680,14 +680,6 @@ public:
         mMouseCollisionPolicy = mouseCollisionPolicy;
     }
 
-    void setRenderToTexture(bool enabled) {
-        if (enabled) {
-            if (!mRenderToTexture) mRenderToTexture.emplace();
-        } else {
-            mRenderToTexture.reset();
-        }
-    }
-
     /**
      * Simulates click on the view. Useful then you want to call clicked() slots of this view.
      */
@@ -1260,19 +1252,6 @@ private:
      * @brief Floating value for AText.
      */
     AFloat mFloating = AFloat::NONE;
-
-    struct RenderToTexture {
-        _<ITexture> texture;
-        AVector<ARect<int>> invalidArea;
-
-        bool drawFromTexture = true;
-
-        /**
-         * @brief Helps avoiding unwanted redrawing if RenderToTexture-capable view is not actually visible.
-         */
-        bool skipRedrawUntilTextureIsPresented = false;
-    };
-    AOptional<RenderToTexture> mRenderToTexture;
 
     /**
      * @brief Applies state-dependent styles and invalidates pixel data, layout, repaint if needed.

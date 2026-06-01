@@ -134,7 +134,7 @@ void AView::render(ARenderContext ctx)
     // mask
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS || mOverflow == AOverflow::HIDDEN) {
         if (!mMaskTexture || mMaskTexture->getSize() != glm::u32vec2(getSize())) {
-            mMaskTexture = ctx.canvas.renderer().createTexture(getSize(), APixelFormat::R_BYTE);
+            mMaskTexture = ctx.backend.createTexture(getSize(), APixelFormat::R_BYTE);
             mRedrawRequested = true;
         }
         if (mRedrawRequested) {
@@ -716,76 +716,6 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
         // clip by overflow
         invalidArea.p1 = glm::max(invalidArea.p1, glm::ivec2(0));
         invalidArea.p2 = glm::min(invalidArea.p2, getSize());
-    }
-    if (mRenderToTexture) {
-        mRenderToTexture->invalidArea << invalidArea;
-        if (std::exchange(mRedrawRequested, true)) {
-            // this view already requested a redraw.
-            return;
-        }
-        // temporary disable drawing from texture. this will be set back to true by the callback below.
-        mRenderToTexture->drawFromTexture = false;
-        AWindow::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](ARenderContext rc) {
-            if (!mRenderToTexture) {
-                return;
-            }
-
-            if (mRenderToTexture->skipRedrawUntilTextureIsPresented) {
-                mRedrawRequested = false;
-                return;
-            }
-
-            if (glm::any(glm::equal(getSize(), glm::ivec2(0)))) {
-                mRedrawRequested = false;
-                mRenderToTexture->invalidArea.clear();
-                return;
-            }
-
-            if (mRenderToTexture->invalidArea.empty()) {
-                return;
-            }
-
-            APerformanceSection s("Render-to-texture rasterization", {}, debugString().toStdString());
-            auto invalidArea = std::exchange(mRenderToTexture->invalidArea, {});
-
-            if (!mRenderToTexture->texture || mRenderToTexture->texture->getSize() != glm::u32vec2(getSize())) {
-                mRenderToTexture->texture = rc.canvas.renderer().createTexture(getSize());
-            }
-
-            auto saved = rc.canvas.save();
-
-            rc.canvas.pushRenderTarget(mRenderToTexture->texture);
-            rc.canvas.clear();
-
-            ARenderContext contextOfTheView = rc;
-
-            for (const auto& r : invalidArea) {
-                contextOfTheView.clippingRects << r;
-            }
-            ARect<int> initialRect {
-                .p1 = { 0, 0 },
-                .p2 = size(),
-            };
-            if (contextOfTheView.clippingRects.empty()) {
-                contextOfTheView.clippingRects << initialRect;
-            } else {
-                contextOfTheView.clip(initialRect);
-            }
-            try {
-                render(contextOfTheView);
-                postRender(contextOfTheView);
-            } catch (const AException& e) {
-                ALogger::err("AView") << "Unable to render view: " << e;
-                return;
-            }
-
-            rc.canvas.restore(saved);
-
-            mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
-            mRenderToTexture->drawFromTexture = true;
-        });
-        AUI_NULLSAFE(mParent)->markPixelDataInvalid(ARect<int>::fromTopLeftPositionAndSize(getPosition(), size()));
-        return;
     }
 
     if (mRedrawRequested) {
