@@ -37,7 +37,7 @@ public:
     void pushRenderTarget(_<ITexture> texture) override;
     void popRenderTarget() override;
 
-    void clear() override;
+    void clear(const AColor& color) override;
 
     void setTransform(const glm::mat4& transform) override;
 

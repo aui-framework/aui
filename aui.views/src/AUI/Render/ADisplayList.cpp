@@ -298,24 +298,37 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer) {
 }
 
 void ADisplayList::resolveClips() {
-    AVector<ARect<float>> clipStack;
-    ARect<float> currentClip { .p1 = {-1e10, -1e10}, .p2 = {1e10, 1e10} };
-
+    struct ClipEntry {
+        AVector<ARect<float>> stack;
+        ARect<float> current;
+    };
+    AVector<ClipEntry> targetClipStack = { { {}, { .p1 = {-1e6, -1e10}, .p2 = {1e6, 1e10} } } };
+    
     for (auto& entity : mEntities) {
         std::visit(aui::lambda_overloaded {
+            [&](const PushRenderTarget& v) {
+                targetClipStack << ClipEntry{ {}, { .p1 = {-1e6, -1e6}, .p2 = {1e6, 1e6} } };
+            },
+            [&](const PopRenderTarget&) {
+                if (targetClipStack.size() > 1) {
+                    targetClipStack.pop_back();
+                }
+            },
             [&](const PushClipRect& v) {
-                clipStack << currentClip;
-                currentClip = currentClip.intersect(v.rect);
+                auto& top = targetClipStack.last();
+                top.stack << top.current;
+                top.current = top.current.intersect(v.rect);
             },
             [&](const PopClipRect&) {
-                if (!clipStack.empty()) {
-                    currentClip = clipStack.last();
-                    clipStack.pop_back();
+                auto& top = targetClipStack.last();
+                if (!top.stack.empty()) {
+                    top.current = top.stack.last();
+                    top.stack.pop_back();
                 }
             },
             [&](auto&) {}
         }, entity.command);
-        entity.clipRect = currentClip;
+        entity.clipRect = targetClipStack.last().current;
     }
 }
 
@@ -357,6 +370,7 @@ void ADisplayList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& 
 
 void ADisplayList::draw(IRendererBackend& renderer) const {
     for (const auto& pass : mPasses) {
+        renderer.beginRenderPass(pass.target);
         renderer.setRenderTarget(pass.target, pass.size);
         renderer.setRenderMaskMode(pass.target && pass.target->getFormat() == APixelFormat::R_BYTE);
         
@@ -369,7 +383,7 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
                   [&](const PopMask&) { return true; },
                   [&](const PushClipRect&) { return true; },
                   [&](const PopClipRect&) { return true; },
-                  [&](const Clear&) { renderer.clear(); return true; },
+                  [&](const Clear& v) { renderer.clear(v.color); return true; },
                   [&](const auto&) { return false; }
                 },
                 entity.command);
@@ -400,7 +414,9 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
                     entity.command);
             }
         }
+        renderer.endRenderPass();
     }
+    renderer.flush();
 }
 
 void ADisplayList::optimize(IRendererBackend& renderer, const _<ITexture>& windowTarget) {

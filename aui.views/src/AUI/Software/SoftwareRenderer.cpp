@@ -66,6 +66,8 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
 
     if (pos.x < 0 || pos.y < 0 || (uint32_t)pos.x >= bitmapSize.x || (uint32_t)pos.y >= bitmapSize.y) return;
     
+    if (pos.x < mClipRect.p1.x || pos.y < mClipRect.p1.y || pos.x >= mClipRect.p2.x || pos.y >= mClipRect.p2.y) return;
+
     glm::vec4 dst;
     if (mRenderTarget) {
         dst = glm::vec4(mRenderTarget->get(glm::uvec2(pos))) / 255.f;
@@ -576,15 +578,16 @@ void SoftwareRenderer::setRenderTarget(const _<ITexture>& texture, glm::uvec2 si
     } else {
         mRenderTarget = nullptr;
     }
+    mClipRect = { .p1 = {-1e10, -1e10}, .p2 = {1e10, 1e10} };
 }
 
 _<ITexture> SoftwareRenderer::createFramebufferWrapper(glm::uvec2 size) {
     return _new<SoftwareFramebufferTexture>(size);
 }
 
-void SoftwareRenderer::clear() {
+void SoftwareRenderer::clear(const AColor& color) {
     if (mRenderTarget) {
-        mRenderTarget->fill(AColor::TRANSPARENT_BLACK);
+        mRenderTarget->fill(color);
     }
 }
 

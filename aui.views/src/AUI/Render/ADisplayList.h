@@ -136,7 +136,9 @@ public:
         ARect<float> rect;
     };
     struct PopClipRect {};
-    struct Clear {};
+    struct Clear {
+        AColor color;
+    };
     struct PushLayer {};
     struct PopLayer {};
     struct PushMask {

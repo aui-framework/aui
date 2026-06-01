@@ -213,7 +213,10 @@ public:
     [[nodiscard]]
     glm::uvec2 getViewportSize() const override { return mViewportSize; }
     void setRenderMaskMode(bool enabled) override { mIsRenderingToMask = enabled; }
-    void clear() override;
+    void clear(const AColor& color) override;
+    void beginRenderPass(const _<ITexture>& target) override;
+    void endRenderPass() override;
+    void flush() override;
     void setMask(const _<ITexture>& mask, const glm::vec4& maskRect = glm::vec4(0.f)) override;
 
     AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,

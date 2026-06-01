@@ -98,8 +98,8 @@ void ADisplayListCanvas::popRenderTarget() {
     add(ADisplayList::PopRenderTarget{}, {});
 }
 
-void ADisplayListCanvas::clear() {
-    add(ADisplayList::Clear{}, {});
+void ADisplayListCanvas::clear(const AColor& color) {
+    add(ADisplayList::Clear{color}, {});
 }
 
 void ADisplayListCanvas::setTransform(const glm::mat4& transform) {

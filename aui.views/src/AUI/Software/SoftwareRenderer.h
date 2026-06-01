@@ -45,13 +45,17 @@ public:
 
     void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
     void setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) override;
+    void setClipRect(const ARect<float>& rect) override { mClipRect = rect; }
     [[nodiscard]]
     glm::uvec2 getViewportSize() const override { return mRenderTarget ? mRenderTarget->size() : (mContext ? mContext->getBitmapSize() : glm::uvec2(0)); }
 
     _<ITexture> createFramebufferWrapper(glm::uvec2 size);
 
     void setRenderMaskMode(bool enabled) override {}
-    void clear() override;
+    void clear(const AColor& color) override;
+    void beginRenderPass(const _<ITexture>& target) override {}
+    void endRenderPass() override {}
+    void flush() override {}
     void setMask(const _<ITexture>& mask, const glm::vec4& maskRect = glm::vec4(0.f)) override;
 
     AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
@@ -76,6 +80,7 @@ private:
 
     SoftwareRenderingContext* mContext = nullptr;
     AImage* mRenderTarget = nullptr;
+    ARect<float> mClipRect { .p1 = {-1e10, -1e10}, .p2 = {1e10, 1e10} };
     bool mAllowRenderToTexture = true;
     ADeque<aui::FontAtlas> mFontEntryData;
     ADeque<aui::CharacterData> mCharData;

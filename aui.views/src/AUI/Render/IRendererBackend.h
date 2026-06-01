@@ -54,7 +54,12 @@ public:
     virtual void setClipRect(const ARect<float>& rect) = 0;
     virtual glm::uvec2 getViewportSize() const = 0;
     virtual void setRenderMaskMode(bool enabled) = 0;
-    virtual void clear() = 0;
+    virtual void clear(const AColor& color) = 0;
+
+    virtual void beginRenderPass(const _<ITexture>& target) = 0;
+    virtual void endRenderPass() = 0;
+    virtual void flush() = 0;
+
     virtual glm::mat4 getProjectionMatrix() const = 0;
 
     virtual void setAllowRenderToTexture(bool allow) = 0;

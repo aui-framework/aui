@@ -308,24 +308,48 @@ void OpenGLRenderer::setRenderTarget(const _<ITexture>& texture, glm::uvec2 size
 }
 
 void OpenGLRenderer::setClipRect(const ARect<float>& rect) {
-    glm::vec2 p1 = rect.p1;
-    glm::vec2 p2 = rect.p2;
+    float x1 = std::max(0.f, rect.p1.x);
+    float y1 = std::max(0.f, rect.p1.y);
+    float x2 = std::min(static_cast<float>(mViewportSize.x), rect.p2.x);
+    float y2 = std::min(static_cast<float>(mViewportSize.y), rect.p2.y);
 
-    int x = (int)std::floor(p1.x);
-    int y = (int)std::floor((float)mViewportSize.y - p2.y);
-    int w = (int)std::ceil(p2.x - p1.x);
-    int h = (int)std::ceil(p2.y - p1.y);
+    int ix1 = static_cast<int>(std::floor(x1));
+    int iy1 = static_cast<int>(std::floor(static_cast<float>(mViewportSize.y) - y2));
+    int iw = static_cast<int>(std::ceil(x2 - x1));
+    int ih = static_cast<int>(std::ceil(y2 - y1));
 
-    glScissor(x, y, w, h);
+    glScissor(ix1, iy1, std::max(0, iw), std::max(0, ih));
 }
 
 _<ITexture> OpenGLRenderer::createFramebufferWrapper(uint32_t handle, glm::uvec2 size) {
     return _new<OpenGLFramebufferTexture>(handle, size);
 }
 
-void OpenGLRenderer::clear() {
-    glClearColor(0.f, 0.f, 0.f, 0.f);
+void OpenGLRenderer::clear(const AColor& color) {
+    glClearColor(color.r, color.g, color.b, color.a);
     glClear(GL_COLOR_BUFFER_BIT);
+}
+
+void OpenGLRenderer::beginRenderPass(const _<ITexture>& target) {
+    GLDebugGroupLocal debugGroup("Render Pass");
+    // Wait, GLDebugGroupLocal is RAII. I should use glPushDebugGroup directly here.
+#if defined(GL_KHR_debug) || defined(GL_VERSION_4_3)
+    if (glPushDebugGroup) {
+        glPushDebugGroup(GL_DEBUG_SOURCE_APPLICATION, 0, -1, "Render Pass");
+    }
+#endif
+}
+
+void OpenGLRenderer::endRenderPass() {
+#if defined(GL_KHR_debug) || defined(GL_VERSION_4_3)
+    if (glPopDebugGroup) {
+        glPopDebugGroup();
+    }
+#endif
+}
+
+void OpenGLRenderer::flush() {
+    glFlush();
 }
 
 void OpenGLRenderer::endPaint() {}
@@ -387,6 +411,8 @@ IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask
     if (w <= 0.f || h <= 0.f || !mask1 || !mask2) {
         return { mEmptyMask, glm::vec4(0.f) };
     }
+
+    GLDebugGroupLocal debugGroup("mergeMasks");
 
     gl::Framebuffer* prevFramebuffer = gl::Framebuffer::current();
     glm::uvec2 prevViewportSize = mViewportSize;
