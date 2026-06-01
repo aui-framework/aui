@@ -88,6 +88,7 @@ void ADisplayListCanvas::popMask() {
 }
 
 void ADisplayListCanvas::pushRenderTarget(_<ITexture> texture) {
+    if (!texture) throw AException("pushRenderTarget called with null texture");
     mRenderTargetStackDepth++;
     add(ADisplayList::PushRenderTarget{std::move(texture)}, {});
 }
