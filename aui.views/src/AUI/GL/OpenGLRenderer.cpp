@@ -331,7 +331,6 @@ void OpenGLRenderer::clear(const AColor& color) {
 }
 
 void OpenGLRenderer::beginRenderPass(const _<ITexture>& target) {
-    GLDebugGroupLocal debugGroup("Render Pass");
     // Wait, GLDebugGroupLocal is RAII. I should use glPushDebugGroup directly here.
 #if defined(GL_KHR_debug) || defined(GL_VERSION_4_3)
     if (glPushDebugGroup) {
