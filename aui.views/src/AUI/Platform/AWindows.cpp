@@ -58,6 +58,7 @@ void AWindow::doDrawWindow() {
     render(ARenderContext {
         .clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } },
         .canvas = rc.canvas(),
+        .backend = rc.backend(),
         .render = rc.renderer(),
     });
 }
