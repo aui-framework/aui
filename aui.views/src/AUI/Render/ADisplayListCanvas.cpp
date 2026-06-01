@@ -13,6 +13,7 @@
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Render/FontAtlas.hpp>
 #include <AUI/Traits/callables.h>
+#include <glm/gtc/matrix_transform.hpp>
 
 #include <utility>
 
@@ -28,28 +29,97 @@ _<IRenderer::IPrerenderedString> ADisplayListCanvas::prerenderString(glm::vec2 p
     return c->finalize();
 }
 
-void ADisplayListCanvas::pushLayerImpl() { add(ADisplayList::PushLayer{}, {}); }
+size_t ADisplayListCanvas::save() {
+    size_t res = mStates.size();
+    mStates.push_back(State{mTransform, mBaseTransform, mMaskStackDepth, mRenderTargetStackDepth, mLayerStackDepth});
+    return res;
+}
 
-void ADisplayListCanvas::popLayerImpl() { add(ADisplayList::PopLayer{}, {}); }
+void ADisplayListCanvas::restore() {
+    if (!mStates.empty()) {
+        State s = mStates.back();
+        mStates.pop_back();
+        mTransform = s.transform;
+        mBaseTransform = s.baseTransform;
+        while (mMaskStackDepth > s.maskStackDepth) popMask();
+        while (mRenderTargetStackDepth > s.renderTargetStackDepth) popRenderTarget();
+        while (mLayerStackDepth > s.layerStackDepth) popLayer();
+    }
+}
 
-void ADisplayListCanvas::pushMaskImpl(_<ITexture> mask, const glm::vec4& maskRect) {
+void ADisplayListCanvas::restore(size_t targetStackSize) {
+    while (mStates.size() > targetStackSize) {
+        restore();
+    }
+}
+
+void ADisplayListCanvas::pushLayer() {
+    mLayerStackDepth++;
+    add(ADisplayList::PushLayer{}, {});
+}
+
+void ADisplayListCanvas::popLayer() {
+    AUI_ASSERT(mLayerStackDepth > 0);
+    mLayerStackDepth--;
+    add(ADisplayList::PopLayer{}, {});
+}
+
+void ADisplayListCanvas::pushMask(_<ITexture> mask, const glm::vec4& maskRect) {
+    mMaskStackDepth++;
     add(ADisplayList::PushMask{std::move(mask), maskRect}, {});
 }
 
-void ADisplayListCanvas::popMaskImpl() {
+void ADisplayListCanvas::popMask() {
+    AUI_ASSERT(mMaskStackDepth > 0);
+    mMaskStackDepth--;
     add(ADisplayList::PopMask{}, {});
 }
 
-void ADisplayListCanvas::pushRenderTargetImpl(_<ITexture> texture) {
+void ADisplayListCanvas::pushRenderTarget(_<ITexture> texture) {
+    mRenderTargetStackDepth++;
     add(ADisplayList::PushRenderTarget{std::move(texture)}, {});
 }
 
-void ADisplayListCanvas::popRenderTargetImpl() {
+void ADisplayListCanvas::popRenderTarget() {
+    AUI_ASSERT(mRenderTargetStackDepth > 0);
+    mRenderTargetStackDepth--;
     add(ADisplayList::PopRenderTarget{}, {});
 }
 
 void ADisplayListCanvas::clear() {
     add(ADisplayList::Clear{}, {});
+}
+
+void ADisplayListCanvas::setTransform(const glm::mat4& transform) {
+    if (isSimple(transform)) {
+        mTransform = mTransform * transform;
+    } else {
+        mBaseTransform = mBaseTransform * mTransform * transform;
+        mTransform = glm::mat4(1.0f);
+    }
+}
+
+void ADisplayListCanvas::setTransformForced(const glm::mat4& transform) noexcept {
+    if (isSimple(transform)) {
+        mBaseTransform = glm::mat4(1.0f);
+        mTransform = transform;
+    } else {
+        mBaseTransform = transform;
+        mTransform = glm::mat4(1.0f);
+    }
+}
+
+void ADisplayListCanvas::translate(const glm::vec2& offset) {
+    mTransform = glm::translate(mTransform, glm::vec3(offset, 0.f));
+}
+
+void ADisplayListCanvas::rotate(const glm::vec3& axis, AAngleRadians angle) {
+    mBaseTransform = mBaseTransform * mTransform * glm::rotate(glm::mat4(1.f), angle.radians(), axis);
+    mTransform = glm::mat4(1.f);
+}
+
+void ADisplayListCanvas::rotate(AAngleRadians angle) {
+    rotate({0.f, 0.f, 1.f}, angle);
 }
 
 void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) {

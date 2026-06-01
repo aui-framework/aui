@@ -9,10 +9,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by Nelonn on 5/20/2026.
-//
-
 #pragma once
 
 #include <glm/glm.hpp>
@@ -30,7 +26,6 @@
 #include <AUI/ASS/Property/Backdrop.h>
 #include <AUI/Render/APaint.hpp>
 #include <AUI/Render/IRenderer.h>
-
 #include <AUI/Render/IRendererBackend.h>
 
 class ACanvas {
@@ -40,68 +35,20 @@ public:
 
     virtual IRendererBackend& renderer() = 0;
 
-    virtual size_t save() {
-        size_t res = mStates.size();
-        mStates.push_back(State{mTransform, mBaseTransform, mMaskStackDepth, mRenderTargetStackDepth, mLayerStackDepth});
-        return res;
-    }
+    virtual size_t save() = 0;
+    virtual void restore() = 0;
+    virtual void restore(size_t targetStackSize) = 0;
 
-    virtual void restore() {
-        if (!mStates.empty()) {
-            State s = mStates.back();
-            mStates.pop_back();
-            mTransform = s.transform;
-            mBaseTransform = s.baseTransform;
-            while (mMaskStackDepth > s.maskStackDepth) popMask();
-            while (mRenderTargetStackDepth > s.renderTargetStackDepth) popRenderTarget();
-            while (mLayerStackDepth > s.layerStackDepth) popLayer();
-        }
-    }
+    virtual void pushMask(_<ITexture> mask, const glm::vec4& maskRect) = 0;
+    virtual void popMask() = 0;
 
-    virtual void restore(size_t targetStackSize) {
-        while (mStates.size() > targetStackSize) {
-            restore();
-        }
-    }
-
-    void pushMask(_<ITexture> mask, const glm::vec4& maskRect) {
-        mMaskStackDepth++;
-        pushMaskImpl(std::move(mask), maskRect);
-    }
-    void popMask() {
-        AUI_ASSERT(mMaskStackDepth > 0);
-        mMaskStackDepth--;
-        popMaskImpl();
-    }
-
-    void pushRenderTarget(_<ITexture> texture) {
-        mRenderTargetStackDepth++;
-        pushRenderTargetImpl(std::move(texture));
-    }
-    void popRenderTarget() {
-        AUI_ASSERT(mRenderTargetStackDepth > 0);
-        mRenderTargetStackDepth--;
-        popRenderTargetImpl();
-    }
+    virtual void pushRenderTarget(_<ITexture> texture) = 0;
+    virtual void popRenderTarget() = 0;
 
     virtual void clear() = 0;
 
-    void pushLayer() {
-        mLayerStackDepth++;
-        pushLayerImpl();
-    }
-    void popLayer() {
-        AUI_ASSERT(mLayerStackDepth > 0);
-        mLayerStackDepth--;
-        popLayerImpl();
-    }
-
-    virtual void pushMaskImpl(_<ITexture> mask, const glm::vec4& maskRect) = 0;
-    virtual void popMaskImpl() = 0;
-    virtual void pushRenderTargetImpl(_<ITexture> texture) = 0;
-    virtual void popRenderTargetImpl() = 0;
-    virtual void pushLayerImpl() = 0;
-    virtual void popLayerImpl() = 0;
+    virtual void pushLayer() = 0;
+    virtual void popLayer() = 0;
 
     static bool isSimple(const glm::mat4& m) noexcept {
         return glm::abs(m[0][1]) < 0.0001f && glm::abs(m[0][2]) < 0.0001f && glm::abs(m[0][3]) < 0.0001f &&
@@ -109,14 +56,7 @@ public:
                glm::abs(m[2][0]) < 0.0001f && glm::abs(m[2][1]) < 0.0001f && glm::abs(m[2][3]) < 0.0001f;
     }
 
-    virtual void setTransform(const glm::mat4& transform) {
-        if (isSimple(transform)) {
-            mTransform = mTransform * transform;
-        } else {
-            mBaseTransform = mBaseTransform * mTransform * transform;
-            mTransform = glm::mat4(1.0f);
-        }
-    }
+    virtual void setTransform(const glm::mat4& transform) = 0;
 
     virtual void rectangle(const APaint& paint,
                            glm::vec2 position,
@@ -186,49 +126,19 @@ public:
 
     virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) = 0;
 
-    float getRenderScale() const noexcept { return mRenderScale; }
-    void setRenderScale(float renderScale) noexcept { mRenderScale = renderScale; }
+    virtual float getRenderScale() const noexcept = 0;
+    virtual void setRenderScale(float renderScale) noexcept = 0;
+
     virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
     virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
 
-    const glm::mat4 getTransform() const noexcept { return mBaseTransform * mTransform; }
-    virtual void setTransformForced(const glm::mat4& transform) noexcept {
-        if (isSimple(transform)) {
-            mBaseTransform = glm::mat4(1.0f);
-            mTransform = transform;
-        } else {
-            mBaseTransform = transform;
-            mTransform = glm::mat4(1.0f);
-        }
-    }
+    virtual const glm::mat4 getTransform() const noexcept = 0;
+    virtual void setTransformForced(const glm::mat4& transform) noexcept = 0;
 
-    void translate(const glm::vec2& offset) {
-        mTransform = glm::translate(mTransform, glm::vec3(offset, 0.f));
-    }
-    void rotate(const glm::vec3& axis, AAngleRadians angle) {
-        mBaseTransform = mBaseTransform * mTransform * glm::rotate(glm::mat4(1.f), angle.radians(), axis);
-        mTransform = glm::mat4(1.f);
-    }
-    void rotate(AAngleRadians angle) {
-        rotate({0.f, 0.f, 1.f}, angle);
-    }
+    virtual void translate(const glm::vec2& offset) = 0;
+    virtual void rotate(const glm::vec3& axis, AAngleRadians angle) = 0;
+    virtual void rotate(AAngleRadians angle) = 0;
 
-    const glm::mat4& getBaseTransform() const noexcept { return mBaseTransform; }
-    void setBaseTransform(const glm::mat4& transform) noexcept { mBaseTransform = transform; }
-
-protected:
-    struct State {
-        glm::mat4 transform;
-        glm::mat4 baseTransform;
-        size_t maskStackDepth;
-        size_t renderTargetStackDepth;
-        size_t layerStackDepth;
-    };
-    std::vector<State> mStates;
-    glm::mat4 mTransform = glm::mat4(1.0f);
-    glm::mat4 mBaseTransform = glm::mat4(1.0f);
-    float mRenderScale = 1.0f;
-    size_t mMaskStackDepth = 0;
-    size_t mRenderTargetStackDepth = 0;
-    size_t mLayerStackDepth = 0;
+    virtual const glm::mat4& getBaseTransform() const noexcept = 0;
+    virtual void setBaseTransform(const glm::mat4& transform) noexcept = 0;
 };

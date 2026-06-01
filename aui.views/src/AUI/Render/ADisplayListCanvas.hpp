@@ -24,15 +24,21 @@ public:
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
 
-    void pushLayerImpl() override;
-    void popLayerImpl() override;
-    void pushMaskImpl(_<ITexture> mask, const glm::vec4& maskRect) override;
-    void popMaskImpl() override;
+    size_t save() override;
+    void restore() override;
+    void restore(size_t targetStackSize) override;
 
-    void pushRenderTargetImpl(_<ITexture> texture) override;
-    void popRenderTargetImpl() override;
+    void pushLayer() override;
+    void popLayer() override;
+    void pushMask(_<ITexture> mask, const glm::vec4& maskRect) override;
+    void popMask() override;
+
+    void pushRenderTarget(_<ITexture> texture) override;
+    void popRenderTarget() override;
 
     void clear() override;
+
+    void setTransform(const glm::mat4& transform) override;
 
     void rectangle(const APaint& paint, glm::vec2 position, glm::vec2 size) override;
     void roundedRectangle(const APaint& paint, glm::vec2 position, glm::vec2 size, float radius) override;
@@ -63,8 +69,36 @@ public:
                       AAngleRadians end) override;
     void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) override;
 
+    float getRenderScale() const noexcept override { return mRenderScale; }
+    void setRenderScale(float renderScale) noexcept override { mRenderScale = renderScale; }
+
+    const glm::mat4 getTransform() const noexcept override { return mBaseTransform * mTransform; }
+    void setTransformForced(const glm::mat4& transform) noexcept override;
+
+    void translate(const glm::vec2& offset) override;
+    void rotate(const glm::vec3& axis, AAngleRadians angle) override;
+    void rotate(AAngleRadians angle) override;
+
+    const glm::mat4& getBaseTransform() const noexcept override { return mBaseTransform; }
+    void setBaseTransform(const glm::mat4& transform) noexcept override { mBaseTransform = transform; }
+
 private:
     void add(ADisplayList::StoredCommand::Command command, const APaint& paint = {});
+
+    struct State {
+        glm::mat4 transform;
+        glm::mat4 baseTransform;
+        size_t maskStackDepth;
+        size_t renderTargetStackDepth;
+        size_t layerStackDepth;
+    };
+    std::vector<State> mStates;
+    glm::mat4 mTransform = glm::mat4(1.0f);
+    glm::mat4 mBaseTransform = glm::mat4(1.0f);
+    float mRenderScale = 1.0f;
+    size_t mMaskStackDepth = 0;
+    size_t mRenderTargetStackDepth = 0;
+    size_t mLayerStackDepth = 0;
 
     ADisplayList& mDisplayList;
     IRendererBackend& mRenderer;
