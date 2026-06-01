@@ -36,6 +36,9 @@ public:
     virtual void restore() = 0;
     virtual void restore(size_t targetStackSize) = 0;
 
+    virtual void pushClipRect(const ARect<float>& rect) = 0;
+    virtual void popClipRect() = 0;
+
     virtual void pushMask(_<ITexture> mask, const glm::vec4& maskRect) = 0;
     virtual void popMask() = 0;
 

@@ -26,6 +26,9 @@ public:
     void restore() override;
     void restore(size_t targetStackSize) override;
 
+    void pushClipRect(const ARect<float>& rect) override;
+    void popClipRect() override;
+
     void pushLayer() override;
     void popLayer() override;
     void pushMask(_<ITexture> mask, const glm::vec4& maskRect) override;
@@ -89,6 +92,7 @@ private:
         size_t maskStackDepth;
         size_t renderTargetStackDepth;
         size_t layerStackDepth;
+        size_t clipStackDepth;
     };
     std::vector<State> mStates;
     glm::mat4 mTransform = glm::mat4(1.0f);
@@ -97,6 +101,7 @@ private:
     size_t mMaskStackDepth = 0;
     size_t mRenderTargetStackDepth = 0;
     size_t mLayerStackDepth = 0;
+    size_t mClipStackDepth = 0;
 
     ADisplayList& mDisplayList;
     IRendererBackend& mRenderer;

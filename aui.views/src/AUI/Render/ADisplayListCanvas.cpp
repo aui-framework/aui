@@ -31,7 +31,7 @@ _<IRenderer::IPrerenderedString> ADisplayListCanvas::prerenderString(glm::vec2 p
 
 size_t ADisplayListCanvas::save() {
     size_t res = mStates.size();
-    mStates.push_back(State{mTransform, mBaseTransform, mMaskStackDepth, mRenderTargetStackDepth, mLayerStackDepth});
+    mStates.push_back(State{mTransform, mBaseTransform, mMaskStackDepth, mRenderTargetStackDepth, mLayerStackDepth, mClipStackDepth});
     return res;
 }
 
@@ -44,6 +44,7 @@ void ADisplayListCanvas::restore() {
         while (mMaskStackDepth > s.maskStackDepth) popMask();
         while (mRenderTargetStackDepth > s.renderTargetStackDepth) popRenderTarget();
         while (mLayerStackDepth > s.layerStackDepth) popLayer();
+        while (mClipStackDepth > s.clipStackDepth) popClipRect();
     }
 }
 
@@ -51,6 +52,17 @@ void ADisplayListCanvas::restore(size_t targetStackSize) {
     while (mStates.size() > targetStackSize) {
         restore();
     }
+}
+
+void ADisplayListCanvas::pushClipRect(const ARect<float>& rect) {
+    mClipStackDepth++;
+    add(ADisplayList::PushClipRect{rect}, {});
+}
+
+void ADisplayListCanvas::popClipRect() {
+    AUI_ASSERT(mClipStackDepth > 0);
+    mClipStackDepth--;
+    add(ADisplayList::PopClipRect{}, {});
 }
 
 void ADisplayListCanvas::pushLayer() {
@@ -372,6 +384,11 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                 glm::vec4 p1 = st * glm::vec4(v.maskRect.x, v.maskRect.y, 0.f, 1.f);
                 glm::vec4 p2 = st * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0.f, 1.f);
                 v.maskRect = glm::vec4(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+            },
+            [&](ADisplayList::PushClipRect& v) {
+                glm::vec4 p1 = st * glm::vec4(v.rect.p1, 0.f, 1.f);
+                glm::vec4 p2 = st * glm::vec4(v.rect.p2, 0.f, 1.f);
+                v.rect = ARect<float>{ glm::vec2(p1), glm::vec2(p2) };
             },
             [&](auto&) {}
         };

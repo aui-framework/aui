@@ -132,6 +132,10 @@ public:
         _<ITexture> texture;
     };
     struct PopRenderTarget {};
+    struct PushClipRect {
+        ARect<float> rect;
+    };
+    struct PopClipRect {};
     struct Clear {};
     struct PushLayer {};
     struct PopLayer {};
@@ -145,8 +149,7 @@ public:
         using Command = std::variant<
             SolidRectangles, GradientRectangles, TexturedRectangles, SolidRoundedRectangles, GradientRoundedRectangles,
             TexturedRoundedRectangles, RectangleBorders, RoundedRectangleBorders, BoxShadow, BoxShadowInner, Glyphs,
-            Lines, LineBatches, Points, SquareSector, Backdrop, PushRenderTarget, PopRenderTarget, Clear, PushLayer, PopLayer, PushMask, PopMask>;
-
+            Lines, LineBatches, Points, SquareSector, Backdrop, PushRenderTarget, PopRenderTarget, PushClipRect, PopClipRect, Clear, PushLayer, PopLayer, PushMask, PopMask>;
         Command command;
         glm::mat4 transform;
         APaint paint;
@@ -160,12 +163,12 @@ public:
         bool isObscured = false;
         _<ITexture> mask;
         glm::vec4 maskRect;
+        ARect<float> clipRect;
     };
 
     struct RenderPass {
         _<ITexture> target;
         glm::uvec2 size;
-        bool shouldClear;
         AVector<Entity> entities;
     };
 
@@ -188,6 +191,7 @@ public:
     void resolveEntities();
     void computeOverlaps();
     void resolveMasks(IRendererBackend& renderer);
+    void resolveClips();
     void resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 
 private:

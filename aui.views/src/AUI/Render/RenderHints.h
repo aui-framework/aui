@@ -51,8 +51,17 @@ namespace RenderHints {
         glm::mat4 stored;
     };
 
-    class PushState : public PushMatrix {
+    class PushState {
     public:
-        inline explicit PushState(CanvasOrRenderer render): PushMatrix(render) {}
+        inline explicit PushState(IRenderer& render): mCanvas(render.canvas()), mSaved(mCanvas.save()) {}
+        inline explicit PushState(ACanvas& canvas): mCanvas(canvas), mSaved(mCanvas.save()) {}
+
+        inline ~PushState() {
+            mCanvas.restore(mSaved);
+        }
+
+    private:
+        ACanvas& mCanvas;
+        size_t mSaved;
     };
 }

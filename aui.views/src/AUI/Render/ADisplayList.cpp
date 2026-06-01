@@ -216,6 +216,8 @@ void ADisplayList::computeOverlaps() {
               [&](const PopMask&) { return true; },
               [&](const PushRenderTarget&) { return true; },
               [&](const PopRenderTarget&) { return true; },
+              [&](const PushClipRect&) { return true; },
+              [&](const PopClipRect&) { return true; },
               [&](const Clear&) { return true; },
               [&](const auto&) { return false; }
             },
@@ -295,6 +297,28 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer) {
     }
 }
 
+void ADisplayList::resolveClips() {
+    AVector<ARect<float>> clipStack;
+    ARect<float> currentClip { .p1 = {-1e10, -1e10}, .p2 = {1e10, 1e10} };
+
+    for (auto& entity : mEntities) {
+        std::visit(aui::lambda_overloaded {
+            [&](const PushClipRect& v) {
+                clipStack << currentClip;
+                currentClip = currentClip.intersect(v.rect);
+            },
+            [&](const PopClipRect&) {
+                if (!clipStack.empty()) {
+                    currentClip = clipStack.last();
+                    clipStack.pop_back();
+                }
+            },
+            [&](auto&) {}
+        }, entity.command);
+        entity.clipRect = currentClip;
+    }
+}
+
 void ADisplayList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
     mPasses.clear();
     struct TargetEntry {
@@ -343,12 +367,15 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
                   [&](const PopLayer&) { return true; },
                   [&](const PushMask&) { return true; },
                   [&](const PopMask&) { return true; },
+                  [&](const PushClipRect&) { return true; },
+                  [&](const PopClipRect&) { return true; },
                   [&](const Clear&) { renderer.clear(); return true; },
                   [&](const auto&) { return false; }
                 },
                 entity.command);
 
             if (!isControl) {
+                renderer.setClipRect(entity.clipRect);
                 renderer.setMask(entity.mask, entity.maskRect);
                 std::visit(
                     aui::lambda_overloaded {
@@ -380,5 +407,6 @@ void ADisplayList::optimize(IRendererBackend& renderer, const _<ITexture>& windo
     resolveEntities();
     computeOverlaps();
     resolveMasks(renderer);
+    resolveClips();
     resolvePasses(renderer, windowTarget);
 }

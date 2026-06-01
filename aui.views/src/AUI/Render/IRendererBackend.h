@@ -51,6 +51,7 @@ public:
     virtual void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, const APaint& paint) = 0;
 
     virtual void setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) = 0;
+    virtual void setClipRect(const ARect<float>& rect) = 0;
     virtual glm::uvec2 getViewportSize() const = 0;
     virtual void setRenderMaskMode(bool enabled) = 0;
     virtual void clear() = 0;
