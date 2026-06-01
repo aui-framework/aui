@@ -4,7 +4,7 @@ cmake_minimum_required(VERSION 3.16)
 # Uncomment this code to pull AUI:
 #
 # # Download aui.boot.cmake (one-time):
-# #   curl https://raw.githubusercontent.com/aui-framework/aui/refs/heads/develop/aui.boot.cmake -o aui.boot.cmake
+# #   curl https://raw.githubusercontent.com/aui-framework/aui/refs/heads/master/aui.boot.cmake -o aui.boot.cmake
 # #
 # include(aui.boot.cmake)
 #

@@ -16,6 +16,8 @@
 #include "AUI/Platform/linux/IPlatformAbstraction.h"
 #include "AUI/Platform/linux/AGlibPtr.h"
 
+class RenderingContextGtk;
+
 class PlatformAbstractionGtk: public IPlatformAbstraction {
 public:
     static aui::gtk4_fake::GtkWindow*& nativeHandle(AWindow& window) {
@@ -71,7 +73,10 @@ protected:
     AGlibPtr<GApplication> mApplication;
     aui::gtk4_fake::GtkWidget* windowManagerInitGtkBox(const IRenderingContext::Init &init) const;
     void windowManagerInitCommon(const IRenderingContext::Init &init, aui::gtk4_fake::GtkWindow* window);
+    void gtkSetWindowClassHint(RenderingContextGtk* context, aui::gtk4_fake::GtkWindow* gtkWindow);
 
 private:
     GMainContext* mMainContext;
+    
+    void setupDpiChangeMonitoring();
 };

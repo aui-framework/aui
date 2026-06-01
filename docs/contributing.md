@@ -9,35 +9,20 @@ information.
 2. Anyone may become an AUI contributor: there are no restrictions.
 3. Tasks and todos are listed on the [GitHub Issues page](https://github.com/aui-framework/aui/issues). Issues marked
    as `good first issue` are relatively simple and can be done without deep dive into AUI.
-4. AUI follows git flow-like branching model. `master` branch is a release candidate branch. `develop` branch is current
-   develop branch. Each feature of the framework is created in a separate branch from `develop` in the `feat/` folder.
-   pulling changes from your branch to `develop` is possible only if the merge with your branch does not generate merge
-   conflicts and does not break the build and tests.
+4. AUI follows git flow-like branching model. `master` branch is a release candidate branch. Each feature of the
+   framework is created in a separate branch from `master` in the `feat/` folder. Pulling changes from your branch to
+   `master` is possible only if the merge with your branch does not generate merge conflicts and does not break the
+   build and tests.
 
    That is, if you want to implement a feature, you should fork AUI's repository (if you don't have direct access to
-   it's repository), checkout the `develop` branch and create a new branch called `feat/feature-name`, where you work
+   it's repository), checkout the `master` branch and create a new branch called `feat/feature-name`, where you work
    under your feature.
 
    When you have finished your work, you should open a pull request from the `feat/feature-name` branch of your
-   repository to the `develop` branch of the AUI's original repository.
+   repository to the `master` branch of the AUI's original repository.
 5. Contributing to AUI, you agree that your code will be released under
    [AUI's license](https://github.com/aui-framework/aui/blob/master/LICENSE).
 
-## Workflow
-
-`master` branch contains code of the release candidate. Code of this branch must compile without errors and should pass
-all tests on all supported platforms.
-Each feature of the framework is created in a separate branch in the `feat/` folder. Pulling changes from your branch to
-`master` is possible only if the merge with your branch does not generate merge conflicts and does not break the build
-and tests.
-
-Merges from `feat/` branch are allowed only to `develop` branch. `develop` is the branch were our actual development
-work happens. When we consider `develop` branch stable enough, we merge `develop` and `master` and create a release.
-
-If you are an external developer (i.e., have no write access to AUI's repository), you will need to create a fork of AUI
-and commit to it. Whilst you can commit to `master` and `develop` branches of your own repository, we still recommend to
-follow feature branch workflow. After you finished your work in your feature branch, open pull request from your feature
-branch to AUI's `develop` branch.
 
 ## AI
 
@@ -83,7 +68,7 @@ Want to help make AUI better? You can work on AUI right from your own project!
 - **Send your changes**: In the terminal window, type these commands (change "ololo" to your GitHub name):
 
    ```
-   git checkout develop
+   git checkout master
    git checkout -b feat/your-feature-name
    git remote set-url origin git@github.com:ololo/aui
    git add -A
@@ -96,7 +81,7 @@ Want to help make AUI better? You can work on AUI right from your own project!
    > **Note**: If you already added a fork remote in a previous session, skip the `git remote set-url` line.
 
 - **Share your work**: Go to your fork on GitHub. It will ask if you want to make a "pull request". Just do it! Make
-   sure the pull request targets the `develop` branch of the original AUI repository.
+   sure the pull request targets the `master` branch of the original AUI repository.
 
 ## Story points
 
@@ -211,7 +196,7 @@ To generate documentation, run the following command from the root of AUI reposi
 ```bash
 git clone https://github.com/aui-framework/aui
 cd aui
-git checkout develop # we do development on develop branch only
+git checkout master 
 
 # if you want to use venv
 python3 -m venv .venv
