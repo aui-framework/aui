@@ -22,7 +22,6 @@
 
 void ass::prop::Property<ass::BackgroundGradient>::renderFor(AView* view, const ARenderContext& ctx) {
     if (!mInfo.gradient) { return; }
-    RenderHints::PushColor x(ctx.canvas);
 
     if (view->getBorderRadius() > 0) {
         ctx.canvas.roundedRectangle(APaint{ABrush(*mInfo.gradient)}, {0, 0}, view->getSize(), view->getBorderRadius());

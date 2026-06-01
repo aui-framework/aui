@@ -31,8 +31,6 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
 
     auto scale = info.scale.orDefault(glm::vec2 { 1, 1 });
     auto drawableDrawWrapper = [&](const glm::ivec2& size) {
-        RenderHints::PushColor c(ctx.canvas);
-        ctx.canvas.setColor(info.overlayColor.orDefault(0xffffff_rgb));
         IDrawable::Params p;
         p.offset = { 0, 0 };
         p.size = glm::vec2(size) * scale;
@@ -47,8 +45,6 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             break;
         }
         case Sizing::TILE: {
-            RenderHints::PushColor c(ctx.canvas);
-            ctx.canvas.setColor(info.overlayColor.orDefault(0xffffff_rgb));
             IDrawable::Params p;
             p.offset = { 0, 0 };
             p.size = glm::vec2(view->getSize());
@@ -252,25 +248,17 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             ctx.canvas.setTransform(
                 glm::translate(glm::mat4(1.f), glm::vec3 { glm::vec2(viewSize - imageSize) / 2.f, 0.f }));
 
-            RenderHints::PushMask mask(ctx.canvas, [&] {
-                ctx.canvas.rectangle(APaint{ASolidBrush{}}, { 0, 0 }, view->getSize());
-            });
-
             drawableDrawWrapper(imageSize);
             break;
-        }
-        case Sizing::NONE: {
-            RenderHints::PushMask mask(ctx.canvas, [&] {
-                ctx.canvas.rectangle(APaint{ASolidBrush{}}, { 0, 0 }, view->getSize());
-            });
+            }
+            case Sizing::NONE: {
             glm::vec2 imageSize = glm::vec2(drawable->getSizeHint());
 
             if (drawable->isDpiDependent())
                 imageSize *= AWindow::current()->getDpiRatio();
             drawableDrawWrapper(imageSize);
             break;
-        }
-    }
+            }    }
 }
 
 void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARenderContext& ctx) {

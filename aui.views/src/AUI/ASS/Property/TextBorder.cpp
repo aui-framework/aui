@@ -20,8 +20,6 @@
 
 void ass::prop::Property<ass::TextBorder>::renderFor(AView* view, const ARenderContext& ctx) {
     if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
-        RenderHints::PushColor c(ctx.canvas);
-        ctx.canvas.setColor(mInfo.borderColor);
 
         {
             RenderHints::PushMatrix m(ctx.canvas);

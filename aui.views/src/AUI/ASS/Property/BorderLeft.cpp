@@ -18,7 +18,6 @@
 #include "BorderLeft.h"
 
 void ass::prop::Property<ass::BorderLeft>::renderFor(AView* view, const ARenderContext& ctx) {
-    RenderHints::PushColor x(ctx.canvas);
     int w = mInfo.width;
 
     ctx.canvas.rectangle(APaint{ASolidBrush{mInfo.color}},

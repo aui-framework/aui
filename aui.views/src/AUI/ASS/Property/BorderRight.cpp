@@ -14,7 +14,6 @@
 #include "BorderRight.h"
 
 void ass::prop::Property<ass::BorderRight>::renderFor(AView* view, const ARenderContext& ctx) {
-    RenderHints::PushColor x(ctx.canvas);
     int w = mInfo.width;
 
     ctx.canvas.rectangle(APaint{ASolidBrush{mInfo.color}},

@@ -14,7 +14,6 @@
 #include "BorderTop.h"
 
 void ass::prop::Property<ass::BorderTop>::renderFor(AView* view, const ARenderContext& ctx) {
-    RenderHints::PushColor x(ctx.canvas);
     int w = mInfo.width;
     ctx.canvas.rectangle(APaint{ASolidBrush{mInfo.color}},
                          {0, 0},
