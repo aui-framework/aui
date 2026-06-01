@@ -45,22 +45,9 @@ public:
     [[nodiscard]]
     uint32_t getDefaultFb() const noexcept;
 
-    void bindViewport();
-
     [[nodiscard]]
     glm::uvec2 viewportSize() const noexcept {
         return mViewportSize;
-    }
-
-    [[nodiscard]]
-    uint32_t getSupersamplingRatio() const noexcept;
-
-    [[nodiscard]]
-    AOptional<gl::Framebuffer*> framebuffer() noexcept {
-        if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-            return fb;
-        }
-        return std::nullopt;
     }
 
     IRenderer& renderer() override {
@@ -75,15 +62,13 @@ public:
         return *mCanvas;
     }
 
-    static gl::Framebuffer newOffscreenRenderingFramebuffer(glm::uvec2 initialSize);
-
 protected:
     _<OpenGLRenderer> mRenderer;
     ADisplayList mDisplayList;
     _unique<ADisplayListCanvas> mCanvas;
     _unique<RendererCanvas> mRendererWrapper;
     glm::uvec2 mViewportSize { 0, 0 };
-    struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
+    _<ITexture> mWindowTarget;
     static _<OpenGLRenderer> ourRenderer() {
         static _weak<OpenGLRenderer> g;
         if (auto v = g.lock()) {
@@ -94,12 +79,9 @@ protected:
         return temp;
     }
 
-    virtual void endFramebuffer();
-
 private:
     ARenderingContextOptions::OpenGL mConfig;
 
-    void tryEnableFramebuffer(glm::uvec2 windowSize);
     void beginFramebuffer(glm::uvec2 windowSize);
 
 #if AUI_PLATFORM_WIN

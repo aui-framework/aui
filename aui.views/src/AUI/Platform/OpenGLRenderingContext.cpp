@@ -10,75 +10,17 @@
  */
 
 #include "OpenGLRenderingContext.h"
-#include "AUI/GL/RenderTarget/RenderbufferRenderTarget.h"
 #include <AUI/GL/gl.h>
 
 static constexpr auto LOG_TAG = "OpenGLRenderingContext";
 
 OpenGLRenderingContext::OpenGLRenderingContext(const ARenderingContextOptions::OpenGL& config) : mConfig(config) {}
 
-void OpenGLRenderingContext::tryEnableFramebuffer(glm::uvec2 windowSize) {
-    try {
-        mFramebuffer.emplace<gl::Framebuffer>(newOffscreenRenderingFramebuffer(windowSize));
-    } catch (const AException& e) {
-        ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: " << e;
-        mFramebuffer = Failed{};
-    }
-}
-
-gl::Framebuffer OpenGLRenderingContext::newOffscreenRenderingFramebuffer(glm::uvec2 initialSize) {
-    gl::Framebuffer framebuffer;
-    framebuffer.resize(initialSize);
-    auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
-    framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
-    auto depth = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
-    framebuffer.attach(depth, GL_DEPTH_STENCIL_ATTACHMENT /* 0x84F9*/ /* GL_DEPTH_STENCIL */);
-    return framebuffer;
-}
-
 void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
-    if (std::get_if<NotTried>(&mFramebuffer)) {
-        tryEnableFramebuffer(windowSize);
-    }
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        if (fb->size() != windowSize) {
-            fb->resize(windowSize);
-        }
-        fb->bind();
-        mViewportSize = fb->size();
-    } else {
-        mViewportSize = windowSize;
-    }
-    bindViewport();
-}
-
-void OpenGLRenderingContext::endFramebuffer() {
-#if !AUI_PLATFORM_EMSCRIPTEN
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        fb->bindForRead();
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
-        glBlitFramebuffer(0, 0,                       // src pos
-                          fb->size().x, fb->size().y, // src size
-                          0, 0,                       // dst pos
-                          fb->size().x, fb->size().y, // dst size
-                          GL_COLOR_BUFFER_BIT,        // mask
-                          GL_LINEAR);                // filter
-        gl::Framebuffer::unbind();
-    }
-#endif
-}
-
-void OpenGLRenderingContext::bindViewport() {
-    glViewport(0, 0, mViewportSize.x, mViewportSize.y);
+    mViewportSize = windowSize;
+    mWindowTarget = mRenderer->createFramebufferWrapper(gl::Framebuffer::current() ? gl::Framebuffer::current()->getHandle() : gl::Framebuffer::DEFAULT_FB, mViewportSize);
 }
 
 uint32_t OpenGLRenderingContext::getDefaultFb() const noexcept {
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        return fb->getHandle();
-    }
-    return 0;
-}
-
-uint32_t OpenGLRenderingContext::getSupersamplingRatio() const noexcept {
-    return 1;
+    return gl::Framebuffer::current() ? gl::Framebuffer::current()->getHandle() : gl::Framebuffer::DEFAULT_FB;
 }
