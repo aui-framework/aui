@@ -9,26 +9,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 26.11.2020.
-//
+#include "Clipboard.h"
 
-#include "AUI/Platform/AClipboard.h"
-#include "AUI/Platform/AWindow.h"
-#include "AUI/Platform/AWindowManager.h"
+#import <UIKit/UIKit.h>
 
-
-void AClipboard::copyToClipboard(const AString &text) {
-    // stub
+void aui::setClipboardTextIOS(const AString& text) {
+    @autoreleasepool {
+        [UIPasteboard generalPasteboard].string = [NSString stringWithUTF8String:text.c_str()];
+    }
 }
-
-bool AClipboard::isEmpty() {
-    // stub
-    return false;
-}
-
-AString AClipboard::pasteFromClipboard() {
-    // stub
-    return AString();
-}
-

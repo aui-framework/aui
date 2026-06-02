@@ -33,7 +33,7 @@
 #include "AUI/Model/ITreeModel.h"
 #include "AUI/Performance/APerformanceFrame.h"
 #include "AUI/Performance/APerformanceSection.h"
-#include "AUI/Platform/AWindowBase.h"
+#include "AUI/Platform/ASurface.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABrush.h"
@@ -213,7 +213,8 @@ namespace {
 
         [[nodiscard]]
         unsigned plotScale() const {
-            return unsigned(APlatform::getDpiRatio() * 2.f);
+            // TODO: maybe dpi here
+            return 2;
         }
 
         static int timeToY(high_resolution_clock::duration t) {
@@ -303,7 +304,7 @@ namespace {
 }
 
 
-DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTargetWindow(targetWindow) {
+DevtoolsPerformanceTab::DevtoolsPerformanceTab(ASurface* targetWindow) : mTargetWindow(targetWindow) {
     using namespace declarative;
 
 #if AUI_PROFILING

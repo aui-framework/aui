@@ -113,7 +113,7 @@ ALanguageCode AI18n::userLanguage() {
     if (s) {
         try {
             AString code(s, s + 5);
-            (code.begin() + 2) = '-';
+            code[2] = '-';
             return code;
         } catch (...) {
 

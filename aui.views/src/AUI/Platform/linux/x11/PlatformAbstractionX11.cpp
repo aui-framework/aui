@@ -171,9 +171,11 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                                 case 127:
                                     break;   // del
                                 default:
-                                    AString s(buf);
+                                    AStringView s(buf);
                                     AUI_ASSERT(!s.empty());
-                                    window->onCharEntered(s[0]);
+                                    for (const auto& c : s.utf8()) {
+                                      window->onCharEntered(c);
+                                    }
                             }
                         }
                         window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
@@ -309,8 +311,6 @@ void PlatformAbstractionX11::windowQuit(AWindow& window) {
         XUnmapWindow(ourDisplay, nativeHandle(window));
     }
 }
-
-float PlatformAbstractionX11::windowFetchDpiFromSystem(AWindow& window) { return APlatform::getDpiRatio(); }
 
 void PlatformAbstractionX11::windowRestore(AWindow& window) {
     if (PlatformAbstractionX11::ourAtoms.netWmState && PlatformAbstractionX11::ourAtoms.netWmStateMaximizedVert &&
@@ -625,6 +625,10 @@ void PlatformAbstractionX11::windowManagerInitNativeWindow(const IRenderingConte
             ALogger::warn("AWindowManager") << "Unable to initialize graphics API:" << e;
         }
     }
+}
+
+float PlatformAbstractionX11::windowGetDpiRatio(AWindow& window) {
+    return windowFetchDpiFromSystem(window);
 }
 
 void PlatformAbstractionX11::windowBlockUserInput(AWindow& window, bool blockUserInput) {

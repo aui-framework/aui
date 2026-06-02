@@ -14,7 +14,7 @@
 
 #include "AUI/Util/AMimedData.h"
 
-class AWindowBase;
+class ASurface;
 
 /**
  * @brief Utility class for creating and processing drag-n-drop events.
@@ -56,7 +56,7 @@ public:
     /**
      * @brief Pushes out a drag-n-drop operation to the OS.
      */
-    void perform(AWindowBase* sourceWindow);
+    void perform(ASurface* sourceWindow);
 
 
     struct EnterEvent {
@@ -70,7 +70,7 @@ public:
     };
 
 private:
-    AWindowBase* mWindow;
+    ASurface* mWindow;
     AMimedData mData;
 };
 

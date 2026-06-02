@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -9,13 +9,50 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "AUI/Platform/AMessageBox.h"
-#include <Windows.h>
-#include "AUI/Platform/AMessageBox.h"
-#include "AUI/Platform/AWindow.h"
+//
+// Created by nelonn on 11/14/25.
+//
 
-AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b)
-{
+#include "Platform.h"
+
+#include <Windows.h>
+#include <AUI/Platform/AMessageBox.h>
+#include <AUI/Platform/AWindow.h>
+
+namespace aui {
+
+void PlatformWin32::setClipboardText(const AString& text) {
+    auto wString = aui::win32::toWchar(text);
+    const size_t len = (text.length() + 1) * sizeof(wchar_t);
+    HGLOBAL hMem = GlobalAlloc(GMEM_MOVEABLE, len);
+    memcpy(GlobalLock(hMem), wString.data(), len);
+    GlobalUnlock(hMem);
+    OpenClipboard(nullptr);
+    EmptyClipboard();
+    SetClipboardData(CF_UNICODETEXT, hMem);
+    CloseClipboard();
+}
+
+AString PlatformWin32::getClipboardText() {
+    OpenClipboard(nullptr);
+    HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
+    std::wstring_view memView = static_cast<const wchar_t*>(GlobalLock(hMem));
+    AUI_DEFER {
+        GlobalUnlock(hMem);
+        CloseClipboard();
+    };
+    if (memView.data()) {
+        AString s(reinterpret_cast<const char16_t*>(memView.data()), memView.length());
+        return s;
+    }
+    return {};
+}
+
+AMessageBox::ResultButton PlatformWin32::messageBoxShow(
+    AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon,
+    AMessageBox::Button b) {
+    using namespace AMessageBox;
+
     HWND window = parent ? parent->getNativeHandle() : nullptr;
 
     long flags = 0;
@@ -32,6 +69,7 @@ AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& titl
         case Icon::CRITICAL:
             flags |= MB_ICONSTOP;
             break;
+        default: break;
     }
 
 
@@ -65,6 +103,9 @@ AMessageBox::ResultButton AMessageBox::show(AWindow* parent, const AString& titl
             return ResultButton::YES;
         case IDNO:
             return ResultButton::NO;
+        default: break;
     }
     return ResultButton::INVALID;
 }
+
+} // namespace aui

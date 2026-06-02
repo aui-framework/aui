@@ -415,7 +415,7 @@ auto makeForEach(RangeFactory&& rangeFactory, _unique<ALayout> layout)
                   "====================> (2) define your container as const field and manually make sure its lifetime exceeds "
                   "AUI_DECLARATIVE_FOR's, or\n"
                   "====================> (3) wrap your container as AProperty.\n"
-                  "====================> Please consult with https://aui-framework.github.io/develop/aforeachui/#AFOREACHUI_UPDATE for more info.");
+                  "====================> Please consult with https://aui-framework.github.io/master/aforeachui/#AFOREACHUI_UPDATE for more info.");
 
     using T = std::decay_t<ImmediateValueType>;
 

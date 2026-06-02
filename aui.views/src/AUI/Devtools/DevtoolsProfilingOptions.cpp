@@ -41,7 +41,7 @@ _<ALabel> header(AString title) {
 }
 }   // namespace
 
-DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
+DevtoolsProfilingOptions::DevtoolsProfilingOptions(ASurface* targetWindow) {
     auto scalingParams = _new<AProperty<aui::float_within_0_1>>(1.f / 3.f);
     setContents(Centered { AScrollArea::Builder().withContents(
         Vertical::Expanding {
@@ -49,7 +49,7 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(AWindowBase* targetWindow) {
           /// [fromItems]
           AText::fromItems(
               { "These settings are applicable for render-to-texture optimizations.",
-                makeLink("Learn more", "https://aui-framework.github.io/develop/md_docs_Render_to_texture.html") }),
+                makeLink("Learn more", "https://aui-framework.github.io/master/render-to-texture/") }),
           CheckBox {
             AUI_REACT(*targetWindow->profiling()->highlightRedrawRequests),
             [targetWindow](bool checked) {

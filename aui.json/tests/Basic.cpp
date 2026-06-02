@@ -115,7 +115,58 @@ TEST(Json, NegativeNumber)
     EXPECT_EQ(v["msg"].asString(), "error");
 }
 
+TEST(Json, ExponentNumber1)
+{
+    auto v = AJson::fromString(R"({"code":-6.94e-7,"msg":"error"})");
+    EXPECT_DOUBLE_EQ(v["code"].asNumber(), -6.94e-7);
+    EXPECT_EQ(v["msg"].asString(), "error");
+}
 
+TEST(Json, ExponentNumber2)
+{
+    auto v = AJson::fromString(R"({"code":-6.94e7,"msg":"error"})");
+    EXPECT_DOUBLE_EQ(v["code"].asNumber(), -6.94e7);
+    EXPECT_EQ(v["msg"].asString(), "error");
+}
+
+TEST(Json, ExponentNumber3)
+{
+    auto v = AJson::fromString(R"({"code":6.94e7,"msg":"error"})");
+    EXPECT_DOUBLE_EQ(v["code"].asNumber(), 6.94e7);
+    EXPECT_EQ(v["msg"].asString(), "error");
+}
+
+TEST(Json, ExponentNumber4)
+{
+    auto v = AJson::fromString(R"({"code":6.94e11,"msg":"error"})");
+    EXPECT_DOUBLE_EQ(v["code"].asNumber(), 6.94e11);
+    EXPECT_EQ(v["msg"].asString(), "error");
+}
+
+TEST(Json, ExponentNumber5)
+{
+    auto v = AJson::fromString(R"({"code":6.94e-11,"msg":"error"})");
+    EXPECT_DOUBLE_EQ(v["code"].asNumber(), 6.94e-11);
+    EXPECT_EQ(v["msg"].asString(), "error");
+}
+
+TEST(Json, ExponentNumber6)
+{
+    auto v = AJson::fromString(R"({"code":6.94e-11})");
+    EXPECT_DOUBLE_EQ(v["code"].asNumber(), 6.94e-11);
+}
+
+TEST(Json, ExponentNumber7)
+{
+    auto v = AJson::fromString(R"({"code":6e10})");
+    EXPECT_DOUBLE_EQ(v["code"].asNumber(), 6e10);
+}
+
+TEST(Json, ExponentNumber8)
+{
+    auto v = AJson::fromString(R"({"code":6E10})");
+    EXPECT_DOUBLE_EQ(v["code"].asNumber(), 6e10);
+}
 
 TEST(Json, Long)
 {

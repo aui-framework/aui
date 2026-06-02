@@ -1,6 +1,6 @@
 #
 # =====================================================================================================================
-# Copyright (c) 2021 Alex2772
+# Copyright (c) 2026 Alex2772
 #
 # Permission is hereby granted, free of charge, to any person obtaining a copy of this software and associated
 # documentation files (the "Software"), to deal in the Software without restriction, including without limitation the
@@ -18,13 +18,103 @@
 # Original code located at https://github.com/aui-framework/aui
 # =====================================================================================================================
 #
+# CLI mode (cmake -P):
+#   cmake -P aui.boot.cmake help          - print this help
+#   cmake -P aui.boot.cmake update [ver]  - update aui.boot.cmake to the latest version
+#   cmake -P aui.boot.cmake create        - create a new project from example_app
+#
+# For more information, see https://aui-framework.github.io/master/getting-started
+# =====================================================================================================================
+#
 
-cmake_minimum_required(VERSION 3.24)
+
+cmake_minimum_required(VERSION 3.22)
 
 find_program(GIT_EXECUTABLE NAMES git git.exe git.cmd git.bat)
 if (NOT GIT_EXECUTABLE)
-    message(FATAL_ERROR "[AUI.BOOT/Git Check] Git not found! Please install Git and try again. https://git-scm.com/")
+    message(FATAL_ERROR "Git not found! Please install Git and try again. https://git-scm.com/")
 endif ()
+
+# ---- CLI mode ----------------------------------------------------------------
+# When invoked via "cmake -P aui.boot.cmake <command>", dispatch subcommands.
+# In cmake -P mode:
+#   CMAKE_ARGV0 = "cmake"
+#   CMAKE_ARGV1 = "-P"
+#   CMAKE_ARGV2 = script path
+#   CMAKE_ARGV3 = first user argument
+if(CMAKE_SCRIPT_MODE_FILE)
+    set(_auib_cli_command "${CMAKE_ARGV3}")
+
+    if("${_auib_cli_command}" STREQUAL "help" OR "${_auib_cli_command}" STREQUAL "")
+        message("")
+        message("AUI.Boot -- CMake package manager for AUI Framework")
+        message("")
+        message("Usage: cmake -P aui.boot.cmake <command>")
+        message("")
+        message("Commands:")
+        message("  help                    Print this help message")
+        message("  update [version]        Update aui.boot.cmake to the specified version")
+        message("                          (default: master branch)")
+        message("  create                  Create a new project in the current directory")
+        message("")
+        message("For more information, see https://aui-framework.github.io/master/getting-started")
+        message("")
+    elseif("${_auib_cli_command}" STREQUAL "update")
+        # Determine version: use CMAKE_ARGV4 if provided, otherwise "master"
+        if(NOT "${CMAKE_ARGV4}" STREQUAL "")
+            set(_auib_update_version "${CMAKE_ARGV4}")
+        else()
+            set(_auib_update_version "master")
+        endif()
+
+        set(_auib_update_url "https://raw.githubusercontent.com/aui-framework/aui/${_auib_update_version}/aui.boot.cmake")
+
+        message(STATUS "Downloading aui.boot.cmake (${_auib_update_version}) from ${_auib_update_url}")
+
+        # Download to a temp file first, then replace the current script
+        set(_auib_tmp "${CMAKE_ARGV2}.tmp")
+        file(DOWNLOAD "${_auib_update_url}" "${_auib_tmp}" SHOW_PROGRESS STATUS _auib_dl_status)
+
+        list(GET _auib_dl_status 0 _auib_dl_code)
+        list(GET _auib_dl_status 1 _auib_dl_msg)
+
+        if(NOT _auib_dl_code EQUAL 0)
+            message(FATAL_ERROR "Failed to download aui.boot.cmake: ${_auib_dl_msg}")
+        endif()
+
+        # Overwrite this script with the downloaded version
+        configure_file("${_auib_tmp}" "${CMAKE_ARGV2}" COPYONLY)
+        file(REMOVE "${_auib_tmp}")
+
+        message(STATUS "aui.boot.cmake updated to ${_auib_update_version} successfully.")
+    elseif("${_auib_cli_command}" STREQUAL "create")
+        find_program(_auib_git NAMES git git.exe git.cmd git.bat)
+        if(NOT _auib_git)
+            message(FATAL_ERROR "Git not found! Please install Git and try again. https://git-scm.com/")
+        endif()
+
+        message(STATUS "Cloning example_app into ${CMAKE_CURRENT_SOURCE_DIR} ...")
+        execute_process(
+            COMMAND "${_auib_git}" clone https://github.com/aui-framework/example_app .
+            RESULT_VARIABLE _auib_clone_result
+            OUTPUT_QUIET
+            ERROR_VARIABLE _auib_clone_error
+        )
+        if(NOT _auib_clone_result EQUAL 0)
+            message(FATAL_ERROR "Failed to clone example_app: ${_auib_clone_error}")
+        endif()
+        message(STATUS "Project created")
+        message(STATUS "")
+        message(STATUS "Next steps:")
+        message(STATUS "  cmake -B build && cmake --build build")
+    else()
+        message(FATAL_ERROR "Unknown command: ${_auib_cli_command}. Use 'cmake -P aui.boot.cmake help' for usage.")
+    endif()
+    return()
+endif()
+# ---- End CLI mode ------------------------------------------------------------
+
+# The rest of this file is only for include() mode (project context).
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
@@ -191,6 +281,12 @@ elseif (IOS)
 elseif (WIN32)
     if (MSVC)
         set(_aui_target_abi "msvc")
+    elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
+        if (CMAKE_CXX_SIMULATE_ID STREQUAL "MSVC")
+            set(_aui_target_abi "msvc")
+        else()
+            set(_aui_target_abi "gnu")
+        endif()
     else()
         set(_aui_target_abi "gnu")
     endif()
@@ -377,10 +473,11 @@ function(_auib_validate_target_installation _target _dep_install_prefix)
                     "This effectively means that the library (and thus your project) is not portable. "
                     "PRECOMPILED-enabled packages must use target names instead of hardcoded paths."
                     "Possible solutions:\n"
-                    "1. -DAUIB_NO_PRECOMPILED=TRUE, or\n"
-                    "2. -DAUIB_${AUI_MODULE_NAME_UPPER}_VALIDATE=OFF (just silences the error), or\n"
-                    "3. configure ${AUI_MODULE_NAME} so it won't depend on ${_property_item}, or\n"
-                    "4. if ${_property_item} is a part of another library, import that library via auib_import as well. "
+                    "1. Clean CMake cache (build directory), or\n"
+                    "2. -DAUIB_NO_PRECOMPILED=TRUE, or\n"
+                    "3. -DAUIB_${AUI_MODULE_NAME_UPPER}_VALIDATE=OFF (just silences the error), or\n"
+                    "4. configure ${AUI_MODULE_NAME} so it won't depend on ${_property_item}, or\n"
+                    "5. if ${_property_item} is a part of another library, import that library via auib_import as well. "
                     "\n"
                     "Alternatively, you can populate AUIB_VALID_INSTALLATION_PATHS variable with valid installation path(s) "
                     "but you would probably encounter issues while deploying your app.")
@@ -560,6 +657,118 @@ function(_auib_postprocess)
 
 endfunction()
 
+function(_auib_git_clone _url _version _source_dir)
+    set(_auib_git_clone_ok FALSE PARENT_SCOPE)
+
+    _auib_find_git()
+    if (NOT GIT_EXECUTABLE)
+        message(FATAL_ERROR "git executable not found.")
+    endif()
+
+    file(MAKE_DIRECTORY "${_source_dir}")
+
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} remote get-url origin
+            WORKING_DIRECTORY "${_source_dir}"
+            RESULT_VARIABLE _err
+            OUTPUT_VARIABLE _existing_remote
+            ERROR_QUIET
+            OUTPUT_STRIP_TRAILING_WHITESPACE
+    )
+
+    if (_err EQUAL 0)
+        message(STATUS "[AUI.BOOT] Reusing existing repo in ${_source_dir}")
+        execute_process(
+                COMMAND ${GIT_EXECUTABLE} remote remove origin
+                WORKING_DIRECTORY "${_source_dir}"
+                RESULT_VARIABLE _remove_err
+                OUTPUT_QUIET
+                ERROR_QUIET
+        )
+        if (NOT _remove_err EQUAL 0)
+            message(STATUS "[AUI.BOOT] 'git remote remove origin' failed, reinitializing ${_source_dir}")
+            file(REMOVE_RECURSE "${_source_dir}")
+            file(MAKE_DIRECTORY "${_source_dir}")
+            execute_process(
+                    COMMAND ${GIT_EXECUTABLE} init
+                    WORKING_DIRECTORY "${_source_dir}"
+                    RESULT_VARIABLE _err
+                    OUTPUT_QUIET
+            )
+            if (NOT _err EQUAL 0)
+                message(FATAL_ERROR "'git init' failed (exit ${_err}) in ${_source_dir}")
+            endif()
+        endif()
+    else()
+        message(STATUS "[AUI.BOOT] Initializing empty repo in ${_source_dir}")
+        execute_process(
+                COMMAND ${GIT_EXECUTABLE} init
+                WORKING_DIRECTORY "${_source_dir}"
+                RESULT_VARIABLE _err
+                OUTPUT_QUIET
+        )
+        if (NOT _err EQUAL 0)
+            message(FATAL_ERROR "'git init' failed (exit ${_err}) in ${_source_dir}")
+        endif()
+    endif()
+
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} remote add origin "${_url}"
+            WORKING_DIRECTORY "${_source_dir}"
+            RESULT_VARIABLE _err
+            OUTPUT_QUIET
+    )
+    if (NOT _err EQUAL 0)
+        message(FATAL_ERROR "'git remote add origin ${_url}' failed (exit ${_err})")
+    endif()
+
+    message(STATUS "[AUI.BOOT] Fetching ${_version} from ${_url}")
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} fetch --depth 1 origin "${_version}"
+            WORKING_DIRECTORY "${_source_dir}"
+            RESULT_VARIABLE _err
+            OUTPUT_QUIET
+            ERROR_QUIET
+    )
+    if (NOT _err EQUAL 0)
+        message(STATUS "[AUI.BOOT] Shallow fetch failed, retrying without --depth (tag/hash may not be advertised)")
+        execute_process(
+                COMMAND ${GIT_EXECUTABLE} fetch origin "${_version}"
+                WORKING_DIRECTORY "${_source_dir}"
+                RESULT_VARIABLE _err
+                OUTPUT_QUIET
+        )
+        if (NOT _err EQUAL 0)
+            message(FATAL_ERROR "'git fetch origin ${_version}' failed (exit ${_err})")
+        endif()
+    endif()
+
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} reset --hard FETCH_HEAD
+            WORKING_DIRECTORY "${_source_dir}"
+            RESULT_VARIABLE _err
+            OUTPUT_QUIET
+    )
+    if (NOT _err EQUAL 0)
+        message(FATAL_ERROR "'git reset --hard FETCH_HEAD' failed (exit ${_err})")
+    endif()
+
+    message(STATUS "[AUI.BOOT] Updating submodules in ${_source_dir}")
+    execute_process(
+            COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive --depth 1
+            WORKING_DIRECTORY "${_source_dir}"
+            RESULT_VARIABLE _err
+            OUTPUT_QUIET
+            ERROR_VARIABLE _err_output
+    )
+    if (NOT _err EQUAL 0)
+        message(FATAL_ERROR "'git submodule update --init --recursive --depth 1' failed (exit ${_err}):\n${_err_output}")
+    endif()
+
+    message(STATUS "[AUI.BOOT] Successfully cloned ${_url} @ ${_version} -> ${_source_dir}")
+    set(_auib_git_clone_ok TRUE PARENT_SCOPE)
+endfunction()
+
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
     list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
@@ -611,7 +820,7 @@ function(auib_import AUI_MODULE_NAME URL)
     set(CMAKE_FIND_USE_SYSTEM_ENVIRONMENT_PATH FALSE)
 
     set(options ADD_SUBDIRECTORY ARCHIVE CONFIG_ONLY IMPORTED_FROM_CONFIG)
-    set(oneValueArgs VERSION CMAKE_WORKING_DIR PRECOMPILED_URL_PREFIX LINK)
+    set(oneValueArgs VERSION CMAKE_WORKING_DIR PRECOMPILED_URL_PREFIX LINK EXPECTED_BUILD_SPECIFIER)
 
     set(multiValueArgs CMAKE_ARGS COMPONENTS REQUIRES)
     cmake_parse_arguments(AUIB_IMPORT "${options}" "${oneValueArgs}"
@@ -700,17 +909,22 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
 
     # [[BUILD_SPECIFIER]]
-    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_TRIPLET}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${CMAKE_GENERATOR}/${AUIB_IMPORT_CMAKE_ARGS}")
+    set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_TRIPLET}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${AUIB_IMPORT_CMAKE_ARGS}")
     string(REPLACE ";" " " BUILD_SPECIFIER "${BUILD_SPECIFIER}")
 
     # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
-    string(MD5 BUILD_SPECIFIER ${BUILD_SPECIFIER})
+    string(MD5 BUILD_SPECIFIER_HASH ${BUILD_SPECIFIER})
     # [[BUILD_SPECIFIER]]
 
-    # append module name to build specifier in order to distinguish modules in prefix/ dir
-    set(BUILD_SPECIFIER "${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER}")
+    set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER_HASH}")
 
-    set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${BUILD_SPECIFIER}")
+    file(WRITE ${DEP_INSTALL_PREFIX}/BUILD_SPECIFIER ${BUILD_SPECIFIER})
+
+    if (AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER)
+        if (NOT "${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}" STREQUAL "${BUILD_SPECIFIER}")
+            message(FATAL_ERROR "Build specifier mismatch. This can be caused by a stale cache. Expected: \"${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}\", got: \"${BUILD_SPECIFIER}\". Try cleaning the CMake cache.")
+        endif ()
+    endif()
 
     if (AUIB_IMPORT_PRECOMPILED_URL_PREFIX)
         if (EXISTS ${AUIB_IMPORT_PRECOMPILED_URL_PREFIX})
@@ -731,11 +945,12 @@ function(auib_import AUI_MODULE_NAME URL)
 
     # the AUI_MODULE_NAME-TAG_OR_HASH is used to hint IDEs (i.e. CLion) about actual project name
     set(DEP_SOURCE_DIR "${AUIB_CACHE_DIR}/repo/${AUI_MODULE_PREFIX}-${TAG_OR_HASH}")
-    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER}")
+    set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER_HASH}")
     set(DEP_FETCHED_FLAG ${DEP_SOURCE_DIR}/FETCHED)
     if (DEP_ADD_SUBDIRECTORY)
-        set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER}-as")
+        set(DEP_BINARY_DIR "${AUIB_CACHE_DIR}/builds/${AUI_MODULE_PREFIX}-${BUILD_SPECIFIER_HASH}-as")
     endif()
+    file(WRITE ${DEP_BINARY_DIR}/BUILD_SPECIFIER ${BUILD_SPECIFIER}) # save build specifier in build dir as well
 
     # invalidate all previous values.
     foreach(_v2 FOUND
@@ -815,71 +1030,33 @@ function(auib_import AUI_MODULE_NAME URL)
             _auib_try_download_precompiled_binary()
         endif()
 
-        if (NOT _skip_compilation)
-            if (AUIB_FORCE_PRECOMPILED)
-                message(FATAL_ERROR "Can't find a precompiled package for ${AUI_MODULE_NAME}. (-DAUIB_FORCE_PRECOMPILED)")
-            endif()
-            set(_skip_fetch FALSE)
-            if (EXISTS "${DEP_SOURCE_DIR}/.git")
-                # let's try to checkout a local repository
-                _auib_find_git()
-                if(GIT_EXECUTABLE)
-                    execute_process(COMMAND ${GIT_EXECUTABLE} checkout -f ${AUIB_IMPORT_VERSION}
-                            WORKING_DIRECTORY ${DEP_SOURCE_DIR}
-                            RESULT_VARIABLE _errored
-                            OUTPUT_QUIET
-                            ERROR_QUIET)
-                    if (NOT _errored)
-                        message(STATUS "${DEP_SOURCE_DIR}: checkout'ed ${AUIB_IMPORT_VERSION}")
-                        set(_skip_fetch TRUE)
-                    endif()
-                endif()
-            endif()
-            if (NOT _skip_fetch)
-                file(REMOVE_RECURSE ${DEP_SOURCE_DIR})
-            endif()
-            file(REMOVE_RECURSE ${DEP_BINARY_DIR})
-        endif()
-
         # check for local existence
         if (EXISTS ${URL})
             get_filename_component(DEP_SOURCE_DIR ${URL} ABSOLUTE)
             message(STATUS "Using local: ${DEP_SOURCE_DIR}")
         else()
             if (NOT _skip_compilation)
-
-                include(FetchContent)
-
                 if (AUIB_IMPORT_ARCHIVE)
-                    set(_import_type URL)
-                else()
-                    set(_import_type GIT_REPOSITORY)
-                endif()
-                if (NOT _skip_fetch)
+                    # Archives are not git repos - fall back to FetchContent for URL downloads.
+                    include(FetchContent)
                     if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.30.0)
-                        # deprecated "FetchContent_Populate(${AUI_MODULE_NAME}_FC)", using a "new" form instead
                         FetchContent_Populate(${AUI_MODULE_NAME}_FC
                                 PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
-                                ${_import_type} "${URL}"
-                                GIT_TAG ${AUIB_IMPORT_VERSION}
-                                GIT_PROGRESS TRUE # show progress of download
-                                USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
-                                USES_TERMINAL_UPDATE TRUE # show progress in ninja generator
-                                GIT_SHALLOW TRUE # clone just the specified commit
+                                URL "${URL}"
+                                GIT_PROGRESS TRUE
+                                USES_TERMINAL_DOWNLOAD TRUE
+                                USES_TERMINAL_UPDATE TRUE
                                 ${SOURCE_BINARY_DIRS_ARG}
                         )
                     else()
                         FetchContent_Declare(${AUI_MODULE_NAME}_FC
                                 PREFIX "${CMAKE_BINARY_DIR}/aui.boot-deps/${AUI_MODULE_NAME}"
-                                ${_import_type} "${URL}"
-                                GIT_TAG ${AUIB_IMPORT_VERSION}
-                                GIT_PROGRESS TRUE # show progress of download
-                                USES_TERMINAL_DOWNLOAD TRUE # show progress in ninja generator
-                                USES_TERMINAL_UPDATE   TRUE # show progress in ninja generator
-                                GIT_SHALLOW TRUE # clone just the specified commit
+                                URL "${URL}"
+                                GIT_PROGRESS TRUE
+                                USES_TERMINAL_DOWNLOAD TRUE
+                                USES_TERMINAL_UPDATE TRUE
                                 ${SOURCE_BINARY_DIRS_ARG}
                         )
-
                         FetchContent_Populate(${AUI_MODULE_NAME}_FC)
                     endif()
 
@@ -887,11 +1064,23 @@ function(auib_import AUI_MODULE_NAME URL)
                             BINARY_DIR DEP_BINARY_DIR
                             SOURCE_DIR DEP_SOURCE_DIR
                     )
-                    message(STATUS "Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
-                    if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
-                        file(TOUCH ${DEP_FETCHED_FLAG})
+                else()
+                    set(_fetch_tag ${AUIB_IMPORT_VERSION})
+                    if (NOT _fetch_tag)
+                        set(_fetch_tag HEAD)
                     endif()
-                endif ()
+
+                    _auib_git_clone("${URL}" "${_fetch_tag}" "${DEP_SOURCE_DIR}")
+
+                    if (NOT _auib_git_clone_ok)
+                        message(FATAL_ERROR "Failed to clone ${AUI_MODULE_NAME} from ${URL} @ ${_fetch_tag}")
+                    endif()
+                endif()
+
+                message(STATUS "[AUI.Boot] Fetched ${AUI_MODULE_NAME} to ${DEP_SOURCE_DIR}")
+                if (NOT AUI_BOOT_SOURCEDIR_COMPAT)
+                    file(TOUCH ${DEP_FETCHED_FLAG})
+                endif()
             endif()
         endif()
 
@@ -944,7 +1133,7 @@ function(auib_import AUI_MODULE_NAME URL)
                     endif()
                 endforeach()
 
- 
+
                 # force msvc compiler to parallel build
                 if(CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")                           # MSVC but exclude clang-cl
                     set_property(DIRECTORY APPEND PROPERTY COMPILE_OPTIONS "-MP")   # Parallel compilation
@@ -963,7 +1152,9 @@ function(auib_import AUI_MODULE_NAME URL)
                         AUIB_TRACE_BUILD_SYSTEM
                         AUIB_SKIP_REPOSITORY_WAIT
                         AUIB_CACHE_DIR
+                        CMAKE_C_COMPILER
                         CMAKE_C_FLAGS
+                        CMAKE_CXX_COMPILER
                         CMAKE_CXX_FLAGS
                         CMAKE_GENERATOR_PLATFORM
                         CMAKE_GENERATOR_TOOLSET
@@ -1190,22 +1381,15 @@ function(auib_import AUI_MODULE_NAME URL)
         set(_precompiled_url "")
         if (EXISTS ${DEP_INSTALL_PREFIX})
             if (AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT)
-                set(_precompiled_url " PRECOMPILED_URL_PREFIX \${CMAKE_CURRENT_LIST_DIR}/deps/${BUILD_SPECIFIER}")
+                set(_precompiled_url " PRECOMPILED_URL_PREFIX \${CMAKE_CURRENT_LIST_DIR}/deps/${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER_HASH}")
+
+                # install will append ${BUILD_SPECIFIER_HASH} because ${DEP_INSTALL_PREFIX} name equals to ${BUILD_SPECIFIER_HASH}
+                # will be deps/zlib/abc1234/
                 install(DIRECTORY ${DEP_INSTALL_PREFIX} DESTINATION "deps/${AUI_MODULE_NAME_LOWER}")
             endif()
         endif()
-        set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
+        set_property(GLOBAL APPEND_STRING PROPERTY AUI_BOOT_DEPS "auib_import(${_forwarded_import_args} EXPECTED_BUILD_SPECIFIER \"${BUILD_SPECIFIER}\" IMPORTED_FROM_CONFIG ${_precompiled_url})\n")
     endif()
-    _auib_find_git()
-    if (GIT_EXECUTABLE AND NOT AUIB_IMPORT_ARCHIVE)
-        execute_process(COMMAND ${GIT_EXECUTABLE} status
-                WORKING_DIRECTORY ${DEP_SOURCE_DIR}
-                OUTPUT_VARIABLE git_status
-        )
-        if(NOT git_status MATCHES "HEAD")
-            message(WARNING "${AUIB_IMPORT_NAME} You are staying on a branch or did not specify the version control, please specify a tag or hash VERSION!\nSee https://aui-framework.github.io/develop/md_docs_2AUI_01Boot.html#version")
-        endif ()
-    endif ()
 endfunction()
 
 

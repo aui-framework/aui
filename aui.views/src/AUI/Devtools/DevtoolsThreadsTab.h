@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "AUI/Platform/AWindowBase.h"
+#include "AUI/Platform/ASurface.h"
 #include "AUI/View/AViewContainer.h"
 
 class DevtoolsThreadsTab : public AViewContainerBase {

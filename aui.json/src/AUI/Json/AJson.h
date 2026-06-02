@@ -17,6 +17,7 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/IO/IInputStream.h"
 #include "AJson.h"
+#include "Path.h"
 #include "AUI/Common/AByteBufferView.h"
 
 #include <AUI/Common/AUuid.h>
@@ -26,10 +27,6 @@
 #include <AUI/Traits/callables.h>
 #include <variant>
 
-/**
-* @defgroup json aui::json
-* @brief aui::json is a json parser/writer.
-*/
 
 class AJson;
 namespace aui::impl {
@@ -100,7 +97,9 @@ private:
         if (auto p = std::get_if<T>(this)) {
             return *p;
         }
-        throw AJsonTypeMismatchException("not a " + AClass<T>::name());
+        auto path = aui::impl::json::currentPath();
+        auto prefix = path.empty() ? AString{} : path + ": ";
+        throw AJsonTypeMismatchException(prefix + "not a " + AClass<T>::name());
     }
 
     template<typename T>
@@ -109,12 +108,14 @@ private:
         if (auto p = std::get_if<T>(this)) {
             return *p;
         }
+        auto path = aui::impl::json::currentPath();
+        auto prefix = path.empty() ? AString{} : path + ": ";
         if constexpr(std::is_same_v<T, aui::impl::JsonObject>) {
-            throw AJsonTypeMismatchException("not an object");
+            throw AJsonTypeMismatchException(prefix + "not an object");
         } else if constexpr(std::is_same_v<T, aui::impl::JsonArray>) {
-            throw AJsonTypeMismatchException("not an array");
+            throw AJsonTypeMismatchException(prefix + "not an array");
         } else {
-            throw AJsonTypeMismatchException("not a " + AClass<T>::name());
+            throw AJsonTypeMismatchException(prefix + "not a " + AClass<T>::name());
         }
     }
 public:
@@ -335,7 +336,7 @@ public:
     }
 
     const AJson& operator[](int arrayIndex) const {
-        return const_cast<AJson&>(*this)[arrayIndex];
+        return as<Array>().at(arrayIndex);
     }
 
     void push_back(AJson elem) {
@@ -382,3 +383,8 @@ public:
 
 #include <AUI/Json/Conversion.h>
 #include <AUI/Json/Serialization.h>
+
+/**
+* @defgroup json aui::json
+* @brief aui::json is a json parser/writer.
+*/

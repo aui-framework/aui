@@ -10,20 +10,21 @@
  */
 
 //
-// Created by alex2 on 26.11.2020.
+// Created by nelonn on 11/14/25.
 //
 
-#include "AUI/Platform/AClipboard.h"
-#include "IPlatformAbstraction.h"
+#include "AClipboard.h"
+
+#include <AUI/Platform/APlatform.h>
 
 bool AClipboard::isEmpty() {
     return pasteFromClipboard().empty();
 }
 
 void AClipboard::copyToClipboard(const AString& text) {
-    IPlatformAbstraction::current().copyToClipboard(text);
+    APlatform::current().setClipboardText(text);
 }
 
 AString AClipboard::pasteFromClipboard() {
-    return IPlatformAbstraction::current().pasteFromClipboard();
+    return APlatform::current().getClipboardText();
 }

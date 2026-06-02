@@ -140,39 +140,28 @@ void AAbstractLabel::setSize(glm::ivec2 size) {
 }
 
 template<class Iterator>
-Iterator AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
-                                                  const Iterator& end,
-                                                  int maxWidth) {
+Iterator findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int maxWidth, const AFontStyle& fontStyle) {
     maxWidth = std::max(maxWidth, 0);
     size_t gotWidth = 0;
     for (Iterator it = begin; it != end; ++it) {
-        gotWidth += getFontStyle().getWidth(it, it + 1);
-        if (gotWidth <= maxWidth)
-            continue;
-
+        gotWidth += fontStyle.getWidth(it, it + 1);
+        if (gotWidth <= maxWidth) continue;
         return it;
     }
-
     return end;
 }
 
 template<class Iterator>
-Iterator AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int maxWidth) {
-    auto firstOverflowedIt = findFirstOverflowedIndex(
-        begin, end, maxWidth - (mTextOverflow == ATextOverflow::ELLIPSIS ? getFontStyle().getWidth({&ELLIPSIS, 1}) : 0));
-    if (firstOverflowedIt == end) {
-        return end;
+Iterator findTruncationPoint(Iterator begin, Iterator end, int maxWidth, ATextOverflow text_overflow, const AFontStyle& fontStyle) {
+    int availableWidth = maxWidth;
+    if (text_overflow == ATextOverflow::ELLIPSIS) {
+        availableWidth -= fontStyle.getWidth({&ELLIPSIS, 1});
     }
-    if (mTextOverflow == ATextOverflow::ELLIPSIS) {
-        firstOverflowedIt = ELLIPSIS;
-        ++firstOverflowedIt;
-    }
-    return firstOverflowedIt;
+    return findFirstOverflowedIndex(begin, end, availableWidth, fontStyle);
 }
 
 void AAbstractLabel::processTextOverflow(AString& text) {
-    if (mTextOverflow == ATextOverflow::NONE)
-        return;
+    if (mTextOverflow == ATextOverflow::NONE) return;
 
     int overflowingWidth;
     if (getFixedSize().x == 0) {
@@ -184,11 +173,15 @@ void AAbstractLabel::processTextOverflow(AString& text) {
     overflowingWidth = std::min(overflowingWidth, mSize.x);
 
     mIsTextTooLarge = getFontStyle().getWidth(text) > overflowingWidth;
-    if (!mIsTextTooLarge)
-        return;
+    if (!mIsTextTooLarge) return;
 
-    auto it = processTextOverflow(text.begin(), text.end(), overflowingWidth);
-    text.erase(it, text.end());
+    auto truncation_point = findTruncationPoint(text.begin(), text.end(), overflowingWidth, mTextOverflow, getFontStyle());
+    text.erase(truncation_point, text.end());
+
+    if (mTextOverflow == ATextOverflow::ELLIPSIS) {
+        auto ending = AChar(ELLIPSIS).toUtf8();
+        text.append(AStringView(ending.begin(), ending.end()));
+    }
 }
 
 void AAbstractLabel::doPrerender(IRenderer& render) {

@@ -32,7 +32,7 @@ glm::ivec2 ADesktop::getMousePosition() {
 
 void ADesktop::setMousePos(const glm::ivec2& pos) { SetCursorPos(pos.x, pos.y); }
 
-AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& startingLocation) {
+AFuture<APath> ADesktop::browseForDir(ASurface* parent, const APath& startingLocation) {
     _<AAbstractThread> ui;
     if (auto* w = dynamic_cast<AWindow*>(parent))
         ui = w->getThread();
@@ -94,7 +94,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
     return promise;
 }
 
-AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
+AFuture<APath> ADesktop::browseForFile(ASurface* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
     _<AAbstractThread> ui;
     if (auto* w = dynamic_cast<AWindow*>(parent))
         ui = w->getThread();

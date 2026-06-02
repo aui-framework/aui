@@ -19,19 +19,19 @@
 
 AUuid::AUuid(const AString& s) {
     size_t dataIndex = 0;
-    for (size_t stringIndex = 0; stringIndex < s.length();) {
-        if (stringIndex + 1 >= s.length()) {
+    for (size_t i = 0; i < s.length();) {
+        if (i + 1 >= s.length()) {
             throw AUuidException("too short uuid string: " + s);
         }
-        auto b1 = s[stringIndex].asAscii();
-        auto b2 = s[stringIndex + 1].asAscii();
+        auto b1 = s[i];
+        auto b2 = s[i + 1];
         if (b1 == '-') {
-            ++stringIndex;
+            ++i;
         } else if (b2 == '-') {
             throw AUuidException("invalid uuid dash format: " + s);
         } else {
             mData[dataIndex++] = fromHex(b1) << 4u | fromHex(b2);
-            stringIndex += 2;
+            i += 2;
         }
     }
     if (dataIndex != mData.size()) {

@@ -28,12 +28,13 @@
 #include "IRenderViewToTexture.h"
 
 class AColor;
-class AWindowBase;
+class ASurface;
 
 
 
 /**
- * Blending mode.
+ * @brief Blending mode.
+ * @details
  * <p><b>Terminology used in this documentation</b>:</p>
  * <dl>
  *   <dt><b><u>S</u>ource color</b> (S)</dt>
@@ -66,6 +67,7 @@ class AWindowBase;
  *   <dt><b>Color-based</b></dt>
  *   <dd>Color-based blending mode is a blending mode that does not use the alpha component in it's formula.</dd>
  * </dl>
+ * <!-- aui:no_dedicated_page -->
  */
 enum class Blending {
     /**
@@ -139,13 +141,43 @@ enum class Blending {
 };
 
 /**
- * @brief Base class for rendering.
+ * @brief Base class for renderer.
  * @ingroup views
  * @details
- * Renderer is shared between windows. It's expected to share resources (if any). Thus, it does not perform any platform
- * specific routines.
+ * The rendering engine provides graphics rendering capabilities for the AUI Framework's user interface system. It
+ * offers both hardware-accelerated (OpenGL) and software-based rendering backends. The engine handles drawing
+ * primitives, text rendering, visual effects, and maintains consistent rendering behavior across different platforms
+ * and hardware capabilities.
  *
- * @sa IRenderingContext
+ * The renderer is shared across windows and manages its own resources such as textures, but [each window has its own
+ * rendering context](awindow.md).
+ *
+ * ## Core Renderer Interface
+ *
+ * | Category | Key Methods | Purpose |
+ * |----------|--------------|---------|
+ * | Shape Drawing | `rectangle()`, `roundedRectangle()`, `rectangleBorder()` | Basic geometric shapes |
+ * | Line Drawing | `line()`, `lines()`, `points()` | Vector graphics primitives |
+ * | Text Rendering | `string()`, `prerenderString()`, `newMultiStringCanvas()` | Text output and caching |
+ * | Visual Effects | `boxShadow()`, `boxShadowInner()`, `squareSector()` | Advanced visual effects |
+ * | State Management | `setColor()`, `setTransform()`, `setBlending()` | Rendering context control |
+ * | Masking | `pushMaskBefore()`, `pushMaskAfter()`, `popMaskBefore()`, `popMaskAfter()` | Stencil-based clipping |
+ *
+ * The renderer maintains internal state including:
+ *   
+ * - Current color multiplier (mColor)
+ * - Transformation matrix (mTransform)
+ * - Target window (mWindow)
+ * - Stencil depth for masking (mStencilDepth)
+ * - Texture pool for resource management (mTexturePool)
+ *
+ * ## HiDPI (High‑DPI) support
+ *
+ * The framework uses logical units [dp](ametric.md) for layout and drawing.  All logical values are
+ * multiplied by the window pixel ratio before they reach the
+ * renderer. The renderer works with physical pixels only (px).
+ * 
+ * This ensures that the UI appears consistent across displays with varying pixel densities.
  */
 class IRenderer: public aui::noncopyable {
 public:
@@ -504,6 +536,12 @@ public:
     /**
      * @brief Sets blending mode.
      * @param blending new blending mode
+     * @details
+     * **Blending Modes and Effects**
+     *
+     * The rendering engine supports multiple blending modes for advanced visual effects:
+     *
+     * <!-- aui:steal_documentation Blending -->
      */
     virtual void setBlending(Blending blending) = 0;
 
@@ -519,7 +557,7 @@ public:
      * @brief Sets the window to render on.
      * @param window target window
      */
-    virtual void setWindow(AWindowBase* window)
+    virtual void setWindow(ASurface* window)
     {
         mWindow = window;
         setColorForced(1.f);
@@ -528,7 +566,7 @@ public:
     }
 
     [[nodiscard]]
-    AWindowBase* getWindow() const noexcept {
+    ASurface* getWindow() const noexcept {
         return mWindow;
     }
 
@@ -584,6 +622,19 @@ public:
     }
 
     /**
+     * @brief Controls the rendering scale of images for display only.
+     * Does not affect the actual visual appearance or geometry of shapes.
+     * Only impacts the sharpness and clarity of rendered images on screen.
+     */
+    void setRenderScale(float render_scale) {
+        mRenderScale = render_scale;
+    }
+
+    float getRenderScale() const noexcept {
+        return mRenderScale;
+    }
+
+    /**
      * @brief Draws rectangular backdrop effects.
      * @param position rectangle position (px)
      * @param size rectangle size (px)
@@ -594,9 +645,10 @@ public:
     void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Any> backdrops);
 
 protected:
+    float mRenderScale = 1.0f;
     AColor mColor;
     glm::mat4 mTransform;
-    AWindowBase* mWindow = nullptr;
+    ASurface* mWindow = nullptr;
     APool<ITexture> mTexturePool;
     uint8_t mStencilDepth = 0;
 
