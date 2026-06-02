@@ -25,6 +25,7 @@
 #include "OpenGLRenderingContextX11.h"
 #include "SoftwareRenderingContextX11.h"
 
+
 aui::assert_not_used_when_null<Display*> PlatformAbstractionX11::ourDisplay = nullptr;
 Screen* PlatformAbstractionX11::ourScreen = nullptr;
 PlatformAbstractionX11::Atoms PlatformAbstractionX11::ourAtoms;
@@ -102,6 +103,8 @@ void PlatformAbstractionX11::ensureXLibInitialized() {
             ourAtoms.netWmSyncRequestCounter = XInternAtom(d, "_NET_WM_SYNC_REQUEST_COUNTER", False);
             ourAtoms.netWmIcon = XInternAtom(ourDisplay, "_NET_WM_ICON", False);
             ourAtoms.cardinal = XInternAtom(ourDisplay, "XA_CARDINAL", False);
+            ourAtoms.progressAtom = XInternAtom(ourDisplay, "_NET_WM_XAPP_PROGRESS", False);
+            ourAtoms.progressPulseAtom = XInternAtom(ourDisplay, "_NET_WM_XAPP_PROGRESS_PULSE", False);
         }
 
         ~DisplayInstance() {
@@ -530,6 +533,37 @@ void PlatformAbstractionX11::windowSetIcon(AWindow& window, const AImage& image)
             PropModeReplace,
             reinterpret_cast<unsigned char*>(icon_data.data()),
             static_cast<int>(icon_data.size()));
+    XFlush(PlatformAbstractionX11::ourDisplay);
+}
+
+void PlatformAbstractionX11::setTaskbarProgress(AWindow& window, aui::float_within_0_1 p) {
+    if (!nativeHandle(window))
+        return;
+
+    if (const char* desktop = std::getenv("XDG_CURRENT_DESKTOP"); desktop && std::string_view(desktop) == "KDE") {
+        static bool warned = false;
+        if (!warned) {
+            ALogger::warn("KDE") << "setTaskbarProgress() is not working on KDE";
+            warned = true;
+        }
+        return;
+    }
+
+    unsigned long progressValue = static_cast<unsigned long>(std::lround(p * 100.0f));
+
+    XChangeProperty( PlatformAbstractionX11::ourDisplay, nativeHandle(window), ourAtoms.progressAtom, XA_CARDINAL, 32,
+        PropModeReplace,
+        reinterpret_cast<unsigned char*>(&progressValue),
+        1
+    );
+
+    unsigned long pulseValue = 0;
+    XChangeProperty( PlatformAbstractionX11::ourDisplay, nativeHandle(window), ourAtoms.progressPulseAtom, XA_CARDINAL, 32,
+        PropModeReplace,
+        reinterpret_cast<unsigned char*>(&pulseValue),
+        1
+    );
+
     XFlush(PlatformAbstractionX11::ourDisplay);
 }
 

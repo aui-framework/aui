@@ -67,6 +67,10 @@ void AWindow::maximize() {
     IPlatformAbstraction::current().windowMaximize(*this);
 }
 
+void AWindow::setTaskbarProgress(aui::float_within_0_1 p) {
+    IPlatformAbstraction::current().setTaskbarProgress(*this,p);
+}
+
 glm::ivec2 AWindow::getWindowPosition() const {
     return IPlatformAbstraction::current().windowGetPosition(const_cast<AWindow&>(*this));
 }

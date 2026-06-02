@@ -40,6 +40,7 @@ AUI_ENTRY {
         }
     );
     window->show();
+    window->setTaskbarProgress(state->progress);
     return 0;
 }
 /// [AProgressBar_example]

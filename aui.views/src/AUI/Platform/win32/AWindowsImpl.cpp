@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-
+#include "AComPtr.h"
 #include "AUI/GL/gl.h"
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
@@ -486,6 +486,33 @@ void AWindow::hide() {
     ShowWindow(mHandle, SW_HIDE);
 }
 
+
+void AWindow::setTaskbarProgress(aui::float_within_0_1 p) {
+    if (!mHandle) return;
+
+    AComPtr<ITaskbarList3> pTaskbar;
+    if (!pTaskbar) {
+        HRESULT hr = CoCreateInstance(
+            CLSID_TaskbarList, nullptr,
+            CLSCTX_INPROC_SERVER,
+            IID_PPV_ARGS(&pTaskbar)
+        );
+        if (FAILED(hr)) return;
+        pTaskbar->HrInit();
+    }
+
+    if (p == 0.0f) {
+        pTaskbar->SetProgressState(mHandle, TBPF_NOPROGRESS);
+        return;
+    }
+    pTaskbar->SetProgressState(mHandle, TBPF_NORMAL);
+    pTaskbar->SetProgressValue(
+        mHandle,
+        static_cast<ULONGLONG>(p * 1000),
+        1000ULL
+    );
+
+}
 
 void AWindowManager::notifyProcessMessages() {
     if (!mWindows.empty()) {
