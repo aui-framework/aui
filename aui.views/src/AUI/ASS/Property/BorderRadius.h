@@ -22,7 +22,7 @@
 namespace ass {
 
     /**
-     * @brief Controls border radius.
+     * @brief Controls border radius (with pixel value or percent).
      * @ingroup ass_properties
      */
     struct BorderRadius {
