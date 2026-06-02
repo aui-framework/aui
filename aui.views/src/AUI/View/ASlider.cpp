@@ -95,7 +95,7 @@ _<AView> Slider::defaultHandle() {
 
 API_AUI_VIEWS _<AView> Slider::operator()() {
     auto handleWrapper = _new<SliderHandleWrapper>(std::move(handle));
-    value.bindToCopy(ASlotDef{AUI_SLOT(handleWrapper.get())::setValue});
+    std::move(value).bindTo(AUI_SLOT(handleWrapper.get())::setValue);
     onValueChanged.bindTo(handleWrapper->valueChanged);
     track->setExpanding({1, 0});
     return Stacked {

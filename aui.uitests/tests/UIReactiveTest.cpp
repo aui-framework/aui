@@ -61,14 +61,6 @@ TEST_F(UIReactiveTest, Label) {
     EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "Hello!");
 }
 
-struct TextColor {
-    AColor color;
-
-    void operator()(AView& view) const {
-
-    }
-};
-
 TEST_F(UIReactiveTest, Test2) {
     // Test that a reactive label updates its text when the bound property changes.
     // The test creates a simple state object with a reactive bool property
@@ -85,7 +77,7 @@ TEST_F(UIReactiveTest, Test2) {
     mWindow->setContents(Vertical {
       Label {
         .text = "Test",
-        .modifier = AUI_REACT(Modifier {} | ::TextColor { state->option ? AColor::GREEN : AColor::RED }),
+        .modifier = AUI_REACT(Modifier {} | TextColor { state->option ? AColor::GREEN : AColor::RED }),
       },
     });
 

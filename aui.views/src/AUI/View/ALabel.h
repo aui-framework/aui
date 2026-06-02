@@ -76,8 +76,8 @@ struct Label {
 
     _<ALabel> operator()() {
         auto label = _new<ALabel>();
-        AUI_NULLSAFE(text)->bindTo(label->text().assignment());
-        modifier.bindTo(ASlotDef{AUI_SLOT(label.get())::setModifier});
+        AUI_NULLSAFE(text)->bindTo(AUI_SLOT(label)::setText);
+        modifier.bindTo(AUI_SLOT(label)::setModifier);
         return label;
     }
 };

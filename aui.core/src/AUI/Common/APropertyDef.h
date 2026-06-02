@@ -38,7 +38,7 @@ struct OwningContainer {
  * <!-- aui:experimental -->
  * You can use this way if you are required to define custom behaviour on getter/setter. As a downside, you have to
  * write extra boilerplate code: define property, data field, signal, getter and setter checking equality. Also,
- * APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this way.
+ * APropertyDef requires the class to derive `AObject`. Most of retained-UI views properties are defined this way.
  *
  * See [property system](property-system.md) for usage examples.
  *
@@ -108,6 +108,10 @@ struct APropertyDef {
     const APropertyDef& operator=(U&& u) const { // NOLINT(*-unconventional-assign-operator)
         std::invoke(set, *const_cast<Model*>(base), std::forward<U>(u));
         return *this;
+    }
+
+    void setValue(Underlying value) const {
+        std::invoke(set, *const_cast<Model*>(base), std::move(value));
     }
 
     [[nodiscard]]

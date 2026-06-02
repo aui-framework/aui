@@ -357,7 +357,27 @@ public:
         return mMargin;
     }
 
-    /**
+    /*
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+*
      * @brief Sets the [margin](AView::mMargin).
      * @param margin margin
      * @details

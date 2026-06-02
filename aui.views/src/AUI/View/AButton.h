@@ -189,7 +189,7 @@ struct Button {
             button->setDefault();
         }
         button->setContents(Centered { std::move(content) });
-        modifier.bindTo(ASlotDef{AUI_SLOT(button.get())::setModifier});
+        modifier.bindTo(AUI_SLOT(button)::setModifier);
         return button;
     }
 };

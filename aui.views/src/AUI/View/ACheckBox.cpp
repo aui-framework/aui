@@ -36,7 +36,7 @@ _<AView> declarative::CheckBox::operator()() {
     AObject::connect(checkbox->clicked, checkbox, [&checkbox = *checkbox]() {
         AUI_EMIT_FOREIGN(checkbox.box(), userCheckedChange, !checkbox.box()->checked);
     });
-    checked.bindTo(checkbox->box()->checked.assignment());
+    std::move(checked).bindTo(AUI_SLOT(checkbox->box()->checked)::setValue);
     onCheckedChange.bindTo(checkbox->box()->userCheckedChange);
     return checkbox;
 }

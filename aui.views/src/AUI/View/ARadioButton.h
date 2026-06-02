@@ -115,7 +115,7 @@ public:
 
         void uncheckAll() {
             for (auto& b : mButtons) {
-                b.second->setChecked(false);
+                b.second->checked() = false;
             }
             mSelectedId = -1;
         }
