@@ -123,9 +123,6 @@ public:
 
     virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) = 0;
 
-    virtual float getRenderScale() const noexcept = 0;
-    virtual void setRenderScale(float renderScale) noexcept = 0;
-
     virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
     virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
 
@@ -135,6 +132,11 @@ public:
     virtual void translate(const glm::vec2& offset) = 0;
     virtual void rotate(const glm::vec3& axis, AAngleRadians angle) = 0;
     virtual void rotate(AAngleRadians angle) = 0;
+
+    virtual void scale(const glm::vec2& multiplier) = 0;
+    void scale(float multiplier) {
+        scale({multiplier, multiplier});
+    }
 
     virtual const glm::mat4& getBaseTransform() const noexcept = 0;
     virtual void setBaseTransform(const glm::mat4& transform) noexcept = 0;
