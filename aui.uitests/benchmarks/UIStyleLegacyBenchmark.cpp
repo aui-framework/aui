@@ -59,8 +59,6 @@ public:
     void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) override {}
     void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, const APaint& paint) override {}
 
-    void setWindow(ASurface* window) override {}
-    ASurface* getWindow() const noexcept override { return nullptr; }
     glm::mat4 getProjectionMatrix() const override { return glm::mat4(1.0f); }
 
     class Stub : public ITexture {
