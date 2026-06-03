@@ -17,6 +17,30 @@
 
 namespace aui::detail {
 
+
+namespace property {
+template <typename Property>                 // can't use AAnyProperty here, as concept would depend on itself
+auto makeAssignment(Property&& property) {   // note the rvalue reference template argument here:
+    // pass your property as std::move(*this) if your
+    // property-compliant struct is temporary! otherwise you'll
+    // spend your weekend on debugging segfaults :)
+    using Underlying = std::decay_t<decltype(*property)>;
+    struct Invocable {
+        Property property;
+        void operator()(Underlying value) const {
+            // avoid property assignment loop (bidirectional connection)
+            // PropertyCommonTest.Property2PropertyBoth
+            if (property.changed.isAtSignalEmissionState()) {
+                return;
+            }
+            const_cast<Property&>(property) = std::move(value);
+        };
+    } i = { std::forward<Property>(property) };
+
+    return i;
+}
+}   // namespace aui::detail::property
+
 /**
  * @brief Dispatches a smart pointer, a raw pointer, or a reference into a raw pointer via overloads.
  * @ingroup signal_slot
@@ -161,18 +185,6 @@ public:
     }
 
     /**
-     * @brief Connects a signal or property to a property.
-     * @param connectionSource The signal (or property) to connect.
-     * @param propertyDestination destination property, whose value is overwritten on connection creation.
-     * @ingroup property-system
-     */
-    template <aui::detail::ConnectionSource ConnectionSource, APropertyWritable PropertyDestination>
-    static void connect(ConnectionSource&& connectionSource, PropertyDestination&& propertyDestination)
-    {
-        AObject::connect(connectionSource, propertyDestination.assignment());
-    }
-
-    /**
      * @brief Connects source property to the destination property and opposite (bidirectionally).
      * @ingroup property-system
      * @details
@@ -200,8 +212,8 @@ public:
             { *propertyDestination } -> aui::convertible_to<std::decay_t<decltype(*propertySource)>>;
         }
     {
-        AObject::connect(propertySource, propertyDestination.assignment());
-        AObject::connect(propertyDestination.changed, propertySource.assignment());
+        AObject::connect(propertySource, propertyDestination.boundObject(), aui::detail::property::makeAssignment(std::forward<PropertyDestination>(propertyDestination)));
+        AObject::connect(propertyDestination.changed, propertySource.boundObject(), aui::detail::property::makeAssignment(std::forward<PropertySource>(propertySource)));
     }
 
     /**
@@ -220,64 +232,6 @@ public:
     template <typename Connectable, ACompatibleSlotFor<Connectable> Function>
     decltype(auto) connect(const Connectable& connectable, Function&& function) {
         return connect(connectable, this, std::forward<Function>(function));
-    }
-
-    /**
-     * @brief Connects signal to the slot of the specified object. Slot is packed to single argument.
-     * @param connectionSource signal or property
-     * @param slotDef instance of <code>AObject</code> + slot
-     * @return Connection instance
-     *
-     * @details
-     * See [signal-slot system](signal_slot.md) for more info.
-     *
-     * ```cpp
-     * connect(view->clicked, ASlotDef { AUI_SLOT(otherObject)::handleButtonClicked });
-     * connect(textField->text(), ASlotDef { AUI_SLOT(otherObject)::handleText });
-     * ```
-     *
-     * !!! note
-     *
-     *     This overload is applicable for cases when you NEED to pass object and its AUI_SLOT via single argument. If
-     *     possible, consider using shorter overload:
-     *
-     *     ```cpp
-     *     connect(view->clicked, AUI_SLOT(otherObject)::handleButtonClicked);
-     *     ```
-     */
-    template <aui::detail::ConnectionSource ConnectionSource, aui::derived_from<AObjectBase> Object, typename Function>
-    static decltype(auto) connect(const ConnectionSource& connectionSource, ASlotDef<Object*, Function> slotDef) {
-        return connect(connectionSource, slotDef.boundObject, std::move(slotDef.invocable));
-    }
-
-    /**
-     * @brief Connects signal or property to the slot of the specified non-AObject type.
-     * @ingroup property-system
-     * @details
-     * See [signal-slot system](signal_slot.md) for more info.
-     *
-     * ```cpp
-     * struct User { AProperty<AString> name }; // user.name here is non-AObject type
-     * connect(textField->text(), user->name.assignment());
-     * ```
-     *
-     * !!! note
-     *
-     *    `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
-     *    connection creation.
-     *
-     *
-     * @param property source property.
-     * @param object instance of `AObject`.
-     * @param function slot. Can be lambda.
-     */
-    template <AAnyProperty Property, typename Object, ACompatibleSlotFor<Property> Function>
-    static void connect(const Property& property, _<Object> object, Function&& function)
-        requires(!aui::derived_from<Object, AObject>)
-    {
-        aui::react::DependencyObserverScope r(nullptr); // drop current dependency observer so it won't track source
-        property.changed.makeRawInvocable(function)(*property);
-        connect(property.changed, object, std::forward<Function>(function));
     }
 
     void setSignalsEnabled(bool enabled) { mSignalsEnabled = enabled; }

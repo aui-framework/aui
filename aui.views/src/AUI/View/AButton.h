@@ -171,7 +171,7 @@ struct Button {
      * @details
      * Called when user activates the button.
      */
-    contract::Slot<> onClick;
+    std::function<void()> onClick;
 
     /**
      * @brief Determines if the button is default.
@@ -184,7 +184,9 @@ struct Button {
 
     _<AButton> operator()() {
         auto button = _new<AButton>();
-        onClick.bindTo(button->clicked);
+        if (onClick) {
+            AObject::connect(button->clicked, AObject::GENERIC_OBSERVER, std::move(onClick));
+        }
         if (isDefault) {
             button->setDefault();
         }

@@ -180,17 +180,6 @@ concept ACompatibleSlotFor = requires (Slot&& c) {
     typename aui::reflect::member<std::decay_t<Slot>>::args;
 };
 
-class API_AUI_CORE AObjectBase;
-
-struct ASlotDefBase {};
-
-template<aui::convertible_to<AObjectBase*> ObjectPtr, typename Invocable>
-struct ASlotDef: ASlotDefBase {
-    ObjectPtr boundObject;
-    Invocable invocable;
-    ASlotDef(ObjectPtr boundObject, Invocable invocable) : boundObject(std::move(boundObject)), invocable(std::move(invocable)) {}
-};
-
 template <typename T>
 concept APropertyReadable = requires(T&& t) {
     // Property must have Underlying type which it represents.

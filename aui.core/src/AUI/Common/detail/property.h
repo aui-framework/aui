@@ -12,36 +12,9 @@
 #pragma once
 
 #include <AUI/Common/ASignal.h>
-#include <AUI/Common/APropertyPrecomputed.h>
 #include <AUI/Common/PropertyModifier.h>
 #include <AUI/Traits/unsafe_declval.h>
 
-namespace aui::detail::property {
-
-template <typename Property>                 // can't use AAnyProperty here, as concept would depend on itself
-auto makeAssignment(Property&& property) {   // note the rvalue reference template argument here:
-    // pass your property as std::move(*this) if your
-    // property-compliant struct is temporary! otherwise you'll
-    // spend your weekend on debugging segfaults :)
-    using Underlying = std::decay_t<decltype(*property)>;
-    struct Invocable {
-        Property property;
-        void operator()(Underlying value) const {
-            // avoid property assignment loop (bidirectional connection)
-            // PropertyCommonTest.Property2PropertyBoth
-            if (property.changed.isAtSignalEmissionState()) {
-                return;
-            }
-            const_cast<Property&>(property) = std::move(value);
-        };
-    } i = { std::forward<Property>(property) };
-
-    return ASlotDef<decltype(property.boundObject()), decltype(i)> {
-        property.boundObject(),
-        std::move(i),
-    };
-}
-}   // namespace aui::detail::property
 
 #define AUI_DETAIL_BINARY_OP(op)                                                                                      \
     template <AAnyProperty T, typename Rhs>                                                                           \

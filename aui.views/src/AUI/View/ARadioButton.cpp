@@ -39,7 +39,9 @@ _<AView> declarative::RadioButton::operator()() {
     auto radiobutton = _new<ARadioButton>(std::move(content));
 //    radiobutton->clicked.clearAllOutgoingConnectionsWith(radiobutton); // removes default legacy behavior
     std::move(checked).bindTo(AUI_SLOT(radiobutton->circle()->checked)::setValue);
-    onClick.bindTo(radiobutton->clicked);
+    if (onClick) {
+        AObject::connect(radiobutton->circle()->checked, AObject::GENERIC_OBSERVER, std::move(onClick));
+    }
     return radiobutton;
 }
 

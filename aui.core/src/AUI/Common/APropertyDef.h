@@ -165,14 +165,6 @@ struct APropertyDef {
         }
     }
 
-    /**
-     * @brief Makes ASlotDef that assigns value to this property.
-     */
-    [[nodiscard]]
-    auto assignment() noexcept {
-        return aui::detail::property::makeAssignment(std::move(*this));
-    }
-
 private:
     friend class AObject;
 };

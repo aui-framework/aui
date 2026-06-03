@@ -160,7 +160,7 @@ struct RadioButton {
      * @details
      * Called when user activates the button.
      */
-    contract::Slot<> onClick;
+    std::function<void()> onClick;
 
     /**
      * @brief View associated with the radio button.

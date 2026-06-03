@@ -99,12 +99,12 @@ public:
     }
 
     template <aui::detail::Receiver Object, typename Slot>
-    void bindTo(const Object& receiver, Slot&& slot) & {
+    void bindTo(const Object& receiver, Slot&& slot) const & {
         std::visit(
             aui::lambda_overloaded {
-              [&](Devastated&) { throw AException("an attempt to bindTo a property twice"); },
-              [&](Constant& c) { std::invoke(aui::detail::dispatchSlot(receiver, std::forward<Slot>(slot)), c.value); },
-              [&](ReactiveExpression& c) {
+              [&](const Devastated&) { throw AException("an attempt to bindTo a property twice"); },
+              [&](const Constant& c) { std::invoke(aui::detail::dispatchSlot(receiver, std::forward<Slot>(slot)), c.value); },
+              [&](const ReactiveExpression& c) {
                   auto& sourceProperty = *c.value;
                   AObject::connect(sourceProperty, receiver, [keepMeAlive = c.value, original = aui::detail::dispatchSlot(receiver, std::forward<Slot>(slot))](const T& value) {
                       std::invoke(original, value);
@@ -113,8 +113,6 @@ public:
             },
             mImpl);
     }
-
-
 
     const T& value() const {
         return std::visit(
@@ -132,39 +130,6 @@ public:
 
 private:
     std::variant<Devastated, Constant, ReactiveExpression> mImpl;
-};
-
-template <typename... Args>
-struct Slot {
-    static_assert(
-        (std::is_object_v<Args> && ...),
-        "// ====================> contract::Slot: there's no effect of specifying of non value arguments for the "
-        "signal."
-        "Consider removing const and reference modifiers.");
-
-    Slot() = default;
-
-    template <aui::convertible_to<AObjectBase*> ObjectPtr, typename Invocable>
-    Slot(ObjectPtr receiverObject, Invocable&& receiverSlot)
-      : mSetup([slotDef = ASlotDef { receiverObject, std::forward<Invocable>(receiverSlot) }](emits<Args...>& signal) {
-          AObject::connect(signal, slotDef);
-      }) {}
-
-    template <typename Invocable>
-    Slot(Invocable&& invocable)
-      : mSetup([invocable = std::forward<Invocable>(invocable)](emits<Args...>& signal) mutable {
-          AObject::connect(signal, AObject::GENERIC_OBSERVER, std::move(invocable));
-      }) {}
-
-    void bindTo(emits<Args...>& signal) {
-        if (!mSetup) {
-            return;
-        }
-        mSetup(signal);
-    }
-
-private:
-    std::function<void(emits<Args...>& signal)> mSetup;
 };
 
 }   // namespace declarative::contract

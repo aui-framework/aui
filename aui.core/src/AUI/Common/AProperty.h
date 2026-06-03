@@ -217,14 +217,6 @@ struct AProperty: AObjectBase {
         return raw != rhs.raw;
     }
 
-    /**
-     * @brief Makes ASlotDef that assigns value to this property.
-     */
-    [[nodiscard]]
-    auto assignment() noexcept {
-        return aui::detail::property::makeAssignment(*this);
-    }
-
 private:
     friend class AObject;
 };
