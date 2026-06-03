@@ -42,25 +42,8 @@ class IRendererBackend;
  * See UIRenderOptimizationTest for tests.
  */
 struct API_AUI_VIEWS ARenderContext {
-    using Rectangles = AStaticVector<ARect<int>, 8>;
-
-    /**
-     * @brief Axis aligned bounding boxes where the rendering is performed in, used for optimization.
-     */
-    Rectangles clippingRects;
     ACanvas& canvas;
     IRendererBackend& backend;
     [[deprecated("Use canvas instead")]]
     IRenderer& render;
-
-    void clip(ARect<int> clipping);
-
-    [[nodiscard]]
-    ARenderContext withShiftedPosition(glm::ivec2 by) const noexcept{
-        auto copy = *this;
-        for (auto& r : copy.clippingRects) {
-            r.translate(by);
-        }
-        return copy;
-    }
 };
