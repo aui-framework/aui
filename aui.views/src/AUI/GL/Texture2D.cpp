@@ -52,7 +52,7 @@ void gl::Texture2D::tex2D(AImageView image) {
     } else {
         mSize = image.size();
 
-        AUI_ASSERTX(image.format().bytesPerPixel() * image.width() * image.height() <= image.buffer().size() || image.buffer().empty(), "bad buffer");
+        AUI_ASSERTX(image.bytesPerPixel() * image.width() * image.height() <= image.buffer().size() || image.buffer().empty(), "bad buffer");
         glTexImage2D(GL_TEXTURE_2D, 0, types.internalformat, image.width(), image.height(), 0, types.format, types.type,
                      image.buffer().empty() ? nullptr : image.buffer().data());
     }

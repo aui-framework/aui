@@ -94,7 +94,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
 
         AByteBuffer data;
 
-        int imageFormat = 0;
+        APixelFormat imageFormat = APixelFormat::UNKNOWN;
         if (fr == FontRendering::NEAREST) {
             // when nearest, freetype renders glyphs into the 1bit-depth image but OpenGL required at least8bit-depth,
             // so we will convert it here
@@ -107,7 +107,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
                                                                                                                : 0;
                 }
             }
-            imageFormat |= APixelFormat::R;
+            imageFormat = APixelFormat::R8_UNORM;
         } else if (fr == FontRendering::SUBPIXEL) {
             data.reserve(g->bitmap.rows * width * 4);
 
@@ -119,7 +119,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
                     data.write(reinterpret_cast<const char*>(&alpha), 1);
                 }
             }
-            imageFormat |= APixelFormat::RGBA;
+            imageFormat = APixelFormat::R8G8B8A8_UNORM;
         } else {
             data.reserve(g->bitmap.rows * g->bitmap.pitch);
 
@@ -127,10 +127,8 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
                 unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
                 data.write(reinterpret_cast<const char*>(bufPtr), g->bitmap.width);
             }
-            imageFormat |= APixelFormat::R;
+            imageFormat = APixelFormat::R8_UNORM;
         }
-
-        imageFormat |= APixelFormat::BYTE;
 
         return Character{
             .image = _new<AImage>(data, glm::uvec2(width, height), imageFormat),

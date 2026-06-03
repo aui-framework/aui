@@ -69,7 +69,6 @@ void AAbstractTextField::doDrawString(ACanvas& render) {
 
     render.translate(
             {mPadding.left - mHorizontalScroll + mTextAlignOffset, getVerticalAlignmentOffset()});
-    render.setColor(textColor());
     mPrerenderedString->draw(render);
 }
 

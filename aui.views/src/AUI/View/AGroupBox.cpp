@@ -20,31 +20,6 @@
 
 using namespace declarative;
 
-namespace {
-    class Inner: public AViewContainerBase {
-    friend class AGroupBox;
-    public:
-        Inner(_<AView> title, const _<AViewContainer>& contents) : mTitle(std::move(title)) {
-            setContents(contents);
-        }
-
-        void drawStencilMask(ARenderContext ctx) override {
-            AView::drawStencilMask(ctx);
-
-            RenderHints::PushMatrix transform(ctx.canvas);
-            auto d = mTitle->getPositionInWindow() - getPositionInWindow();
-            AUI_REPEAT(2) {
-                ctx.canvas.rectangle(APaint{ASolidBrush{}},
-                                     d,
-                                     mTitle->getSize());
-            }
-        }
-
-    private:
-        _<AView> mTitle;
-    };
-}
-
 AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
     mTitle(std::move(titleView)),
     mContent(std::move(contentView)) {
@@ -55,20 +30,14 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
     using namespace declarative;
     setContents(Vertical {
         Horizontal { mTitle } << ".agroupbox-title",
-        mFrame = _new<Inner>(mTitle,
-                            /*
-                             * Using two nested container because view's masking does not affect it's background (style), but does for
-                             * its children.
-                             */
-                             Vertical {
-                                 Vertical::Expanding {
-                                     mContent AUI_LET { it->setExpanding(); }
-                                 }  << ".agroupbox-inner"
-                             } AUI_OVERRIDE_STYLE {
-                                     Expanding {},
-                                     AOverflow::HIDDEN, // forces to call drawStencilMask
-                             }) AUI_LET {
-        },
+        mFrame = Vertical {
+            Vertical::Expanding {
+                mContent AUI_LET { it->setExpanding(); }
+            } << ".agroupbox-inner"
+        } AUI_OVERRIDE_STYLE {
+            Expanding {},
+            AOverflow::HIDDEN,
+        }
     });
 
     if (auto asCheckbox = _cast<ACheckBox>(mTitle)) {

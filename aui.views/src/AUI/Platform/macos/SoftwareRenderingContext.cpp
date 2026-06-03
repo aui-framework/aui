@@ -36,13 +36,13 @@ void SoftwareRenderingContext::destroyNativeWindow(ASurface &window) {
 
 void SoftwareRenderingContext::beginPaint(ASurface &window) {
     CommonRenderingContext::beginPaint(window);
-    mRenderer->setWindow(&window);
     mDisplayList.clear();
+    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize);
 }
 
 void SoftwareRenderingContext::endPaint(ASurface &window) {
     mDisplayList.optimize();
-    mDisplayList.draw(*mRenderer);
+    mDisplayList.draw(*mRenderer, mWindowTarget);
     mDisplayList.clear();
     CommonRenderingContext::endPaint(window);
 }
@@ -54,8 +54,9 @@ void SoftwareRenderingContext::beginResize(ASurface &window) {
 void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     CommonRenderingContext::init(init);
     mRenderer = _new<SoftwareRenderer>();
+    mRenderer->setContext(this);
     mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
-    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas);
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
 }
 
 void SoftwareRenderingContext::endResize(ASurface &window) {
@@ -75,6 +76,4 @@ void SoftwareRenderingContext::reallocate() {
         free(mBitmapBlob);
     }
     mBitmapBlob = static_cast<uint8_t *>(malloc(mBitmapSize.x * mBitmapSize.y * 4));
-
-    mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
 }

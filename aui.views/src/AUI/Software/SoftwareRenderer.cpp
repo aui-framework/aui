@@ -23,8 +23,8 @@ _unique<IOffscreenRenderPass> SoftwareRenderer::beginOffscreen(const _<ITexture>
 
 void SoftwareRenderer::endOffscreen(_unique<IOffscreenRenderPass> pass) {
     if (auto c = dynamic_cast<CommonOffscreenRenderPass*>(pass.get())) {
-        c->displayList.optimize(*this, c->target);
-        c->displayList.draw(*this);
+        c->displayList.optimize();
+        c->displayList.draw(*this, c->target);
     }
 }
 #include <AUI/Image/AImage.h>

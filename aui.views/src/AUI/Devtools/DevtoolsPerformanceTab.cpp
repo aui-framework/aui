@@ -69,8 +69,7 @@ namespace {
         void render(ARenderContext ctx) override {
             AView::render(ctx);
             if (mTexture == nullptr) {
-                auto& backend = ctx.canvas.renderer();
-                mTexture = backend.createTexture(mImage.size(), mImage.format());
+                mTexture = ctx.backend.createTexture(mImage.size(), mImage.format());
             }
 
             ctx.canvas.rectangle(ATexturedBrush {
@@ -210,7 +209,7 @@ namespace {
         };
         using SectionStatMap = AMap<AString /* section name */, SectionStat>;
 
-        AFormattedImage<APixelFormat::RGBA_BYTE> mImage;
+        AFormattedImage<APixelFormat::R8G8B8A8_UNORM> mImage;
         _<ITexture> mTexture;
         unsigned mFrameIndex = 0;
 

@@ -282,7 +282,8 @@ void ADisplayList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& 
     mPasses << RenderPass{ .target = windowTarget, .size = sz, .entities = mEntities };
 }
 
-void ADisplayList::draw(IRendererBackend& renderer) const {
+void ADisplayList::draw(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
+    resolvePasses(renderer, windowTarget);
     for (const auto& pass : mPasses) {
         renderer.beginRenderPass(pass.target);
         renderer.setRenderTarget(pass.target, pass.size);
@@ -368,9 +369,8 @@ void ADisplayList::draw(IRendererBackend& renderer) const {
     renderer.flush();
 }
 
-void ADisplayList::optimize(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
+void ADisplayList::optimize() {
     resolveEntities();
     computeOverlaps();
     resolveClips();
-    resolvePasses(renderer, windowTarget);
 }

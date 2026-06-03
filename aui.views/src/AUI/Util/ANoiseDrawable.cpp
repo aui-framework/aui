@@ -14,12 +14,12 @@
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Util/ARandom.h>
 
-void ANoiseDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
+void ANoiseDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) {
     if (!mNoise) {
-        auto& backend = render.renderer();
-        mNoise = backend.createTexture({ 32, 32 }, APixelFormat::RGBA_BYTE);
+        auto& backend = ctx.backend;
+        mNoise = backend.createTexture({ 32, 32 }, APixelFormat::R8G8B8A8_UNORM);
 
-        AFormattedImage<APixelFormat::RGBA_BYTE> data({ 32, 32 });
+        AFormattedImage<APixelFormat::R8G8B8A8_UNORM> data({ 32, 32 });
         ARandom r;
         for (auto& color : data) {
             color.r = color.g = color.b = uint8_t(r.nextInt());
@@ -28,7 +28,7 @@ void ANoiseDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
         mNoise->upload(AImageView(data));
         }
 
-    render.rectangle(APaint {
+    ctx.canvas.rectangle(APaint {
         ATexturedBrush {
             .texture = mNoise,
             .uv1 = glm::vec2(0),

@@ -36,7 +36,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
         p.size = glm::vec2(size) * scale;
         p.repeat = info.rep.orDefault(Repeat::NONE);
         p.imageRendering = imageRendering;
-        drawable->draw(ctx.canvas, p);
+        drawable->draw(ctx, p);
     };
 
     switch (info.sizing.orDefault(Sizing::FIT_PADDING)) {
@@ -51,7 +51,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             p.repeat = info.rep.orDefault(Repeat::NONE);
             p.cropUvBottomRight = glm::vec2(view->getSize()) / scale;
             p.imageRendering = imageRendering;
-            drawable->draw(ctx.canvas, p);
+            drawable->draw(ctx, p);
             break;
         }
         case Sizing::COVER: {
@@ -139,11 +139,11 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             p.size = view->getSize();
             p.imageRendering = imageRendering;
 
-            drawable->draw(ctx.canvas, p);
+            drawable->draw(ctx, p);
             break;
         }
         case Sizing::SPLIT_2X2: {
-            auto ratio = ctx.canvas.getRenderScale() / info.dpiMargin.orDefault(1.f);
+            auto ratio = ctx.render.getRenderScale() / info.dpiMargin.orDefault(1.f);
             auto textureSize = glm::vec2(drawable->getSizeHint()) * ratio;
             auto textureWidth = textureSize.x;
             auto textureHeight = textureSize.y;
@@ -161,7 +161,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
                 p.size = { width, height };
                 p.imageRendering = imageRendering;
                 p.renderingSize = { textureWidth, textureHeight };
-                drawable->draw(ctx.canvas, p);
+                drawable->draw(ctx, p);
             };
 
             // upper left

@@ -123,14 +123,13 @@ void AEmbedContext::windowRender() {
     auto& render = renderingContext->renderer();
     auto& backend = renderingContext->backend();
     auto& canvas = renderingContext->canvas();
-    backend.setWindow(mContainer.get());
     if (mContainer->mRequiresLayoutUpdate) {
         mContainer->mRequiresLayoutUpdate = false;
         mContainer->applyGeometryToChildrenIfNecessary();
     }
     renderingContext->beginPaint(*mContainer);
     mContainer->mRequiresRedraw = false;
-    mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .canvas = canvas, .render = render});
+    mContainer->render({.canvas = canvas, .backend = backend, .render = render});
     renderingContext->endPaint(*mContainer);
 }
 

@@ -14,87 +14,68 @@
 
 aui::gl::impl::TextureFormat aui::gl::impl::recognize(APixelFormat format) {
     TextureFormat r{};
-    const auto comps = (format & APixelFormat::COMPONENT_BITS);
-    const auto type = (format & APixelFormat::TYPE_BITS);
-    switch (comps) {
-        case APixelFormat::R:
+    switch (format) {
+        case APixelFormat::R8_UNORM:
             r.format = GL_RED;
+            r.type = GL_UNSIGNED_BYTE;
+            r.internalformat = GL_R8;
             break;
-        case APixelFormat::RG:
+        case APixelFormat::R8G8_UNORM:
             r.format = GL_RG;
+            r.type = GL_UNSIGNED_BYTE;
+            r.internalformat = GL_RG8;
             break;
-        case APixelFormat::RGB:
+        case APixelFormat::R8G8B8_UNORM:
             r.format = GL_RGB;
+            r.type = GL_UNSIGNED_BYTE;
+            r.internalformat = GL_RGB8;
             break;
-        case APixelFormat::RGBA:
+        case APixelFormat::R8G8B8A8_UNORM:
             r.format = GL_RGBA;
+            r.type = GL_UNSIGNED_BYTE;
+            r.internalformat = GL_RGBA8;
             break;
-        case APixelFormat::BGRA:
+        case APixelFormat::B8G8R8A8_UNORM:
 #if defined(GL_BGRA_EXT) && !defined(GL_BGRA)
             r.format = GL_BGRA_EXT;
 #elif defined(GL_BGRA)
             r.format = GL_BGRA;
 #else
-            ALogger::warn("TextureFormatRecognition") << "Unhandled components mask for BGRA: 0x" << std::hex << comps << " (defaulting to RGBA)";
             r.format = GL_RGBA;
 #endif
-            break;
-        default:
-            ALogger::warn("TextureFormatRecognition") << "Unhandled components mask: 0x" << std::hex << comps << " (defaulting to RGBA)";
-            r.format = GL_RGBA;
-            break;
-    }
-    switch (type) {
-        case APixelFormat::BYTE:
             r.type = GL_UNSIGNED_BYTE;
-            switch (comps) {
-                case APixelFormat::R:
-                    r.internalformat = GL_R8;
-                    break;
-                case APixelFormat::RG:
-                    r.internalformat = GL_RG8;
-                    break;
-                case APixelFormat::RGB:
-                    r.internalformat = GL_RGB8;
-                    break;
-                case APixelFormat::RGBA:
-                    r.internalformat = GL_RGBA8;
-                    break;
 #if defined(GL_BGRA8_EXT)
-                case APixelFormat::BGRA:
-                    r.internalformat = GL_BGRA8_EXT;
-                    break;
+            r.internalformat = GL_BGRA8_EXT;
+#else
+            r.internalformat = GL_RGBA8;
 #endif
-                default:
-                    ALogger::warn("TextureFormatRecognition") << "Unhandled internalFormat: 0x" << std::hex << comps << " (defaulting to RGBA8)";
-                    r.internalformat = GL_RGBA8;
-                    break;
-            }
             break;
-        case APixelFormat::FLOAT:
-            switch (comps) {
-                case APixelFormat::R:
-                    r.internalformat = GL_R32F;
-                    break;
-                case APixelFormat::RG:
-                    r.internalformat = GL_RG32F;
-                    break;
-                case APixelFormat::RGB:
-                    r.internalformat = GL_RGB32F;
-                    break;
-                case APixelFormat::RGBA:
-                    r.internalformat = GL_RGBA32F;
-                    break;
-                default:
-                    ALogger::warn("TextureFormatRecognition") << "Unhandled internalFormat: 0x" << std::hex << comps << " (defaulting to RGBA32F)";
-                    r.internalformat = GL_RGBA32F;
-                    break;
-            }
+        case APixelFormat::R16G16B16A16_SFLOAT:
+            r.format = GL_RGBA;
+#if defined(GL_HALF_FLOAT)
+            r.type = GL_HALF_FLOAT;
+#elif defined(GL_HALF_FLOAT_OES)
+            r.type = GL_HALF_FLOAT_OES;
+#else
+            r.type = GL_FLOAT;
+#endif
+            r.internalformat = GL_RGBA16F;
+            break;
+        case APixelFormat::R32G32B32A32_SFLOAT:
+            r.format = GL_RGBA;
+            r.type = GL_FLOAT;
+            r.internalformat = GL_RGBA32F;
+            break;
+        case APixelFormat::A2R10G10B10_UNORM_PACK32:
+            r.format = GL_BGRA;
+            r.type = GL_UNSIGNED_INT_2_10_10_10_REV;
+            r.internalformat = GL_RGB10_A2;
             break;
         default:
-            ALogger::warn("TextureFormatRecognition") << "Unhandled type mask: 0x" << std::hex << type << " (defaulting to UBYTE RGBA8)";
+            ALogger::warn("TextureFormatRecognition") << "Unhandled format: " << static_cast<int>(format) << " (defaulting to RGBA8)";
+            r.format = GL_RGBA;
             r.type = GL_UNSIGNED_BYTE;
-            r.internalformat = (comps == APixelFormat::R) ? GL_R8 : (comps == APixelFormat::RGB) ? GL_RGB8 : GL_RGBA8;
+            r.internalformat = GL_RGBA8;
             break;
     }
     return r;

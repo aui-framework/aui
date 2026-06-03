@@ -31,15 +31,15 @@ void OpenGLRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
     mDisplayList.clear();
     beginFramebuffer(window.getSize());
+    mWindowTarget = mRenderer->createFramebufferWrapper(gl::Framebuffer::current() ? gl::Framebuffer::current()->getHandle() : gl::Framebuffer::DEFAULT_FB, mViewportSize);
     mRenderer->beginPaint(window.getSize());
 }
 
 void OpenGLRenderingContext::endPaint(ASurface& window) {
     mDisplayList.optimize();
-    mDisplayList.draw(*mRenderer);
+    mDisplayList.draw(*mRenderer, mWindowTarget);
     mDisplayList.clear();
     CommonRenderingContext::endPaint(window);
-    endFramebuffer();
     mRenderer->endPaint();
 }
 
@@ -49,15 +49,10 @@ void OpenGLRenderingContext::beginResize(ASurface& window) {
 void OpenGLRenderingContext::endResize(ASurface& window) {
 
 }
-
 AImage OpenGLRenderingContext::makeScreenshot() {
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        fb->bindForRead();
-        AImage result(mViewportSize, APixelFormat::RGBA_BYTE);
-        glReadPixels(0, 0, result.width(), result.height(), GL_RGBA, GL_UNSIGNED_BYTE, static_cast<void*>(result.modifiableBuffer().data()));
-        result.mirrorVertically();
-        gl::Framebuffer::unbind();
-        return result;
-    }
-    return {};
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
+    AImage result(mViewportSize, APixelFormat::R8G8B8A8_UNORM);
+    glReadPixels(0, 0, result.width(), result.height(), GL_RGBA, GL_UNSIGNED_BYTE, static_cast<void*>(result.modifiableBuffer().data()));
+    result.mirrorVertically();
+    return result;
 }

@@ -44,19 +44,93 @@ void AScrollAreaViewport::setContents(_<AView> content) {
 void AScrollAreaViewport::applyGeometryToChildren() {
     AViewContainerBase::applyGeometryToChildren();
     mInner->setSize(glm::max(mInner->getMinimumSize(), getSize()));
-    if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
-        if (!IRenderViewToTexture::isEnabledForView(*mInner)) {
-            auto w = AWindow::current();
-            if (!w) {
-                return;
-            }
 
-            IRenderViewToTexture::enableForView(w->getRenderingContext()->renderer(), *mInner);
+    if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
+        if (!mRenderToTexture) {
+            mRenderToTexture.emplace();
         }
     } else {
-        IRenderViewToTexture::disableForView(*mInner);
+        mRenderToTexture.reset();
     }
 }
+
+void AScrollAreaViewport::render(ARenderContext ctx) {
+    if (mRenderToTexture && mRenderToTexture->drawFromTexture) {
+        mRenderToTexture->skipRedrawUntilTextureIsPresented = false;
+        if (!mRenderToTexture->texture) {
+            drawOffscreen(ctx);
+        }
+        ctx.canvas.rectangle(APaint{ATexturedBrush{mRenderToTexture->texture}}, {0, 0}, getSize());
+    } else {
+        //AViewContainerBase::render(ctx);
+    }
+}
+
+void AScrollAreaViewport::markPixelDataInvalid(ARect<int> invalidArea) {
+    if (mRenderToTexture) {
+        mRenderToTexture->invalidArea << invalidArea;
+        if (std::exchange(mRedrawRequested, true)) {
+            // this view already requested a redraw.
+            return;
+        }
+        // temporary disable drawing from texture. this will be set back to true by the callback below.
+        mRenderToTexture->drawFromTexture = false;
+        AWindow::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](ARenderContext rc) {
+            if (!mRenderToTexture) {
+                return;
+            }
+            if (mRenderToTexture->invalidArea.empty()) {
+                return;
+            }
+            drawOffscreen(rc);
+        });
+        AUI_NULLSAFE(mParent)->markPixelDataInvalid(ARect<int>::fromTopLeftPositionAndSize(getPosition(), getSize()));
+        return;
+    }
+
+    AViewContainerBase::markPixelDataInvalid(invalidArea);
+}
+
+void AScrollAreaViewport::drawOffscreen(ARenderContext rc) {
+    if (!mRenderToTexture) {
+        return;
+    }
+
+    if (mRenderToTexture->skipRedrawUntilTextureIsPresented) {
+        mRedrawRequested = false;
+        return;
+    }
+
+    if (glm::any(glm::equal(getSize(), glm::ivec2(0)))) {
+        mRedrawRequested = false;
+        mRenderToTexture->invalidArea.clear();
+        return;
+    }
+
+    auto invalidArea = std::exchange(mRenderToTexture->invalidArea, {});
+
+    if (!mRenderToTexture->texture || mRenderToTexture->texture->getSize() != glm::u32vec2(getSize())) {
+        mRenderToTexture->texture = rc.backend.createTexture(getSize());
+    }
+
+    auto offscreenPass = rc.backend.beginOffscreen(mRenderToTexture->texture);
+    auto contextOfTheView = offscreenPass->context();
+    contextOfTheView.canvas.clear();
+
+    try {
+        AViewContainerBase::render(contextOfTheView);
+    } catch (const AException& e) {
+        ALogger::err("AScrollAreaViewport") << "Unable to render viewport: " << e;
+        rc.backend.endOffscreen(std::move(offscreenPass));
+        return;
+    }
+
+    rc.backend.endOffscreen(std::move(offscreenPass));
+
+    mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
+    mRenderToTexture->drawFromTexture = true;
+}
+
 void AScrollAreaViewport::updateContentsScroll() {
     mInner->setPosition(-glm::ivec2(mScroll));
     emit mScrollChanged(mScroll);

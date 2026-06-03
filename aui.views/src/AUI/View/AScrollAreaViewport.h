@@ -40,6 +40,8 @@ public:
     }
 
     void applyGeometryToChildren() override;
+    void render(ARenderContext ctx) override;
+    void markPixelDataInvalid(ARect<int> invalidArea) override;
 
     bool consumesClick(const glm::ivec2& position) override {
         return true;
@@ -99,6 +101,17 @@ public:
 private:
     _<Inner> mInner;
     _<AView> mContents;
+
+    struct RenderToTexture {
+        _<ITexture> texture;
+        AVector<ARect<int>> invalidArea;
+
+        bool drawFromTexture = true;
+        bool skipRedrawUntilTextureIsPresented = false;
+    };
+    AOptional<RenderToTexture> mRenderToTexture;
+
+    void drawOffscreen(ARenderContext ctx);
 
     glm::uvec2 mScroll = {0, 0};
     emits<glm::uvec2> mScrollChanged;

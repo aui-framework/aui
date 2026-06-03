@@ -35,7 +35,7 @@ private:
     APixelFormat mFormat;
     _weak<OpenGLRenderer> mRenderer;
 public:
-    OpenGLTexture2D(_weak<OpenGLRenderer> renderer) : mFormat(APixelFormat::RGBA_BYTE), mRenderer(std::move(renderer)) {}
+    OpenGLTexture2D(_weak<OpenGLRenderer> renderer) : mFormat(APixelFormat::R8G8B8A8_UNORM), mRenderer(std::move(renderer)) {}
     OpenGLTexture2D(_weak<OpenGLRenderer> renderer, glm::u32vec2 size, APixelFormat format) : mFormat(format), mRenderer(std::move(renderer)) {
         mTexture.tex2D(size, format);
     }
@@ -177,7 +177,7 @@ public:
 
     void setAllowRenderToTexture(bool allowRenderToTexture) override { mAllowRenderToTexture = allowRenderToTexture; }
 
-    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE, TextureFilter filter = TextureFilter::LINEAR) override;
+    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::R8G8B8A8_UNORM, TextureFilter filter = TextureFilter::LINEAR) override;
     _<ITexture> createFramebufferWrapper(uint32_t handle, glm::uvec2 size);
 
     void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) override;

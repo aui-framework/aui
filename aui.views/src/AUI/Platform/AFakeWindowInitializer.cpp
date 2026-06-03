@@ -56,10 +56,16 @@ namespace {
 
         void setMask(const _<ITexture>& mask, const glm::vec4& maskRect) override {}
         void setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) override {}
+        void setClipRect(const ARect<float>& rect) override {}
         [[nodiscard]]
         glm::uvec2 getViewportSize() const override { return glm::uvec2(0); }
         void setRenderMaskMode(bool enabled) override {}
-        void clear() override {}
+        void clear(const AColor& color) override {}
+        _unique<IOffscreenRenderPass> beginOffscreen(const _<ITexture>& renderTarget) override { return nullptr; }
+        void endOffscreen(_unique<IOffscreenRenderPass> pass) override {}
+        void beginRenderPass(const _<ITexture>& target) override {}
+        void endRenderPass() override {}
+        void flush() override {}
         const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
         AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
                                const _<ITexture>& mask2, const glm::vec4& mask2Rect) override {
@@ -76,5 +82,5 @@ struct AFakeWindowInitializer {
     ADisplayList dl;
     ADisplayListCanvas canvas;
     RendererCanvas renderer;
-    AFakeWindowInitializer(): canvas(dl, backend), renderer(canvas) {}
+    AFakeWindowInitializer(): canvas(dl, backend), renderer(canvas, backend) {}
 };

@@ -70,6 +70,11 @@ enum class AOverflowMask {
     ROUNDED_RECT,
 
     /**
+     * @brief Simple rectangular clipping.
+     */
+    RECT,
+
+    /**
      * @brief Mask is produced from the alpha channel of the BackgroundImage.
      *
      * Helps in creating custom-shaped gradients, textures and effects.
@@ -79,4 +84,5 @@ enum class AOverflowMask {
 
 AUI_ENUM_VALUES(AOverflowMask,
                 AOverflowMask::ROUNDED_RECT,
+                AOverflowMask::RECT,
                 AOverflowMask::BACKGROUND_IMAGE_ALPHA)

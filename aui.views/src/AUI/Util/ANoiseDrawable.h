@@ -18,7 +18,7 @@ class ACanvas;
 
 class ANoiseDrawable: public IDrawable {
 public:
-    void draw(ACanvas& render, const Params& params) override;
+    void draw(ARenderContext ctx, const Params& params) override;
     glm::ivec2 getSizeHint() override;
 
 private:

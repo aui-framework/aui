@@ -27,7 +27,7 @@ public:
     CommonOffscreenRenderPass(IRendererBackend& backend, const _<ITexture>& target) : 
         backend(backend), target(target), canvas(displayList, backend), rendererCanvas(canvas, backend) {}
 
-    ARenderContext context() const override {
-        return { const_cast<ADisplayListCanvas&>(canvas), backend, const_cast<RendererCanvas&>(rendererCanvas) };
+    ARenderContext context() override {
+        return { canvas, backend, rendererCanvas };
     }
 };

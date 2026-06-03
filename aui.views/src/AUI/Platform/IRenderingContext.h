@@ -61,4 +61,4 @@ public:
     virtual IRenderer& renderer() = 0;
     virtual IRendererBackend& backend() = 0;
     virtual ACanvas& canvas() = 0;
-    };
+};

@@ -33,7 +33,7 @@ public:
     explicit AVectorDrawable(_<IImageFactory> factory): mFactory(std::move(factory)) {}
     ~AVectorDrawable();
 
-	void draw(ACanvas& render, const IDrawable::Params& params) override;
+	void draw(ARenderContext ctx, const IDrawable::Params& params) override;
 	glm::ivec2 getSizeHint() override;
 
 	bool isDpiDependent() const override;

@@ -40,14 +40,14 @@ glm::ivec2 AVectorDrawable::getSizeHint() {
     return mFactory->getSizeHint();
 }
 
-void AVectorDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
+void AVectorDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) {
     auto& size = params.size;
     if (size.x < 1 || size.y < 1) {
         return;
     }
     auto key = asKey(size);
     auto doDraw = [&](const _<ITexture>& texture) {
-        render.rectangle(APaint{ATexturedBrush{
+        ctx.canvas.rectangle(APaint{ATexturedBrush{
                                      .texture = texture,
                                      .uv1 = params.cropUvTopLeft,
                                      .uv2 = params.cropUvBottomRight,
@@ -76,7 +76,7 @@ void AVectorDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
         textureSize.y = getSizeHint().y;
     }
 
-    auto& backend = render.renderer();
+    auto& backend = ctx.backend;
     auto img = mFactory->provideImage(glm::max(textureSize, glm::ivec2(0)));
     auto texture = backend.createTexture(img.size(), img.format(), TextureFilter::NEAREST);
     texture->upload(img);

@@ -10,18 +10,7 @@
  */
 
 #include "OpenGLRenderer.h"
-#include <AUI/Render/CommonOffscreenRenderPass.h>
 
-_unique<IOffscreenRenderPass> OpenGLRenderer::beginOffscreen(const _<ITexture>& renderTarget) {
-    return std::make_unique<CommonOffscreenRenderPass>(*this, renderTarget);
-}
-
-void OpenGLRenderer::endOffscreen(_unique<IOffscreenRenderPass> pass) {
-    if (auto c = dynamic_cast<CommonOffscreenRenderPass*>(pass.get())) {
-        c->displayList.optimize(*this, c->target);
-        c->displayList.draw(*this);
-    }
-}
 #include "TextureFormatRecognition.h"
 #include <AUI/Render/IRenderer.h>
 #include <AUI/Traits/callables.h>
@@ -41,6 +30,7 @@ void OpenGLRenderer::endOffscreen(_unique<IOffscreenRenderPass> pass) {
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/View/AAbstractLabel.h>
 #include <AUI/Performance/APerformanceSection.h>
+#include <AUI/Render/CommonOffscreenRenderPass.h>
 
 #ifdef AUI_PLATFORM_WIN32
 #include <windows.h>
@@ -55,7 +45,7 @@ class OpenGLFramebufferTexture : public ITexture {
 public:
     OpenGLFramebufferTexture(uint32_t handle, glm::uvec2 size) : mHandle(handle), mSize(size) {}
     glm::u32vec2 getSize() const override { return mSize; }
-    APixelFormat getFormat() const override { return APixelFormat::RGBA_BYTE; }
+    APixelFormat getFormat() const override { return APixelFormat::R8G8B8A8_UNORM; }
     void upload(AImageView image) override {}
     uint32_t handle() const noexcept { return mHandle; }
 private:
@@ -152,6 +142,17 @@ size_t OpenGLRenderer::TransientBuffer::upload(const void* data, size_t size) {
     return res;
 }
 
+_unique<IOffscreenRenderPass> OpenGLRenderer::beginOffscreen(const _<ITexture>& renderTarget) {
+    return std::make_unique<CommonOffscreenRenderPass>(*this, renderTarget);
+}
+
+void OpenGLRenderer::endOffscreen(_unique<IOffscreenRenderPass> pass) {
+    if (auto c = dynamic_cast<CommonOffscreenRenderPass*>(pass.get())) {
+        c->displayList.optimize();
+        c->displayList.draw(*this, c->target);
+    }
+}
+
 OpenGLRenderer::OpenGLRenderer() :
     mVertexBuffer(GL_ARRAY_BUFFER, 2 * 1024 * 1024),
     mIndexBuffer(GL_ELEMENT_ARRAY_BUFFER, 1024 * 1024),
@@ -221,8 +222,8 @@ precision highp int;
     useShader(mUnblendShader, "basic_uv.vsh", "rect_unblend.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
     useShader(mMergeMasksShader, "merge_masks.vsh", "merge_masks.fsh", {{0, "pos"}, {1, "uv"}});
 
-    mEmptyMask = createTexture({1, 1}, APixelFormat::R_BYTE);
-    AImage emptyImg({1, 1}, APixelFormat::R_BYTE);
+    mEmptyMask = createTexture({1, 1}, APixelFormat::R8_UNORM);
+    AImage emptyImg({1, 1}, APixelFormat::R8_UNORM);
     std::memset(emptyImg.modifiableBuffer().data(), 0, emptyImg.modifiableBuffer().getSize());
     static_cast<OpenGLTexture2D*>(mEmptyMask.get())->upload(emptyImg);
 
@@ -230,7 +231,7 @@ precision highp int;
     mVertexBuffer.bind();
     mIndexBuffer.bind();
 
-    AImage whiteImg(glm::uvec2(1, 1), APixelFormat::RGBA_BYTE);
+    AImage whiteImg(glm::uvec2(1, 1), APixelFormat::R8G8B8A8_UNORM);
     whiteImg.set({0, 0}, AColor::WHITE);
     mWhiteTexture.tex2D(whiteImg);
     mWhiteTexture.setupNearest();
@@ -431,7 +432,7 @@ IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask
     bool prevIsRenderingToMask = mIsRenderingToMask;
 
     glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(w)), std::max(1u, (unsigned)std::ceil(h)));
-    auto destTexture = createTexture(size, APixelFormat::R_BYTE, TextureFilter::NEAREST);
+    auto destTexture = createTexture(size, APixelFormat::R8_UNORM, TextureFilter::NEAREST);
     auto glDestTexture = _cast<OpenGLTexture2D>(destTexture);
     glDestTexture->texture().setupClampToEdge();
 

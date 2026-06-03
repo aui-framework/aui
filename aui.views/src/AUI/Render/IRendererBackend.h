@@ -28,7 +28,7 @@ class ACanvas;
 class IOffscreenRenderPass {
 public:
     virtual ~IOffscreenRenderPass() = default;
-    virtual ARenderContext context() const = 0;
+    virtual ARenderContext context() = 0;
 };
 
 /**

@@ -14,6 +14,9 @@
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/APlatform.h>
 #include <AUI/Platform/AGLEmbedContext.h>
+#include <AUI/Render/IRenderer.h>
+#include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Render/RendererCanvas.h>
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/Util/Declarative/Containers.h>
 #include <AUI/View/AButton.h>
@@ -185,6 +188,16 @@ public:
 /// [EmbedRenderingContext]
 struct EmbedRenderingContext : IRenderingContext {
     std::shared_ptr<OpenGLRenderer> m_renderer;
+    ADisplayList m_displayList;
+    _unique<ADisplayListCanvas> m_canvas;
+    _unique<RendererCanvas> m_rendererWrapper;
+
+    EmbedRenderingContext() {}
+
+    void init() {
+        m_canvas = std::make_unique<ADisplayListCanvas>(m_displayList, *m_renderer);
+        m_rendererWrapper = std::make_unique<RendererCanvas>(*m_canvas, *m_renderer);
+    }
 
     ~EmbedRenderingContext() override {
     }
@@ -196,6 +209,7 @@ struct EmbedRenderingContext : IRenderingContext {
     }
 
     void beginPaint(ASurface& window) override {
+        m_displayList.clear();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, window.getSize().x, window.getSize().y);
         m_renderer->beginPaint(window.getSize());
@@ -203,6 +217,9 @@ struct EmbedRenderingContext : IRenderingContext {
         glClear(GL_COLOR_BUFFER_BIT);
     }
     void endPaint(ASurface& window) override {
+        m_displayList.optimize();
+        m_displayList.draw(*m_renderer, {}); // TODO(Nelonn): fix
+        m_displayList.clear();
         m_renderer->endPaint();
     }
 
@@ -212,7 +229,15 @@ struct EmbedRenderingContext : IRenderingContext {
     }
 
     IRenderer& renderer() override {
+        return *m_rendererWrapper;
+    }
+
+    IRendererBackend& backend() override {
         return *m_renderer;
+    }
+
+    ACanvas& canvas() override {
+        return *m_canvas;
     }
 };
 /// [EmbedRenderingContext]
@@ -402,8 +427,9 @@ AUI_ENTRY {
         /// [Rendering]
         if (window.requiresRedraw()) {
             ARenderContext render_context {
-                .clippingRects = {},
-                .render = *renderer,
+                .canvas = window.getWindow()->getRenderingContext()->canvas(),
+                .backend = window.getWindow()->getRenderingContext()->backend(),
+                .render = window.getWindow()->getRenderingContext()->renderer(),
             };
             window.render(render_context);
             SDL_GL_SwapWindow(window.sdl_window);

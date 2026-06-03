@@ -43,8 +43,7 @@ void AGLEmbedContext::render(const ARenderContext& context) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    context.render.setColorForced(1.f);
-    context.render.setTransformForced(glm::ortho(0.f,
+    context.canvas.setTransformForced(glm::ortho(0.f,
                                            static_cast<float>(mSize.x),
                                            static_cast<float>(mSize.y),
                                            0.f));

@@ -55,12 +55,13 @@ void AWindow::onClosed() {
 void AWindow::doDrawWindow() {
     APerformanceSection s("AWindow::doDrawWindow");
     auto& rc = *mRenderingContext;
+    auto saved = rc.canvas().save();
     render(ARenderContext {
-        .clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } },
         .canvas = rc.canvas(),
         .backend = rc.backend(),
         .render = rc.renderer(),
     });
+    rc.canvas().restore(saved);
 }
 
 void AWindow::createDevtoolsWindow() {

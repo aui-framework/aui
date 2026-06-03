@@ -45,6 +45,7 @@ void OpenGLRenderingContext::makeCurrent(HDC hdc) noexcept {
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
+    mViewportSize = { init.width, init.height };
 
     // INITIALIZE OPENGL
     static PIXELFORMATDESCRIPTOR pfd;
@@ -212,7 +213,7 @@ void OpenGLRenderingContext::init(const Init& init) {
 
     mRenderer = ourRenderer();
     mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
-    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas);
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
     makeCurrent(mWindowDC);
     // vsync
     wglSwapIntervalEXT(!(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));
@@ -246,10 +247,9 @@ void OpenGLRenderingContext::endResize(ASurface& window) {
 
 void OpenGLRenderingContext::endPaint(ASurface& window) {
     mDisplayList.optimize();
-    mDisplayList.draw(*mRenderer);
+    mDisplayList.draw(*mRenderer, mWindowTarget);
     mDisplayList.clear();
 
-    endFramebuffer();
     mRenderer->endPaint();
     SwapBuffers(mSmoothResize ? mPainterDC : mWindowDC);
     if (mSmoothResize) {
@@ -263,5 +263,16 @@ OpenGLRenderingContext::~OpenGLRenderingContext() {
 }
 
 AImage OpenGLRenderingContext::makeScreenshot() {
-    return AImage();
+    std::cout << "makeScreenshot start" << std::endl;
+    makeCurrent(mWindowDC);
+    std::cout << "makeScreenshot current context set" << std::endl;
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
+    std::cout << "makeScreenshot creating result image size " << mViewportSize.x << "x" << mViewportSize.y << std::endl;
+    AImage result(mViewportSize, APixelFormat::R8G8B8A8_UNORM);
+    std::cout << "makeScreenshot result image created" << std::endl;
+    glReadPixels(0, 0, result.width(), result.height(), GL_RGBA, GL_UNSIGNED_BYTE, static_cast<void*>(result.modifiableBuffer().data()));
+    std::cout << "makeScreenshot pixels read" << std::endl;
+    result.mirrorVertically();
+    std::cout << "makeScreenshot finished" << std::endl;
+    return result;
 }

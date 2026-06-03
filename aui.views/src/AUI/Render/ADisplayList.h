@@ -177,12 +177,9 @@ public:
         mPasses.clear();
     }
 
-    /**
-     * @brief Resolves all entities and their properties (like masks) beforehand.
-     */
-    void optimize(IRendererBackend& renderer, const _<ITexture>& windowTarget);
+    void optimize();
 
-    void draw(IRendererBackend& renderer) const;
+    void draw(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 
     void resolveEntities();
     void computeOverlaps();

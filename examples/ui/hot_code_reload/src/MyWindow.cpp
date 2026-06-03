@@ -35,9 +35,8 @@ public:
     void render(ARenderContext ctx) override {
         AView::render(ctx);
         // things that render every frame don't even require observing AHotCodeReload::inst().patchEnd.
-        ctx.canvas.setColor(AColor::RED);
         static int frame = 0; // bss test
-        ctx.canvas.string({0, 60}, fmt::format("frame = {}", frame++));
+        ctx.canvas.string(APaint{ASolidBrush{}, AColor::RED}, {0, 60}, fmt::format("frame = {}", frame++));
     }
 };
 }

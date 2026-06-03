@@ -42,7 +42,7 @@ bool isDefinitelyInvisible(AView& view) {
 }
 }
 
-void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
+void AViewContainerBase::drawView(const _<AView>& view, ARenderContext ctx) {
     if (aui::view::impl::isDefinitelyInvisible(*view)) [[unlikely]] {
         return;
     }
@@ -50,17 +50,6 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
     if (view->mSkipUntilLayoutUpdate) [[unlikely]] {
         return;
     }
-
-    auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
-    ARect<int> rectOfTheView{ .p1 = {0, 0}, .p2 = view->getSize() };
-    bool intersects = ranges::any_of(contextOfTheView.clippingRects, [&](const auto& r) {
-      return rectOfTheView.isIntersects(r);
-    });
-    if (!intersects) {
-        return;
-    }
-
-    const auto prevStencilLevel = contextOfTheView.render.getStencilDepth();
 
     const bool showRedraw = [&] {
       if (view->mRedrawRequested) [[unlikely]] {
@@ -76,42 +65,24 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
     }();
     AUI_DEFER {
       if (showRedraw) [[unlikely]] {
-          auto c = contextOfTheView.render.getColor();
-          AUI_DEFER { contextOfTheView.render.setColorForced(c); };
-          contextOfTheView.render.rectangle(ASolidBrush{0x40ff00ff_argb}, view->getPosition(), view->getSize());
+          ctx.canvas.rectangle(APaint{ASolidBrush{0x40ff00ff_argb}}, view->getPosition(), view->getSize());
       }
     };
 
-    RenderHints::PushState s(contextOfTheView.render);
+    auto saved = ctx.canvas.save();
+
     glm::mat4 t(1.f);
     view->getTransform(t);
-    contextOfTheView.render.setTransform(t);
-    contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
-    if (view->mRenderToTexture) [[unlikely]] { // view was prerendered to texture; see AView::markPixelDataInvalid
-        view->mRenderToTexture->skipRedrawUntilTextureIsPresented = false;
-        // Check invalidArea is not dirty; otherwise we would have to draw the views without render-to-texture
-        // optimizations.
-        // Unfortunately, we can't quickly refresh the texture here because aui's main render buffer is already in use
-        // and contains uncommited data.
-        if (view->mRenderToTexture->drawFromTexture) {
-            view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.canvas);
-            return;
-        }
-    }
+    ctx.canvas.setTransform(t);
     try {
-        view->render(contextOfTheView);
-        view->postRender(contextOfTheView);
-    }
-    catch (const AException& e) {
+        view->render(ctx);
+        view->postRender(ctx);
+    } catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Unable to render view: " << e;
-        contextOfTheView.render.setStencilDepth(prevStencilLevel);
         return;
     }
 
-    {
-        auto currentStencilLevel = contextOfTheView.render.getStencilDepth();
-        AUI_ASSERT(currentStencilLevel == prevStencilLevel);
-    }
+    ctx.canvas.restore(saved);
 }
 
 

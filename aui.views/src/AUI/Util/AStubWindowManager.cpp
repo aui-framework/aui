@@ -34,7 +34,7 @@ public:
     {
         reallocate(init.window);
         mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *gStubWindowManagerConfig->renderer);
-        mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas);
+        mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *gStubWindowManagerConfig->renderer);
     }
 
     ~StubRenderingContext() override = default;
@@ -44,12 +44,12 @@ public:
     }
 
     void beginPaint(ASurface& window) override {
-        mDisplayList.clear();
-        std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
+        SoftwareRenderingContext::beginPaint(window);
     }
 
     void endPaint(ASurface& window) override {
-        mDisplayList.draw(*gStubWindowManagerConfig->renderer);
+        mDisplayList.optimize();
+        mDisplayList.draw(backend(), mWindowTarget);
         mDisplayList.clear();
     }
 

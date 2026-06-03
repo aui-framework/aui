@@ -31,7 +31,7 @@ AAbstractLabel::AAbstractLabel() {
 void AAbstractLabel::render(ARenderContext context) {
     AView::render(context);
 
-    doRenderText(context.canvas);
+    doRenderText(context);
 }
 
 int AAbstractLabel::getContentMinimumWidth() {
@@ -193,7 +193,8 @@ void AAbstractLabel::doPrerender(ACanvas& render) {
     }
 }
 
-void AAbstractLabel::doRenderText(ACanvas& render) {
+void AAbstractLabel::doRenderText(ARenderContext ctx) {
+    auto& render = ctx.canvas;
     if (!mPrerendered) {
         doPrerender(render);
     }
@@ -211,7 +212,7 @@ void AAbstractLabel::doRenderText(ACanvas& render) {
                                                    glm::vec3(mPadding.left + mTextLeftOffset, iconY, 0)));
                 IDrawable::Params p;
                 p.size = requiredSpace;
-                mIcon->draw(render, p);
+                mIcon->draw(ctx, p);
                 mTextLeftOffset += requiredSpace.x + 4_dp;
             }
         };
@@ -235,7 +236,7 @@ void AAbstractLabel::doRenderText(ACanvas& render) {
 
                         IDrawable::Params p;
                         p.size = requiredSpace;
-                        mIcon->draw(render, p);
+                        mIcon->draw(ctx, p);
                     }
 
                     break;
@@ -252,7 +253,7 @@ void AAbstractLabel::doRenderText(ACanvas& render) {
 
                         IDrawable::Params p;
                         p.size = requiredSpace;
-                        mIcon->draw(render, p);
+                        mIcon->draw(ctx, p);
                     }
 
                     break;

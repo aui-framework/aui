@@ -144,7 +144,7 @@ void OpenGLRenderingContextGtk::endFramebuffer() {
         glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
         glBlitFramebuffer(
             0, 0,                                                 // src pos
-            fb->supersampledSize().x, fb->supersampledSize().y,   // src size
+            fb->size().x, fb->size().y,                           // src size
             0, fb->size().y,                                      // dst pos
             fb->size().x, 0,                                      // dst size
             GL_COLOR_BUFFER_BIT,                                  // mask

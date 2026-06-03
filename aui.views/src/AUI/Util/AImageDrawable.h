@@ -31,7 +31,7 @@ public:
     explicit AImageDrawable(_<AImage> image);
     virtual ~AImageDrawable();
 
-    void draw(ACanvas& render, const IDrawable::Params& params) override;
+    void draw(ARenderContext ctx, const IDrawable::Params& params) override;
 
     AImage rasterize(glm::ivec2 imageSize) override;
 

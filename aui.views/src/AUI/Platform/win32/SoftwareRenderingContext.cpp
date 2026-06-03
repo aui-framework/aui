@@ -27,8 +27,9 @@ IRendererBackend& SoftwareRenderingContext::backend() {
 void SoftwareRenderingContext::init(const IRenderingContext::Init& init) {
     CommonRenderingContext::init(init);
     mRenderer = _new<SoftwareRenderer>();
+    mRenderer->setContext(this);
     mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
-    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas);
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
 }
 
 void SoftwareRenderingContext::destroyNativeWindow(ASurface& window) {
@@ -37,18 +38,17 @@ void SoftwareRenderingContext::destroyNativeWindow(ASurface& window) {
 
 void SoftwareRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
-    mRenderer->setWindow(&window);
     mDisplayList.clear();
-    std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
+    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize);
     for (size_t i = 0; i < mBitmapSize.x * mBitmapSize.y; ++i) {
         auto dataPtr = reinterpret_cast<uint32_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO) + i * 4);
         *dataPtr = 0;
     }
 }
 
-void SoftwareRenderingContext::endPaint(ASurface& window) {
+void SoftwareRenderingContext::endPaint(ASurface &window) {
     mDisplayList.optimize();
-    mDisplayList.draw(*mRenderer);
+    mDisplayList.draw(*mRenderer, mWindowTarget);
     mDisplayList.clear();
 
     if (mPainterDC != 0) {
@@ -75,7 +75,6 @@ void SoftwareRenderingContext::endResize(ASurface& window) {
 void SoftwareRenderingContext::reallocate(const ASurface &window) {
     mBitmapSize = window.getSize();
     mBitmapBlob.reallocate(mBitmapSize.x * mBitmapSize.y * 4 + sizeof(*mBitmapInfo));
-    mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
     mBitmapInfo = reinterpret_cast<BITMAPINFO*>(mBitmapBlob.data());
 
     mBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -102,5 +101,5 @@ AImage SoftwareRenderingContext::makeScreenshot() {
         data.at<std::uint8_t>(i + 2) = ptr[0];
         data.at<std::uint8_t>(i + 3) = ptr[3];
     }
-    return {std::move(data), mBitmapSize, APixelFormat::RGBA | APixelFormat::BYTE};
+    return {std::move(data), mBitmapSize, APixelFormat::B8G8R8A8_UNORM};
 }

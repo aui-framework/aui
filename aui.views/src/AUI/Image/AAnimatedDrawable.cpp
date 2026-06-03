@@ -21,7 +21,7 @@
 AAnimatedDrawable::AAnimatedDrawable(_<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
 }
 
-void AAnimatedDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
+void AAnimatedDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) {
     APerformanceSection s("AAnimatedDrawable::draw");
 
     if (mFactory->isNewImageAvailable()) {
@@ -31,7 +31,7 @@ void AAnimatedDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
         }();
 
         if (!mTexture || mTexture->getSize() != glm::u32vec2(img.size())) {
-            auto& backend = render.renderer();
+            auto& backend = ctx.backend;
             mTexture = backend.createTexture(img.size(), img.format(), TextureFilter::NEAREST);
         }
 
@@ -43,7 +43,7 @@ void AAnimatedDrawable::draw(ACanvas& render, const IDrawable::Params& params) {
     }
 
     APerformanceSection s2("draw");
-    render.rectangle(APaint{ATexturedBrush{
+    ctx.canvas.rectangle(APaint{ATexturedBrush{
             mTexture,
             params.cropUvTopLeft,
             params.cropUvBottomRight,

@@ -45,7 +45,7 @@ public:
     explicit AAbstractLabel(AString text) noexcept: mText(std::move(text)) {}
 
     void render(ARenderContext context) override;
-    void doRenderText(ACanvas& render);
+    void doRenderText(ARenderContext render);
     int getContentMinimumWidth() override;
     int getContentMinimumHeight() override;
 

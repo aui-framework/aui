@@ -462,7 +462,7 @@ void AWindow::show() {
 }
 void AWindow::setIcon(const AImage& image) {
     if (!mHandle) return;
-    AUI_ASSERT(image.format() & APixelFormat::BYTE);
+    AUI_ASSERT(image.format() == APixelFormat::R8_UNORM);
 
     if (mIcon) {
         DestroyIcon(mIcon);

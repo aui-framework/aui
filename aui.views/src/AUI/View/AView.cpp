@@ -135,17 +135,18 @@ void AView::render(ARenderContext ctx) {
             ctx.canvas.pushClipRect(ARect<float>::fromTopLeftPositionAndSize({0, 0}, getSize()));
         } else {
             if (!mMaskTexture || mMaskTexture->getSize() != glm::u32vec2(getSize())) {
-                mMaskTexture = ctx.backend.createTexture(getSize(), APixelFormat::R_BYTE);
+                mMaskTexture = ctx.backend.createTexture(getSize(), APixelFormat::R8_UNORM);
                 mRedrawRequested = true;
             }
             if (mRedrawRequested) {
-                ctx.canvas.pushRenderTarget(mMaskTexture);
-                ctx.canvas.clear();
-                ctx.canvas.setTransformForced(glm::mat4(1.0f));
+                auto pass = ctx.backend.beginOffscreen(mMaskTexture);
+                auto offctx = pass->context();
+                offctx.canvas.clear();
+                offctx.canvas.setTransformForced(glm::mat4(1.0f));
                 APaint maskPaint;
                 maskPaint.brush = ASolidBrush{AColor::WHITE};
-                ctx.canvas.roundedRectangle(maskPaint, {0, 0}, getSize(), getBorderRadius());
-                ctx.canvas.popRenderTarget();
+                offctx.canvas.roundedRectangle(maskPaint, {0, 0}, getSize(), getBorderRadius());
+                ctx.backend.endOffscreen(std::move(pass));
                 mRedrawRequested = false;
             }
             ctx.canvas.pushMask(mMaskTexture, glm::vec4(0.f, 0.f, getSize()));
