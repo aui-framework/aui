@@ -68,7 +68,7 @@ public:
     void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
 
-    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE, TextureFilter filter = TextureFilter::LINEAR) override;
+    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::R8G8B8A8_UNORM, TextureFilter filter = TextureFilter::LINEAR) override;
 
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;

@@ -63,7 +63,7 @@ SoftwareRenderer::SoftwareRenderer() :
     mFontCache(AFontManager::inst().createCache(this)) {}
 
 void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& paint) {
-    if (mRenderTarget && mRenderTarget->format() == APixelFormat::R_BYTE) {
+    if (mRenderTarget && mRenderTarget->format() == APixelFormat::R8_UNORM) {
         color = AColor(color.a, 0.f, 0.f, color.a);
     }
     glm::uvec2 bitmapSize;
@@ -576,7 +576,7 @@ class SoftwareFramebufferTexture : public ITexture {
 public:
     SoftwareFramebufferTexture(glm::uvec2 size) : mSize(size) {}
     glm::u32vec2 getSize() const override { return mSize; }
-    APixelFormat getFormat() const override { return APixelFormat::RGBA_BYTE; }
+    APixelFormat getFormat() const override { return APixelFormat::R8G8B8A8_UNORM; }
     void upload(AImageView image) override {}
 private:
     glm::uvec2 mSize;
@@ -620,16 +620,16 @@ IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& ma
     float h = std::min(mask1Rect.y + mask1Rect.w, mask2Rect.y + mask2Rect.w) - y;
 
     if (w <= 0.f || h <= 0.f) {
-        auto emptyTexture = createTexture({1, 1}, APixelFormat::R_BYTE);
-        AImage img({1, 1}, APixelFormat::R_BYTE);
+        auto emptyTexture = createTexture({1, 1}, APixelFormat::R8_UNORM);
+        AImage img({1, 1}, APixelFormat::R8_UNORM);
         std::memset(img.modifiableBuffer().data(), 0, img.modifiableBuffer().getSize());
         _cast<SoftwareTexture>(emptyTexture)->upload(std::move(img));
         return { emptyTexture, glm::vec4(0.f) };
     }
 
     glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(w)), std::max(1u, (unsigned)std::ceil(h)));
-    auto destTexture = createTexture(size, APixelFormat::R_BYTE);
-    AImage destImg(size, APixelFormat::R_BYTE);
+    auto destTexture = createTexture(size, APixelFormat::R8_UNORM);
+    AImage destImg(size, APixelFormat::R8_UNORM);
     std::memset(destImg.modifiableBuffer().data(), 0, destImg.modifiableBuffer().getSize());
 
     auto s1 = _cast<SoftwareTexture>(mask1);
