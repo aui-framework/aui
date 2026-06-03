@@ -293,10 +293,10 @@ public:
     /**
      * @brief border-radius, specified in ASS.
      */
-    float getBorderRadius() const {
+    const AMetric& getBorderRadius() const {
         return mBorderRadius;
     }
-    void setBorderRadius(float radius) {
+    void setBorderRadius(const AMetric& radius) {
         mBorderRadius = radius;
     }
 
@@ -1178,7 +1178,7 @@ private:
     /**
      * @brief border-radius, specified in ASS.
      */
-    float mBorderRadius = 0;
+    AMetric mBorderRadius;
 
     /**
      * @brief Mouse collision policy. See MouseCollisionPolicy.

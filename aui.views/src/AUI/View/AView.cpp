@@ -105,21 +105,19 @@ void AView::markMinContentSizeInvalid()
     AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
 }
 
-void AView::postRender(ARenderContext ctx)
-{
-    if (mOverflow == AOverflow::HIDDEN_FROM_THIS || mOverflow == AOverflow::HIDDEN) {
-        ctx.canvas.popMask();
-    }
+void AView::postRender(ARenderContext ctx) {
     if (mAnimator) {
         mAnimator->postRender(this, ctx.canvas);
     }
     emit redrawn;
 }
 
-void AView::render(ARenderContext ctx)
-{
-    if (mAnimator)
+void AView::render(ARenderContext ctx) {
+    size_t saved = ctx.canvas.save();
+
+    if (mAnimator) {
         mAnimator->animate(this, ctx.canvas);
+    }
 
     ensureAssUpdated();
 
@@ -133,21 +131,25 @@ void AView::render(ARenderContext ctx)
 
     // mask
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS || mOverflow == AOverflow::HIDDEN) {
-        if (!mMaskTexture || mMaskTexture->getSize() != glm::u32vec2(getSize())) {
-            mMaskTexture = ctx.backend.createTexture(getSize(), APixelFormat::R_BYTE);
-            mRedrawRequested = true;
+        if (mOverflowMask == AOverflowMask::RECT && getBorderRadius().getRawValue() <= 0.0001f) {
+            ctx.canvas.pushClipRect(ARect<float>::fromTopLeftPositionAndSize({0, 0}, getSize()));
+        } else {
+            if (!mMaskTexture || mMaskTexture->getSize() != glm::u32vec2(getSize())) {
+                mMaskTexture = ctx.backend.createTexture(getSize(), APixelFormat::R_BYTE);
+                mRedrawRequested = true;
+            }
+            if (mRedrawRequested) {
+                ctx.canvas.pushRenderTarget(mMaskTexture);
+                ctx.canvas.clear();
+                ctx.canvas.setTransformForced(glm::mat4(1.0f));
+                APaint maskPaint;
+                maskPaint.brush = ASolidBrush{AColor::WHITE};
+                ctx.canvas.roundedRectangle(maskPaint, {0, 0}, getSize(), getBorderRadius());
+                ctx.canvas.popRenderTarget();
+                mRedrawRequested = false;
+            }
+            ctx.canvas.pushMask(mMaskTexture, glm::vec4(0.f, 0.f, getSize()));
         }
-        if (mRedrawRequested) {
-            ctx.canvas.pushRenderTarget(mMaskTexture);
-            ctx.canvas.clear();
-            ctx.canvas.setTransformForced(glm::mat4(1.0f));
-            APaint maskPaint;
-            maskPaint.brush = ASolidBrush{AColor::WHITE};
-            ctx.canvas.roundedRectangle(maskPaint, {0, 0}, getSize(), getBorderRadius());
-            ctx.canvas.popRenderTarget();
-            mRedrawRequested = false;
-        }
-        ctx.canvas.pushMask(mMaskTexture, glm::vec4(0.f, 0.f, getSize()));
     }
 
     // draw list
@@ -164,6 +166,8 @@ void AView::render(ARenderContext ctx)
         w->renderFor(this, ctx);
     }
     mRedrawRequested = false;
+
+    ctx.canvas.restore(saved);
 }
 
 static void walkToParentStack(AView* view, aui::invocable<AView*> auto&& callback) {
@@ -206,7 +210,7 @@ void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     mOverflow = AOverflow::VISIBLE;
     mMargin = {};
     mMinSize = {};
-    mBorderRadius = 0.f;
+    mBorderRadius = 0;
     //mForceStencilForBackground = false;
     mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
     mOpacity = 1;
