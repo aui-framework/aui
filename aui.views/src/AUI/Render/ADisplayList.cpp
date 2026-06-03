@@ -276,6 +276,54 @@ void ADisplayList::resolveClips() {
     }
 }
 
+void ADisplayList::resolveMasks(IRendererBackend& renderer) {
+    struct MaskStackEntry {
+        _<ITexture> mask;
+        glm::vec4 maskRect;
+    };
+    std::vector<MaskStackEntry> maskStack;
+    _<ITexture> currentMask;
+    glm::vec4 currentMaskRect(0.f);
+
+    for (auto& entity : mEntities) {
+        std::visit(
+            aui::lambda_overloaded {
+                [&](const PushMask& v) {
+                    glm::vec2 p1 = glm::vec2(entity.transform * glm::vec4(v.maskRect.x, v.maskRect.y, 0, 1));
+                    glm::vec2 p2 = glm::vec2(entity.transform * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0, 1));
+                    glm::vec4 displayListRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+
+                    if (!currentMask) {
+                        currentMask = v.mask;
+                        currentMaskRect = displayListRect;
+                    } else {
+                        auto merged = renderer.mergeMasks(currentMask, currentMaskRect, v.mask, displayListRect);
+                        currentMask = merged.texture;
+                        currentMaskRect = merged.rect;
+                    }
+                    maskStack.push_back({currentMask, currentMaskRect});
+                },
+                [&](const PopMask&) {
+                    if (!maskStack.empty()) {
+                        maskStack.pop_back();
+                    }
+                    if (!maskStack.empty()) {
+                        currentMask = maskStack.back().mask;
+                        currentMaskRect = maskStack.back().maskRect;
+                    } else {
+                        currentMask = nullptr;
+                        currentMaskRect = glm::vec4(0.f);
+                    }
+                },
+                [&](auto&) {}
+            },
+            entity.command);
+
+        entity.mask = currentMask;
+        entity.maskRect = currentMaskRect;
+    }
+}
+
 void ADisplayList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
     mPasses.clear();
     glm::uvec2 sz = windowTarget ? windowTarget->getSize() : glm::uvec2(0);
@@ -283,54 +331,20 @@ void ADisplayList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& 
 }
 
 void ADisplayList::draw(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
+    resolveMasks(renderer);
     resolvePasses(renderer, windowTarget);
     for (const auto& pass : mPasses) {
         renderer.beginRenderPass(pass.target);
         renderer.setRenderTarget(pass.target, pass.size);
         renderer.setRenderMaskMode(pass.target && pass.target->getFormat() == APixelFormat::R8_UNORM);
-        
-        struct MaskStackEntry {
-            _<ITexture> mask;
-            glm::vec4 maskRect;
-        };
-        std::vector<MaskStackEntry> maskStack;
-        _<ITexture> currentMask;
-        glm::vec4 currentMaskRect(0.f);
 
         for (const auto& entity : pass.entities) {
             bool isControl = std::visit(
                 aui::lambda_overloaded {
                   [&](const PushLayer&) { return true; },
                   [&](const PopLayer&) { return true; },
-                  [&](const PushMask& v) {
-                      glm::vec2 p1 = glm::vec2(entity.transform * glm::vec4(v.maskRect.x, v.maskRect.y, 0, 1));
-                      glm::vec2 p2 = glm::vec2(entity.transform * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0, 1));
-                      glm::vec4 displayListRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
-
-                      if (!currentMask) {
-                          currentMask = v.mask;
-                          currentMaskRect = displayListRect;
-                      } else {
-                          auto merged = renderer.mergeMasks(currentMask, currentMaskRect, v.mask, displayListRect);
-                          currentMask = merged.texture;
-                          currentMaskRect = merged.rect;
-                      }
-                      maskStack.push_back({currentMask, currentMaskRect});
-                      return true;
-                  },
-                  [&](const PopMask&) {
-                      if (!maskStack.empty()) {
-                          maskStack.pop_back();
-                      }
-                      if (!maskStack.empty()) {
-                          currentMask = maskStack.back().mask;
-                          currentMaskRect = maskStack.back().maskRect;
-                      } else {
-                          currentMask = nullptr;
-                          currentMaskRect = glm::vec4(0.f);
-                      }
-                      return true;
-                  },
+                  [&](const PushMask&) { return true; },
+                  [&](const PopMask&) { return true; },
                   [&](const PushClipRect&) { return true; },
                   [&](const PopClipRect&) { return true; },
                   [&](const Clear& v) { renderer.clear(v.color); return true; },
@@ -340,7 +354,7 @@ void ADisplayList::draw(IRendererBackend& renderer, const _<ITexture>& windowTar
 
             if (!isControl) {
                 renderer.setClipRect(entity.clipRect);
-                renderer.setMask(currentMask, currentMaskRect);
+                renderer.setMask(entity.mask, entity.maskRect);
                 std::visit(
                     aui::lambda_overloaded {
                       [&](const SolidRectangles& v) { renderer.solidRectangles(v, entity.transform, entity.paint); },
@@ -366,7 +380,6 @@ void ADisplayList::draw(IRendererBackend& renderer, const _<ITexture>& windowTar
         }
         renderer.endRenderPass();
     }
-    renderer.flush();
 }
 
 void ADisplayList::optimize() {

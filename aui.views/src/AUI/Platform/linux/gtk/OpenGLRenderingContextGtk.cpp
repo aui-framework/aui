@@ -137,21 +137,6 @@ void OpenGLRenderingContextGtk::gtkSnapshot(GtkWidget* widget, GtkSnapshot* snap
     }
     gtk_snapshot_restore(snapshot);
 }
-void OpenGLRenderingContextGtk::endFramebuffer() {
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        // gtk can't flip the Y axis by itself, so we need to do it manually
-        fb->bindForRead();
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
-        glBlitFramebuffer(
-            0, 0,                                                 // src pos
-            fb->size().x, fb->size().y,                           // src size
-            0, fb->size().y,                                      // dst pos
-            fb->size().x, 0,                                      // dst size
-            GL_COLOR_BUFFER_BIT,                                  // mask
-            GL_LINEAR);                                           // filter
-        gl::Framebuffer::unbind();
-    }
-}
 
 void OpenGLRenderingContextGtk::gtkUnrealize(GtkWidget* widget) {
     deleteTextures();

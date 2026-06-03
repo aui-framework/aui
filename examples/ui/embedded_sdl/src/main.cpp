@@ -212,7 +212,7 @@ struct EmbedRenderingContext : IRenderingContext {
         m_displayList.clear();
         glBindFramebuffer(GL_FRAMEBUFFER, 0);
         glViewport(0, 0, window.getSize().x, window.getSize().y);
-        m_renderer->beginPaint(window.getSize());
+        m_renderer->createFramebufferWrapper(0, window.getSize());
         glClearColor(1, 1, 1, 1);
         glClear(GL_COLOR_BUFFER_BIT);
     }
@@ -220,7 +220,6 @@ struct EmbedRenderingContext : IRenderingContext {
         m_displayList.optimize();
         m_displayList.draw(*m_renderer, {}); // TODO(Nelonn): fix
         m_displayList.clear();
-        m_renderer->endPaint();
     }
 
     void beginResize(ASurface& window) override {

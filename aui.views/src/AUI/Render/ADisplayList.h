@@ -160,6 +160,8 @@ public:
         ARect<float> boundingBox;
         bool isObscured = false;
         ARect<float> clipRect;
+        _<ITexture> mask;
+        glm::vec4 maskRect;
     };
 
     struct RenderPass {
@@ -184,6 +186,7 @@ public:
     void resolveEntities();
     void computeOverlaps();
     void resolveClips();
+    void resolveMasks(IRendererBackend& renderer);
     void resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 
 private:

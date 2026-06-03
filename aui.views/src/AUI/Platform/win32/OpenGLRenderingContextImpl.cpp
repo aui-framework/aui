@@ -234,7 +234,6 @@ void OpenGLRenderingContext::beginPaint(ASurface& window) {
 
     makeCurrent(mSmoothResize ? mPainterDC : mWindowDC);
     beginFramebuffer(window.getSize());
-    mRenderer->beginPaint(window.getSize());
 }
 
 void OpenGLRenderingContext::beginResize(ASurface& window) {
@@ -250,7 +249,6 @@ void OpenGLRenderingContext::endPaint(ASurface& window) {
     mDisplayList.draw(*mRenderer, mWindowTarget);
     mDisplayList.clear();
 
-    mRenderer->endPaint();
     SwapBuffers(mSmoothResize ? mPainterDC : mWindowDC);
     if (mSmoothResize) {
         makeCurrent(nullptr);

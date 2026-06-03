@@ -278,14 +278,15 @@ void OpenGLRenderer::setBlending(const APaint& paint) {
     }
 }
 
-void OpenGLRenderer::beginPaint(glm::uvec2 windowSize) {
-    mViewportSize = windowSize;
+_<ITexture> OpenGLRenderer::createFramebufferWrapper(uint32_t handle, glm::uvec2 size) {
+    mViewportSize = size;
     mProjectionMatrix = glm::ortho(0.f, (float)mViewportSize.x, (float)mViewportSize.y, 0.f, -1.f, 1.f);
     glDisable(GL_DEPTH_TEST);
     glDisable(GL_CULL_FACE);
     glDisable(GL_STENCIL_TEST);
     glEnable(GL_SCISSOR_TEST);
-    glScissor(0, 0, (GLsizei)windowSize.x, (GLsizei)windowSize.y);
+    glScissor(0, 0, (GLsizei)size.x, (GLsizei)size.y);
+    return _new<OpenGLFramebufferTexture>(handle, size);
 }
 
 void OpenGLRenderer::onTextureDestroyed(ITexture* texture) {
@@ -334,10 +335,6 @@ void OpenGLRenderer::setClipRect(const ARect<float>& rect) {
     glScissor(ix1, iy1, std::max(0, iw), std::max(0, ih));
 }
 
-_<ITexture> OpenGLRenderer::createFramebufferWrapper(uint32_t handle, glm::uvec2 size) {
-    return _new<OpenGLFramebufferTexture>(handle, size);
-}
-
 void OpenGLRenderer::clear(const AColor& color) {
     glClearColor(color.r, color.g, color.b, color.a);
     glClear(GL_COLOR_BUFFER_BIT);
@@ -364,13 +361,12 @@ void OpenGLRenderer::flush() {
     glFlush();
 }
 
-void OpenGLRenderer::endPaint() {}
-
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
     return mProjectionMatrix;
 }
 
 bool OpenGLRenderer::loadGL(GLLoadProc load_proc, bool es) {
+    gladLoadGLLoader(load_proc);
     mIsES = es;
     if (mIsES) {
         if (GLAD_GL_ES_VERSION_3_0) mGLSLVersion = 300;
@@ -382,8 +378,6 @@ bool OpenGLRenderer::loadGL(GLLoadProc load_proc, bool es) {
     }
     return true;
 }
-
-bool OpenGLRenderer::loadGL(GLLoadProc load_proc) { return loadGL(load_proc, false); }
 
 uint32_t OpenGLRenderer::getDefaultFb() const noexcept { return 0; }
 

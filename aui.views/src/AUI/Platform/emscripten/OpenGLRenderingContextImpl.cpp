@@ -49,8 +49,7 @@ void OpenGLRenderingContext::beginPaint(ASurface& window) {
     mDisplayList.clear();
     mViewportSize = window.getSize();
     bindViewport();
-    mWindowTarget = mRenderer->createFramebufferWrapper(gl::Framebuffer::current() ? gl::Framebuffer::current()->getHandle() : gl::Framebuffer::DEFAULT_FB, mViewportSize);
-    mRenderer->beginPaint(window.getSize());
+    beginFramebuffer(mViewportSize);
 }
 
 void OpenGLRenderingContext::beginResize(ASurface& window) {
@@ -65,7 +64,6 @@ void OpenGLRenderingContext::endPaint(ASurface& window) {
     mDisplayList.draw(*mRenderer, mWindowTarget);
     mDisplayList.clear();
 
-    mRenderer->endPaint();
     CommonRenderingContext::endPaint(window);
 }
 

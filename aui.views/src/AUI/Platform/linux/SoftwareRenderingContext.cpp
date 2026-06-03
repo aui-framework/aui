@@ -32,7 +32,6 @@ IRendererBackend& SoftwareRenderingContext::backend() {
 }
 
 void SoftwareRenderingContext::init(const Init& init) {
-    CommonRenderingContext::init(init);
     mRenderer = _new<SoftwareRenderer>();
     mRenderer->setContext(this);
     mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
@@ -73,5 +72,5 @@ AImage SoftwareRenderingContext::makeScreenshot() {
     size_t s = mBitmapSize.x * mBitmapSize.y * 4;
     data.resize(s);
     std::memcpy(data.data(), mBitmapBlob, s);
-    return AImageView(data, mBitmapSize, APixelFormat::B8G8R8A8_UNORM | APixelFormat::R8_UNORM).convert(APixelFormat::R8G8B8A8_UNORM);
+    return AImage(std::move(data), mBitmapSize, APixelFormat::B8G8R8A8_UNORM);
 }

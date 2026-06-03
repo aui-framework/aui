@@ -45,13 +45,13 @@ public:
           image->xhot = 0;
           image->yhot = 0;
           image->delay = 0;
-          static constexpr auto X_FORMAT = APixelFormat::B8G8R8A8_UNORM | APixelFormat::R8_UNORM;
+          static constexpr auto X_FORMAT = APixelFormat::B8G8R8A8_UNORM;
           AFormattedImageView<X_FORMAT> destination(
-              AByteBufferView(reinterpret_cast<const char*>(image->pixels), img.buffer().size()), img.size());
+              AByteBufferView(reinterpret_cast<const char*>(image->pixels), img.width() * img.height() * 4), img.size());
 
           img.visit([&](const auto& source) {
               using source_image_t = std::decay_t<decltype(source)>;
-              using destination_image_t = std::decay_t<decltype(destination)>;
+              using destination_image_t = AFormattedImageView<X_FORMAT>;
 
               static constexpr auto sourceFormat = (APixelFormat) source_image_t::FORMAT;
               static constexpr auto destinationFormat = (APixelFormat) destination_image_t::FORMAT;

@@ -24,9 +24,9 @@ public:
     SoftwareRenderingContext();
     ~SoftwareRenderingContext() override;
 
+    void init(const Init& init) override;
 #if !AUI_PLATFORM_LINUX
     // to be implemented by IPlatformAbstraction
-    void init(const Init& init) override;
     void destroyNativeWindow(ASurface& window) override;
 #endif
 

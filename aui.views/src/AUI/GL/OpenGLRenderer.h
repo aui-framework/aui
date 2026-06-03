@@ -170,7 +170,6 @@ public:
     OpenGLRenderer();
 
     static bool loadGL(GLLoadProc load_proc, bool es = false);
-    static bool loadGL(GLLoadProc load_proc);
 
     [[nodiscard]]
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
@@ -195,9 +194,6 @@ public:
     void points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) override;
     void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) override;
     void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, const APaint& paint) override;
-
-    void beginPaint(glm::uvec2 windowSize);
-    void endPaint();
 
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;

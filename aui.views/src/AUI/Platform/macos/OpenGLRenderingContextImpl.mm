@@ -102,8 +102,6 @@ void OpenGLRenderingContext::beginPaint(ASurface& window) {
     }
 
     beginFramebuffer(window.getSize());
-    mWindowTarget = mRenderer->createFramebufferWrapper(gl::Framebuffer::current() ? gl::Framebuffer::current()->getHandle() : gl::Framebuffer::DEFAULT_FB, mViewportSize);
-    mRenderer->beginPaint(window.getSize());
 }
 
 void OpenGLRenderingContext::beginResize(ASurface& window) {
@@ -127,7 +125,6 @@ void OpenGLRenderingContext::endPaint(ASurface& window) {
     mDisplayList.draw(*mRenderer, mWindowTarget);
     mDisplayList.clear();
 
-    mRenderer->endPaint();
     [static_cast<NSOpenGLContext*>(ourContext) flushBuffer];
     CommonRenderingContext::endPaint(window);
 }

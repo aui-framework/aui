@@ -42,6 +42,7 @@ void SoftwareRenderingContextX11::init(const IRenderingContext::Init& init) {
             ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask |
             PointerMotionMask | StructureNotifyMask | PropertyChangeMask | StructureNotifyMask;
     }
+    SoftwareRenderingContext::init(init);
     xInitNativeWindow(init, swa, vi);
     mBitmapSize = init.window.getSize();
     XGCValues gcv {

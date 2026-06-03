@@ -18,7 +18,10 @@ OpenGLRenderingContext::OpenGLRenderingContext(const ARenderingContextOptions::O
 
 void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
     mViewportSize = windowSize;
-    mWindowTarget = mRenderer->createFramebufferWrapper(gl::Framebuffer::current() ? gl::Framebuffer::current()->getHandle() : gl::Framebuffer::DEFAULT_FB, mViewportSize);
+    if (!mWindowTarget) {
+        // backbuffer fb
+        mWindowTarget = mRenderer->createFramebufferWrapper(gl::Framebuffer::DEFAULT_FB, mViewportSize);
+    }
 }
 
 uint32_t OpenGLRenderingContext::getDefaultFb() const noexcept {

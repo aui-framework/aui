@@ -21,7 +21,7 @@ public:
       : OpenGLRenderingContext(config), RenderingContextGtk(window) {}
 
     ~OpenGLRenderingContextGtk() override = default;
-    void init(const Init& init);
+    void init(const Init& init) override;
     void destroyNativeWindow(ASurface& window) override;
     void gtkRealize(aui::gtk4_fake::GtkWidget* widget) override;
     void gtkSnapshot(aui::gtk4_fake::GtkWidget* widget, aui::gtk4_fake::GtkSnapshot* snapshot) override;
@@ -66,7 +66,4 @@ private:
     void attachBuffers(aui::gtk4_fake::GtkWidget* widget);
     void deleteBuffers();
     void deleteTextures();
-
-protected:
-    void endFramebuffer() override;
 };
