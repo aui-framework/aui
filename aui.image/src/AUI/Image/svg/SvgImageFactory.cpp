@@ -42,7 +42,7 @@ AImage SvgImageFactory::provideImage(const glm::ivec2& size) {
     bitmap.convertToRGBA();
     return {AByteBufferView(reinterpret_cast<const char*>(bitmap.data()), bitmap.stride() * size.y),
                       glm::uvec2(size),
-                      APixelFormat::RGBA_BYTE};
+                      APixelFormat::R8G8B8A8_UNORM};
 }
 
 glm::ivec2 SvgImageFactory::getSizeHint() {

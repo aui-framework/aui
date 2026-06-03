@@ -26,7 +26,7 @@ bool JpgImageLoader::matches(AByteBufferView buffer) {
 }
 
 void JpgImageLoader::save(aui::no_escape<IOutputStream> outputStream, AImageView image, int quality) {
-    image.convert<APixelFormat::RGB_BYTE>([&](AFormattedImageView<APixelFormat::RGB_BYTE> converted) {
+    image.convert<APixelFormat::R8G8B8_UNORM>([&](AFormattedImageView<APixelFormat::R8G8B8_UNORM> converted) {
         stbi_write_jpg_to_func([](void *context, void *data, int size) {
             reinterpret_cast<IOutputStream*>(context)->write(reinterpret_cast<char*>(data), size);
         }, reinterpret_cast<void*>(outputStream.ptr()), converted.width(), converted.height(), converted.bytesPerPixel(), converted.data(), quality);

@@ -117,7 +117,7 @@ AImage WebpImageFactory::provideImage(const glm::ivec2 &size) {
         }
     }
 
-    return {AByteBuffer(mDecodedFrameBuffer, PIXEL_FORMAT.bytesPerPixel() * mWidth * mHeight),
+    return {AByteBuffer(mDecodedFrameBuffer, ::bytesPerPixel(PIXEL_FORMAT) * mWidth * mHeight),
                   glm::uvec2(mWidth, mHeight), PIXEL_FORMAT};
 }
 

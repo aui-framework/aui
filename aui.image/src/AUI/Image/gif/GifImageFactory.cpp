@@ -103,11 +103,11 @@ bool GifImageFactory::hasAnimationFinished() {
 
 AImage GifImageFactory::fetchImage() {
     if (mLastFrameBuffer) {
-        AImage result({mLastFrameBuffer, 4 * mWidth * mHeight}, {mWidth, mHeight}, APixelFormat::RGBA_BYTE);
+        AImage result({mLastFrameBuffer, 4 * mWidth * mHeight}, {mWidth, mHeight}, APixelFormat::R8G8B8A8_UNORM);
         return result;
     }
 
-    AImage result({mWidth, mHeight}, APixelFormat::RGBA_BYTE);
+    AImage result({mWidth, mHeight}, APixelFormat::R8G8B8A8_UNORM);
     result.fill({0, 0, 0, 0});
     return result;
 }

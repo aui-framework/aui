@@ -61,7 +61,7 @@ private:
     FrameSkipMode mSkipMode = FrameSkipMode::PAUSE;
     std::chrono::milliseconds mTotalDuration = std::chrono::milliseconds(0);
 
-    static constexpr APixelFormat PIXEL_FORMAT = APixelFormat(APixelFormat::RGBA_BYTE);
+    static constexpr APixelFormat PIXEL_FORMAT = APixelFormat(APixelFormat::R8G8B8A8_UNORM);
 
     void loadNextFrame();
 
