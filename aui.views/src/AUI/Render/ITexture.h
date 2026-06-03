@@ -22,6 +22,11 @@ enum class TextureFilter {
     LINEAR,
 };
 
+enum class TextureOrigin {
+    TOP_LEFT,
+    BOTTOM_LEFT,
+};
+
 /**
  * @brief Renderer-friendly image representation.
  */
@@ -38,5 +43,12 @@ public:
     [[nodiscard]]
     virtual APixelFormat getFormat() const = 0;
 
+    [[nodiscard]]
+    TextureOrigin getOrigin() const { return mOrigin; }
+    void setOrigin(TextureOrigin origin) { mOrigin = origin; }
+
     virtual ~ITexture() = default;
+
+protected:
+    TextureOrigin mOrigin = TextureOrigin::TOP_LEFT;
 };
