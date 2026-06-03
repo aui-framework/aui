@@ -64,7 +64,14 @@ struct ALinearGradientBrush {
      * direction.
      */
     AAngleRadians rotation = 180_deg;
-    bool operator==(const ALinearGradientBrush&) const = default;
+
+    bool operator==(const ALinearGradientBrush& o) const {
+        if (rotation != o.rotation || colors.size() != o.colors.size()) return false;
+        for (size_t i = 0; i < colors.size(); ++i) {
+            if (!(colors[i] == o.colors[i])) return false;
+        }
+        return true;
+    }
 };
 
 class ITexture;

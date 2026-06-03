@@ -15,7 +15,18 @@
 #include <AUI/Platform/ASurface.h>
 #include <AUI/ASS/Property/Backdrop.h>
 #include <AUI/Traits/values.h>
-#include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/CommonOffscreenRenderPass.h>
+
+_unique<IOffscreenRenderPass> SoftwareRenderer::beginOffscreen(const _<ITexture>& renderTarget) {
+    return std::make_unique<CommonOffscreenRenderPass>(*this, renderTarget);
+}
+
+void SoftwareRenderer::endOffscreen(_unique<IOffscreenRenderPass> pass) {
+    if (auto c = dynamic_cast<CommonOffscreenRenderPass*>(pass.get())) {
+        c->displayList.optimize(*this, c->target);
+        c->displayList.draw(*this);
+    }
+}
 #include <AUI/Image/AImage.h>
 #include <AUI/Render/FontAtlas.hpp>
 #include <AUI/Platform/AFontManager.h>

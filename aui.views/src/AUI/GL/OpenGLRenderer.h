@@ -206,6 +206,9 @@ public:
 
     void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override;
 
+    _unique<IOffscreenRenderPass> beginOffscreen(const _<ITexture>& renderTarget) override;
+    void endOffscreen(_unique<IOffscreenRenderPass> pass) override;
+
     void setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) override;
     void setClipRect(const ARect<float>& rect) override;
     [[nodiscard]]

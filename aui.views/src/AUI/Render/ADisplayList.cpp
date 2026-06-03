@@ -214,8 +214,6 @@ void ADisplayList::computeOverlaps() {
               [&](const PopLayer&) { return true; },
               [&](const PushMask&) { return true; },
               [&](const PopMask&) { return true; },
-              [&](const PushRenderTarget&) { return true; },
-              [&](const PopRenderTarget&) { return true; },
               [&](const PushClipRect&) { return true; },
               [&](const PopClipRect&) { return true; },
               [&](const Clear&) { return true; },
@@ -306,14 +304,6 @@ void ADisplayList::resolveClips() {
     
     for (auto& entity : mEntities) {
         std::visit(aui::lambda_overloaded {
-            [&](const PushRenderTarget& v) {
-                targetClipStack << ClipEntry{ {}, { .p1 = {-1e6, -1e6}, .p2 = {1e6, 1e6} } };
-            },
-            [&](const PopRenderTarget&) {
-                if (targetClipStack.size() > 1) {
-                    targetClipStack.pop_back();
-                }
-            },
             [&](const PushClipRect& v) {
                 auto& top = targetClipStack.last();
                 top.stack << top.current;
@@ -334,38 +324,8 @@ void ADisplayList::resolveClips() {
 
 void ADisplayList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
     mPasses.clear();
-    struct TargetEntry {
-        _<ITexture> texture;
-        glm::uvec2 size;
-    };
-    AVector<TargetEntry> targetStack = { {windowTarget, windowTarget->getSize()} };
-    
-    auto getPass = [&](const TargetEntry& target) -> RenderPass& {
-        if (mPasses.empty() || mPasses.last().target != target.texture) {
-            mPasses << RenderPass{ target.texture, target.size };
-        }
-        return mPasses.last();
-    };
-
-    for (auto& entity : mEntities) {
-        bool handled = std::visit(aui::lambda_overloaded {
-            [&](const PushRenderTarget& v) {
-                targetStack << TargetEntry{ v.texture, v.texture->getSize() };
-                return true;
-            },
-            [&](const PopRenderTarget&) {
-                if (targetStack.size() > 1) {
-                    targetStack.pop_back();
-                }
-                return true;
-            },
-            [&](auto&) { return false; }
-        }, entity.command);
-
-        if (!handled) {
-            getPass(targetStack.last()).entities << entity;
-        }
-    }
+    glm::uvec2 sz = windowTarget ? windowTarget->getSize() : glm::uvec2(0);
+    mPasses << RenderPass{ .target = windowTarget, .size = sz, .entities = mEntities };
 }
 
 void ADisplayList::draw(IRendererBackend& renderer) const {

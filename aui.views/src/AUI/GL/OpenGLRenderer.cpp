@@ -10,6 +10,18 @@
  */
 
 #include "OpenGLRenderer.h"
+#include <AUI/Render/CommonOffscreenRenderPass.h>
+
+_unique<IOffscreenRenderPass> OpenGLRenderer::beginOffscreen(const _<ITexture>& renderTarget) {
+    return std::make_unique<CommonOffscreenRenderPass>(*this, renderTarget);
+}
+
+void OpenGLRenderer::endOffscreen(_unique<IOffscreenRenderPass> pass) {
+    if (auto c = dynamic_cast<CommonOffscreenRenderPass*>(pass.get())) {
+        c->displayList.optimize(*this, c->target);
+        c->displayList.draw(*this);
+    }
+}
 #include "TextureFormatRecognition.h"
 #include <AUI/Render/IRenderer.h>
 #include <AUI/Traits/callables.h>

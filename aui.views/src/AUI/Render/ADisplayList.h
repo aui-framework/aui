@@ -39,7 +39,7 @@ public:
     };
     struct GradientRectangles {
         AVector<RectInstance> instances;
-        AVector<ALinearGradientBrush::ColorEntry> colors;
+        AStaticVector<ALinearGradientBrush::ColorEntry, 2> colors;
         AAngleRadians rotation;
     };
     struct TexturedRectangles {
@@ -55,7 +55,7 @@ public:
     struct GradientRoundedRectangles {
         AVector<RectInstance> instances;
         float radius;
-        AVector<ALinearGradientBrush::ColorEntry> colors;
+        AStaticVector<ALinearGradientBrush::ColorEntry, 2> colors;
         AAngleRadians rotation;
     };
     struct TexturedRoundedRectangles {
@@ -128,10 +128,6 @@ public:
         AVector<ass::Backdrop::Any> backdrops;
     };
 
-    struct PushRenderTarget {
-        _<ITexture> texture;
-    };
-    struct PopRenderTarget {};
     struct PushClipRect {
         ARect<float> rect;
     };
@@ -151,7 +147,7 @@ public:
         using Command = std::variant<
             SolidRectangles, GradientRectangles, TexturedRectangles, SolidRoundedRectangles, GradientRoundedRectangles,
             TexturedRoundedRectangles, RectangleBorders, RoundedRectangleBorders, BoxShadow, BoxShadowInner, Glyphs,
-            Lines, LineBatches, Points, SquareSector, Backdrop, PushRenderTarget, PopRenderTarget, PushClipRect, PopClipRect, Clear, PushLayer, PopLayer, PushMask, PopMask>;
+            Lines, LineBatches, Points, SquareSector, Backdrop, PushClipRect, PopClipRect, Clear, PushLayer, PopLayer, PushMask, PopMask>;
         Command command;
         glm::mat4 transform;
         APaint paint;

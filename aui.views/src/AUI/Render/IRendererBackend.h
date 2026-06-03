@@ -18,9 +18,18 @@
 #include <AUI/Render/ADisplayList.h>
 #include <AUI/Render/IRendererInterfaces.h>
 #include "IRenderer.h"
+#include <AUI/Render/ARenderContext.h>
 
 class ASurface;
 namespace aui { class FontAtlas; class AFontCache; }
+
+class ACanvas;
+
+class IOffscreenRenderPass {
+public:
+    virtual ~IOffscreenRenderPass() = default;
+    virtual ARenderContext context() const = 0;
+};
 
 /**
  * @brief Actual renderer interface.
@@ -29,6 +38,9 @@ namespace aui { class FontAtlas; class AFontCache; }
 class API_AUI_VIEWS IRendererBackend {
 public:
     virtual ~IRendererBackend() = default;
+
+    virtual _unique<IOffscreenRenderPass> beginOffscreen(const _<ITexture>& renderTarget) = 0;
+    virtual void endOffscreen(_unique<IOffscreenRenderPass> pass) = 0;
 
     virtual _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE, TextureFilter filter = TextureFilter::LINEAR) = 0;
     virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;

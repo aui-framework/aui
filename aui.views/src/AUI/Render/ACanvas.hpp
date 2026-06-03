@@ -39,11 +39,8 @@ public:
     virtual void pushClipRect(const ARect<float>& rect) = 0;
     virtual void popClipRect() = 0;
 
-    virtual void pushMask(_<ITexture> mask, const glm::vec4& maskRect) = 0;
+    virtual void pushMask(const _<ITexture>& maskTexture, const glm::vec4& maskRect) = 0;
     virtual void popMask() = 0;
-
-    virtual void pushRenderTarget(_<ITexture> texture) = 0;
-    virtual void popRenderTarget() = 0;
 
     virtual void clear(const AColor& color = AColor::TRANSPARENT_BLACK) = 0;
 

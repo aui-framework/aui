@@ -31,7 +31,7 @@ _<IRenderer::IPrerenderedString> ADisplayListCanvas::prerenderString(glm::vec2 p
 
 size_t ADisplayListCanvas::save() {
     size_t res = mStates.size();
-    mStates.push_back(State{mTransform, mBaseTransform, mMaskStackDepth, mRenderTargetStackDepth, mLayerStackDepth, mClipStackDepth});
+    mStates.push_back(State{mTransform, mBaseTransform, mMaskStackDepth, mLayerStackDepth, mClipStackDepth});
     return res;
 }
 
@@ -42,7 +42,6 @@ void ADisplayListCanvas::restore() {
         mTransform = s.transform;
         mBaseTransform = s.baseTransform;
         while (mMaskStackDepth > s.maskStackDepth) popMask();
-        while (mRenderTargetStackDepth > s.renderTargetStackDepth) popRenderTarget();
         while (mLayerStackDepth > s.layerStackDepth) popLayer();
         while (mClipStackDepth > s.clipStackDepth) popClipRect();
     }
@@ -76,7 +75,7 @@ void ADisplayListCanvas::popLayer() {
     add(ADisplayList::PopLayer{}, {});
 }
 
-void ADisplayListCanvas::pushMask(_<ITexture> mask, const glm::vec4& maskRect) {
+void ADisplayListCanvas::pushMask(const _<ITexture>& mask, const glm::vec4& maskRect) {
     mMaskStackDepth++;
     add(ADisplayList::PushMask{std::move(mask), maskRect}, {});
 }
@@ -85,18 +84,6 @@ void ADisplayListCanvas::popMask() {
     AUI_ASSERT(mMaskStackDepth > 0);
     mMaskStackDepth--;
     add(ADisplayList::PopMask{}, {});
-}
-
-void ADisplayListCanvas::pushRenderTarget(_<ITexture> texture) {
-    if (!texture) throw AException("pushRenderTarget called with null texture");
-    mRenderTargetStackDepth++;
-    add(ADisplayList::PushRenderTarget{std::move(texture)}, {});
-}
-
-void ADisplayListCanvas::popRenderTarget() {
-    AUI_ASSERT(mRenderTargetStackDepth > 0);
-    mRenderTargetStackDepth--;
-    add(ADisplayList::PopRenderTarget{}, {});
 }
 
 void ADisplayListCanvas::clear(const AColor& color) {

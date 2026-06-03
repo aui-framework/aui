@@ -31,11 +31,8 @@ public:
 
     void pushLayer() override;
     void popLayer() override;
-    void pushMask(_<ITexture> mask, const glm::vec4& maskRect) override;
+    void pushMask(const _<ITexture>& maskTexture, const glm::vec4& maskRect) override;
     void popMask() override;
-
-    void pushRenderTarget(_<ITexture> texture) override;
-    void popRenderTarget() override;
 
     void clear(const AColor& color) override;
 
@@ -90,7 +87,6 @@ private:
         glm::mat4 transform;
         glm::mat4 baseTransform;
         size_t maskStackDepth;
-        size_t renderTargetStackDepth;
         size_t layerStackDepth;
         size_t clipStackDepth;
     };
@@ -99,7 +95,6 @@ private:
     glm::mat4 mBaseTransform = glm::mat4(1.0f);
     float mRenderScale = 1.0f;
     size_t mMaskStackDepth = 0;
-    size_t mRenderTargetStackDepth = 0;
     size_t mLayerStackDepth = 0;
     size_t mClipStackDepth = 0;
 
