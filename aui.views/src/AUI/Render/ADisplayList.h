@@ -159,8 +159,6 @@ public:
         APaint paint;
         ARect<float> boundingBox;
         bool isObscured = false;
-        _<ITexture> mask;
-        glm::vec4 maskRect;
         ARect<float> clipRect;
     };
 
@@ -188,7 +186,6 @@ public:
 
     void resolveEntities();
     void computeOverlaps();
-    void resolveMasks(IRendererBackend& renderer);
     void resolveClips();
     void resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 

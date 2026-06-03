@@ -121,4 +121,5 @@ private:
     IRendererBackend& mBackend;
     Blending mBlending = Blending::NORMAL;
     AColor mColorMultiplier = AColor::WHITE;
+    float mRenderScale = 1.0f;
 };

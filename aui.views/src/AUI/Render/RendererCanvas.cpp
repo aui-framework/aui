@@ -157,11 +157,11 @@ bool RendererCanvas::allowRenderToTexture() const noexcept {
 }
 
 void RendererCanvas::setRenderScale(float render_scale) {
-    mCanvas.setRenderScale(render_scale);
+    mRenderScale = render_scale;
 }
 
 float RendererCanvas::getRenderScale() const noexcept {
-    return mCanvas.getRenderScale();
+    return mRenderScale;
 }
 
 void RendererCanvas::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) {

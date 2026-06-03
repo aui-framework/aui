@@ -113,6 +113,10 @@ void ADisplayListCanvas::translate(const glm::vec2& offset) {
     mTransform = glm::translate(mTransform, glm::vec3(offset, 0.f));
 }
 
+void ADisplayListCanvas::scale(const glm::vec2& multiplier) {
+    mTransform = glm::scale(mTransform, glm::vec3(multiplier, 1.f));
+}
+
 void ADisplayListCanvas::rotate(const glm::vec3& axis, AAngleRadians angle) {
     mBaseTransform = mBaseTransform * mTransform * glm::rotate(glm::mat4(1.f), angle.radians(), axis);
     mTransform = glm::mat4(1.f);

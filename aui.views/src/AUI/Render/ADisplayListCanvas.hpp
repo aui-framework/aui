@@ -67,8 +67,7 @@ public:
                       AAngleRadians end) override;
     void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) override;
 
-    float getRenderScale() const noexcept override { return mRenderScale; }
-    void setRenderScale(float renderScale) noexcept override { mRenderScale = renderScale; }
+    void scale(const glm::vec2& multiplier) override;
 
     const glm::mat4 getTransform() const noexcept override { return mBaseTransform * mTransform; }
     void setTransformForced(const glm::mat4& transform) noexcept override;
@@ -93,7 +92,6 @@ private:
     std::vector<State> mStates;
     glm::mat4 mTransform = glm::mat4(1.0f);
     glm::mat4 mBaseTransform = glm::mat4(1.0f);
-    float mRenderScale = 1.0f;
     size_t mMaskStackDepth = 0;
     size_t mLayerStackDepth = 0;
     size_t mClipStackDepth = 0;

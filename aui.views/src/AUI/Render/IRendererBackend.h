@@ -42,7 +42,7 @@ public:
     virtual _unique<IOffscreenRenderPass> beginOffscreen(const _<ITexture>& renderTarget) = 0;
     virtual void endOffscreen(_unique<IOffscreenRenderPass> pass) = 0;
 
-    virtual _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::RGBA_BYTE, TextureFilter filter = TextureFilter::LINEAR) = 0;
+    virtual _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::R8G8B8A8_UNORM, TextureFilter filter = TextureFilter::LINEAR) = 0;
     virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
 
     virtual void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) = 0;
