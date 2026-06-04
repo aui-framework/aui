@@ -27,7 +27,7 @@ void ass::legacy::Property<ass::LayoutSpacing>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const LayoutSpacing& value) {
+Modifier operator|(Modifier thiz, LayoutSpacing value) {
     return thiz.then([value](AView& view) {
         auto container = dynamic_cast<AViewContainerBase*>(&view);
         if (container) {

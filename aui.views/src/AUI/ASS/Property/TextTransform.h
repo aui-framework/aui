@@ -39,5 +39,5 @@ namespace ass::legacy {
         }
     };
 
-    Modifier operator|(Modifier thiz, const TextTransform& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, TextTransform value);
 }

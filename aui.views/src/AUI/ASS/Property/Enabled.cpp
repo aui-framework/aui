@@ -21,7 +21,7 @@ void ass::legacy::Property<ass::Enabled>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const Enabled& value) {
+Modifier operator|(Modifier thiz, Enabled value) {
     return thiz.then([value](AView& view) {
         view.setEnabled(value.enabled);
     });

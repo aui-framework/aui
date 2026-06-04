@@ -83,5 +83,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const Padding& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, Padding value);
 }

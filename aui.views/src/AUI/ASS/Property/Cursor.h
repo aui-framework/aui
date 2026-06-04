@@ -41,5 +41,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const ACursor& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, ACursor value);
 }

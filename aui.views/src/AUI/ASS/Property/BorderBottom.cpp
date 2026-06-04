@@ -32,8 +32,13 @@ ass::legacy::PropertySlot ass::legacy::Property<ass::BorderBottom>::getPropertyS
     return ass::legacy::PropertySlot::BORDER;
 }
 namespace ass {
-Modifier operator|(Modifier thiz, const BorderBottom& value) {
-    // TODO: BorderBottom is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, BorderBottom value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        RenderHints::PushColor x(ctx.render);
+        int w = value.width;
+        ctx.render.rectangle(ASolidBrush{value.color},
+                             {0, int(ctx.size.y) - w},
+                             {ctx.size.x, w});
+    });
 }
 }   // namespace ass

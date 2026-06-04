@@ -35,8 +35,15 @@ bool ass::legacy::Property<ass::BoxShadowInner>::isNone() {
     return mInfo.color.isFullyTransparent();
 }
 namespace ass {
-Modifier operator|(Modifier thiz, const BoxShadowInner& value) {
-    // TODO: BoxShadowInner is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, BoxShadowInner value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        ctx.render.boxShadowInner({0, 0},
+                                 glm::vec2(ctx.size),
+                                 value.blurRadius,
+                                 value.spreadRadius,
+                                 0.f,
+                                 value.color,
+                                 {value.offsetX.getValuePx(), value.offsetY.getValuePx()});
+    });
 }
 }   // namespace ass

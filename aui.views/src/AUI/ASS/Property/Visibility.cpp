@@ -17,7 +17,7 @@ void ass::legacy::Property<Visibility>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const Visibility& value) {
+Modifier operator|(Modifier thiz, Visibility value) {
     return thiz.then([value](AView& view) {
         view.setVisibility(value);
     });

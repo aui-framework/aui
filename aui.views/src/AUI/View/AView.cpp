@@ -159,6 +159,11 @@ void AView::render(ARenderContext ctx)
         }
     }
 
+    for (const auto& i : mAppliedModifier.data().renderBehind) {
+        ass::Modifier::RenderCtx renderCtx{ctx, getSize(), this};
+        i(renderCtx);
+    }
+
     //draw before drawing this element
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
     {
@@ -254,7 +259,7 @@ void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     }
     applyAssRule(mCustomStyleRule);
 
-    for (const auto& i : mAppliedModifier.elements()) {
+    for (const auto& i : mAppliedModifier.data().elements) {
         i(*this);
     }
     
@@ -687,7 +692,7 @@ void AView::setCustomStyle(ass::PropertyListRecursive rule) {
 
 void AView::setModifier(ass::Modifier modifier) {
     mAppliedModifier = std::move(modifier);
-    for (const auto& i : mAppliedModifier.elements()) {
+    for (const auto& i : mAppliedModifier.data().elements) {
         i(*this);
     }
 }

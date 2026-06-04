@@ -35,7 +35,7 @@ namespace ass {
         static LineHeight NORMAL;
     };
 
-    Modifier operator|(Modifier thiz, const LineHeight& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, LineHeight value);
 
     namespace legacy {
         template<>

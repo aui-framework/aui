@@ -42,8 +42,9 @@ ass::Backdrop::GaussianBlurCustom ass::Backdrop::GaussianBlur::findOptimalParams
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const Backdrop& value) {
-    // TODO: Backdrop is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, Backdrop value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) mutable {
+        ctx.render.backdrops({}, ctx.size, std::span<ass::Backdrop::Any>(value.effects));
+    });
 }
 }   // namespace ass

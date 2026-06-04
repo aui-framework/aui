@@ -40,8 +40,13 @@ void ass::legacy::Property<ass::BoxShadow>::updateInvalidPixelRect(ARect<int>& i
     invalidRect.p2 = glm::max(invalidRect.p2, shadowRect.p2);
 }
 namespace ass {
-Modifier operator|(Modifier thiz, const BoxShadow& value) {
-    // TODO: BoxShadow is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, BoxShadow value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        ctx.render.boxShadow({value.offsetX.getValuePx() - value.spreadRadius.getValuePx(),
+                           value.offsetY.getValuePx() - value.spreadRadius.getValuePx()},
+                          glm::vec2(ctx.size) + value.spreadRadius.getValuePx() * 2.f,
+                           value.blurRadius,
+                           value.color);
+    });
 }
 }   // namespace ass

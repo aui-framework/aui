@@ -49,5 +49,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const Font& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, Font value);
 }

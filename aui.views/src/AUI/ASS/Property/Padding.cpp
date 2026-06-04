@@ -27,7 +27,7 @@ void ass::legacy::Property<ass::Padding>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const Padding& value) {
+Modifier operator|(Modifier thiz, Padding value) {
     return thiz.then([value](AView& view) {
         auto padding = view.getPadding();
         value.left.bindTo(padding.left);

@@ -24,7 +24,7 @@ void ass::legacy::Property<ass::Font>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const Font& value) {
+Modifier operator|(Modifier thiz, Font value) {
     return thiz.then([value](AView& view) {
         auto font = AFontManager::inst().getFont(value.url);
         if (!font) font = AFontManager::inst().getDefaultFont();

@@ -58,5 +58,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const BorderLeft& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, BorderLeft value);
 }

@@ -29,7 +29,7 @@ namespace ass {
         AMetric spacing;
     };
 
-    Modifier operator|(Modifier thiz, const LayoutSpacing& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, LayoutSpacing value);
 
     namespace legacy {
         template<>

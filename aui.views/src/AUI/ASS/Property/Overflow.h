@@ -52,6 +52,6 @@ public:
 };
 }   // namespace prop
 
-Modifier operator|(Modifier thiz, const AOverflow& value);
-Modifier operator|(Modifier thiz, const AOverflowMask& value);
+API_AUI_VIEWS Modifier operator|(Modifier thiz, AOverflow value);
+API_AUI_VIEWS Modifier operator|(Modifier thiz, AOverflowMask value);
 }   // namespace ass

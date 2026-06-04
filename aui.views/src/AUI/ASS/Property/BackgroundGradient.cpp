@@ -17,16 +17,16 @@
 #include "BackgroundGradient.h"
 #include "IProperty.h"
 
-
-
 void ass::legacy::Property<ass::BackgroundGradient>::renderFor(AView* view, const ARenderContext& ctx) {
-    if (!mInfo.gradient) { return; }
+    if (!mInfo.gradient) {
+        return;
+    }
     RenderHints::PushColor x(ctx.render);
 
     if (view->getBorderRadius() > 0) {
-        ctx.render.roundedRectangle(ABrush(*mInfo.gradient), {0, 0}, view->getSize(), view->getBorderRadius());
-    } else  {
-        ctx.render.rectangle(ABrush(*mInfo.gradient), {0, 0}, view->getSize());
+        ctx.render.roundedRectangle(ABrush(*mInfo.gradient), { 0, 0 }, view->getSize(), view->getBorderRadius());
+    } else {
+        ctx.render.rectangle(ABrush(*mInfo.gradient), { 0, 0 }, view->getSize());
     }
     IPropertyBase::renderFor(view, ctx);
 }
@@ -35,9 +35,14 @@ ass::legacy::PropertySlot ass::legacy::Property<ass::BackgroundGradient>::getPro
     return ass::legacy::PropertySlot::BACKGROUND_SOLID;
 }
 namespace ass {
-Modifier operator|(Modifier thiz, const BackgroundGradient& value) {
-    // TODO: BackgroundGradient is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, BackgroundGradient value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        if (!value.gradient) {
+            return;
+        }
+        RenderHints::PushColor x(ctx.render);
+
+        ctx.render.rectangle(ABrush(*value.gradient), { 0, 0 }, glm::vec2(ctx.size));
+    });
 }
 }   // namespace ass
-

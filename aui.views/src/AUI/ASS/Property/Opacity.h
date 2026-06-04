@@ -64,5 +64,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const Opacity& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, Opacity value);
 }

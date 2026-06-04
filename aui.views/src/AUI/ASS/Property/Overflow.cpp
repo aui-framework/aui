@@ -26,7 +26,7 @@ void ass::legacy::Property<AOverflowMask>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const AOverflow& value) {
+Modifier operator|(Modifier thiz, AOverflow value) {
     return thiz.then([value](AView& view) {
         view.setOverflow(value);
     });
@@ -34,7 +34,7 @@ Modifier operator|(Modifier thiz, const AOverflow& value) {
 }   // namespace ass
 
 namespace ass {
-Modifier operator|(Modifier thiz, const AOverflowMask& value) {
+Modifier operator|(Modifier thiz, AOverflowMask value) {
     return thiz.then([value](AView& view) {
         view.setOverflowMask(value);
     });

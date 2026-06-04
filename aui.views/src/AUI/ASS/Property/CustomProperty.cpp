@@ -16,7 +16,7 @@ void ass::legacy::Property<ass::CustomProperty>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const CustomProperty& value) {
+Modifier operator|(Modifier thiz, CustomProperty value) {
     return thiz.then([value](AView& view) {
         AUI_NULLSAFE(value.onApplyFor)(&view);
     });

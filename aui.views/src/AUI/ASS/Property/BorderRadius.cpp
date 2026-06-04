@@ -20,7 +20,7 @@ void ass::legacy::Property<ass::BorderRadius>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const BorderRadius& value) {
+Modifier operator|(Modifier thiz, BorderRadius value) {
     return thiz.then([value](AView& view) {
         view.setBorderRadius(value.radius);
     });

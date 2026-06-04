@@ -38,15 +38,8 @@ void ass::legacy::Property<ass::BackgroundSolid>::renderFor(AView* view, const A
 bool ass::legacy::Property<ass::BackgroundSolid>::isNone() {
     return mInfo.color.isFullyTransparent();
 }
+
 ass::legacy::PropertySlot ass::legacy::Property<ass::BackgroundSolid>::getPropertySlot() const {
     return ass::legacy::PropertySlot::BACKGROUND_SOLID;
 }
-
-namespace ass {
-Modifier operator|(Modifier thiz, const BackgroundSolid& value) {
-    // TODO: BackgroundSolid is a render-time property
-    return thiz;
-}
-}   // namespace ass
-
 

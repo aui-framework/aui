@@ -29,7 +29,7 @@ namespace ass {
         AMetric size;
     };
 
-    Modifier operator|(Modifier thiz, const FontSize& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, FontSize value);
 
     namespace legacy {
         template<>

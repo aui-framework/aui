@@ -48,8 +48,32 @@ ass::legacy::PropertySlot ass::legacy::Property<ass::TextBorder>::getPropertySlo
     return ass::legacy::PropertySlot::TEXT_SHADOW;
 }
 namespace ass {
-Modifier operator|(Modifier thiz, const TextBorder& value) {
-    // TODO: TextBorder is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, TextBorder value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        if (auto label = dynamic_cast<AAbstractLabel*>(ctx.view)) {
+            RenderHints::PushColor c(ctx.render);
+            ctx.render.setColor(value.borderColor);
+            {
+                RenderHints::PushMatrix m(ctx.render);
+                ctx.render.translate({-1, 0});
+                label->doRenderText(ctx.render);
+            }
+            {
+                RenderHints::PushMatrix m(ctx.render);
+                ctx.render.translate({1, 0});
+                label->doRenderText(ctx.render);
+            }
+            {
+                RenderHints::PushMatrix m(ctx.render);
+                ctx.render.translate({0, -1});
+                label->doRenderText(ctx.render);
+            }
+            {
+                RenderHints::PushMatrix m(ctx.render);
+                ctx.render.translate({0, 1});
+                label->doRenderText(ctx.render);
+            }
+        }
+    });
 }
 }   // namespace ass

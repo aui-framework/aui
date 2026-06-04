@@ -31,7 +31,7 @@ void ass::legacy::Property<FontRendering>::applyFor(AView* view){
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const FontRendering& value) {
+Modifier operator|(Modifier thiz, FontRendering value) {
     return thiz.then([value](AView& view) {
         auto fontView = dynamic_cast<IFontView*>(&view);
         if (!fontView) {

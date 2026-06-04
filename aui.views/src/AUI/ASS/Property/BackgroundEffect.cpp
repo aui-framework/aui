@@ -33,12 +33,3 @@ bool ass::legacy::Property<ass::BackgroundEffect>::isNone() {
 ass::legacy::PropertySlot ass::legacy::Property<ass::BackgroundEffect>::getPropertySlot() const {
     return ass::legacy::PropertySlot::BACKGROUND_EFFECT;
 }
-
-
-
-namespace ass {
-Modifier operator|(Modifier thiz, const BackgroundEffect& value) {
-    // TODO: BackgroundEffect is a render-time property
-    return thiz;
-}
-}   // namespace ass

@@ -24,7 +24,7 @@ void ass::legacy::Property<ass::FixedSize>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const FixedSize& value) {
+Modifier operator|(Modifier thiz, FixedSize value) {
     return thiz.then([value](AView& view) {
         view.setFixedSize({
             value.width ? value.width->getValuePx() : view.getFixedSize().x,

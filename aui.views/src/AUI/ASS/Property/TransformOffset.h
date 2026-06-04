@@ -53,5 +53,5 @@ public:
 };
 }   // namespace legacy
 
-Modifier operator|(Modifier thiz, const TransformOffset& value);
+API_AUI_VIEWS Modifier operator|(Modifier thiz, TransformOffset value);
 }   // namespace ass

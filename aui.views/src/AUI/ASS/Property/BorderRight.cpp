@@ -30,8 +30,13 @@ ass::legacy::PropertySlot ass::legacy::Property<ass::BorderRight>::getPropertySl
     return ass::legacy::PropertySlot::BORDER;
 }
 namespace ass {
-Modifier operator|(Modifier thiz, const BorderRight& value) {
-    // TODO: BorderRight is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, BorderRight value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        RenderHints::PushColor x(ctx.render);
+        int w = value.width;
+        ctx.render.rectangle(ASolidBrush{value.color},
+                             {int(ctx.size.x) - w, 0},
+                             {w, ctx.size.y});
+    });
 }
 }

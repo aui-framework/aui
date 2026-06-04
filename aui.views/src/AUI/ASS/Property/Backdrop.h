@@ -122,5 +122,5 @@ namespace ass {
         };
     }   // namespace legacy
 
-    Modifier operator|(Modifier thiz, const Backdrop& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, Backdrop value);
 }   // namespace ass

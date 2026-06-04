@@ -61,7 +61,7 @@ namespace ass {
 
     }
 
-    Modifier operator|(Modifier thiz, const BackgroundCropping& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, BackgroundCropping value);
 }
 
 inline const ass::BackgroundCropping ass::BackgroundCropping::H4_1 = { glm::vec2{0.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} };

@@ -42,5 +42,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const ATextOverflow& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, ATextOverflow value);
 }

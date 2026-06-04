@@ -24,7 +24,7 @@ void ass::legacy::Property<ass::Expanding>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const Expanding& value) {
+Modifier operator|(Modifier thiz, Expanding value) {
     return thiz.then([value](AView& view) {
         view.setExpanding({
             value.expandingX.orDefault(view.getExpandingHorizontal()),

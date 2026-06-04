@@ -28,8 +28,13 @@ ass::legacy::PropertySlot ass::legacy::Property<ass::BorderTop>::getPropertySlot
     return ass::legacy::PropertySlot::BORDER;
 }
 namespace ass {
-Modifier operator|(Modifier thiz, const BorderTop& value) {
-    // TODO: BorderTop is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, BorderTop value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        RenderHints::PushColor x(ctx.render);
+        int w = value.width;
+        ctx.render.rectangle(ASolidBrush{value.color},
+                             {0, 0},
+                             {ctx.size.x, w});
+    });
 }
 }   // namespace ass

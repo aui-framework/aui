@@ -33,8 +33,17 @@ ass::legacy::PropertySlot ass::legacy::Property<ass::TextShadow>::getPropertySlo
     return ass::legacy::PropertySlot::TEXT_SHADOW;
 }
 namespace ass {
-Modifier operator|(Modifier thiz, const TextShadow& value) {
-    // TODO: TextShadow is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, TextShadow value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        if (auto label = dynamic_cast<AAbstractLabel*>(ctx.view)) {
+            RenderHints::PushColor c(ctx.render);
+            ctx.render.setColor(value.shadowColor);
+            {
+                RenderHints::PushMatrix m(ctx.render);
+                ctx.render.translate({value.offsetX.getValuePx(), value.offsetY.getValuePx()});
+                label->doRenderText(ctx.render);
+            }
+        }
+    });
 }
 }   // namespace ass

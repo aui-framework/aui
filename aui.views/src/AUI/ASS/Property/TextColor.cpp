@@ -32,7 +32,7 @@ void ass::legacy::Property<ass::TextColor>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const TextColor& value) {
+Modifier operator|(Modifier thiz, TextColor value) {
     return thiz.then([value](AView& view) {
         view.setTextColor(std::visit(
             aui::lambda_overloaded {

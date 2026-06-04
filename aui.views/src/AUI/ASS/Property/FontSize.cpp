@@ -22,7 +22,7 @@ void ass::legacy::Property<ass::FontSize>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const FontSize& value) {
+Modifier operator|(Modifier thiz, FontSize value) {
     return thiz.then([value](AView& view) {
         AUI_NULLSAFE(dynamic_cast<IFontView*>(&view))->getFontStyle().size = value.size.getValuePx();
     });

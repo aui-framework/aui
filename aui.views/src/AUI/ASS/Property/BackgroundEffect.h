@@ -54,6 +54,4 @@ namespace ass {
         };
 
     }
-
-    Modifier operator|(Modifier thiz, const BackgroundEffect& value);
 }

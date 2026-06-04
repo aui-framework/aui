@@ -88,5 +88,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const Margin& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, Margin value);
 }

@@ -53,5 +53,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const TextShadow& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, TextShadow value);
 }

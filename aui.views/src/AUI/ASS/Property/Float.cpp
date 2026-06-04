@@ -21,7 +21,7 @@ void ass::legacy::Property<AFloat>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const AFloat& value) {
+Modifier operator|(Modifier thiz, AFloat value) {
     return thiz.then([value](AView& view) {
         view.setFloating(value);
     });

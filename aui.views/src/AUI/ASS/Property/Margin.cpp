@@ -34,7 +34,7 @@ void ass::legacy::Property<ass::Margin>::updateInvalidPixelRect(ARect<int>& inva
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const Margin& value) {
+Modifier operator|(Modifier thiz, Margin value) {
     return thiz.then([value](AView& view) {
         auto margin = view.getMargin();
         value.left.bindTo(margin.left);

@@ -58,5 +58,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const MinSize& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, MinSize value);
 }

@@ -28,7 +28,7 @@ namespace ass {
         AString family;
     };
 
-    Modifier operator|(Modifier thiz, const FontFamily& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, FontFamily value);
 
     namespace legacy {
         template<>

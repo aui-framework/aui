@@ -23,7 +23,7 @@ void ass::legacy::Property<ass::MinSize>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const MinSize& value) {
+Modifier operator|(Modifier thiz, MinSize value) {
     return thiz.then([value](AView& view) {
         view.setMinSize({
             value.width ? value.width->getValuePx() : view.getMinSize().x,

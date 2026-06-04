@@ -85,5 +85,5 @@ namespace ass {
         };
     }
 
-Modifier operator|(Modifier thiz, const ScrollbarAppearance& value);
+API_AUI_VIEWS Modifier operator|(Modifier thiz, ScrollbarAppearance value);
 }

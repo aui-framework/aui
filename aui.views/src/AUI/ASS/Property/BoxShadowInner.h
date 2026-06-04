@@ -64,5 +64,5 @@ public:
 };
 }   // namespace legacy
 
-Modifier operator|(Modifier thiz, const BoxShadowInner& value);
+API_AUI_VIEWS Modifier operator|(Modifier thiz, BoxShadowInner value);
 }   // namespace ass

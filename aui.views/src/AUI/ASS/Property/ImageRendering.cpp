@@ -31,8 +31,9 @@ ass::legacy::PropertySlot ass::legacy::Property<ImageRendering>::getPropertySlot
 
 
 namespace ass {
-Modifier operator|(Modifier thiz, const ImageRendering& value) {
-    // TODO: ImageRendering is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, ImageRendering value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        if (ctx.view) { ctx.view->getAssHelper()->state.imageRendering = value; }
+    });
 }
 }   // namespace ass

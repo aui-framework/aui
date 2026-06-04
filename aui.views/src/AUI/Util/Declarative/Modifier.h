@@ -11,6 +11,9 @@
 
 #include <functional>
 #include "AUI/Common/ASmallVector.h"
+#include "AUI/Render/ARenderContext.h"
+#include "AUI/Geometry2D/ARect.h"
+
 #include <utility>
 
 class AView;
@@ -32,26 +35,71 @@ class Modifier {
 public:
     using Element = std::function<void(AView&)>;
 
+    /**
+     * @brief Render context passed to renderBehind callbacks.
+     * @details
+     * Extends ARenderContext with layout information about the view being drawn,
+     * so that render callbacks no longer need a direct reference to AView.
+     * Inspired by DrawScope in Jetpack Compose.
+     */
+    struct RenderCtx : ARenderContext {
+        /**
+         * @brief The bounding rect size of the view in its local coordinate space.
+         */
+        glm::uvec2 size;
+
+        /**
+         * @brief Optional pointer to the view being rendered.
+         * @details
+         * Provided as an escape hatch for callbacks that must access view-specific state
+         * (e.g. text rendering helpers). Prefer using `size` and `render` directly.
+         * May be null in unit-test / off-screen contexts.
+         */
+        AView* view = nullptr;
+    };
+
+    /**
+     * @brief Callback type for renderBehind.
+     * @details
+     * Receives a RenderCtx instead of AView& so that the callback is decoupled
+     * from the view hierarchy.  All geometry needed for drawing (size, etc.) is
+     * available through RenderCtx::rect; the renderer is available through
+     * ARenderContext::render.
+     */
+    using RenderCallback = std::function<void(RenderCtx ctx)>;
+
     Modifier() = default;
     Modifier(const Modifier& other) = default;
     Modifier(Modifier&& other) noexcept = default;
     Modifier& operator=(const Modifier& other) = default;
     Modifier& operator=(Modifier&& other) noexcept = default;
 
-    [[nodiscard]] const auto& elements() const { return mElements; }
-
+    [[nodiscard]] const auto& data() const { return mData; }
 
     /**
      * @brief Concatenates this modifier with another.
      * @details
-     * Returns a `Modifier` representing this modifier followed by `other` in sequence.
+     * Returns a `Modifier` representing this modifier.
      */
     Modifier& then(Element element) {
-        mElements << std::move(element);
+        mData.elements << std::move(element);
         return *this;
     }
 
+    /**
+     * @brief Adds a new render callback (new API, no AView& dependency).
+     */
+    Modifier& renderBehind(RenderCallback element) {
+        mData.renderBehind << std::move(element);
+        return *this;
+    }
+
+
+
 private:
-    ASmallVector<Element, 16> mElements;
+    struct Data {
+        ASmallVector<Element, 16> elements;
+        ASmallVector<RenderCallback, 4> renderBehind;
+    } mData;
 };
 }

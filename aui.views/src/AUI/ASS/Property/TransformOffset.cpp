@@ -31,8 +31,9 @@ void ass::legacy::Property<ass::TransformOffset>::updateInvalidPixelRect(ARect<i
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const TransformOffset& value) {
-    // TODO: TransformOffset is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, TransformOffset value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        ctx.render.setTransform(glm::translate(glm::mat4(1.f), glm::vec3{value.offsetX, value.offsetY, 0.0}));
+    });
 }
 }   // namespace ass

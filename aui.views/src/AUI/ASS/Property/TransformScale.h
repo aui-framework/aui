@@ -55,5 +55,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const TransformScale& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, TransformScale value);
 }

@@ -36,8 +36,14 @@ void ass::legacy::Property<ass::TransformScale>::updateInvalidPixelRect(ARect<in
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const TransformScale& value) {
-    // TODO: TransformScale is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, TransformScale value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        auto pivot = glm::vec2(ctx.size) / 2.f;
+        glm::mat4 m(1.f);
+        m = glm::translate(m, glm::vec3(pivot, 0.f));
+        m = glm::scale(m, glm::vec3(value.scale, 1.0f));
+        m = glm::translate(m, glm::vec3(-pivot, 0.f));
+        ctx.render.setTransform(m);
+    });
 }
 }   // namespace ass

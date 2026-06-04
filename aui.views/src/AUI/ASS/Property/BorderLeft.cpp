@@ -34,8 +34,13 @@ ass::legacy::PropertySlot ass::legacy::Property<ass::BorderLeft>::getPropertySlo
     return ass::legacy::PropertySlot::BORDER;
 }
 namespace ass {
-Modifier operator|(Modifier thiz, const BorderLeft& value) {
-    // TODO: BorderLeft is a render-time property
-    return thiz;
+Modifier operator|(Modifier thiz, BorderLeft value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        RenderHints::PushColor x(ctx.render);
+        int w = value.width;
+        ctx.render.rectangle(ASolidBrush{value.color},
+                             {0, 0},
+                             {w, ctx.size.y});
+    });
 }
 }   // namespace ass

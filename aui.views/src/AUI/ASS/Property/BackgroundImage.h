@@ -168,8 +168,6 @@ public:
 
 }   // namespace prop
 
-Modifier operator|(Modifier thiz, const ass::BackgroundImage& value);
-
 }   // namespace ass
 
 AUI_ENUM_VALUES(

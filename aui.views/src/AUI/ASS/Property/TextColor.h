@@ -48,5 +48,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const TextColor& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, TextColor value);
     }   // namespace ass

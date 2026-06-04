@@ -53,5 +53,5 @@ public:
 };
 }
 
-Modifier operator|(Modifier thiz, const BorderRight& value);
+API_AUI_VIEWS Modifier operator|(Modifier thiz, BorderRight value);
 }

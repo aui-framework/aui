@@ -21,10 +21,10 @@ struct State {
     AProperty<bool> checked = false;
 };
 
-_<AView> minimalCheckBox(_<AProperty<bool>> state) {
+_<AView> minimalCheckBox(contract::In<bool> checked, std::function<void(bool)> onCheckedChange) {
     return CheckBox {
-        .checked = AUI_REACT(*state),
-        .onCheckedChange = [state](bool checked) { *state = checked; },
+        .checked = std::move(checked),
+        .onCheckedChange = std::move(onCheckedChange),
         .content = Label { "Green" },
     };
 }
@@ -33,7 +33,7 @@ AUI_ENTRY {
     auto window = _new<AWindow>("Checkbox", 300_dp, 100_dp);
     auto state = _new<State>();
     window->setContents(Vertical {
-      minimalCheckBox(AUI_PTR_ALIAS(state, checked)),
+      minimalCheckBox(AUI_REACT(state->checked), [=](bool checked) { state->checked = checked; }),
       Label {
         .text = "This label reflects checkbox state.",
         .modifier = AUI_REACT(Modifier {} | TextColor { state->checked ? AColor::GREEN : AColor::RED }),

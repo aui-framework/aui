@@ -22,7 +22,7 @@ void ass::legacy::Property<ACursor>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const ACursor& value) {
+Modifier operator|(Modifier thiz, ACursor value) {
     return thiz.then([value](AView& view) {
         view.setCursor(value);
     });

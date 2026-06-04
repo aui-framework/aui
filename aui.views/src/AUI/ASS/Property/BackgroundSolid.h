@@ -55,6 +55,4 @@ namespace ass {
         };
 
     }
-
-    Modifier operator|(Modifier thiz, const BackgroundSolid& value);
 }

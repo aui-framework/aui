@@ -24,7 +24,7 @@ void ass::legacy::Property<ass::FontFamily>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const FontFamily& value) {
+Modifier operator|(Modifier thiz, FontFamily value) {
     return thiz.then([value](AView& view) {
         auto family = AFontManager::inst().getFontFamily(value.family);
         AUI_NULLSAFE(dynamic_cast<IFontView*>(&view))->getFontStyle().font = AFontManager::inst().getDefaultFont();

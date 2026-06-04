@@ -44,5 +44,5 @@ namespace ass {
 
     }
 
-    Modifier operator|(Modifier thiz, const ImageRendering& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, ImageRendering value);
 }

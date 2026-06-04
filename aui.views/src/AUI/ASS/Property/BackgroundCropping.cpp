@@ -25,7 +25,7 @@ void ass::legacy::Property<ass::BackgroundCropping>::applyFor(AView* view) {
 }
 
 namespace ass {
-Modifier operator|(Modifier thiz, const BackgroundCropping& value) {
+Modifier operator|(Modifier thiz, BackgroundCropping value) {
     return thiz.then([value](AView& view) {
         view.getAssHelper()->state.backgroundCropping = value;
     });

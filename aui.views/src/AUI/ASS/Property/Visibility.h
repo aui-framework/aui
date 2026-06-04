@@ -34,5 +34,5 @@ namespace ass::legacy {
         }
     };
 
-    Modifier operator|(Modifier thiz, const Visibility& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, Visibility value);
 }

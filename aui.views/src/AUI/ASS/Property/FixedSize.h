@@ -52,5 +52,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const FixedSize& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, FixedSize value);
 }

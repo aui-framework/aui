@@ -59,5 +59,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const MaxSize& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, MaxSize value);
 }

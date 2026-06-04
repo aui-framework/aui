@@ -49,5 +49,5 @@ namespace ass {
         };
     }
 
-    Modifier operator|(Modifier thiz, const Enabled& value);
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, Enabled value);
 }   // namespace ass
