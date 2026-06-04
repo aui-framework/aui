@@ -55,14 +55,13 @@ void AScrollAreaViewport::applyGeometryToChildren() {
 }
 
 void AScrollAreaViewport::render(ARenderContext ctx) {
-    if (mRenderToTexture && mRenderToTexture->drawFromTexture) {
-        mRenderToTexture->skipRedrawUntilTextureIsPresented = false;
+    if (mRenderToTexture) {
         if (!mRenderToTexture->texture) {
             drawOffscreen(ctx);
         }
         ctx.canvas.rectangle(APaint{ATexturedBrush{mRenderToTexture->texture, {}, {}, {}, {}, true}}, {0, 0}, getSize());
     } else {
-        //AViewContainerBase::render(ctx);
+        AViewContainerBase::render(ctx);
     }
 }
 
@@ -73,8 +72,6 @@ void AScrollAreaViewport::markPixelDataInvalid(ARect<int> invalidArea) {
             // this view already requested a redraw.
             return;
         }
-        // temporary disable drawing from texture. this will be set back to true by the callback below.
-        mRenderToTexture->drawFromTexture = false;
         AWindow::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](ARenderContext rc) {
             if (!mRenderToTexture) {
                 return;
@@ -93,11 +90,6 @@ void AScrollAreaViewport::markPixelDataInvalid(ARect<int> invalidArea) {
 
 void AScrollAreaViewport::drawOffscreen(ARenderContext rc) {
     if (!mRenderToTexture) {
-        return;
-    }
-
-    if (mRenderToTexture->skipRedrawUntilTextureIsPresented) {
-        mRedrawRequested = false;
         return;
     }
 
@@ -126,9 +118,6 @@ void AScrollAreaViewport::drawOffscreen(ARenderContext rc) {
     }
 
     rc.backend.endOffscreen(std::move(offscreenPass));
-
-    mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
-    mRenderToTexture->drawFromTexture = true;
 }
 
 void AScrollAreaViewport::updateContentsScroll() {

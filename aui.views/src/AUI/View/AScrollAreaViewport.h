@@ -105,9 +105,6 @@ private:
     struct RenderToTexture {
         _<ITexture> texture;
         AVector<ARect<int>> invalidArea;
-
-        bool drawFromTexture = true;
-        bool skipRedrawUntilTextureIsPresented = false;
     };
     AOptional<RenderToTexture> mRenderToTexture;
 
