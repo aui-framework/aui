@@ -67,14 +67,6 @@
  *
  * ![](imgs/Screenshot_20250715_091801.png)
  *
- * ## Button with a signal-slot handler
- *
- * This button executes the member function upon click.
- *
- * <!-- aui:snippet examples/ui/button2/src/main.cpp AButton_example -->
- *
- * ![](imgs/Screenshot_20250715_091801.png)
- *
  * ## Default button
  *
  * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the

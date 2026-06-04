@@ -115,18 +115,18 @@ static _<AView> checkBoxesDemo() {
     auto state = _new<State>();
     return Vertical {
         CheckBox {
-          AUI_REACT(state->checked1),
-          [state](bool checked) { state->checked1 = checked; },
-          Label { "Unchecked checkbox" },
+          .checked = AUI_REACT(state->checked1),
+          .onCheckedChange = [state](bool checked) { state->checked1 = checked; },
+          .content = Label { "Unchecked checkbox" },
         },
         CheckBox {
-          AUI_REACT(state->checked2),
-          [state](bool checked) { state->checked2 = checked; },
-          Label { "Checked checkbox" },
+          .checked = AUI_REACT(state->checked2),
+          .onCheckedChange = [state](bool checked) { state->checked2 = checked; },
+          .content = Label { "Checked checkbox" },
         },
         CheckBox {
-          AUI_REACT(false),
-          Label { "Disabled checkbox" },
+          .checked = AUI_REACT(false),
+          .content = Label { "Disabled checkbox" },
         } AUI_LET { it->disable(); },
     };
 }
