@@ -36,7 +36,7 @@ glm::ivec2 AImageDrawable::getSizeHint() {
 void AImageDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) {
     if (auto asImage = std::get_if<_<AImage>>(&mStorage)) {
         auto& backend = ctx.backend;
-        auto texture = backend.createTexture((*asImage)->size(), (*asImage)->format(), TextureFilter::NEAREST);
+        auto texture = backend.createTexture((*asImage)->size(), (*asImage)->format(), TextureFilter::LINEAR);
         texture->upload(**asImage);
         mStorage = std::move(texture);
     }
