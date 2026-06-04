@@ -65,6 +65,7 @@ public:
     public:
         void upload(AImageView image) override { mSize = image.size(); }
         [[nodiscard]] glm::u32vec2 getSize() const override { return mSize; }
+        [[nodiscard]] APixelFormat getFormat() const override { return APixelFormat::R8G8B8A8_UNORM; }
         ~Stub() override = default;
     private:
         glm::u32vec2 mSize = { 0, 0 };
