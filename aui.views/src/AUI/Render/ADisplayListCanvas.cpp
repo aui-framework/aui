@@ -140,7 +140,11 @@ void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm:
             add(ADisplayList::GradientRectangles{{ {position, size, AColor::WHITE} }, std::move(colors), b.rotation}, paint);
         },
         [&](const ATexturedBrush& b) {
-            add(ADisplayList::TexturedRectangles{{ {position, size, combinedColor} }, b.texture, b.uv1.valueOr(glm::vec2(0.f)), b.uv2.valueOr(glm::vec2(1.f))}, paint);
+            glm::vec2 uv1 = b.uv1.valueOr(glm::vec2(0.f, 0.f));
+            glm::vec2 uv2 = b.uv2.valueOr(glm::vec2(1.f, 1.f));
+            uv1.y = 1.f - uv1.y;
+            uv2.y = 1.f - uv2.y;
+            add(ADisplayList::TexturedRectangles{{ {position, size, combinedColor} }, b.texture, uv1, uv2, b.premultiplied}, paint);
         },
         [&](const auto&) {}
     }, paint.brush);
@@ -162,7 +166,7 @@ void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 positio
             add(ADisplayList::GradientRoundedRectangles{{ {position, size, AColor::WHITE} }, radius, std::move(colors), b.rotation}, paint);
         },
         [&](const ATexturedBrush& b) {
-            add(ADisplayList::TexturedRoundedRectangles{{ {position, size, combinedColor} }, radius, b.texture, b.uv1.valueOr(glm::vec2(0.f)), b.uv2.valueOr(glm::vec2(1.f))}, paint);
+            add(ADisplayList::TexturedRoundedRectangles{{ {position, size, combinedColor} }, radius, b.texture, b.uv1.valueOr(glm::vec2(0.f)), b.uv2.valueOr(glm::vec2(1.f)), b.premultiplied}, paint);
         },
         [&](const auto&) {}
     }, paint.brush);

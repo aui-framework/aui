@@ -211,7 +211,10 @@ void SoftwareRenderer::texturedRectangles(const ADisplayList::TexturedRectangles
                 } else {
                     texColor = AColor::RED;
                 }
-                putPixel({x, y}, AColor(texColor * inst.color).premultiply(), paint);
+                if (!v.premultiplied) {
+                    texColor = texColor.premultiply();
+                }
+                putPixel({x, y}, texColor * inst.color, paint);
             }
         }
     }
@@ -319,7 +322,9 @@ void SoftwareRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRou
                     } else {
                         texColor = AColor::RED;
                     }
-                    texColor = texColor.premultiply();
+                    if (!v.premultiplied) {
+                        texColor = texColor.premultiply();
+                    }
                     putPixel({x, y}, texColor * color * a, paint);
                 }
             }

@@ -50,5 +50,5 @@ public:
     virtual ~ITexture() = default;
 
 protected:
-    TextureOrigin mOrigin = TextureOrigin::TOP_LEFT;
+    TextureOrigin mOrigin = TextureOrigin::BOTTOM_LEFT;
 };

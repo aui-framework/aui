@@ -2,6 +2,7 @@ layout(location = 0) out vec4 fragColor;
 in vec2 vUv;
 in vec4 vColor;
 uniform sampler2D albedo;
+uniform bool u_premultiplied;
 
 uniform sampler2D u_mask;
 uniform bool u_useMask;
@@ -10,7 +11,9 @@ uniform vec4 u_maskRect;
 
 void main() {
     vec4 tex = texture(albedo, vUv);
-    tex.rgb *= tex.a;
+    if (!u_premultiplied) {
+        tex.rgb *= tex.a;
+    }
     fragColor = tex * vColor;
     if (u_useMask) {
         vec2 maskUv = (gl_FragCoord.xy - u_maskRect.xy) / u_maskRect.zw;

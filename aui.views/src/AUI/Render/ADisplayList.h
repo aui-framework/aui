@@ -47,6 +47,7 @@ public:
         _<ITexture> texture;
         glm::vec2 uv1 = { 0.f, 0.f };
         glm::vec2 uv2 = { 1.f, 1.f };
+        bool premultiplied = false;
     };
     struct SolidRoundedRectangles {
         AVector<RectInstance> instances;
@@ -64,6 +65,7 @@ public:
         _<ITexture> texture;
         glm::vec2 uv1 = { 0.f, 0.f };
         glm::vec2 uv2 = { 1.f, 1.f };
+        bool premultiplied = false;
     };
     struct RectangleBorders {
         AVector<RectInstance> instances;

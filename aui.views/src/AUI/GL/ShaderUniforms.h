@@ -44,4 +44,5 @@ namespace aui::ShaderUniforms {
     extern ::gl::Program::Uniform DIVIDER;
     extern ::gl::Program::Uniform THRESHOLD;
     extern ::gl::Program::Uniform KERNEL;
+    extern ::gl::Program::Uniform PREMULTIPLIED;
 }

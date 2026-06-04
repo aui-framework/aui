@@ -43,15 +43,32 @@ namespace {
 
 class OpenGLFramebufferTexture : public ITexture {
 public:
-    OpenGLFramebufferTexture(uint32_t handle, glm::uvec2 size) : mHandle(handle), mSize(size) {}
+    OpenGLFramebufferTexture(uint32_t handle, glm::uvec2 size) : mHandle(handle), mSize(size) {
+        mOrigin = TextureOrigin::TOP_LEFT;
+    }
     glm::u32vec2 getSize() const override { return mSize; }
     APixelFormat getFormat() const override { return APixelFormat::R8G8B8A8_UNORM; }
     void upload(AImageView image) override {}
+
+    void bind() { glBindTexture(GL_TEXTURE_2D, mHandle); }
+    void bind(uint32_t unit) {
+        glActiveTexture(GL_TEXTURE0 + unit);
+        glBindTexture(GL_TEXTURE_2D, mHandle);
+    }
+
     uint32_t handle() const noexcept { return mHandle; }
 private:
     uint32_t mHandle;
     glm::uvec2 mSize;
 };
+
+void bindTexture(ITexture* texture, uint32_t unit = 0) {
+    if (auto t = dynamic_cast<OpenGLTexture2D*>(texture)) {
+        t->bind(unit);
+    } else if (auto t = dynamic_cast<OpenGLFramebufferTexture*>(texture)) {
+        t->bind(unit);
+    }
+}
 
 std::array<glm::vec2, 4> getVerticesForRect(glm::vec2 pos, glm::vec2 size) {
     return {
@@ -143,6 +160,7 @@ size_t OpenGLRenderer::TransientBuffer::upload(const void* data, size_t size) {
 }
 
 _unique<IOffscreenRenderPass> OpenGLRenderer::beginOffscreen(const _<ITexture>& renderTarget) {
+    renderTarget->setOrigin(TextureOrigin::TOP_LEFT);
     return std::make_unique<CommonOffscreenRenderPass>(*this, renderTarget);
 }
 
@@ -165,33 +183,24 @@ OpenGLRenderer::OpenGLRenderer() :
 
     auto useShader = [&](AOptional<gl::Program>& out, const AString& vertex, const AString& fragment, std::initializer_list<std::pair<int, const char*>> attrs) {
         auto getPrefix = [](GLenum stage) -> std::string {
-            std::string prefix = "#version " + std::to_string(mGLSLVersion) + "\n";
-            if (mGLSLVersion < 130) {
-                if (stage == GL_VERTEX_SHADER) {
-                    prefix += "#define in attribute\n#define out varying\n";
-                } else {
-                    prefix += "#define in varying\n#define fragColor gl_FragColor\n";
-                }
-            } else {
-                if (stage == GL_FRAGMENT_SHADER) {
-                    prefix += "out vec4 fragColor;\n";
-                    prefix += "#define gl_FragColor fragColor\n";
-                }
-            }
+            std::string prefix;
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS || AUI_PLATFORM_EMSCRIPTEN
+            prefix = "#version 300 es\n";
+#else
+            prefix = "#version 330 core\n";
+#endif
             prefix += R"(
 #ifdef GL_ES
-#extension GL_OES_standard_derivatives : enable
 precision mediump float;
 #define mediump
 #define highp
 #else
-#if __VERSION__ >= 130
 precision highp float;
 precision highp int;
-#endif
 #define mediump
 #define highp
 #endif
+#define gl_FragColor fragColor
 )";
             return prefix;
         };
@@ -394,7 +403,7 @@ void OpenGLRenderer::setupMask(gl::Program& shader) {
         glMaskRect.z = mMaskRect.z;
         glMaskRect.w = -mMaskRect.w;
         shader.set(aui::ShaderUniforms::MASK_RECT, glMaskRect);
-        static_cast<OpenGLTexture2D*>(mMask.get())->bind(1);
+        bindTexture(mMask.get(), 1);
     } else {
         shader.set(aui::ShaderUniforms::USE_MASK, false);
         mWhiteTexture.bind(1);
@@ -620,8 +629,12 @@ void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& 
     mTexturedShader->use();
     mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
     mTexturedShader->set(aui::ShaderUniforms::ALBEDO, 0);
+    mTexturedShader->set(aui::ShaderUniforms::PREMULTIPLIED, v.premultiplied);
     setupMask(*mTexturedShader);
-    static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
+    bindTexture(v.texture.get());
+
+    glm::vec2 uv1 = v.uv1;
+    glm::vec2 uv2 = v.uv2;
 
     AVector<VertexBasicUv> vertices;
     AVector<GLuint> indices;
@@ -633,10 +646,10 @@ void OpenGLRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& 
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = maskColor(inst.color).premultiply();
 
-        vertices << VertexBasicUv{rectVertices[0], {v.uv1.x, v.uv1.y}, color};
-        vertices << VertexBasicUv{rectVertices[1], {v.uv2.x, v.uv1.y}, color};
-        vertices << VertexBasicUv{rectVertices[2], {v.uv1.x, v.uv2.y}, color};
-        vertices << VertexBasicUv{rectVertices[3], {v.uv2.x, v.uv2.y}, color};
+        vertices << VertexBasicUv{rectVertices[0], {uv1.x, uv1.y}, color};
+        vertices << VertexBasicUv{rectVertices[1], {uv2.x, uv1.y}, color};
+        vertices << VertexBasicUv{rectVertices[2], {uv1.x, uv2.y}, color};
+        vertices << VertexBasicUv{rectVertices[3], {uv2.x, uv2.y}, color};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
@@ -778,8 +791,12 @@ void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRound
     mRoundedTexturedShader->use();
     mRoundedTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
     mRoundedTexturedShader->set(aui::ShaderUniforms::ALBEDO, 0);
+    mRoundedTexturedShader->set(aui::ShaderUniforms::PREMULTIPLIED, v.premultiplied);
     setupMask(*mRoundedTexturedShader);
-    static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
+    bindTexture(v.texture.get());
+
+    glm::vec2 uv1 = v.uv1;
+    glm::vec2 uv2 = v.uv2;
 
     AVector<VertexRounded> vertices;
     AVector<GLuint> indices;
@@ -800,10 +817,10 @@ void OpenGLRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRound
         auto rectVertices = getVerticesForRect(inst.position, inst.size);
         glm::vec4 color = maskColor(inst.color).premultiply();
 
-        vertices << VertexRounded{rectVertices[0], {v.uv1.x, v.uv1.y}, color, outerSize};
-        vertices << VertexRounded{rectVertices[1], {v.uv2.x, v.uv1.y}, color, outerSize};
-        vertices << VertexRounded{rectVertices[2], {v.uv1.x, v.uv2.y}, color, outerSize};
-        vertices << VertexRounded{rectVertices[3], {v.uv2.x, v.uv2.y}, color, outerSize};
+        vertices << VertexRounded{rectVertices[0], {uv1.x, uv1.y}, color, outerSize};
+        vertices << VertexRounded{rectVertices[1], {uv2.x, uv1.y}, color, outerSize};
+        vertices << VertexRounded{rectVertices[2], {uv1.x, uv2.y}, color, outerSize};
+        vertices << VertexRounded{rectVertices[3], {uv2.x, uv2.y}, color, outerSize};
 
         indices << offset + 0 << offset + 1 << offset + 2 << offset + 2 << offset + 1 << offset + 3;
     }
@@ -1028,7 +1045,7 @@ void OpenGLRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& tran
         mSymbolShader->set(aui::ShaderUniforms::ALBEDO, 0);
         setupMask(*mSymbolShader);
     }
-    static_cast<OpenGLTexture2D*>(v.texture.get())->bind();
+    bindTexture(v.texture.get());
 
     AVector<GLuint> indices;
     indices.reserve(v.instances.size() * 6);
@@ -1325,6 +1342,7 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<c
     mTexturedShader->use();
     mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix);
     mTexturedShader->set(aui::ShaderUniforms::COLOR, glm::vec4(1.f));
+    mTexturedShader->set(aui::ShaderUniforms::PREMULTIPLIED, true);
     static_cast<OpenGLTexture2D*>(areaOfInterest->framebuffer->renderTarget.get())->bind();
 
     auto rectVertices = getVerticesForRect(glm::vec2(position), glm::vec2(size));

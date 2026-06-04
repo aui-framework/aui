@@ -63,8 +63,12 @@ uint32_t gl::Program::load(std::string code, uint32_t type, GLSLOptions options)
 
     std::string prefix;
     if (!options.custom) {
-        prefix = fmt::format("#version 100\n"
-                       "precision {} float;\n"
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS || AUI_PLATFORM_EMSCRIPTEN
+        prefix = "#version 300 es\n";
+#else
+        prefix = "#version 330 core\n";
+#endif
+        prefix += fmt::format("precision {} float;\n"
                        "precision {} int;\n",
                        options.floatp == Precision::highp ? "highp" : "mediump",
                        options.intp == Precision::highp ? "highp" : "mediump");

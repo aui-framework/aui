@@ -42,7 +42,7 @@ void ADisplayList::add(StoredCommand::Command cmd, const glm::mat4& transform, A
                     return true;
                 },
                 [&](TexturedRectangles& l, TexturedRectangles& r) {
-                    if (l.texture == r.texture && l.uv1 == r.uv1 && l.uv2 == r.uv2) {
+                    if (l.texture == r.texture && l.uv1 == r.uv1 && l.uv2 == r.uv2 && l.premultiplied == r.premultiplied) {
                         l.instances << std::move(r.instances);
                         return true;
                     }
@@ -56,7 +56,7 @@ void ADisplayList::add(StoredCommand::Command cmd, const glm::mat4& transform, A
                     return false;
                 },
                 [&](TexturedRoundedRectangles& l, TexturedRoundedRectangles& r) {
-                    if (l.radius == r.radius && l.texture == r.texture && l.uv1 == r.uv1 && l.uv2 == r.uv2) {
+                    if (l.radius == r.radius && l.texture == r.texture && l.uv1 == r.uv1 && l.uv2 == r.uv2 && l.premultiplied == r.premultiplied) {
                         l.instances << std::move(r.instances);
                         return true;
                     }
@@ -359,10 +359,28 @@ void ADisplayList::draw(IRendererBackend& renderer, const _<ITexture>& windowTar
                     aui::lambda_overloaded {
                       [&](const SolidRectangles& v) { renderer.solidRectangles(v, entity.transform, entity.paint); },
                       [&](const GradientRectangles& v) { renderer.gradientRectangles(v, entity.transform, entity.paint); },
-                      [&](const TexturedRectangles& v) { renderer.texturedRectangles(v, entity.transform, entity.paint); },
+                      [&](const TexturedRectangles& v) {
+                          if (v.texture && v.texture->getOrigin() == TextureOrigin::BOTTOM_LEFT) {
+                              auto copy = v;
+                              copy.uv1.y = 1.f - copy.uv1.y;
+                              copy.uv2.y = 1.f - copy.uv2.y;
+                              renderer.texturedRectangles(copy, entity.transform, entity.paint);
+                          } else {
+                              renderer.texturedRectangles(v, entity.transform, entity.paint);
+                          }
+                      },
                       [&](const SolidRoundedRectangles& v) { renderer.solidRoundedRectangles(v, entity.transform, entity.paint); },
                       [&](const GradientRoundedRectangles& v) { renderer.gradientRoundedRectangles(v, entity.transform, entity.paint); },
-                      [&](const TexturedRoundedRectangles& v) { renderer.texturedRoundedRectangles(v, entity.transform, entity.paint); },
+                      [&](const TexturedRoundedRectangles& v) {
+                          if (v.texture && v.texture->getOrigin() == TextureOrigin::BOTTOM_LEFT) {
+                              auto copy = v;
+                              copy.uv1.y = 1.f - copy.uv1.y;
+                              copy.uv2.y = 1.f - copy.uv2.y;
+                              renderer.texturedRoundedRectangles(copy, entity.transform, entity.paint);
+                          } else {
+                              renderer.texturedRoundedRectangles(v, entity.transform, entity.paint);
+                          }
+                      },
                       [&](const RectangleBorders& v) { renderer.rectangleBorders(v, entity.transform, entity.paint); },
                       [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, entity.transform, entity.paint); },
                       [&](const BoxShadow& v) { renderer.boxShadow(v, entity.transform, entity.paint); },

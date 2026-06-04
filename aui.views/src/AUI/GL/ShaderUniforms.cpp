@@ -41,4 +41,5 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform DIVIDER("divider");
     gl::Program::Uniform THRESHOLD("threshold");
     gl::Program::Uniform KERNEL("kernel");
+    gl::Program::Uniform PREMULTIPLIED("u_premultiplied");
 }

@@ -3,6 +3,7 @@ in vec2 vUv;
 in vec4 vColor;
 in vec2 vOuterSize;
 uniform sampler2D albedo;
+uniform bool u_premultiplied;
 
 uniform sampler2D u_mask;
 uniform bool u_useMask;
@@ -24,7 +25,9 @@ float rounded(vec2 absolute, vec2 size, vec2 absoluteDerivatives) {
 
 void main() {
     vec4 tex = texture(albedo, vUv);
-    tex.rgb *= tex.a;
+    if (!u_premultiplied) {
+        tex.rgb *= tex.a;
+    }
     fragColor = tex * vColor * rounded(abs(vUv * 2.0 - 1.0), vOuterSize, fwidth(vUv) * 2.0);
     if (u_useMask) {
         vec2 maskUv = (gl_FragCoord.xy - u_maskRect.xy) / u_maskRect.zw;

@@ -114,8 +114,10 @@ struct ATexturedBrush {
      */
     Repeat repeat = Repeat::NONE;
 
+    bool premultiplied = false;
+
     bool operator==(const ATexturedBrush& other) const {
-        return texture == other.texture && uv1 == other.uv1 && uv2 == other.uv2 && imageRendering == other.imageRendering && repeat == other.repeat;
+        return texture == other.texture && uv1 == other.uv1 && uv2 == other.uv2 && imageRendering == other.imageRendering && repeat == other.repeat && premultiplied == other.premultiplied;
     }
 };
 

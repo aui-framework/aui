@@ -60,7 +60,7 @@ void AScrollAreaViewport::render(ARenderContext ctx) {
         if (!mRenderToTexture->texture) {
             drawOffscreen(ctx);
         }
-        ctx.canvas.rectangle(APaint{ATexturedBrush{mRenderToTexture->texture}}, {0, 0}, getSize());
+        ctx.canvas.rectangle(APaint{ATexturedBrush{mRenderToTexture->texture, {}, {}, {}, {}, true}}, {0, 0}, getSize());
     } else {
         //AViewContainerBase::render(ctx);
     }
