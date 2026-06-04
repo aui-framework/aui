@@ -1,3 +1,4 @@
+layout(location = 0) out vec4 fragColor;
 in vec2 vUv;
 in vec4 vColor;
 in vec2 vInnerSize;
@@ -31,14 +32,14 @@ float rounded(vec2 absolute, vec2 size, vec2 absoluteDerivatives) {
 void main() {
     vec2 absolute = abs(vUv * 2.0 - 1.0);
     vec2 absoluteDerivatives = fwidth(vUv) * 2.0;
-    gl_FragColor = vColor * (rounded(absolute, vOuterSize, absoluteDerivatives) - rounded(absolute * vOuterToInner, vInnerSize, absoluteDerivatives * vOuterToInner));
+    fragColor = vColor * (rounded(absolute, vOuterSize, absoluteDerivatives) - rounded(absolute * vOuterToInner, vInnerSize, absoluteDerivatives * vOuterToInner));
     if (u_useMask) {
         vec2 maskUv = (gl_FragCoord.xy - u_maskRect.xy) / u_maskRect.zw;
         if (maskUv.x < 0.0 || maskUv.x > 1.0 || maskUv.y < 0.0 || maskUv.y > 1.0) {
-            gl_FragColor *= 0.0;
+            fragColor *= 0.0;
         } else {
-            gl_FragColor *= texture2D(u_mask, maskUv).r;
+            fragColor *= texture(u_mask, maskUv).r;
         }
     }
-    if (gl_FragColor.a < 0.001) discard;
+    if (fragColor.a < 0.001) discard;
 }

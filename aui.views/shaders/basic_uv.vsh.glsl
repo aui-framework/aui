@@ -1,11 +1,11 @@
-in vec2 pos;
-in vec2 uv;
-in vec4 color;
-in vec2 outerSize;
-in vec2 innerSize;
-in vec2 outerToInner;
-in vec4 color1;
-in vec4 color2;
+layout(location = 0) in vec2 pos;
+layout(location = 1) in vec2 uv;
+layout(location = 2) in vec4 color;
+layout(location = 3) in vec2 outerSize;
+layout(location = 4) in vec2 innerSize;
+layout(location = 5) in vec2 outerToInner;
+layout(location = 6) in vec4 color1;
+layout(location = 7) in vec4 color2;
 
 out vec4 vVertex;
 out vec2 vUv;

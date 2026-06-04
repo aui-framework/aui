@@ -1,3 +1,4 @@
+layout(location = 0) out vec4 fragColor;
 in vec4 vVertex;
 in vec2 vUv;
 in vec4 vColor;
@@ -43,13 +44,13 @@ void main() {
     vec4 query = vec4(v - lower, v - upper);
     vec4 integral = 0.5 + 0.5 * erf(query * (sqrt(0.5) / sigma));
     float factor = (1.0 - clamp((integral.z - integral.x) * (integral.w - integral.y), 0.0, 1.0)) * rounded(abs(vUv * 2.0 - 1.0), outerSize, fwidth(vUv) * 2.0);
-    gl_FragColor = vColor * factor;
+    fragColor = vColor * factor;
     if (u_useMask) {
         vec2 maskUv = (gl_FragCoord.xy - u_maskRect.xy) / u_maskRect.zw;
         if (maskUv.x < 0.0 || maskUv.x > 1.0 || maskUv.y < 0.0 || maskUv.y > 1.0) {
-            gl_FragColor *= 0.0;
+            fragColor *= 0.0;
         } else {
-            gl_FragColor *= texture2D(u_mask, maskUv).r;
+            fragColor *= texture(u_mask, maskUv).r;
         }
     }
 }

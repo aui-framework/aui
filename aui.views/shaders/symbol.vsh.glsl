@@ -1,6 +1,6 @@
-in vec2 pos;
-in vec2 uv;
-in vec4 color;
+layout(location = 0) in vec2 pos;
+layout(location = 1) in vec2 uv;
+layout(location = 2) in vec4 color;
 out vec2 vUv;
 out vec4 vColor;
 uniform mat4 transform;
