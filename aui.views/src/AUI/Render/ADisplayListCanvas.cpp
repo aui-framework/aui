@@ -53,9 +53,9 @@ void ADisplayListCanvas::restore(size_t targetStackSize) {
     }
 }
 
-void ADisplayListCanvas::pushClipRect(const ARect<float>& rect) {
+void ADisplayListCanvas::pushClipRect(const ARect<float>& rect, AClipOp op) {
     mClipStackDepth++;
-    add(ADisplayList::PushClipRect{rect}, {});
+    add(ADisplayList::PushClipRect{rect, op}, {});
 }
 
 void ADisplayListCanvas::popClipRect() {

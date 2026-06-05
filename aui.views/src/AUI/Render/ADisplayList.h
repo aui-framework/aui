@@ -23,6 +23,7 @@
 #include <AUI/Geometry2D/ARect.h>
 #include <AUI/Render/ITexture.h>
 #include <AUI/Render/IRendererText.hpp>
+#include <AUI/Render/AClipOp.hpp>
 
 class IRenderer;
 class IRendererBackend;
@@ -132,6 +133,7 @@ public:
 
     struct PushClipRect {
         ARect<float> rect;
+        AClipOp op;
     };
     struct PopClipRect {};
     struct Clear {

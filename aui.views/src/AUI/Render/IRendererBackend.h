@@ -89,5 +89,7 @@ public:
     virtual AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
                                    const _<ITexture>& mask2, const glm::vec4& mask2Rect) = 0;
 
+    virtual _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) = 0;
+
     virtual const _<aui::AFontCache>& getFontCache() = 0;
 };

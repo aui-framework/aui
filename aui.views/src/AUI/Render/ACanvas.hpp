@@ -26,6 +26,7 @@
 #include <AUI/ASS/Property/Backdrop.h>
 #include <AUI/Render/APaint.hpp>
 #include <AUI/Render/IRenderer.h>
+#include <AUI/Render/AClipOp.hpp>
 
 class ACanvas {
 public:
@@ -36,7 +37,7 @@ public:
     virtual void restore() = 0;
     virtual void restore(size_t targetStackSize) = 0;
 
-    virtual void pushClipRect(const ARect<float>& rect) = 0;
+    virtual void pushClipRect(const ARect<float>& rect, AClipOp op = AClipOp::INTERSECT) = 0;
     virtual void popClipRect() = 0;
 
     virtual void pushMask(const _<ITexture>& maskTexture, const glm::vec4& maskRect) = 0;
