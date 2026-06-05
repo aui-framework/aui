@@ -347,8 +347,7 @@ void OpenGLRenderer::setClipRect(const ARect<float>& rect) {
 
 void OpenGLRenderer::clear(const AColor& color) {
     glViewport(0, 0, static_cast<GLsizei>(mViewportSize.x), static_cast<GLsizei>(mViewportSize.y));
-    glEnable(GL_SCISSOR_TEST);
-    glScissor(0, 0, static_cast<GLsizei>(mViewportSize.x), static_cast<GLsizei>(mViewportSize.y));
+    glDisable(GL_SCISSOR_TEST);
     glClearColor(color.r, color.g, color.b, color.a);
     glClear(GL_COLOR_BUFFER_BIT);
 }
