@@ -113,8 +113,6 @@ void AView::postRender(ARenderContext ctx) {
 }
 
 void AView::render(ARenderContext ctx) {
-    size_t saved = ctx.canvas.save();
-
     if (mAnimator) {
         mAnimator->animate(this, ctx.canvas);
     }
@@ -167,8 +165,6 @@ void AView::render(ARenderContext ctx) {
         w->renderFor(this, ctx);
     }
     mRedrawRequested = false;
-
-    ctx.canvas.restore(saved);
 }
 
 static void walkToParentStack(AView* view, aui::invocable<AView*> auto&& callback) {
