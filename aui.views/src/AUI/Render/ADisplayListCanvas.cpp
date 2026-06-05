@@ -396,6 +396,14 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                 glm::vec4 p2 = st * glm::vec4(v.rect.p2, 0.f, 1.f);
                 v.rect = ARect<float>{ glm::vec2(p1), glm::vec2(p2) };
             },
+            [&](ADisplayList::Backdrop& v) {
+                auto p1 = glm::vec2(st * glm::vec4(v.position, 0.f, 1.f));
+                auto p2 = glm::vec2(st * glm::vec4(v.position + v.size, 0.f, 1.f));
+                auto lower = glm::floor(glm::min(p1, p2));
+                auto upper = glm::ceil(glm::max(p1, p2));
+                v.position = glm::ivec2(lower);
+                v.size = glm::ivec2(upper - lower);
+            },
             [&](auto&) {}
         };
         std::visit(applyST, command);

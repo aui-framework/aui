@@ -32,6 +32,9 @@
 #include <AUI/View/AAbstractLabel.h>
 #include <AUI/Performance/APerformanceSection.h>
 #include <AUI/Render/CommonOffscreenRenderPass.h>
+#include <AUI/Util/GaussianKernel.h>
+#include <array>
+#include <cmath>
 
 #ifdef AUI_PLATFORM_WIN32
 #include <windows.h>
@@ -128,6 +131,9 @@ struct VertexRoundedGradient {
     glm::vec4 color1;
     glm::vec4 color2;
 };
+
+const gl::Program::Uniform BACKDROP_KERNEL_RADIUS("uKernelRadius");
+const gl::Program::Uniform BACKDROP_UVMAP("uvmap");
 
 }
 
@@ -231,6 +237,8 @@ precision highp int;
     useShader(mLineSolidDashedShader, "basic_uv.vsh", "line_solid_dashed.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
     useShader(mUnblendShader, "basic_uv.vsh", "rect_unblend.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
     useShader(mMergeMasksShader, "merge_masks.vsh", "merge_masks.fsh", {{0, "pos"}, {1, "uv"}});
+    useShader(mBackdropBlurShader, "basic_uv.vsh", "backdrop_blur.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
+    useShader(mBackdropLiquidShader, "basic_uv.vsh", "backdrop_liquid.fsh", {{0, "pos"}, {1, "uv"}, {2, "color"}});
 
     mEmptyMask = createTexture({1, 1}, APixelFormat::R8_UNORM);
     AImage emptyImg({1, 1}, APixelFormat::R8_UNORM);
@@ -428,7 +436,8 @@ _<ITexture> OpenGLRenderer::createRectMask(const ARect<float>& rect, bool invert
 
     gl::Framebuffer& framebuffer = getFbo(glDestTexture);
 
-    gl::Framebuffer* prevFramebuffer = gl::Framebuffer::current();
+    GLint prevFramebuffer = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFramebuffer);
     glm::uvec2 prevViewportSize = mViewportSize;
     glm::mat4 prevProjectionMatrix = mProjectionMatrix;
     bool prevIsRenderingToMask = mIsRenderingToMask;
@@ -454,8 +463,8 @@ _<ITexture> OpenGLRenderer::createRectMask(const ARect<float>& rect, bool invert
         glDisable(GL_SCISSOR_TEST);
     }
 
-    if (prevFramebuffer) {
-        prevFramebuffer->bind();
+    if (prevFramebuffer != 0) {
+        glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(prevFramebuffer));
     } else {
         glBindFramebuffer(GL_FRAMEBUFFER, getDefaultFb());
     }
@@ -496,7 +505,8 @@ IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask
 
     GLDebugGroupLocal debugGroup("mergeMasks");
 
-    gl::Framebuffer* prevFramebuffer = gl::Framebuffer::current();
+    GLint prevFramebuffer = 0;
+    glGetIntegerv(GL_FRAMEBUFFER_BINDING, &prevFramebuffer);
     glm::uvec2 prevViewportSize = mViewportSize;
     glm::mat4 prevProjectionMatrix = mProjectionMatrix;
     bool prevIsRenderingToMask = mIsRenderingToMask;
@@ -583,8 +593,8 @@ IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask
     gl::State::activeTexture(0);
     gl::State::bindTexture(GL_TEXTURE_2D, 0);
 
-    if (prevFramebuffer) {
-        prevFramebuffer->bind();
+    if (prevFramebuffer != 0) {
+        glBindFramebuffer(GL_FRAMEBUFFER, static_cast<GLuint>(prevFramebuffer));
     } else {
         gl::Framebuffer::unbind();
     }
@@ -1350,9 +1360,36 @@ void OpenGLRenderer::squareSector(const ADisplayList::SquareSector& v, const glm
 void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {
     if (!glm::all(glm::greaterThan(size, glm::ivec2(0)))) return;
     if (backdrops.empty()) return;
+    if (!mCurrentRenderTarget) return;
 
-    auto source = gl::Framebuffer::current();
-    if (!source) return;
+    auto currentTexture = dynamic_cast<OpenGLTexture2D*>(mCurrentRenderTarget.get());
+    auto currentFramebufferTexture = dynamic_cast<OpenGLFramebufferTexture*>(mCurrentRenderTarget.get());
+    if (currentFramebufferTexture && currentFramebufferTexture->handle() == 0) {
+        return;
+    }
+
+    auto bindCurrentRenderTarget = [&] {
+        if (currentTexture) {
+            getFbo(_cast<OpenGLTexture2D>(mCurrentRenderTarget)).bind();
+        } else if (currentFramebufferTexture) {
+            glBindFramebuffer(GL_FRAMEBUFFER, currentFramebufferTexture->handle());
+        } else {
+            gl::Framebuffer::unbind();
+        }
+        glViewport(0, 0, static_cast<GLsizei>(mViewportSize.x), static_cast<GLsizei>(mViewportSize.y));
+    };
+
+    auto bindCurrentRenderTargetForRead = [&] {
+        if (currentTexture) {
+            getFbo(_cast<OpenGLTexture2D>(mCurrentRenderTarget)).bindForRead();
+        } else if (currentFramebufferTexture) {
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, currentFramebufferTexture->handle());
+        }
+    };
+
+    auto sourceSize = glm::ivec2(mViewportSize);
+
+    GLDebugGroupLocal debugGroup("backdrops");
 
     struct AreaOfInterest {
         FramebufferFromPool framebuffer;
@@ -1361,41 +1398,221 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<c
 
     AOptional<AreaOfInterest> areaOfInterest;
 
-    auto initAreaOfInterestIfEmpty = [&](glm::ivec2 fbSize){
-        if (areaOfInterest) return;
+    auto sourceVertices = getVerticesForRect(glm::vec2(position), glm::vec2(size));
+    std::array<glm::ivec2, 4> transformedVertices{};
+    for (size_t i = 0; i < transformedVertices.size(); ++i) {
+        auto ndc = glm::vec2(mProjectionMatrix * glm::vec4(sourceVertices[i], 0, 1));
+        transformedVertices[i] = glm::ivec2((ndc + 1.f) / 2.f * glm::vec2(sourceSize));
+    }
+    auto sourceLower = transformedVertices[0];
+    auto sourceUpper = transformedVertices[0];
+    for (const auto& v : transformedVertices) {
+        sourceLower = glm::min(sourceLower, v);
+        sourceUpper = glm::max(sourceUpper, v);
+    }
 
+    auto initAreaOfInterest = [&](glm::ivec2 fbSize) {
         auto fb = getFramebufferForMultiPassEffect(fbSize);
-        source->bindForRead();
-        fb->framebuffer.bindForWrite();
-
-        auto vertices = getVerticesForRect(glm::vec2(position), glm::vec2(size));
-        std::array<glm::ivec2, 4> transformedVertices{};
-        for (size_t i = 0; i < 4; ++i) {
-            auto ndc = glm::vec2(mProjectionMatrix * glm::vec4(vertices[i], 0, 1));
-            transformedVertices[i] = glm::ivec2((ndc + 1.f) / 2.f * glm::vec2(source->size()));
+        if (auto texture = dynamic_cast<ITexture*>(fb->renderTarget.get())) {
+            texture->setOrigin(TextureOrigin::TOP_LEFT);
         }
-
-        auto p1 = transformedVertices[0];
-        auto p2 = transformedVertices[3];
-        glBlitFramebuffer(p1.x, p1.y, p2.x, p2.y, 0, 0, fbSize.x, fbSize.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+        bindCurrentRenderTargetForRead();
+        fb->framebuffer.bindForWrite();
+        glBlitFramebuffer(sourceLower.x, sourceLower.y, sourceUpper.x, sourceUpper.y,
+                          0, 0, fbSize.x, fbSize.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
         areaOfInterest = AreaOfInterest{
             .framebuffer = std::move(fb),
             .size = fbSize,
         };
     };
 
-    {
-        AUI_DEFER {
-            source->bind();
-            source->bindViewport();
+    auto initAreaOfInterestIfEmpty = [&](glm::ivec2 fbSize) {
+        if (!areaOfInterest) {
+            initAreaOfInterest(fbSize);
+        }
+    };
+
+    auto bindAreaTexture = [&](const AreaOfInterest& area, uint32_t unit = 0) {
+        bindTexture(dynamic_cast<ITexture*>(area.framebuffer->renderTarget.get()), unit);
+    };
+
+    auto drawBlurPass = [&](gl::Framebuffer& target, glm::ivec2 targetSize, gl::Framebuffer::IRenderTarget& sourceTexture,
+                            glm::vec2 stepSize, glm::vec2 uvMax, unsigned radius) {
+        target.bind();
+        glViewport(0, 0, targetSize.x, targetSize.y);
+        glScissor(0, 0, targetSize.x, targetSize.y);
+
+        mBackdropBlurShader->use();
+        mBackdropBlurShader->set(aui::ShaderUniforms::TRANSFORM,
+                                 glm::ortho(0.f, float(targetSize.x), float(targetSize.y), 0.f, -1.f, 1.f));
+        mBackdropBlurShader->set(aui::ShaderUniforms::COLOR, glm::vec4(1.f));
+        mBackdropBlurShader->set(aui::ShaderUniforms::PIXEL_TO_UV, stepSize);
+        mBackdropBlurShader->set(aui::ShaderUniforms::M2, uvMax);
+        mBackdropBlurShader->set(BACKDROP_KERNEL_RADIUS, int(radius));
+        mBackdropBlurShader->setArray(aui::ShaderUniforms::KERNEL, aui::detail::gaussianKernel(radius));
+        bindTexture(dynamic_cast<ITexture*>(&sourceTexture));
+
+        auto rectVertices = getVerticesForRect({0.f, 0.f}, glm::vec2(targetSize));
+        VertexBasicUv vertices[4] = {
+            {rectVertices[0], {0.f, 1.f}, glm::vec4(1.f)},
+            {rectVertices[1], {1.f, 1.f}, glm::vec4(1.f)},
+            {rectVertices[2], {0.f, 0.f}, glm::vec4(1.f)},
+            {rectVertices[3], {1.f, 0.f}, glm::vec4(1.f)},
         };
+        GLuint indices[6] = {0, 1, 2, 2, 1, 3};
+
+        size_t vOffset = mVertexBuffer.upload(vertices, sizeof(vertices));
+        size_t iOffset = mIndexBuffer.upload(indices, sizeof(indices));
+
+        mBatchVao.bind();
+        glEnableVertexAttribArray(0);
+        glEnableVertexAttribArray(1);
+        glEnableVertexAttribArray(2);
+        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
+        glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
+        glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, color)));
+
+        glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
+    };
+
+    {
+        auto previousBlendEnabled = glIsEnabled(GL_BLEND);
+        auto previousScissorEnabled = glIsEnabled(GL_SCISSOR_TEST);
+        GLint previousScissorBox[4] = {};
+        glGetIntegerv(GL_SCISSOR_BOX, previousScissorBox);
+
+        AUI_DEFER {
+            if (previousBlendEnabled) {
+                glEnable(GL_BLEND);
+            } else {
+                glDisable(GL_BLEND);
+            }
+            if (previousScissorEnabled) {
+                glEnable(GL_SCISSOR_TEST);
+                glScissor(previousScissorBox[0], previousScissorBox[1], previousScissorBox[2], previousScissorBox[3]);
+            } else {
+                glDisable(GL_SCISSOR_TEST);
+            }
+            bindCurrentRenderTarget();
+        };
+
+        glDisable(GL_BLEND);
 
         for (const auto& backdrop : backdrops) {
             std::visit(aui::lambda_overloaded{
-                [&](const ass::Backdrop::GaussianBlur& blur) {
-                    initAreaOfInterestIfEmpty(size);
-                    // Blur implementation would go here.
-                    // For now, we just have the blitted area in areaOfInterest.
+                [&](const ass::Backdrop::LiquidFluid&) {
+                    AUI_ASSERTX(!areaOfInterest, "LiquidGlass must be the first effect in backdrop list.");
+                    if (areaOfInterest) {
+                        return;
+                    }
+
+                    auto targetSize = sourceSize;
+                    auto fb = getFramebufferForMultiPassEffect(targetSize);
+                    if (auto texture = dynamic_cast<ITexture*>(fb->renderTarget.get())) {
+                        texture->setOrigin(TextureOrigin::TOP_LEFT);
+                    }
+                    bindCurrentRenderTargetForRead();
+                    fb->framebuffer.bindForWrite();
+                    glBlitFramebuffer(0, 0, targetSize.x, targetSize.y,
+                                      0, 0, targetSize.x, targetSize.y, GL_COLOR_BUFFER_BIT, GL_LINEAR);
+                    areaOfInterest = AreaOfInterest {
+                        .framebuffer = std::move(fb),
+                        .size = targetSize,
+                    };
+
+                    static auto uvMap = [] {
+                        auto result = std::make_unique<gl::Texture2D>();
+                        result->tex2D(*AImage::fromUrl(":uni/liquid_glass1.png"));
+                        return result;
+                    }();
+
+                    auto offscreen = getFramebufferForMultiPassEffect(size);
+                    if (auto texture = dynamic_cast<ITexture*>(offscreen->renderTarget.get())) {
+                        texture->setOrigin(TextureOrigin::TOP_LEFT);
+                    }
+                    offscreen->framebuffer.bind();
+                    glViewport(0, 0, size.x, size.y);
+                    glScissor(0, 0, size.x, size.y);
+
+                    bindAreaTexture(*areaOfInterest);
+                    uvMap->bind(1);
+
+                    mBackdropLiquidShader->use();
+                    mBackdropLiquidShader->set(aui::ShaderUniforms::TRANSFORM,
+                                               glm::ortho(0.f, float(size.x), float(size.y), 0.f, -1.f, 1.f));
+                    mBackdropLiquidShader->set(aui::ShaderUniforms::UV_SCALE,
+                                               glm::vec2(areaOfInterest->size) /
+                                                   glm::vec2(areaOfInterest->framebuffer->framebuffer.size()));
+                    mBackdropLiquidShader->set(BACKDROP_UVMAP, 1);
+
+                    auto m = mProjectionMatrix;
+                    m = glm::translate(m, glm::vec3(0, size.y, 0));
+                    m = glm::scale(m, glm::vec3(1, -1, 1));
+                    m = glm::translate(m, glm::vec3(position, 0.f));
+                    m = glm::scale(m, glm::vec3(size, 1.f));
+                    mBackdropLiquidShader->set(aui::ShaderUniforms::M2, m);
+
+                    auto rectVertices = getVerticesForRect({0.f, 0.f}, glm::vec2(size));
+                    VertexBasicUv vertices[4] = {
+                        {rectVertices[0], {0.f, 1.f}, glm::vec4(1.f)},
+                        {rectVertices[1], {1.f, 1.f}, glm::vec4(1.f)},
+                        {rectVertices[2], {0.f, 0.f}, glm::vec4(1.f)},
+                        {rectVertices[3], {1.f, 0.f}, glm::vec4(1.f)},
+                    };
+                    GLuint indices[6] = {0, 1, 2, 2, 1, 3};
+
+                    size_t vOffset = mVertexBuffer.upload(vertices, sizeof(vertices));
+                    size_t iOffset = mIndexBuffer.upload(indices, sizeof(indices));
+
+                    mBatchVao.bind();
+                    glEnableVertexAttribArray(0);
+                    glEnableVertexAttribArray(1);
+                    glEnableVertexAttribArray(2);
+                    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
+                    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
+                    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, color)));
+
+                    glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
+                    gl::State::activeTexture(1);
+                    gl::State::bindTexture(GL_TEXTURE_2D, 0);
+                    gl::State::activeTexture(0);
+
+                    areaOfInterest = AreaOfInterest {
+                        .framebuffer = std::move(offscreen),
+                        .size = size,
+                    };
+                },
+                [&](const ass::Backdrop::GaussianBlurCustom& blur) {
+                    auto radius = glm::min(64u, unsigned(glm::max(0, int(blur.radius.getValuePx()))));
+                    if (radius <= 1) {
+                        return;
+                    }
+
+                    AUI_ASSERT(blur.downscale > 0);
+                    auto effectSize = glm::max(glm::ivec2(1), size / blur.downscale);
+
+                    initAreaOfInterestIfEmpty(effectSize);
+
+                    auto areaFramebufferSize = areaOfInterest->framebuffer->framebuffer.size();
+                    auto stepX = glm::vec2(1.f / float(areaFramebufferSize.x), 0.f);
+                    auto uvMaxX = glm::vec2(areaOfInterest->size) / glm::vec2(areaFramebufferSize) - stepX * 0.5f;
+
+                    auto temp = getFramebufferForMultiPassEffect(effectSize);
+                    if (auto texture = dynamic_cast<ITexture*>(temp->renderTarget.get())) {
+                        texture->setOrigin(TextureOrigin::TOP_LEFT);
+                    }
+
+                    drawBlurPass(temp->framebuffer, effectSize, *areaOfInterest->framebuffer->renderTarget,
+                                 stepX, uvMaxX, radius);
+
+                    auto tempFramebufferSize = temp->framebuffer.size();
+                    auto stepY = glm::vec2(0.f, 1.f / float(tempFramebufferSize.y));
+                    auto uvMaxY = glm::vec2(effectSize) / glm::vec2(tempFramebufferSize) - stepY * 0.5f;
+
+                    drawBlurPass(areaOfInterest->framebuffer->framebuffer, effectSize, *temp->renderTarget,
+                                 stepY, uvMaxY, radius);
+
+                    areaOfInterest->size = effectSize;
                 },
                 [&](const auto&) {}
             }, backdrop);
@@ -1404,10 +1621,12 @@ void OpenGLRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<c
 
     if (!areaOfInterest) return;
 
+    setBlending(APaint{});
     mTexturedShader->use();
     mTexturedShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix);
     mTexturedShader->set(aui::ShaderUniforms::COLOR, glm::vec4(1.f));
     mTexturedShader->set(aui::ShaderUniforms::PREMULTIPLIED, true);
+    setupMask(*mTexturedShader);
     static_cast<OpenGLTexture2D*>(areaOfInterest->framebuffer->renderTarget.get())->bind();
 
     auto rectVertices = getVerticesForRect(glm::vec2(position), glm::vec2(size));

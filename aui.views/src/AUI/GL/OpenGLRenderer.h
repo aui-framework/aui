@@ -136,6 +136,8 @@ private:
     AOptional<gl::Program> mSymbolShaderSubPixel;
     AOptional<gl::Program> mLineSolidDashedShader;
     AOptional<gl::Program> mMergeMasksShader;
+    AOptional<gl::Program> mBackdropBlurShader;
+    AOptional<gl::Program> mBackdropLiquidShader;
     _<ITexture> mEmptyMask;
 
     gl::Vao mBatchVao;

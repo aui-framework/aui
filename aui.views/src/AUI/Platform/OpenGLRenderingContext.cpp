@@ -25,5 +25,5 @@ void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
 }
 
 uint32_t OpenGLRenderingContext::getDefaultFb() const noexcept {
-    return gl::Framebuffer::current() ? gl::Framebuffer::current()->getHandle() : gl::Framebuffer::DEFAULT_FB;
+    return gl::Framebuffer::DEFAULT_FB;
 }

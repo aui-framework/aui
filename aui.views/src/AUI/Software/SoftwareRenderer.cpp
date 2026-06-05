@@ -16,6 +16,7 @@
 #include <AUI/ASS/Property/Backdrop.h>
 #include <AUI/Traits/values.h>
 #include <AUI/Render/CommonOffscreenRenderPass.h>
+#include <cmath>
 
 _unique<IOffscreenRenderPass> SoftwareRenderer::beginOffscreen(const _<ITexture>& renderTarget) {
     return std::make_unique<CommonOffscreenRenderPass>(*this, renderTarget);
@@ -56,6 +57,89 @@ float roundedRectBorderCoverage(glm::vec2 localPos, glm::vec2 size, float radius
     float sdf_outer = roundedRectSDF(localPos, size, radius);
     float sdf_border = std::abs(sdf_outer + borderWidth * 0.5f) - borderWidth * 0.5f;
     return glm::clamp(0.5f - sdf_border * scale, 0.f, 1.f);
+}
+
+AImage resizeLinear(AImageView source, glm::uvec2 newSize) {
+    if (source.size() == newSize) {
+        return AImage(source);
+    }
+    AImage resized(newSize, source.format());
+    if (newSize.x == 0 || newSize.y == 0 || source.width() == 0 || source.height() == 0) {
+        return resized;
+    }
+
+    auto sourceMax = glm::max(source.size(), glm::uvec2(1)) - glm::uvec2(1);
+    auto ratio = glm::vec2(sourceMax) / glm::vec2(glm::max(newSize, glm::uvec2(1)));
+
+    for (uint32_t y = 0; y < newSize.y; ++y) {
+        for (uint32_t x = 0; x < newSize.x; ++x) {
+            auto sourceX = ratio.x * float(x);
+            auto sourceY = ratio.y * float(y);
+
+            auto x0 = uint32_t(sourceX);
+            auto y0 = uint32_t(sourceY);
+            auto x1 = glm::min(x0 + 1, source.width() - 1);
+            auto y1 = glm::min(y0 + 1, source.height() - 1);
+            auto xWeight = sourceX - float(x0);
+            auto yWeight = sourceY - float(y0);
+
+            auto c00 = source.get({x0, y0}) * ((1.f - xWeight) * (1.f - yWeight));
+            auto c10 = source.get({x1, y0}) * (xWeight * (1.f - yWeight));
+            auto c01 = source.get({x0, y1}) * (yWeight * (1.f - xWeight));
+            auto c11 = source.get({x1, y1}) * (xWeight * yWeight);
+            resized.set({x, y}, c00 + c10 + c01 + c11);
+        }
+    }
+
+    return resized;
+}
+
+void gaussianBlur(AImage& image, int radius) {
+    if (radius <= 0 || image.width() == 0 || image.height() == 0) {
+        return;
+    }
+
+    auto kernelSize = radius * 2 + 1;
+    AVector<float> kernel;
+    kernel.reserve(kernelSize);
+
+    auto sigma = glm::max(radius * 0.5f, 1.f);
+    auto denominator = 2.f * sigma * sigma;
+    float kernelSum = 0.f;
+    for (int i = -radius; i <= radius; ++i) {
+        auto weight = std::exp(-(i * i) / denominator);
+        kernel << weight;
+        kernelSum += weight;
+    }
+    for (auto& weight : kernel) {
+        weight /= kernelSum;
+    }
+
+    AImage horizontal(image.size(), image.format());
+    for (uint32_t y = 0; y < image.height(); ++y) {
+        for (uint32_t x = 0; x < image.width(); ++x) {
+            glm::vec4 color(0.f);
+            for (int i = -radius; i <= radius; ++i) {
+                auto sampleX = glm::clamp(int(x) + i, 0, int(image.width()) - 1);
+                color += glm::vec4(image.get({uint32_t(sampleX), y})) * kernel[i + radius];
+            }
+            horizontal.set({x, y}, AColor(glm::clamp(color, 0.f, 1.f)));
+        }
+    }
+
+    AImage result(image.size(), image.format());
+    for (uint32_t y = 0; y < image.height(); ++y) {
+        for (uint32_t x = 0; x < image.width(); ++x) {
+            glm::vec4 color(0.f);
+            for (int i = -radius; i <= radius; ++i) {
+                auto sampleY = glm::clamp(int(y) + i, 0, int(image.height()) - 1);
+                color += glm::vec4(horizontal.get({x, uint32_t(sampleY)})) * kernel[i + radius];
+            }
+            result.set({x, y}, AColor(glm::clamp(color, 0.f, 1.f)));
+        }
+    }
+
+    image = std::move(result);
 }
 }
 
@@ -595,7 +679,40 @@ void SoftwareRenderer::squareSector(const ADisplayList::SquareSector& v, const g
         }
     }
 }
-void SoftwareRenderer::backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {}
+void SoftwareRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {
+    if (!mRenderTarget || backdrops.empty() || !glm::all(glm::greaterThan(size, glm::ivec2(0)))) {
+        return;
+    }
+
+    auto clippedPosition = glm::max(position, glm::ivec2(0));
+    auto clippedEnd = glm::min(position + size, glm::ivec2(mRenderTarget->size()));
+    auto clippedSize = clippedEnd - clippedPosition;
+    if (!glm::all(glm::greaterThan(clippedSize, glm::ivec2(0)))) {
+        return;
+    }
+
+    AImage area = AImageView(*mRenderTarget).cropped(glm::uvec2(clippedPosition), glm::uvec2(clippedSize)).convert(APixelFormat::R8G8B8A8_UNORM);
+    auto originalSize = area.size();
+
+    for (const auto& backdrop : backdrops) {
+        std::visit(aui::lambda_overloaded {
+            [&](const ass::Backdrop::GaussianBlurCustom& blur) {
+                auto downscale = glm::max(1, blur.downscale);
+                auto scaledSize = glm::max(glm::uvec2(1), (originalSize + glm::uvec2(downscale - 1)) / uint32_t(downscale));
+                auto working = downscale == 1 ? AImage(area) : resizeLinear(area, scaledSize);
+                gaussianBlur(working, glm::max(1, int(std::lround(blur.radius.getValuePx()))));
+                area = working.size() == originalSize ? std::move(working) : resizeLinear(working, originalSize);
+            },
+            [&](const auto&) {}
+        }, backdrop);
+    }
+
+    for (uint32_t y = 0; y < area.height(); ++y) {
+        for (uint32_t x = 0; x < area.width(); ++x) {
+            putPixel(clippedPosition + glm::ivec2(x, y), area.get({x, y}), APaint {});
+        }
+    }
+}
 
 namespace {
 class SoftwareFramebufferTexture : public ITexture {

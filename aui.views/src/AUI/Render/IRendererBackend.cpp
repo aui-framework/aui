@@ -14,6 +14,11 @@
 #include <AUI/Traits/callables.h>
 
 void IRendererBackend::backdrops(const ADisplayList::Backdrop& v, const glm::mat4& transform) {
+    auto p1 = glm::vec2(transform * glm::vec4(v.position, 0.f, 1.f));
+    auto p2 = glm::vec2(transform * glm::vec4(v.position + v.size, 0.f, 1.f));
+    auto lower = glm::floor(glm::min(p1, p2));
+    auto upper = glm::ceil(glm::max(p1, p2));
+
     using Preprocessed = ass::Backdrop::Preprocessed;
     auto preprocessed =
         v.backdrops | ranges::views::transform([](const ass::Backdrop::Any& val) -> Preprocessed {
@@ -23,9 +28,10 @@ void IRendererBackend::backdrops(const ADisplayList::Backdrop& v, const glm::mat
                       return b.findOptimalParams();
                   },
                   [](const auto& b) -> Preprocessed { return b; },
-                },
-                val);
+                 },
+                 val);
         }) |
         ranges::to_vector;
-    this->backdrops(v.position, v.size, std::span<const Preprocessed>(preprocessed.data(), preprocessed.size()));
+    this->backdrops(glm::ivec2(lower), glm::ivec2(upper - lower),
+                    std::span<const Preprocessed>(preprocessed.data(), preprocessed.size()));
 }
