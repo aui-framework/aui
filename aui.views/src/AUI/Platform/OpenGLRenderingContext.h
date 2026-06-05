@@ -65,10 +65,12 @@ public:
 protected:
     _<OpenGLRenderer> mRenderer;
     ADisplayList mDisplayList;
+    ADisplayList mPresentDisplayList;
     _unique<ADisplayListCanvas> mCanvas;
     _unique<RendererCanvas> mRendererWrapper;
     glm::uvec2 mViewportSize { 0, 0 };
     _<ITexture> mWindowTarget;
+    _<ITexture> mBackbufferTarget;
     static _<OpenGLRenderer> ourRenderer() {
         static _weak<OpenGLRenderer> g;
         if (auto v = g.lock()) {
@@ -83,6 +85,7 @@ private:
     ARenderingContextOptions::OpenGL mConfig;
 
     void beginFramebuffer(glm::uvec2 windowSize);
+    void presentToBackbuffer();
 
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;

@@ -36,6 +36,7 @@ void OpenGLRenderingContext::beginPaint(ASurface& window) {
 void OpenGLRenderingContext::endPaint(ASurface& window) {
     mDisplayList.optimize();
     mDisplayList.draw(*mRenderer, mWindowTarget);
+    presentToBackbuffer();
     mDisplayList.clear();
     mRenderer->flush();
     CommonRenderingContext::endPaint(window);

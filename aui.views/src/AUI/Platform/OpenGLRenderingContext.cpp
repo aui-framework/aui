@@ -18,12 +18,38 @@ OpenGLRenderingContext::OpenGLRenderingContext(const ARenderingContextOptions::O
 
 void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
     mViewportSize = windowSize;
+    if (!mBackbufferTarget || mBackbufferTarget->getSize() != mViewportSize) {
+        mBackbufferTarget = mRenderer->createFramebufferWrapper(gl::Framebuffer::DEFAULT_FB, mViewportSize);
+    }
     if (!mWindowTarget || mWindowTarget->getSize() != mViewportSize) {
-        // backbuffer fb
-        mWindowTarget = mRenderer->createFramebufferWrapper(gl::Framebuffer::DEFAULT_FB, mViewportSize);
+        mWindowTarget = mRenderer->createTexture(mViewportSize, APixelFormat::R8G8B8A8_UNORM, TextureFilter::LINEAR);
+        mWindowTarget->setOrigin(TextureOrigin::TOP_LEFT);
     }
 }
 
 uint32_t OpenGLRenderingContext::getDefaultFb() const noexcept {
     return gl::Framebuffer::DEFAULT_FB;
+}
+
+void OpenGLRenderingContext::presentToBackbuffer() {
+    if (!mWindowTarget || !mBackbufferTarget) {
+        return;
+    }
+
+    mPresentDisplayList.clear();
+    ADisplayListCanvas canvas(mPresentDisplayList, *mRenderer);
+    canvas.clear(AColor::TRANSPARENT_BLACK);
+    canvas.rectangle(
+        APaint {
+            .brush = ATexturedBrush {
+                .texture = mWindowTarget,
+                .imageRendering = ImageRendering::SMOOTH,
+                .premultiplied = true,
+            },
+        },
+        {0.f, 0.f},
+        glm::vec2(mViewportSize));
+    mPresentDisplayList.optimize();
+    mPresentDisplayList.draw(*mRenderer, mBackbufferTarget);
+    mPresentDisplayList.clear();
 }

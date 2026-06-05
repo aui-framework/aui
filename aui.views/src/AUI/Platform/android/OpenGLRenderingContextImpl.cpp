@@ -51,6 +51,7 @@ void OpenGLRenderingContext::endResize(ASurface& window) {
 void OpenGLRenderingContext::endPaint(ASurface& window) {
     mDisplayList.optimize();
     mDisplayList.draw(*mRenderer, mWindowTarget);
+    presentToBackbuffer();
     mDisplayList.clear();
 
     CommonRenderingContext::endPaint(window);
@@ -58,4 +59,3 @@ void OpenGLRenderingContext::endPaint(ASurface& window) {
 
 OpenGLRenderingContext::~OpenGLRenderingContext() {
 }
-
