@@ -129,7 +129,9 @@ void AView::render(ARenderContext ctx) {
 
     // mask
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS || mOverflow == AOverflow::HIDDEN) {
-        if (mOverflowMask == AOverflowMask::RECT && getBorderRadius().getRawValue() <= 0.0001f) {
+        if (mOverflowMask == AOverflowMask::ROUNDED_RECT) {
+            ctx.canvas.pushClipRoundedRect(ARect<float>::fromTopLeftPositionAndSize({0, 0}, getSize()), getBorderRadius().getValuePx());
+        } else if (mOverflowMask == AOverflowMask::RECT) {
             ctx.canvas.pushClipRect(ARect<float>::fromTopLeftPositionAndSize({0, 0}, getSize()));
         } else {
             if (!mMaskTexture || mMaskTexture->getSize() != glm::u32vec2(getSize())) {
@@ -140,7 +142,6 @@ void AView::render(ARenderContext ctx) {
                 auto pass = ctx.backend.beginOffscreen(mMaskTexture);
                 auto offctx = pass->context();
                 offctx.canvas.clear();
-                offctx.canvas.setTransformForced(glm::mat4(1.0f));
                 APaint maskPaint;
                 maskPaint.brush = ASolidBrush{AColor::WHITE};
                 offctx.canvas.roundedRectangle(maskPaint, {0, 0}, getSize(), getBorderRadius());
