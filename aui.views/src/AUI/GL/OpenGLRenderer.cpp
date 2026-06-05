@@ -400,9 +400,9 @@ void OpenGLRenderer::setupMask(gl::Program& shader) {
         shader.set(aui::ShaderUniforms::USE_MASK, true);
         glm::vec4 glMaskRect;
         glMaskRect.x = mMaskRect.x;
-        glMaskRect.y = (float)mViewportSize.y - mMaskRect.y;
+        glMaskRect.y = (float)mViewportSize.y - mMaskRect.y - mMaskRect.w;
         glMaskRect.z = mMaskRect.z;
-        glMaskRect.w = -mMaskRect.w;
+        glMaskRect.w = mMaskRect.w;
         shader.set(aui::ShaderUniforms::MASK_RECT, glMaskRect);
         bindTexture(mMask.get(), 1);
     } else {
@@ -506,15 +506,15 @@ IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask
 
     glm::vec4 glMask1Rect;
     glMask1Rect.x = mask1Rect.x;
-    glMask1Rect.y = (float)prevViewportSize.y - mask1Rect.y;
+    glMask1Rect.y = (float)prevViewportSize.y - mask1Rect.y - mask1Rect.w;
     glMask1Rect.z = mask1Rect.z;
-    glMask1Rect.w = -mask1Rect.w;
+    glMask1Rect.w = mask1Rect.w;
 
     glm::vec4 glMask2Rect;
     glMask2Rect.x = mask2Rect.x;
-    glMask2Rect.y = (float)prevViewportSize.y - mask2Rect.y;
+    glMask2Rect.y = (float)prevViewportSize.y - mask2Rect.y - mask2Rect.w;
     glMask2Rect.z = mask2Rect.z;
-    glMask2Rect.w = -mask2Rect.w;
+    glMask2Rect.w = mask2Rect.w;
 
     glm::vec4 glDestRect;
     glDestRect.x = x;
