@@ -285,94 +285,115 @@ void ADisplayList::resolveClips() {
 }
 
 void ADisplayList::resolveMasks(IRendererBackend& renderer) {
-    struct MaskStackEntry {
+    struct MaskState {
         _<ITexture> mask;
         glm::vec4 maskRect;
     };
-    std::vector<MaskStackEntry> maskStack;
-    std::vector<bool> clipIsDifferenceStack;
-    _<ITexture> currentMask;
-    glm::vec4 currentMaskRect(0.f);
 
-    auto viewportSize = renderer.getViewportSize();
-    ARect<float> viewportRect{{0, 0}, glm::vec2(viewportSize)};
+    std::vector<MaskState> mask_stack;
+    std::vector<MaskState> layer_mask_stack;
+    std::vector<MaskState> clip_diff_mask_stack;
+    std::vector<bool> clip_is_difference_stack;
+
+    _<ITexture> current_mask;
+    glm::vec4 current_mask_rect(0.f);
+
+    auto viewport_size = renderer.getViewportSize();
+    ARect<float> viewport_rect{ {0, 0}, glm::vec2(viewport_size) };
+
+    auto applyMask = [&](const _<ITexture>& new_mask, const glm::vec4& new_rect) {
+        if (!current_mask) {
+            current_mask = new_mask;
+            current_mask_rect = new_rect;
+        } else {
+            auto merged = renderer.mergeMasks(current_mask, current_mask_rect, new_mask, new_rect);
+            current_mask = merged.texture;
+            current_mask_rect = merged.rect;
+        }
+    };
 
     for (auto& entity : mEntities) {
         std::visit(
             aui::lambda_overloaded {
+                [&](PushLayer&) {
+                    layer_mask_stack.push_back({ current_mask, current_mask_rect });
+                    current_mask = nullptr;
+                    current_mask_rect = glm::vec4(0.f);
+                },
+                [&](PopLayer&) {
+                    if (!layer_mask_stack.empty()) {
+                        current_mask = layer_mask_stack.back().mask;
+                        current_mask_rect = layer_mask_stack.back().maskRect;
+                        layer_mask_stack.pop_back();
+                    }
+                },
+
                 [&](PushMask& v) {
                     glm::vec2 p1 = glm::vec2(entity.transform * glm::vec4(v.maskRect.x, v.maskRect.y, 0, 1));
-                    glm::vec2 p2 = glm::vec2(entity.transform * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0, 1));
-                    glm::vec4 displayListRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+                    glm::vec2 p2 = glm::vec2(entity.transform * glm::vec4(
+                        v.maskRect.x + v.maskRect.z,
+                        v.maskRect.y + v.maskRect.w, 0, 1));
+                    glm::vec4 display_list_rect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
 
-                    maskStack.push_back({currentMask, currentMaskRect});
-
-                    if (!currentMask) {
-                        currentMask = v.mask;
-                        currentMaskRect = displayListRect;
-                    } else {
-                        auto merged = renderer.mergeMasks(currentMask, currentMaskRect, v.mask, displayListRect);
-                        currentMask = merged.texture;
-                        currentMaskRect = merged.rect;
-                    }
+                    mask_stack.push_back({ current_mask, current_mask_rect });
+                    applyMask(v.mask, display_list_rect);
                 },
                 [&](PopMask&) {
-                    if (!maskStack.empty()) {
-                        currentMask = maskStack.back().mask;
-                        currentMaskRect = maskStack.back().maskRect;
-                        maskStack.pop_back();
+                    if (!mask_stack.empty()) {
+                        current_mask = mask_stack.back().mask;
+                        current_mask_rect = mask_stack.back().maskRect;
+                        mask_stack.pop_back();
                     }
                 },
+
                 [&](PushClipRect& v) {
                     if (v.op == AClipOp::DIFFERENCE) {
-                        clipIsDifferenceStack.push_back(true);
+                        clip_is_difference_stack.push_back(true);
 
                         glm::vec4 p1 = entity.transform * glm::vec4(v.rect.p1, 0.f, 1.f);
                         glm::vec4 p2 = entity.transform * glm::vec4(v.rect.p2, 0.f, 1.f);
-                        ARect<float> worldRect{ .p1 = glm::min(glm::vec2(p1), glm::vec2(p2)),
-                                                .p2 = glm::max(glm::vec2(p1), glm::vec2(p2)) };
+                        ARect<float> world_rect{
+                            .p1 = glm::min(glm::vec2(p1), glm::vec2(p2)),
+                            .p2 = glm::max(glm::vec2(p1), glm::vec2(p2))
+                        };
 
-                        auto bounds = entity.clipRect.intersect(viewportRect);
+                        auto bounds = entity.clipRect.intersect(viewport_rect);
 
-                        maskStack.push_back({currentMask, currentMaskRect});
+                        clip_diff_mask_stack.push_back({ current_mask, current_mask_rect });
 
                         if (bounds.size().x > 0.01f && bounds.size().y > 0.01f) {
-                            auto mask = renderer.createRectMask(worldRect, true, bounds);
-                            glm::vec4 maskRect(bounds.p1.x, bounds.p1.y, bounds.size().x, bounds.size().y);
-
-                            if (!currentMask) {
-                                currentMask = mask;
-                                currentMaskRect = maskRect;
-                            } else {
-                                auto merged = renderer.mergeMasks(currentMask, currentMaskRect, mask, maskRect);
-                                currentMask = merged.texture;
-                                currentMaskRect = merged.rect;
-                            }
+                            auto mask = renderer.createRectMask(world_rect, true, bounds);
+                            glm::vec4 mask_rect(
+                                bounds.p1.x, bounds.p1.y,
+                                bounds.size().x, bounds.size().y);
+                            applyMask(mask, mask_rect);
                         }
                     } else {
-                        clipIsDifferenceStack.push_back(false);
+                        clip_is_difference_stack.push_back(false);
                     }
                 },
                 [&](PopClipRect&) {
-                    if (!clipIsDifferenceStack.empty()) {
-                        if (clipIsDifferenceStack.back()) {
-                            if (!maskStack.empty()) {
-                                currentMask = maskStack.back().mask;
-                                currentMaskRect = maskStack.back().maskRect;
-                                maskStack.pop_back();
+                    if (!clip_is_difference_stack.empty()) {
+                        if (clip_is_difference_stack.back()) {
+                            if (!clip_diff_mask_stack.empty()) {
+                                current_mask = clip_diff_mask_stack.back().mask;
+                                current_mask_rect = clip_diff_mask_stack.back().maskRect;
+                                clip_diff_mask_stack.pop_back();
                             }
                         }
-                        clipIsDifferenceStack.pop_back();
+                        clip_is_difference_stack.pop_back();
                     }
                 },
+
                 [&](auto&) {}
             },
             entity.command);
 
-        entity.mask = currentMask;
-        entity.maskRect = currentMaskRect;
+        entity.mask = current_mask;
+        entity.maskRect = current_mask_rect;
     }
 }
+
 
 void ADisplayList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
     mPasses.clear();
