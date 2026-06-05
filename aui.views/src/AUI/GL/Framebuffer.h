@@ -48,9 +48,6 @@ namespace gl {
         Framebuffer(Framebuffer&& rhs) noexcept: mHandle(rhs.mHandle),
                                                  mSize(rhs.mSize),
                                                  mAttachedTargets(std::move(rhs.mAttachedTargets)) {
-            if (current() == &rhs) {
-                gFramebufferCurrent = this;
-            }
             rhs.mHandle = 0;            
         }
         virtual ~Framebuffer();
@@ -84,21 +81,15 @@ namespace gl {
             if (mHandle == rhs.mHandle) {
                 return *this;
             }
-            if (current() == &rhs) {
-                gFramebufferCurrent = this;
-            }
             std::swap(mHandle, rhs.mHandle);
             mSize = rhs.mSize;
             mAttachedTargets = std::move(rhs.mAttachedTargets);
             return *this;
         }
 
-        static gl::Framebuffer* current();
-
         void bindViewport();
 
     private:
-        static Framebuffer* gFramebufferCurrent;
         uint32_t mHandle = 0;
         glm::u32vec2 mSize{0, 0};
         AVector<_<IRenderTarget>> mAttachedTargets;

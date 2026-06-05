@@ -13,8 +13,6 @@
 #include <AUI/GL/State.h>
 
 
-gl::Framebuffer* gl::Framebuffer::gFramebufferCurrent = nullptr;
-
 #if AUI_PLATFORM_LINUX
 int gl::Framebuffer::DEFAULT_FB = 0;
 #endif
@@ -24,9 +22,6 @@ gl::Framebuffer::Framebuffer() {
 }
 
 gl::Framebuffer::~Framebuffer() {
-    if (gFramebufferCurrent == this) {
-        gFramebufferCurrent = nullptr;
-    }
     if (mHandle == 0) {
         return;
     }
@@ -35,25 +30,21 @@ gl::Framebuffer::~Framebuffer() {
 
 void gl::Framebuffer::bind()
 {
-    gFramebufferCurrent = this;
-  	glBindFramebuffer(GL_FRAMEBUFFER, mHandle);
+    glBindFramebuffer(GL_FRAMEBUFFER, mHandle);
 }
 
 void gl::Framebuffer::bindForRead()
 {
-    gFramebufferCurrent = this;
     glBindFramebuffer(GL_READ_FRAMEBUFFER, mHandle);
 }
 
 void gl::Framebuffer::bindForWrite()
 {
-    gFramebufferCurrent = this;
     glBindFramebuffer(GL_DRAW_FRAMEBUFFER, mHandle);
 }
 
 void gl::Framebuffer::unbind()
 {
-    gFramebufferCurrent = nullptr;
     glBindFramebuffer(GL_FRAMEBUFFER, DEFAULT_FB);
 }
 
@@ -69,10 +60,6 @@ void gl::Framebuffer::resize(glm::u32vec2 newSize) {
     {
         t->onFramebufferResize(mSize);
     }
-}
-
-gl::Framebuffer* gl::Framebuffer::current() {
-    return gFramebufferCurrent;
 }
 
 void gl::Framebuffer::bindViewport() {
