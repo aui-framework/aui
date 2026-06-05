@@ -15,7 +15,7 @@
 
 #include "Padding.h"
 
-void ass::prop::Property<ass::Padding>::applyFor(AView* view) {
+void ass::legacy::Property<ass::Padding>::applyFor(AView* view) {
     auto padding = view->getPadding();
 
     mInfo.left.bindTo(padding.left);
@@ -25,3 +25,16 @@ void ass::prop::Property<ass::Padding>::applyFor(AView* view) {
 
     view->setPadding(padding);
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, Padding value) {
+    return thiz.then([value](AView& view) {
+        auto padding = view.getPadding();
+        value.left.bindTo(padding.left);
+        value.top.bindTo(padding.top);
+        value.right.bindTo(padding.right);
+        value.bottom.bindTo(padding.bottom);
+        view.setPadding(padding);
+    });
+}
+}   // namespace ass

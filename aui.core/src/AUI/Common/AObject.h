@@ -16,15 +16,86 @@
 #include <AUI/Traits/types.h>
 
 namespace aui::detail {
-template <typename Object, aui::not_overloaded_lambda Lambda>
-Lambda&& makeLambda(Object*, Lambda&& lambda)
-{
-    return std::forward<Lambda>(lambda);
+
+
+namespace property {
+template <typename Property>                 // can't use AAnyProperty here, as concept would depend on itself
+auto makeAssignment(Property&& property) {   // note the rvalue reference template argument here:
+    // pass your property as std::move(*this) if your
+    // property-compliant struct is temporary! otherwise you'll
+    // spend your weekend on debugging segfaults :)
+    using Underlying = std::decay_t<decltype(*property)>;
+    struct Invocable {
+        Property property;
+        void operator()(Underlying value) const {
+            // avoid property assignment loop (bidirectional connection)
+            // PropertyCommonTest.Property2PropertyBoth
+            if (property.changed.isAtSignalEmissionState()) {
+                return;
+            }
+            const_cast<Property&>(property) = std::move(value);
+        };
+    } i = { std::forward<Property>(property) };
+
+    return i;
+}
+}   // namespace aui::detail::property
+
+/**
+ * @brief Dispatches a smart pointer, a raw pointer, or a reference into a raw pointer via overloads.
+ * @ingroup signal_slot
+ * @param object raw pointer to an `AObjectBase`-derived object.
+ * @return Raw pointer to `object`.
+ */
+template<aui::derived_from<AObjectBase> Object>
+Object* dispatchReceiverObject(Object* object) {
+    return const_cast<Object*>(object);
+}
+template<aui::derived_from<AObjectBase> Object>
+Object* dispatchReceiverObject(const Object& object) {
+    return const_cast<Object*>(&object);
 }
 
-template <typename Object1, typename Object2, typename Returns, typename... Args>
-auto makeLambda(Object1* object, Returns (Object2::*method)(Args...)) {
-    return [object, method](Args... args) { (object->*method)(std::forward<Args>(args)...); };
+template<aui::derived_from<AObjectBase> Object>
+Object* dispatchReceiverObject(const _<Object>& object) {
+    return object.get();
+}
+
+template<typename T>
+concept Receiver = requires(const T& t) { { dispatchReceiverObject(t) }; };
+
+static_assert(Receiver<AObjectBase*>);
+static_assert(Receiver<AObjectBase&>);
+static_assert(Receiver<_<AObjectBase>>);
+
+/**
+ * @brief Dispatches slot as a lambda.
+ * @ingroup signal_slot
+ * @return `lambda` as is.
+ * @details
+ * This overload is selected when the slot is a non-overloaded lambda. No wrapping is needed because
+ * lambdas are already callable without a bound object.
+ */
+template <Receiver Object, aui::not_overloaded_lambda Lambda>
+Lambda&& dispatchSlot(const Object&, Lambda&& slot)
+{
+    return std::forward<Lambda>(slot);
+}
+
+/**
+ * @brief Wraps a member-function pointer together with its object into a callable.
+ * @ingroup signal_slot
+ * @details
+ * This overload is selected when the slot is a member-function pointer. It captures `object` and
+ * `method` and returns a lambda that invokes `(object->*method)(args...)` when called.
+ * @param object pointer to the receiver object.
+ * @param method pointer-to-member-function to invoke on `object`.
+ * @return A lambda that calls `method` on `object` with the forwarded arguments.
+ */
+template <Receiver Object1, Receiver Object2, typename Returns, typename... Args>
+auto dispatchSlot(const Object1& object, Returns (Object2::*slot)(Args...)) {
+    auto objectPtr = dispatchReceiverObject(object);
+    return [objectPtr, slot](Args... args) { (objectPtr->*slot)(std::forward<Args>(args)...); };
 }
 
 template <typename T>
@@ -76,22 +147,24 @@ public:
      * @brief Connects a signal or property to a slot on an `AObject`.
      *
      * @param connectionSource    The signal (or property) to connect.
-     * @param receiver            Pointer to the target `AObject` instance.
-     * @param function            Slot callable – can be a lambda or a member‑function pointer
-     *                            wrapped with `AUI_SLOT`.
-     * @return                    A connection object that keeps the link alive.
+     * @param receiver            Either pointer, or reference, or smart pointer to the target `AObject` instance.
+     * @param slot                Slot – can be a lambda or a member‑function pointer wrapped with `AUI_SLOT`.
+     * @return                    A connection handle that can be used to destroy the object.
      *
      * ```cpp
      * // (1) Connect a normal signal – the slot is invoked when the signal fires.
-     * connect(view->clicked, AUI_SLOT(otherObjectRawPtr)::handleButtonClicked);
+     * connect(view->clicked, AUI_SLOT(otherObject)::handleButtonClicked);
      *
-     * // (2) Connect a property – the slot is called immediately with the current
+     * // (2) Connect a normal signal – handle with a lambda.
+     * connect(view->clicked, otherObject, []{ std::cout << "Button clicked\n"; });
+     *
+     * // (3) Connect a property – the slot is called immediately with the current
      * //     value (pre-fire) and subsequently whenever the property changes.
-     * connect(textField->text(), AUI_SLOT(otherObjectRawPtr)::handleText);
+     * connect(textField->text(), AUI_SLOT(otherObject)::handleText);
      *
-     * // (3) Connect AUI_REACT – the slot is called immediately with the current
+     * // (4) Connect AUI_REACT – the slot is called immediately with the current
      * //     value(pre-fire) and subsequently whenever the property changes.
-     * connect(AUI_REACT(textField->text().empty()), AUI_SLOT(otherObjectRawPtr)::setEnabled);
+     * connect(AUI_REACT(textField->text().empty()), AUI_SLOT(otherObject)::setEnabled);
      * ```
      *
      * **Important notes**
@@ -103,24 +176,12 @@ public:
      *
      */
     template <
-        aui::detail::ConnectionSource ConnectionSource, aui::derived_from<AObjectBase> Object,
-        ACompatibleSlotFor<ConnectionSource> Function>
-    static decltype(auto) connect(const ConnectionSource& connectionSource, Object* receiver, Function&& function) {
+        aui::detail::ConnectionSource ConnectionSource, aui::detail::Receiver Object,
+        ACompatibleSlotFor<ConnectionSource> Slot>
+    static decltype(auto) connect(const ConnectionSource& connectionSource, const Object& receiver, Slot&& slot) {
         return aui::detail::ConnectionSourceTraits<std::decay_t<ConnectionSource>> {}.connect(
-            const_cast<ConnectionSource&>(connectionSource), receiver,
-            aui::detail::makeLambda(receiver, std::forward<Function>(function)));
-    }
-
-    /**
-     * @brief Connects a signal or property to a property.
-     * @param connectionSource The signal (or property) to connect.
-     * @param propertyDestination destination property, whose value is overwritten on connection creation.
-     * @ingroup property-system
-     */
-    template <aui::detail::ConnectionSource ConnectionSource, APropertyWritable PropertyDestination>
-    static void connect(ConnectionSource&& connectionSource, PropertyDestination&& propertyDestination)
-    {
-        AObject::connect(connectionSource, propertyDestination.assignment());
+            const_cast<ConnectionSource&>(connectionSource), aui::detail::dispatchReceiverObject(receiver),
+            aui::detail::dispatchSlot(receiver, std::forward<Slot>(slot)));
     }
 
     /**
@@ -151,15 +212,8 @@ public:
             { *propertyDestination } -> aui::convertible_to<std::decay_t<decltype(*propertySource)>>;
         }
     {
-        AObject::connect(propertySource, propertyDestination.assignment());
-        AObject::connect(propertyDestination.changed, propertySource.assignment());
-    }
-
-    template <
-        aui::detail::ConnectionSource ConnectionSource, aui::derived_from<AObjectBase> Object,
-        ACompatibleSlotFor<ConnectionSource> Function>
-    static decltype(auto) connect(const ConnectionSource& connectionSource, Object& object, Function&& function) {
-        return connect(connectionSource, &object, std::forward<Function>(function));
+        AObject::connect(propertySource, propertyDestination.boundObject(), aui::detail::property::makeAssignment(std::forward<PropertyDestination>(propertyDestination)));
+        AObject::connect(propertyDestination.changed, propertySource.boundObject(), aui::detail::property::makeAssignment(std::forward<PropertySource>(propertySource)));
     }
 
     /**
@@ -178,93 +232,6 @@ public:
     template <typename Connectable, ACompatibleSlotFor<Connectable> Function>
     decltype(auto) connect(const Connectable& connectable, Function&& function) {
         return connect(connectable, this, std::forward<Function>(function));
-    }
-
-    /**
-     * @brief Connects signal or property to the slot of the specified object.
-     * @ingroup signal_slot
-     * @details
-     * See [signal-slot system](signal_slot.md) for more info.
-     * ```cpp
-     * connect(view->clicked, AUI_SLOT(otherObjectSharedPtr)::handleButtonClicked);
-     * connect(textField->text(), AUI_SLOT(otherObjectSharedPtr)::handleText);
-     * ```
-     *
-     * !!! note
-     *
-     *     `_<Object>` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed
-     *     during connection creation.
-     *
-     * @param connectable signal or property
-     * @param object instance of <code>AObject</code>
-     * @param function slot. Can be lambda
-     * @return Connection instance
-     */
-    template <
-        aui::detail::ConnectionSource ConnectionSource, aui::derived_from<AObjectBase> Object,
-        ACompatibleSlotFor<ConnectionSource> Function>
-    static decltype(auto) connect(const ConnectionSource& connectionSource, _<Object> object, Function&& function) {
-        return connect(connectionSource, object.get(), std::forward<Function>(function));
-    }
-
-    /**
-     * @brief Connects signal to the slot of the specified object. Slot is packed to single argument.
-     * @param connectionSource signal or property
-     * @param slotDef instance of <code>AObject</code> + slot
-     * @return Connection instance
-     *
-     * @details
-     * See [signal-slot system](signal_slot.md) for more info.
-     *
-     * ```cpp
-     * connect(view->clicked, ASlotDef { AUI_SLOT(otherObject)::handleButtonClicked });
-     * connect(textField->text(), ASlotDef { AUI_SLOT(otherObject)::handleText });
-     * ```
-     *
-     * !!! note
-     *
-     *     This overload is applicable for cases when you NEED to pass object and its AUI_SLOT via single argument. If
-     *     possible, consider using shorter overload:
-     *
-     *     ```cpp
-     *     connect(view->clicked, AUI_SLOT(otherObject)::handleButtonClicked);
-     *     ```
-     */
-    template <aui::detail::ConnectionSource ConnectionSource, aui::derived_from<AObjectBase> Object, typename Function>
-    static decltype(auto) connect(const ConnectionSource& connectionSource, ASlotDef<Object*, Function> slotDef) {
-        return connect(connectionSource, slotDef.boundObject, std::move(slotDef.invocable));
-    }
-
-    /**
-     * @brief Connects signal or property to the slot of the specified non-AObject type.
-     * @ingroup property-system
-     * @details
-     * See [signal-slot system](signal_slot.md) for more info.
-     *
-     * ```cpp
-     * struct User { AProperty<AString> name }; // user.name here is non-AObject type
-     * connect(textField->text(), user->name.assignment());
-     * ```
-     *
-     * !!! note
-     *
-     *    `object` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed during
-     *    connection creation.
-     *
-     *
-     * @param property source property.
-     * @param object instance of `AObject`.
-     * @param function slot. Can be lambda.
-     */
-    template <AAnyProperty Property, typename Object, ACompatibleSlotFor<Property> Function>
-    static void connect(const Property& property, _<Object> object, Function&& function)
-        requires(!aui::derived_from<Object, AObject>)
-    {
-        aui::react::DependencyObserverScope r(nullptr); // drop current dependency observer so it won't track source
-        property.changed.makeRawInvocable(function)(*property);
-        connect(property.changed, object, std::forward<Function>(function));
-        const_cast<std::decay_t<decltype(property.changed)>&>(property.changed)
-            .connectNonAObject(std::move(object), aui::detail::makeLambda(object, std::forward<Function>(function)));
     }
 
     void setSignalsEnabled(bool enabled) { mSignalsEnabled = enabled; }

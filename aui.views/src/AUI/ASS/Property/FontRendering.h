@@ -17,9 +17,10 @@
 
 #include "IProperty.h"
 #include <AUI/Render/FontRendering.h> // defined here
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<FontRendering>: IPropertyBase {
         private:
@@ -39,4 +40,6 @@ namespace ass {
         };
 
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, FontRendering value);
 }

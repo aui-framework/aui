@@ -15,9 +15,10 @@
 #include <AUI/Util/AMetric.h>
 #include <AUI/Enum/AOverflow.h>   // defined here
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
-namespace prop {
+namespace legacy {
 template <>
 struct API_AUI_VIEWS Property<AOverflow> : IPropertyBase {
 private:
@@ -50,4 +51,7 @@ public:
     }
 };
 }   // namespace prop
+
+API_AUI_VIEWS Modifier operator|(Modifier thiz, AOverflow value);
+API_AUI_VIEWS Modifier operator|(Modifier thiz, AOverflowMask value);
 }   // namespace ass

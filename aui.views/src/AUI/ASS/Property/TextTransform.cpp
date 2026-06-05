@@ -17,8 +17,18 @@
 #include <AUI/View/AAbstractLabel.h>
 #include "TextTransform.h"
 
-void ass::prop::Property<TextTransform>::applyFor(AView* view) {
+void ass::legacy::Property<TextTransform>::applyFor(AView* view) {
     if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
         label->setTextTransform(mInfo);
     }
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, TextTransform value) {
+    return thiz.then([value](AView& view) {
+        if (auto label = dynamic_cast<AAbstractLabel*>(&view)) {
+            label->setTextTransform(value);
+        }
+    });
+}
+}   // namespace ass

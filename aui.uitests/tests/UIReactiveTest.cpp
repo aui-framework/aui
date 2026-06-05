@@ -11,6 +11,7 @@
 #include "AUI/Test/UI/UITestCase.h"
 #include "AUI/Test/UI/Assertion/Color.h"
 #include "AUI/Util/Declarative/Containers.h"
+#include "AUI/View/ACheckBox.h"
 
 namespace {
 
@@ -40,12 +41,12 @@ TEST_F(UIReactiveTest, Label) {
     // Test that a reactive label updates its text when the bound property changes.
     // The test creates a simple state object with a reactive string property
     // and binds it to a label using the AUI_REACT macro. It then verifies
-    // the initial rendered text and the updated text after changing the
+    // the initially rendered text and the updated text after changing the
     // property.
     using namespace ass;
 
     struct State {
-        AProperty<AString> name;
+        AProperty<AString> name = "Test";
     };
     auto state = _new<State>();
 
@@ -53,11 +54,41 @@ TEST_F(UIReactiveTest, Label) {
         Label { AUI_REACT("{}!"_format(state->name)) }
     });
 
-    // Initially, the property is empty, so the label should display "!".
-    EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "!");
+    // Initially, the property equals to "Test", so the label should display "Test!".
+    EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "Test!");
     // Update the property; the label should automatically reflect the new value.
     state->name = "Hello";
     EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "Hello!");
+}
+
+TEST_F(UIReactiveTest, Test2) {
+    // Test that a reactive label updates its text when the bound property changes.
+    // The test creates a simple state object with a reactive bool property
+    // and binds it to a label using the AUI_REACT macro. It then verifies
+    // the initial rendered text and the updated text after changing the
+    // property.
+    using namespace ass;
+
+    struct State {
+        AProperty<bool> option = false;
+    };
+    auto state = _new<State>();
+
+    mWindow->setContents(Vertical {
+      Label {
+        .text = "Test",
+        .modifier = AUI_REACT(Modifier {} | TextColor { state->option ? AColor::GREEN : AColor::RED }),
+      },
+    });
+
+    // Initially, the property equals to `false`, so the label should be red.
+    uitest::frame();
+    EXPECT_EQ(_cast<ALabel>(By::type<ALabel>().one())->textColor(), AColor::RED);
+
+    // Update the property; the label should automatically reflect the new value.
+    state->option = true;
+    uitest::frame();
+    EXPECT_EQ(_cast<ALabel>(By::type<ALabel>().one())->textColor(), AColor::GREEN);
 }
 
 /*

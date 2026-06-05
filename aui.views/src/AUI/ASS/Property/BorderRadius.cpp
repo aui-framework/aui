@@ -15,6 +15,14 @@
 
 #include "BorderRadius.h"
 
-void ass::prop::Property<ass::BorderRadius>::applyFor(AView* view) {
+void ass::legacy::Property<ass::BorderRadius>::applyFor(AView* view) {
     view->setBorderRadius(mInfo.radius);
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, BorderRadius value) {
+    return thiz.then([value](AView& view) {
+        view.setBorderRadius(value.radius);
+    });
+}
+}   // namespace ass

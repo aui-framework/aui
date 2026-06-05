@@ -12,6 +12,7 @@
 #pragma once
 
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -29,7 +30,7 @@ namespace ass {
         BackgroundEffect(Args&&... args): mEffects({ _new<Args>(std::move(args))... }) {}
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<BackgroundEffect>: IPropertyBase {
         private:

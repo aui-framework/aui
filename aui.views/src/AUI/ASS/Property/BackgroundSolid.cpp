@@ -18,7 +18,7 @@
 #include "IProperty.h"
 
 
-void ass::prop::Property<ass::BackgroundSolid>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ass::BackgroundSolid>::renderFor(AView* view, const ARenderContext& ctx) {
     ASolidBrush brush = { mInfo.color };
     if (view->getBorderRadius() > 0) {
         ctx.render.roundedRectangle(brush,
@@ -35,11 +35,11 @@ void ass::prop::Property<ass::BackgroundSolid>::renderFor(AView* view, const ARe
     IPropertyBase::renderFor(view, ctx);
 }
 
-bool ass::prop::Property<ass::BackgroundSolid>::isNone() {
+bool ass::legacy::Property<ass::BackgroundSolid>::isNone() {
     return mInfo.color.isFullyTransparent();
 }
-ass::prop::PropertySlot ass::prop::Property<ass::BackgroundSolid>::getPropertySlot() const {
-    return ass::prop::PropertySlot::BACKGROUND_SOLID;
-}
 
+ass::legacy::PropertySlot ass::legacy::Property<ass::BackgroundSolid>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::BACKGROUND_SOLID;
+}
 

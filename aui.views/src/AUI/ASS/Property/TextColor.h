@@ -28,7 +28,7 @@ namespace ass {
     };
 
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<TextColor>: IPropertyBase {
         private:
@@ -47,4 +47,6 @@ namespace ass {
             }
         };
     }
-}
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, TextColor value);
+    }   // namespace ass

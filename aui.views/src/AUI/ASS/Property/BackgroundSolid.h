@@ -16,6 +16,7 @@
 #pragma once
 
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -30,7 +31,7 @@ namespace ass {
         BackgroundSolid(std::nullptr_t) : color(0.f) {}
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<BackgroundSolid>: IPropertyBase {
         private:

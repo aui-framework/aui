@@ -18,10 +18,11 @@
 #include <AUI/Util/ALayoutDirection.h>
 #include "IProperty.h"
 #include <AUI/Enum/ImageRendering.h> // defined here
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<ImageRendering>: IPropertyBase {
         private:
@@ -42,4 +43,6 @@ namespace ass {
         };
 
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, ImageRendering value);
 }

@@ -28,7 +28,9 @@ namespace ass {
         AString family;
     };
 
-    namespace prop {
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, FontFamily value);
+
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<FontFamily>: IPropertyBase {
         private:

@@ -17,6 +17,7 @@
 
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
     /**
@@ -32,7 +33,7 @@ namespace ass {
     };
 
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<FixedSize>: IPropertyBase {
         private:
@@ -50,4 +51,6 @@ namespace ass {
             }
         };
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, FixedSize value);
 }

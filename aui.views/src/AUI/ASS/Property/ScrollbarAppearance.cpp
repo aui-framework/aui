@@ -16,8 +16,18 @@
 #include "ScrollbarAppearance.h"
 #include <AUI/View/AScrollArea.h>
 
-void ass::prop::Property<ass::ScrollbarAppearance>::applyFor(AView* view) {
+void ass::legacy::Property<ass::ScrollbarAppearance>::applyFor(AView* view) {
     if (auto scrollArea = _cast<AScrollArea>(aui::ptr::shared_from_this(view))) {
         scrollArea->setScrollbarAppearance(mInfo);
     }
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, ScrollbarAppearance value) {
+    return thiz.then([value](AView& view) {
+        if (auto scrollArea = _cast<AScrollArea>(aui::ptr::shared_from_this(&view))) {
+            scrollArea->setScrollbarAppearance(value);
+        }
+    });
+}
+}   // namespace ass

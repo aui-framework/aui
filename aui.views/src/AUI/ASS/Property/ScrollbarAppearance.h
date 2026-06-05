@@ -18,6 +18,7 @@
 #include <AUI/Platform/ACursor.h>
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 
 
@@ -66,7 +67,7 @@ namespace ass {
         AxisValue mHorizontal = AxisValue::ON_DEMAND;
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<ScrollbarAppearance>: IPropertyBase {
         private:
@@ -83,4 +84,6 @@ namespace ass {
             }
         };
     }
+
+API_AUI_VIEWS Modifier operator|(Modifier thiz, ScrollbarAppearance value);
 }

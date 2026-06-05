@@ -64,44 +64,54 @@ public:
     In(aui::react::Expression<Expr>&& reactiveExpression)
       : mImpl(ReactiveExpression { _new<APropertyPrecomputed<T>>(std::move(reactiveExpression.expression)) }) {}
 
-
-    template <typename ObjectPtr, typename Invocable>
-    void bindToCopy(ASlotDef<ObjectPtr, Invocable> destination) {
-        auto invocable = aui::detail::makeLambda(destination.boundObject, destination.invocable);
+    /**
+     * @brief Binds to the slot of the object.
+     * @param receiver pointer to AObject-based object that willing to observe this contract. Either reference, or
+     *        raw pointer, or smart pointer.
+     * @param slot  Either pointer-to-member of receiver, or a lambda.
+     * @details
+     * If the contract holds a constant, the `invocable` will be called with stored value with no additional overhead.
+     *
+     * If the contract holds a result of `AUI_REACT`, `APropertyPrecomputed` will be bound to the receiver.
+     *
+     * This API was introduced to support old "retained-mode" UI:
+     *
+     * ```cpp
+     * auto label = _new<ALabel>();
+     * std::move(text).bindTo(AUI_SLOT(label)::setText);
+     * ```
+     */
+    template <aui::detail::Receiver Object, typename Slot>
+    void bindTo(const Object& receiver, Slot&& slot) && {
         std::visit(
             aui::lambda_overloaded {
               [&](Devastated&) { throw AException("an attempt to bindTo a property twice"); },
-              [&](Constant& c) { std::invoke(invocable, c.value); },
+              [&](Constant& c) { std::invoke(aui::detail::dispatchSlot(receiver, std::forward<Slot>(slot)), std::move(c.value)); },
               [&](ReactiveExpression& c) {
                   auto& sourceProperty = *c.value;
-                  AObject::connect(
-                      sourceProperty, destination.boundObject,
-                      [keepAlive = c.value, invocable = std::move(invocable)](const T& v) {
-                          std::invoke(invocable, v);
-                      });
-              },
-            },
-            mImpl);
-    }
-
-    template <typename ObjectPtr, typename Invocable>
-    void bindTo(ASlotDef<ObjectPtr, Invocable> destination) {
-        auto invocable = aui::detail::makeLambda(destination.boundObject, destination.invocable);
-        std::visit(
-            aui::lambda_overloaded {
-              [&](Devastated&) { throw AException("an attempt to bindTo a property twice"); },
-              [&](Constant& c) { std::invoke(invocable, std::move(c.value)); },
-              [&](ReactiveExpression& c) {
-                  auto& sourceProperty = *c.value;
-                  AObject::connect(
-                      sourceProperty, destination.boundObject,
-                      [keepAlive = std::move(c.value), invocable = std::move(invocable)](const T& v) {
-                          std::invoke(invocable, v);
-                      });
+                  AObject::connect(sourceProperty, receiver, [keepMeAlive = std::move(c.value), original = aui::detail::dispatchSlot(receiver, std::forward<Slot>(slot))](const T& value) {
+                      std::invoke(original, value);
+                  });
               },
             },
             mImpl);
         mImpl = Devastated {};
+    }
+
+    template <aui::detail::Receiver Object, typename Slot>
+    void bindTo(const Object& receiver, Slot&& slot) const & {
+        std::visit(
+            aui::lambda_overloaded {
+              [&](const Devastated&) { throw AException("an attempt to bindTo a property twice"); },
+              [&](const Constant& c) { std::invoke(aui::detail::dispatchSlot(receiver, std::forward<Slot>(slot)), c.value); },
+              [&](const ReactiveExpression& c) {
+                  auto& sourceProperty = *c.value;
+                  AObject::connect(sourceProperty, receiver, [keepMeAlive = c.value, original = aui::detail::dispatchSlot(receiver, std::forward<Slot>(slot))](const T& value) {
+                      std::invoke(original, value);
+                  });
+              },
+            },
+            mImpl);
     }
 
     const T& value() const {
@@ -120,39 +130,6 @@ public:
 
 private:
     std::variant<Devastated, Constant, ReactiveExpression> mImpl;
-};
-
-template <typename... Args>
-struct Slot {
-    static_assert(
-        (std::is_object_v<Args> && ...),
-        "// ====================> contract::Slot: there's no effect of specifying of non value arguments for the "
-        "signal."
-        "Consider removing const and reference modifiers.");
-
-    Slot() = default;
-
-    template <aui::convertible_to<AObjectBase*> ObjectPtr, typename Invocable>
-    Slot(ObjectPtr receiverObject, Invocable&& receiverSlot)
-      : mSetup([slotDef = ASlotDef { receiverObject, std::forward<Invocable>(receiverSlot) }](emits<Args...>& signal) {
-          AObject::connect(signal, slotDef);
-      }) {}
-
-    template <typename Invocable>
-    Slot(Invocable&& invocable)
-      : mSetup([invocable = std::forward<Invocable>(invocable)](emits<Args...>& signal) mutable {
-          AObject::connect(signal, AObject::GENERIC_OBSERVER, std::move(invocable));
-      }) {}
-
-    void bindTo(emits<Args...>& signal) {
-        if (!mSetup) {
-            return;
-        }
-        mSetup(signal);
-    }
-
-private:
-    std::function<void(emits<Args...>& signal)> mSetup;
 };
 
 }   // namespace declarative::contract
