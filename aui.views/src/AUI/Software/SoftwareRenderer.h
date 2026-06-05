@@ -65,6 +65,7 @@ public:
                            const _<ITexture>& mask2, const glm::vec4& mask2Rect) override;
 
     _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) override;
+    _<ITexture> createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) override;
 
 
     void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }

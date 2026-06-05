@@ -74,6 +74,9 @@ namespace {
         _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) override {
             return nullptr;
         }
+        _<ITexture> createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) override {
+            return nullptr;
+        }
 
     private:
         _<aui::AFontCache> mFontCache;

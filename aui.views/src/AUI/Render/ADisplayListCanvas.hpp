@@ -27,6 +27,7 @@ public:
     void restore(size_t targetStackSize) override;
 
     void pushClipRect(const ARect<float>& rect, AClipOp op) override;
+    void pushClipRoundedRect(const ARect<float>& rect, float radius, AClipOp op) override;
     void popClipRect() override;
 
     void pushLayer() override;

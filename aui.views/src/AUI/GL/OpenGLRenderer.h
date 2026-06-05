@@ -55,7 +55,9 @@ public:
     void bind(uint32_t unit) { mTexture.bind(unit); }
     gl::Texture2D& texture() noexcept { return mTexture; }
 protected:
-    void onFramebufferResize(glm::u32vec2 size) override { mTexture.tex2D(size, mFormat); }
+    void onFramebufferResize(glm::u32vec2 size) override {
+        AUI_ASSERTX(mTexture.getSize() == size, "changing texture size after creation is forbidden");
+    }
     void attach(gl::Framebuffer& to, GLenum attachmentType) override {
         to.bind();
         onFramebufferResize(to.size());
@@ -219,9 +221,10 @@ public:
     void setMask(const _<ITexture>& mask, const glm::vec4& maskRect = glm::vec4(0.f)) override;
 
     AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
-                                   const _<ITexture>& mask2, const glm::vec4& mask2Rect) override;
+                                    const _<ITexture>& mask2, const glm::vec4& mask2Rect) override;
 
     _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) override;
+    _<ITexture> createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) override;
 
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 

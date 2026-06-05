@@ -346,6 +346,9 @@ void OpenGLRenderer::setClipRect(const ARect<float>& rect) {
 }
 
 void OpenGLRenderer::clear(const AColor& color) {
+    glViewport(0, 0, static_cast<GLsizei>(mViewportSize.x), static_cast<GLsizei>(mViewportSize.y));
+    glEnable(GL_SCISSOR_TEST);
+    glScissor(0, 0, static_cast<GLsizei>(mViewportSize.x), static_cast<GLsizei>(mViewportSize.y));
     glClearColor(color.r, color.g, color.b, color.a);
     glClear(GL_COLOR_BUFFER_BIT);
 }
@@ -461,6 +464,22 @@ _<ITexture> OpenGLRenderer::createRectMask(const ARect<float>& rect, bool invert
     mViewportSize = prevViewportSize;
     mProjectionMatrix = prevProjectionMatrix;
     mIsRenderingToMask = prevIsRenderingToMask;
+
+    return destTexture;
+}
+
+_<ITexture> OpenGLRenderer::createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) {
+    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(bounds.size().x)), std::max(1u, (unsigned)std::ceil(bounds.size().y)));
+    auto destTexture = createTexture(size, APixelFormat::R8_UNORM, TextureFilter::NEAREST);
+    auto glDestTexture = _cast<OpenGLTexture2D>(destTexture);
+    glDestTexture->texture().setupClampToEdge();
+
+    auto pass = beginOffscreen(destTexture);
+    auto ctx = pass->context();
+    ctx.canvas.clear(inverted ? AColor::WHITE : AColor::TRANSPARENT_BLACK);
+    ctx.canvas.setTransformForced(glm::mat4(1.0f));
+    ctx.canvas.roundedRectangle(APaint{ASolidBrush{inverted ? AColor::BLACK : AColor::WHITE}}, rect.min() - bounds.min(), rect.size(), radius);
+    endOffscreen(std::move(pass));
 
     return destTexture;
 }
@@ -1430,13 +1449,6 @@ OpenGLRenderer::FramebufferFromPool OpenGLRenderer::getFramebufferForMultiPassEf
                     return res.release();
                 }
             }
-            if (!mFramebuffersForMultiPassEffectsPool.empty()) {
-                auto res = std::move(mFramebuffersForMultiPassEffectsPool.back());
-                mFramebuffersForMultiPassEffectsPool.pop_back();
-                res->framebuffer.resize(glm::max(res->framebuffer.size(), minRequiredSize));
-                return res.release();
-            }
-
             auto object = std::make_unique<FramebufferWithTextureRT>();
             object->framebuffer.resize(minRequiredSize);
             object->renderTarget = _cast<gl::Framebuffer::IRenderTarget>(createTexture(minRequiredSize));

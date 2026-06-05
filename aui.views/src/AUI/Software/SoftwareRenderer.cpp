@@ -662,6 +662,37 @@ _<ITexture> SoftwareRenderer::createRectMask(const ARect<float>& rect, bool inve
     return destTexture;
 }
 
+_<ITexture> SoftwareRenderer::createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) {
+    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(bounds.size().x)), std::max(1u, (unsigned)std::ceil(bounds.size().y)));
+    auto destTexture = createTexture(size, APixelFormat::R8_UNORM);
+    AImage destImg(size, APixelFormat::R8_UNORM);
+
+    const auto rectMin = rect.min();
+    const auto rectMax = rect.max();
+    const auto rectSize = rect.size();
+    radius = std::max(0.f, std::min(radius, std::min(rectSize.x, rectSize.y) * 0.5f));
+
+    auto insideRoundedRect = [&](float ax, float ay) {
+        auto qx = std::abs(ax - (rectMin.x + rectMax.x) * 0.5f) - (rectSize.x * 0.5f - radius);
+        auto qy = std::abs(ay - (rectMin.y + rectMax.y) * 0.5f) - (rectSize.y * 0.5f - radius);
+        auto outer = glm::length(glm::max(glm::vec2(qx, qy), glm::vec2(0.f)));
+        auto inner = std::min(std::max(qx, qy), 0.f);
+        return outer + inner <= radius;
+    };
+
+    for (unsigned dy = 0; dy < size.y; ++dy) {
+        for (unsigned dx = 0; dx < size.x; ++dx) {
+            float ax = bounds.p1.x + dx + 0.5f;
+            float ay = bounds.p1.y + dy + 0.5f;
+            float val = (insideRoundedRect(ax, ay) ^ inverted) ? 1.f : 0.f;
+            destImg.set({dx, dy}, AColor(val, 0.f, 0.f, 1.f));
+        }
+    }
+
+    _cast<SoftwareTexture>(destTexture)->upload(std::move(destImg));
+    return destTexture;
+}
+
 IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
                                                            const _<ITexture>& mask2, const glm::vec4& mask2Rect) {
     float x = std::max(mask1Rect.x, mask2Rect.x);
@@ -724,4 +755,3 @@ IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& ma
     _cast<SoftwareTexture>(destTexture)->upload(std::move(destImg));
     return { destTexture, glm::vec4(x, y, (float)size.x, (float)size.y) };
 }
-

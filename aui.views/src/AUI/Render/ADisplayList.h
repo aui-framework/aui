@@ -135,6 +135,11 @@ public:
         ARect<float> rect;
         AClipOp op;
     };
+    struct PushClipRoundedRect {
+        ARect<float> rect;
+        float radius;
+        AClipOp op;
+    };
     struct PopClipRect {};
     struct Clear {
         AColor color;
@@ -151,7 +156,7 @@ public:
         using Command = std::variant<
             SolidRectangles, GradientRectangles, TexturedRectangles, SolidRoundedRectangles, GradientRoundedRectangles,
             TexturedRoundedRectangles, RectangleBorders, RoundedRectangleBorders, BoxShadow, BoxShadowInner, Glyphs,
-            Lines, LineBatches, Points, SquareSector, Backdrop, PushClipRect, PopClipRect, Clear, PushLayer, PopLayer, PushMask, PopMask>;
+            Lines, LineBatches, Points, SquareSector, Backdrop, PushClipRect, PushClipRoundedRect, PopClipRect, Clear, PushLayer, PopLayer, PushMask, PopMask>;
         Command command;
         glm::mat4 transform;
         APaint paint;

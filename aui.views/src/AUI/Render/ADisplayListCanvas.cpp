@@ -58,6 +58,11 @@ void ADisplayListCanvas::pushClipRect(const ARect<float>& rect, AClipOp op) {
     add(ADisplayList::PushClipRect{rect, op}, {});
 }
 
+void ADisplayListCanvas::pushClipRoundedRect(const ARect<float>& rect, float radius, AClipOp op) {
+    mClipStackDepth++;
+    add(ADisplayList::PushClipRoundedRect{rect, radius, op}, {});
+}
+
 void ADisplayListCanvas::popClipRect() {
     AUI_ASSERT(mClipStackDepth > 0);
     mClipStackDepth--;
@@ -382,6 +387,11 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                 v.maskRect = glm::vec4(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
             },
             [&](ADisplayList::PushClipRect& v) {
+                glm::vec4 p1 = st * glm::vec4(v.rect.p1, 0.f, 1.f);
+                glm::vec4 p2 = st * glm::vec4(v.rect.p2, 0.f, 1.f);
+                v.rect = ARect<float>{ glm::vec2(p1), glm::vec2(p2) };
+            },
+            [&](ADisplayList::PushClipRoundedRect& v) {
                 glm::vec4 p1 = st * glm::vec4(v.rect.p1, 0.f, 1.f);
                 glm::vec4 p2 = st * glm::vec4(v.rect.p2, 0.f, 1.f);
                 v.rect = ARect<float>{ glm::vec2(p1), glm::vec2(p2) };

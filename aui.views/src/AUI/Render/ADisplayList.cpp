@@ -215,6 +215,7 @@ void ADisplayList::computeOverlaps() {
               [&](const PushMask&) { return true; },
               [&](const PopMask&) { return true; },
               [&](const PushClipRect&) { return true; },
+              [&](const PushClipRoundedRect&) { return true; },
               [&](const PopClipRect&) { return true; },
               [&](const Clear&) { return true; },
               [&](const auto&) { return false; }
@@ -259,6 +260,19 @@ void ADisplayList::resolveClips() {
     for (auto& entity : mEntities) {
         std::visit(aui::lambda_overloaded {
             [&](const PushClipRect& v) {
+                auto& top = targetClipStack.last();
+                top.stack << top.current;
+
+                glm::vec4 p1 = entity.transform * glm::vec4(v.rect.p1, 0.f, 1.f);
+                glm::vec4 p2 = entity.transform * glm::vec4(v.rect.p2, 0.f, 1.f);
+                ARect<float> worldRect{ .p1 = glm::min(glm::vec2(p1), glm::vec2(p2)),
+                                        .p2 = glm::max(glm::vec2(p1), glm::vec2(p2)) };
+
+                if (v.op == AClipOp::INTERSECT) {
+                    top.current = top.current.intersect(worldRect);
+                }
+            },
+            [&](const PushClipRoundedRect& v) {
                 auto& top = targetClipStack.last();
                 top.stack << top.current;
 
@@ -371,6 +385,26 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer, const _<ITexture>& w
                         clip_is_difference_stack.push_back(false);
                     }
                 },
+                [&](PushClipRoundedRect& v) {
+                    glm::vec4 p1 = entity.transform * glm::vec4(v.rect.p1, 0.f, 1.f);
+                    glm::vec4 p2 = entity.transform * glm::vec4(v.rect.p2, 0.f, 1.f);
+                    ARect<float> world_rect{
+                        .p1 = glm::min(glm::vec2(p1), glm::vec2(p2)),
+                        .p2 = glm::max(glm::vec2(p1), glm::vec2(p2))
+                    };
+
+                    auto clip_bounds = entity.clipRect.intersect(viewport_rect);
+                    auto mask_bounds = v.op == AClipOp::INTERSECT ? clip_bounds.intersect(world_rect) : clip_bounds;
+
+                    clip_is_difference_stack.push_back(true);
+                    clip_diff_mask_stack.push_back({ current_mask, current_mask_rect });
+
+                    if (mask_bounds.size().x > 0.01f && mask_bounds.size().y > 0.01f) {
+                        auto mask = renderer.createRoundedRectMask(world_rect, v.radius, v.op == AClipOp::DIFFERENCE, mask_bounds);
+                        glm::vec4 mask_rect(mask_bounds.p1.x, mask_bounds.p1.y, mask_bounds.size().x, mask_bounds.size().y);
+                        applyMask(mask, mask_rect);
+                    }
+                },
                 [&](PopClipRect&) {
                     if (!clip_is_difference_stack.empty()) {
                         if (clip_is_difference_stack.back()) {
@@ -416,6 +450,7 @@ void ADisplayList::draw(IRendererBackend& renderer, const _<ITexture>& windowTar
                   [&](const PushMask&) { return true; },
                   [&](const PopMask&) { return true; },
                   [&](const PushClipRect&) { return true; },
+                  [&](const PushClipRoundedRect&) { return true; },
                   [&](const PopClipRect&) { return true; },
                   [&](const Clear& v) { renderer.clear(v.color); return true; },
                   [&](const auto&) { return false; }

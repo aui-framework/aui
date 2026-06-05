@@ -38,6 +38,7 @@ public:
     virtual void restore(size_t targetStackSize) = 0;
 
     virtual void pushClipRect(const ARect<float>& rect, AClipOp op = AClipOp::INTERSECT) = 0;
+    virtual void pushClipRoundedRect(const ARect<float>& rect, float radius, AClipOp op = AClipOp::INTERSECT) = 0;
     virtual void popClipRect() = 0;
 
     virtual void pushMask(const _<ITexture>& maskTexture, const glm::vec4& maskRect) = 0;
