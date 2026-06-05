@@ -20,6 +20,7 @@
 #include <AUI/Render/ACanvas.hpp>
 #include <AUI/Image/AImage.h>
 #include <AUI/GL/gl.h>
+#include <AUI/GL/State.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Util/ABuiltinFiles.h>
 #include <AUI/Common/AByteBuffer.h>
@@ -50,10 +51,10 @@ public:
     APixelFormat getFormat() const override { return APixelFormat::R8G8B8A8_UNORM; }
     void upload(AImageView image) override {}
 
-    void bind() { glBindTexture(GL_TEXTURE_2D, mHandle); }
+    void bind() { gl::State::bindTexture(GL_TEXTURE_2D, mHandle); }
     void bind(uint32_t unit) {
-        glActiveTexture(GL_TEXTURE0 + unit);
-        glBindTexture(GL_TEXTURE_2D, mHandle);
+        gl::State::activeTexture(unit);
+        gl::State::bindTexture(GL_TEXTURE_2D, mHandle);
     }
 
     uint32_t handle() const noexcept { return mHandle; }
@@ -416,6 +417,53 @@ void OpenGLRenderer::setMask(const _<ITexture>& mask, const glm::vec4& maskRect)
     mMaskRect = maskRect;
 }
 
+_<ITexture> OpenGLRenderer::createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) {
+    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(bounds.size().x)), std::max(1u, (unsigned)std::ceil(bounds.size().y)));
+    auto destTexture = createTexture(size, APixelFormat::R8_UNORM, TextureFilter::NEAREST);
+    auto glDestTexture = _cast<OpenGLTexture2D>(destTexture);
+    glDestTexture->texture().setupClampToEdge();
+
+    gl::Framebuffer& framebuffer = getFbo(glDestTexture);
+
+    gl::Framebuffer* prevFramebuffer = gl::Framebuffer::current();
+    glm::uvec2 prevViewportSize = mViewportSize;
+    glm::mat4 prevProjectionMatrix = mProjectionMatrix;
+    bool prevIsRenderingToMask = mIsRenderingToMask;
+
+    framebuffer.bind();
+    glViewport(0, 0, size.x, size.y);
+    mViewportSize = size;
+    mProjectionMatrix = glm::mat4(1.0f);
+    mIsRenderingToMask = true;
+
+    glClearColor(inverted ? 1.f : 0.f, 0.f, 0.f, 0.f);
+    glClear(GL_COLOR_BUFFER_BIT);
+
+    auto intersection = rect.intersect(bounds);
+    if (intersection.p1.x < intersection.p2.x && intersection.p1.y < intersection.p2.y) {
+        glEnable(GL_SCISSOR_TEST);
+        glScissor((GLint)(intersection.p1.x - bounds.p1.x),
+                  (GLint)(size.y - (intersection.p2.y - bounds.p1.y)),
+                  (GLsizei)std::ceil(intersection.size().x),
+                  (GLsizei)std::ceil(intersection.size().y));
+        glClearColor(inverted ? 0.f : 1.f, 0.f, 0.f, 0.f);
+        glClear(GL_COLOR_BUFFER_BIT);
+        glDisable(GL_SCISSOR_TEST);
+    }
+
+    if (prevFramebuffer) {
+        prevFramebuffer->bind();
+    } else {
+        glBindFramebuffer(GL_FRAMEBUFFER, getDefaultFb());
+    }
+    glViewport(0, 0, prevViewportSize.x, prevViewportSize.y);
+    mViewportSize = prevViewportSize;
+    mProjectionMatrix = prevProjectionMatrix;
+    mIsRenderingToMask = prevIsRenderingToMask;
+
+    return destTexture;
+}
+
 IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
                                                          const _<ITexture>& mask2, const glm::vec4& mask2Rect) {
     float x = std::max(mask1Rect.x, mask2Rect.x);
@@ -488,10 +536,8 @@ IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask
     mMergeMasksShader->set(u_destRect, glDestRect);
     mMergeMasksShader->set(u_transform, glm::mat4(1.0f));
 
-    glActiveTexture(GL_TEXTURE0);
-    static_cast<OpenGLTexture2D*>(mask1.get())->bind();
-    glActiveTexture(GL_TEXTURE1);
-    static_cast<OpenGLTexture2D*>(mask2.get())->bind();
+    bindTexture(mask1.get(), 0);
+    bindTexture(mask2.get(), 1);
 
     AVector<VertexBasicUv> vertices;
     vertices << VertexBasicUv{{-1.f, -1.f}, {0.f, 0.f}, glm::vec4(1.f)};
@@ -513,10 +559,10 @@ IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask
 
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 
-    glActiveTexture(GL_TEXTURE1);
-    glBindTexture(GL_TEXTURE_2D, 0);
-    glActiveTexture(GL_TEXTURE0);
-    glBindTexture(GL_TEXTURE_2D, 0);
+    gl::State::activeTexture(1);
+    gl::State::bindTexture(GL_TEXTURE_2D, 0);
+    gl::State::activeTexture(0);
+    gl::State::bindTexture(GL_TEXTURE_2D, 0);
 
     if (prevFramebuffer) {
         prevFramebuffer->bind();

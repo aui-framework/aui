@@ -221,6 +221,8 @@ public:
     AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
                                    const _<ITexture>& mask2, const glm::vec4& mask2Rect) override;
 
+    _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) override;
+
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 
     uint32_t getDefaultFb() const noexcept;

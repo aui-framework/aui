@@ -79,6 +79,27 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
     
     if (pos.x < mClipRect.p1.x || pos.y < mClipRect.p1.y || pos.x >= mClipRect.p2.x || pos.y >= mClipRect.p2.y) return;
 
+    float maskVal = 1.f;
+    if (mMask) {
+        if (pos.x >= mMaskRect.x && pos.x < mMaskRect.x + mMaskRect.z &&
+            pos.y >= mMaskRect.y && pos.y < mMaskRect.y + mMaskRect.w) {
+            auto s = _cast<SoftwareTexture>(mMask);
+            if (s) {
+                glm::uvec2 mSize = s->getImage().size();
+                float tx = (pos.x - mMaskRect.x) / mMaskRect.z * mSize.x;
+                float ty = (pos.y - mMaskRect.y) / mMaskRect.w * mSize.y;
+                unsigned px = glm::clamp((unsigned)tx, 0u, mSize.x - 1);
+                unsigned py = glm::clamp((unsigned)ty, 0u, mSize.y - 1);
+                maskVal = glm::vec4(s->getImage().get({px, py})).r / 255.f;
+            }
+        } else {
+            maskVal = 0.f;
+        }
+    }
+    if (maskVal <= 0.001f) return;
+    AColor colorWithMask = color;
+    colorWithMask.a *= maskVal;
+
     glm::vec4 dst;
     if (mRenderTarget) {
         dst = glm::vec4(mRenderTarget->get(glm::uvec2(pos))) / 255.f;
@@ -88,22 +109,22 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
 
     AColor combined;
     if (paint.blending == Blending::INVERSE_DST) {
-        combined.r = color.r * (1.f - dst.r);
-        combined.g = color.g * (1.f - dst.g);
-        combined.b = color.b * (1.f - dst.b);
-        combined.a = color.a * (1.f - dst.a) + dst.a;
+        combined.r = colorWithMask.r * (1.f - dst.r);
+        combined.g = colorWithMask.g * (1.f - dst.g);
+        combined.b = colorWithMask.b * (1.f - dst.b);
+        combined.a = colorWithMask.a * (1.f - dst.a) + dst.a;
     } else if (paint.blending == Blending::ADDITIVE) {
-        combined.r = color.r + dst.r;
-        combined.g = color.g + dst.g;
-        combined.b = color.b + dst.b;
-        combined.a = color.a * (1.f - dst.a) + dst.a;
+        combined.r = colorWithMask.r + dst.r;
+        combined.g = colorWithMask.g + dst.g;
+        combined.b = colorWithMask.b + dst.b;
+        combined.a = colorWithMask.a * (1.f - dst.a) + dst.a;
     } else if (paint.blending == Blending::INVERSE_SRC) {
-        combined.r = dst.r * (1.f - color.r);
-        combined.g = dst.g * (1.f - color.g);
-        combined.b = dst.b * (1.f - color.b);
-        combined.a = color.a * (1.f - dst.a) + dst.a;
+        combined.r = dst.r * (1.f - colorWithMask.r);
+        combined.g = dst.g * (1.f - colorWithMask.g);
+        combined.b = dst.b * (1.f - colorWithMask.b);
+        combined.a = colorWithMask.a * (1.f - dst.a) + dst.a;
     } else {
-        combined = dst * (1.f - color.a) + color;
+        combined = dst * (1.f - colorWithMask.a) + colorWithMask;
     }
 
     if (mRenderTarget) {
@@ -615,7 +636,31 @@ _<ITexture> SoftwareRenderer::createTexture(glm::u32vec2 size, APixelFormat form
     return t;
 }
 
-void SoftwareRenderer::setMask(const _<ITexture>& mask, const glm::vec4& maskRect) {}
+void SoftwareRenderer::setMask(const _<ITexture>& mask, const glm::vec4& maskRect) {
+    mMask = mask;
+    mMaskRect = maskRect;
+}
+
+_<ITexture> SoftwareRenderer::createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) {
+    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(bounds.size().x)), std::max(1u, (unsigned)std::ceil(bounds.size().y)));
+    auto destTexture = createTexture(size, APixelFormat::R8_UNORM);
+    AImage destImg(size, APixelFormat::R8_UNORM);
+    
+    for (unsigned dy = 0; dy < size.y; ++dy) {
+        for (unsigned dx = 0; dx < size.x; ++dx) {
+            float ax = bounds.p1.x + dx + 0.5f;
+            float ay = bounds.p1.y + dy + 0.5f;
+            
+            bool inside = ax >= rect.p1.x && ax <= rect.p2.x &&
+                          ay >= rect.p1.y && ay <= rect.p2.y;
+            
+            float val = (inside ^ inverted) ? 1.f : 0.f;
+            destImg.set({dx, dy}, AColor(val, 0.f, 0.f, 1.f));
+        }
+    }
+    _cast<SoftwareTexture>(destTexture)->upload(std::move(destImg));
+    return destTexture;
+}
 
 IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
                                                            const _<ITexture>& mask2, const glm::vec4& mask2Rect) {

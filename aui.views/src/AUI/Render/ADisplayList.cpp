@@ -300,7 +300,7 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer) {
     for (auto& entity : mEntities) {
         std::visit(
             aui::lambda_overloaded {
-                [&](const PushMask& v) {
+                [&](PushMask& v) {
                     glm::vec2 p1 = glm::vec2(entity.transform * glm::vec4(v.maskRect.x, v.maskRect.y, 0, 1));
                     glm::vec2 p2 = glm::vec2(entity.transform * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0, 1));
                     glm::vec4 displayListRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
@@ -316,14 +316,14 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer) {
                         currentMaskRect = merged.rect;
                     }
                 },
-                [&](const PopMask&) {
+                [&](PopMask&) {
                     if (!maskStack.empty()) {
                         currentMask = maskStack.back().mask;
                         currentMaskRect = maskStack.back().maskRect;
                         maskStack.pop_back();
                     }
                 },
-                [&](const PushClipRect& v) {
+                [&](PushClipRect& v) {
                     if (v.op == AClipOp::DIFFERENCE) {
                         clipIsDifferenceStack.push_back(true);
 
@@ -353,7 +353,7 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer) {
                         clipIsDifferenceStack.push_back(false);
                     }
                 },
-                [&](const PopClipRect&) {
+                [&](PopClipRect&) {
                     if (!clipIsDifferenceStack.empty()) {
                         if (clipIsDifferenceStack.back()) {
                             if (!maskStack.empty()) {

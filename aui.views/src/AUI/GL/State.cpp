@@ -26,12 +26,34 @@ State::~State() {
 
 }
 
+namespace {
+    uint8_t gActiveTextureUnit = 0;
+}
+
 void State::activeTexture(uint8_t index) {
-	impl<0>(glActiveTexture, GL_TEXTURE0 + index);
+#ifdef SO_STATE
+	static uint8_t prevIndex = 0xff;
+	if (prevIndex != index) {
+		prevIndex = index;
+		glActiveTexture(GL_TEXTURE0 + index);
+	}
+#else
+	glActiveTexture(GL_TEXTURE0 + index);
+#endif
+	gActiveTextureUnit = index;
 }
 
 void State::bindTexture(GLenum mode, GLuint texture) {
-	impl<1>(glBindTexture, mode, texture);
+#ifdef SO_STATE
+	static std::tuple<uint8_t, GLenum, GLuint> prevState = {0xff, 0, 0};
+	std::tuple<uint8_t, GLenum, GLuint> state = {gActiveTextureUnit, mode, texture};
+	if (prevState != state) {
+		prevState = state;
+		glBindTexture(mode, texture);
+	}
+#else
+	glBindTexture(mode, texture);
+#endif
 }
 
 void State::useProgram(GLuint program) {

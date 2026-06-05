@@ -71,6 +71,9 @@ namespace {
                                const _<ITexture>& mask2, const glm::vec4& mask2Rect) override {
             return { nullptr, glm::vec4(0.f) };
         }
+        _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) override {
+            return nullptr;
+        }
 
     private:
         _<aui::AFontCache> mFontCache;

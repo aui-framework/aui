@@ -64,6 +64,8 @@ public:
     AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
                            const _<ITexture>& mask2, const glm::vec4& mask2Rect) override;
 
+    _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) override;
+
 
     void setAllowRenderToTexture(bool allow) override { mAllowRenderToTexture = allow; }
     bool allowRenderToTexture() const noexcept override { return mAllowRenderToTexture; }
@@ -84,6 +86,8 @@ private:
     SoftwareRenderingContext* mContext = nullptr;
     AImage* mRenderTarget = nullptr;
     ARect<float> mClipRect { .p1 = {-1e10, -1e10}, .p2 = {1e10, 1e10} };
+    _<ITexture> mMask;
+    glm::vec4 mMaskRect = glm::vec4(0.f);
     bool mAllowRenderToTexture = true;
     ADeque<aui::FontAtlas> mFontEntryData;
     ADeque<aui::CharacterData> mCharData;
