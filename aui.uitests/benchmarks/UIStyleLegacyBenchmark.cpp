@@ -75,7 +75,28 @@ public:
         auto t = _new<Stub>();
         return t;
     }
+    void setMask(const _<ITexture>& mask, const glm::vec4& maskRect) override {}
+    AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
+                           const _<ITexture>& mask2, const glm::vec4& mask2Rect) override {
+        return { nullptr, glm::vec4(0.f) };
+    }
+    _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) override {
+        return nullptr;
+    }
+    void setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) override {}
+    void setClipRect(const ARect<float>& rect) override {}
+    void setRenderMaskMode(bool enabled) override {}
+    void clear(const AColor& color) override {}
+    void beginRenderPass(const _<ITexture>& target) override {}
+    void endRenderPass() override {}
+    void flush() override {}
+    _unique<IOffscreenRenderPass> beginOffscreen(const _<ITexture>& renderTarget) override { return nullptr; }
+    void endOffscreen(_unique<IOffscreenRenderPass> pass) override {}
+    void setAllowRenderToTexture(bool allow) override {}
+    bool allowRenderToTexture() const noexcept override { return true; }
+    void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override {}
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
+
 
 private:
     _<aui::AFontCache> mFontCache;

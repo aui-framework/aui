@@ -406,6 +406,7 @@ void OpenGLRenderer::setupMask(gl::Program& shader) {
         shader.set(aui::ShaderUniforms::MASK_RECT, glMaskRect);
         bindTexture(mMask.get(), 1);
     } else {
+        shader.set(aui::ShaderUniforms::MASK, 1);
         shader.set(aui::ShaderUniforms::USE_MASK, false);
         mWhiteTexture.bind(1);
     }
