@@ -21,6 +21,7 @@ SoftwareRenderingContextX11::~SoftwareRenderingContextX11() {
 }
 
 void SoftwareRenderingContextX11::init(const IRenderingContext::Init& init) {
+    PlatformAbstractionX11::ensureXLibInitialized();
     static XSetWindowAttributes swa;
     if (!vi) {
         XVisualInfo viTemplate;
