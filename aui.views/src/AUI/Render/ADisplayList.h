@@ -190,7 +190,7 @@ public:
     void resolveEntities();
     void computeOverlaps();
     void resolveClips();
-    void resolveMasks(IRendererBackend& renderer);
+    void resolveMasks(IRendererBackend& renderer, const _<ITexture>& windowTarget);
     void resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 
 private:

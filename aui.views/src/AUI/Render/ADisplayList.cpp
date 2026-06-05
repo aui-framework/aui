@@ -284,7 +284,7 @@ void ADisplayList::resolveClips() {
     }
 }
 
-void ADisplayList::resolveMasks(IRendererBackend& renderer) {
+void ADisplayList::resolveMasks(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
     struct MaskState {
         _<ITexture> mask;
         glm::vec4 maskRect;
@@ -298,8 +298,7 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer) {
     _<ITexture> current_mask;
     glm::vec4 current_mask_rect(0.f);
 
-    auto viewport_size = renderer.getViewportSize();
-    ARect<float> viewport_rect{ {0, 0}, glm::vec2(viewport_size) };
+    ARect<float> viewport_rect{ {0, 0}, glm::vec2(windowTarget->getSize()) };
 
     auto applyMask = [&](const _<ITexture>& new_mask, const glm::vec4& new_rect) {
         if (!current_mask) {
@@ -402,7 +401,7 @@ void ADisplayList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& 
 }
 
 void ADisplayList::draw(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
-    resolveMasks(renderer);
+    resolveMasks(renderer, windowTarget);
     resolvePasses(renderer, windowTarget);
     for (const auto& pass : mPasses) {
         renderer.beginRenderPass(pass.target);
