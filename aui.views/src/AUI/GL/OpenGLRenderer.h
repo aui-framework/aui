@@ -55,7 +55,7 @@ public:
     void bind(uint32_t unit) { mTexture.bind(unit); }
     gl::Texture2D& texture() noexcept { return mTexture; }
 protected:
-    void onFramebufferResize(glm::u32vec2 size) override { mTexture.framebufferTex2D(size, gl::Type::UNSIGNED_BYTE); }
+    void onFramebufferResize(glm::u32vec2 size) override { mTexture.tex2D(size, mFormat); }
     void attach(gl::Framebuffer& to, GLenum attachmentType) override {
         to.bind();
         onFramebufferResize(to.size());
