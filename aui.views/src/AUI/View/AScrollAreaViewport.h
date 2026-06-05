@@ -107,6 +107,7 @@ private:
         AVector<ARect<int>> invalidArea;
     };
     AOptional<RenderToTexture> mRenderToTexture;
+    bool mOffscreenRedrawRequested = false;
 
     void drawOffscreen(ARenderContext ctx);
 
