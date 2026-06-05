@@ -83,6 +83,9 @@ public:
     _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) override {
         return nullptr;
     }
+    _<ITexture> createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) override {
+        return nullptr;
+    }
     void setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) override {}
     void setClipRect(const ARect<float>& rect) override {}
     void setRenderMaskMode(bool enabled) override {}
