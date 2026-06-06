@@ -80,6 +80,9 @@ void OpenGLRenderingContextGtk::gtkRealize(GtkWidget* widget) {
     auto acquired = contextScope();
 
     mRenderer = ourRenderer();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
+    mFlipY = true;
 }
 
 void OpenGLRenderingContextGtk::gtkSnapshot(GtkWidget* widget, GtkSnapshot* snapshot) {

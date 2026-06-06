@@ -71,6 +71,7 @@ protected:
     glm::uvec2 mViewportSize { 0, 0 };
     _<ITexture> mWindowTarget;
     _<ITexture> mBackbufferTarget;
+    bool mFlipY = false;
     static _<OpenGLBackend> ourRenderer() {
         static _weak<OpenGLBackend> g;
         if (auto v = g.lock()) {

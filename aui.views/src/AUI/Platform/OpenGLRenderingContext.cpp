@@ -23,7 +23,7 @@ void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
     }
     if (!mWindowTarget || mWindowTarget->getSize() != mViewportSize) {
         mWindowTarget = mRenderer->createTexture(mViewportSize, APixelFormat::R8G8B8A8_UNORM, TextureFilter::LINEAR);
-        mWindowTarget->setOrigin(TextureOrigin::TOP_LEFT);
+        mWindowTarget->setOrigin(mFlipY ? TextureOrigin::BOTTOM_LEFT : TextureOrigin::TOP_LEFT);
     }
 }
 
