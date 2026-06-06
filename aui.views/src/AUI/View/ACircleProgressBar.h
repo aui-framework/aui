@@ -70,6 +70,9 @@ public:
 private:
     aui::float_within_0_1 mValue = 0.f;
     _<Inner> mInner;
+    _<ITexture> mMaskTexture;
+    float mValueForMask = -1.f;
+    glm::ivec2 mSizeForMask = {0, 0};
 
 
 signals:
