@@ -351,18 +351,54 @@ _<ITexture> OpenGLRenderer::createFramebufferWrapper(uint32_t handle, glm::uvec2
 }
 
 void OpenGLRenderer::onTextureDestroyed(ITexture* texture) {
-    mFboCache.erase(texture);
+    auto glTexture = dynamic_cast<OpenGLTexture2D*>(texture);
+    if (!glTexture) {
+        return;
+    }
+    for (auto it = mFboCache.begin(); it != mFboCache.end();) {
+        if (it->first.textureHandle == glTexture->texture().getHandle()) {
+            mFboCacheList.erase(it->second);
+            it = mFboCache.erase(it);
+        } else {
+            ++it;
+        }
+    }
+}
+
+std::size_t OpenGLRenderer::FboCacheKeyHash::operator()(const FboCacheKey& value) const noexcept {
+    std::size_t seed = value.textureHandle;
+    seed ^= std::size_t(value.textureTarget) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    seed ^= std::size_t(value.attachment) + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+    return seed;
+}
+
+void OpenGLRenderer::trimFboCache() {
+    while (mFboCache.size() > MAX_FBO_CACHE_SIZE) {
+        auto last = std::prev(mFboCacheList.end());
+        mFboCache.erase(last->key);
+        mFboCacheList.pop_back();
+    }
 }
 
 gl::Framebuffer& OpenGLRenderer::getFbo(const _<OpenGLTexture2D>& texture) {
-    auto it = mFboCache.find(texture.get());
+    FboCacheKey key {
+        .textureHandle = texture->texture().getHandle(),
+        .textureTarget = GL_TEXTURE_2D,
+        .attachment = GL_COLOR_ATTACHMENT0,
+    };
+    auto it = mFboCache.find(key);
     if (it == mFboCache.end()) {
-        auto [newIt, inserted] = mFboCache.emplace(texture.get(), gl::Framebuffer());
-        newIt->second.bind();
+        mFboCacheList.push_front(FboCacheEntry { .key = key, .framebuffer = gl::Framebuffer() });
+        auto entryIt = mFboCacheList.begin();
+        entryIt->framebuffer.bind();
         glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, texture->texture().getHandle(), 0);
-        it = newIt;
+        auto [newIt, inserted] = mFboCache.emplace(key, entryIt);
+        trimFboCache();
+        return entryIt->framebuffer;
     }
-    return it->second;
+    mFboCacheList.splice(mFboCacheList.begin(), mFboCacheList, it->second);
+    it->second = mFboCacheList.begin();
+    return it->second->framebuffer;
 }
 
 void OpenGLRenderer::setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) {

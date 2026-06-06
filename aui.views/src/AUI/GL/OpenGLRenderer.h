@@ -26,6 +26,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Platform/ASurface.h>
 #include <AUI/Render/ACanvas.hpp>
+#include <list>
 #include <unordered_map>
 
 class OpenGLRenderer;
@@ -76,6 +77,29 @@ public:
 private:
     void onTextureDestroyed(ITexture* texture);
     gl::Framebuffer& getFbo(const _<OpenGLTexture2D>& texture);
+
+    struct FboCacheKey {
+        GLuint textureHandle;
+        GLenum textureTarget;
+        GLenum attachment;
+
+        [[nodiscard]] bool operator==(const FboCacheKey& rhs) const noexcept = default;
+    };
+
+    struct FboCacheKeyHash {
+        [[nodiscard]] std::size_t operator()(const FboCacheKey& value) const noexcept;
+    };
+
+    struct FboCacheEntry {
+        FboCacheKey key;
+        gl::Framebuffer framebuffer;
+    };
+
+    using FboCacheList = std::list<FboCacheEntry>;
+    using FboCacheMap = std::unordered_map<FboCacheKey, FboCacheList::iterator, FboCacheKeyHash>;
+
+    static constexpr std::size_t MAX_FBO_CACHE_SIZE = 64;
+    void trimFboCache();
 
     class TransientBuffer {
     public:
@@ -243,6 +267,7 @@ public:
     uint32_t getDefaultFb() const noexcept;
 
 private:
-    std::unordered_map<ITexture*, gl::Framebuffer> mFboCache;
+    FboCacheList mFboCacheList;
+    FboCacheMap mFboCache;
     _<ITexture> mCurrentRenderTarget;
 };
