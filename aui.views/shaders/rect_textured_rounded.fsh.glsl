@@ -31,11 +31,7 @@ void main() {
     fragColor = tex * vColor * rounded(abs(vUv * 2.0 - 1.0), vOuterSize, fwidth(vUv) * 2.0);
     if (u_useMask) {
         vec2 maskUv = (gl_FragCoord.xy - u_maskRect.xy) / u_maskRect.zw;
-        if (maskUv.x < 0.0 || maskUv.x > 1.0 || maskUv.y < 0.0 || maskUv.y > 1.0) {
-            fragColor *= 0.0;
-        } else {
-            fragColor *= texture(u_mask, maskUv).r;
-        }
+        fragColor *= texture(u_mask, maskUv).r;
     }
     if (fragColor.a < 0.001) discard;
 }
