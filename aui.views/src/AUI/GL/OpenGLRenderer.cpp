@@ -250,7 +250,6 @@ precision highp int;
 #define mediump
 #define highp
 #endif
-#define gl_FragColor fragColor
 )";
             return prefix;
         };
