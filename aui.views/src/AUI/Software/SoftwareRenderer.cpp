@@ -246,7 +246,8 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
     if (mMask) {
         auto s = _cast<SoftwareTexture>(mMask);
         if (s) {
-            glm::vec2 uv = (glm::vec2(pos) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y)) / glm::vec2(mMaskRect.z, mMaskRect.w);
+            glm::vec2 texSize = s->getImage().size();
+            glm::vec2 uv = (glm::vec2(pos) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y)) / texSize;
             maskVal = glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR)).r;
         }
     }
@@ -275,7 +276,7 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
         combined.r = dst.r * (1.f - colorWithMask.r);
         combined.g = dst.g * (1.f - colorWithMask.g);
         combined.b = dst.b * (1.f - colorWithMask.b);
-        combined.a = colorWithMask.a * (1.f - dst.a) + dst.a;
+        combined.a = dst.a * (1.f - colorWithMask.a);
     } else {
         combined = dst * (1.f - colorWithMask.a) + colorWithMask;
     }
@@ -731,6 +732,15 @@ void SoftwareRenderer::glyphs(const ADrawList::Glyphs& v, const glm::mat4& trans
 
                         if (x < 0 || y < 0 || (uint32_t)x >= bitmapSize.x || (uint32_t)y >= bitmapSize.y) continue;
 
+                        float globalMaskVal = 1.f;
+                        if (mMask) {
+                            auto s = _cast<SoftwareTexture>(mMask);
+                            if (s) {
+                                glm::vec2 uv = (glm::vec2(x, y) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y)) / glm::vec2(s->getImage().size());
+                                globalMaskVal = glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR)).r;
+                            }
+                        }
+
                         glm::vec4 dst;
                         if (mRenderTarget) {
                             dst = glm::vec4(mRenderTarget->get(glm::uvec2(x, y)));
@@ -739,13 +749,12 @@ void SoftwareRenderer::glyphs(const ADrawList::Glyphs& v, const glm::mat4& trans
                         }
 
                         AColor res;
-                        glm::vec3 mask = glm::vec3(maskColor);
+                        glm::vec3 mask = glm::vec3(maskColor) * globalMaskVal;
                         res.r = dst.r * (1.f - mask.r * pColor.a) + pColor.r * mask.r;
                         res.g = dst.g * (1.f - mask.g * pColor.a) + pColor.g * mask.g;
                         res.b = dst.b * (1.f - mask.b * pColor.a) + pColor.b * mask.b;
                         float avgMask = (mask.r + mask.g + mask.b) / 3.f;
                         res.a = dst.a * (1.f - avgMask * pColor.a) + avgMask * pColor.a;
-
                         if (mRenderTarget) {
                             mRenderTarget->set(glm::uvec2(x, y), AColor(glm::clamp(res, 0.f, 1.f)));
                         } else {
@@ -1040,7 +1049,7 @@ IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& ma
     }
 
     _cast<SoftwareTexture>(destTexture)->upload(std::move(destImg));
-    AMergedMask merged { destTexture, mergedRect };
+    AMergedMask merged { destTexture, glm::vec4(mergedRect.x, mergedRect.y, (float)size.x, (float)size.y) };
     mMergedMaskCache.emplace(cacheKey, MergedMaskCacheEntry { .texture = destTexture, .rect = merged.rect });
     return merged;
 }
