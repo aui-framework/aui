@@ -200,7 +200,7 @@ _<IDrawable> ADesktop::iconOfFile(const APath& file) {
 
         AImage image(
             AByteBufferView(reinterpret_cast<const char*>(rawData), dataLength),
-            glm::uvec2(icon.size.width, icon.size.height), APixelFormat::R8G8B8_UNORM);
+            glm::uvec2(icon.size.width, icon.size.height), APixelFormat::R8G8B8A8_UNORM);
 
         return _new<AImageDrawable>(_new<AImage>(image));
     }
