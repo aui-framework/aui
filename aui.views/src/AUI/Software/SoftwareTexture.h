@@ -16,6 +16,7 @@
 class SoftwareTexture: public ITexture {
 private:
     AImage mImage;
+    TextureFilter mFilter = TextureFilter::LINEAR;
 
 public:
     void upload(AImageView image) override;
@@ -35,5 +36,13 @@ public:
 
     [[nodiscard]] const AImage& getImage() const noexcept {
         return mImage;
+    }
+
+    void setFilter(TextureFilter filter) {
+        mFilter = filter;
+    }
+
+    [[nodiscard]] TextureFilter getFilter() const noexcept {
+        return mFilter;
     }
 };

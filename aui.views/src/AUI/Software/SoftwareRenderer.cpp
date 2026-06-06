@@ -109,6 +109,36 @@ float roundedRectBorderCoverage(glm::vec2 localPos, glm::vec2 size, float radius
     return glm::clamp(0.5f - sdf_border * scale, 0.f, 1.f);
 }
 
+AColor sample(const AImage& img, glm::vec2 uv, TextureFilter filter) {
+    if (img.width() == 0 || img.height() == 0) return AColor::BLACK;
+    uv = glm::clamp(uv, 0.f, 1.f);
+    if (filter == TextureFilter::NEAREST) {
+        int x = (int)(uv.x * (float)img.width());
+        int y = (int)(uv.y * (float)img.height());
+        return img.get({(uint32_t)glm::clamp(x, 0, (int)img.width() - 1), (uint32_t)glm::clamp(y, 0, (int)img.height() - 1)});
+    }
+    float tx = uv.x * (float)img.width() - 0.5f;
+    float ty = uv.y * (float)img.height() - 0.5f;
+    int x0 = (int)std::floor(tx);
+    int y0 = (int)std::floor(ty);
+    int x1 = x0 + 1;
+    int y1 = y0 + 1;
+
+    float fx = tx - (float)x0;
+    float fy = ty - (float)y0;
+
+    auto getSafe = [&](int x, int y) {
+        return glm::vec4(img.get({(uint32_t)glm::clamp(x, 0, (int)img.width() - 1), (uint32_t)glm::clamp(y, 0, (int)img.height() - 1)}));
+    };
+
+    glm::vec4 c00 = getSafe(x0, y0);
+    glm::vec4 c10 = getSafe(x1, y0);
+    glm::vec4 c01 = getSafe(x0, y1);
+    glm::vec4 c11 = getSafe(x1, y1);
+
+    return glm::mix(glm::mix(c00, c10, fx), glm::mix(c01, c11, fx), fy);
+}
+
 AImage resizeLinear(AImageView source, glm::uvec2 newSize) {
     if (source.size() == newSize) {
         return AImage(source);
@@ -219,24 +249,19 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
             pos.y >= mMaskRect.y && pos.y < mMaskRect.y + mMaskRect.w) {
             auto s = _cast<SoftwareTexture>(mMask);
             if (s) {
-                glm::uvec2 mSize = s->getImage().size();
-                float tx = (pos.x - mMaskRect.x) / mMaskRect.z * mSize.x;
-                float ty = (pos.y - mMaskRect.y) / mMaskRect.w * mSize.y;
-                unsigned px = glm::clamp((unsigned)tx, 0u, mSize.x - 1);
-                unsigned py = glm::clamp((unsigned)ty, 0u, mSize.y - 1);
-                maskVal = glm::vec4(s->getImage().get({px, py})).r / 255.f;
+                glm::vec2 uv = (glm::vec2(pos) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y)) / glm::vec2(mMaskRect.z, mMaskRect.w);
+                maskVal = glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR)).r;
             }
         } else {
             maskVal = 0.f;
         }
     }
     if (maskVal <= 0.001f) return;
-    AColor colorWithMask = color;
-    colorWithMask.a *= maskVal;
+    AColor colorWithMask = color * maskVal;
 
     glm::vec4 dst;
     if (mRenderTarget) {
-        dst = glm::vec4(mRenderTarget->get(glm::uvec2(pos))) / 255.f;
+        dst = glm::vec4(mRenderTarget->get(glm::uvec2(pos)));
     } else {
         dst = glm::vec4(mContext->getPixel(glm::uvec2(pos))) / 255.f;
     }
@@ -269,13 +294,27 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
 }
 
 void SoftwareRenderer::solidRectangles(const ADrawList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) {
+    glm::mat4 invTransform = glm::inverse(transform);
     for (const auto& inst : v.instances) {
         auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
-        auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+        auto p2 = transform * glm::vec4(inst.position + glm::vec2(inst.size.x, 0.f), 0.f, 1.f);
+        auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
+        auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+
         AColor color = inst.color.premultiply();
-        for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-            for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-                putPixel({x, y}, color, paint);
+        for (int y = (int)minY; y < (int)maxY; ++y) {
+            for (int x = (int)minX; x < (int)maxX; ++x) {
+                glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+                glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y);
+                if (localPos.x >= inst.position.x && localPos.x <= inst.position.x + inst.size.x &&
+                    localPos.y >= inst.position.y && localPos.y <= inst.position.y + inst.size.y) {
+                    putPixel({x, y}, color, paint);
+                }
             }
         }
     }
@@ -322,21 +361,30 @@ void SoftwareRenderer::gradientRectangles(const ADrawList::GradientRectangles& v
     glm::vec4 c1 = v.colors.size() > 0 ? v.colors[0].color.premultiply() : glm::vec4(0.f);
     glm::vec4 c2 = v.colors.size() > 1 ? v.colors[1].color.premultiply() : (v.colors.size() > 0 ? v.colors[0].color.premultiply() : glm::vec4(0.f));
 
+    glm::mat4 invTransform = glm::inverse(transform);
     for (const auto& inst : v.instances) {
         auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
-        auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-        float width = p2.x - p1.x;
-        float height = p2.y - p1.y;
+        auto p2 = transform * glm::vec4(inst.position + glm::vec2(inst.size.x, 0.f), 0.f, 1.f);
+        auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
+        auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
 
-        for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-            for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-                float uvX = (x - p1.x) / width;
-                float uvY = (y - p1.y) / height;
-                glm::vec2 uv(uvX, uvY);
-                glm::vec3 transformedUv = helper.matrix * glm::vec3(uv, 1.f);
-                float t = glm::clamp(transformedUv.x, 0.f, 1.f);
-                AColor color = glm::mix(c1, c2, t) * inst.color.premultiply();
-                putPixel({x, y}, color, paint);
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+
+        for (int y = (int)minY; y < (int)maxY; ++y) {
+            for (int x = (int)minX; x < (int)maxX; ++x) {
+                glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+                glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y);
+                if (localPos.x >= inst.position.x && localPos.x <= inst.position.x + inst.size.x &&
+                    localPos.y >= inst.position.y && localPos.y <= inst.position.y + inst.size.y) {
+                    glm::vec2 uv = (localPos - inst.position) / inst.size;
+                    glm::vec3 transformedUv = helper.matrix * glm::vec3(uv, 1.f);
+                    float t = glm::clamp(transformedUv.x, 0.f, 1.f);
+                    AColor color = glm::mix(c1, c2, t) * inst.color.premultiply();
+                    putPixel({x, y}, color, paint);
+                }
             }
         }
     }
@@ -347,48 +395,60 @@ void SoftwareRenderer::texturedRectangles(const ADrawList::TexturedRectangles& v
     const auto& img = texture->getImage();
     if (img.width() == 0 || img.height() == 0) return;
 
+    glm::mat4 invTransform = glm::inverse(transform);
     for (const auto& inst : v.instances) {
         auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
-        auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-        
-        float width = p2.x - p1.x;
-        float height = p2.y - p1.y;
+        auto p2 = transform * glm::vec4(inst.position + glm::vec2(inst.size.x, 0.f), 0.f, 1.f);
+        auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
+        auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
 
-        for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-            for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-                float u = glm::mix(v.uv1.x, v.uv2.x, (x - (float)p1.x) / width);
-                float v_uv = glm::mix(v.uv1.y, v.uv2.y, (y - (float)p1.y) / height);
-                
-                glm::uvec2 texPos((unsigned)(u * glm::max(0.f, (float)img.width() - 1.f)), (unsigned)(v_uv * glm::max(0.f, (float)img.height() - 1.f)));
-                AColor texColor;
-                if (texPos.x < img.width() && texPos.y < img.height()) {
-                    texColor = img.get(texPos);
-                } else {
-                    texColor = AColor::RED;
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+
+        for (int y = (int)minY; y < (int)maxY; ++y) {
+            for (int x = (int)minX; x < (int)maxX; ++x) {
+                glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+                glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y);
+                if (localPos.x >= inst.position.x && localPos.x <= inst.position.x + inst.size.x &&
+                    localPos.y >= inst.position.y && localPos.y <= inst.position.y + inst.size.y) {
+                    glm::vec2 uv = (localPos - inst.position) / inst.size;
+                    glm::vec2 texUv = glm::mix(v.uv1, v.uv2, uv);
+
+                    AColor texColor = sample(img, texUv, texture->getFilter());
+                    if (!v.premultiplied) {
+                        texColor = texColor.premultiply();
+                    }
+                    putPixel({x, y}, texColor * inst.color, paint);
                 }
-                if (!v.premultiplied) {
-                    texColor = texColor.premultiply();
-                }
-                putPixel({x, y}, texColor * inst.color, paint);
             }
         }
     }
 }
 void SoftwareRenderer::solidRoundedRectangles(const ADrawList::SolidRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
+    glm::mat4 invTransform = glm::inverse(transform);
+    float scale = glm::length(glm::vec2(transform * glm::vec4(1.f, 0.f, 0.f, 0.f)));
     for (const auto& inst : v.instances) {
         auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
-        auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+        auto p2 = transform * glm::vec4(inst.position + glm::vec2(inst.size.x, 0.f), 0.f, 1.f);
+        auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
+        auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+
         AColor color = inst.color.premultiply();
         float radius = v.radius;
         float maxRadius = std::min(inst.size.x, inst.size.y) * 0.5f;
         if (radius > maxRadius) {
             radius = maxRadius;
         }
-        glm::mat4 invTransform = glm::inverse(transform);
-        float scale = (p2.x - p1.x) / inst.size.x;
 
-        for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-            for (int x = (int)p1.x; x < (int)p2.x; ++x) {
+        for (int y = (int)minY; y < (int)maxY; ++y) {
+            for (int x = (int)minX; x < (int)maxX; ++x) {
                 glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
                 glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y) - inst.position;
                 float a = roundedRectCoverage(localPos, inst.size, radius, scale);
@@ -409,29 +469,33 @@ void SoftwareRenderer::gradientRoundedRectangles(const ADrawList::GradientRounde
     glm::vec4 c1 = v.colors.size() > 0 ? v.colors[0].color.premultiply() : glm::vec4(0.f);
     glm::vec4 c2 = v.colors.size() > 1 ? v.colors[1].color.premultiply() : (v.colors.size() > 0 ? v.colors[0].color.premultiply() : glm::vec4(0.f));
 
+    glm::mat4 invTransform = glm::inverse(transform);
+    float scale = glm::length(glm::vec2(transform * glm::vec4(1.f, 0.f, 0.f, 0.f)));
     for (const auto& inst : v.instances) {
         auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
-        auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+        auto p2 = transform * glm::vec4(inst.position + glm::vec2(inst.size.x, 0.f), 0.f, 1.f);
+        auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
+        auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+
         AColor color = inst.color.premultiply();
         float radius = v.radius;
         float maxRadius = std::min(inst.size.x, inst.size.y) * 0.5f;
         if (radius > maxRadius) {
             radius = maxRadius;
         }
-        glm::mat4 invTransform = glm::inverse(transform);
-        float scale = (p2.x - p1.x) / inst.size.x;
-        float width = p2.x - p1.x;
-        float height = p2.y - p1.y;
 
-        for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-            for (int x = (int)p1.x; x < (int)p2.x; ++x) {
+        for (int y = (int)minY; y < (int)maxY; ++y) {
+            for (int x = (int)minX; x < (int)maxX; ++x) {
                 glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
                 glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y) - inst.position;
                 float a = roundedRectCoverage(localPos, inst.size, radius, scale);
                 if (a > 0.001f) {
-                    float uvX = (x - p1.x) / width;
-                    float uvY = (y - p1.y) / height;
-                    glm::vec2 uv(uvX, uvY);
+                    glm::vec2 uv = localPos / inst.size;
                     glm::vec3 transformedUv = helper.matrix * glm::vec3(uv, 1.f);
                     float t = glm::clamp(transformedUv.x, 0.f, 1.f);
                     AColor gradColor = glm::mix(c1, c2, t);
@@ -447,36 +511,36 @@ void SoftwareRenderer::texturedRoundedRectangles(const ADrawList::TexturedRounde
     const auto& img = texture->getImage();
     if (img.width() == 0 || img.height() == 0) return;
 
+    glm::mat4 invTransform = glm::inverse(transform);
+    float scale = glm::length(glm::vec2(transform * glm::vec4(1.f, 0.f, 0.f, 0.f)));
     for (const auto& inst : v.instances) {
         auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
-        auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+        auto p2 = transform * glm::vec4(inst.position + glm::vec2(inst.size.x, 0.f), 0.f, 1.f);
+        auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
+        auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+
         AColor color = inst.color.premultiply();
         float radius = v.radius;
         float maxRadius = std::min(inst.size.x, inst.size.y) * 0.5f;
         if (radius > maxRadius) {
             radius = maxRadius;
         }
-        glm::mat4 invTransform = glm::inverse(transform);
-        float scale = (p2.x - p1.x) / inst.size.x;
-        float width = p2.x - p1.x;
-        float height = p2.y - p1.y;
 
-        for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-            for (int x = (int)p1.x; x < (int)p2.x; ++x) {
+        for (int y = (int)minY; y < (int)maxY; ++y) {
+            for (int x = (int)minX; x < (int)maxX; ++x) {
                 glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
                 glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y) - inst.position;
                 float a = roundedRectCoverage(localPos, inst.size, radius, scale);
                 if (a > 0.001f) {
-                    float uvX = glm::mix(v.uv1.x, v.uv2.x, (x - p1.x) / width);
-                    float uvY = glm::mix(v.uv1.y, v.uv2.y, (y - p1.y) / height);
-                    glm::uvec2 texPos((unsigned)(uvX * glm::max(0.f, (float)img.width() - 1.f)),
-                                      (unsigned)(uvY * glm::max(0.f, (float)img.height() - 1.f)));
-                    AColor texColor;
-                    if (texPos.x < img.width() && texPos.y < img.height()) {
-                        texColor = img.get(texPos);
-                    } else {
-                        texColor = AColor::RED;
-                    }
+                    glm::vec2 uv = localPos / inst.size;
+                    glm::vec2 texUv = glm::mix(v.uv1, v.uv2, uv);
+
+                    AColor texColor = sample(img, texUv, texture->getFilter());
                     if (!v.premultiplied) {
                         texColor = texColor.premultiply();
                     }
@@ -487,38 +551,59 @@ void SoftwareRenderer::texturedRoundedRectangles(const ADrawList::TexturedRounde
     }
 }
 void SoftwareRenderer::rectangleBorders(const ADrawList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
+    glm::mat4 invTransform = glm::inverse(transform);
     for (const auto& inst : v.instances) {
+        auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
+        auto p2 = transform * glm::vec4(inst.position + glm::vec2(inst.size.x, 0.f), 0.f, 1.f);
+        auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
+        auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+
         AColor color = inst.color.premultiply();
-        auto drawSubRect = [&](glm::vec2 pos, glm::vec2 size) {
-            auto p1 = transform * glm::vec4(pos, 0.f, 1.f);
-            auto p2 = transform * glm::vec4(pos + size, 0.f, 1.f);
-            for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-                for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-                    putPixel({x, y}, color, paint);
+        for (int y = (int)minY; y < (int)maxY; ++y) {
+            for (int x = (int)minX; x < (int)maxX; ++x) {
+                glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+                glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y);
+                if (localPos.x >= inst.position.x && localPos.x <= inst.position.x + inst.size.x &&
+                    localPos.y >= inst.position.y && localPos.y <= inst.position.y + inst.size.y) {
+
+                    bool inner = localPos.x >= inst.position.x + v.lineWidth && localPos.x <= inst.position.x + inst.size.x - v.lineWidth &&
+                                 localPos.y >= inst.position.y + v.lineWidth && localPos.y <= inst.position.y + inst.size.y - v.lineWidth;
+                    if (!inner) {
+                        putPixel({x, y}, color, paint);
+                    }
                 }
             }
-        };
-        drawSubRect(inst.position, {inst.size.x, v.lineWidth});
-        drawSubRect({inst.position.x, inst.position.y + inst.size.y - v.lineWidth}, {inst.size.x, v.lineWidth});
-        drawSubRect({inst.position.x, inst.position.y + v.lineWidth}, {v.lineWidth, inst.size.y - v.lineWidth * 2.f});
-        drawSubRect({inst.position.x + inst.size.x - v.lineWidth, inst.position.y + v.lineWidth}, {v.lineWidth, inst.size.y - v.lineWidth * 2.f});
+        }
     }
 }
 void SoftwareRenderer::roundedRectangleBorders(const ADrawList::RoundedRectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
+    glm::mat4 invTransform = glm::inverse(transform);
+    float scale = glm::length(glm::vec2(transform * glm::vec4(1.f, 0.f, 0.f, 0.f)));
     for (const auto& inst : v.instances) {
+        auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
+        auto p2 = transform * glm::vec4(inst.position + glm::vec2(inst.size.x, 0.f), 0.f, 1.f);
+        auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
+        auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+
         AColor color = inst.color.premultiply();
         float radius = v.radius;
         float maxRadius = std::min(inst.size.x, inst.size.y) * 0.5f;
         if (radius > maxRadius) {
             radius = maxRadius;
         }
-        auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
-        auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-        glm::mat4 invTransform = glm::inverse(transform);
-        float scale = (p2.x - p1.x) / inst.size.x;
 
-        for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-            for (int x = (int)p1.x; x < (int)p2.x; ++x) {
+        for (int y = (int)minY; y < (int)maxY; ++y) {
+            for (int x = (int)minX; x < (int)maxX; ++x) {
                 glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
                 glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y) - inst.position;
                 float a = roundedRectBorderCoverage(localPos, inst.size, radius, (float)v.borderWidth, scale);
@@ -536,14 +621,22 @@ void SoftwareRenderer::boxShadow(const ADrawList::BoxShadow& v, const glm::mat4&
     glm::vec2 size = v.size + padding * 2.f;
 
     auto p1 = transform * glm::vec4(pos, 0.f, 1.f);
-    auto p2 = transform * glm::vec4(pos + size, 0.f, 1.f);
+    auto p2 = transform * glm::vec4(pos + glm::vec2(size.x, 0.f), 0.f, 1.f);
+    auto p3 = transform * glm::vec4(pos + glm::vec2(0.f, size.y), 0.f, 1.f);
+    auto p4 = transform * glm::vec4(pos + size, 0.f, 1.f);
+
+    float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
+    float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
+    float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
+    float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+
     glm::mat4 invTransform = glm::inverse(transform);
     AColor color = v.color.premultiply();
 
-    for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-        for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-            glm::vec4 localPos = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
-            glm::vec2 val = glm::vec2(localPos.x, localPos.y);
+    for (int y = (int)minY; y < (int)maxY; ++y) {
+        for (int x = (int)minX; x < (int)maxX; ++x) {
+            glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+            glm::vec2 val = glm::vec2(localPos4.x, localPos4.y);
             glm::vec4 query = glm::vec4(val - v.position, val - (v.position + v.size));
             glm::vec4 erfVal = erf(query * (std::sqrt(0.5f) / sigma));
             glm::vec4 integral = glm::vec4(0.5f) + glm::vec4(0.5f) * erfVal;
@@ -560,13 +653,21 @@ void SoftwareRenderer::boxShadowInner(const ADrawList::BoxShadowInner& v, const 
     glm::vec2 upper = v.position + v.size + v.offset - glm::vec2(v.spreadRadius);
 
     auto p1 = transform * glm::vec4(v.position, 0.f, 1.f);
-    auto p2 = transform * glm::vec4(v.position + v.size, 0.f, 1.f);
+    auto p2 = transform * glm::vec4(v.position + glm::vec2(v.size.x, 0.f), 0.f, 1.f);
+    auto p3 = transform * glm::vec4(v.position + glm::vec2(0.f, v.size.y), 0.f, 1.f);
+    auto p4 = transform * glm::vec4(v.position + v.size, 0.f, 1.f);
+
+    float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
+    float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
+    float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
+    float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+
     glm::mat4 invTransform = glm::inverse(transform);
-    float scale = (p2.x - p1.x) / v.size.x;
+    float scale = glm::length(glm::vec2(transform * glm::vec4(1.f, 0.f, 0.f, 0.f)));
     AColor color = v.color.premultiply();
 
-    for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-        for (int x = (int)p1.x; x < (int)p2.x; ++x) {
+    for (int y = (int)minY; y < (int)maxY; ++y) {
+        for (int x = (int)minX; x < (int)maxX; ++x) {
             glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
             glm::vec2 val = glm::vec2(localPos4.x, localPos4.y);
 
@@ -593,60 +694,69 @@ void SoftwareRenderer::glyphs(const ADrawList::Glyphs& v, const glm::mat4& trans
     if (img.width() == 0)
         return;
 
+    glm::mat4 invTransform = glm::inverse(transform);
     for (const auto& inst : v.instances) {
         auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
-        auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
+        auto p2 = transform * glm::vec4(inst.position + glm::vec2(inst.size.x, 0.f), 0.f, 1.f);
+        auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
+        auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
 
-        float width = p2.x - p1.x;
-        float height = p2.y - p1.y;
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
 
-        for (int y = (int) p1.y; y < (int) p2.y; ++y) {
-            for (int x = (int) p1.x; x < (int) p2.x; ++x) {
-                float u = ((float)x + 0.5f - p1.x) / width;
-                float v_uv = ((float)y + 0.5f - p1.y) / height;
+        for (int y = (int)minY; y < (int)maxY; ++y) {
+            for (int x = (int)minX; x < (int)maxX; ++x) {
+                glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+                glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y);
+                if (localPos.x >= inst.position.x && localPos.x <= inst.position.x + inst.size.x &&
+                    localPos.y >= inst.position.y && localPos.y <= inst.position.y + inst.size.y) {
 
-                float tx = glm::mix(inst.u1.x, inst.u2.x, u) * (float)img.width();
-                float ty = glm::mix(inst.u1.y, inst.u2.y, v_uv) * (float)img.height();
+                    glm::vec2 uv = (localPos - inst.position) / inst.size;
+                    glm::vec2 texUv = glm::mix(inst.u1, inst.u2, uv);
 
-                int texX = glm::clamp((int)glm::floor(tx), 0, (int)img.width() - 1);
-                int texY = glm::clamp((int)glm::floor(ty), 0, (int)img.height() - 1);
+                    int texX = glm::clamp((int)(texUv.x * (float)img.width()), 0, (int)img.width() - 1);
+                    int texY = glm::clamp((int)(texUv.y * (float)img.height()), 0, (int)img.height() - 1);
 
-                AColor maskColor = img.get(glm::uvec2(texX, texY));
-                AColor pColor = inst.color.premultiply();
+                    AColor maskColor = img.get({(uint32_t)texX, (uint32_t)texY});
+                    AColor pColor = inst.color.premultiply();
 
-                if (!v.isSubpixel) {
-                    AColor finalColor = pColor * maskColor.r;
-                    putPixel({x, y}, finalColor, paint);
-                } else {
-                    glm::uvec2 bitmapSize;
-                    if (mRenderTarget) {
-                        bitmapSize = mRenderTarget->size();
-                    } else if (mContext) {
-                        bitmapSize = mContext->bitmapSize();
+                    if (!v.isSubpixel) {
+                        AColor finalColor = pColor * maskColor.r;
+                        putPixel({x, y}, finalColor, paint);
                     } else {
-                        continue;
-                    }
+                        glm::uvec2 bitmapSize;
+                        if (mRenderTarget) {
+                            bitmapSize = mRenderTarget->size();
+                        } else if (mContext) {
+                            bitmapSize = mContext->bitmapSize();
+                        } else {
+                            continue;
+                        }
 
-                    if (x < 0 || y < 0 || (uint32_t)x >= bitmapSize.x || (uint32_t)y >= bitmapSize.y) continue;
+                        if (x < 0 || y < 0 || (uint32_t)x >= bitmapSize.x || (uint32_t)y >= bitmapSize.y) continue;
 
-                    glm::vec4 dst;
-                    if (mRenderTarget) {
-                        dst = glm::vec4(mRenderTarget->get(glm::uvec2(x, y))) / 255.f;
-                    } else {
-                        dst = glm::vec4(mContext->getPixel(glm::uvec2(x, y))) / 255.f;
-                    }
+                        glm::vec4 dst;
+                        if (mRenderTarget) {
+                            dst = glm::vec4(mRenderTarget->get(glm::uvec2(x, y)));
+                        } else {
+                            dst = glm::vec4(mContext->getPixel(glm::uvec2(x, y))) / 255.f;
+                        }
 
-                    AColor res;
-                    res.r = dst.r * (1.f - maskColor.r) + pColor.r * maskColor.r;
-                    res.g = dst.g * (1.f - maskColor.g) + pColor.g * maskColor.g;
-                    res.b = dst.b * (1.f - maskColor.b) + pColor.b * maskColor.b;
-                    float avgMask = (maskColor.r + maskColor.g + maskColor.b) / 3.f;
-                    res.a = dst.a * (1.f - avgMask * pColor.a) + avgMask * pColor.a;
+                        AColor res;
+                        glm::vec3 mask = glm::vec3(maskColor);
+                        res.r = dst.r * (1.f - mask.r * pColor.a) + pColor.r * mask.r;
+                        res.g = dst.g * (1.f - mask.g * pColor.a) + pColor.g * mask.g;
+                        res.b = dst.b * (1.f - mask.b * pColor.a) + pColor.b * mask.b;
+                        float avgMask = (mask.r + mask.g + mask.b) / 3.f;
+                        res.a = dst.a * (1.f - avgMask * pColor.a) + avgMask * pColor.a;
 
-                    if (mRenderTarget) {
-                        mRenderTarget->set(glm::uvec2(x, y), AColor(glm::clamp(res, 0.f, 1.f)));
-                    } else {
-                        mContext->putPixel(glm::uvec2(x, y), glm::u8vec4(glm::clamp(res, 0.f, 1.f) * 255.f));
+                        if (mRenderTarget) {
+                            mRenderTarget->set(glm::uvec2(x, y), AColor(glm::clamp(res, 0.f, 1.f)));
+                        } else {
+                            mContext->putPixel(glm::uvec2(x, y), glm::u8vec4(glm::clamp(res, 0.f, 1.f) * 255.f));
+                        }
                     }
                 }
             }
@@ -800,6 +910,7 @@ glm::mat4 SoftwareRenderer::getProjectionMatrix() const { return glm::mat4(1.0f)
 _<ITexture> SoftwareRenderer::createTexture(glm::u32vec2 size, APixelFormat format, TextureFilter filter) {
     auto t = _new<SoftwareTexture>();
     t->upload(AImage(size, format));
+    t->setFilter(filter);
     return t;
 }
 
