@@ -819,25 +819,67 @@ void SoftwareRenderer::lines(const ADrawList::LineBatches& v, const glm::mat4& t
 }
 void SoftwareRenderer::squareSector(const ADrawList::SquareSector& v, const glm::mat4& transform, const APaint& paint) {
     auto p1 = transform * glm::vec4(v.position, 0.f, 1.f);
-    auto p2 = transform * glm::vec4(v.position + v.size, 0.f, 1.f);
+    auto p2 = transform * glm::vec4(v.position + glm::vec2(v.size.x, 0.f), 0.f, 1.f);
+    auto p3 = transform * glm::vec4(v.position + glm::vec2(0.f, v.size.y), 0.f, 1.f);
+    auto p4 = transform * glm::vec4(v.position + v.size, 0.f, 1.f);
+
+    float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
+    float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
+    float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
+    float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+
+    glm::mat4 invTransform = glm::inverse(transform);
     AColor color = paint.color.premultiply();
-    float width = p2.x - p1.x;
-    float height = p2.y - p1.y;
 
     float beginRad = v.begin.radians();
     float endRad = v.end.radians();
-    if (beginRad < 0.f) beginRad += 2.f * glm::pi<float>();
-    if (endRad < 0.f) endRad += 2.f * glm::pi<float>();
+    const float PI2 = 6.28318530718f;
 
-    for (int y = (int)p1.y; y < (int)p2.y; ++y) {
-        for (int x = (int)p1.x; x < (int)p2.x; ++x) {
-            float uvX = (x - p1.x) / width;
-            float uvY = (y - p1.y) / height;
-            glm::vec2 uv = glm::vec2(uvX, uvY) * 2.f - glm::vec2(1.f);
-            float angle = glm::atan(uv.y, uv.x);
-            if (angle < 0.f) angle += 2.f * glm::pi<float>();
-            if (angle >= beginRad && angle <= endRad) {
-                putPixel({x, y}, color, paint);
+    if (endRad - beginRad >= PI2 - 0.0001f) {
+        for (int y = (int)minY; y < (int)maxY; ++y) {
+            for (int x = (int)minX; x < (int)maxX; ++x) {
+                glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+                glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y);
+                if (localPos.x >= v.position.x && localPos.x <= v.position.x + v.size.x &&
+                    localPos.y >= v.position.y && localPos.y <= v.position.y + v.size.y) {
+                    putPixel({x, y}, color, paint);
+                }
+            }
+        }
+        return;
+    }
+
+    auto normalize = [PI2](float a) {
+        a = std::fmod(a, PI2);
+        if (a < 0.f) a += PI2;
+        return a;
+    };
+
+    float b = normalize(beginRad);
+    float e = normalize(endRad);
+
+    for (int y = (int)minY; y < (int)maxY; ++y) {
+        for (int x = (int)minX; x < (int)maxX; ++x) {
+            glm::vec4 localPos4 = invTransform * glm::vec4((float)x + 0.5f, (float)y + 0.5f, 0.f, 1.f);
+            glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y);
+            if (localPos.x >= v.position.x && localPos.x <= v.position.x + v.size.x &&
+                localPos.y >= v.position.y && localPos.y <= v.position.y + v.size.y) {
+
+                glm::vec2 uv = (localPos - v.position) / v.size;
+                glm::vec2 centeredUv = uv * 2.f - 1.f;
+                float angle = std::atan2(centeredUv.x, -centeredUv.y);
+                if (angle < 0.f) angle += PI2;
+
+                bool inside = false;
+                if (b < e) {
+                    inside = (angle >= b && angle <= e);
+                } else {
+                    inside = (angle >= b || angle <= e);
+                }
+
+                if (inside) {
+                    putPixel({x, y}, color, paint);
+                }
             }
         }
     }

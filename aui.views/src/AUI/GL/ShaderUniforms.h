@@ -41,6 +41,8 @@ namespace aui::ShaderUniforms {
     extern ::gl::Program::Uniform WHICH_ALGO;
     extern ::gl::Program::Uniform M1;
     extern ::gl::Program::Uniform M2;
+    extern ::gl::Program::Uniform BEGIN;
+    extern ::gl::Program::Uniform END;
     extern ::gl::Program::Uniform DIVIDER;
     extern ::gl::Program::Uniform THRESHOLD;
     extern ::gl::Program::Uniform KERNEL;

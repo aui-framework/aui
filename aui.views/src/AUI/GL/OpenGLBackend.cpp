@@ -1382,22 +1382,18 @@ void OpenGLBackend::squareSector(const ADrawList::SquareSector& v, const glm::ma
     mSquareSectorShader->set(aui::ShaderUniforms::TRANSFORM, mProjectionMatrix * transform);
     setupMask(*mSquareSectorShader);
 
-    auto calculateLineMatrix = [](AAngleRadians angle) {
-        auto s = glm::sin(angle.radians());
-        auto c = glm::cos(angle.radians());
-        return glm::mat3(c, 0.f, 0.f,
-                         s, 0.f, 0.f,
-                         -0.5f * (s + c), 0.f, 0.f);
-    };
-
-    mSquareSectorShader->set(aui::ShaderUniforms::M1, calculateLineMatrix(v.begin));
-    mSquareSectorShader->set(aui::ShaderUniforms::M2, calculateLineMatrix(v.end));
+    mSquareSectorShader->set(aui::ShaderUniforms::BEGIN, v.begin.radians());
+    mSquareSectorShader->set(aui::ShaderUniforms::END, v.end.radians());
 
     auto rectVertices = getVerticesForRect(v.position, v.size);
     glm::vec4 color = maskColor(paint.color).premultiply();
 
-    VertexBasic vertices[4];
-    for (int i = 0; i < 4; ++i) vertices[i] = {rectVertices[i], color};
+    VertexBasicUv vertices[4] = {
+        {rectVertices[0], {0.f, 0.f}, color},
+        {rectVertices[1], {1.f, 0.f}, color},
+        {rectVertices[2], {0.f, 1.f}, color},
+        {rectVertices[3], {1.f, 1.f}, color},
+    };
     GLuint indices[6] = {0, 1, 2, 2, 1, 3};
 
     size_t vOffset = mVertexBuffer.upload(vertices, sizeof(vertices));
@@ -1405,10 +1401,11 @@ void OpenGLBackend::squareSector(const ADrawList::SquareSector& v, const glm::ma
 
     mBatchVao.bind();
     glEnableVertexAttribArray(0);
-    glDisableVertexAttribArray(1);
+    glEnableVertexAttribArray(1);
     glEnableVertexAttribArray(2);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasic), (void*)(vOffset + offsetof(VertexBasic, pos)));
-    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasic), (void*)(vOffset + offsetof(VertexBasic, color)));
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, pos)));
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, uv)));
+    glVertexAttribPointer(2, 4, GL_FLOAT, GL_FALSE, sizeof(VertexBasicUv), (void*)(vOffset + offsetof(VertexBasicUv, color)));
 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }

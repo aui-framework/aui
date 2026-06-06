@@ -38,6 +38,8 @@ namespace aui::ShaderUniforms {
     gl::Program::Uniform WHICH_ALGO("whichAlgo");
     gl::Program::Uniform M1("m1");
     gl::Program::Uniform M2("m2");
+    gl::Program::Uniform BEGIN("u_begin");
+    gl::Program::Uniform END("u_end");
     gl::Program::Uniform DIVIDER("divider");
     gl::Program::Uniform THRESHOLD("threshold");
     gl::Program::Uniform KERNEL("kernel");
