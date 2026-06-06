@@ -111,7 +111,6 @@ float roundedRectBorderCoverage(glm::vec2 localPos, glm::vec2 size, float radius
 
 AColor sample(const AImage& img, glm::vec2 uv, TextureFilter filter) {
     if (img.width() == 0 || img.height() == 0) return AColor::BLACK;
-    uv = glm::clamp(uv, 0.f, 1.f);
     if (filter == TextureFilter::NEAREST) {
         int x = (int)(uv.x * (float)img.width());
         int y = (int)(uv.y * (float)img.height());
@@ -245,15 +244,10 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
 
     float maskVal = 1.f;
     if (mMask) {
-        if (pos.x >= mMaskRect.x && pos.x < mMaskRect.x + mMaskRect.z &&
-            pos.y >= mMaskRect.y && pos.y < mMaskRect.y + mMaskRect.w) {
-            auto s = _cast<SoftwareTexture>(mMask);
-            if (s) {
-                glm::vec2 uv = (glm::vec2(pos) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y)) / glm::vec2(mMaskRect.z, mMaskRect.w);
-                maskVal = glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR)).r;
-            }
-        } else {
-            maskVal = 0.f;
+        auto s = _cast<SoftwareTexture>(mMask);
+        if (s) {
+            glm::vec2 uv = (glm::vec2(pos) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y)) / glm::vec2(mMaskRect.z, mMaskRect.w);
+            maskVal = glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR)).r;
         }
     }
     if (maskVal <= 0.001f) return;
