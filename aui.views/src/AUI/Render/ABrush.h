@@ -32,7 +32,7 @@
  */
 struct ASolidBrush {
     AColor solidColor = AColor::WHITE;
-    bool operator==(const ASolidBrush&) const = default;
+    bool operator==(const ASolidBrush&) const noexcept = default;
 };
 
 
@@ -40,7 +40,7 @@ struct ASolidBrush {
  * The brush used with a custom graphics API shaders.
  */
 struct ACustomShaderBrush {
-    bool operator==(const ACustomShaderBrush&) const = default;
+    bool operator==(const ACustomShaderBrush&) const noexcept = default;
 };
 
 
@@ -51,7 +51,7 @@ struct ALinearGradientBrush {
     struct ColorEntry {
         aui::float_within_0_1 position;
         AColor color;
-        bool operator==(const ColorEntry&) const = default;
+        bool operator==(const ColorEntry&) const noexcept = default;
     };
 
     AStaticVector<ColorEntry, 2> colors;
@@ -65,12 +65,8 @@ struct ALinearGradientBrush {
      */
     AAngleRadians rotation = 180_deg;
 
-    bool operator==(const ALinearGradientBrush& o) const {
-        if (rotation != o.rotation || colors.size() != o.colors.size()) return false;
-        for (size_t i = 0; i < colors.size(); ++i) {
-            if (!(colors[i] == o.colors[i])) return false;
-        }
-        return true;
+    bool operator==(const ALinearGradientBrush& o) const noexcept {
+        return rotation == o.rotation && colors == o.colors;
     }
 };
 
