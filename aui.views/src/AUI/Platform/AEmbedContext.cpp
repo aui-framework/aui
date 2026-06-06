@@ -16,7 +16,7 @@
 #include <AUI/GL/State.h>
 #include <AUI/Platform/ASurface.h>
 #include <AUI/Platform/AWindow.h>
-#include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/GL/OpenGLBackend.hpp>
 #include <AUI/Util/ALayoutInflater.h>
 #include <AUI/Render/ADisplayList.h>
 #include <AUI/Render/ADisplayListCanvas.hpp>

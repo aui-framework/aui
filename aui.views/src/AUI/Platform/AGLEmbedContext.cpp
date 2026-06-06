@@ -16,7 +16,7 @@
 #include "AGLEmbedContext.h"
 
 #include <AUI/GL/State.h>
-#include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/GL/OpenGLBackend.hpp>
 
 AGLEmbedContext::AGLEmbedContext() {
 #if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)

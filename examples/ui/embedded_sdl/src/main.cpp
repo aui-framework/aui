@@ -17,7 +17,7 @@
 #include <AUI/Render/IRenderer.h>
 #include <AUI/Render/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
-#include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/GL/OpenGLBackend.hpp>
 #include <AUI/Util/Declarative/Containers.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/ATextField.h>
@@ -187,7 +187,7 @@ public:
 
 /// [EmbedRenderingContext]
 struct EmbedRenderingContext : IRenderingContext {
-    std::shared_ptr<OpenGLRenderer> m_renderer;
+    std::shared_ptr<OpenGLBackend> m_renderer;
     ADisplayList m_displayList;
     _unique<ADisplayListCanvas> m_canvas;
     _unique<RendererCanvas> m_rendererWrapper;
@@ -385,12 +385,12 @@ AUI_ENTRY {
     /// [APlatformInit]
 
     /// [RendererSetup]
-    if (!OpenGLRenderer::loadGL((OpenGLRenderer::GLLoadProc)SDL_GL_GetProcAddress)) {
-        ALogger::err("OpenGLRenderer") << "Failed to load GL";
+    if (!OpenGLBackend::loadGL((OpenGLBackend::GLLoadProc)SDL_GL_GetProcAddress)) {
+        ALogger::err("OpenGLBackend") << "Failed to load GL";
         return 1;
     }
 
-    auto renderer = std::make_shared<OpenGLRenderer>();
+    auto renderer = std::make_shared<OpenGLBackend>();
     {
         auto rendering_context = std::make_unique<EmbedRenderingContext>();
         rendering_context->m_renderer = renderer;

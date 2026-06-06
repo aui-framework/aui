@@ -13,7 +13,7 @@
 #include "UIBenchmarkScene.h"
 #include "AUI/Platform/ARenderingContextOptions.h"
 #include "AUI/Image/png/PngImageLoader.h"
-#include "AUI/GL/OpenGLRenderer.h"
+#include "AUI/GL/OpenGLBackend.hpp"
 
 static void OpenGLRendering(benchmark::State& state) {
 
@@ -36,7 +36,7 @@ static void OpenGLRendering(benchmark::State& state) {
     window->setContents(declarative::Centered { uiBenchmarkScene() });
     window->pack();
 
-    AUI_ASSERT(dynamic_cast<OpenGLRenderer*>(&AWindow::current()->getRenderingContext()->renderer()));
+    AUI_ASSERT(dynamic_cast<OpenGLBackend*>(&AWindow::current()->getRenderingContext()->renderer()));
 
     for (auto _ : state) {
         window->redraw();

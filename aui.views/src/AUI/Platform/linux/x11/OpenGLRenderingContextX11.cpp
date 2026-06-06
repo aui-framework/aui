@@ -171,7 +171,7 @@ void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
     xInitNativeWindow(init, swa, vi);
     glXMakeCurrent(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(init.window), ourContext);
 
-    if (!OpenGLRenderer::loadGL((OpenGLRenderer::GLLoadProc)glXGetProcAddressARB)) {
+    if (!OpenGLBackend::loadGL((OpenGLBackend::GLLoadProc)glXGetProcAddressARB)) {
         throw AException("glad load failed");
     }
     ALogger::info("OpenGL context is ready");

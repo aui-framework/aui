@@ -15,7 +15,7 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Util/ARandom.h>
-#include "AUI/GL/OpenGLRenderer.h"
+#include "AUI/GL/OpenGLBackend.hpp"
 #include "AUI/Util/kAUI.h"
 #include <emscripten.h>
 #include <emscripten/html5.h>

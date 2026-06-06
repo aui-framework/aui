@@ -73,7 +73,7 @@ void OpenGLRenderingContextGtk::gtkRealize(GtkWidget* widget) {
     }
     bool is_desktop_gl = is_desktop_gl_fn();
 
-    if (!OpenGLRenderer::loadGL(aui::epoxy_fake::get_proc_address, !is_desktop_gl)) {
+    if (!OpenGLBackend::loadGL(aui::epoxy_fake::get_proc_address, !is_desktop_gl)) {
         throw AException("Failed to load GL");
     }
 

@@ -11,7 +11,7 @@
 
 #include "RenderingContextX11.h"
 #include <AUI/Util/ARandom.h>
-#include "AUI/GL/OpenGLRenderer.h"
+#include "AUI/GL/OpenGLBackend.hpp"
 #include "AUI/Util/kAUI.h"
 #include "AUI/Logging/ALogger.h"
 #include <AUI/UITestState.h>

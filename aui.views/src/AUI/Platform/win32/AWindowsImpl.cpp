@@ -42,7 +42,7 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <AUI/Util/ALayoutInflater.h>
-#include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/GL/OpenGLBackend.hpp>
 
 #include <AUI/Util/Cache.h>
 #include <AUI/Action/AMenu.h>

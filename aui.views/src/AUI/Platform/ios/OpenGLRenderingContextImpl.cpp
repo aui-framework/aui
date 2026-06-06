@@ -21,7 +21,7 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/GL/GLDebug.h>
 
-#include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/GL/OpenGLBackend.hpp>
 #include <AUI/GL/State.h>
 
 static void* UIKit_GL_GetProcAddress(const char *proc)

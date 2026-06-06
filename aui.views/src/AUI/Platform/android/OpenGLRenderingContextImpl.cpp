@@ -20,7 +20,7 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/GL/GLDebug.h>
 
-#include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/GL/OpenGLBackend.hpp>
 #include <AUI/GL/State.h>
 #include <EGL/egl.h>
 

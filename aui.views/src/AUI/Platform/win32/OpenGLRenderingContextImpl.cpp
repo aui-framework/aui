@@ -20,7 +20,7 @@
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
-#include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/GL/OpenGLBackend.hpp>
 #include <AUI/GL/State.h>
 #include <AUI/Util/kAUI.h>
 #include <tuple>

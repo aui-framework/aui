@@ -18,7 +18,7 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include "ARenderingContextOptions.h"
-#include "AUI/GL/OpenGLRenderer.h"
+#include "AUI/GL/OpenGLBackend.hpp"
 #include <AUI/Render/ADisplayList.h>
 #include <AUI/Render/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
@@ -63,7 +63,7 @@ public:
     }
 
 protected:
-    _<OpenGLRenderer> mRenderer;
+    _<OpenGLBackend> mRenderer;
     ADisplayList mDisplayList;
     ADisplayList mPresentDisplayList;
     _unique<ADisplayListCanvas> mCanvas;
@@ -71,12 +71,12 @@ protected:
     glm::uvec2 mViewportSize { 0, 0 };
     _<ITexture> mWindowTarget;
     _<ITexture> mBackbufferTarget;
-    static _<OpenGLRenderer> ourRenderer() {
-        static _weak<OpenGLRenderer> g;
+    static _<OpenGLBackend> ourRenderer() {
+        static _weak<OpenGLBackend> g;
         if (auto v = g.lock()) {
             return v;
         }
-        auto temp = _new<OpenGLRenderer>();
+        auto temp = _new<OpenGLBackend>();
         g = temp;
         return temp;
     }

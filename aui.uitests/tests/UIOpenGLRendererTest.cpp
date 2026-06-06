@@ -11,7 +11,7 @@
 
 #include <gmock/gmock.h>
 #include "AUI/UITest.h"
-#include "AUI/GL/OpenGLRenderer.h"
+#include "AUI/GL/OpenGLBackend.hpp"
 #include "AUI/Util/UIBuildingHelpers.h"
 
 using namespace ass;
@@ -53,7 +53,7 @@ protected:
 #include <AUI/IO/AFileOutputStream.h>
 
 TEST_F(UIOpenGLRendererTest, CheckRenderer) {
-    EXPECT_TRUE(dynamic_cast<OpenGLRenderer*>(&AWindow::current()->getRenderingContext()->backend()));
+    EXPECT_TRUE(dynamic_cast<OpenGLBackend*>(&AWindow::current()->getRenderingContext()->backend()));
     mWindow->setContents(Centered {
       _new<AView>() << ".test" AUI_OVERRIDE_STYLE {
         BackgroundSolid { AColor::RED },
