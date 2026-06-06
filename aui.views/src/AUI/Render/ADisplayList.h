@@ -192,6 +192,7 @@ public:
 
     void draw(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 
+    void reorderAndBatch();
     void resolveEntities();
     void computeOverlaps();
     void resolveClips();

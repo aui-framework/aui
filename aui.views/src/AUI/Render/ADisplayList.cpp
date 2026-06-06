@@ -23,13 +23,167 @@ bool isOpaque(const ABrush& brush, const AColor& globalColor) {
               for (const auto& c : v.colors) if (c.color.a * globalColor.a < 0.999f) return false;
               return true;
           },
-          [&](const ATexturedBrush& v) {
-              // textures are usually transparent
-              return false;
-          },
-          [&](const auto&) { return false; } },
-        brush);
+          [&](const ATexturedBrush&) { return false; },
+          [&](const auto&) { return false; }
+        }, brush);
 }
+
+bool isBarrier(const ADisplayList::StoredCommand::Command& cmd) {
+    return std::visit(aui::lambda_overloaded {
+        [](const ADisplayList::PushLayer&)            { return true; },
+        [](const ADisplayList::PopLayer&)             { return true; },
+        [](const ADisplayList::PushMask&)             { return true; },
+        [](const ADisplayList::PopMask&)              { return true; },
+        [](const ADisplayList::PushClipRect&)         { return true; },
+        [](const ADisplayList::PushClipRoundedRect&)  { return true; },
+        [](const ADisplayList::PopClipRect&)          { return true; },
+        [](const ADisplayList::Clear&)                { return true; },
+        [](const auto&)                               { return false; }
+    }, cmd);
+}
+
+bool tryMerge(ADisplayList::StoredCommand& l, ADisplayList::StoredCommand& r) {
+    if (l.transform != r.transform) return false;
+    if (l.paint != r.paint)      return false;
+    if (l.command.index() != r.command.index()) return false;
+
+    return std::visit(aui::lambda_overloaded {
+        [&](ADisplayList::SolidRectangles& ld, ADisplayList::SolidRectangles& rd) {
+            ld.instances << std::move(rd.instances);
+            return true;
+        },
+        [&](ADisplayList::GradientRectangles& ld, ADisplayList::GradientRectangles& rd) {
+            if (ld.colors != rd.colors || ld.rotation != rd.rotation) return false;
+            ld.instances << std::move(rd.instances);
+            return true;
+        },
+        [&](ADisplayList::TexturedRectangles& ld, ADisplayList::TexturedRectangles& rd) {
+            if (ld.texture != rd.texture || ld.uv1 != rd.uv1 || ld.uv2 != rd.uv2 || ld.premultiplied != rd.premultiplied) return false;
+            ld.instances << std::move(rd.instances);
+            return true;
+        },
+        [&](ADisplayList::SolidRoundedRectangles& ld, ADisplayList::SolidRoundedRectangles& rd) {
+            if (ld.radius != rd.radius) return false;
+            ld.instances << std::move(rd.instances);
+            return true;
+        },
+        [&](ADisplayList::GradientRoundedRectangles& ld, ADisplayList::GradientRoundedRectangles& rd) {
+            if (ld.radius != rd.radius || ld.colors != rd.colors || ld.rotation != rd.rotation) return false;
+            ld.instances << std::move(rd.instances);
+            return true;
+        },
+        [&](ADisplayList::TexturedRoundedRectangles& ld, ADisplayList::TexturedRoundedRectangles& rd) {
+            if (ld.radius != rd.radius || ld.texture != rd.texture || ld.uv1 != rd.uv1 || ld.uv2 != rd.uv2 || ld.premultiplied != rd.premultiplied) return false;
+            ld.instances << std::move(rd.instances);
+            return true;
+        },
+        [&](ADisplayList::RectangleBorders& ld, ADisplayList::RectangleBorders& rd) {
+            if (ld.lineWidth != rd.lineWidth) return false;
+            ld.instances << std::move(rd.instances);
+            return true;
+        },
+        [&](ADisplayList::RoundedRectangleBorders& ld, ADisplayList::RoundedRectangleBorders& rd) {
+            if (ld.radius != rd.radius || ld.borderWidth != rd.borderWidth) return false;
+            ld.instances << std::move(rd.instances);
+            return true;
+        },
+        [&](ADisplayList::Glyphs& ld, ADisplayList::Glyphs& rd) {
+            if (ld.texture != rd.texture || ld.isSubpixel != rd.isSubpixel) return false;
+            ld.instances << std::move(rd.instances);
+            return true;
+        },
+        [&](ADisplayList::Lines& ld, ADisplayList::Lines& rd) {
+            if (ld.style != rd.style || ld.width != rd.width) return false;
+            ld.points << std::move(rd.points);
+            return true;
+        },
+        [&](ADisplayList::LineBatches& ld, ADisplayList::LineBatches& rd) {
+            if (ld.style != rd.style || ld.width != rd.width) return false;
+            ld.points << std::move(rd.points);
+            return true;
+        },
+        [&](ADisplayList::Points& ld, ADisplayList::Points& rd) {
+            if (ld.size != rd.size) return false;
+            ld.points << std::move(rd.points);
+            return true;
+        },
+        [&](auto&, auto&) { return false; }
+    }, l.command, r.command);
+}
+
+bool rectsOverlap(const ARect<float>& a, const ARect<float>& b) {
+    return a.p1.x < b.p2.x && a.p2.x > b.p1.x &&
+           a.p1.y < b.p2.y && a.p2.y > b.p1.y;
+}
+
+ARect<float> boundingBoxOfCommand(const ADisplayList::StoredCommand& cmd) {
+    glm::vec2 lo(std::numeric_limits<float>::max());
+    glm::vec2 hi(std::numeric_limits<float>::lowest());
+
+    auto expandInstances = [&](const auto& v) {
+        for (const auto& inst : v.instances) {
+            lo = glm::min(lo, inst.position);
+            hi = glm::max(hi, inst.position + inst.size);
+        }
+    };
+
+    std::visit(aui::lambda_overloaded {
+        [&](const ADisplayList::SolidRectangles& v)          { expandInstances(v); },
+        [&](const ADisplayList::GradientRectangles& v)        { expandInstances(v); },
+        [&](const ADisplayList::TexturedRectangles& v)        { expandInstances(v); },
+        [&](const ADisplayList::SolidRoundedRectangles& v)    { expandInstances(v); },
+        [&](const ADisplayList::GradientRoundedRectangles& v) { expandInstances(v); },
+        [&](const ADisplayList::TexturedRoundedRectangles& v) { expandInstances(v); },
+        [&](const ADisplayList::RectangleBorders& v)          { expandInstances(v); },
+        [&](const ADisplayList::RoundedRectangleBorders& v)   { expandInstances(v); },
+        [&](const ADisplayList::Glyphs& v) {
+            for (const auto& inst : v.instances) {
+                lo = glm::min(lo, inst.position);
+                hi = glm::max(hi, inst.position + inst.size);
+            }
+        },
+        [&](const ADisplayList::BoxShadow& v) {
+            lo = v.position - glm::vec2(v.blurRadius);
+            hi = v.position + v.size + glm::vec2(v.blurRadius);
+        },
+        [&](const ADisplayList::BoxShadowInner& v) {
+            lo = v.position; hi = v.position + v.size;
+        },
+        [&](const ADisplayList::Lines& v) {
+            for (auto p : v.points) { lo = glm::min(lo, p); hi = glm::max(hi, p); }
+        },
+        [&](const ADisplayList::LineBatches& v) {
+            for (auto& p : v.points) {
+                lo = glm::min(lo, p.first);  lo = glm::min(lo, p.second);
+                hi = glm::max(hi, p.first);  hi = glm::max(hi, p.second);
+            }
+        },
+        [&](const ADisplayList::Points& v) {
+            for (auto p : v.points) { lo = glm::min(lo, p); hi = glm::max(hi, p); }
+        },
+        [&](const ADisplayList::SquareSector& v) {
+            lo = v.position; hi = v.position + v.size;
+        },
+        [&](const ADisplayList::Backdrop& v) {
+            lo = glm::vec2(v.position); hi = glm::vec2(v.position + v.size);
+        },
+        [&](const auto&) {}
+    }, cmd.command);
+
+    if (lo.x > hi.x) return ARect<float>{ .p1 = {0,0}, .p2 = {0,0} };
+
+    // Transform to world space
+    glm::vec2 corners[4] = { lo, {hi.x, lo.y}, hi, {lo.x, hi.y} };
+    glm::vec2 wlo(std::numeric_limits<float>::max());
+    glm::vec2 whi(std::numeric_limits<float>::lowest());
+    for (auto& c : corners) {
+        glm::vec4 tp = cmd.transform * glm::vec4(c, 0.f, 1.f);
+        wlo = glm::min(wlo, glm::vec2(tp));
+        whi = glm::max(whi, glm::vec2(tp));
+    }
+    return ARect<float>{ .p1 = wlo, .p2 = whi };
+}
+
 }   // namespace
 
 void ADisplayList::add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint) {
@@ -112,6 +266,68 @@ void ADisplayList::add(StoredCommand::Command cmd, const glm::mat4& transform, A
     mCommands << StoredCommand{std::move(cmd), transform, std::move(paint)};
 }
 
+void ADisplayList::reorderAndBatch() {
+    auto flushSegment = [&](AVector<StoredCommand>& seg) {
+        if (seg.size() < 2) return;
+
+        AVector<ARect<float>> boxes;
+        boxes.reserve(seg.size());
+        for (const auto& c : seg) boxes << boundingBoxOfCommand(c);
+
+        AVector<StoredCommand> merged;
+        merged.reserve(seg.size());
+        AVector<ARect<float>> mergedBoxes;
+        mergedBoxes.reserve(seg.size());
+
+        merged << std::move(seg[0]);
+        mergedBoxes << boxes[0];
+
+        // Z-order spatial batching: Try to push commands as far back as possible without intersections
+        for (std::size_t i = 1; i < seg.size(); ++i) {
+            bool merged_flag = false;
+
+            for (int j = int(merged.size()) - 1; j >= 0; --j) {
+                if (tryMerge(merged[j], seg[i])) {
+                    mergedBoxes[j].p1 = glm::min(mergedBoxes[j].p1, boxes[i].p1);
+                    mergedBoxes[j].p2 = glm::max(mergedBoxes[j].p2, boxes[i].p2);
+                    merged_flag = true;
+                    break;
+                }
+
+                // If it overlaps with an intermediate layer, we cannot move it any further back.
+                if (rectsOverlap(boxes[i], mergedBoxes[j])) {
+                    break;
+                }
+            }
+
+            if (!merged_flag) {
+                merged << std::move(seg[i]);
+                mergedBoxes << boxes[i];
+            }
+        }
+
+        seg = std::move(merged);
+    };
+
+    AVector<StoredCommand> result;
+    AVector<StoredCommand> segment;
+
+    for (auto& cmd : mCommands) {
+        if (isBarrier(cmd.command)) {
+            flushSegment(segment);
+            for (auto& s : segment) result << std::move(s);
+            segment.clear();
+            result << std::move(cmd);
+        } else {
+            segment << std::move(cmd);
+        }
+    }
+    flushSegment(segment);
+    for (auto& s : segment) result << std::move(s);
+
+    mCommands = std::move(result);
+}
+
 void ADisplayList::resolveEntities() {
     mEntities.clear();
     for (const auto& cmd : mCommands) {
@@ -121,7 +337,7 @@ void ADisplayList::resolveEntities() {
                   using T = std::decay_t<decltype(v)>;
                   glm::vec2 localPos(0.f);
                   glm::vec2 localSize(0.f);
-                  
+
                   if constexpr (std::is_same_v<T, BoxShadowInner> || std::is_same_v<T, SquareSector>) {
                       localPos = v.position;
                       localSize = v.size;
@@ -178,7 +394,7 @@ void ADisplayList::resolveEntities() {
                        mEntities << Entity{ .command = cmd.command, .transform = cmd.transform, .paint = cmd.paint };
                       return;
                   }
-                  
+
                   glm::vec2 corners[] = {
                       localPos,
                       {localPos.x + localSize.x, localPos.y},
@@ -207,45 +423,68 @@ void ADisplayList::computeOverlaps() {
     mOpaqueRects.clear();
     for (auto it = mEntities.rbegin(); it != mEntities.rend(); ++it) {
         it->isObscured = false;
-        
-        bool isControl = std::visit(
+
+        bool is_control = std::visit(
             aui::lambda_overloaded {
-              [&](const PushLayer&) { return true; },
-              [&](const PopLayer&) { return true; },
-              [&](const PushMask&) { return true; },
-              [&](const PopMask&) { return true; },
-              [&](const PushClipRect&) { return true; },
-              [&](const PushClipRoundedRect&) { return true; },
-              [&](const PopClipRect&) { return true; },
-              [&](const Clear&) { return true; },
-              [&](const auto&) { return false; }
-            },
-            it->command);
-        if (isControl) {
+              [](const PushLayer&)           { return true; },
+              [](const PopLayer&)            { return true; },
+              [](const PushMask&)            { return true; },
+              [](const PopMask&)             { return true; },
+              [](const PushClipRect&)        { return true; },
+              [](const PushClipRoundedRect&) { return true; },
+              [](const PopClipRect&)         { return true; },
+              [](const Clear&)               { return true; },
+              [](const auto&)                { return false; }
+            }, it->command);
+
+        if (is_control) continue;
+
+        const auto& clip = it->clipRect;
+        const auto& bb   = it->boundingBox;
+        float clip_w = clip.p2.x - clip.p1.x;
+        float clip_h = clip.p2.y - clip.p1.y;
+        if (clip_w <= 0.f || clip_h <= 0.f) {
+            it->isObscured = true;
             continue;
+        }
+        if (bb.p2.x <= clip.p1.x || bb.p1.x >= clip.p2.x ||
+            bb.p2.y <= clip.p1.y || bb.p1.y >= clip.p2.y) {
+            it->isObscured = true;
+            continue;
+        }
+
+        if (it->mask) {
+            float mx1 = it->maskRect.x;
+            float my1 = it->maskRect.y;
+            float mx2 = mx1 + it->maskRect.z;
+            float my2 = my1 + it->maskRect.w;
+            if (bb.p2.x <= mx1 || bb.p1.x >= mx2 ||
+                bb.p2.y <= my1 || bb.p1.y >= my2) {
+                it->isObscured = true;
+                continue;
+            }
         }
 
         bool obscured = false;
         for (const auto& opaque : mOpaqueRects) {
-            if (it->boundingBox.p1.x >= opaque.p1.x && it->boundingBox.p2.x <= opaque.p2.x &&
-                it->boundingBox.p1.y >= opaque.p1.y && it->boundingBox.p2.y <= opaque.p2.y) {
+            if (bb.p1.x >= opaque.p1.x && bb.p2.x <= opaque.p2.x &&
+                bb.p1.y >= opaque.p1.y && bb.p2.y <= opaque.p2.y) {
                 obscured = true;
                 break;
             }
         }
-        
+
         if (obscured) {
             it->isObscured = true;
         } else {
             bool opaque = std::visit(
                 aui::lambda_overloaded {
-                  [&](const SolidRectangles& v) { return v.instances.size() == 1 && v.instances[0].color.a >= 0.999f; },
-                  [&](const auto&) { return false; }
-                },
-                it->command);
-            if (opaque) {
-                mOpaqueRects << it->boundingBox;
-            }
+                  [](const SolidRectangles& v) {
+                      return v.instances.size() == 1 && v.instances[0].color.a >= 0.999f;
+                  },
+                  [](const auto&) { return false; }
+                }, it->command);
+            if (opaque) mOpaqueRects << bb;
         }
     }
 }
@@ -256,7 +495,7 @@ void ADisplayList::resolveClips() {
         ARect<float> current;
     };
     AVector<ClipEntry> targetClipStack = { { {}, { .p1 = {-1e6, -1e6}, .p2 = {1e6, 1e6} } } };
-    
+
     for (auto& entity : mEntities) {
         std::visit(aui::lambda_overloaded {
             [&](const PushClipRect& v) {
@@ -311,8 +550,6 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer, const _<ITexture>& w
 
     _<ITexture> current_mask;
     glm::vec4 current_mask_rect(0.f);
-
-    ARect<float> viewport_rect{ {0, 0}, glm::vec2(windowTarget->getSize()) };
 
     auto applyMask = [&](const _<ITexture>& new_mask, const glm::vec4& new_rect) {
         if (!current_mask) {
@@ -370,15 +607,16 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer, const _<ITexture>& w
                             .p2 = glm::max(glm::vec2(p1), glm::vec2(p2))
                         };
 
-                        auto bounds = entity.clipRect.intersect(viewport_rect);
+                        // Маска в размер самой фигуры с отступом в 2 пикселя
+                        ARect<float> mask_bounds = { world_rect.p1 - glm::vec2(2.f), world_rect.p2 + glm::vec2(2.f) };
 
                         clip_diff_mask_stack.push_back({ current_mask, current_mask_rect });
 
-                        if (bounds.size().x > 0.01f && bounds.size().y > 0.01f) {
-                            auto mask = renderer.createRectMask(world_rect, true, bounds);
+                        if (mask_bounds.size().x > 0.f && mask_bounds.size().y > 0.f) {
+                            auto mask = renderer.createRectMask(world_rect, true, mask_bounds);
                             glm::vec4 mask_rect(
-                                bounds.p1.x, bounds.p1.y,
-                                bounds.size().x, bounds.size().y);
+                                mask_bounds.p1.x, mask_bounds.p1.y,
+                                mask_bounds.size().x, mask_bounds.size().y);
                             applyMask(mask, mask_rect);
                         }
                     } else {
@@ -393,16 +631,15 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer, const _<ITexture>& w
                         .p2 = glm::max(glm::vec2(p1), glm::vec2(p2))
                     };
 
-                    auto clip_bounds = entity.clipRect.intersect(viewport_rect);
-                    auto mask_bounds = v.op == AClipOp::OP_INTERSECT ? clip_bounds.intersect(world_rect) : clip_bounds;
+                    // Маска в размер самой фигуры с отступом в 2 пикселя
+                    ARect<float> mask_bounds = { world_rect.p1 - glm::vec2(2.f), world_rect.p2 + glm::vec2(2.f) };
 
                     clip_is_difference_stack.push_back(true);
                     clip_diff_mask_stack.push_back({ current_mask, current_mask_rect });
 
-                    if (mask_bounds.size().x > 0.01f && mask_bounds.size().y > 0.01f) {
+                    if (mask_bounds.size().x > 0.f && mask_bounds.size().y > 0.f) {
                         auto mask = renderer.createRoundedRectMask(world_rect, v.radius, v.op == AClipOp::OP_DIFFERENCE, mask_bounds);
-                        auto mask_rect_bounds = v.op == AClipOp::OP_DIFFERENCE ? mask_bounds : world_rect.intersect(mask_bounds);
-                        glm::vec4 mask_rect(mask_rect_bounds.p1.x, mask_rect_bounds.p1.y, mask_rect_bounds.size().x, mask_rect_bounds.size().y);
+                        glm::vec4 mask_rect(mask_bounds.p1.x, mask_bounds.p1.y, mask_bounds.size().x, mask_bounds.size().y);
                         applyMask(mask, mask_rect);
                     }
                 },
@@ -507,7 +744,8 @@ void ADisplayList::draw(IRendererBackend& renderer, const _<ITexture>& windowTar
 }
 
 void ADisplayList::optimize() {
+    reorderAndBatch();
     resolveEntities();
-    computeOverlaps();
     resolveClips();
+    computeOverlaps();
 }
