@@ -162,6 +162,24 @@ public:
         APaint paint;
     };
 
+    struct LogicalMask {
+        enum class Type {
+            Texture,
+            Rect,
+            RoundedRect
+        } type;
+
+        AClipOp op = AClipOp::OP_INTERSECT;
+
+        ARect<float> rect;
+        float radius = 0.f;
+
+        _<ITexture> texture;
+        glm::vec4 maskRect;
+
+        glm::mat4 transform;
+    };
+
     struct Entity {
         StoredCommand::Command command;
         glm::mat4 transform;
@@ -171,6 +189,8 @@ public:
         ARect<float> clipRect;
         _<ITexture> mask;
         glm::vec4 maskRect;
+        AVector<LogicalMask> activeMasks;
+        bool culled = false;
     };
 
     struct RenderPass {
@@ -196,7 +216,8 @@ public:
     void resolveEntities();
     void computeOverlaps();
     void resolveClips();
-    void resolveMasks(IRendererBackend& renderer, const _<ITexture>& windowTarget);
+    void resolveLogicalMasks();
+    void resolvePhysicalMasks(IRendererBackend& renderer);
     void resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 
 private:

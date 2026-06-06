@@ -184,7 +184,43 @@ ARect<float> boundingBoxOfCommand(const ADisplayList::StoredCommand& cmd) {
     return ARect<float>{ .p1 = wlo, .p2 = whi };
 }
 
-}   // namespace
+inline void hash_combine(std::size_t& seed, std::size_t hash) {
+    seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
+}
+
+std::size_t hashLogicalMask(const ADisplayList::LogicalMask& m) {
+    std::size_t seed = 0;
+
+    hash_combine(seed, std::hash<int>()(static_cast<int>(m.type)));
+    hash_combine(seed, std::hash<int>()(static_cast<int>(m.op)));
+
+    if (m.type == ADisplayList::LogicalMask::Type::Rect || m.type == ADisplayList::LogicalMask::Type::RoundedRect) {
+        hash_combine(seed, std::hash<float>()(m.rect.p1.x));
+        hash_combine(seed, std::hash<float>()(m.rect.p1.y));
+        hash_combine(seed, std::hash<float>()(m.rect.p2.x));
+        hash_combine(seed, std::hash<float>()(m.rect.p2.y));
+
+        if (m.type == ADisplayList::LogicalMask::Type::RoundedRect) {
+            hash_combine(seed, std::hash<float>()(m.radius));
+        }
+    } else if (m.type == ADisplayList::LogicalMask::Type::Texture) {
+        hash_combine(seed, std::hash<void*>()(m.texture.get()));
+        hash_combine(seed, std::hash<float>()(m.maskRect.x));
+        hash_combine(seed, std::hash<float>()(m.maskRect.y));
+        hash_combine(seed, std::hash<float>()(m.maskRect.z));
+        hash_combine(seed, std::hash<float>()(m.maskRect.w));
+    }
+
+    for(int i = 0; i < 4; ++i) {
+        for(int j = 0; j < 4; ++j) {
+            hash_combine(seed, std::hash<float>()(m.transform[i][j]));
+        }
+    }
+
+    return seed;
+}
+
+} // namespace
 
 void ADisplayList::add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint) {
     if (!mCommands.empty()) {
@@ -537,134 +573,180 @@ void ADisplayList::resolveClips() {
     }
 }
 
-void ADisplayList::resolveMasks(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
-    struct MaskState {
-        _<ITexture> mask;
-        glm::vec4 maskRect;
+void ADisplayList::resolveLogicalMasks() {
+    AVector<LogicalMask> maskStack;
+
+    auto isFullyInside = [](const ARect<float>& inner, const ARect<float>& outer) {
+        return inner.p1.x >= outer.p1.x && inner.p2.x <= outer.p2.x &&
+               inner.p1.y >= outer.p1.y && inner.p2.y <= outer.p2.y;
     };
 
-    std::vector<MaskState> mask_stack;
-    std::vector<MaskState> layer_mask_stack;
-    std::vector<MaskState> clip_diff_mask_stack;
-    std::vector<bool> clip_is_difference_stack;
-
-    _<ITexture> current_mask;
-    glm::vec4 current_mask_rect(0.f);
-
-    auto applyMask = [&](const _<ITexture>& new_mask, const glm::vec4& new_rect) {
-        if (!current_mask) {
-            current_mask = new_mask;
-            current_mask_rect = new_rect;
-        } else {
-            auto merged = renderer.mergeMasks(current_mask, current_mask_rect, new_mask, new_rect);
-            current_mask = merged.texture;
-            current_mask_rect = merged.rect;
-        }
+    auto isFullyOutside = [](const ARect<float>& a, const ARect<float>& b) {
+        return a.p2.x <= b.p1.x || a.p1.x >= b.p2.x ||
+               a.p2.y <= b.p1.y || a.p1.y >= b.p2.y;
     };
 
     for (auto& entity : mEntities) {
-        std::visit(
-            aui::lambda_overloaded {
-                [&](PushLayer&) {
-                    layer_mask_stack.push_back({ current_mask, current_mask_rect });
-                    current_mask = nullptr;
-                    current_mask_rect = glm::vec4(0.f);
-                },
-                [&](PopLayer&) {
-                    if (!layer_mask_stack.empty()) {
-                        current_mask = layer_mask_stack.back().mask;
-                        current_mask_rect = layer_mask_stack.back().maskRect;
-                        layer_mask_stack.pop_back();
-                    }
-                },
-
-                [&](PushMask& v) {
-                    glm::vec2 p1 = glm::vec2(entity.transform * glm::vec4(v.maskRect.x, v.maskRect.y, 0, 1));
-                    glm::vec2 p2 = glm::vec2(entity.transform * glm::vec4(
-                        v.maskRect.x + v.maskRect.z,
-                        v.maskRect.y + v.maskRect.w, 0, 1));
-                    glm::vec4 display_list_rect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
-
-                    mask_stack.push_back({ current_mask, current_mask_rect });
-                    applyMask(v.mask, display_list_rect);
-                },
-                [&](PopMask&) {
-                    if (!mask_stack.empty()) {
-                        current_mask = mask_stack.back().mask;
-                        current_mask_rect = mask_stack.back().maskRect;
-                        mask_stack.pop_back();
-                    }
-                },
-
-                [&](PushClipRect& v) {
-                    if (v.op == AClipOp::OP_DIFFERENCE) {
-                        clip_is_difference_stack.push_back(true);
-
-                        glm::vec4 p1 = entity.transform * glm::vec4(v.rect.p1, 0.f, 1.f);
-                        glm::vec4 p2 = entity.transform * glm::vec4(v.rect.p2, 0.f, 1.f);
-                        ARect<float> world_rect{
-                            .p1 = glm::min(glm::vec2(p1), glm::vec2(p2)),
-                            .p2 = glm::max(glm::vec2(p1), glm::vec2(p2))
-                        };
-
-                        // Маска в размер самой фигуры с отступом в 2 пикселя
-                        ARect<float> mask_bounds = { world_rect.p1 - glm::vec2(2.f), world_rect.p2 + glm::vec2(2.f) };
-
-                        clip_diff_mask_stack.push_back({ current_mask, current_mask_rect });
-
-                        if (mask_bounds.size().x > 0.f && mask_bounds.size().y > 0.f) {
-                            auto mask = renderer.createRectMask(world_rect, true, mask_bounds);
-                            glm::vec4 mask_rect(
-                                mask_bounds.p1.x, mask_bounds.p1.y,
-                                mask_bounds.size().x, mask_bounds.size().y);
-                            applyMask(mask, mask_rect);
-                        }
-                    } else {
-                        clip_is_difference_stack.push_back(false);
-                    }
-                },
-                [&](PushClipRoundedRect& v) {
-                    glm::vec4 p1 = entity.transform * glm::vec4(v.rect.p1, 0.f, 1.f);
-                    glm::vec4 p2 = entity.transform * glm::vec4(v.rect.p2, 0.f, 1.f);
-                    ARect<float> world_rect{
-                        .p1 = glm::min(glm::vec2(p1), glm::vec2(p2)),
-                        .p2 = glm::max(glm::vec2(p1), glm::vec2(p2))
-                    };
-
-                    // Маска в размер самой фигуры с отступом в 2 пикселя
-                    ARect<float> mask_bounds = { world_rect.p1 - glm::vec2(2.f), world_rect.p2 + glm::vec2(2.f) };
-
-                    clip_is_difference_stack.push_back(true);
-                    clip_diff_mask_stack.push_back({ current_mask, current_mask_rect });
-
-                    if (mask_bounds.size().x > 0.f && mask_bounds.size().y > 0.f) {
-                        auto mask = renderer.createRoundedRectMask(world_rect, v.radius, v.op == AClipOp::OP_DIFFERENCE, mask_bounds);
-                        glm::vec4 mask_rect(mask_bounds.p1.x, mask_bounds.p1.y, mask_bounds.size().x, mask_bounds.size().y);
-                        applyMask(mask, mask_rect);
-                    }
-                },
-                [&](PopClipRect&) {
-                    if (!clip_is_difference_stack.empty()) {
-                        if (clip_is_difference_stack.back()) {
-                            if (!clip_diff_mask_stack.empty()) {
-                                current_mask = clip_diff_mask_stack.back().mask;
-                                current_mask_rect = clip_diff_mask_stack.back().maskRect;
-                                clip_diff_mask_stack.pop_back();
-                            }
-                        }
-                        clip_is_difference_stack.pop_back();
-                    }
-                },
-
-                [&](auto&) {}
+        std::visit(aui::lambda_overloaded {
+            [&](const PushMask& v) {
+                maskStack.push_back({ LogicalMask::Type::Texture, AClipOp::OP_INTERSECT,
+                                      /* rect */ {}, 0.f, v.mask, v.maskRect, entity.transform });
             },
-            entity.command);
+            [&](const PushClipRect& v) {
+                maskStack.push_back({ LogicalMask::Type::Rect, v.op, v.rect, 0.f, nullptr, {}, entity.transform });
+            },
+            [&](const PushClipRoundedRect& v) {
+                maskStack.push_back({ LogicalMask::Type::RoundedRect, v.op, v.rect, v.radius, nullptr, {}, entity.transform });
+            },
+            [&](const PopMask&) { if(!maskStack.empty()) maskStack.pop_back(); },
+            [&](const PopClipRect&) { if(!maskStack.empty()) maskStack.pop_back(); },
+            [&](const auto&) {}
+        }, entity.command);
 
-        entity.mask = current_mask;
-        entity.maskRect = current_mask_rect;
+        if (!isBarrier(entity.command)) {
+            for (const auto& mask : maskStack) {
+                glm::vec4 p1 = mask.transform * glm::vec4(mask.rect.p1, 0.f, 1.f);
+                glm::vec4 p2 = mask.transform * glm::vec4(mask.rect.p2, 0.f, 1.f);
+                ARect<float> maskWorld = { glm::min(glm::vec2(p1), glm::vec2(p2)), glm::max(glm::vec2(p1), glm::vec2(p2)) };
+
+                if (mask.type == LogicalMask::Type::Rect) {
+                    if (mask.op == AClipOp::OP_INTERSECT) {
+                        if (isFullyOutside(entity.boundingBox, maskWorld)) {
+                            entity.culled = true;
+                            break;
+                        }
+                        if (isFullyInside(entity.boundingBox, maskWorld)) continue;
+                    } else if (mask.op == AClipOp::OP_DIFFERENCE) {
+                        if (isFullyInside(entity.boundingBox, maskWorld)) {
+                            entity.culled = true;
+                            break; // Вырезано полностью
+                        }
+                        if (isFullyOutside(entity.boundingBox, maskWorld)) continue;
+                    }
+                }
+                else if (mask.type == LogicalMask::Type::RoundedRect) {
+                    ARect<float> safeInner = { maskWorld.p1 + glm::vec2(mask.radius), maskWorld.p2 - glm::vec2(mask.radius) };
+
+                    if (mask.op == AClipOp::OP_INTERSECT) {
+                         if (isFullyOutside(entity.boundingBox, maskWorld)) {
+                            entity.culled = true; break;
+                         }
+                         if (isFullyInside(entity.boundingBox, safeInner)) continue;
+                    } else if (mask.op == AClipOp::OP_DIFFERENCE) {
+                         if (isFullyInside(entity.boundingBox, safeInner)) {
+                             entity.culled = true; break;
+                         }
+                         if (isFullyOutside(entity.boundingBox, maskWorld)) continue;
+                    }
+                }
+
+                entity.activeMasks.push_back(mask);
+            }
+        }
     }
 }
 
+void ADisplayList::resolvePhysicalMasks(IRendererBackend& renderer) {
+    struct PhysicalMaskState {
+        _<ITexture> texture;
+        glm::vec4 rect;
+    };
+
+    std::unordered_map<std::size_t, PhysicalMaskState> maskCache;
+
+    for (auto& entity : mEntities) {
+        if (entity.culled || entity.activeMasks.empty()) {
+            entity.mask = nullptr;
+            entity.maskRect = glm::vec4(0.f);
+            continue;
+        }
+
+        std::size_t combinedHash = 0;
+        bool requiresPhysicalTexture = false;
+
+        for (const auto& mask : entity.activeMasks) {
+            if (mask.type == LogicalMask::Type::Rect && mask.op == AClipOp::OP_INTERSECT) {
+                continue;
+            }
+
+            requiresPhysicalTexture = true;
+            hash_combine(combinedHash, hashLogicalMask(mask));
+        }
+
+        if (!requiresPhysicalTexture) {
+            entity.mask = nullptr;
+            entity.maskRect = glm::vec4(0.f);
+            continue;
+        }
+
+        if (auto it = maskCache.find(combinedHash); it != maskCache.end()) {
+            entity.mask = it->second.texture;
+            entity.maskRect = it->second.rect;
+            continue;
+        }
+
+        _<ITexture> compositeTexture = nullptr;
+        glm::vec4 compositeRect(0.f);
+
+        auto applyMask = [&](const _<ITexture>& newMask, const glm::vec4& newRect) {
+            if (!compositeTexture) {
+                compositeTexture = newMask;
+                compositeRect = newRect;
+            } else {
+                auto merged = renderer.mergeMasks(compositeTexture, compositeRect, newMask, newRect);
+                compositeTexture = merged.texture;
+                compositeRect = merged.rect;
+            }
+        };
+
+        for (const auto& mask : entity.activeMasks) {
+            if (mask.type == LogicalMask::Type::Rect && mask.op == AClipOp::OP_INTERSECT) {
+                continue;
+            }
+
+            if (mask.type == LogicalMask::Type::Texture) {
+                glm::vec2 p1 = glm::vec2(mask.transform * glm::vec4(mask.maskRect.x, mask.maskRect.y, 0, 1));
+                glm::vec2 p2 = glm::vec2(mask.transform * glm::vec4(
+                    mask.maskRect.x + mask.maskRect.z,
+                    mask.maskRect.y + mask.maskRect.w, 0, 1));
+
+                glm::vec4 displayListRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+                applyMask(mask.texture, displayListRect);
+            }
+            else {
+                glm::vec4 p1 = mask.transform * glm::vec4(mask.rect.p1, 0.f, 1.f);
+                glm::vec4 p2 = mask.transform * glm::vec4(mask.rect.p2, 0.f, 1.f);
+
+                ARect<float> worldRect = {
+                    .p1 = glm::min(glm::vec2(p1), glm::vec2(p2)),
+                    .p2 = glm::max(glm::vec2(p1), glm::vec2(p2))
+                };
+
+                ARect<float> maskBounds = { worldRect.p1 - glm::vec2(2.f), worldRect.p2 + glm::vec2(2.f) };
+
+                if (maskBounds.size().x > 0.f && maskBounds.size().y > 0.f) {
+                    _<ITexture> generatedMask = nullptr;
+                    glm::vec4 rectForApply(maskBounds.p1.x, maskBounds.p1.y, maskBounds.size().x, maskBounds.size().y);
+
+                    if (mask.type == LogicalMask::Type::RoundedRect) {
+                        generatedMask = renderer.createRoundedRectMask(worldRect, mask.radius, mask.op == AClipOp::OP_DIFFERENCE, maskBounds);
+                    } else if (mask.type == LogicalMask::Type::Rect) { // Только OP_DIFFERENCE доходит сюда
+                        generatedMask = renderer.createRectMask(worldRect, true, maskBounds);
+                    }
+
+                    if (generatedMask) {
+                        applyMask(generatedMask, rectForApply);
+                    }
+                }
+            }
+        }
+
+        maskCache[combinedHash] = { compositeTexture, compositeRect };
+
+        entity.mask = compositeTexture;
+        entity.maskRect = compositeRect;
+    }
+}
 
 void ADisplayList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
     mPasses.clear();
@@ -673,7 +755,8 @@ void ADisplayList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& 
 }
 
 void ADisplayList::draw(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
-    resolveMasks(renderer, windowTarget);
+    resolveLogicalMasks();
+    resolvePhysicalMasks(renderer);
     resolvePasses(renderer, windowTarget);
     for (const auto& pass : mPasses) {
         renderer.beginRenderPass(pass.target);
