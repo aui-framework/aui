@@ -11,7 +11,9 @@
 
 #pragma once
 
+#undef DIFFERENCE
+
 enum class AClipOp {
     INTERSECT,
-    DIFFERENCE
+    DIFFERENCE,
 };
