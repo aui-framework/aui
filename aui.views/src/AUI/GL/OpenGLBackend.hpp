@@ -188,9 +188,6 @@ private:
     glm::uvec2 mViewportSize { 1, 1 };
     glm::mat4 mProjectionMatrix { 1.f };
 
-    static bool mIsES;
-    static int mGLSLVersion;
-
     glm::vec4 maskColor(glm::vec4 color) const noexcept {
         if (mIsRenderingToMask) {
             return glm::vec4(1.f, 0.f, 0.f, color.w);
@@ -205,6 +202,9 @@ private:
     }
 
 public:
+    static bool mIsES;
+    static int mGLSLVersion;
+
     OpenGLBackend();
 
     static bool loadGL(GLLoadProc load_proc, bool es = false);

@@ -20,6 +20,8 @@
 #include <iostream>
 #include <AUI/Logging/ALogger.h>
 
+#include "OpenGLBackend.hpp"
+
 gl::Program::Program() { mProgram = glCreateProgram(); }
 
 void gl::Program::label(const AString& name) {
@@ -66,7 +68,11 @@ uint32_t gl::Program::load(std::string code, uint32_t type, GLSLOptions options)
 #if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS || AUI_PLATFORM_EMSCRIPTEN
         prefix = "#version 300 es\n";
 #else
-        prefix = "#version 330 core\n";
+        if (OpenGLBackend::mIsES) {
+            prefix = "#version 300 es\n";
+        } else {
+            prefix = "#version 330 core\n";
+        }
 #endif
         prefix += fmt::format("precision {} float;\n"
                        "precision {} int;\n",

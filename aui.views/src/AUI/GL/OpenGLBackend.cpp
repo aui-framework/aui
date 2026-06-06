@@ -232,31 +232,9 @@ OpenGLBackend::OpenGLBackend() :
     };
 
     auto useShader = [&](AOptional<gl::Program>& out, const AString& vertex, const AString& fragment, std::initializer_list<std::pair<int, const char*>> attrs) {
-        auto getPrefix = [](GLenum stage) -> std::string {
-            std::string prefix;
-#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS || AUI_PLATFORM_EMSCRIPTEN
-            prefix = "#version 300 es\n";
-#else
-            prefix = "#version 330 core\n";
-#endif
-            prefix += R"(
-#ifdef GL_ES
-precision mediump float;
-#define mediump
-#define highp
-#else
-precision highp float;
-precision highp int;
-#define mediump
-#define highp
-#endif
-)";
-            return prefix;
-        };
-
         out.emplace();
-        out->loadVertexShader(getPrefix(GL_VERTEX_SHADER) + readShader(vertex), { .custom = true });
-        out->loadFragmentShader(getPrefix(GL_FRAGMENT_SHADER) + readShader(fragment), { .custom = true });
+        out->loadVertexShader(readShader(vertex));
+        out->loadFragmentShader(readShader(fragment));
 
         for (auto [index, name] : attrs) {
             out->bindAttribute(index, name);
