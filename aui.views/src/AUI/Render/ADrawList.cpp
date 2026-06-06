@@ -308,7 +308,9 @@ void ADrawList::reorderAndBatch() {
 
         AVector<ARect<float>> boxes;
         boxes.reserve(seg.size());
-        for (const auto& c : seg) boxes << boundingBoxOfCommand(c);
+        for (const auto& c : seg) {
+            boxes << boundingBoxOfCommand(c);
+        }
 
         AVector<StoredCommand> merged;
         merged.reserve(seg.size());
