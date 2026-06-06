@@ -619,7 +619,7 @@ void ADisplayList::resolveLogicalMasks() {
                     } else if (mask.op == AClipOp::OP_DIFFERENCE) {
                         if (isFullyInside(entity.boundingBox, maskWorld)) {
                             entity.culled = true;
-                            break; // Вырезано полностью
+                            break;
                         }
                         if (isFullyOutside(entity.boundingBox, maskWorld)) continue;
                     }
