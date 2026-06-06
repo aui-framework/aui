@@ -250,15 +250,17 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
 
             drawableDrawWrapper(imageSize);
             break;
-            }
-            case Sizing::NONE: {
+        }
+
+        case Sizing::NONE: {
             glm::vec2 imageSize = glm::vec2(drawable->getSizeHint());
 
             if (drawable->isDpiDependent())
                 imageSize *= AWindow::current()->getDpiRatio();
             drawableDrawWrapper(imageSize);
             break;
-            }    }
+        }
+    }
 }
 
 void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARenderContext& ctx) {

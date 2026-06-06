@@ -130,7 +130,7 @@ void AView::render(ARenderContext ctx) {
     // mask
     if (mOverflow == AOverflow::HIDDEN_FROM_THIS || mOverflow == AOverflow::HIDDEN) {
         if (mOverflowMask == AOverflowMask::ROUNDED_RECT) {
-            ctx.canvas.pushClipRoundedRect(ARect<float>::fromTopLeftPositionAndSize({0, 0}, getSize()), getBorderRadius().getValuePx());
+            ctx.canvas.pushClipRoundedRect(ARect<float>::fromTopLeftPositionAndSize({0, 0}, getSize()), getBorderRadius());
         } else if (mOverflowMask == AOverflowMask::RECT) {
             ctx.canvas.pushClipRect(ARect<float>::fromTopLeftPositionAndSize({0, 0}, getSize()));
         } else {

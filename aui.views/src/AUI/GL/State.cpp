@@ -31,29 +31,12 @@ namespace {
 }
 
 void State::activeTexture(uint8_t index) {
-#ifdef SO_STATE
-	static uint8_t prevIndex = 0xff;
-	if (prevIndex != index) {
-		prevIndex = index;
-		glActiveTexture(GL_TEXTURE0 + index);
-	}
-#else
-	glActiveTexture(GL_TEXTURE0 + index);
-#endif
-	gActiveTextureUnit = index;
+    glActiveTexture(GL_TEXTURE0 + index);
+    gActiveTextureUnit = index;
 }
 
 void State::bindTexture(GLenum mode, GLuint texture) {
-#ifdef SO_STATE
-	static std::tuple<uint8_t, GLenum, GLuint> prevState = {0xff, 0, 0};
-	std::tuple<uint8_t, GLenum, GLuint> state = {gActiveTextureUnit, mode, texture};
-	if (prevState != state) {
-		prevState = state;
-		glBindTexture(mode, texture);
-	}
-#else
-	glBindTexture(mode, texture);
-#endif
+    glBindTexture(mode, texture);
 }
 
 void State::useProgram(GLuint program) {

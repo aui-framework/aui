@@ -15,7 +15,10 @@
 #include <cstddef>
 #include <algorithm>
 #include <functional>
+#include <bit>
+#include <type_traits>
 
+#include <glm/gtc/packing.hpp>
 #include <AUI/Common/AColor.h>
 
 /**
@@ -57,6 +60,109 @@ inline constexpr uint8_t bytesPerPixel(APixelFormat format) noexcept {
 }
 
 namespace aui::pixel_format {
+    namespace detail {
+        constexpr std::uint16_t pack_half(float f) noexcept {
+            std::uint32_t i = std::bit_cast<std::uint32_t>(f);
+            std::uint32_t s = (i >> 16) & 0x8000;
+            int32_t e = ((i >> 23) & 0xFF) - 127;
+            uint32_t m = i & 0x7FFFFF;
+
+            if (e <= -15) {
+                if (e < -24) return s;
+                m |= 0x800000;
+                uint32_t shift = -e - 14;
+                m >>= shift;
+                return s | (m >> 13);
+            } else if (e >= 16) {
+                return s | 0x7C00; // Infinity
+            } else {
+                return s | ((e + 15) << 10) | (m >> 13);
+            }
+        }
+        constexpr float unpack_half(std::uint16_t h) noexcept {
+            uint32_t s = (h & 0x8000) << 16;
+            int32_t e = ((h >> 10) & 0x1F);
+            uint32_t m = h & 0x03FF;
+
+            if (e == 0) {
+                if (m == 0) return std::bit_cast<float>(s);
+                while (!(m & 0x0400)) {
+                    m <<= 1;
+                    e--;
+                }
+                e++;
+                m &= ~0x0400;
+            } else if (e == 31) {
+                if (m == 0) return std::bit_cast<float>(s | 0x7F800000);
+                return std::bit_cast<float>(s | 0x7F800000 | (m << 13));
+            }
+            return std::bit_cast<float>(s | ((e + 127 - 15) << 23) | (m << 13));
+        }
+    }
+
+    /**
+     * @brief Half-precision floating point wrapper.
+     */
+    struct float16 {
+        std::uint16_t bits;
+
+        constexpr float16() noexcept : bits(0) {}
+        constexpr explicit float16(float f) noexcept : bits(0) {
+            if (std::is_constant_evaluated()) {
+                bits = detail::pack_half(f);
+            } else {
+                bits = glm::packHalf1x16(f);
+            }
+        }
+        constexpr operator float() const noexcept {
+            if (std::is_constant_evaluated()) {
+                return detail::unpack_half(bits);
+            } else {
+                return glm::unpackHalf1x16(bits);
+            }
+        }
+
+        constexpr float16& operator+=(float16 rhs) noexcept {
+            if (std::is_constant_evaluated()) {
+                bits = detail::pack_half(float(*this) + float(rhs));
+            } else {
+                bits = glm::packHalf1x16(float(*this) + float(rhs));
+            }
+            return *this;
+        }
+        constexpr float16& operator-=(float16 rhs) noexcept {
+            if (std::is_constant_evaluated()) {
+                bits = detail::pack_half(float(*this) - float(rhs));
+            } else {
+                bits = glm::packHalf1x16(float(*this) - float(rhs));
+            }
+            return *this;
+        }
+        constexpr float16& operator*=(float16 rhs) noexcept {
+            if (std::is_constant_evaluated()) {
+                bits = detail::pack_half(float(*this) * float(rhs));
+            } else {
+                bits = glm::packHalf1x16(float(*this) * float(rhs));
+            }
+            return *this;
+        }
+        constexpr float16& operator/=(float16 rhs) noexcept {
+            if (std::is_constant_evaluated()) {
+                bits = detail::pack_half(float(*this) / float(rhs));
+            } else {
+                bits = glm::packHalf1x16(float(*this) / float(rhs));
+            }
+            return *this;
+        }
+
+        auto operator<=>(const float16&) const = default;
+    };
+
+    constexpr float16 operator+(float16 lhs, float16 rhs) noexcept { return lhs += rhs; }
+    constexpr float16 operator-(float16 lhs, float16 rhs) noexcept { return lhs -= rhs; }
+    constexpr float16 operator*(float16 lhs, float16 rhs) noexcept { return lhs *= rhs; }
+    constexpr float16 operator/(float16 lhs, float16 rhs) noexcept { return lhs /= rhs; }
+
     namespace detail {
         template<typename T, APixelFormat format>
         struct component_representation;
@@ -116,7 +222,7 @@ namespace aui::pixel_format {
             static constexpr std::size_t COMPONENT_COUNT = 4;
         };
         template<> struct format_traits_impl<APixelFormat::R16G16B16A16_SFLOAT> {
-            using component_t = std::uint16_t;
+            using component_t = float16;
             static constexpr std::size_t COMPONENT_COUNT = 4;
         };
         template<> struct format_traits_impl<APixelFormat::R32G32B32A32_SFLOAT> {
@@ -256,10 +362,10 @@ namespace aui::pixel_format {
                 out.r = static_cast<std::uint8_t>(glm::clamp(c.r, 0.f, 1.f) * 255.f);
                 out.a = static_cast<std::uint8_t>(glm::clamp(c.a, 0.f, 1.f) * 255.f);
             } else if constexpr (to == APixelFormat::R16G16B16A16_SFLOAT) {
-                out.r = static_cast<std::uint16_t>(glm::clamp(c.r, 0.f, 1.f) * 65535.f);
-                out.g = static_cast<std::uint16_t>(glm::clamp(c.g, 0.f, 1.f) * 65535.f);
-                out.b = static_cast<std::uint16_t>(glm::clamp(c.b, 0.f, 1.f) * 65535.f);
-                out.a = static_cast<std::uint16_t>(glm::clamp(c.a, 0.f, 1.f) * 65535.f);
+                out.r = float16(c.r);
+                out.g = float16(c.g);
+                out.b = float16(c.b);
+                out.a = float16(c.a);
             } else if constexpr (to == APixelFormat::R32G32B32A32_SFLOAT) {
                 out.r = c.r;
                 out.g = c.g;
@@ -289,7 +395,7 @@ namespace aui::pixel_format {
         } else if constexpr (format == APixelFormat::B8G8R8A8_UNORM) {
             return AColor(this->r / 255.f, this->g / 255.f, this->b / 255.f, this->a / 255.f);
         } else if constexpr (format == APixelFormat::R16G16B16A16_SFLOAT) {
-            return AColor(this->r / 65535.f, this->g / 65535.f, this->b / 65535.f, this->a / 65535.f);
+            return AColor(float(this->r), float(this->g), float(this->b), float(this->a));
         } else if constexpr (format == APixelFormat::R32G32B32A32_SFLOAT) {
             return AColor(this->r, this->g, this->b, this->a);
         } else if constexpr (format == APixelFormat::A2R10G10B10_UNORM_PACK32) {

@@ -128,9 +128,11 @@ void AEmbedContext::windowRender() {
         mContainer->applyGeometryToChildrenIfNecessary();
     }
     renderingContext->beginPaint(*mContainer);
+    AUI_DEFER {
+        renderingContext->endPaint(*mContainer);
+    };
     mContainer->mRequiresRedraw = false;
     mContainer->render({.canvas = canvas, .backend = backend, .render = render});
-    renderingContext->endPaint(*mContainer);
 }
 
 void AEmbedContext::setContainer(const _<AViewContainer>& container) {

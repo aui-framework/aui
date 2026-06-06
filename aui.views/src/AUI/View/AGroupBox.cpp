@@ -35,7 +35,7 @@ public:
             titleRect.p1 -= getPositionInWindow();
             titleRect.p2 -= getPositionInWindow();
 
-            ctx.canvas.pushClipRect(titleRect, AClipOp::DIFFERENCE);
+            ctx.canvas.pushClipRect(titleRect, AClipOp::OP_DIFFERENCE);
             AViewContainerBase::render(ctx);
             ctx.canvas.popClipRect();
         } else {

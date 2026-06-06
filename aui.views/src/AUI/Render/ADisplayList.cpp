@@ -268,7 +268,7 @@ void ADisplayList::resolveClips() {
                 ARect<float> worldRect{ .p1 = glm::min(glm::vec2(p1), glm::vec2(p2)),
                                         .p2 = glm::max(glm::vec2(p1), glm::vec2(p2)) };
 
-                if (v.op == AClipOp::INTERSECT) {
+                if (v.op == AClipOp::OP_INTERSECT) {
                     top.current = top.current.intersect(worldRect);
                 }
             },
@@ -281,7 +281,7 @@ void ADisplayList::resolveClips() {
                 ARect<float> worldRect{ .p1 = glm::min(glm::vec2(p1), glm::vec2(p2)),
                                         .p2 = glm::max(glm::vec2(p1), glm::vec2(p2)) };
 
-                if (v.op == AClipOp::INTERSECT) {
+                if (v.op == AClipOp::OP_INTERSECT) {
                     top.current = top.current.intersect(worldRect);
                 }
             },
@@ -360,7 +360,7 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer, const _<ITexture>& w
                 },
 
                 [&](PushClipRect& v) {
-                    if (v.op == AClipOp::DIFFERENCE) {
+                    if (v.op == AClipOp::OP_DIFFERENCE) {
                         clip_is_difference_stack.push_back(true);
 
                         glm::vec4 p1 = entity.transform * glm::vec4(v.rect.p1, 0.f, 1.f);
@@ -394,14 +394,14 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer, const _<ITexture>& w
                     };
 
                     auto clip_bounds = entity.clipRect.intersect(viewport_rect);
-                    auto mask_bounds = v.op == AClipOp::INTERSECT ? clip_bounds.intersect(world_rect) : clip_bounds;
+                    auto mask_bounds = v.op == AClipOp::OP_INTERSECT ? clip_bounds.intersect(world_rect) : clip_bounds;
 
                     clip_is_difference_stack.push_back(true);
                     clip_diff_mask_stack.push_back({ current_mask, current_mask_rect });
 
                     if (mask_bounds.size().x > 0.01f && mask_bounds.size().y > 0.01f) {
-                        auto mask = renderer.createRoundedRectMask(world_rect, v.radius, v.op == AClipOp::DIFFERENCE, mask_bounds);
-                        auto mask_rect_bounds = v.op == AClipOp::DIFFERENCE ? mask_bounds : world_rect.intersect(mask_bounds);
+                        auto mask = renderer.createRoundedRectMask(world_rect, v.radius, v.op == AClipOp::OP_DIFFERENCE, mask_bounds);
+                        auto mask_rect_bounds = v.op == AClipOp::OP_DIFFERENCE ? mask_bounds : world_rect.intersect(mask_bounds);
                         glm::vec4 mask_rect(mask_rect_bounds.p1.x, mask_rect_bounds.p1.y, mask_rect_bounds.size().x, mask_rect_bounds.size().y);
                         applyMask(mask, mask_rect);
                     }
