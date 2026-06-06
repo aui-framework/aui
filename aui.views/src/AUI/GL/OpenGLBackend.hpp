@@ -217,21 +217,21 @@ public:
     _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format = APixelFormat::R8G8B8A8_UNORM, TextureFilter filter = TextureFilter::LINEAR) override;
     _<ITexture> createFramebufferWrapper(uint32_t handle, glm::uvec2 size);
 
-    void solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) override;
-    void gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) override;
-    void texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, const APaint& paint) override;
-    void solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override;
-    void gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override;
-    void texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override;
-    void rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) override;
-    void roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, const APaint& paint) override;
-    void boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) override;
-    void boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) override;
-    void glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) override;
-    void lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) override;
-    void points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) override;
-    void lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) override;
-    void squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, const APaint& paint) override;
+    void solidRectangles(const ADrawList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) override;
+    void gradientRectangles(const ADrawList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) override;
+    void texturedRectangles(const ADrawList::TexturedRectangles& v, const glm::mat4& transform, const APaint& paint) override;
+    void solidRoundedRectangles(const ADrawList::SolidRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override;
+    void gradientRoundedRectangles(const ADrawList::GradientRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override;
+    void texturedRoundedRectangles(const ADrawList::TexturedRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override;
+    void rectangleBorders(const ADrawList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) override;
+    void roundedRectangleBorders(const ADrawList::RoundedRectangleBorders& v, const glm::mat4& transform, const APaint& paint) override;
+    void boxShadow(const ADrawList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) override;
+    void boxShadowInner(const ADrawList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) override;
+    void glyphs(const ADrawList::Glyphs& v, const glm::mat4& transform, const APaint& paint) override;
+    void lines(const ADrawList::Lines& v, const glm::mat4& transform, const APaint& paint) override;
+    void points(const ADrawList::Points& v, const glm::mat4& transform, const APaint& paint) override;
+    void lines(const ADrawList::LineBatches& v, const glm::mat4& transform, const APaint& paint) override;
+    void squareSector(const ADrawList::SquareSector& v, const glm::mat4& transform, const APaint& paint) override;
 
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;

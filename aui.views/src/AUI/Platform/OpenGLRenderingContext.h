@@ -19,7 +19,7 @@
 #include <AUI/Platform/CommonRenderingContext.h>
 #include "ARenderingContextOptions.h"
 #include "AUI/GL/OpenGLBackend.hpp"
-#include <AUI/Render/ADisplayList.h>
+#include <AUI/Render/ADrawList.hpp>
 #include <AUI/Render/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
 
@@ -64,8 +64,8 @@ public:
 
 protected:
     _<OpenGLBackend> mRenderer;
-    ADisplayList mDisplayList;
-    ADisplayList mPresentDisplayList;
+    ADrawList mDisplayList;
+    ADrawList mPresentDisplayList;
     _unique<ADisplayListCanvas> mCanvas;
     _unique<RendererCanvas> mRendererWrapper;
     glm::uvec2 mViewportSize { 0, 0 };

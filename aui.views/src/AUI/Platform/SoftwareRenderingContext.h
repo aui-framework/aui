@@ -13,7 +13,7 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Platform/AWindow.h>
-#include <AUI/Render/ADisplayList.h>
+#include <AUI/Render/ADrawList.hpp>
 #include <AUI/Render/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
 
@@ -105,7 +105,7 @@ public:
 
 protected:
     _<SoftwareRenderer> mRenderer;
-    ADisplayList mDisplayList;
+    ADrawList mDisplayList;
     _unique<ADisplayListCanvas> mCanvas;
     _unique<RendererCanvas> mRendererWrapper;
 

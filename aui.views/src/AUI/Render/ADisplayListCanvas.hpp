@@ -13,11 +13,11 @@
 
 #include <glm/glm.hpp>
 #include <AUI/Render/ACanvas.hpp>
-#include <AUI/Render/ADisplayList.h>
+#include <AUI/Render/ADrawList.hpp>
 
 class API_AUI_VIEWS ADisplayListCanvas : public ACanvas {
 public:
-    ADisplayListCanvas(ADisplayList& displayList, IRendererBackend& renderer) : mDisplayList(displayList), mRenderer(renderer) {}
+    ADisplayListCanvas(ADrawList& displayList, IRendererBackend& renderer) : mDisplayList(displayList), mRenderer(renderer) {}
 
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
@@ -81,7 +81,7 @@ public:
     void setBaseTransform(const glm::mat4& transform) noexcept override { mBaseTransform = transform; }
 
 private:
-    void add(ADisplayList::StoredCommand::Command command, const APaint& paint = {});
+    void add(ADrawList::StoredCommand::Command command, const APaint& paint = {});
 
     struct State {
         glm::mat4 transform;
@@ -97,6 +97,6 @@ private:
     size_t mLayerStackDepth = 0;
     size_t mClipStackDepth = 0;
 
-    ADisplayList& mDisplayList;
+    ADrawList& mDisplayList;
     IRendererBackend& mRenderer;
 };

@@ -55,44 +55,44 @@ void ADisplayListCanvas::restore(size_t targetStackSize) {
 
 void ADisplayListCanvas::pushClipRect(const ARect<float>& rect, AClipOp op) {
     mClipStackDepth++;
-    add(ADisplayList::PushClipRect{rect, op}, {});
+    add(ADrawList::PushClipRect{rect, op}, {});
 }
 
 void ADisplayListCanvas::pushClipRoundedRect(const ARect<float>& rect, float radius, AClipOp op) {
     mClipStackDepth++;
-    add(ADisplayList::PushClipRoundedRect{rect, radius, op}, {});
+    add(ADrawList::PushClipRoundedRect{rect, radius, op}, {});
 }
 
 void ADisplayListCanvas::popClipRect() {
     AUI_ASSERT(mClipStackDepth > 0);
     mClipStackDepth--;
-    add(ADisplayList::PopClipRect{}, {});
+    add(ADrawList::PopClipRect{}, {});
 }
 
 void ADisplayListCanvas::pushLayer() {
     mLayerStackDepth++;
-    add(ADisplayList::PushLayer{}, {});
+    add(ADrawList::PushLayer{}, {});
 }
 
 void ADisplayListCanvas::popLayer() {
     AUI_ASSERT(mLayerStackDepth > 0);
     mLayerStackDepth--;
-    add(ADisplayList::PopLayer{}, {});
+    add(ADrawList::PopLayer{}, {});
 }
 
 void ADisplayListCanvas::pushMask(const _<ITexture>& mask, const glm::vec4& maskRect) {
     mMaskStackDepth++;
-    add(ADisplayList::PushMask{std::move(mask), maskRect}, {});
+    add(ADrawList::PushMask{std::move(mask), maskRect}, {});
 }
 
 void ADisplayListCanvas::popMask() {
     AUI_ASSERT(mMaskStackDepth > 0);
     mMaskStackDepth--;
-    add(ADisplayList::PopMask{}, {});
+    add(ADrawList::PopMask{}, {});
 }
 
 void ADisplayListCanvas::clear(const AColor& color) {
-    add(ADisplayList::Clear{color}, {});
+    add(ADrawList::Clear{color}, {});
 }
 
 void ADisplayListCanvas::setTransform(const glm::mat4& transform) {
@@ -137,19 +137,19 @@ void ADisplayListCanvas::rectangle(const APaint& paint, glm::vec2 position, glm:
 
     std::visit(aui::lambda_overloaded {
         [&](const ASolidBrush& b) {
-            add(ADisplayList::SolidRectangles{{ {position, size, b.solidColor * combinedColor} }}, paint);
+            add(ADrawList::SolidRectangles{{ {position, size, b.solidColor * combinedColor} }}, paint);
         },
         [&](const ALinearGradientBrush& b) {
             auto colors = b.colors;
             for (auto& c : colors) c.color *= combinedColor;
-            add(ADisplayList::GradientRectangles{{ {position, size, AColor::WHITE} }, std::move(colors), b.rotation}, paint);
+            add(ADrawList::GradientRectangles{{ {position, size, AColor::WHITE} }, std::move(colors), b.rotation}, paint);
         },
         [&](const ATexturedBrush& b) {
             glm::vec2 uv1 = b.uv1.valueOr(glm::vec2(0.f, 0.f));
             glm::vec2 uv2 = b.uv2.valueOr(glm::vec2(1.f, 1.f));
             uv1.y = 1.f - uv1.y;
             uv2.y = 1.f - uv2.y;
-            add(ADisplayList::TexturedRectangles{{ {position, size, combinedColor} }, b.texture, uv1, uv2, b.premultiplied}, paint);
+            add(ADrawList::TexturedRectangles{{ {position, size, combinedColor} }, b.texture, uv1, uv2, b.premultiplied}, paint);
         },
         [&](const auto&) {}
     }, paint.brush);
@@ -161,17 +161,17 @@ void ADisplayListCanvas::roundedRectangle(const APaint& paint, glm::vec2 positio
 
     std::visit(aui::lambda_overloaded {
         [&](const ASolidBrush& b) {
-            add(ADisplayList::SolidRoundedRectangles{{ {position, size, b.solidColor * combinedColor} }, radius}, paint);
+            add(ADrawList::SolidRoundedRectangles{{ {position, size, b.solidColor * combinedColor} }, radius}, paint);
         },
         [&](const ALinearGradientBrush& b) {
             auto colors = b.colors;
             for (auto& c : colors) {
                 c.color *= combinedColor;
             }
-            add(ADisplayList::GradientRoundedRectangles{{ {position, size, AColor::WHITE} }, radius, std::move(colors), b.rotation}, paint);
+            add(ADrawList::GradientRoundedRectangles{{ {position, size, AColor::WHITE} }, radius, std::move(colors), b.rotation}, paint);
         },
         [&](const ATexturedBrush& b) {
-            add(ADisplayList::TexturedRoundedRectangles{{ {position, size, combinedColor} }, radius, b.texture, b.uv1.valueOr(glm::vec2(0.f)), b.uv2.valueOr(glm::vec2(1.f)), b.premultiplied}, paint);
+            add(ADrawList::TexturedRoundedRectangles{{ {position, size, combinedColor} }, radius, b.texture, b.uv1.valueOr(glm::vec2(0.f)), b.uv2.valueOr(glm::vec2(1.f)), b.premultiplied}, paint);
         },
         [&](const auto&) {}
     }, paint.brush);
@@ -184,7 +184,7 @@ void ADisplayListCanvas::rectangleBorder(const APaint& paint, glm::vec2 position
     if (auto b = std::get_if<ASolidBrush>(&paint.brush)) {
         brushColor = b->solidColor;
     }
-    add(ADisplayList::RectangleBorders{{ {position, size, combinedColor * brushColor} }, lineWidth}, paint);
+    add(ADrawList::RectangleBorders{{ {position, size, combinedColor * brushColor} }, lineWidth}, paint);
 }
 
 void ADisplayListCanvas::roundedRectangleBorder(const APaint& paint,
@@ -198,11 +198,11 @@ void ADisplayListCanvas::roundedRectangleBorder(const APaint& paint,
     if (auto b = std::get_if<ASolidBrush>(&paint.brush)) {
         brushColor = b->solidColor;
     }
-    add(ADisplayList::RoundedRectangleBorders{{ {position, size, combinedColor * brushColor} }, radius, borderWidth}, paint);
+    add(ADrawList::RoundedRectangleBorders{{ {position, size, combinedColor * brushColor} }, radius, borderWidth}, paint);
 }
 
 void ADisplayListCanvas::boxShadow(const APaint& paint, glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) {
-    add(ADisplayList::BoxShadow{position, size, blurRadius, color}, paint);
+    add(ADrawList::BoxShadow{position, size, blurRadius, color}, paint);
 }
 
 void ADisplayListCanvas::boxShadowInner(const APaint& paint,
@@ -213,7 +213,7 @@ void ADisplayListCanvas::boxShadowInner(const APaint& paint,
                                         float borderRadius,
                                         const AColor& color,
                                         glm::vec2 offset) {
-    add(ADisplayList::BoxShadowInner{position, size, blurRadius, spreadRadius, borderRadius, color, offset}, paint);
+    add(ADrawList::BoxShadowInner{position, size, blurRadius, spreadRadius, borderRadius, color, offset}, paint);
 }
 
 void ADisplayListCanvas::string(const APaint& paint, glm::vec2 position, const AString& string, const AFontStyle& fs) {
@@ -230,22 +230,22 @@ void ADisplayListCanvas::prerenderedString(const APaint& paint, glm::vec2 positi
 }
 
 void ADisplayListCanvas::glyphRect(const _<ITexture>& texture, glm::vec2 position, glm::vec2 size, glm::vec2 u1, glm::vec2 u2, const AColor& color, bool isSubpixel) {
-    add(ADisplayList::Glyphs{{{position, size, u1, u2, color}}, texture, AColor::WHITE, isSubpixel}, {});
+    add(ADrawList::Glyphs{{{position, size, u1, u2, color}}, texture, AColor::WHITE, isSubpixel}, {});
 }
 
 void ADisplayListCanvas::lines(const APaint& paint, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
-    add(ADisplayList::Lines{{points.begin(), points.end()}, style, width}, paint);
+    add(ADrawList::Lines{{points.begin(), points.end()}, style, width}, paint);
 }
 
 void ADisplayListCanvas::points(const APaint& paint, AArrayView<glm::vec2> points, AMetric size) {
-    add(ADisplayList::Points{{points.begin(), points.end()}, size}, paint);
+    add(ADrawList::Points{{points.begin(), points.end()}, size}, paint);
 }
 
 void ADisplayListCanvas::lines(const APaint& paint,
                                AArrayView<std::pair<glm::vec2, glm::vec2>> points,
                                const ABorderStyle& style,
                                AMetric width) {
-    add(ADisplayList::LineBatches{{points.begin(), points.end()}, style, width}, paint);
+    add(ADrawList::LineBatches{{points.begin(), points.end()}, style, width}, paint);
 }
 
 void ADisplayListCanvas::squareSector(const APaint& paint,
@@ -253,14 +253,14 @@ void ADisplayListCanvas::squareSector(const APaint& paint,
                                       const glm::vec2& size,
                                       AAngleRadians begin,
                                       AAngleRadians end) {
-    add(ADisplayList::SquareSector{position, size, begin, end}, paint);
+    add(ADrawList::SquareSector{position, size, begin, end}, paint);
 }
 
 void ADisplayListCanvas::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) {
-    add(ADisplayList::Backdrop{position, size, {backdrops.begin(), backdrops.end()}}, {});
+    add(ADrawList::Backdrop{position, size, {backdrops.begin(), backdrops.end()}}, {});
 }
 
-void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const APaint& paint) {
+void ADisplayListCanvas::add(ADrawList::StoredCommand::Command command, const APaint& paint) {
     APaint combined = paint;
     
     auto st = mTransform;
@@ -275,7 +275,7 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
     
     if (st != glm::mat4(1.f)) {
         auto applyST = aui::lambda_overloaded {
-            [&](ADisplayList::SolidRectangles& v) {
+            [&](ADrawList::SolidRectangles& v) {
                 for (auto& inst : v.instances) {
                     glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
                     glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
@@ -283,7 +283,7 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                     inst.size = glm::vec2(p2) - inst.position;
                 }
             },
-            [&](ADisplayList::GradientRectangles& v) {
+            [&](ADrawList::GradientRectangles& v) {
                 for (auto& inst : v.instances) {
                     glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
                     glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
@@ -291,7 +291,7 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                     inst.size = glm::vec2(p2) - inst.position;
                 }
             },
-            [&](ADisplayList::TexturedRectangles& v) {
+            [&](ADrawList::TexturedRectangles& v) {
                 for (auto& inst : v.instances) {
                     glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
                     glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
@@ -299,7 +299,7 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                     inst.size = glm::vec2(p2) - inst.position;
                 }
             },
-            [&](ADisplayList::SolidRoundedRectangles& v) {
+            [&](ADrawList::SolidRoundedRectangles& v) {
                 for (auto& inst : v.instances) {
                     glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
                     glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
@@ -307,7 +307,7 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                     inst.size = glm::vec2(p2) - inst.position;
                 }
             },
-            [&](ADisplayList::GradientRoundedRectangles& v) {
+            [&](ADrawList::GradientRoundedRectangles& v) {
                 for (auto& inst : v.instances) {
                     glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
                     glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
@@ -315,7 +315,7 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                     inst.size = glm::vec2(p2) - inst.position;
                 }
             },
-            [&](ADisplayList::TexturedRoundedRectangles& v) {
+            [&](ADrawList::TexturedRoundedRectangles& v) {
                 for (auto& inst : v.instances) {
                     glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
                     glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
@@ -323,7 +323,7 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                     inst.size = glm::vec2(p2) - inst.position;
                 }
             },
-            [&](ADisplayList::RectangleBorders& v) {
+            [&](ADrawList::RectangleBorders& v) {
                 for (auto& inst : v.instances) {
                     glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
                     glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
@@ -331,7 +331,7 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                     inst.size = glm::vec2(p2) - inst.position;
                 }
             },
-            [&](ADisplayList::RoundedRectangleBorders& v) {
+            [&](ADrawList::RoundedRectangleBorders& v) {
                 for (auto& inst : v.instances) {
                     glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
                     glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
@@ -339,7 +339,7 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                     inst.size = glm::vec2(p2) - inst.position;
                 }
             },
-            [&](ADisplayList::Glyphs& v) {
+            [&](ADrawList::Glyphs& v) {
                 for (auto& inst : v.instances) {
                     glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
                     glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
@@ -347,56 +347,56 @@ void ADisplayListCanvas::add(ADisplayList::StoredCommand::Command command, const
                     inst.size = glm::vec2(p2) - inst.position;
                 }
             },
-            [&](ADisplayList::BoxShadow& v) {
+            [&](ADrawList::BoxShadow& v) {
                 glm::vec4 p1 = st * glm::vec4(v.position, 0.f, 1.f);
                 glm::vec4 p2 = st * glm::vec4(v.position + v.size, 0.f, 1.f);
                 v.position = glm::vec2(p1);
                 v.size = glm::vec2(p2) - v.position;
             },
-            [&](ADisplayList::BoxShadowInner& v) {
+            [&](ADrawList::BoxShadowInner& v) {
                 glm::vec4 p1 = st * glm::vec4(v.position, 0.f, 1.f);
                 glm::vec4 p2 = st * glm::vec4(v.position + v.size, 0.f, 1.f);
                 v.position = glm::vec2(p1);
                 v.size = glm::vec2(p2) - v.position;
             },
-            [&](ADisplayList::SquareSector& v) {
+            [&](ADrawList::SquareSector& v) {
                 glm::vec4 p1 = st * glm::vec4(v.position, 0.f, 1.f);
                 glm::vec4 p2 = st * glm::vec4(v.position + v.size, 0.f, 1.f);
                 v.position = glm::vec2(p1);
                 v.size = glm::vec2(p2) - v.position;
             },
-            [&](ADisplayList::Lines& v) {
+            [&](ADrawList::Lines& v) {
                 for (auto& p : v.points) {
                     p = glm::vec2(st * glm::vec4(p, 0.f, 1.f));
                 }
             },
-            [&](ADisplayList::LineBatches& v) {
+            [&](ADrawList::LineBatches& v) {
                 for (auto& p : v.points) {
                     p.first = glm::vec2(st * glm::vec4(p.first, 0.f, 1.f));
                     p.second = glm::vec2(st * glm::vec4(p.second, 0.f, 1.f));
                 }
             },
-            [&](ADisplayList::Points& v) {
+            [&](ADrawList::Points& v) {
                 for (auto& p : v.points) {
                     p = glm::vec2(st * glm::vec4(p, 0.f, 1.f));
                 }
             },
-            [&](ADisplayList::PushMask& v) {
+            [&](ADrawList::PushMask& v) {
                 glm::vec4 p1 = st * glm::vec4(v.maskRect.x, v.maskRect.y, 0.f, 1.f);
                 glm::vec4 p2 = st * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0.f, 1.f);
                 v.maskRect = glm::vec4(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
             },
-            [&](ADisplayList::PushClipRect& v) {
+            [&](ADrawList::PushClipRect& v) {
                 glm::vec4 p1 = st * glm::vec4(v.rect.p1, 0.f, 1.f);
                 glm::vec4 p2 = st * glm::vec4(v.rect.p2, 0.f, 1.f);
                 v.rect = ARect<float>{ glm::vec2(p1), glm::vec2(p2) };
             },
-            [&](ADisplayList::PushClipRoundedRect& v) {
+            [&](ADrawList::PushClipRoundedRect& v) {
                 glm::vec4 p1 = st * glm::vec4(v.rect.p1, 0.f, 1.f);
                 glm::vec4 p2 = st * glm::vec4(v.rect.p2, 0.f, 1.f);
                 v.rect = ARect<float>{ glm::vec2(p1), glm::vec2(p2) };
             },
-            [&](ADisplayList::Backdrop& v) {
+            [&](ADrawList::Backdrop& v) {
                 auto p1 = glm::vec2(st * glm::vec4(v.position, 0.f, 1.f));
                 auto p2 = glm::vec2(st * glm::vec4(v.position + v.size, 0.f, 1.f));
                 auto lower = glm::floor(glm::min(p1, p2));

@@ -28,7 +28,7 @@
 class IRenderer;
 class IRendererBackend;
 
-class ADisplayList {
+class ADrawList {
 public:
     struct RectInstance {
         glm::vec2 position;

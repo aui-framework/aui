@@ -12,7 +12,7 @@
 #pragma once
 
 #include <AUI/Render/IRendererBackend.h>
-#include <AUI/Render/ADisplayList.h>
+#include <AUI/Render/ADrawList.hpp>
 #include <AUI/Render/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
 
@@ -20,7 +20,7 @@ class CommonOffscreenRenderPass : public IOffscreenRenderPass {
 public:
     IRendererBackend& backend;
     _<ITexture> target;
-    ADisplayList displayList;
+    ADrawList displayList;
     ADisplayListCanvas canvas;
     RendererCanvas rendererCanvas;
 

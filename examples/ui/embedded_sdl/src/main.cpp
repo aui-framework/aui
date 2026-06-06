@@ -188,7 +188,7 @@ public:
 /// [EmbedRenderingContext]
 struct EmbedRenderingContext : IRenderingContext {
     std::shared_ptr<OpenGLBackend> m_renderer;
-    ADisplayList m_displayList;
+    ADrawList m_displayList;
     _unique<ADisplayListCanvas> m_canvas;
     _unique<RendererCanvas> m_rendererWrapper;
 

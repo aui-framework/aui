@@ -667,7 +667,7 @@ IRendererBackend::AMergedMask OpenGLBackend::mergeMasks(const _<ITexture>& mask1
     return merged;
 }
 
-void OpenGLBackend::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::solidRectangles(const ADrawList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("solidRectangles");
     setBlending(paint);
@@ -703,7 +703,7 @@ void OpenGLBackend::solidRectangles(const ADisplayList::SolidRectangles& v, cons
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
-void OpenGLBackend::gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::gradientRectangles(const ADrawList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("gradientRectangles");
     setBlending(paint);
@@ -755,7 +755,7 @@ void OpenGLBackend::gradientRectangles(const ADisplayList::GradientRectangles& v
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
-void OpenGLBackend::texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::texturedRectangles(const ADrawList::TexturedRectangles& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty() || !v.texture) return;
     GLDebugGroupLocal debugGroup("texturedRectangles");
     setBlending(paint);
@@ -801,7 +801,7 @@ void OpenGLBackend::texturedRectangles(const ADisplayList::TexturedRectangles& v
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
-void OpenGLBackend::solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::solidRoundedRectangles(const ADrawList::SolidRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("solidRoundedRectangles");
     setBlending(paint);
@@ -852,7 +852,7 @@ void OpenGLBackend::solidRoundedRectangles(const ADisplayList::SolidRoundedRecta
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
-void OpenGLBackend::gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::gradientRoundedRectangles(const ADrawList::GradientRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("gradientRoundedRectangles");
     setBlending(paint);
@@ -917,7 +917,7 @@ void OpenGLBackend::gradientRoundedRectangles(const ADisplayList::GradientRounde
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
-void OpenGLBackend::texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::texturedRoundedRectangles(const ADrawList::TexturedRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty() || !v.texture) return;
     GLDebugGroupLocal debugGroup("texturedRoundedRectangles");
     setBlending(paint);
@@ -974,7 +974,7 @@ void OpenGLBackend::texturedRoundedRectangles(const ADisplayList::TexturedRounde
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
-void OpenGLBackend::rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::rectangleBorders(const ADrawList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("rectangleBorders");
     setBlending(paint);
@@ -1018,7 +1018,7 @@ void OpenGLBackend::rectangleBorders(const ADisplayList::RectangleBorders& v, co
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
-void OpenGLBackend::roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::roundedRectangleBorders(const ADrawList::RoundedRectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
     GLDebugGroupLocal debugGroup("roundedRectangleBorders");
     setBlending(paint);
@@ -1086,7 +1086,7 @@ void OpenGLBackend::roundedRectangleBorders(const ADisplayList::RoundedRectangle
     glDrawElements(GL_TRIANGLES, (GLsizei)indices.size(), GL_UNSIGNED_INT, (void*)iOffset);
 }
 
-void OpenGLBackend::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::boxShadow(const ADrawList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) {
     GLDebugGroupLocal debugGroup("boxShadow");
     setBlending(paint);
     mBoxShadowShader->use();
@@ -1121,7 +1121,7 @@ void OpenGLBackend::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4&
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }
 
-void OpenGLBackend::boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::boxShadowInner(const ADrawList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) {
     GLDebugGroupLocal debugGroup("boxShadowInner");
     setBlending(paint);
     mBoxShadowInnerShader->use();
@@ -1162,7 +1162,7 @@ void OpenGLBackend::boxShadowInner(const ADisplayList::BoxShadowInner& v, const 
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }
 
-void OpenGLBackend::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::glyphs(const ADrawList::Glyphs& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty() || !v.texture) return;
     GLDebugGroupLocal debugGroup(v.isSubpixel ? "glyphsSubpixel" : "glyphsGrayscale");
     setBlending(paint);
@@ -1286,7 +1286,7 @@ bool OpenGLBackend::setupLineShader(const glm::mat4& transform, const ABorderSty
     }, style.value());
 }
 
-void OpenGLBackend::lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::lines(const ADrawList::Lines& v, const glm::mat4& transform, const APaint& paint) {
     if (v.points.size() < 2) return;
     GLDebugGroupLocal debugGroup("lines");
     setBlending(paint);
@@ -1320,7 +1320,7 @@ void OpenGLBackend::lines(const ADisplayList::Lines& v, const glm::mat4& transfo
     glDrawArrays(GL_LINE_STRIP, 0, (GLsizei)vertices.size());
 }
 
-void OpenGLBackend::points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::points(const ADrawList::Points& v, const glm::mat4& transform, const APaint& paint) {
     if (v.points.empty()) return;
     GLDebugGroupLocal debugGroup("points");
     setBlending(paint);
@@ -1347,7 +1347,7 @@ void OpenGLBackend::points(const ADisplayList::Points& v, const glm::mat4& trans
     glDrawArrays(GL_POINTS, 0, (GLsizei)vertices.size());
 }
 
-void OpenGLBackend::lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::lines(const ADrawList::LineBatches& v, const glm::mat4& transform, const APaint& paint) {
     if (v.points.empty()) return;
     GLDebugGroupLocal debugGroup("lineBatches");
     setBlending(paint);
@@ -1377,7 +1377,7 @@ void OpenGLBackend::lines(const ADisplayList::LineBatches& v, const glm::mat4& t
     glDrawArrays(GL_LINES, 0, (GLsizei)vertices.size());
 }
 
-void OpenGLBackend::squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, const APaint& paint) {
+void OpenGLBackend::squareSector(const ADrawList::SquareSector& v, const glm::mat4& transform, const APaint& paint) {
     GLDebugGroupLocal debugGroup("squareSector");
     setBlending(paint);
     mSquareSectorShader->use();

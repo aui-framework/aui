@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "ADisplayList.h"
+#include "ADrawList.hpp"
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Traits/callables.h>
 
@@ -28,81 +28,81 @@ bool isOpaque(const ABrush& brush, const AColor& globalColor) {
         }, brush);
 }
 
-bool isBarrier(const ADisplayList::StoredCommand::Command& cmd) {
+bool isBarrier(const ADrawList::StoredCommand::Command& cmd) {
     return std::visit(aui::lambda_overloaded {
-        [](const ADisplayList::PushLayer&)            { return true; },
-        [](const ADisplayList::PopLayer&)             { return true; },
-        [](const ADisplayList::PushMask&)             { return true; },
-        [](const ADisplayList::PopMask&)              { return true; },
-        [](const ADisplayList::PushClipRect&)         { return true; },
-        [](const ADisplayList::PushClipRoundedRect&)  { return true; },
-        [](const ADisplayList::PopClipRect&)          { return true; },
-        [](const ADisplayList::Clear&)                { return true; },
+        [](const ADrawList::PushLayer&)            { return true; },
+        [](const ADrawList::PopLayer&)             { return true; },
+        [](const ADrawList::PushMask&)             { return true; },
+        [](const ADrawList::PopMask&)              { return true; },
+        [](const ADrawList::PushClipRect&)         { return true; },
+        [](const ADrawList::PushClipRoundedRect&)  { return true; },
+        [](const ADrawList::PopClipRect&)          { return true; },
+        [](const ADrawList::Clear&)                { return true; },
         [](const auto&)                               { return false; }
     }, cmd);
 }
 
-bool tryMerge(ADisplayList::StoredCommand& l, ADisplayList::StoredCommand& r) {
+bool tryMerge(ADrawList::StoredCommand& l, ADrawList::StoredCommand& r) {
     if (l.transform != r.transform) return false;
     if (l.paint != r.paint)      return false;
     if (l.command.index() != r.command.index()) return false;
 
     return std::visit(aui::lambda_overloaded {
-        [&](ADisplayList::SolidRectangles& ld, ADisplayList::SolidRectangles& rd) {
+        [&](ADrawList::SolidRectangles& ld, ADrawList::SolidRectangles& rd) {
             ld.instances << std::move(rd.instances);
             return true;
         },
-        [&](ADisplayList::GradientRectangles& ld, ADisplayList::GradientRectangles& rd) {
+        [&](ADrawList::GradientRectangles& ld, ADrawList::GradientRectangles& rd) {
             if (ld.colors != rd.colors || ld.rotation != rd.rotation) return false;
             ld.instances << std::move(rd.instances);
             return true;
         },
-        [&](ADisplayList::TexturedRectangles& ld, ADisplayList::TexturedRectangles& rd) {
+        [&](ADrawList::TexturedRectangles& ld, ADrawList::TexturedRectangles& rd) {
             if (ld.texture != rd.texture || ld.uv1 != rd.uv1 || ld.uv2 != rd.uv2 || ld.premultiplied != rd.premultiplied) return false;
             ld.instances << std::move(rd.instances);
             return true;
         },
-        [&](ADisplayList::SolidRoundedRectangles& ld, ADisplayList::SolidRoundedRectangles& rd) {
+        [&](ADrawList::SolidRoundedRectangles& ld, ADrawList::SolidRoundedRectangles& rd) {
             if (ld.radius != rd.radius) return false;
             ld.instances << std::move(rd.instances);
             return true;
         },
-        [&](ADisplayList::GradientRoundedRectangles& ld, ADisplayList::GradientRoundedRectangles& rd) {
+        [&](ADrawList::GradientRoundedRectangles& ld, ADrawList::GradientRoundedRectangles& rd) {
             if (ld.radius != rd.radius || ld.colors != rd.colors || ld.rotation != rd.rotation) return false;
             ld.instances << std::move(rd.instances);
             return true;
         },
-        [&](ADisplayList::TexturedRoundedRectangles& ld, ADisplayList::TexturedRoundedRectangles& rd) {
+        [&](ADrawList::TexturedRoundedRectangles& ld, ADrawList::TexturedRoundedRectangles& rd) {
             if (ld.radius != rd.radius || ld.texture != rd.texture || ld.uv1 != rd.uv1 || ld.uv2 != rd.uv2 || ld.premultiplied != rd.premultiplied) return false;
             ld.instances << std::move(rd.instances);
             return true;
         },
-        [&](ADisplayList::RectangleBorders& ld, ADisplayList::RectangleBorders& rd) {
+        [&](ADrawList::RectangleBorders& ld, ADrawList::RectangleBorders& rd) {
             if (ld.lineWidth != rd.lineWidth) return false;
             ld.instances << std::move(rd.instances);
             return true;
         },
-        [&](ADisplayList::RoundedRectangleBorders& ld, ADisplayList::RoundedRectangleBorders& rd) {
+        [&](ADrawList::RoundedRectangleBorders& ld, ADrawList::RoundedRectangleBorders& rd) {
             if (ld.radius != rd.radius || ld.borderWidth != rd.borderWidth) return false;
             ld.instances << std::move(rd.instances);
             return true;
         },
-        [&](ADisplayList::Glyphs& ld, ADisplayList::Glyphs& rd) {
+        [&](ADrawList::Glyphs& ld, ADrawList::Glyphs& rd) {
             if (ld.texture != rd.texture || ld.isSubpixel != rd.isSubpixel) return false;
             ld.instances << std::move(rd.instances);
             return true;
         },
-        [&](ADisplayList::Lines& ld, ADisplayList::Lines& rd) {
+        [&](ADrawList::Lines& ld, ADrawList::Lines& rd) {
             if (ld.style != rd.style || ld.width != rd.width) return false;
             ld.points << std::move(rd.points);
             return true;
         },
-        [&](ADisplayList::LineBatches& ld, ADisplayList::LineBatches& rd) {
+        [&](ADrawList::LineBatches& ld, ADrawList::LineBatches& rd) {
             if (ld.style != rd.style || ld.width != rd.width) return false;
             ld.points << std::move(rd.points);
             return true;
         },
-        [&](ADisplayList::Points& ld, ADisplayList::Points& rd) {
+        [&](ADrawList::Points& ld, ADrawList::Points& rd) {
             if (ld.size != rd.size) return false;
             ld.points << std::move(rd.points);
             return true;
@@ -116,7 +116,7 @@ bool rectsOverlap(const ARect<float>& a, const ARect<float>& b) {
            a.p1.y < b.p2.y && a.p2.y > b.p1.y;
 }
 
-ARect<float> boundingBoxOfCommand(const ADisplayList::StoredCommand& cmd) {
+ARect<float> boundingBoxOfCommand(const ADrawList::StoredCommand& cmd) {
     glm::vec2 lo(std::numeric_limits<float>::max());
     glm::vec2 hi(std::numeric_limits<float>::lowest());
 
@@ -128,43 +128,43 @@ ARect<float> boundingBoxOfCommand(const ADisplayList::StoredCommand& cmd) {
     };
 
     std::visit(aui::lambda_overloaded {
-        [&](const ADisplayList::SolidRectangles& v)          { expandInstances(v); },
-        [&](const ADisplayList::GradientRectangles& v)        { expandInstances(v); },
-        [&](const ADisplayList::TexturedRectangles& v)        { expandInstances(v); },
-        [&](const ADisplayList::SolidRoundedRectangles& v)    { expandInstances(v); },
-        [&](const ADisplayList::GradientRoundedRectangles& v) { expandInstances(v); },
-        [&](const ADisplayList::TexturedRoundedRectangles& v) { expandInstances(v); },
-        [&](const ADisplayList::RectangleBorders& v)          { expandInstances(v); },
-        [&](const ADisplayList::RoundedRectangleBorders& v)   { expandInstances(v); },
-        [&](const ADisplayList::Glyphs& v) {
+        [&](const ADrawList::SolidRectangles& v)          { expandInstances(v); },
+        [&](const ADrawList::GradientRectangles& v)        { expandInstances(v); },
+        [&](const ADrawList::TexturedRectangles& v)        { expandInstances(v); },
+        [&](const ADrawList::SolidRoundedRectangles& v)    { expandInstances(v); },
+        [&](const ADrawList::GradientRoundedRectangles& v) { expandInstances(v); },
+        [&](const ADrawList::TexturedRoundedRectangles& v) { expandInstances(v); },
+        [&](const ADrawList::RectangleBorders& v)          { expandInstances(v); },
+        [&](const ADrawList::RoundedRectangleBorders& v)   { expandInstances(v); },
+        [&](const ADrawList::Glyphs& v) {
             for (const auto& inst : v.instances) {
                 lo = glm::min(lo, inst.position);
                 hi = glm::max(hi, inst.position + inst.size);
             }
         },
-        [&](const ADisplayList::BoxShadow& v) {
+        [&](const ADrawList::BoxShadow& v) {
             lo = v.position - glm::vec2(v.blurRadius);
             hi = v.position + v.size + glm::vec2(v.blurRadius);
         },
-        [&](const ADisplayList::BoxShadowInner& v) {
+        [&](const ADrawList::BoxShadowInner& v) {
             lo = v.position; hi = v.position + v.size;
         },
-        [&](const ADisplayList::Lines& v) {
+        [&](const ADrawList::Lines& v) {
             for (auto p : v.points) { lo = glm::min(lo, p); hi = glm::max(hi, p); }
         },
-        [&](const ADisplayList::LineBatches& v) {
+        [&](const ADrawList::LineBatches& v) {
             for (auto& p : v.points) {
                 lo = glm::min(lo, p.first);  lo = glm::min(lo, p.second);
                 hi = glm::max(hi, p.first);  hi = glm::max(hi, p.second);
             }
         },
-        [&](const ADisplayList::Points& v) {
+        [&](const ADrawList::Points& v) {
             for (auto p : v.points) { lo = glm::min(lo, p); hi = glm::max(hi, p); }
         },
-        [&](const ADisplayList::SquareSector& v) {
+        [&](const ADrawList::SquareSector& v) {
             lo = v.position; hi = v.position + v.size;
         },
-        [&](const ADisplayList::Backdrop& v) {
+        [&](const ADrawList::Backdrop& v) {
             lo = glm::vec2(v.position); hi = glm::vec2(v.position + v.size);
         },
         [&](const auto&) {}
@@ -188,22 +188,22 @@ inline void hash_combine(std::size_t& seed, std::size_t hash) {
     seed ^= hash + 0x9e3779b9 + (seed << 6) + (seed >> 2);
 }
 
-std::size_t hashLogicalMask(const ADisplayList::LogicalMask& m) {
+std::size_t hashLogicalMask(const ADrawList::LogicalMask& m) {
     std::size_t seed = 0;
 
     hash_combine(seed, std::hash<int>()(static_cast<int>(m.type)));
     hash_combine(seed, std::hash<int>()(static_cast<int>(m.op)));
 
-    if (m.type == ADisplayList::LogicalMask::Type::Rect || m.type == ADisplayList::LogicalMask::Type::RoundedRect) {
+    if (m.type == ADrawList::LogicalMask::Type::Rect || m.type == ADrawList::LogicalMask::Type::RoundedRect) {
         hash_combine(seed, std::hash<float>()(m.rect.p1.x));
         hash_combine(seed, std::hash<float>()(m.rect.p1.y));
         hash_combine(seed, std::hash<float>()(m.rect.p2.x));
         hash_combine(seed, std::hash<float>()(m.rect.p2.y));
 
-        if (m.type == ADisplayList::LogicalMask::Type::RoundedRect) {
+        if (m.type == ADrawList::LogicalMask::Type::RoundedRect) {
             hash_combine(seed, std::hash<float>()(m.radius));
         }
-    } else if (m.type == ADisplayList::LogicalMask::Type::Texture) {
+    } else if (m.type == ADrawList::LogicalMask::Type::Texture) {
         hash_combine(seed, std::hash<void*>()(m.texture.get()));
         hash_combine(seed, std::hash<float>()(m.maskRect.x));
         hash_combine(seed, std::hash<float>()(m.maskRect.y));
@@ -222,7 +222,7 @@ std::size_t hashLogicalMask(const ADisplayList::LogicalMask& m) {
 
 } // namespace
 
-void ADisplayList::add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint) {
+void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint) {
     if (!mCommands.empty()) {
         auto& last = mCommands.last();
         if (last.transform == transform && last.paint == paint && last.command.index() == cmd.index()) {
@@ -302,7 +302,7 @@ void ADisplayList::add(StoredCommand::Command cmd, const glm::mat4& transform, A
     mCommands << StoredCommand{std::move(cmd), transform, std::move(paint)};
 }
 
-void ADisplayList::reorderAndBatch() {
+void ADrawList::reorderAndBatch() {
     auto flushSegment = [&](AVector<StoredCommand>& seg) {
         if (seg.size() < 2) return;
 
@@ -364,7 +364,7 @@ void ADisplayList::reorderAndBatch() {
     mCommands = std::move(result);
 }
 
-void ADisplayList::resolveEntities() {
+void ADrawList::resolveEntities() {
     mEntities.clear();
     for (const auto& cmd : mCommands) {
         std::visit(
@@ -455,7 +455,7 @@ void ADisplayList::resolveEntities() {
     }
 }
 
-void ADisplayList::computeOverlaps() {
+void ADrawList::computeOverlaps() {
     mOpaqueRects.clear();
     for (auto it = mEntities.rbegin(); it != mEntities.rend(); ++it) {
         it->isObscured = false;
@@ -525,7 +525,7 @@ void ADisplayList::computeOverlaps() {
     }
 }
 
-void ADisplayList::resolveClips() {
+void ADrawList::resolveClips() {
     struct ClipEntry {
         AVector<ARect<float>> stack;
         ARect<float> current;
@@ -573,7 +573,7 @@ void ADisplayList::resolveClips() {
     }
 }
 
-void ADisplayList::resolveLogicalMasks() {
+void ADrawList::resolveLogicalMasks() {
     AVector<LogicalMask> maskStack;
 
     auto isFullyInside = [](const ARect<float>& inner, const ARect<float>& outer) {
@@ -646,7 +646,7 @@ void ADisplayList::resolveLogicalMasks() {
     }
 }
 
-void ADisplayList::resolvePhysicalMasks(IRendererBackend& renderer) {
+void ADrawList::resolvePhysicalMasks(IRendererBackend& renderer) {
     struct PhysicalMaskState {
         _<ITexture> texture;
         glm::vec4 rect;
@@ -748,13 +748,13 @@ void ADisplayList::resolvePhysicalMasks(IRendererBackend& renderer) {
     }
 }
 
-void ADisplayList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
+void ADrawList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
     mPasses.clear();
     glm::uvec2 sz = windowTarget ? windowTarget->getSize() : glm::uvec2(0);
     mPasses << RenderPass{ .target = windowTarget, .size = sz, .entities = mEntities };
 }
 
-void ADisplayList::draw(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
+void ADrawList::draw(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
     resolveLogicalMasks();
     resolvePhysicalMasks(renderer);
     resolvePasses(renderer, windowTarget);
@@ -826,7 +826,7 @@ void ADisplayList::draw(IRendererBackend& renderer, const _<ITexture>& windowTar
     }
 }
 
-void ADisplayList::optimize() {
+void ADrawList::optimize() {
     reorderAndBatch();
     resolveEntities();
     resolveClips();

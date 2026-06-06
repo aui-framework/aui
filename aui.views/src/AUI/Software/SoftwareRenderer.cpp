@@ -268,7 +268,7 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
     }
 }
 
-void SoftwareRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::solidRectangles(const ADrawList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) {
     for (const auto& inst : v.instances) {
         auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
         auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
@@ -312,7 +312,7 @@ void SoftwareRenderer::drawLine(glm::ivec2 p0, glm::ivec2 p1, float width, AColo
         }
     }
 }
-void SoftwareRenderer::gradientRectangles(const ADisplayList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::gradientRectangles(const ADrawList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
     ALinearGradientBrush brush {
         v.colors,
@@ -341,7 +341,7 @@ void SoftwareRenderer::gradientRectangles(const ADisplayList::GradientRectangles
         }
     }
 }
-void SoftwareRenderer::texturedRectangles(const ADisplayList::TexturedRectangles& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::texturedRectangles(const ADrawList::TexturedRectangles& v, const glm::mat4& transform, const APaint& paint) {
     auto texture = dynamic_cast<SoftwareTexture*>(v.texture.get());
     if (!texture) return;
     const auto& img = texture->getImage();
@@ -374,7 +374,7 @@ void SoftwareRenderer::texturedRectangles(const ADisplayList::TexturedRectangles
         }
     }
 }
-void SoftwareRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::solidRoundedRectangles(const ADrawList::SolidRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
     for (const auto& inst : v.instances) {
         auto p1 = transform * glm::vec4(inst.position, 0.f, 1.f);
         auto p2 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
@@ -399,7 +399,7 @@ void SoftwareRenderer::solidRoundedRectangles(const ADisplayList::SolidRoundedRe
         }
     }
 }
-void SoftwareRenderer::gradientRoundedRectangles(const ADisplayList::GradientRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::gradientRoundedRectangles(const ADrawList::GradientRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
     if (v.instances.empty()) return;
     ALinearGradientBrush brush {
         v.colors,
@@ -441,7 +441,7 @@ void SoftwareRenderer::gradientRoundedRectangles(const ADisplayList::GradientRou
         }
     }
 }
-void SoftwareRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::texturedRoundedRectangles(const ADrawList::TexturedRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) {
     auto texture = dynamic_cast<SoftwareTexture*>(v.texture.get());
     if (!texture) return;
     const auto& img = texture->getImage();
@@ -486,7 +486,7 @@ void SoftwareRenderer::texturedRoundedRectangles(const ADisplayList::TexturedRou
         }
     }
 }
-void SoftwareRenderer::rectangleBorders(const ADisplayList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::rectangleBorders(const ADrawList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
     for (const auto& inst : v.instances) {
         AColor color = inst.color.premultiply();
         auto drawSubRect = [&](glm::vec2 pos, glm::vec2 size) {
@@ -504,7 +504,7 @@ void SoftwareRenderer::rectangleBorders(const ADisplayList::RectangleBorders& v,
         drawSubRect({inst.position.x + inst.size.x - v.lineWidth, inst.position.y + v.lineWidth}, {v.lineWidth, inst.size.y - v.lineWidth * 2.f});
     }
 }
-void SoftwareRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::roundedRectangleBorders(const ADrawList::RoundedRectangleBorders& v, const glm::mat4& transform, const APaint& paint) {
     for (const auto& inst : v.instances) {
         AColor color = inst.color.premultiply();
         float radius = v.radius;
@@ -529,7 +529,7 @@ void SoftwareRenderer::roundedRectangleBorders(const ADisplayList::RoundedRectan
         }
     }
 }
-void SoftwareRenderer::boxShadow(const ADisplayList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::boxShadow(const ADrawList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) {
     float sigma = v.blurRadius / 2.f;
     float padding = v.blurRadius * 2.f;
     glm::vec2 pos = v.position - padding;
@@ -554,7 +554,7 @@ void SoftwareRenderer::boxShadow(const ADisplayList::BoxShadow& v, const glm::ma
         }
     }
 }
-void SoftwareRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::boxShadowInner(const ADrawList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) {
     float sigma = v.blurRadius / 2.f;
     glm::vec2 lower = v.position + v.offset + glm::vec2(v.spreadRadius);
     glm::vec2 upper = v.position + v.size + v.offset - glm::vec2(v.spreadRadius);
@@ -585,7 +585,7 @@ void SoftwareRenderer::boxShadowInner(const ADisplayList::BoxShadowInner& v, con
         }
     }
 }
-void SoftwareRenderer::glyphs(const ADisplayList::Glyphs& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::glyphs(const ADrawList::Glyphs& v, const glm::mat4& transform, const APaint& paint) {
     auto texture = dynamic_cast<SoftwareTexture*>(v.texture.get());
     if (!texture)
         return;
@@ -664,7 +664,7 @@ _<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 pos
     c->addString(position, text);
     return c->finalize();
 }
-void SoftwareRenderer::lines(const ADisplayList::Lines& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::lines(const ADrawList::Lines& v, const glm::mat4& transform, const APaint& paint) {
     if (v.points.size() < 2) return;
     float widthPx = v.width.getValuePx();
     AColor color = paint.color.premultiply();
@@ -675,7 +675,7 @@ void SoftwareRenderer::lines(const ADisplayList::Lines& v, const glm::mat4& tran
         drawLine({(int)p0.x, (int)p0.y}, {(int)p1.x, (int)p1.y}, widthPx, color, paint);
     }
 }
-void SoftwareRenderer::points(const ADisplayList::Points& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::points(const ADrawList::Points& v, const glm::mat4& transform, const APaint& paint) {
     if (v.points.empty()) return;
     float size = v.size.getValuePx();
     int w = (int)std::round(size);
@@ -693,7 +693,7 @@ void SoftwareRenderer::points(const ADisplayList::Points& v, const glm::mat4& tr
         }
     }
 }
-void SoftwareRenderer::lines(const ADisplayList::LineBatches& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::lines(const ADrawList::LineBatches& v, const glm::mat4& transform, const APaint& paint) {
     if (v.points.empty()) return;
     float widthPx = v.width.getValuePx();
     AColor color = paint.color.premultiply();
@@ -704,7 +704,7 @@ void SoftwareRenderer::lines(const ADisplayList::LineBatches& v, const glm::mat4
         drawLine({(int)p0.x, (int)p0.y}, {(int)p1.x, (int)p1.y}, widthPx, color, paint);
     }
 }
-void SoftwareRenderer::squareSector(const ADisplayList::SquareSector& v, const glm::mat4& transform, const APaint& paint) {
+void SoftwareRenderer::squareSector(const ADrawList::SquareSector& v, const glm::mat4& transform, const APaint& paint) {
     auto p1 = transform * glm::vec4(v.position, 0.f, 1.f);
     auto p2 = transform * glm::vec4(v.position + v.size, 0.f, 1.f);
     AColor color = paint.color.premultiply();
