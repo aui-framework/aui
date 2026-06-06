@@ -536,9 +536,7 @@ _<ITexture> OpenGLBackend::createRoundedRectMask(const ARect<float>& rect, float
         mRoundedRectMaskCache.erase(it);
     }
 
-    auto usefulBounds = inverted ? bounds : rect.intersect(bounds);
-
-    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(usefulBounds.size().x)), std::max(1u, (unsigned)std::ceil(usefulBounds.size().y)));
+    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(bounds.size().x)), std::max(1u, (unsigned)std::ceil(bounds.size().y)));
     auto destTexture = createTexture(size, APixelFormat::R8_UNORM, TextureFilter::NEAREST);
     auto glDestTexture = _cast<OpenGLTexture2D>(destTexture);
     glDestTexture->texture().setupClampToEdge();
@@ -547,7 +545,7 @@ _<ITexture> OpenGLBackend::createRoundedRectMask(const ARect<float>& rect, float
     auto ctx = pass->context();
     ctx.canvas.clear(inverted ? AColor::WHITE : AColor::TRANSPARENT_BLACK);
     ctx.canvas.setTransformForced(glm::mat4(1.0f));
-    ctx.canvas.roundedRectangle(APaint{ASolidBrush{inverted ? AColor::BLACK : AColor::WHITE}}, rect.min() - usefulBounds.min(), rect.size(), radius);
+    ctx.canvas.roundedRectangle(APaint{ASolidBrush{inverted ? AColor::BLACK : AColor::WHITE}}, rect.min() - bounds.min(), rect.size(), radius);
     endOffscreen(std::move(pass));
 
     mRoundedRectMaskCache.emplace(cacheKey, RoundedRectMaskCacheEntry { .texture = destTexture });

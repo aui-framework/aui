@@ -730,7 +730,7 @@ void ADrawList::resolvePhysicalMasks(IRendererBackend& renderer) {
 
                     if (mask.type == LogicalMask::Type::RoundedRect) {
                         generatedMask = renderer.createRoundedRectMask(worldRect, mask.radius, mask.op == AClipOp::OP_DIFFERENCE, maskBounds);
-                    } else if (mask.type == LogicalMask::Type::Rect) { // Только OP_DIFFERENCE доходит сюда
+                    } else if (mask.type == LogicalMask::Type::Rect) {
                         generatedMask = renderer.createRectMask(worldRect, true, maskBounds);
                     }
 
