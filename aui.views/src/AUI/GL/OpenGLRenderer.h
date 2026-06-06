@@ -26,6 +26,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Platform/ASurface.h>
 #include <AUI/Render/ACanvas.hpp>
+#include <unordered_map>
 
 class OpenGLRenderer;
 
@@ -139,6 +140,15 @@ private:
     AOptional<gl::Program> mBackdropBlurShader;
     AOptional<gl::Program> mBackdropLiquidShader;
     _<ITexture> mEmptyMask;
+    struct RoundedRectMaskCacheEntry {
+        _weak<ITexture> texture;
+    };
+    struct MergedMaskCacheEntry {
+        _weak<ITexture> texture;
+        glm::vec4 rect = glm::vec4(0.f);
+    };
+    std::unordered_map<std::size_t, RoundedRectMaskCacheEntry> mRoundedRectMaskCache;
+    std::unordered_map<std::size_t, MergedMaskCacheEntry> mMergedMaskCache;
 
     gl::Vao mBatchVao;
     gl::Texture2D mGradientTexture;

@@ -56,12 +56,14 @@ void AWindow::doDrawWindow() {
     APerformanceSection s("AWindow::doDrawWindow");
     auto& rc = *mRenderingContext;
     auto saved = rc.canvas().save();
+    AUI_DEFER {
+        rc.canvas().restore(saved);
+    };
     render(ARenderContext {
         .canvas = rc.canvas(),
         .backend = rc.backend(),
         .render = rc.renderer(),
     });
-    rc.canvas().restore(saved);
 }
 
 void AWindow::createDevtoolsWindow() {

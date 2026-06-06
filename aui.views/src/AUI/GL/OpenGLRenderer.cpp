@@ -26,6 +26,7 @@
 #include <AUI/Common/AByteBuffer.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/GL/ShaderUniforms.h>
+#include <AUI/Hash.h>
 #include <AUI/Render/Brush/Gradient.h>
 #include <AUI/Render/FontAtlas.hpp>
 #include <AUI/Platform/AFontManager.h>
@@ -34,6 +35,7 @@
 #include <AUI/Render/CommonOffscreenRenderPass.h>
 #include <AUI/Util/GaussianKernel.h>
 #include <array>
+#include <bit>
 #include <cmath>
 
 #ifdef AUI_PLATFORM_WIN32
@@ -176,6 +178,47 @@ void OpenGLRenderer::endOffscreen(_unique<IOffscreenRenderPass> pass) {
         c->displayList.optimize();
         c->displayList.draw(*this, c->target);
     }
+}
+
+glm::vec4 toVec4(const ARect<float>& rect) {
+    return { rect.p1.x, rect.p1.y, rect.size().x, rect.size().y };
+}
+
+ARect<float> toRect(const glm::vec4& rect) {
+    return ARect<float>::fromTopLeftPositionAndSize({ rect.x, rect.y }, { rect.z, rect.w });
+}
+
+glm::vec4 toGlRect(const glm::vec4& rect, glm::uvec2 viewportSize) {
+    return { rect.x, (float)viewportSize.y - rect.y - rect.w, rect.z, rect.w };
+}
+
+void hashFloat(std::size_t& seed, float value) {
+    aui::hash_combine(seed, std::bit_cast<uint32_t>(value));
+}
+
+void hashVec4(std::size_t& seed, const glm::vec4& value) {
+    hashFloat(seed, value.x);
+    hashFloat(seed, value.y);
+    hashFloat(seed, value.z);
+    hashFloat(seed, value.w);
+}
+
+std::size_t roundedRectMaskCacheKey(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) {
+    std::size_t seed = 0;
+    hashVec4(seed, toVec4(rect));
+    hashFloat(seed, radius);
+    aui::hash_combine(seed, inverted);
+    hashVec4(seed, toVec4(bounds));
+    return seed;
+}
+
+std::size_t mergedMaskCacheKey(ITexture* mask1, const glm::vec4& mask1Rect, ITexture* mask2, const glm::vec4& mask2Rect) {
+    std::size_t seed = 0;
+    aui::hash_combine(seed, reinterpret_cast<std::uintptr_t>(mask1));
+    hashVec4(seed, mask1Rect);
+    aui::hash_combine(seed, reinterpret_cast<std::uintptr_t>(mask2));
+    hashVec4(seed, mask2Rect);
+    return seed;
 }
 
 OpenGLRenderer::OpenGLRenderer() :
@@ -408,12 +451,7 @@ void OpenGLRenderer::setupMask(gl::Program& shader) {
     if (mMask) {
         shader.set(aui::ShaderUniforms::MASK, 1);
         shader.set(aui::ShaderUniforms::USE_MASK, true);
-        glm::vec4 glMaskRect;
-        glMaskRect.x = mMaskRect.x;
-        glMaskRect.y = (float)mViewportSize.y - mMaskRect.y - mMaskRect.w;
-        glMaskRect.z = mMaskRect.z;
-        glMaskRect.w = mMaskRect.w;
-        shader.set(aui::ShaderUniforms::MASK_RECT, glMaskRect);
+        shader.set(aui::ShaderUniforms::MASK_RECT, toGlRect(mMaskRect, mViewportSize));
         bindTexture(mMask.get(), 1);
     } else {
         shader.set(aui::ShaderUniforms::MASK, 1);
@@ -477,7 +515,17 @@ _<ITexture> OpenGLRenderer::createRectMask(const ARect<float>& rect, bool invert
 }
 
 _<ITexture> OpenGLRenderer::createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) {
-    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(bounds.size().x)), std::max(1u, (unsigned)std::ceil(bounds.size().y)));
+    const auto cacheKey = roundedRectMaskCacheKey(rect, radius, inverted, bounds);
+    if (auto it = mRoundedRectMaskCache.find(cacheKey); it != mRoundedRectMaskCache.end()) {
+        if (auto texture = it->second.texture.lock()) {
+            return texture;
+        }
+        mRoundedRectMaskCache.erase(it);
+    }
+
+    auto usefulBounds = inverted ? bounds : rect.intersect(bounds);
+
+    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(usefulBounds.size().x)), std::max(1u, (unsigned)std::ceil(usefulBounds.size().y)));
     auto destTexture = createTexture(size, APixelFormat::R8_UNORM, TextureFilter::NEAREST);
     auto glDestTexture = _cast<OpenGLTexture2D>(destTexture);
     glDestTexture->texture().setupClampToEdge();
@@ -486,9 +534,10 @@ _<ITexture> OpenGLRenderer::createRoundedRectMask(const ARect<float>& rect, floa
     auto ctx = pass->context();
     ctx.canvas.clear(inverted ? AColor::WHITE : AColor::TRANSPARENT_BLACK);
     ctx.canvas.setTransformForced(glm::mat4(1.0f));
-    ctx.canvas.roundedRectangle(APaint{ASolidBrush{inverted ? AColor::BLACK : AColor::WHITE}}, rect.min() - bounds.min(), rect.size(), radius);
+    ctx.canvas.roundedRectangle(APaint{ASolidBrush{inverted ? AColor::BLACK : AColor::WHITE}}, rect.min() - usefulBounds.min(), rect.size(), radius);
     endOffscreen(std::move(pass));
 
+    mRoundedRectMaskCache.emplace(cacheKey, RoundedRectMaskCacheEntry { .texture = destTexture });
     return destTexture;
 }
 
@@ -501,6 +550,14 @@ IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask
 
     if (w <= 0.f || h <= 0.f || !mask1 || !mask2) {
         return { mEmptyMask, glm::vec4(0.f) };
+    }
+
+    const auto cacheKey = mergedMaskCacheKey(mask1.get(), mask1Rect, mask2.get(), mask2Rect);
+    if (auto it = mMergedMaskCache.find(cacheKey); it != mMergedMaskCache.end()) {
+        if (auto texture = it->second.texture.lock()) {
+            return { texture, it->second.rect };
+        }
+        mMergedMaskCache.erase(it);
     }
 
     GLDebugGroupLocal debugGroup("mergeMasks");
@@ -533,23 +590,9 @@ IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask
 
     mMergeMasksShader->use();
 
-    glm::vec4 glMask1Rect;
-    glMask1Rect.x = mask1Rect.x;
-    glMask1Rect.y = (float)prevViewportSize.y - mask1Rect.y - mask1Rect.w;
-    glMask1Rect.z = mask1Rect.z;
-    glMask1Rect.w = mask1Rect.w;
-
-    glm::vec4 glMask2Rect;
-    glMask2Rect.x = mask2Rect.x;
-    glMask2Rect.y = (float)prevViewportSize.y - mask2Rect.y - mask2Rect.w;
-    glMask2Rect.z = mask2Rect.z;
-    glMask2Rect.w = mask2Rect.w;
-
-    glm::vec4 glDestRect;
-    glDestRect.x = x;
-    glDestRect.y = (float)prevViewportSize.y - y - (float)size.y;
-    glDestRect.z = (float)size.x;
-    glDestRect.w = (float)size.y;
+    glm::vec4 glMask1Rect = toGlRect(mask1Rect, prevViewportSize);
+    glm::vec4 glMask2Rect = toGlRect(mask2Rect, prevViewportSize);
+    glm::vec4 glDestRect = toGlRect(glm::vec4(x, y, (float)size.x, (float)size.y), prevViewportSize);
 
     static gl::Program::Uniform u_mask1("u_mask1");
     static gl::Program::Uniform u_mask2("u_mask2");
@@ -606,7 +649,9 @@ IRendererBackend::AMergedMask OpenGLRenderer::mergeMasks(const _<ITexture>& mask
 
     if (prevBlend) glEnable(GL_BLEND); else glDisable(GL_BLEND);
 
-    return { destTexture, glm::vec4(x, y, (float)size.x, (float)size.y) };
+    AMergedMask merged { destTexture, glm::vec4(x, y, (float)size.x, (float)size.y) };
+    mMergedMaskCache.emplace(cacheKey, MergedMaskCacheEntry { .texture = destTexture, .rect = merged.rect });
+    return merged;
 }
 
 void OpenGLRenderer::solidRectangles(const ADisplayList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) {

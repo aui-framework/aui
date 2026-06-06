@@ -66,11 +66,6 @@ aui::gl::impl::TextureFormat aui::gl::impl::recognize(APixelFormat format) {
             r.type = GL_FLOAT;
             r.internalformat = GL_RGBA32F;
             break;
-        case APixelFormat::A2R10G10B10_UNORM_PACK32:
-            r.format = GL_BGRA;
-            r.type = GL_UNSIGNED_INT_2_10_10_10_REV;
-            r.internalformat = GL_RGB10_A2;
-            break;
         default:
             ALogger::warn("TextureFormatRecognition") << "Unhandled format: " << static_cast<int>(format) << " (defaulting to RGBA8)";
             r.format = GL_RGBA;

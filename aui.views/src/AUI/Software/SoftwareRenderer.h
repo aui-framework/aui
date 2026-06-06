@@ -19,6 +19,7 @@
 #include <AUI/ASS/Property/Backdrop.h>
 #include <AUI/Render/FontAtlas.hpp>
 #include "SoftwareTexture.h"
+#include <unordered_map>
 
 class SoftwareRenderer: public IRendererBackend {
 public:
@@ -93,4 +94,13 @@ private:
     ADeque<aui::FontAtlas> mFontEntryData;
     ADeque<aui::CharacterData> mCharData;
     _<aui::AFontCache> mFontCache;
+    struct RoundedRectMaskCacheEntry {
+        _weak<ITexture> texture;
+    };
+    struct MergedMaskCacheEntry {
+        _weak<ITexture> texture;
+        glm::vec4 rect = glm::vec4(0.f);
+    };
+    std::unordered_map<std::size_t, RoundedRectMaskCacheEntry> mRoundedRectMaskCache;
+    std::unordered_map<std::size_t, MergedMaskCacheEntry> mMergedMaskCache;
 };

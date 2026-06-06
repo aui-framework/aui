@@ -34,7 +34,7 @@ enum class APixelFormat : std::uint8_t {
     R16G16B16A16_SFLOAT,
     R32G32B32A32_SFLOAT,
 
-    A2R10G10B10_UNORM_PACK32,
+    A2R10G10B10_UNORM_PACK32, // Unsupported by OpenGL
 
     // WARNING! please handle AImageView::visit cases when adding new enum values
 

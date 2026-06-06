@@ -14,8 +14,10 @@
 #include <AUI/Traits/callables.h>
 #include <AUI/Platform/ASurface.h>
 #include <AUI/ASS/Property/Backdrop.h>
+#include <AUI/Hash.h>
 #include <AUI/Traits/values.h>
 #include <AUI/Render/CommonOffscreenRenderPass.h>
+#include <bit>
 #include <cmath>
 
 _unique<IOffscreenRenderPass> SoftwareRenderer::beginOffscreen(const _<ITexture>& renderTarget) {
@@ -35,6 +37,54 @@ void SoftwareRenderer::endOffscreen(_unique<IOffscreenRenderPass> pass) {
 #include <AUI/Render/Brush/Gradient.h>
 
 namespace {
+glm::vec4 toVec4(const ARect<float>& rect) {
+    return { rect.p1.x, rect.p1.y, rect.size().x, rect.size().y };
+}
+
+float rectArea(const glm::vec4& rect) {
+    return std::max(0.f, rect.z) * std::max(0.f, rect.w);
+}
+
+glm::vec4 intersectRects(const glm::vec4& a, const glm::vec4& b) {
+    float x = std::max(a.x, b.x);
+    float y = std::max(a.y, b.y);
+    float w = std::min(a.x + a.z, b.x + b.z) - x;
+    float h = std::min(a.y + a.w, b.y + b.w) - y;
+    if (w <= 0.f || h <= 0.f) {
+        return glm::vec4(0.f);
+    }
+    return { x, y, w, h };
+}
+
+void hashFloat(std::size_t& seed, float value) {
+    aui::hash_combine(seed, std::bit_cast<uint32_t>(value));
+}
+
+void hashVec4(std::size_t& seed, const glm::vec4& value) {
+    hashFloat(seed, value.x);
+    hashFloat(seed, value.y);
+    hashFloat(seed, value.z);
+    hashFloat(seed, value.w);
+}
+
+std::size_t roundedRectMaskCacheKey(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) {
+    std::size_t seed = 0;
+    hashVec4(seed, toVec4(rect));
+    hashFloat(seed, radius);
+    aui::hash_combine(seed, inverted);
+    hashVec4(seed, toVec4(bounds));
+    return seed;
+}
+
+std::size_t mergedMaskCacheKey(ITexture* mask1, const glm::vec4& mask1Rect, ITexture* mask2, const glm::vec4& mask2Rect) {
+    std::size_t seed = 0;
+    aui::hash_combine(seed, reinterpret_cast<std::uintptr_t>(mask1));
+    hashVec4(seed, mask1Rect);
+    aui::hash_combine(seed, reinterpret_cast<std::uintptr_t>(mask2));
+    hashVec4(seed, mask2Rect);
+    return seed;
+}
+
 glm::vec4 erf(glm::vec4 x) {
     glm::vec4 s = glm::sign(x);
     glm::vec4 a = glm::abs(x);
@@ -780,7 +830,16 @@ _<ITexture> SoftwareRenderer::createRectMask(const ARect<float>& rect, bool inve
 }
 
 _<ITexture> SoftwareRenderer::createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) {
-    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(bounds.size().x)), std::max(1u, (unsigned)std::ceil(bounds.size().y)));
+    const auto cacheKey = roundedRectMaskCacheKey(rect, radius, inverted, bounds);
+    if (auto it = mRoundedRectMaskCache.find(cacheKey); it != mRoundedRectMaskCache.end()) {
+        if (auto texture = it->second.texture.lock()) {
+            return texture;
+        }
+        mRoundedRectMaskCache.erase(it);
+    }
+
+    auto usefulBounds = inverted ? bounds : rect.intersect(bounds);
+    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(usefulBounds.size().x)), std::max(1u, (unsigned)std::ceil(usefulBounds.size().y)));
     auto destTexture = createTexture(size, APixelFormat::R8_UNORM);
     AImage destImg(size, APixelFormat::R8_UNORM);
 
@@ -799,25 +858,23 @@ _<ITexture> SoftwareRenderer::createRoundedRectMask(const ARect<float>& rect, fl
 
     for (unsigned dy = 0; dy < size.y; ++dy) {
         for (unsigned dx = 0; dx < size.x; ++dx) {
-            float ax = bounds.p1.x + dx + 0.5f;
-            float ay = bounds.p1.y + dy + 0.5f;
+            float ax = usefulBounds.p1.x + dx + 0.5f;
+            float ay = usefulBounds.p1.y + dy + 0.5f;
             float val = (insideRoundedRect(ax, ay) ^ inverted) ? 1.f : 0.f;
             destImg.set({dx, dy}, AColor(val, 0.f, 0.f, 1.f));
         }
     }
 
     _cast<SoftwareTexture>(destTexture)->upload(std::move(destImg));
+    mRoundedRectMaskCache.emplace(cacheKey, RoundedRectMaskCacheEntry { .texture = destTexture });
     return destTexture;
 }
 
 IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
                                                            const _<ITexture>& mask2, const glm::vec4& mask2Rect) {
-    float x = std::max(mask1Rect.x, mask2Rect.x);
-    float y = std::max(mask1Rect.y, mask2Rect.y);
-    float w = std::min(mask1Rect.x + mask1Rect.z, mask2Rect.x + mask2Rect.z) - x;
-    float h = std::min(mask1Rect.y + mask1Rect.w, mask2Rect.y + mask2Rect.w) - y;
+    glm::vec4 mergedRect = intersectRects(mask1Rect, mask2Rect);
 
-    if (w <= 0.f || h <= 0.f) {
+    if (rectArea(mergedRect) <= 0.f || !mask1 || !mask2) {
         auto emptyTexture = createTexture({1, 1}, APixelFormat::R8_UNORM);
         AImage img({1, 1}, APixelFormat::R8_UNORM);
         std::memset(img.modifiableBuffer().data(), 0, img.modifiableBuffer().getSize());
@@ -825,7 +882,15 @@ IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& ma
         return { emptyTexture, glm::vec4(0.f) };
     }
 
-    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(w)), std::max(1u, (unsigned)std::ceil(h)));
+    const auto cacheKey = mergedMaskCacheKey(mask1.get(), mask1Rect, mask2.get(), mask2Rect);
+    if (auto it = mMergedMaskCache.find(cacheKey); it != mMergedMaskCache.end()) {
+        if (auto texture = it->second.texture.lock()) {
+            return { texture, it->second.rect };
+        }
+        mMergedMaskCache.erase(it);
+    }
+
+    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(mergedRect.z)), std::max(1u, (unsigned)std::ceil(mergedRect.w)));
     auto destTexture = createTexture(size, APixelFormat::R8_UNORM);
     AImage destImg(size, APixelFormat::R8_UNORM);
     std::memset(destImg.modifiableBuffer().data(), 0, destImg.modifiableBuffer().getSize());
@@ -835,8 +900,8 @@ IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& ma
 
     for (unsigned dy = 0; dy < size.y; ++dy) {
         for (unsigned dx = 0; dx < size.x; ++dx) {
-            float ax = x + dx + 0.5f;
-            float ay = y + dy + 0.5f;
+            float ax = mergedRect.x + dx + 0.5f;
+            float ay = mergedRect.y + dy + 0.5f;
 
             float val1 = 0.f;
             if (ax >= mask1Rect.x && ax <= mask1Rect.x + mask1Rect.z &&
@@ -870,5 +935,7 @@ IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& ma
     }
 
     _cast<SoftwareTexture>(destTexture)->upload(std::move(destImg));
-    return { destTexture, glm::vec4(x, y, (float)size.x, (float)size.y) };
+    AMergedMask merged { destTexture, mergedRect };
+    mMergedMaskCache.emplace(cacheKey, MergedMaskCacheEntry { .texture = destTexture, .rect = merged.rect });
+    return merged;
 }

@@ -401,7 +401,8 @@ void ADisplayList::resolveMasks(IRendererBackend& renderer, const _<ITexture>& w
 
                     if (mask_bounds.size().x > 0.01f && mask_bounds.size().y > 0.01f) {
                         auto mask = renderer.createRoundedRectMask(world_rect, v.radius, v.op == AClipOp::DIFFERENCE, mask_bounds);
-                        glm::vec4 mask_rect(mask_bounds.p1.x, mask_bounds.p1.y, mask_bounds.size().x, mask_bounds.size().y);
+                        auto mask_rect_bounds = v.op == AClipOp::DIFFERENCE ? mask_bounds : world_rect.intersect(mask_bounds);
+                        glm::vec4 mask_rect(mask_rect_bounds.p1.x, mask_rect_bounds.p1.y, mask_rect_bounds.size().x, mask_rect_bounds.size().y);
                         applyMask(mask, mask_rect);
                     }
                 },
