@@ -61,15 +61,12 @@ public:
     AYieldGeneratorPromise() = default;
 
     auto get_return_object() noexcept -> AYieldGenerator<T>;
-    auto getReturnObject() noexcept -> AYieldGenerator<T> { return get_return_object(); }
 
     auto initial_suspend() const { return std::suspend_always{}; }
-    auto initialSuspend() const { return initial_suspend(); }
 
     auto final_suspend() const noexcept {
         return std::suspend_always{};
     }
-    auto finalSuspend() const noexcept { return final_suspend(); }
 
     template<typename U = T, std::enable_if_t<!std::is_rvalue_reference<U>::value, int> = 0>
     auto yield_value(std::remove_reference_t<T>& value) noexcept {
@@ -77,18 +74,9 @@ public:
         return std::suspend_always{};
     }
 
-    template<typename U = T, std::enable_if_t<!std::is_rvalue_reference<U>::value, int> = 0>
-    auto yieldValue(std::remove_reference_t<T>& value) noexcept {
-        return yield_value(value);
-    }
-
     auto yield_value(std::remove_reference_t<T>&& value) noexcept {
         mValue = std::addressof(value);
         return std::suspend_always{};
-    }
-
-    auto yieldValue(std::remove_reference_t<T>&& value) noexcept {
-        return yield_value(value);
     }
 
     auto unhandled_exception() -> void {
@@ -100,10 +88,6 @@ public:
     }
 
     auto return_void() noexcept -> void {}
-
-    auto returnVoid() noexcept -> void {
-        return return_void();
-    }
 
     auto value() const noexcept -> ReferenceType {
         return static_cast<ReferenceType>(*mValue);
@@ -134,11 +118,11 @@ class AYieldGeneratorIterator {
     using CoroutineHandle = std::coroutine_handle<AYieldGeneratorPromise<T>>;
 
 public:
-    using IteratorCategory = std::input_iterator_tag;
-    using DifferenceType = std::ptrdiff_t;
-    using ValueType = typename AYieldGeneratorPromise<T>::ValueType;
-    using ReferenceType = typename AYieldGeneratorPromise<T>::ReferenceType;
-    using PointerType = typename AYieldGeneratorPromise<T>::PointerType;
+    using iterator_category = std::input_iterator_tag;
+    using difference_type = std::ptrdiff_t;
+    using value_type = typename AYieldGeneratorPromise<T>::ValueType;
+    using reference_type = typename AYieldGeneratorPromise<T>::ReferenceType;
+    using pointer_type = typename AYieldGeneratorPromise<T>::PointerType;
 
     AYieldGeneratorIterator() noexcept {}
 
@@ -174,11 +158,11 @@ public:
         (void)operator++();
     }
 
-    ReferenceType operator*() const noexcept {
+    reference_type operator*() const noexcept {
         return mCoroutine.promise().value();
     }
 
-    PointerType operator->() const noexcept {
+    pointer_type operator->() const noexcept {
         return std::addressof(operator*());
     }
 
@@ -191,9 +175,9 @@ private:
 template<typename T>
 class AYieldGenerator : public std::ranges::view_base {
 public:
-    using PromiseType = aui::impl::AYieldGeneratorPromise<T>;
-    using Iterator = aui::impl::AYieldGeneratorIterator<T>;
-    using Sentinel = aui::impl::AYieldGeneratorSentinel;
+    using promise_type = aui::impl::AYieldGeneratorPromise<T>;
+    using iterator = aui::impl::AYieldGeneratorIterator<T>;
+    using sentinel = aui::impl::AYieldGeneratorSentinel;
 
     AYieldGenerator() noexcept : mCoroutine(nullptr) {}
 
@@ -223,7 +207,7 @@ public:
         }
     }
 
-    auto begin() -> Iterator {
+    auto begin() -> iterator {
         if (mCoroutine != nullptr) {
             mCoroutine.resume();
             if (mCoroutine.done()) {
@@ -231,20 +215,20 @@ public:
             }
         }
 
-        return Iterator{mCoroutine};
+        return iterator{mCoroutine};
     }
 
-    auto end() noexcept -> Sentinel {
-        return Sentinel{};
+    auto end() noexcept -> sentinel {
+        return sentinel{};
     }
 
 private:
     friend class aui::impl::AYieldGeneratorPromise<T>;
 
-    explicit AYieldGenerator(std::coroutine_handle<PromiseType> coroutine) noexcept
+    explicit AYieldGenerator(std::coroutine_handle<promise_type> coroutine) noexcept
         : mCoroutine(coroutine) {}
 
-    std::coroutine_handle<PromiseType> mCoroutine;
+    std::coroutine_handle<promise_type> mCoroutine;
 };
 
 namespace aui::impl {
