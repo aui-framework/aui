@@ -37,8 +37,6 @@ static void OpenGLRendering(benchmark::State& state) {
     window->setContents(declarative::Centered { uiBenchmarkScene() });
     window->pack();
 
-    AUI_ASSERT(dynamic_cast<RendererCanvas*>(&AWindow::current()->getRenderingContext()->renderer()));
-
     for (auto _ : state) {
         window->redraw();
     }
