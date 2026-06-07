@@ -37,11 +37,10 @@ uint32_t OpenGLRenderingContext::getDefaultFb() const noexcept {
 
 AImage OpenGLRenderingContext::makeScreenshot() {
     bindContext();
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, getDefaultFb());
-    AImage result(mViewportSize, APixelFormat::R8G8B8A8_UNORM);
-    glReadPixels(0, 0, result.width(), result.height(), GL_RGBA, GL_UNSIGNED_BYTE, static_cast<void*>(result.modifiableBuffer().data()));
-    result.mirrorVertically();
-    return result;
+    if (mWindowTarget) {
+        return mRenderer->readback(mWindowTarget);
+    }
+    return {};
 }
 
 void OpenGLRenderingContext::presentToBackbuffer() {
