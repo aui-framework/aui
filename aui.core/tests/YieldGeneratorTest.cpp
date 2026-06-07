@@ -412,4 +412,27 @@ TEST(YieldGenerator, StateAccumulation) {
     EXPECT_EQ(values[6], 8);
 }
 
+/**
+ * @brief Test generator with move only types.
+ */
+TEST(YieldGenerator, MoveOnly) {
+    auto generateFibonacci = []() -> AYieldGenerator<std::unique_ptr<int>> {
+        for (int i = 0; i < 5; ++i) {
+            co_yield std::make_unique<int>(i);
+        }
+    };
+
+    std::vector<std::unique_ptr<int>> values;
+    for (auto& value : generateFibonacci()) {
+        values.push_back(std::move(value));
+    }
+
+    EXPECT_EQ(values.size(), 5);
+    EXPECT_EQ(*values[0], 0);
+    EXPECT_EQ(*values[1], 1);
+    EXPECT_EQ(*values[2], 2);
+    EXPECT_EQ(*values[3], 3);
+    EXPECT_EQ(*values[4], 4);
+}
+
 #endif

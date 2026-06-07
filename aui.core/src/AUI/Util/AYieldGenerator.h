@@ -83,10 +83,6 @@ public:
         mException = std::current_exception();
     }
 
-    auto unhandledException() -> void {
-        return unhandled_exception();
-    }
-
     auto return_void() noexcept -> void {}
 
     auto value() const noexcept -> ReferenceType {
