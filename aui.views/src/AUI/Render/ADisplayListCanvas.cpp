@@ -275,5 +275,5 @@ void ADisplayListCanvas::add(ADrawList::StoredCommand::Command command, const AP
         ADrawList::applyTransform(command, st);
     }
 
-    mDisplayList.add(std::move(command), bt, paint);
+    mDrawList.add(std::move(command), bt, paint);
 }

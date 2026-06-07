@@ -31,7 +31,7 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init& init) {
     CommonRenderingContext::init(init);
     mRenderer = _new<SoftwareRenderer>();
     mRenderer->setContext(this);
-    mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
     mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
 }
 
@@ -41,7 +41,7 @@ void SoftwareRenderingContext::destroyNativeWindow(ASurface& window) {
 
 void SoftwareRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
-    mDisplayList.clear();
+    mDrawList.clear();
     mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize);
     for (size_t i = 0; i < mBitmapSize.x * mBitmapSize.y; ++i) {
         auto dataPtr = reinterpret_cast<uint32_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO) + i * 4);
@@ -50,9 +50,9 @@ void SoftwareRenderingContext::beginPaint(ASurface& window) {
 }
 
 void SoftwareRenderingContext::endPaint(ASurface &window) {
-    mDisplayList.optimize();
-    mDisplayList.draw(*mRenderer, mWindowTarget);
-    mDisplayList.clear();
+    mDrawList.optimize();
+    mDrawList.draw(*mRenderer, mWindowTarget);
+    mDrawList.clear();
 
     if (mPainterDC != 0) {
         StretchDIBits(mPainterDC,

@@ -105,7 +105,7 @@ public:
 
 protected:
     _<SoftwareRenderer> mRenderer;
-    ADrawList mDisplayList;
+    ADrawList mDrawList;
     _unique<ADisplayListCanvas> mCanvas;
     _unique<RendererCanvas> mRendererWrapper;
 

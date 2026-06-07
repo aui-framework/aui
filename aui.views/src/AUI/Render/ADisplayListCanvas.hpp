@@ -17,7 +17,7 @@
 
 class API_AUI_VIEWS ADisplayListCanvas : public ACanvas {
 public:
-    ADisplayListCanvas(ADrawList& displayList, IRendererBackend& renderer) : mDisplayList(displayList), mRenderer(renderer) {}
+    ADisplayListCanvas(ADrawList& displayList, IRendererBackend& renderer) : mDrawList(displayList), mRenderer(renderer) {}
 
     _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
     _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
@@ -97,6 +97,6 @@ private:
     size_t mLayerStackDepth = 0;
     size_t mClipStackDepth = 0;
 
-    ADrawList& mDisplayList;
+    ADrawList& mDrawList;
     IRendererBackend& mRenderer;
 };

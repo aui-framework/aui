@@ -195,7 +195,7 @@ void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
     }
 
     mRenderer = ourRenderer();
-    mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
     mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
 }
 

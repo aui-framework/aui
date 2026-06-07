@@ -65,7 +65,7 @@ public:
 protected:
     virtual void bindContext();
     _<OpenGLBackend> mRenderer;
-    ADrawList mDisplayList;
+    ADrawList mDrawList;
     ADrawList mPresentDisplayList;
     _unique<ADisplayListCanvas> mCanvas;
     _unique<RendererCanvas> mRendererWrapper;

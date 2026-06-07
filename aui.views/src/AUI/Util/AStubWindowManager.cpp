@@ -33,7 +33,7 @@ public:
 #endif
     {
         reallocate(init.window);
-        mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *gStubWindowManagerConfig->renderer);
+        mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *gStubWindowManagerConfig->renderer);
         mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *gStubWindowManagerConfig->renderer);
     }
 
@@ -48,9 +48,9 @@ public:
     }
 
     void endPaint(ASurface& window) override {
-        mDisplayList.optimize();
-        mDisplayList.draw(backend(), mWindowTarget);
-        mDisplayList.clear();
+        mDrawList.optimize();
+        mDrawList.draw(backend(), mWindowTarget);
+        mDrawList.clear();
     }
 
     IRendererBackend& backend() override {

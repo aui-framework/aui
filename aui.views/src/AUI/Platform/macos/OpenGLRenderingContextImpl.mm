@@ -84,7 +84,7 @@ void OpenGLRenderingContext::init(const Init& init) {
     glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
 
     mRenderer = ourRenderer();
-    mCanvas = std::make_unique<ADisplayListCanvas>(mDisplayList, *mRenderer);
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
     mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
     ALogger::info("OpenGL context is ready");
 }
@@ -95,7 +95,7 @@ void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
 
 void OpenGLRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
-    mDisplayList.clear();
+    mDrawList.clear();
     if (auto nativeWindow = dynamic_cast<AWindow*>(&window)) {
         auto contentView  = [static_cast<NSWindow*>(nativeWindow->mHandle) contentView];
         [static_cast<NSOpenGLContext*>(ourContext) setView:contentView];
@@ -121,9 +121,9 @@ void OpenGLRenderingContext::endResize(ASurface& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ASurface& window) {
-    mDisplayList.optimize();
-    mDisplayList.draw(*mRenderer, mWindowTarget);
-    mDisplayList.clear();
+    mDrawList.optimize();
+    mDrawList.draw(*mRenderer, mWindowTarget);
+    mDrawList.clear();
 
     [static_cast<NSOpenGLContext*>(ourContext) flushBuffer];
     CommonRenderingContext::endPaint(window);
