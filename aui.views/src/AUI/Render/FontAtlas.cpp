@@ -71,11 +71,14 @@ void MultiStringCanvas::addStringT(const glm::ivec2& position, UnicodeString tex
     for (auto i = text.begin(); i != text.end(); ++i) {
         AChar c = *i;
         if (c == ' ') {
+            notifySymbolAdded({ glm::ivec2{ advance, advanceY } });
             advance += mFontStyle.getSpaceWidth();
         } else if (c == '\n') {
+            notifySymbolAdded({ glm::ivec2{ advance, advanceY } });
             advanceX = (glm::max) (advanceX, int(glm::ceil(advance)));
             advance = (float) position.x;
             advanceY += mFontStyle.getLineHeight();
+            nextLine();
         } else {
             auto data = mFontAtlas->getCharacter(c, font, fe);
             if (!data) {
@@ -89,6 +92,7 @@ void MultiStringCanvas::addStringT(const glm::ivec2& position, UnicodeString tex
             float width = ch.image->width();
             float height = ch.image->height();
 
+            notifySymbolAdded({ glm::ivec2{ posX, posY } });
             mGlyphs.push_back(
                 { glm::vec2(posX, posY), glm::vec2(width, height), glm::vec2(data->uv.x, data->uv.y),
                   glm::vec2(data->uv.z, data->uv.w), mFontStyle.color, data->texture });
@@ -103,6 +107,7 @@ void MultiStringCanvas::addStringT(const glm::ivec2& position, UnicodeString tex
             advance += ch.horizontal.advance;
         }
     }
+    notifySymbolAdded({ glm::ivec2{ advance, advanceY } });
     mAdvanceX = (glm::max) (mAdvanceX, (glm::max) (advanceX, int(glm::ceil(advance))));
     mAdvanceY = advanceY + mFontStyle.getLineHeight();
 }
