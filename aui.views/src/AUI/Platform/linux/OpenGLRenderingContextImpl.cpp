@@ -48,10 +48,3 @@ void OpenGLRenderingContext::beginResize(ASurface& window) {
 void OpenGLRenderingContext::endResize(ASurface& window) {
 
 }
-AImage OpenGLRenderingContext::makeScreenshot() {
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
-    AImage result(mViewportSize, APixelFormat::R8G8B8A8_UNORM);
-    glReadPixels(0, 0, result.width(), result.height(), GL_RGBA, GL_UNSIGNED_BYTE, static_cast<void*>(result.modifiableBuffer().data()));
-    result.mirrorVertically();
-    return result;
-}

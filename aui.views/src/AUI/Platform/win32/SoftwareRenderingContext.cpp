@@ -12,6 +12,9 @@
 #include <AUI/Platform/SoftwareRenderingContext.h>
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Software/SoftwareRenderer.h>
+#include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Render/RendererCanvas.h>
+#include <AUI/Image/AImage.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext()
 {

@@ -14,6 +14,8 @@
 #include "AUI/Software/SoftwareRenderer.h"
 #include <AUI/Render/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
+#include <AUI/Common/AByteBuffer.h>
+#include <AUI/Image/AImage.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext() {
 
@@ -61,7 +63,11 @@ void SoftwareRenderingContext::endResize(ASurface &window) {
 }
 
 AImage SoftwareRenderingContext::makeScreenshot() {
-    return {};
+    AByteBuffer data;
+    size_t s = mBitmapSize.x * mBitmapSize.y * 4;
+    data.resize(s);
+    std::memcpy(data.data(), mBitmapBlob, s);
+    return AImage(std::move(data), mBitmapSize, APixelFormat::B8G8R8A8_UNORM);
 }
 
 void SoftwareRenderingContext::reallocate(const ASurface& window) {

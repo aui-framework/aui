@@ -12,6 +12,7 @@
 #include <AUI/Platform/SoftwareRenderingContext.h>
 #include <AUI/Render/IRendererBackend.h>
 #include "AUI/Common/AByteBufferView.h"
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Image/AImage.h"
 #include "AUI/Image/APixelFormat.h"
 #include "AUI/Software/SoftwareRenderer.h"
@@ -40,6 +41,7 @@ void SoftwareRenderingContext::init(const Init& init) {
 
 void SoftwareRenderingContext::beginPaint(ASurface &window) {
     mDisplayList.clear();
+    if (!mRenderer) return;
     mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize);
 }
 

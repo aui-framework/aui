@@ -16,6 +16,10 @@ static constexpr auto LOG_TAG = "OpenGLRenderingContext";
 
 OpenGLRenderingContext::OpenGLRenderingContext(const ARenderingContextOptions::OpenGL& config) : mConfig(config) {}
 
+void OpenGLRenderingContext::bindContext() {
+
+}
+
 void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
     mViewportSize = windowSize;
     if (!mBackbufferTarget || mBackbufferTarget->getSize() != mViewportSize) {
@@ -29,6 +33,15 @@ void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
 
 uint32_t OpenGLRenderingContext::getDefaultFb() const noexcept {
     return gl::Framebuffer::DEFAULT_FB;
+}
+
+AImage OpenGLRenderingContext::makeScreenshot() {
+    bindContext();
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, getDefaultFb());
+    AImage result(mViewportSize, APixelFormat::R8G8B8A8_UNORM);
+    glReadPixels(0, 0, result.width(), result.height(), GL_RGBA, GL_UNSIGNED_BYTE, static_cast<void*>(result.modifiableBuffer().data()));
+    result.mirrorVertically();
+    return result;
 }
 
 void OpenGLRenderingContext::presentToBackbuffer() {

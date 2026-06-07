@@ -51,7 +51,7 @@ public:
     void boxShadow(const ADrawList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) override {}
     void boxShadowInner(const ADrawList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) override {}
     void glyphs(const ADrawList::Glyphs& v, const glm::mat4& transform, const APaint& paint) override {}
-    _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override {
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override {
         return _new<StubPrerenderedString>();
     }
     void lines(const ADrawList::Lines& v, const glm::mat4& transform, const APaint& paint) override {}
@@ -88,6 +88,9 @@ public:
     }
     void setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) override {}
     void setClipRect(const ARect<float>& rect) override {}
+    glm::uvec2 getViewportSize() const override {
+        return {};
+    }
     void setRenderMaskMode(bool enabled) override {}
     void clear(const AColor& color) override {}
     void beginRenderPass(const _<ITexture>& target) override {}

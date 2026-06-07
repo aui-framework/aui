@@ -261,17 +261,6 @@ void OpenGLRenderingContext::endPaint(ASurface& window) {
 OpenGLRenderingContext::~OpenGLRenderingContext() {
 }
 
-AImage OpenGLRenderingContext::makeScreenshot() {
-    std::cout << "makeScreenshot start" << std::endl;
+void OpenGLRenderingContext::bindContext() {
     makeCurrent(mWindowDC);
-    std::cout << "makeScreenshot current context set" << std::endl;
-    glBindFramebuffer(GL_READ_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
-    std::cout << "makeScreenshot creating result image size " << mViewportSize.x << "x" << mViewportSize.y << std::endl;
-    AImage result(mViewportSize, APixelFormat::R8G8B8A8_UNORM);
-    std::cout << "makeScreenshot result image created" << std::endl;
-    glReadPixels(0, 0, result.width(), result.height(), GL_RGBA, GL_UNSIGNED_BYTE, static_cast<void*>(result.modifiableBuffer().data()));
-    std::cout << "makeScreenshot pixels read" << std::endl;
-    result.mirrorVertically();
-    std::cout << "makeScreenshot finished" << std::endl;
-    return result;
 }
