@@ -29,8 +29,8 @@
 class API_AUI_VIEWS AStubWindowManager: public AWindowManager {
 public:
     void initNativeWindow(const IRenderingContext::Init& init) override;
-    static AImage makeScreenshot(aui::no_escape<AWindow> window);
-    static void drawFrame();
+    static AImage makeScreenshot(AWindow& window);
+    static void drawFrame(AWindow& window);
 
     /**
      * @brief Stub window manager configuration to narrow ui test/benchmark scope.

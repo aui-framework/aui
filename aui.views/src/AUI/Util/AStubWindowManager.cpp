@@ -71,12 +71,14 @@ void AStubWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
     init.setRenderingContext(std::move(context));
 }
 
-void AStubWindowManager::drawFrame() {
+void AStubWindowManager::drawFrame(AWindow& window) {
     for (auto& w : AWindow::getWindowManager().getWindows()) {
         w->getRenderingContext()->beginResize(*w);
         w->pack();
         w->getRenderingContext()->endResize(*w);
+        w->getRenderingContext()->beginPaint(window);
         w->redraw();
+        w->getRenderingContext()->endPaint(window);
     }
 }
 
@@ -84,7 +86,7 @@ void AStubWindowManager::setConfig(Config config) {
     gStubWindowManagerConfig = std::move(config);
 }
 
-AImage AStubWindowManager::makeScreenshot(aui::no_escape<AWindow> window) {
-    drawFrame();
-    return window->getRenderingContext()->makeScreenshot();
+AImage AStubWindowManager::makeScreenshot(AWindow& window) {
+    drawFrame(window);
+    return window.getRenderingContext()->makeScreenshot();
 }

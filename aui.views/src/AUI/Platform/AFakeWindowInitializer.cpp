@@ -16,11 +16,16 @@
 #include <AUI/Render/ADisplayListCanvas.hpp>
 #include <AUI/Render/FontAtlas.hpp>
 #include <AUI/Platform/AFontManager.h>
+#include <AUI/Image/AImage.h>
 
 namespace {
     class FakeBackend: public IRendererBackend {
     public:
         FakeBackend() : mFontCache(AFontManager::inst().createCache(this)) {}
+
+        AImage readback(const _<ITexture>& texture) override {
+            return {};
+        }
 
         void solidRectangles(const ADrawList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
         void gradientRectangles(const ADrawList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
