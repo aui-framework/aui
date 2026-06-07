@@ -152,16 +152,6 @@ public:
     };
     struct PopMask {};
 
-    struct StoredCommand {
-        using Command = std::variant<
-            SolidRectangles, GradientRectangles, TexturedRectangles, SolidRoundedRectangles, GradientRoundedRectangles,
-            TexturedRoundedRectangles, RectangleBorders, RoundedRectangleBorders, BoxShadow, BoxShadowInner, Glyphs,
-            Lines, LineBatches, Points, SquareSector, Backdrop, PushClipRect, PushClipRoundedRect, PopClipRect, Clear, PushLayer, PopLayer, PushMask, PopMask>;
-        Command command;
-        glm::mat4 transform;
-        APaint paint;
-    };
-
     struct LogicalMask {
         enum class Type {
             Texture,
@@ -180,32 +170,42 @@ public:
         glm::mat4 transform;
     };
 
-    struct Entity {
-        StoredCommand::Command command;
+    struct StoredCommand {
+        using Command = std::variant<
+            SolidRectangles, GradientRectangles, TexturedRectangles, SolidRoundedRectangles, GradientRoundedRectangles,
+            TexturedRoundedRectangles, RectangleBorders, RoundedRectangleBorders, BoxShadow, BoxShadowInner, Glyphs,
+            Lines, LineBatches, Points, SquareSector, Backdrop, PushClipRect, PushClipRoundedRect, PopClipRect, Clear, PushLayer, PopLayer, PushMask, PopMask>;
+        Command command;
         glm::mat4 transform;
         APaint paint;
-        ARect<float> boundingBox;
-        bool isObscured = false;
+
+        ARect<float> worldBoundingBox;
         ARect<float> clipRect;
+        bool culled = false;
+        bool isObscured = false;
+        AVector<LogicalMask> activeMasks;
         _<ITexture> mask;
         glm::vec4 maskRect;
-        AVector<LogicalMask> activeMasks;
-        bool culled = false;
     };
 
     struct RenderPass {
         _<ITexture> target;
         glm::uvec2 size;
-        AVector<Entity> entities;
+        AVector<StoredCommand> entities;
     };
 
     void add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint);
 
+    static void applyTransform(StoredCommand::Command& command, const glm::mat4& transform);
+    static ARect<float> boundingBoxOfCommand(const StoredCommand::Command& cmd, const glm::mat4& transform);
+
     void clear() {
         mCommands.clear();
         mOpaqueRects.clear();
-        mEntities.clear();
-        mPasses.clear();
+        mClipStack.clear();
+        mCurrentClipRect = { {-1e6, -1e6}, {1e6, 1e6} };
+        mMaskStack.clear();
+        mCurrentSegmentStart = 0;
     }
 
     void optimize();
@@ -213,16 +213,18 @@ public:
     void draw(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 
     void reorderAndBatch();
-    void resolveEntities();
     void computeOverlaps();
-    void resolveClips();
-    void resolveLogicalMasks();
     void resolvePhysicalMasks(IRendererBackend& renderer);
     void resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 
 private:
     AVector<StoredCommand> mCommands;
     AVector<ARect<float>> mOpaqueRects;
-    AVector<Entity> mEntities;
+
+    // State tracking during add
+    AVector<ARect<float>> mClipStack;
+    ARect<float> mCurrentClipRect = { {-1e6, -1e6}, {1e6, 1e6} };
+    AVector<LogicalMask> mMaskStack;
+    size_t mCurrentSegmentStart = 0;
     AVector<RenderPass> mPasses;
 };

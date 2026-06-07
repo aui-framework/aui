@@ -261,153 +261,19 @@ void ADisplayListCanvas::backdrops(glm::ivec2 position, glm::ivec2 size, std::sp
 }
 
 void ADisplayListCanvas::add(ADrawList::StoredCommand::Command command, const APaint& paint) {
-    APaint combined = paint;
-    
     auto st = mTransform;
     auto bt = mBaseTransform;
-    
+
     if (!isSimple(st)) {
         // This shouldn't normally happen with setTransform(), but might with setTransformForced().
         // Flush simple transform into base.
         bt = bt * st;
         st = glm::mat4(1.f);
     }
-    
+
     if (st != glm::mat4(1.f)) {
-        auto applyST = aui::lambda_overloaded {
-            [&](ADrawList::SolidRectangles& v) {
-                for (auto& inst : v.instances) {
-                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
-                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-                    inst.position = glm::vec2(p1);
-                    inst.size = glm::vec2(p2) - inst.position;
-                }
-            },
-            [&](ADrawList::GradientRectangles& v) {
-                for (auto& inst : v.instances) {
-                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
-                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-                    inst.position = glm::vec2(p1);
-                    inst.size = glm::vec2(p2) - inst.position;
-                }
-            },
-            [&](ADrawList::TexturedRectangles& v) {
-                for (auto& inst : v.instances) {
-                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
-                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-                    inst.position = glm::vec2(p1);
-                    inst.size = glm::vec2(p2) - inst.position;
-                }
-            },
-            [&](ADrawList::SolidRoundedRectangles& v) {
-                for (auto& inst : v.instances) {
-                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
-                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-                    inst.position = glm::vec2(p1);
-                    inst.size = glm::vec2(p2) - inst.position;
-                }
-            },
-            [&](ADrawList::GradientRoundedRectangles& v) {
-                for (auto& inst : v.instances) {
-                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
-                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-                    inst.position = glm::vec2(p1);
-                    inst.size = glm::vec2(p2) - inst.position;
-                }
-            },
-            [&](ADrawList::TexturedRoundedRectangles& v) {
-                for (auto& inst : v.instances) {
-                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
-                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-                    inst.position = glm::vec2(p1);
-                    inst.size = glm::vec2(p2) - inst.position;
-                }
-            },
-            [&](ADrawList::RectangleBorders& v) {
-                for (auto& inst : v.instances) {
-                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
-                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-                    inst.position = glm::vec2(p1);
-                    inst.size = glm::vec2(p2) - inst.position;
-                }
-            },
-            [&](ADrawList::RoundedRectangleBorders& v) {
-                for (auto& inst : v.instances) {
-                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
-                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-                    inst.position = glm::vec2(p1);
-                    inst.size = glm::vec2(p2) - inst.position;
-                }
-            },
-            [&](ADrawList::Glyphs& v) {
-                for (auto& inst : v.instances) {
-                    glm::vec4 p1 = st * glm::vec4(inst.position, 0.f, 1.f);
-                    glm::vec4 p2 = st * glm::vec4(inst.position + inst.size, 0.f, 1.f);
-                    inst.position = glm::vec2(p1);
-                    inst.size = glm::vec2(p2) - inst.position;
-                }
-            },
-            [&](ADrawList::BoxShadow& v) {
-                glm::vec4 p1 = st * glm::vec4(v.position, 0.f, 1.f);
-                glm::vec4 p2 = st * glm::vec4(v.position + v.size, 0.f, 1.f);
-                v.position = glm::vec2(p1);
-                v.size = glm::vec2(p2) - v.position;
-            },
-            [&](ADrawList::BoxShadowInner& v) {
-                glm::vec4 p1 = st * glm::vec4(v.position, 0.f, 1.f);
-                glm::vec4 p2 = st * glm::vec4(v.position + v.size, 0.f, 1.f);
-                v.position = glm::vec2(p1);
-                v.size = glm::vec2(p2) - v.position;
-            },
-            [&](ADrawList::SquareSector& v) {
-                glm::vec4 p1 = st * glm::vec4(v.position, 0.f, 1.f);
-                glm::vec4 p2 = st * glm::vec4(v.position + v.size, 0.f, 1.f);
-                v.position = glm::vec2(p1);
-                v.size = glm::vec2(p2) - v.position;
-            },
-            [&](ADrawList::Lines& v) {
-                for (auto& p : v.points) {
-                    p = glm::vec2(st * glm::vec4(p, 0.f, 1.f));
-                }
-            },
-            [&](ADrawList::LineBatches& v) {
-                for (auto& p : v.points) {
-                    p.first = glm::vec2(st * glm::vec4(p.first, 0.f, 1.f));
-                    p.second = glm::vec2(st * glm::vec4(p.second, 0.f, 1.f));
-                }
-            },
-            [&](ADrawList::Points& v) {
-                for (auto& p : v.points) {
-                    p = glm::vec2(st * glm::vec4(p, 0.f, 1.f));
-                }
-            },
-            [&](ADrawList::PushMask& v) {
-                glm::vec4 p1 = st * glm::vec4(v.maskRect.x, v.maskRect.y, 0.f, 1.f);
-                glm::vec4 p2 = st * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0.f, 1.f);
-                v.maskRect = glm::vec4(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
-            },
-            [&](ADrawList::PushClipRect& v) {
-                glm::vec4 p1 = st * glm::vec4(v.rect.p1, 0.f, 1.f);
-                glm::vec4 p2 = st * glm::vec4(v.rect.p2, 0.f, 1.f);
-                v.rect = ARect<float>{ glm::vec2(p1), glm::vec2(p2) };
-            },
-            [&](ADrawList::PushClipRoundedRect& v) {
-                glm::vec4 p1 = st * glm::vec4(v.rect.p1, 0.f, 1.f);
-                glm::vec4 p2 = st * glm::vec4(v.rect.p2, 0.f, 1.f);
-                v.rect = ARect<float>{ glm::vec2(p1), glm::vec2(p2) };
-            },
-            [&](ADrawList::Backdrop& v) {
-                auto p1 = glm::vec2(st * glm::vec4(v.position, 0.f, 1.f));
-                auto p2 = glm::vec2(st * glm::vec4(v.position + v.size, 0.f, 1.f));
-                auto lower = glm::floor(glm::min(p1, p2));
-                auto upper = glm::ceil(glm::max(p1, p2));
-                v.position = glm::ivec2(lower);
-                v.size = glm::ivec2(upper - lower);
-            },
-            [&](auto&) {}
-        };
-        std::visit(applyST, command);
+        ADrawList::applyTransform(command, st);
     }
-    
-    mDisplayList.add(std::move(command), bt, combined);
+
+    mDisplayList.add(std::move(command), bt, paint);
 }
