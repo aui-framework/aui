@@ -1728,3 +1728,14 @@ OpenGLBackend::FramebufferFromPool OpenGLBackend::getFramebufferForMultiPassEffe
         }(),
         FramebufferBackToPool { this });
 }
+
+AImage OpenGLBackend::readback(const _<ITexture>& texture) {
+    if (auto glTexture = _cast<OpenGLTexture2D>(texture)) {
+        auto& fbo = getFbo(glTexture);
+        fbo.bind();
+        AImage result(texture->getSize(), texture->getFormat());
+        glReadPixels(0, 0, result.width(), result.height(), GL_RGBA, GL_UNSIGNED_BYTE, result.modifiableBuffer().data());
+        return result;
+    }
+    return {};
+}

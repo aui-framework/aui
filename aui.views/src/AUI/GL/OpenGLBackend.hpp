@@ -262,6 +262,8 @@ public:
     _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) override;
     _<ITexture> createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) override;
 
+    AImage readback(const _<ITexture>& texture) override;
+
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 
     uint32_t getDefaultFb() const noexcept;

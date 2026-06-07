@@ -21,6 +21,7 @@
 #include <AUI/Render/ARenderContext.h>
 
 class ASurface;
+class AImage;
 namespace aui { class FontAtlas; class AFontCache; }
 
 class ACanvas;
@@ -91,6 +92,8 @@ public:
 
     virtual _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) = 0;
     virtual _<ITexture> createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) = 0;
+
+    virtual AImage readback(const _<ITexture>& texture) = 0;
 
     virtual const _<aui::AFontCache>& getFontCache() = 0;
 };

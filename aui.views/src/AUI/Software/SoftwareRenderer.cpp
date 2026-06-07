@@ -1095,3 +1095,10 @@ IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& ma
     mMergedMaskCache.emplace(cacheKey, MergedMaskCacheEntry { .texture = destTexture, .rect = merged.rect });
     return merged;
 }
+
+AImage SoftwareRenderer::readback(const _<ITexture>& texture) {
+    if (auto softwareTexture = _cast<SoftwareTexture>(texture)) {
+        return softwareTexture->getImage();
+    }
+    return {};
+}
