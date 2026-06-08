@@ -157,6 +157,18 @@ ARect<float> transformRect(const ARect<float>& rect, const glm::mat4& transform)
     return { lo, hi };
 }
 
+ADrawList::LogicalMask::Type effectiveMaskType(const ADrawList::LogicalMask& mask) {
+    if (mask.type == ADrawList::LogicalMask::Type::RoundedRect && mask.radius == 0.f) {
+        return ADrawList::LogicalMask::Type::Rect;
+    }
+    return mask.type;
+}
+
+bool isMaskScissorOnly(const ADrawList::LogicalMask& mask) {
+    return effectiveMaskType(mask) == ADrawList::LogicalMask::Type::Rect &&
+           mask.op == AClipOp::OP_INTERSECT;
+}
+
 } // namespace
 
 void ADrawList::applyTransform(StoredCommand::Command& command, const glm::mat4& transform) {
@@ -342,19 +354,25 @@ void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APai
         std::visit(aui::lambda_overloaded {
             [&](const PushClipRect& v) {
                 mClipStack << mCurrentClipRect;
-                ARect<float> worldRect = transformRect(v.rect, transform);
+                ARect<float> world_rect = transformRect(v.rect, transform);
                 if (v.op == AClipOp::OP_INTERSECT) {
-                    mCurrentClipRect = mCurrentClipRect.intersect(worldRect);
+                    mCurrentClipRect = mCurrentClipRect.intersect(world_rect);
                 }
-                mMaskStack.push_back({ LogicalMask::Type::Rect, v.op, v.rect, 0.f, nullptr, {}, transform });
+                if (v.op != AClipOp::OP_INTERSECT) {
+                    mMaskStack.push_back({ LogicalMask::Type::Rect, v.op, v.rect, 0.f, nullptr, {}, transform });
+                }
             },
             [&](const PushClipRoundedRect& v) {
                 mClipStack << mCurrentClipRect;
-                ARect<float> worldRect = transformRect(v.rect, transform);
+                ARect<float> world_rect = transformRect(v.rect, transform);
                 if (v.op == AClipOp::OP_INTERSECT) {
-                    mCurrentClipRect = mCurrentClipRect.intersect(worldRect);
+                    mCurrentClipRect = mCurrentClipRect.intersect(world_rect);
                 }
-                mMaskStack.push_back({ LogicalMask::Type::RoundedRect, v.op, v.rect, v.radius, nullptr, {}, transform });
+                // Normalise: radius == 0 is equivalent to a plain rect mask.
+                const LogicalMask::Type mask_type = (v.radius == 0.f)
+                    ? LogicalMask::Type::Rect
+                    : LogicalMask::Type::RoundedRect;
+                mMaskStack.push_back({ mask_type, v.op, v.rect, v.radius, nullptr, {}, transform });
             },
             [&](const PopClipRect&) {
                 if (!mClipStack.empty()) {
@@ -380,25 +398,23 @@ void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APai
     }
 
     // Draw command
-    auto finalTransform = transform;
-    auto finalCommand = std::move(cmd);
+    auto final_transform = transform;
+    auto final_command = std::move(cmd);
 
-    if (ACanvas::isSimple(finalTransform)) {
-        applyTransform(finalCommand, finalTransform);
-        finalTransform = glm::mat4(1.f);
+    if (ACanvas::isSimple(final_transform)) {
+        applyTransform(final_command, final_transform);
+        final_transform = glm::mat4(1.f);
     }
 
-    auto bbox = boundingBoxOfCommand(finalCommand, finalTransform);
+    auto bbox = boundingBoxOfCommand(final_command, final_transform);
 
-    // Culling
     if (bbox.p2.x <= mCurrentClipRect.p1.x || bbox.p1.x >= mCurrentClipRect.p2.x ||
         bbox.p2.y <= mCurrentClipRect.p1.y || bbox.p1.y >= mCurrentClipRect.p2.y) {
         return;
     }
 
-    // Try merge
     for (int i = int(mCommands.size()) - 1; i >= int(mCurrentSegmentStart); --i) {
-        if (tryMerge(mCommands[i], finalCommand, finalTransform, paint)) {
+        if (tryMerge(mCommands[i], final_command, final_transform, paint)) {
             mCommands[i].worldBoundingBox.p1 = glm::min(mCommands[i].worldBoundingBox.p1, bbox.p1);
             mCommands[i].worldBoundingBox.p2 = glm::max(mCommands[i].worldBoundingBox.p2, bbox.p2);
             return;
@@ -408,7 +424,7 @@ void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APai
         }
     }
 
-    StoredCommand sc{std::move(finalCommand), finalTransform, std::move(paint), bbox, mCurrentClipRect};
+    StoredCommand sc{std::move(final_command), final_transform, std::move(paint), bbox, mCurrentClipRect};
 
     auto isFullyInside = [](const ARect<float>& inner, const ARect<float>& outer) {
         return inner.p1.x >= outer.p1.x && inner.p2.x <= outer.p2.x &&
@@ -421,41 +437,46 @@ void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APai
     };
 
     for (const auto& mask : mMaskStack) {
-        ARect<float> maskWorld;
-        if (mask.type == LogicalMask::Type::Texture) {
-            maskWorld = transformRect(ARect<float>::fromTopLeftPositionAndSize({mask.maskRect.x, mask.maskRect.y}, {mask.maskRect.z, mask.maskRect.w}), mask.transform);
+        if (isMaskScissorOnly(mask)) continue;
+
+        const LogicalMask::Type eff_type = effectiveMaskType(mask);
+
+        ARect<float> mask_world;
+        if (eff_type == LogicalMask::Type::Texture) {
+            mask_world = transformRect(ARect<float>::fromTopLeftPositionAndSize({mask.maskRect.x, mask.maskRect.y}, {mask.maskRect.z, mask.maskRect.w}), mask.transform);
         } else {
-            maskWorld = transformRect(mask.rect, mask.transform);
+            mask_world = transformRect(mask.rect, mask.transform);
         }
 
-        if (mask.type == LogicalMask::Type::Rect) {
-            if (mask.op == AClipOp::OP_INTERSECT) {
-                if (isFullyOutside(bbox, maskWorld)) {
-                    return; // Culled
-                }
-                if (isFullyInside(bbox, maskWorld)) continue;
-            } else if (mask.op == AClipOp::OP_DIFFERENCE) {
-                if (isFullyInside(bbox, maskWorld)) {
-                    return; // Culled
-                }
-                if (isFullyOutside(bbox, maskWorld)) continue;
-            }
-        }
-        else if (mask.type == LogicalMask::Type::RoundedRect) {
-            ARect<float> safeInner = { maskWorld.p1 + glm::vec2(mask.radius), maskWorld.p2 - glm::vec2(mask.radius) };
+        if (eff_type == LogicalMask::Type::RoundedRect) {
+            ARect<float> safe_inner = { mask_world.p1 + glm::vec2(mask.radius), mask_world.p2 - glm::vec2(mask.radius) };
 
             if (mask.op == AClipOp::OP_INTERSECT) {
-                 if (isFullyOutside(bbox, maskWorld)) {
+                 if (isFullyOutside(bbox, mask_world)) {
                     return; // Culled
                  }
-                 if (isFullyInside(bbox, safeInner)) continue;
+                 if (isFullyInside(bbox, safe_inner)) continue;
             } else if (mask.op == AClipOp::OP_DIFFERENCE) {
-                 if (isFullyInside(bbox, safeInner)) {
+                 if (isFullyInside(bbox, safe_inner)) {
                      return; // Culled
                  }
-                 if (isFullyOutside(bbox, maskWorld)) continue;
+                 if (isFullyOutside(bbox, mask_world)) continue;
             }
         }
+        else if (eff_type == LogicalMask::Type::Rect) {
+            if (mask.op == AClipOp::OP_INTERSECT) {
+                if (isFullyOutside(bbox, mask_world)) {
+                    return; // Culled
+                }
+                if (isFullyInside(bbox, mask_world)) continue;
+            } else if (mask.op == AClipOp::OP_DIFFERENCE) {
+                if (isFullyInside(bbox, mask_world)) {
+                    return; // Culled
+                }
+                if (isFullyOutside(bbox, mask_world)) continue;
+            }
+        }
+
         sc.activeMasks.push_back(mask);
     }
     mCommands << std::move(sc);
@@ -474,7 +495,7 @@ void ADrawList::computeOverlaps() {
 
         const auto& clip = it->clipRect;
         const auto& bb   = it->worldBoundingBox;
-        
+
         if (it->mask) {
             float mx1 = it->maskRect.x;
             float my1 = it->maskRect.y;
@@ -517,7 +538,7 @@ void ADrawList::resolvePhysicalMasks(IRendererBackend& renderer) {
         glm::vec4 rect;
     };
 
-    std::unordered_map<std::size_t, PhysicalMaskState> maskCache;
+    std::unordered_map<std::size_t, PhysicalMaskState> mask_cache;
 
     for (auto& entity : mCommands) {
         if (entity.culled || entity.activeMasks.empty() || isBarrier(entity.command)) {
@@ -526,81 +547,65 @@ void ADrawList::resolvePhysicalMasks(IRendererBackend& renderer) {
             continue;
         }
 
-        std::size_t combinedHash = 0;
-        bool requiresPhysicalTexture = false;
-
+        std::size_t combined_hash = 0;
         for (const auto& mask : entity.activeMasks) {
-            if (mask.type == LogicalMask::Type::Rect && mask.op == AClipOp::OP_INTERSECT) {
-                continue;
-            }
-
-            requiresPhysicalTexture = true;
-            hash_combine(combinedHash, hashLogicalMask(mask));
+            hash_combine(combined_hash, hashLogicalMask(mask));
         }
 
-        if (!requiresPhysicalTexture) {
-            entity.mask = nullptr;
-            entity.maskRect = glm::vec4(0.f);
-            continue;
-        }
-
-        if (auto it = maskCache.find(combinedHash); it != maskCache.end()) {
+        if (auto it = mask_cache.find(combined_hash); it != mask_cache.end()) {
             entity.mask = it->second.texture;
             entity.maskRect = it->second.rect;
             continue;
         }
 
-        _<ITexture> compositeTexture = nullptr;
-        glm::vec4 compositeRect(0.f);
+        _<ITexture> composite_texture = nullptr;
+        glm::vec4 composite_rect(0.f);
 
-        auto applyMask = [&](const _<ITexture>& newMask, const glm::vec4& newRect) {
-            if (!compositeTexture) {
-                compositeTexture = newMask;
-                compositeRect = newRect;
+        auto applyMask = [&](const _<ITexture>& new_mask, const glm::vec4& new_rect) {
+            if (!composite_texture) {
+                composite_texture = new_mask;
+                composite_rect = new_rect;
             } else {
-                auto merged = renderer.mergeMasks(compositeTexture, compositeRect, newMask, newRect);
-                compositeTexture = merged.texture;
-                compositeRect = merged.rect;
+                auto merged = renderer.mergeMasks(composite_texture, composite_rect, new_mask, new_rect);
+                composite_texture = merged.texture;
+                composite_rect = merged.rect;
             }
         };
 
         for (const auto& mask : entity.activeMasks) {
-            if (mask.type == LogicalMask::Type::Rect && mask.op == AClipOp::OP_INTERSECT) {
-                continue;
-            }
+            const LogicalMask::Type eff_type = effectiveMaskType(mask);
 
-            if (mask.type == LogicalMask::Type::Texture) {
+            if (eff_type == LogicalMask::Type::Texture) {
                 auto r = transformRect(ARect<float>::fromTopLeftPositionAndSize({mask.maskRect.x, mask.maskRect.y}, {mask.maskRect.z, mask.maskRect.w}), mask.transform);
 
-                glm::vec4 displayListRect(r.p1.x, r.p1.y, r.size().x, r.size().y);
-                applyMask(mask.texture, displayListRect);
-            }
-            else {
-                ARect<float> worldRect = transformRect(mask.rect, mask.transform);
+                glm::vec4 display_list_rect(r.p1.x, r.p1.y, r.size().x, r.size().y);
+                applyMask(mask.texture, display_list_rect);
+            } else {
+                ARect<float> world_rect = transformRect(mask.rect, mask.transform);
+                ARect<float> mask_bounds = { world_rect.p1 - glm::vec2(2.f), world_rect.p2 + glm::vec2(2.f) };
 
-                ARect<float> maskBounds = { worldRect.p1 - glm::vec2(2.f), worldRect.p2 + glm::vec2(2.f) };
+                if (mask_bounds.size().x > 0.f && mask_bounds.size().y > 0.f) {
+                    _<ITexture> generated_mask = nullptr;
+                    glm::vec4 rect_for_apply(mask_bounds.p1.x, mask_bounds.p1.y, mask_bounds.size().x, mask_bounds.size().y);
 
-                if (maskBounds.size().x > 0.f && maskBounds.size().y > 0.f) {
-                    _<ITexture> generatedMask = nullptr;
-                    glm::vec4 rectForApply(maskBounds.p1.x, maskBounds.p1.y, maskBounds.size().x, maskBounds.size().y);
-
-                    if (mask.type == LogicalMask::Type::RoundedRect) {
-                        generatedMask = renderer.createRoundedRectMask(worldRect, mask.radius, mask.op == AClipOp::OP_DIFFERENCE, maskBounds);
-                    } else if (mask.type == LogicalMask::Type::Rect) {
-                        generatedMask = renderer.createRectMask(worldRect, true, maskBounds);
+                    if (eff_type == LogicalMask::Type::RoundedRect) {
+                        generated_mask = renderer.createRoundedRectMask(world_rect, mask.radius, mask.op == AClipOp::OP_DIFFERENCE, mask_bounds);
+                    } else {
+                        // LogicalMask::Type::Rect (including RoundedRect with radius == 0)
+                        generated_mask = renderer.createRectMask(world_rect, true, mask_bounds);
                     }
 
-                    if (generatedMask) {
-                        applyMask(generatedMask, rectForApply);
+                    if (generated_mask) {
+                        applyMask(generated_mask, rect_for_apply);
                     }
                 }
             }
         }
 
-        maskCache[combinedHash] = { compositeTexture, compositeRect };
+        mask_cache[combined_hash] = { composite_texture, composite_rect };
 
-        entity.mask = compositeTexture;
-        entity.maskRect = compositeRect;
+        entity.mask = composite_texture;
+        entity.maskRect = composite_rect;
     }
 }
 
