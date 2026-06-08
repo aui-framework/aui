@@ -74,7 +74,6 @@ protected:
  */
 TEST_F(UIScreenAnalyzer, AverageColor) {
     // check the button is red
-    // TODO(Nelonn): Doesn't work, we'll rework window context system later
-    //By::text("Say hello").check(averageColor(0xff0000_rgb), "the button is not red");
-    //By::text("A basic button").check(uitest::impl::not$(averageColor(0xff0000_rgb)), "the button is red");
+    By::text("Say hello").check(averageColor(0xff0000_rgb), "the button is not red");
+    By::text("A basic button").check(uitest::impl::not$(averageColor(0xff0000_rgb)), "the button is red");
 }
