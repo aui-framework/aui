@@ -17,6 +17,8 @@
 #include "AUI/Image/gif/GifImageFactory.h"
 #include <AUI/Render/ACanvas.hpp>
 #include <AUI/Render/IRendererBackend.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/View/AView.h>
 
 AAnimatedDrawable::AAnimatedDrawable(_<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
 }
@@ -40,6 +42,17 @@ void AAnimatedDrawable::draw(ARenderContext ctx, const IDrawable::Params& params
         }
         APerformanceSection s2("upload");
         mTexture->upload(img);
+
+        if (!mTimer) {
+            mTimer = _new<ATimer>(std::chrono::milliseconds(mFactory->getCurrentFrameLength()));
+            AObject::connect(mTimer->fired, this, [&] {
+                mFactory->prepareNextFrame();
+                emit dirty(mFactory->getDirtyRect());
+            });
+            mTimer->start();
+        } else {
+            mTimer->restart();
+        }
     }
 
     APerformanceSection s2("draw");

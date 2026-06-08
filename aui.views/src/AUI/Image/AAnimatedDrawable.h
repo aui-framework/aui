@@ -18,11 +18,14 @@
 #include "AUI/Image/IAnimatedImageFactory.h"
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Common/ASignal.h"
+#include <AUI/Common/ATimer.h>
 
 class API_AUI_VIEWS AAnimatedDrawable : public IDrawable, public AObject {
 private:
     _<IAnimatedImageFactory> mFactory;
     _<ITexture> mTexture;
+
+    _<ATimer> mTimer;
 public:
     explicit AAnimatedDrawable(_<IAnimatedImageFactory> factory);
     ~AAnimatedDrawable() override = default;
@@ -32,5 +35,5 @@ public:
 
 signals:
     emits<> animationFinished;
+    emits<ARect<int>> dirty;
 };
-
