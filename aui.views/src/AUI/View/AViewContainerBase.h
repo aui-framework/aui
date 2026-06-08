@@ -419,12 +419,6 @@ private:
     AVector<_<AView>> mViews;
     bool mSizeSet = false;
 
-
-    struct RepaintTrap {
-        bool triggered = false;
-    };
-    AOptional<RepaintTrap> mRepaintTrap;
-
     struct ConsumesClickCache {
         glm::ivec2 position;
         bool value;
