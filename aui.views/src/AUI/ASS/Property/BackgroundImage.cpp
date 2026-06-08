@@ -36,6 +36,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
         p.size = glm::vec2(size) * scale;
         p.repeat = info.rep.orDefault(Repeat::NONE);
         p.imageRendering = imageRendering;
+        p.color = info.overlayColor.orDefault(AColor::WHITE);
         drawable->draw(ctx, p);
     };
 
@@ -51,6 +52,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             p.repeat = info.rep.orDefault(Repeat::NONE);
             p.cropUvBottomRight = glm::vec2(view->getSize()) / scale;
             p.imageRendering = imageRendering;
+            p.color = info.overlayColor.orDefault(AColor::WHITE);
             drawable->draw(ctx, p);
             break;
         }
@@ -138,6 +140,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             p.cropUvBottomRight = offset + cropping.size.orDefault({ 1, 1 });
             p.size = view->getSize();
             p.imageRendering = imageRendering;
+            p.color = info.overlayColor.orDefault(AColor::WHITE);
 
             drawable->draw(ctx, p);
             break;
@@ -161,6 +164,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
                 p.size = { width, height };
                 p.imageRendering = imageRendering;
                 p.renderingSize = { textureWidth, textureHeight };
+                p.color = info.overlayColor.orDefault(AColor::WHITE);
                 drawable->draw(ctx, p);
             };
 

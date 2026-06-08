@@ -47,13 +47,16 @@ void AVectorDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) 
     }
     auto key = asKey(size);
     auto doDraw = [&](const _<ITexture>& texture) {
-        ctx.canvas.rectangle(APaint{ATexturedBrush{
-                                     .texture = texture,
-                                     .uv1 = params.cropUvTopLeft,
-                                     .uv2 = params.cropUvBottomRight,
-                                     .imageRendering = ImageRendering::PIXELATED,
-                                     .repeat = params.repeat,
-                             }},
+        ctx.canvas.rectangle(APaint{
+                                     .brush = ATexturedBrush{
+                                             .texture = texture,
+                                             .uv1 = params.cropUvTopLeft,
+                                             .uv2 = params.cropUvBottomRight,
+                                             .imageRendering = ImageRendering::PIXELATED,
+                                             .repeat = params.repeat,
+                                     },
+                                     .color = params.color,
+                             },
                              params.offset,
                              size);
     };

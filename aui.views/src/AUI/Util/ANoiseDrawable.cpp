@@ -29,13 +29,14 @@ void ANoiseDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) {
         }
 
     ctx.canvas.rectangle(APaint {
-        ATexturedBrush {
+        .brush = ATexturedBrush {
             .texture = mNoise,
             .uv1 = glm::vec2(0),
             .uv2 = glm::vec2(params.size) * glm::vec2(0.37390528174893522421f, 0.37577434667f),
             .imageRendering = ImageRendering::SMOOTH,
             .repeat = Repeat::X_Y,
-        }
+        },
+        .color = params.color,
     }, params.offset, params.size);
 }
 

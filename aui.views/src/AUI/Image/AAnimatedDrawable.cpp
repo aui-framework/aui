@@ -43,12 +43,15 @@ void AAnimatedDrawable::draw(ARenderContext ctx, const IDrawable::Params& params
     }
 
     APerformanceSection s2("draw");
-    ctx.canvas.rectangle(APaint{ATexturedBrush{
-            mTexture,
-            params.cropUvTopLeft,
-            params.cropUvBottomRight,
-            params.imageRendering,
-    }}, params.offset, params.size);
+    ctx.canvas.rectangle(APaint{
+                                 .brush = ATexturedBrush{
+                                         mTexture,
+                                         params.cropUvTopLeft,
+                                         params.cropUvBottomRight,
+                                         params.imageRendering,
+                                 },
+                                 .color = params.color,
+                         }, params.offset, params.size);
 }
 
 glm::ivec2 AAnimatedDrawable::getSizeHint() {

@@ -18,6 +18,7 @@
 #include <AUI/Enum/ImageRendering.h>
 #include <AUI/Image/AImage.h>
 #include <AUI/Render/ARenderContext.h>
+#include <AUI/Common/AColor.h>
 
 class ACanvas;
 
@@ -50,6 +51,7 @@ public:
         Repeat repeat = Repeat::NONE;
         ImageRendering imageRendering;
         AOptional<glm::vec2> renderingSize;
+        AColor color = AColor::WHITE;
     };
 
     /**

@@ -43,13 +43,14 @@ void AImageDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) {
     const auto& texture = std::get<_<ITexture>>(mStorage);
 
     ctx.canvas.rectangle(APaint {
-        ATexturedBrush {
+        .brush = ATexturedBrush {
             .texture = texture,
             .uv1 = params.cropUvTopLeft,
             .uv2 = params.cropUvBottomRight,
             .imageRendering = params.imageRendering,
             .repeat = params.repeat,
-        }
+        },
+        .color = params.color,
     }, params.offset, params.size);
 }
 
