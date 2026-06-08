@@ -162,3 +162,19 @@ void WebpImageFactory::loadNextFrame() {
 bool WebpImageFactory::hasAnimationFinished() {
     return mAnimationFinished;
 }
+
+ARect<int> WebpImageFactory::getDirtyRect() {
+    return { .p1 = { 0, 0 }, .p2 = { int(mWidth), int(mHeight) } };
+}
+
+void WebpImageFactory::prepareNextFrame() {
+    // loadNextFrame already does what's needed for WebP for now.
+    // However, WebP implementation currently relies on provideImage for timing.
+}
+
+uint32_t WebpImageFactory::getCurrentFrameLength() {
+    if (mCurrentFrame < mDurations.size()) {
+        return mDurations[mCurrentFrame].count();
+    }
+    return 100; // Default fallback
+}

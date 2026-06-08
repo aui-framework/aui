@@ -62,27 +62,19 @@ AImage GifImageFactory::provideImage(const glm::ivec2 &size) {
         return fetchImage();
     }
 
-    mCurrentFrameIndex++;
-    if (mCurrentFrameIndex == mFrameCount) {
-        mAnimationFinished = true;
-        mCurrentFrameIndex = 0;
-        nsgif_reset(mContext);
-    }
-    nsgif_rect_t area;
-    uint32_t frame;
-    auto error = nsgif_frame_prepare(mContext, &area, &mCurrentFrameLength, &frame);
-    if (error) {
-        throw AException(nsgif_strerror(error));
+    if (!mIsPrepared) {
+        prepareNextFrame();
     }
 
-    mCurrentFrameLength *= 10; //cs to ms
+    mCurrentFrameLength = mNextFrameDelay;
     nsgif_bitmap_t* buffer;
-    error = nsgif_frame_decode(mContext, frame, &buffer);
+    auto error = nsgif_frame_decode(mContext, mNextFrameIndex, &buffer);
     mLastFrameBuffer = static_cast<uint8_t*>(buffer);
     if (error) {
         throw AException(nsgif_strerror(error));
     }
 
+    mIsPrepared = false;
     mLastFrameStarted = std::chrono::high_resolution_clock::now();
     return fetchImage();
 }
@@ -99,6 +91,35 @@ glm::ivec2 GifImageFactory::getSizeHint() {
 
 bool GifImageFactory::hasAnimationFinished() {
     return mAnimationFinished;
+}
+
+ARect<int> GifImageFactory::getDirtyRect() {
+    return mDirtyRect;
+}
+
+void GifImageFactory::prepareNextFrame() {
+    if (mIsPrepared) {
+        return;
+    }
+    mCurrentFrameIndex++;
+    if (mCurrentFrameIndex == mFrameCount) {
+        mAnimationFinished = true;
+        mCurrentFrameIndex = 0;
+        nsgif_reset(mContext);
+    }
+    nsgif_rect_t area;
+    auto error = nsgif_frame_prepare(mContext, &area, &mNextFrameDelay, &mNextFrameIndex);
+    if (error) {
+        throw AException(nsgif_strerror(error));
+    }
+    mNextFrameDelay *= 10; //cs to ms
+    mDirtyRect.p1 = { (int)area.x0, (int)area.y0 };
+    mDirtyRect.p2 = { (int)area.x1, (int)area.y1 };
+    mIsPrepared = true;
+}
+
+uint32_t GifImageFactory::getCurrentFrameLength() {
+    return mCurrentFrameLength;
 }
 
 AImage GifImageFactory::fetchImage() {

@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <AUI/Geometry2D/ARect.h>
 #include "AUI/Image/IImageFactory.h"
 
 /**
@@ -23,4 +24,19 @@ public:
      * @brief Returns true, if last provided frame was last (within one cycle of animation)
      */
     virtual bool hasAnimationFinished() = 0;
+
+    /**
+     * @return dirty rect of the last provided frame
+     */
+    virtual ARect<int> getDirtyRect() = 0;
+
+    /**
+     * @brief Prepares metadata for the next frame (dirty rect, delay).
+     */
+    virtual void prepareNextFrame() = 0;
+
+    /**
+     * @return delay for the current (last provided) frame in milliseconds.
+     */
+    virtual uint32_t getCurrentFrameLength() = 0;
 };

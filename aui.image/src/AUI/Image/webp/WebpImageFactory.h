@@ -34,6 +34,12 @@ public:
 
     bool hasAnimationFinished() override;
 
+    ARect<int> getDirtyRect() override;
+
+    void prepareNextFrame() override;
+
+    uint32_t getCurrentFrameLength() override;
+
     enum class FrameSkipMode {
         PAUSE,         // 0: pause, continue from the same frame
         SKIP_FRAMES,   // 1: skip frames and loops (fast forward)
