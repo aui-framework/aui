@@ -533,8 +533,6 @@ _<ITexture> OpenGLBackend::createRectMask(const ARect<float>& rect, bool inverte
 }
 
 _<ITexture> OpenGLBackend::createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) {
-    GLDebugGroupLocal debugGroup("createRoundedRectMask");
-
     const auto cacheKey = roundedRectMaskCacheKey(rect, radius, inverted, bounds);
     if (auto it = mRoundedRectMaskCache.find(cacheKey); it != mRoundedRectMaskCache.end()) {
         if (auto texture = it->second.texture.lock()) {
@@ -542,6 +540,8 @@ _<ITexture> OpenGLBackend::createRoundedRectMask(const ARect<float>& rect, float
         }
         mRoundedRectMaskCache.erase(it);
     }
+
+    GLDebugGroupLocal debugGroup("createRoundedRectMask");
 
     glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(bounds.size().x)), std::max(1u, (unsigned)std::ceil(bounds.size().y)));
     auto destTexture = createTexture(size, APixelFormat::R8_UNORM, TextureFilter::NEAREST);
