@@ -104,7 +104,7 @@ private:
 
     struct RenderToTexture {
         _<ITexture> texture;
-        AVector<ARect<int>> invalidArea;
+        AOptional<ARect<int>> invalidArea;
     };
     AOptional<RenderToTexture> mRenderToTexture;
     bool mOffscreenRedrawRequested = false;
