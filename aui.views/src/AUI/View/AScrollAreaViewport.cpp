@@ -9,6 +9,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <AUI/Render/ABrush.h>
+#include <AUI/Render/APaint.hpp>
 #include <AUI/Util/ALayoutInflater.h>
 #include <AUI/Util/ARaiiHelper.h>
 #include "AScrollAreaViewport.h"
@@ -129,7 +131,14 @@ void AScrollAreaViewport::drawOffscreen(ARenderContext rc) {
         mOffscreenRedrawRequested = false;
     };
 
-    if (mRenderToTexture->invalidArea) {
+    bool highlightRedrawRequests = false;
+    if (auto window = AWindow::current()) {
+        if (auto& p = window->profiling()) [[unlikely]] {
+            highlightRedrawRequests = p->highlightRedrawRequests;
+        }
+    }
+
+    if (!highlightRedrawRequests && mRenderToTexture->invalidArea) {
         ARect<int> expandedArea = mRenderToTexture->invalidArea.value();
         expandedArea.p1 -= 8;
         expandedArea.p2 += 8;
@@ -145,6 +154,13 @@ void AScrollAreaViewport::drawOffscreen(ARenderContext rc) {
         AViewContainerBase::render(contextOfTheView);
     } catch (const AException& e) {
         ALogger::err("AScrollAreaViewport") << "Unable to render viewport: " << e;
+    }
+
+    if (highlightRedrawRequests && mRenderToTexture->invalidArea) {
+        ARect<int> expandedArea = mRenderToTexture->invalidArea.value();
+        expandedArea.p1 -= 8;
+        expandedArea.p2 += 8;
+        contextOfTheView.canvas.rectangle(APaint{ASolidBrush{0x40ff00ff_argb}}, expandedArea.min(), expandedArea.size());
     }
 }
 
