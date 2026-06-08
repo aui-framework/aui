@@ -26,6 +26,7 @@ private:
     _<ITexture> mTexture;
 
     _<ATimer> mTimer;
+    int mLastFrameIndex = -1;
 public:
     explicit AAnimatedDrawable(_<IAnimatedImageFactory> factory);
     ~AAnimatedDrawable() override = default;

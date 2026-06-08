@@ -23,6 +23,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Image/AImageLoaderRegistry.h>
 #include <AUI/Util/AImageDrawable.h>
+#include <AUI/Image/AAnimatedDrawable.h>
 
 void ass::prop::Property<ass::BackgroundImage>::draw(
     const ARenderContext& ctx, AView* view, const _<IDrawable>& drawable, const ass::BackgroundImage& info) {
@@ -277,11 +278,19 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARe
             *info.image)) {
         if (!view->getAssHelper()->state.backgroundImage) {
             // resolve background image by url
-            view->getAssHelper()->state.backgroundImage = std::visit(
+            auto drawable = std::visit(
                 aui::lambda_overloaded {
                   [](const _<IDrawable>& drawable) { return drawable; },
                   [](const AString& s) { return IDrawable::fromUrl(s); } },
                 *info.image);
+            view->getAssHelper()->state.backgroundImage = drawable;
+            if (auto animated = _cast<AAnimatedDrawable>(drawable)) {
+                view->getAssHelper()->state.backgroundImageDirtyConnection = AObject::connect(animated->dirty, view, [view] {
+                   view->redraw();
+                });
+            } else {
+                view->getAssHelper()->state.backgroundImageDirtyConnection = {};
+            }
         }
         if (auto drawable = *view->getAssHelper()->state.backgroundImage) {
             draw(ctx, view, drawable, info);

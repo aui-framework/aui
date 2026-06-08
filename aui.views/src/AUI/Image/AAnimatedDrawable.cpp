@@ -43,15 +43,25 @@ void AAnimatedDrawable::draw(ARenderContext ctx, const IDrawable::Params& params
         APerformanceSection s2("upload");
         mTexture->upload(img);
 
+        auto frameLength = std::chrono::milliseconds(mFactory->getCurrentFrameLength());
         if (!mTimer) {
-            mTimer = _new<ATimer>(std::chrono::milliseconds(mFactory->getCurrentFrameLength()));
-            AObject::connect(mTimer->fired, this, [&] {
+            mTimer = _new<ATimer>(frameLength);
+            AObject::connect(mTimer->fired, this, [&, timer = mTimer] {
+                if (mTimer != timer) return;
                 mFactory->prepareNextFrame();
                 emit dirty(mFactory->getDirtyRect());
             });
             mTimer->start();
         } else {
-            mTimer->restart();
+            // we restart only if it's already running to adjust for potential frame duration change
+            mTimer->stop();
+            mTimer = _new<ATimer>(frameLength);
+            AObject::connect(mTimer->fired, this, [&, timer = mTimer] {
+                if (mTimer != timer) return;
+                mFactory->prepareNextFrame();
+                emit dirty(mFactory->getDirtyRect());
+            });
+            mTimer->start();
         }
     }
 
