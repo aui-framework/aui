@@ -313,6 +313,9 @@ void OpenGLBackend::setBlending(const APaint& paint) {
         case Blending::INVERSE_SRC:
             glBlendFuncSeparate(GL_ZERO, GL_ONE_MINUS_SRC_COLOR, GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
             break;
+        case Blending::CLEAR:
+            glBlendFuncSeparate(GL_ZERO, GL_ZERO, GL_ZERO, GL_ZERO);
+            break;
     }
 }
 

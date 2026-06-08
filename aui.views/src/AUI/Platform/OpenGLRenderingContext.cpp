@@ -58,6 +58,7 @@ void OpenGLRenderingContext::presentToBackbuffer() {
                 .imageRendering = ImageRendering::SMOOTH,
                 .premultiplied = true,
             },
+            .blending = Blending::CLEAR,
         },
         {0.f, 0.f},
         glm::vec2(mViewportSize));

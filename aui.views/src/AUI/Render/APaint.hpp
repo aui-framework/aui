@@ -120,7 +120,13 @@ enum class Blending {
      * </dl>
      */
     INVERSE_SRC,
+
+    /**
+     * @brief Clears the destination color, ignoring alpha.
+     */
+    CLEAR,
 };
+
 struct APaint {
     ABrush brush = ASolidBrush{AColor::WHITE};
     AColor color = AColor::WHITE;

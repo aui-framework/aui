@@ -242,17 +242,21 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
     
     if (pos.x < mClipRect.p1.x || pos.y < mClipRect.p1.y || pos.x >= mClipRect.p2.x || pos.y >= mClipRect.p2.y) return;
 
-    float maskVal = 1.f;
-    if (mMask) {
-        auto s = _cast<SoftwareTexture>(mMask);
-        if (s) {
-            glm::vec2 texSize = s->getImage().size();
-            glm::vec2 uv = (glm::vec2(pos) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y)) / texSize;
-            maskVal = glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR)).r;
+    if (paint.blending != Blending::CLEAR) {
+        float maskVal = 1.f;
+        if (mMask) {
+            auto s = _cast<SoftwareTexture>(mMask);
+            if (s) {
+                glm::vec2 texSize = s->getImage().size();
+                glm::vec2 uv = (glm::vec2(pos) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y)) / texSize;
+                maskVal = glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR)).r;
+            }
         }
+        if (maskVal <= 0.001f) return;
+        color = color * maskVal;
     }
-    if (maskVal <= 0.001f) return;
-    AColor colorWithMask = color * maskVal;
+    
+    AColor colorWithMask = color;
 
     glm::vec4 dst;
     if (mRenderTarget) {
@@ -262,7 +266,9 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
     }
 
     AColor combined;
-    if (paint.blending == Blending::INVERSE_DST) {
+    if (paint.blending == Blending::CLEAR) {
+        combined = colorWithMask;
+    } else if (paint.blending == Blending::INVERSE_DST) {
         combined.r = colorWithMask.r * (1.f - dst.r);
         combined.g = colorWithMask.g * (1.f - dst.g);
         combined.b = colorWithMask.b * (1.f - dst.b);
