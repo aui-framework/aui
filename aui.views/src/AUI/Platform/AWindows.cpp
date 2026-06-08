@@ -61,8 +61,13 @@ void AWindow::doDrawWindow() {
         resetInvalidArea();
     };
 
-    if (auto invalidArea = getInvalidArea()) {
-        ARect<int> expandedArea = invalidArea.value();
+    bool highlightRedrawRequests = false;
+    if (auto& p = profiling()) [[unlikely]] {
+        highlightRedrawRequests = p->highlightRedrawRequests;
+    }
+
+    if (!highlightRedrawRequests && getInvalidArea()) {
+        ARect<int> expandedArea = getInvalidArea().value();
         expandedArea.p1 -= 8;
         expandedArea.p2 += 8;
         rc.canvas().pushClipRect(ARect<float>::fromTopLeftPositionAndSize(expandedArea.min(), expandedArea.size()));
@@ -78,6 +83,13 @@ void AWindow::doDrawWindow() {
         .backend = rc.backend(),
         .render = rc.renderer(),
     });
+
+    if (highlightRedrawRequests && getInvalidArea()) {
+        ARect<int> expandedArea = getInvalidArea().value();
+        expandedArea.p1 -= 8;
+        expandedArea.p2 += 8;
+        rc.canvas().rectangle(APaint{ASolidBrush{0x40ff00ff_argb}}, expandedArea.min(), expandedArea.size());
+    }
 }
 
 void AWindow::createDevtoolsWindow() {

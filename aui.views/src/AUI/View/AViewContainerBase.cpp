@@ -51,24 +51,6 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext ctx) {
         return;
     }
 
-    const bool showRedraw = [&] {
-      if (view->mRedrawRequested) [[unlikely]] {
-          if (auto w = AWindow::current()) [[unlikely]] {
-              if (auto& p = w->profiling()) {
-                  if (p->highlightRedrawRequests) {
-                      return true;
-                  }
-              }
-          }
-      }
-      return false;
-    }();
-    AUI_DEFER {
-      if (showRedraw) [[unlikely]] {
-          ctx.canvas.rectangle(APaint{ASolidBrush{0x40ff00ff_argb}}, view->getPosition(), view->getSize());
-      }
-    };
-
     auto saved = ctx.canvas.save();
 
     glm::mat4 t(1.f);
