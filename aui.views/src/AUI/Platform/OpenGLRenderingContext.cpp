@@ -16,9 +16,11 @@ static constexpr auto LOG_TAG = "OpenGLRenderingContext";
 
 OpenGLRenderingContext::OpenGLRenderingContext(const ARenderingContextOptions::OpenGL& config) : mConfig(config) {}
 
+#if !defined(_WIN32)
 void OpenGLRenderingContext::bindContext() {
 
 }
+#endif
 
 void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
     mViewportSize = windowSize;
