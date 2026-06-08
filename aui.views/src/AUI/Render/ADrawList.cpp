@@ -139,6 +139,24 @@ std::size_t hashLogicalMask(const ADrawList::LogicalMask& m) {
     return seed;
 }
 
+ARect<float> transformRect(const ARect<float>& rect, const glm::mat4& transform) {
+    if (transform == glm::mat4(1.f)) return rect;
+    glm::vec2 corners[4] = {
+        rect.p1,
+        {rect.p2.x, rect.p1.y},
+        rect.p2,
+        {rect.p1.x, rect.p2.y}
+    };
+    glm::vec2 lo(std::numeric_limits<float>::max());
+    glm::vec2 hi(std::numeric_limits<float>::lowest());
+    for (auto& c : corners) {
+        glm::vec4 tp = transform * glm::vec4(c, 0.f, 1.f);
+        lo = glm::min(lo, glm::vec2(tp));
+        hi = glm::max(hi, glm::vec2(tp));
+    }
+    return { lo, hi };
+}
+
 } // namespace
 
 void ADrawList::applyTransform(StoredCommand::Command& command, const glm::mat4& transform) {
@@ -146,93 +164,81 @@ void ADrawList::applyTransform(StoredCommand::Command& command, const glm::mat4&
     std::visit(aui::lambda_overloaded {
         [&](ADrawList::SolidRectangles& v) {
             for (auto& inst : v.instances) {
-                glm::vec2 p1 = glm::vec2(transform * glm::vec4(inst.position, 0.f, 1.f));
-                glm::vec2 p2 = glm::vec2(transform * glm::vec4(inst.position + inst.size, 0.f, 1.f));
-                inst.position = p1;
-                inst.size = p2 - p1;
+                auto r = transformRect({inst.position, inst.position + inst.size}, transform);
+                inst.position = r.p1;
+                inst.size = r.size();
             }
         },
         [&](ADrawList::GradientRectangles& v) {
             for (auto& inst : v.instances) {
-                glm::vec2 p1 = glm::vec2(transform * glm::vec4(inst.position, 0.f, 1.f));
-                glm::vec2 p2 = glm::vec2(transform * glm::vec4(inst.position + inst.size, 0.f, 1.f));
-                inst.position = p1;
-                inst.size = p2 - p1;
+                auto r = transformRect({inst.position, inst.position + inst.size}, transform);
+                inst.position = r.p1;
+                inst.size = r.size();
             }
         },
         [&](ADrawList::TexturedRectangles& v) {
             for (auto& inst : v.instances) {
-                glm::vec2 p1 = glm::vec2(transform * glm::vec4(inst.position, 0.f, 1.f));
-                glm::vec2 p2 = glm::vec2(transform * glm::vec4(inst.position + inst.size, 0.f, 1.f));
-                inst.position = p1;
-                inst.size = p2 - p1;
+                auto r = transformRect({inst.position, inst.position + inst.size}, transform);
+                inst.position = r.p1;
+                inst.size = r.size();
             }
         },
         [&](ADrawList::SolidRoundedRectangles& v) {
             for (auto& inst : v.instances) {
-                glm::vec2 p1 = glm::vec2(transform * glm::vec4(inst.position, 0.f, 1.f));
-                glm::vec2 p2 = glm::vec2(transform * glm::vec4(inst.position + inst.size, 0.f, 1.f));
-                inst.position = p1;
-                inst.size = p2 - p1;
+                auto r = transformRect({inst.position, inst.position + inst.size}, transform);
+                inst.position = r.p1;
+                inst.size = r.size();
             }
         },
         [&](ADrawList::GradientRoundedRectangles& v) {
             for (auto& inst : v.instances) {
-                glm::vec2 p1 = glm::vec2(transform * glm::vec4(inst.position, 0.f, 1.f));
-                glm::vec2 p2 = glm::vec2(transform * glm::vec4(inst.position + inst.size, 0.f, 1.f));
-                inst.position = p1;
-                inst.size = p2 - p1;
+                auto r = transformRect({inst.position, inst.position + inst.size}, transform);
+                inst.position = r.p1;
+                inst.size = r.size();
             }
         },
         [&](ADrawList::TexturedRoundedRectangles& v) {
             for (auto& inst : v.instances) {
-                glm::vec2 p1 = glm::vec2(transform * glm::vec4(inst.position, 0.f, 1.f));
-                glm::vec2 p2 = glm::vec2(transform * glm::vec4(inst.position + inst.size, 0.f, 1.f));
-                inst.position = p1;
-                inst.size = p2 - p1;
+                auto r = transformRect({inst.position, inst.position + inst.size}, transform);
+                inst.position = r.p1;
+                inst.size = r.size();
             }
         },
         [&](ADrawList::RectangleBorders& v) {
             for (auto& inst : v.instances) {
-                glm::vec2 p1 = glm::vec2(transform * glm::vec4(inst.position, 0.f, 1.f));
-                glm::vec2 p2 = glm::vec2(transform * glm::vec4(inst.position + inst.size, 0.f, 1.f));
-                inst.position = p1;
-                inst.size = p2 - p1;
+                auto r = transformRect({inst.position, inst.position + inst.size}, transform);
+                inst.position = r.p1;
+                inst.size = r.size();
             }
         },
         [&](ADrawList::RoundedRectangleBorders& v) {
             for (auto& inst : v.instances) {
-                glm::vec2 p1 = glm::vec2(transform * glm::vec4(inst.position, 0.f, 1.f));
-                glm::vec2 p2 = glm::vec2(transform * glm::vec4(inst.position + inst.size, 0.f, 1.f));
-                inst.position = p1;
-                inst.size = p2 - p1;
+                auto r = transformRect({inst.position, inst.position + inst.size}, transform);
+                inst.position = r.p1;
+                inst.size = r.size();
             }
         },
         [&](ADrawList::Glyphs& v) {
             for (auto& inst : v.instances) {
-                glm::vec2 p1 = glm::vec2(transform * glm::vec4(inst.position, 0.f, 1.f));
-                glm::vec2 p2 = glm::vec2(transform * glm::vec4(inst.position + inst.size, 0.f, 1.f));
-                inst.position = p1;
-                inst.size = p2 - p1;
+                auto r = transformRect({inst.position, inst.position + inst.size}, transform);
+                inst.position = r.p1;
+                inst.size = r.size();
             }
         },
         [&](ADrawList::BoxShadow& v) {
-            glm::vec2 p1 = glm::vec2(transform * glm::vec4(v.position, 0.f, 1.f));
-            glm::vec2 p2 = glm::vec2(transform * glm::vec4(v.position + v.size, 0.f, 1.f));
-            v.position = p1;
-            v.size = p2 - p1;
+            auto r = transformRect({v.position, v.position + v.size}, transform);
+            v.position = r.p1;
+            v.size = r.size();
         },
         [&](ADrawList::BoxShadowInner& v) {
-            glm::vec2 p1 = glm::vec2(transform * glm::vec4(v.position, 0.f, 1.f));
-            glm::vec2 p2 = glm::vec2(transform * glm::vec4(v.position + v.size, 0.f, 1.f));
-            v.position = p1;
-            v.size = p2 - p1;
+            auto r = transformRect({v.position, v.position + v.size}, transform);
+            v.position = r.p1;
+            v.size = r.size();
         },
         [&](ADrawList::SquareSector& v) {
-            glm::vec2 p1 = glm::vec2(transform * glm::vec4(v.position, 0.f, 1.f));
-            glm::vec2 p2 = glm::vec2(transform * glm::vec4(v.position + v.size, 0.f, 1.f));
-            v.position = p1;
-            v.size = p2 - p1;
+            auto r = transformRect({v.position, v.position + v.size}, transform);
+            v.position = r.p1;
+            v.size = r.size();
         },
         [&](ADrawList::Lines& v) {
             for (auto& p : v.points) {
@@ -251,25 +257,19 @@ void ADrawList::applyTransform(StoredCommand::Command& command, const glm::mat4&
             }
         },
         [&](ADrawList::PushMask& v) {
-            glm::vec2 p1 = glm::vec2(transform * glm::vec4(v.maskRect.x, v.maskRect.y, 0.f, 1.f));
-            glm::vec2 p2 = glm::vec2(transform * glm::vec4(v.maskRect.x + v.maskRect.z, v.maskRect.y + v.maskRect.w, 0.f, 1.f));
-            v.maskRect = glm::vec4(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+            auto r = transformRect(ARect<float>::fromTopLeftPositionAndSize({v.maskRect.x, v.maskRect.y}, {v.maskRect.z, v.maskRect.w}), transform);
+            v.maskRect = glm::vec4(r.p1.x, r.p1.y, r.size().x, r.size().y);
         },
         [&](ADrawList::PushClipRect& v) {
-            glm::vec2 p1 = glm::vec2(transform * glm::vec4(v.rect.p1, 0.f, 1.f));
-            glm::vec2 p2 = glm::vec2(transform * glm::vec4(v.rect.p2, 0.f, 1.f));
-            v.rect = ARect<float>{ p1, p2 };
+            v.rect = transformRect(v.rect, transform);
         },
         [&](ADrawList::PushClipRoundedRect& v) {
-            glm::vec2 p1 = glm::vec2(transform * glm::vec4(v.rect.p1, 0.f, 1.f));
-            glm::vec2 p2 = glm::vec2(transform * glm::vec4(v.rect.p2, 0.f, 1.f));
-            v.rect = ARect<float>{ p1, p2 };
+            v.rect = transformRect(v.rect, transform);
         },
         [&](ADrawList::Backdrop& v) {
-            auto p1 = glm::vec2(transform * glm::vec4(v.position, 0.f, 1.f));
-            auto p2 = glm::vec2(transform * glm::vec4(v.position + v.size, 0.f, 1.f));
-            auto lower = glm::floor(glm::min(p1, p2));
-            auto upper = glm::ceil(glm::max(p1, p2));
+            auto r = transformRect({glm::vec2(v.position), glm::vec2(v.position) + glm::vec2(v.size)}, transform);
+            auto lower = glm::floor(r.p1);
+            auto upper = glm::ceil(r.p2);
             v.position = glm::ivec2(lower);
             v.size = glm::ivec2(upper - lower);
         },
@@ -333,18 +333,7 @@ ARect<float> ADrawList::boundingBoxOfCommand(const StoredCommand::Command& cmd, 
 
     if (lo.x > hi.x) return ARect<float>{ .p1 = {0,0}, .p2 = {0,0} };
 
-    if (transform == glm::mat4(1.f)) return { lo, hi };
-
-    // Transform to world space
-    glm::vec2 corners[4] = { lo, {hi.x, lo.y}, hi, {lo.x, hi.y} };
-    glm::vec2 wlo(std::numeric_limits<float>::max());
-    glm::vec2 whi(std::numeric_limits<float>::lowest());
-    for (auto& c : corners) {
-        glm::vec4 tp = transform * glm::vec4(c, 0.f, 1.f);
-        wlo = glm::min(wlo, glm::vec2(tp));
-        whi = glm::max(whi, glm::vec2(tp));
-    }
-    return ARect<float>{ .p1 = wlo, .p2 = whi };
+    return transformRect({ lo, hi }, transform);
 }
 
 void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint) {
@@ -353,9 +342,7 @@ void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APai
         std::visit(aui::lambda_overloaded {
             [&](const PushClipRect& v) {
                 mClipStack << mCurrentClipRect;
-                glm::vec2 p1 = glm::vec2(transform * glm::vec4(v.rect.p1, 0.f, 1.f));
-                glm::vec2 p2 = glm::vec2(transform * glm::vec4(v.rect.p2, 0.f, 1.f));
-                ARect<float> worldRect{ glm::min(p1, p2), glm::max(p1, p2) };
+                ARect<float> worldRect = transformRect(v.rect, transform);
                 if (v.op == AClipOp::OP_INTERSECT) {
                     mCurrentClipRect = mCurrentClipRect.intersect(worldRect);
                 }
@@ -363,9 +350,7 @@ void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APai
             },
             [&](const PushClipRoundedRect& v) {
                 mClipStack << mCurrentClipRect;
-                glm::vec2 p1 = glm::vec2(transform * glm::vec4(v.rect.p1, 0.f, 1.f));
-                glm::vec2 p2 = glm::vec2(transform * glm::vec4(v.rect.p2, 0.f, 1.f));
-                ARect<float> worldRect{ glm::min(p1, p2), glm::max(p1, p2) };
+                ARect<float> worldRect = transformRect(v.rect, transform);
                 if (v.op == AClipOp::OP_INTERSECT) {
                     mCurrentClipRect = mCurrentClipRect.intersect(worldRect);
                 }
@@ -436,9 +421,12 @@ void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APai
     };
 
     for (const auto& mask : mMaskStack) {
-        glm::vec4 p1 = mask.transform * glm::vec4(mask.rect.p1, 0.f, 1.f);
-        glm::vec4 p2 = mask.transform * glm::vec4(mask.rect.p2, 0.f, 1.f);
-        ARect<float> maskWorld = { glm::min(glm::vec2(p1), glm::vec2(p2)), glm::max(glm::vec2(p1), glm::vec2(p2)) };
+        ARect<float> maskWorld;
+        if (mask.type == LogicalMask::Type::Texture) {
+            maskWorld = transformRect(ARect<float>::fromTopLeftPositionAndSize({mask.maskRect.x, mask.maskRect.y}, {mask.maskRect.z, mask.maskRect.w}), mask.transform);
+        } else {
+            maskWorld = transformRect(mask.rect, mask.transform);
+        }
 
         if (mask.type == LogicalMask::Type::Rect) {
             if (mask.op == AClipOp::OP_INTERSECT) {
@@ -582,22 +570,13 @@ void ADrawList::resolvePhysicalMasks(IRendererBackend& renderer) {
             }
 
             if (mask.type == LogicalMask::Type::Texture) {
-                glm::vec2 p1 = glm::vec2(mask.transform * glm::vec4(mask.maskRect.x, mask.maskRect.y, 0, 1));
-                glm::vec2 p2 = glm::vec2(mask.transform * glm::vec4(
-                    mask.maskRect.x + mask.maskRect.z,
-                    mask.maskRect.y + mask.maskRect.w, 0, 1));
+                auto r = transformRect(ARect<float>::fromTopLeftPositionAndSize({mask.maskRect.x, mask.maskRect.y}, {mask.maskRect.z, mask.maskRect.w}), mask.transform);
 
-                glm::vec4 displayListRect(p1.x, p1.y, p2.x - p1.x, p2.y - p1.y);
+                glm::vec4 displayListRect(r.p1.x, r.p1.y, r.size().x, r.size().y);
                 applyMask(mask.texture, displayListRect);
             }
             else {
-                glm::vec4 p1 = mask.transform * glm::vec4(mask.rect.p1, 0.f, 1.f);
-                glm::vec4 p2 = mask.transform * glm::vec4(mask.rect.p2, 0.f, 1.f);
-
-                ARect<float> worldRect = {
-                    .p1 = glm::min(glm::vec2(p1), glm::vec2(p2)),
-                    .p2 = glm::max(glm::vec2(p1), glm::vec2(p2))
-                };
+                ARect<float> worldRect = transformRect(mask.rect, mask.transform);
 
                 ARect<float> maskBounds = { worldRect.p1 - glm::vec2(2.f), worldRect.p2 + glm::vec2(2.f) };
 

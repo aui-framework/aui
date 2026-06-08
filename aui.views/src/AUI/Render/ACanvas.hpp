@@ -50,9 +50,9 @@ public:
     virtual void popLayer() = 0;
 
     static bool isSimple(const glm::mat4& m) noexcept {
-        return glm::abs(m[0][1]) < 0.0001f && glm::abs(m[0][2]) < 0.0001f && glm::abs(m[0][3]) < 0.0001f &&
-               glm::abs(m[1][0]) < 0.0001f && glm::abs(m[1][2]) < 0.0001f && glm::abs(m[1][3]) < 0.0001f &&
-               glm::abs(m[2][0]) < 0.0001f && glm::abs(m[2][1]) < 0.0001f && glm::abs(m[2][3]) < 0.0001f;
+        return m[0][0] > 0.0001f && glm::abs(m[0][1]) < 0.0001f && glm::abs(m[0][2]) < 0.0001f && glm::abs(m[0][3]) < 0.0001f &&
+               glm::abs(m[1][0]) < 0.0001f && m[1][1] > 0.0001f && glm::abs(m[1][2]) < 0.0001f && glm::abs(m[1][3]) < 0.0001f &&
+               glm::abs(m[2][0]) < 0.0001f && glm::abs(m[2][1]) < 0.0001f && m[2][2] > 0.0001f && glm::abs(m[2][3]) < 0.0001f;
     }
 
     virtual void setTransform(const glm::mat4& transform) = 0;
