@@ -58,7 +58,21 @@ void AWindow::doDrawWindow() {
     auto saved = rc.canvas().save();
     AUI_DEFER {
         rc.canvas().restore(saved);
+        resetInvalidArea();
     };
+
+    if (auto invalidArea = getInvalidArea()) {
+        ARect<int> expandedArea = invalidArea.value();
+        expandedArea.p1 -= 8;
+        expandedArea.p2 += 8;
+        rc.canvas().pushClipRect(ARect<float>::fromTopLeftPositionAndSize(expandedArea.min(), expandedArea.size()));
+        APaint clear_paint;
+        clear_paint.blending = Blending::CLEAR;
+        rc.canvas().rectangle(clear_paint, expandedArea.min(), expandedArea.size());
+    } else {
+        rc.canvas().clear();
+    }
+
     render(ARenderContext {
         .canvas = rc.canvas(),
         .backend = rc.backend(),

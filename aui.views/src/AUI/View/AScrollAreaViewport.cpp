@@ -130,10 +130,13 @@ void AScrollAreaViewport::drawOffscreen(ARenderContext rc) {
     };
 
     if (mRenderToTexture->invalidArea) {
-        contextOfTheView.canvas.pushClipRect(ARect<float>::fromTopLeftPositionAndSize(mRenderToTexture->invalidArea->min(), mRenderToTexture->invalidArea->size()));
+        ARect<int> expandedArea = mRenderToTexture->invalidArea.value();
+        expandedArea.p1 -= 8;
+        expandedArea.p2 += 8;
+        contextOfTheView.canvas.pushClipRect(ARect<float>::fromTopLeftPositionAndSize(expandedArea.min(), expandedArea.size()));
         APaint clear_paint;
         clear_paint.blending = Blending::CLEAR;
-        contextOfTheView.canvas.rectangle(clear_paint, mRenderToTexture->invalidArea->min(), mRenderToTexture->invalidArea->size());
+        contextOfTheView.canvas.rectangle(clear_paint, expandedArea.min(), expandedArea.size());
     } else {
         contextOfTheView.canvas.clear();
     }

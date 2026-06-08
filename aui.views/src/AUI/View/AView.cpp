@@ -78,9 +78,6 @@ AView::~AView() {
 void AView::redraw()
 {
     AUI_ASSERT_UI_THREAD_ONLY();
-    if (mRedrawRequested) {
-        return;
-    }
     static constexpr auto EXTRA_OFFSET = 8;
     auto invalidRect = ARect<int>::fromTopLeftPositionAndSize(glm::ivec2(-EXTRA_OFFSET), getSize() + glm::ivec2(EXTRA_OFFSET * 2));
     for (auto s : mAss) {
@@ -529,6 +526,7 @@ void AView::setGeometry(int x, int y, int width, int height) {
         return;
     }
     emit geometryChanged({x, y}, {width, height});
+    redraw();
 }
 
 bool AView::consumesClick(const glm::ivec2& pos) {
@@ -718,11 +716,6 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
         // clip by overflow
         invalidArea.p1 = glm::max(invalidArea.p1, glm::ivec2(0));
         invalidArea.p2 = glm::min(invalidArea.p2, getSize());
-    }
-
-    if (mRedrawRequested) {
-        // this view already requested a redraw.
-        return;
     }
 
     AUI_NULLSAFE(mParent)->markPixelDataInvalid(invalidArea.translate(getPosition()));

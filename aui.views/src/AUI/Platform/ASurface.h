@@ -454,11 +454,21 @@ protected:
 
     void markPixelDataInvalid(ARect<int> invalidArea) override;
 
+    [[nodiscard]]
+    const AOptional<ARect<int>>& getInvalidArea() const noexcept {
+        return mInvalidArea;
+    }
+
+    void resetInvalidArea() {
+        mInvalidArea.reset();
+    }
+
 private:
     void processTouchscreenKeyboardRequest();
 
     _weak<AView> mFocusedView;
     aui::lazy<Profiling> mProfiling = [] { return Profiling{}; };
+    AOptional<ARect<int>> mInvalidArea;
     float mDpiRatio = 1.f;
     ScalingParams mScalingParams;
 
