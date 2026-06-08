@@ -24,88 +24,11 @@ _<IRenderer::IMultiStringCanvas> RendererCanvas::newMultiStringCanvas(const AFon
     return _new<aui::MultiStringCanvas>(mBackend, entryData, style);
 }
 
-void RendererCanvas::rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) {
-    mCanvas.rectangle(paint(brush), position, size);
-}
-
-void RendererCanvas::roundedRectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius) {
-    mCanvas.roundedRectangle(paint(brush), position, size, radius);
-}
-
-void RendererCanvas::rectangleBorder(const ABrush& brush, glm::vec2 position, glm::vec2 size, float lineWidth) {
-    mCanvas.rectangleBorder(paint(brush), position, size, lineWidth);
-}
-
-void RendererCanvas::roundedRectangleBorder(const ABrush& brush,
-                                            glm::vec2 position,
-                                            glm::vec2 size,
-                                            float radius,
-                                            int borderWidth) {
-    mCanvas.roundedRectangleBorder(paint(brush), position, size, radius, borderWidth);
-}
-
-void RendererCanvas::boxShadow(glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) {
-    mCanvas.boxShadow(paint({}), position, size, blurRadius, color);
-}
-
-void RendererCanvas::boxShadowInner(glm::vec2 position,
-                                    glm::vec2 size,
-                                    float blurRadius,
-                                    float spreadRadius,
-                                    float borderRadius,
-                                    const AColor& color,
-                                    glm::vec2 offset) {
-    mCanvas.boxShadowInner(paint({}), position, size, blurRadius, spreadRadius, borderRadius, color, offset);
-}
-
-void RendererCanvas::string(glm::vec2 position, const AString& string, const AFontStyle& fs) {
-    if (string.empty()) return;
-    auto c = newMultiStringCanvas(fs);
-    c->addString(position, string);
-    c->finalize()->draw(mCanvas);
-}
-
 _<IRenderer::IPrerenderedString> RendererCanvas::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
     if (text.empty()) return nullptr;
     auto c = newMultiStringCanvas(fs);
     c->addString(position, text);
     return c->finalize();
-}
-
-void RendererCanvas::line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style, AMetric width) {
-    glm::vec2 points[] = { p1, p2 };
-    lines(brush, points, style, width);
-}
-
-void RendererCanvas::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
-    mCanvas.lines(paint(brush), points, style, width);
-}
-
-void RendererCanvas::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style) {
-    lines(brush, points, style, 1_dp);
-}
-
-void RendererCanvas::points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) {
-    mCanvas.points(paint(brush), points, size);
-}
-
-void RendererCanvas::lines(const ABrush& brush,
-                           AArrayView<std::pair<glm::vec2, glm::vec2>> points,
-                           const ABorderStyle& style,
-                           AMetric width) {
-    mCanvas.lines(paint(brush), points, style, width);
-}
-
-void RendererCanvas::lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style) {
-    lines(brush, points, style, 1_dp);
-}
-
-void RendererCanvas::squareSector(const ABrush& brush,
-                                  const glm::vec2& position,
-                                  const glm::vec2& size,
-                                  AAngleRadians begin,
-                                  AAngleRadians end) {
-    mCanvas.squareSector(paint(brush), position, size, begin, end);
 }
 
 void RendererCanvas::setColorForced(const AColor& color) {

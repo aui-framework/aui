@@ -22,62 +22,7 @@ public:
 
     _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
 
-    void rectangle(const ABrush& brush,
-                           glm::vec2 position,
-                           glm::vec2 size) override;
-
-    void roundedRectangle(const ABrush& brush,
-                                  glm::vec2 position,
-                                  glm::vec2 size,
-                                  float radius) override;
-
-    void rectangleBorder(const ABrush& brush,
-                                 glm::vec2 position,
-                                 glm::vec2 size,
-                                 float lineWidth = 1.f) override;
-
-    void roundedRectangleBorder(const ABrush& brush,
-                                        glm::vec2 position,
-                                        glm::vec2 size,
-                                        float radius,
-                                        int borderWidth) override;
-
-    void boxShadow(glm::vec2 position,
-                           glm::vec2 size,
-                           float blurRadius,
-                           const AColor& color) override;
-
-    void boxShadowInner(glm::vec2 position,
-                                glm::vec2 size,
-                                float blurRadius,
-                                float spreadRadius,
-                                float borderRadius,
-                                const AColor& color,
-                                glm::vec2 offset) override;
-
-    void string(glm::vec2 position,
-                        const AString& string,
-                        const AFontStyle& fs) override;
-
     _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
-
-    void line(const ABrush& brush, glm::vec2 p1, glm::vec2 p2, const ABorderStyle& style = ABorderStyle::Solid{}, AMetric width = 1_dp) override;
-
-    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override;
-
-    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style = ABorderStyle::Solid{}) override;
-
-    void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) override;
-
-    void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style, AMetric width) override;
-
-    void lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style = ABorderStyle::Solid{}) override;
-
-    void squareSector(const ABrush& brush,
-                              const glm::vec2& position,
-                              const glm::vec2& size,
-                              AAngleRadians begin,
-                              AAngleRadians end) override;
 
     void setColorForced(const AColor& color) override;
 
