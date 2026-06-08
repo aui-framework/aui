@@ -13,6 +13,7 @@
 
 #include <AUI/Render/IRenderer.h>
 #include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/RenderHints.h>
 #include <chrono>
 
 using namespace std::chrono;
@@ -25,6 +26,7 @@ void ASpinnerV2::render(ARenderContext ctx) {
         AView::render(ctx);
         return;
     }
+    RenderHints::PushState s(ctx.canvas);
     ctx.canvas.translate(glm::vec2(getSize()) / 2.f);
     const auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
     ctx.canvas.rotate(
