@@ -24,8 +24,8 @@
 #include <AUI/Util/AArrayView.h>
 #include <AUI/Common/AString.h>
 #include <AUI/ASS/Property/Backdrop.h>
+#include <AUI/Render/IRendererText.hpp>
 #include <AUI/Render/APaint.hpp>
-#include <AUI/Render/IRenderer.h>
 #include <AUI/Render/AClipOp.hpp>
 
 class ACanvas {
@@ -99,7 +99,7 @@ public:
 
     virtual void prerenderedString(const APaint& paint,
                                    glm::vec2 position,
-                                   const _<IRenderer::IPrerenderedString>& prerenderedString) = 0;
+                                   const _<aui::IPrerenderedString>& prerenderedString) = 0;
 
     virtual void glyphRect(const _<ITexture>& texture, glm::vec2 position, glm::vec2 size, glm::vec2 u1, glm::vec2 u2, const AColor& color, bool isSubpixel) = 0;
 
@@ -125,8 +125,8 @@ public:
 
     virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) = 0;
 
-    virtual _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
-    virtual _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
+    virtual _<aui::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
+    virtual _<aui::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
 
     virtual const glm::mat4 getTransform() const noexcept = 0;
     virtual void setTransformForced(const glm::mat4& transform) noexcept = 0;
