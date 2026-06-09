@@ -91,15 +91,5 @@ void SoftwareRenderingContext::reallocate() {
 }
 
 AImage SoftwareRenderingContext::makeScreenshot() {
-    AByteBuffer data;
-    size_t s = mBitmapSize.x * mBitmapSize.y * 4;
-    data.resize(s);
-    for (size_t i = 0; i < s; i += 4) {
-        uint8_t* ptr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFOHEADER) + i);
-        data.at<std::uint8_t>(i    ) = ptr[2];
-        data.at<std::uint8_t>(i + 1) = ptr[1];
-        data.at<std::uint8_t>(i + 2) = ptr[0];
-        data.at<std::uint8_t>(i + 3) = ptr[3];
-    }
-    return {std::move(data), mBitmapSize, APixelFormat::B8G8R8A8_UNORM};
+    return mRenderer->readback(mWindowTarget);
 }
