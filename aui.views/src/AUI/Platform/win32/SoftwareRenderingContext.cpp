@@ -43,10 +43,6 @@ void SoftwareRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
     mDrawList.clear();
     mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize);
-    for (size_t i = 0; i < mBitmapSize.x * mBitmapSize.y; ++i) {
-        auto dataPtr = reinterpret_cast<uint32_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO) + i * 4);
-        *dataPtr = 0;
-    }
 }
 
 void SoftwareRenderingContext::endPaint(ASurface &window) {

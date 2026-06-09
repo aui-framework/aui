@@ -240,13 +240,7 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
 
     if (pos.x < 0 || pos.y < 0 || (uint32_t)pos.x >= bitmapSize.x || (uint32_t)pos.y >= bitmapSize.y) return;
     
-    {
-        int ix1 = static_cast<int>(std::floor(std::max(0.f, mClipRect.p1.x)));
-        int iy1 = static_cast<int>(std::floor(std::max(0.f, mClipRect.p1.y)));
-        int iw = static_cast<int>(std::ceil(mClipRect.p2.x - mClipRect.p1.x));
-        int ih = static_cast<int>(std::ceil(mClipRect.p2.y - mClipRect.p1.y));
-        if (pos.x < ix1 || pos.y < iy1 || pos.x >= ix1 + iw || pos.y >= iy1 + ih) return;
-    }
+    if (pos.x < mClipRect.p1.x || pos.y < mClipRect.p1.y || pos.x >= mClipRect.p2.x || pos.y >= mClipRect.p2.y) return;
 
     float maskVal = 1.f;
     if (mMask) {
@@ -741,6 +735,8 @@ void SoftwareRenderer::glyphs(const ADrawList::Glyphs& v, const glm::mat4& trans
                         }
 
                         if (x < 0 || y < 0 || (uint32_t)x >= bitmapSize.x || (uint32_t)y >= bitmapSize.y) continue;
+
+                        if (x < mClipRect.p1.x || y < mClipRect.p1.y || x >= mClipRect.p2.x || y >= mClipRect.p2.y) continue;
 
                         float globalMaskVal = 1.f;
                         if (mMask) {
