@@ -55,15 +55,16 @@ void SoftwareRenderingContext::endPaint(ASurface &window) {
     mDrawList.clear();
 
     if (mPainterDC != 0) {
-        StretchDIBits(mPainterDC,
-                      0, 0,
-                      mBitmapSize.x, mBitmapSize.y,
-                      0, 0,
-                      mBitmapSize.x, mBitmapSize.y,
-                      mBitmapInfo->bmiColors,
-                      mBitmapInfo,
-                      DIB_RGB_COLORS,
-                      SRCCOPY);
+        SetDIBitsToDevice(mPainterDC,
+                  0, 0,
+                  mBitmapSize.x, mBitmapSize.y,
+                  0, 0,
+                  0,
+                  mBitmapSize.y,
+                  mBitmapInfo->bmiColors,
+                  mBitmapInfo,
+                  DIB_RGB_COLORS
+        );
     }
     CommonRenderingContext::endPaint(window);
 }
