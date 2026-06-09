@@ -11,8 +11,8 @@
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
 #include <AUI/Render/IRendererBackend.h>
-#include "AUI/Software/SoftwareRenderer.h"
-#include <AUI/Render/ADisplayListCanvas.hpp>
+#include "AUI/Render/ARender/Software/SoftwareRenderer.h"
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
 #include <AUI/Common/AByteBuffer.h>
 #include <AUI/Image/AImage.h>

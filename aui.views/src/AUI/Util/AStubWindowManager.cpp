@@ -14,7 +14,7 @@
 //
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
-#include <AUI/Software/SoftwareRenderer.h>
+#include <AUI/Render/ARender/Software/SoftwareRenderer.h>
 #include "AStubWindowManager.h"
 
 static aui::lazy<AStubWindowManager::Config> gStubWindowManagerConfig = [] {

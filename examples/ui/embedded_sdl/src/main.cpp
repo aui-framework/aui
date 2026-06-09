@@ -15,9 +15,9 @@
 #include <AUI/Platform/APlatform.h>
 #include <AUI/Platform/AGLEmbedContext.h>
 #include <AUI/Render/IRenderer.h>
-#include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
-#include <AUI/GL/OpenGLBackend.hpp>
+#include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
 #include <AUI/Util/Declarative/Containers.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/ATextField.h>

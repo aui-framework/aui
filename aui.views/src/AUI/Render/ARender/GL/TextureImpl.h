@@ -14,7 +14,7 @@
 #include "Texture.h"
 #include "gl.h"
 #include "ResourcePool.h"
-#include <AUI/GL/State.h>
+#include <AUI/Render/ARender/GL/State.h>
 
 
 template<unsigned int TEXTURE_TARGET>

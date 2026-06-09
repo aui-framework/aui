@@ -16,7 +16,7 @@
 #include <AUI/ASS/Property/Backdrop.h>
 #include <AUI/Hash.h>
 #include <AUI/Traits/values.h>
-#include <AUI/Render/CommonOffscreenRenderPass.h>
+#include <AUI/Render/ARender/CommonOffscreenRenderPass.h>
 #include <bit>
 #include <cmath>
 
@@ -94,8 +94,8 @@ glm::vec4 erf(glm::vec4 x) {
 }
 
 float roundedRectSDF(glm::vec2 p, glm::vec2 size, float r) {
-    glm::vec2 d = glm::abs(p - size * 0.5f) - (size * 0.5f - glm::vec2(r));
-    return glm::length(glm::max(d, glm::vec2(0.f))) + glm::min(glm::max(d.x, d.y), 0.f) - r;
+    glm::vec2 q = glm::abs(p - size * 0.5f) - size * 0.5f + r;
+    return glm::min(glm::max(q.x, q.y), 0.0f) + glm::length(glm::max(q, 0.0f)) - r;
 }
 
 float roundedRectCoverage(glm::vec2 localPos, glm::vec2 size, float radius, float scale) {
@@ -240,22 +240,26 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
 
     if (pos.x < 0 || pos.y < 0 || (uint32_t)pos.x >= bitmapSize.x || (uint32_t)pos.y >= bitmapSize.y) return;
     
-    if (pos.x < mClipRect.p1.x || pos.y < mClipRect.p1.y || pos.x >= mClipRect.p2.x || pos.y >= mClipRect.p2.y) return;
-
-    if (paint.blending != Blending::CLEAR) {
-        float maskVal = 1.f;
-        if (mMask) {
-            auto s = _cast<SoftwareTexture>(mMask);
-            if (s) {
-                glm::vec2 texSize = s->getImage().size();
-                glm::vec2 uv = (glm::vec2(pos) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y)) / texSize;
-                maskVal = glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR)).r;
-            }
-        }
-        if (maskVal <= 0.001f) return;
-        color = color * maskVal;
+    {
+        int ix1 = static_cast<int>(std::floor(std::max(0.f, mClipRect.p1.x)));
+        int iy1 = static_cast<int>(std::floor(std::max(0.f, mClipRect.p1.y)));
+        int iw = static_cast<int>(std::ceil(mClipRect.p2.x - mClipRect.p1.x));
+        int ih = static_cast<int>(std::ceil(mClipRect.p2.y - mClipRect.p1.y));
+        if (pos.x < ix1 || pos.y < iy1 || pos.x >= ix1 + iw || pos.y >= iy1 + ih) return;
     }
-    
+
+    float maskVal = 1.f;
+    if (mMask) {
+        auto s = _cast<SoftwareTexture>(mMask);
+        if (s) {
+            glm::vec2 texSize = s->getImage().size();
+            glm::vec2 uv = (glm::vec2(pos) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y)) / texSize;
+            maskVal = glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR)).r;
+        }
+    }
+    if (maskVal <= 0.001f) return;
+    color = color * maskVal;
+
     AColor colorWithMask = color;
 
     glm::vec4 dst;
@@ -951,29 +955,14 @@ _<ITexture> SoftwareRenderer::createFramebufferWrapper(glm::uvec2 size) {
 }
 
 void SoftwareRenderer::clear(const AColor& color) {
-    auto viewportSize = getViewportSize();
-    ARect<int> clearRect = { {0, 0}, glm::ivec2(viewportSize) };
-
-    clearRect.p1 = glm::max(clearRect.p1, glm::ivec2(std::floor(mClipRect.p1.x), std::floor(mClipRect.p1.y)));
-    clearRect.p2 = glm::min(clearRect.p2, glm::ivec2(std::ceil(mClipRect.p2.x), std::ceil(mClipRect.p2.y)));
-
-    if (clearRect.p1.x >= clearRect.p2.x || clearRect.p1.y >= clearRect.p2.y) return;
-
     if (mRenderTarget) {
-        if (clearRect.min() == glm::ivec2(0) && clearRect.size() == glm::ivec2(mRenderTarget->size())) {
-            mRenderTarget->fill(color);
-        } else {
-            for (int y = clearRect.p1.y; y < clearRect.p2.y; ++y) {
-                for (int x = clearRect.p1.x; x < clearRect.p2.x; ++x) {
-                    mRenderTarget->set({(uint32_t)x, (uint32_t)y}, color);
-                }
-            }
-        }
+        mRenderTarget->fill(color);
     } else if (mContext) {
+        auto size = mContext->bitmapSize();
         glm::u8vec4 c = glm::u8vec4(glm::clamp(color, 0.f, 1.f) * 255.f);
-        for (int y = clearRect.p1.y; y < clearRect.p2.y; ++y) {
-            for (int x = clearRect.p1.x; x < clearRect.p2.x; ++x) {
-                mContext->putPixel({(uint32_t)x, (uint32_t)y}, c);
+        for (uint32_t y = 0; y < size.y; ++y) {
+            for (uint32_t x = 0; x < size.x; ++x) {
+                mContext->putPixel({x, y}, c);
             }
         }
     }

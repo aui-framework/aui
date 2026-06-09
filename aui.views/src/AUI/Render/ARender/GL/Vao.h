@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include "AUI/GL/gl.h"
+#include "AUI/Render/ARender/GL/gl.h"
 #include <glm/glm.hpp>
 #include "AUI/Common/AVector.h"
 #include "AUI/Util/AArrayView.h"

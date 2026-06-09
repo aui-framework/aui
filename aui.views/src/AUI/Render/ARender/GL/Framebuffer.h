@@ -20,7 +20,7 @@
 #include <AUI/Common/AMap.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Views.h>
-#include <AUI/GL/gl.h>
+#include <AUI/Render/ARender/GL/gl.h>
 
 namespace gl {
     class API_AUI_VIEWS Framebuffer: public aui::noncopyable {

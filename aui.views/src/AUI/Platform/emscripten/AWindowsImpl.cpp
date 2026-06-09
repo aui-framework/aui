@@ -12,8 +12,8 @@
 
 #include <emscripten/html5.h>
 
-#include "AUI/GL/gl.h"
-#include "AUI/GL/GLDebug.h"
+#include "AUI/Render/ARender/GL/gl.h"
+#include "AUI/Render/ARender/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Render/IRenderer.h"
@@ -22,9 +22,9 @@
 
 
 #include "AUI/Util/ARandom.h"
-#include "AUI/GL/State.h"
+#include "AUI/Render/ARender/GL/State.h"
 #include "AUI/Thread/AThread.h"
-#include "AUI/GL/OpenGLBackend.hpp"
+#include "AUI/Render/ARender/GL/OpenGLBackend.hpp"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/OpenGLRenderingContext.h"

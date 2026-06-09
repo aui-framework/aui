@@ -11,7 +11,7 @@
 
 #pragma once
 
-#include <AUI/GL/Program.h>
+#include <AUI/Render/ARender/GL/Program.h>
 
 namespace aui::ShaderUniforms {
     extern ::gl::Program::Uniform COLOR;

@@ -12,8 +12,8 @@
 #pragma once
 
 #include <AUI/View/AView.h>
-#include <AUI/GL/Program.h>
-#include <AUI/GL/Texture2D.h>
+#include <AUI/Render/ARender/GL/Program.h>
+#include <AUI/Render/ARender/GL/Texture2D.h>
 
 class FractalView : public AView {
 private:

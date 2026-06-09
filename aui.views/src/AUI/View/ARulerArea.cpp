@@ -78,7 +78,6 @@ void ARulerArea::render(ARenderContext ctx) {
     AViewContainerBase::render(ctx);
 
 
-    glDisable(GL_STENCIL_TEST);
     // cursor display
     const auto rulerOffset = glm::ivec2(mVerticalRuler->getWidth(), mHorizontalRuler->getHeight());
     if (glm::any(glm::greaterThan(mMousePos, rulerOffset * 2))) {
@@ -110,8 +109,6 @@ void ARulerArea::render(ARenderContext ctx) {
                              {0.f, mMousePos.y},
                              {mMousePos.x, 1});
     }
-
-    glEnable(GL_STENCIL_TEST);
 }
 
 void ARulerArea::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {

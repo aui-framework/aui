@@ -13,15 +13,15 @@
 // Created by Alex2772 on 12/7/2021.
 //
 
-#include <AUI/GL/gl.h>
-#include <AUI/GL/GLDebug.h>
+#include <AUI/Render/ARender/GL/gl.h>
+#include <AUI/Render/ARender/GL/GLDebug.h>
 #include <glad/glad_wgl.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
-#include <AUI/GL/OpenGLBackend.hpp>
-#include <AUI/GL/State.h>
+#include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
+#include <AUI/Render/ARender/GL/State.h>
 #include <AUI/Util/kAUI.h>
 #include <tuple>
 #include <string_view>

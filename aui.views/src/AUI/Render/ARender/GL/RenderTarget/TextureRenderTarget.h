@@ -13,9 +13,9 @@
 
 
 #include <AUI/Util/kAUI.h>
-#include <AUI/GL/Framebuffer.h>
-#include <AUI/GL/GLEnums.h>
-#include <AUI/GL/Texture2D.h>
+#include <AUI/Render/ARender/GL/Framebuffer.h>
+#include <AUI/Render/ARender/GL/GLEnums.h>
+#include <AUI/Render/ARender/GL/Texture2D.h>
 
 namespace gl {
 

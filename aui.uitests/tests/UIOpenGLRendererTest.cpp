@@ -11,7 +11,7 @@
 
 #include <gmock/gmock.h>
 #include "AUI/UITest.h"
-#include "AUI/GL/OpenGLBackend.hpp"
+#include "AUI/Render/ARender/GL/OpenGLBackend.hpp"
 #include "AUI/Util/UIBuildingHelpers.h"
 
 using namespace ass;

@@ -15,7 +15,7 @@
 
 #include "GLDebug.h"
 
-#include <AUI/GL/gl.h>
+#include <AUI/Render/ARender/GL/gl.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Traits/strings.h>
 #include <string_view>

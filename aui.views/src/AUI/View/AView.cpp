@@ -18,8 +18,8 @@
 #include "AUI/Platform/AWindow.h"
 #include <AUI/Platform/IRenderingContext.h>
 #include <AUI/Render/ACanvas.hpp>
-#include <AUI/Render/ADrawList.hpp>
-#include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Render/ARender/ADrawList.hpp>
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Render/ITexture.h>

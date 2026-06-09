@@ -13,8 +13,8 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Platform/AWindow.h>
-#include <AUI/Render/ADrawList.hpp>
-#include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Render/ARender/ADrawList.hpp>
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
 
 class SoftwareRenderer;

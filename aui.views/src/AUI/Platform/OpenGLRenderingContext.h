@@ -18,9 +18,9 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include "ARenderingContextOptions.h"
-#include "AUI/GL/OpenGLBackend.hpp"
-#include <AUI/Render/ADrawList.hpp>
-#include <AUI/Render/ADisplayListCanvas.hpp>
+#include "AUI/Render/ARender/GL/OpenGLBackend.hpp"
+#include <AUI/Render/ARender/ADrawList.hpp>
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
 
 class OpenGLRenderingContext: public CommonRenderingContext {

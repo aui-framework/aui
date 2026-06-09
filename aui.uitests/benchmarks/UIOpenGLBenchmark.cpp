@@ -13,7 +13,7 @@
 #include "UIBenchmarkScene.h"
 #include "AUI/Platform/ARenderingContextOptions.h"
 #include "AUI/Image/png/PngImageLoader.h"
-#include "AUI/GL/OpenGLBackend.hpp"
+#include "AUI/Render/ARender/GL/OpenGLBackend.hpp"
 #include "AUI/Render/RendererCanvas.h"
 
 static void OpenGLRendering(benchmark::State& state) {

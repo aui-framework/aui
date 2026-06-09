@@ -9,8 +9,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <AUI/GL/Framebuffer.h>
-#include <AUI/GL/State.h>
+#include <AUI/Render/ARender/GL/Framebuffer.h>
+#include <AUI/Render/ARender/GL/State.h>
 
 
 #if AUI_PLATFORM_LINUX

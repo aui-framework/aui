@@ -11,18 +11,18 @@
 
 #pragma once
 
-#include <AUI/GL/gl.h>
-#include <AUI/GL/Program.h>
-#include <AUI/GL/Framebuffer.h>
-#include <AUI/GL/Vao.h>
-#include <AUI/GL/Texture2D.h>
+#include <AUI/Render/ARender/GL/gl.h>
+#include <AUI/Render/ARender/GL/Program.h>
+#include <AUI/Render/ARender/GL/Framebuffer.h>
+#include <AUI/Render/ARender/GL/Vao.h>
+#include <AUI/Render/ARender/GL/Texture2D.h>
 #include <AUI/Util/APool.h>
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/ADeque.h>
 #include <AUI/Render/FontAtlas.hpp>
 #include "AUI/Render/ABorderStyle.h"
 #include <AUI/Render/IRendererBackend.h>
-#include "AUI/GL/RenderTarget/TextureRenderTarget.h"
+#include "AUI/Render/ARender/GL/RenderTarget/TextureRenderTarget.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Platform/ASurface.h>
 #include <AUI/Render/ACanvas.hpp>

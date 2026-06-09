@@ -12,11 +12,11 @@
 #pragma once
 
 #include <AUI/Common/AVector.h>
-#include <AUI/GL/gl.h>
+#include <AUI/Render/ARender/GL/gl.h>
 #include <glm/glm.hpp>
 #include "ResourcePool.h"
 #include <AUI/Common/AString.h>
-#include <AUI/GL/State.h>
+#include <AUI/Render/ARender/GL/State.h>
 
 namespace gl {
     namespace detail {

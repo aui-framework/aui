@@ -26,10 +26,6 @@ void AViewProfiler::displayBoundsOn(AView& v, ARenderContext ctx) {
 
     RenderHints::PushMatrix m(ctx.canvas);
     ctx.canvas.setTransform(glm::translate(glm::mat4(1.f), glm::vec3{v.getPositionInWindow(), 0.f}));
-    glEnable(GL_STENCIL_TEST);
-    glStencilMask(0xff);
-    glStencilOp(GL_INCR, GL_INCR, GL_INCR);
-    glStencilFunc(GL_EQUAL, 0, 0xff);
 
     {
         ctx.canvas.rectangle(APaint{ .brush = ASolidBrush{0x7cb6c180u} },
@@ -49,7 +45,6 @@ void AViewProfiler::displayBoundsOn(AView& v, ARenderContext ctx) {
                              {v.getWidth() + v.getMargin().horizontal(), v.getHeight() + v.getMargin().vertical()});
     }
 
-    glDisable(GL_STENCIL_TEST);
     {
         int x = -v.getMargin().left;
         int y = v.getHeight() + v.getMargin().bottom + 2_dp;

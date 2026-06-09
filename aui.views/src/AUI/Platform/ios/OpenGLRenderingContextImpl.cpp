@@ -14,15 +14,15 @@
 //
 
 #include <dlfcn.h>
-#include <AUI/GL/gl.h>
+#include <AUI/Render/ARender/GL/gl.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
-#include <AUI/GL/GLDebug.h>
+#include <AUI/Render/ARender/GL/GLDebug.h>
 
-#include <AUI/GL/OpenGLBackend.hpp>
-#include <AUI/GL/State.h>
+#include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
+#include <AUI/Render/ARender/GL/State.h>
 
 static void* UIKit_GL_GetProcAddress(const char *proc)
 {

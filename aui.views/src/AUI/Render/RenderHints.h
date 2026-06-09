@@ -12,13 +12,11 @@
 #pragma once
 
 #include <glm/glm.hpp>
+#include <variant>
 #include <AUI/Views.h>
 #include <AUI/Common/AColor.h>
-#include <AUI/GL/gl.h>
-#include "IRenderer.h"
-#include <variant>
+#include <AUI/Render/IRenderer.h>
 #include <AUI/Render/ACanvas.hpp>
-
 #include <AUI/Render/IRendererBackend.h>
 
 namespace RenderHints {

@@ -46,7 +46,7 @@ public:
             // draw red rects to highlight views
             if (auto matcher = ::UIMatcher::current()) {
                 for (auto& v: matcher->toSet()) {
-                    AWindow::current()->getRenderingContext()->renderer().rectangleBorder(ASolidBrush{0xaae00000_argb},
+                    AWindow::current()->getRenderingContext()->canvas().rectangleBorder(APaint{ASolidBrush{0xaae00000_argb}},
                                         v->getPositionInWindow() - glm::ivec2{1, 1},
                                         v->getSize() + glm::ivec2{2, 2});
                 }

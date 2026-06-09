@@ -11,7 +11,7 @@
 
 #include "AUIWidget.h"
 #include "gtk_functions.h"
-#include <AUI/GL/gl.h>
+#include <AUI/Render/ARender/GL/gl.h>
 #include <cassert>
 #include <numeric>
 #include <optional>

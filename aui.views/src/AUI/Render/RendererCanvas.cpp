@@ -14,8 +14,8 @@
 #include <AUI/Render/IRendererBackend.h>
 #include <AUI/Render/FontAtlas.hpp>
 #include <range/v3/all.hpp>
-#include <AUI/GL/OpenGLBackend.hpp>
-#include <AUI/Software/SoftwareRenderer.h>
+#include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
+#include <AUI/Render/ARender/Software/SoftwareRenderer.h>
 
 RendererCanvas::RendererCanvas(ACanvas& canvas, IRendererBackend& backend) : mCanvas(canvas), mBackend(backend) {}
 

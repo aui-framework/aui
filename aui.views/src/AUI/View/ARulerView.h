@@ -18,7 +18,6 @@
 
 #include <AUI/View/AView.h>
 #include <AUI/Util/ALayoutDirection.h>
-#include <AUI/GL/Vao.h>
 #include "AUI/Font/IFontView.h"
 
 /**
@@ -31,7 +30,6 @@
 class API_AUI_VIEWS ARulerView: public AView, public IFontView {
 private:
     ALayoutDirection mLayoutDirection;
-    _<gl::Vao> mPrecompiledLines;
 
     int mOffsetPx = 0;
 

@@ -15,8 +15,8 @@
 #include "AUI/Common/AByteBuffer.h"
 #include "AUI/Image/AImage.h"
 #include "AUI/Image/APixelFormat.h"
-#include "AUI/Software/SoftwareRenderer.h"
-#include <AUI/Render/ADisplayListCanvas.hpp>
+#include "AUI/Render/ARender/Software/SoftwareRenderer.h"
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext() {}

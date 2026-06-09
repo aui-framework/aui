@@ -13,7 +13,7 @@
 
 #include <cstdint>
 #include <AUI/Common/AString.h>
-#include <AUI/GL/State.h>
+#include <AUI/Render/ARender/GL/State.h>
 
 namespace gl {
 constexpr uint32_t TEXTURE_1D = 0x0DE1;

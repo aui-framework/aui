@@ -12,8 +12,8 @@
 #pragma once
 
 #include <AUI/Render/IRendererBackend.h>
-#include <AUI/Render/ADrawList.hpp>
-#include <AUI/Render/ADisplayListCanvas.hpp>
+#include <AUI/Render/ARender/ADrawList.hpp>
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
 #include <AUI/Render/RendererCanvas.h>
 
 class CommonOffscreenRenderPass : public IOffscreenRenderPass {

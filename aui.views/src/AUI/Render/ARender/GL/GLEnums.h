@@ -10,7 +10,7 @@
  */
 
 #pragma once
-#include <AUI/GL/gl.h>
+#include <AUI/Render/ARender/GL/gl.h>
 
 namespace gl {
     enum class Multisampling {

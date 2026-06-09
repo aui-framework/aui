@@ -10,7 +10,7 @@
  */
 
 #include "OpenGLRenderingContext.h"
-#include <AUI/GL/gl.h>
+#include <AUI/Render/ARender/GL/gl.h>
 
 static constexpr auto LOG_TAG = "OpenGLRenderingContext";
 
