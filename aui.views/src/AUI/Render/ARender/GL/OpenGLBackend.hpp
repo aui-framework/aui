@@ -22,7 +22,6 @@
 #include <AUI/Render/FontAtlas.hpp>
 #include "AUI/Render/ABorderStyle.h"
 #include <AUI/Render/IRendererBackend.h>
-#include "AUI/Render/ARender/GL/RenderTarget/TextureRenderTarget.h"
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Platform/ASurface.h>
 #include <AUI/Render/ACanvas.hpp>
