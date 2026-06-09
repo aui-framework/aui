@@ -51,51 +51,6 @@ public:
         return mBitmapSize;
     }
 
-    inline void putPixel(const glm::uvec2& position, const glm::u8vec3& color) noexcept {
-        putPixel(position, glm::u8vec4(color, 255));
-    }
-#if AUI_PLATFORM_WIN
-    inline void putPixel(const glm::uvec2& position, const glm::u8vec4& color) noexcept {
-        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
-
-        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
-            + (mBitmapSize.x * position.y + position.x) * 4);
-        dataPtr[0] = color[2];
-        dataPtr[1] = color[1];
-        dataPtr[2] = color[0];
-        dataPtr[3] = color[3];
-    }
-    inline glm::u8vec4 getPixel(const glm::uvec2& position) noexcept {
-        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
-
-        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
-                                                  + (mBitmapSize.x * position.y + position.x) * 4);
-
-        return { dataPtr[2], dataPtr[1], dataPtr[0], dataPtr[3] };
-    }
-#else
-    inline void putPixel(const glm::uvec2& position, const glm::u8vec4& color) noexcept {
-        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
-
-        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob + (mBitmapSize.x * position.y + position.x) * 4);
-        dataPtr[0] = color[2];
-        dataPtr[1] = color[1];
-        dataPtr[2] = color[0];
-        dataPtr[3] = color[3];
-    }
-    inline glm::u8vec4 getPixel(const glm::uvec2& position) noexcept {
-        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
-
-        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob + (mBitmapSize.x * position.y + position.x) * 4);
-        return {
-            dataPtr[2],
-            dataPtr[1],
-            dataPtr[0],
-            dataPtr[3],
-        };
-    }
-#endif
-
     [[nodiscard]]
     const glm::uvec2& getBitmapSize() const noexcept {
         return mBitmapSize;

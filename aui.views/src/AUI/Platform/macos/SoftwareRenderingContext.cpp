@@ -39,7 +39,7 @@ void SoftwareRenderingContext::destroyNativeWindow(ASurface &window) {
 void SoftwareRenderingContext::beginPaint(ASurface &window) {
     CommonRenderingContext::beginPaint(window);
     mDrawList.clear();
-    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize);
+    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize, { mBitmapBlob, mBitmapSize.x * mBitmapSize.y * 4 });
 }
 
 void SoftwareRenderingContext::endPaint(ASurface &window) {
@@ -56,8 +56,8 @@ void SoftwareRenderingContext::beginResize(ASurface &window) {
 void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     CommonRenderingContext::init(init);
     mRenderer = _new<SoftwareRenderer>();
-    mRenderer->setContext(this);
     mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
+
     mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
 }
 

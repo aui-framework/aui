@@ -21,12 +21,12 @@
 #include "SoftwareTexture.h"
 #include <unordered_map>
 
+class SoftwareFramebufferTexture;
+
 class SoftwareRenderer: public IRendererBackend {
 public:
     SoftwareRenderer();
     ~SoftwareRenderer() override = default;
-
-    void setContext(SoftwareRenderingContext* context) { mContext = context; }
 
     void solidRectangles(const ADrawList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) override;
     void gradientRectangles(const ADrawList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) override;
@@ -51,9 +51,9 @@ public:
     void setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) override;
     void setClipRect(const ARect<float>& rect) override { mClipRect = rect; }
     [[nodiscard]]
-    glm::uvec2 getViewportSize() const override { return mRenderTarget ? mRenderTarget->size() : (mContext ? mContext->getBitmapSize() : glm::uvec2(0)); }
+    glm::uvec2 getViewportSize() const override { return mRenderTarget ? mRenderTarget->size() : glm::uvec2(0); }
 
-    _<ITexture> createFramebufferWrapper(glm::uvec2 size);
+    _<ITexture> createFramebufferWrapper(glm::uvec2 size, std::span<uint8_t> data);
 
     void setRenderMaskMode(bool enabled) override {}
     void clear(const AColor& color) override;
@@ -88,7 +88,6 @@ private:
     void putPixel(glm::ivec2 pos, AColor color, const APaint& paint);
     void drawLine(glm::ivec2 p0, glm::ivec2 p1, float width, AColor color, const APaint& paint);
 
-    SoftwareRenderingContext* mContext = nullptr;
     AImage* mRenderTarget = nullptr;
     ARect<float> mClipRect { .p1 = {-1e10, -1e10}, .p2 = {1e10, 1e10} };
     _<ITexture> mMask;

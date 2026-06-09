@@ -14,7 +14,7 @@
 #include <AUI/Render/ITexture.h>
 
 class SoftwareTexture: public ITexture {
-private:
+protected:
     AImage mImage;
     TextureFilter mFilter = TextureFilter::LINEAR;
 
@@ -35,6 +35,10 @@ public:
     }
 
     [[nodiscard]] const AImage& getImage() const noexcept {
+        return mImage;
+    }
+
+    [[nodiscard]] AImage& getImage() noexcept {
         return mImage;
     }
 

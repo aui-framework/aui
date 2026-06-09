@@ -34,15 +34,15 @@ IRendererBackend& SoftwareRenderingContext::backend() {
 
 void SoftwareRenderingContext::init(const Init& init) {
     mRenderer = _new<SoftwareRenderer>();
-    mRenderer->setContext(this);
     mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
+
     mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
 }
 
 void SoftwareRenderingContext::beginPaint(ASurface &window) {
     mDrawList.clear();
     if (!mRenderer) return;
-    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize);
+    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize, { mBitmapBlob, mBitmapSize.x * mBitmapSize.y * 4 });
 }
 
 void SoftwareRenderingContext::endPaint(ASurface &window) {

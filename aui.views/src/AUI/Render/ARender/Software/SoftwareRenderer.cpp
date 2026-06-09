@@ -244,17 +244,11 @@ float SoftwareRenderer::getMaskVal(glm::ivec2 pos) {
 }
 
 void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& paint) {
-    if (mRenderTarget && mRenderTarget->format() == APixelFormat::R8_UNORM) {
+    if (!mRenderTarget) return;
+    if (mRenderTarget->format() == APixelFormat::R8_UNORM) {
         color = AColor(color.a, 0.f, 0.f, color.a);
     }
-    glm::uvec2 bitmapSize;
-    if (mRenderTarget) {
-        bitmapSize = mRenderTarget->size();
-    } else if (mContext) {
-        bitmapSize = mContext->bitmapSize();
-    } else {
-        return;
-    }
+    glm::uvec2 bitmapSize = mRenderTarget->size();
 
     if (pos.x < 0 || pos.y < 0 || (uint32_t)pos.x >= bitmapSize.x || (uint32_t)pos.y >= bitmapSize.y) return;
     
@@ -266,12 +260,7 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
 
     AColor colorWithMask = color;
 
-    glm::vec4 dst;
-    if (mRenderTarget) {
-        dst = glm::vec4(mRenderTarget->get(glm::uvec2(pos)));
-    } else {
-        dst = glm::vec4(mContext->getPixel(glm::uvec2(pos))) / 255.f;
-    }
+    glm::vec4 dst = glm::vec4(mRenderTarget->get(glm::uvec2(pos)));
 
     AColor combined;
     if (paint.blending == Blending::CLEAR) {
@@ -295,11 +284,7 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
         combined = dst * (1.f - colorWithMask.a) + colorWithMask;
     }
 
-    if (mRenderTarget) {
-        mRenderTarget->set(glm::uvec2(pos), AColor(glm::clamp(combined, 0.f, 1.f)));
-    } else {
-        mContext->putPixel(glm::uvec2(pos), glm::u8vec4(glm::clamp(combined, 0.f, 1.f) * 255.f));
-    }
+    mRenderTarget->set(glm::uvec2(pos), AColor(glm::clamp(combined, 0.f, 1.f)));
 }
 
 void SoftwareRenderer::solidRectangles(const ADrawList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) {
@@ -735,14 +720,8 @@ void SoftwareRenderer::glyphs(const ADrawList::Glyphs& v, const glm::mat4& trans
                         AColor finalColor = pColor * maskColor.r;
                         putPixel({x, y}, finalColor, paint);
                     } else {
-                        glm::uvec2 bitmapSize;
-                        if (mRenderTarget) {
-                            bitmapSize = mRenderTarget->size();
-                        } else if (mContext) {
-                            bitmapSize = mContext->bitmapSize();
-                        } else {
-                            continue;
-                        }
+                        if (!mRenderTarget) continue;
+                        glm::uvec2 bitmapSize = mRenderTarget->size();
 
                         if (x < 0 || y < 0 || (uint32_t)x >= bitmapSize.x || (uint32_t)y >= bitmapSize.y) continue;
 
@@ -750,12 +729,7 @@ void SoftwareRenderer::glyphs(const ADrawList::Glyphs& v, const glm::mat4& trans
 
                         float globalMaskVal = getMaskVal({x, y});
 
-                        glm::vec4 dst;
-                        if (mRenderTarget) {
-                            dst = glm::vec4(mRenderTarget->get(glm::uvec2(x, y)));
-                        } else {
-                            dst = glm::vec4(mContext->getPixel(glm::uvec2(x, y))) / 255.f;
-                        }
+                        glm::vec4 dst = glm::vec4(mRenderTarget->get(glm::uvec2(x, y)));
 
                         AColor res;
                         glm::vec3 mask = glm::vec3(maskColor) * globalMaskVal;
@@ -764,11 +738,7 @@ void SoftwareRenderer::glyphs(const ADrawList::Glyphs& v, const glm::mat4& trans
                         res.b = dst.b * (1.f - mask.b * pColor.a) + pColor.b * mask.b;
                         float avgMask = (mask.r + mask.g + mask.b) / 3.f;
                         res.a = dst.a * (1.f - avgMask * pColor.a) + avgMask * pColor.a;
-                        if (mRenderTarget) {
-                            mRenderTarget->set(glm::uvec2(x, y), AColor(glm::clamp(res, 0.f, 1.f)));
-                        } else {
-                            mContext->putPixel(glm::uvec2(x, y), glm::u8vec4(glm::clamp(res, 0.f, 1.f) * 255.f));
-                        }
+                        mRenderTarget->set(glm::uvec2(x, y), AColor(glm::clamp(res, 0.f, 1.f)));
                     }
                 }
             }
@@ -928,42 +898,42 @@ void SoftwareRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span
     }
 }
 
-namespace {
-class SoftwareFramebufferTexture : public ITexture {
+class SoftwareFramebufferTexture : public SoftwareTexture {
 public:
-    SoftwareFramebufferTexture(glm::uvec2 size) : mSize(size) {}
-    glm::u32vec2 getSize() const override { return mSize; }
-    APixelFormat getFormat() const override { return APixelFormat::R8G8B8A8_UNORM; }
+    SoftwareFramebufferTexture(glm::uvec2 size, std::span<uint8_t> data) {
+        struct Helper : AImage {
+            Helper(std::span<uint8_t> data, glm::uvec2 size) {
+                mSize = size;
+#if AUI_PLATFORM_WIN
+                mFormat = APixelFormat::B8G8R8A8_UNORM;
+#else
+                mFormat = APixelFormat::R8G8B8A8_UNORM;
+#endif
+                mStride = mSize.x * 4;
+                mData = AByteBufferView(reinterpret_cast<const char*>(data.data()), data.size());
+            }
+        };
+        mImage = Helper(data, size);
+    }
     void upload(AImageView image) override {}
-private:
-    glm::uvec2 mSize;
 };
-}
 
 void SoftwareRenderer::setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) {
     if (auto swTexture = dynamic_cast<SoftwareTexture*>(texture.get())) {
-        mRenderTarget = const_cast<AImage*>(&swTexture->getImage());
+        mRenderTarget = &swTexture->getImage();
     } else {
         mRenderTarget = nullptr;
     }
     mClipRect = { .p1 = {-1e10, -1e10}, .p2 = {1e10, 1e10} };
 }
 
-_<ITexture> SoftwareRenderer::createFramebufferWrapper(glm::uvec2 size) {
-    return _new<SoftwareFramebufferTexture>(size);
+_<ITexture> SoftwareRenderer::createFramebufferWrapper(glm::uvec2 size, std::span<uint8_t> data) {
+    return _new<SoftwareFramebufferTexture>(size, data);
 }
 
 void SoftwareRenderer::clear(const AColor& color) {
     if (mRenderTarget) {
         mRenderTarget->fill(color);
-    } else if (mContext) {
-        auto size = mContext->bitmapSize();
-        glm::u8vec4 c = glm::u8vec4(glm::clamp(color, 0.f, 1.f) * 255.f);
-        for (uint32_t y = 0; y < size.y; ++y) {
-            for (uint32_t x = 0; x < size.x; ++x) {
-                mContext->putPixel({x, y}, c);
-            }
-        }
     }
 }
 
