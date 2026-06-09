@@ -267,6 +267,11 @@ public:
         return buffer().data();
     }
 
+    [[nodiscard]]
+    size_t stride() const noexcept {
+        return mStride;
+    }
+
 protected:
     AByteBufferView mData;
     size_t mStride;
