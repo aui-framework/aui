@@ -1066,7 +1066,7 @@ IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& ma
 
 AImage SoftwareRenderer::readback(const _<ITexture>& texture) {
     if (auto softwareTexture = _cast<SoftwareTexture>(texture)) {
-        return softwareTexture->getImage();
+        return AImage(static_cast<const AImageView&>(softwareTexture->getImage()));
     }
     return {};
 }
