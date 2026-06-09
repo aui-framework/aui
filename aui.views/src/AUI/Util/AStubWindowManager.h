@@ -40,7 +40,7 @@ public:
         /**
          * @brief Renderer used for window manager.
          */
-        _unique<IRendererBackend> renderer;
+        _<IRendererBackend> renderer;
     };
 
     static void setConfig(Config config);
