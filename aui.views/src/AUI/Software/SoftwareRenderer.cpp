@@ -267,7 +267,7 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
 
     AColor combined;
     if (paint.blending == Blending::CLEAR) {
-        combined = colorWithMask;
+        combined = AColor(0.f, 0.f, 0.f, 0.f);
     } else if (paint.blending == Blending::INVERSE_DST) {
         combined.r = colorWithMask.r * (1.f - dst.r);
         combined.g = colorWithMask.g * (1.f - dst.g);
@@ -302,10 +302,10 @@ void SoftwareRenderer::solidRectangles(const ADrawList::SolidRectangles& v, cons
         auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
         auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
 
-        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
-        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
-        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
-        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}) - 1.f);
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}) + 1.f);
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}) - 1.f);
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}) + 1.f);
 
         AColor color = inst.color.premultiply();
         for (int y = (int)minY; y < (int)maxY; ++y) {
@@ -369,10 +369,10 @@ void SoftwareRenderer::gradientRectangles(const ADrawList::GradientRectangles& v
         auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
         auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
 
-        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
-        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
-        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
-        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}) - 1.f);
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}) + 1.f);
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}) - 1.f);
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}) + 1.f);
 
         for (int y = (int)minY; y < (int)maxY; ++y) {
             for (int x = (int)minX; x < (int)maxX; ++x) {
@@ -403,10 +403,10 @@ void SoftwareRenderer::texturedRectangles(const ADrawList::TexturedRectangles& v
         auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
         auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
 
-        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
-        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
-        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
-        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}) - 1.f);
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}) + 1.f);
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}) - 1.f);
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}) + 1.f);
 
         for (int y = (int)minY; y < (int)maxY; ++y) {
             for (int x = (int)minX; x < (int)maxX; ++x) {
@@ -436,10 +436,10 @@ void SoftwareRenderer::solidRoundedRectangles(const ADrawList::SolidRoundedRecta
         auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
         auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
 
-        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
-        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
-        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
-        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}) - 1.f);
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}) + 1.f);
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}) - 1.f);
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}) + 1.f);
 
         AColor color = inst.color.premultiply();
         float radius = v.radius;
@@ -478,10 +478,10 @@ void SoftwareRenderer::gradientRoundedRectangles(const ADrawList::GradientRounde
         auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
         auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
 
-        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
-        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
-        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
-        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}) - 1.f);
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}) + 1.f);
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}) - 1.f);
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}) + 1.f);
 
         AColor color = inst.color.premultiply();
         float radius = v.radius;
@@ -520,10 +520,10 @@ void SoftwareRenderer::texturedRoundedRectangles(const ADrawList::TexturedRounde
         auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
         auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
 
-        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
-        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
-        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
-        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}) - 1.f);
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}) + 1.f);
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}) - 1.f);
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}) + 1.f);
 
         AColor color = inst.color.premultiply();
         float radius = v.radius;
@@ -559,10 +559,10 @@ void SoftwareRenderer::rectangleBorders(const ADrawList::RectangleBorders& v, co
         auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
         auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
 
-        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
-        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
-        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
-        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}) - 1.f);
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}) + 1.f);
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}) - 1.f);
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}) + 1.f);
 
         AColor color = inst.color.premultiply();
         for (int y = (int)minY; y < (int)maxY; ++y) {
@@ -591,10 +591,10 @@ void SoftwareRenderer::roundedRectangleBorders(const ADrawList::RoundedRectangle
         auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
         auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
 
-        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
-        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
-        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
-        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}) - 1.f);
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}) + 1.f);
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}) - 1.f);
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}) + 1.f);
 
         AColor color = inst.color.premultiply();
         float radius = v.radius;
@@ -702,10 +702,10 @@ void SoftwareRenderer::glyphs(const ADrawList::Glyphs& v, const glm::mat4& trans
         auto p3 = transform * glm::vec4(inst.position + glm::vec2(0.f, inst.size.y), 0.f, 1.f);
         auto p4 = transform * glm::vec4(inst.position + inst.size, 0.f, 1.f);
 
-        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}));
-        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}));
-        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}));
-        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}));
+        float minX = std::floor(std::min({p1.x, p2.x, p3.x, p4.x}) - 1.f);
+        float maxX = std::ceil(std::max({p1.x, p2.x, p3.x, p4.x}) + 1.f);
+        float minY = std::floor(std::min({p1.y, p2.y, p3.y, p4.y}) - 1.f);
+        float maxY = std::ceil(std::max({p1.y, p2.y, p3.y, p4.y}) + 1.f);
 
         for (int y = (int)minY; y < (int)maxY; ++y) {
             for (int x = (int)minX; x < (int)maxX; ++x) {
@@ -951,8 +951,31 @@ _<ITexture> SoftwareRenderer::createFramebufferWrapper(glm::uvec2 size) {
 }
 
 void SoftwareRenderer::clear(const AColor& color) {
+    auto viewportSize = getViewportSize();
+    ARect<int> clearRect = { {0, 0}, glm::ivec2(viewportSize) };
+
+    clearRect.p1 = glm::max(clearRect.p1, glm::ivec2(std::floor(mClipRect.p1.x), std::floor(mClipRect.p1.y)));
+    clearRect.p2 = glm::min(clearRect.p2, glm::ivec2(std::ceil(mClipRect.p2.x), std::ceil(mClipRect.p2.y)));
+
+    if (clearRect.p1.x >= clearRect.p2.x || clearRect.p1.y >= clearRect.p2.y) return;
+
     if (mRenderTarget) {
-        mRenderTarget->fill(color);
+        if (clearRect.min() == glm::ivec2(0) && clearRect.size() == glm::ivec2(mRenderTarget->size())) {
+            mRenderTarget->fill(color);
+        } else {
+            for (int y = clearRect.p1.y; y < clearRect.p2.y; ++y) {
+                for (int x = clearRect.p1.x; x < clearRect.p2.x; ++x) {
+                    mRenderTarget->set({(uint32_t)x, (uint32_t)y}, color);
+                }
+            }
+        }
+    } else if (mContext) {
+        glm::u8vec4 c = glm::u8vec4(glm::clamp(color, 0.f, 1.f) * 255.f);
+        for (int y = clearRect.p1.y; y < clearRect.p2.y; ++y) {
+            for (int x = clearRect.p1.x; x < clearRect.p2.x; ++x) {
+                mContext->putPixel({(uint32_t)x, (uint32_t)y}, c);
+            }
+        }
     }
 }
 
