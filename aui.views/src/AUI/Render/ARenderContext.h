@@ -46,4 +46,12 @@ struct API_AUI_VIEWS ARenderContext {
     IRendererBackend& backend;
     [[deprecated("Use canvas instead")]]
     IRenderer& render;
+
+    /**
+     * @brief Clip rectangle relative to the view's coordinate space.
+     */
+    ARect<float> clipRect;
+
+    [[nodiscard]]
+    ARenderContext withShiftedPosition(const glm::vec2& position) const;
 };

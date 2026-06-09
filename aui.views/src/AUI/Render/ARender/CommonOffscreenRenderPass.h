@@ -28,6 +28,11 @@ public:
         backend(backend), target(target), canvas(displayList, backend), rendererCanvas(canvas, backend) {}
 
     ARenderContext context() override {
-        return { canvas, backend, rendererCanvas };
+        return {
+            .canvas = canvas,
+            .backend = backend,
+            .render = rendererCanvas,
+            .clipRect = ARect<float>::fromTopLeftPositionAndSize({0, 0}, target->getSize()),
+        };
     }
 };

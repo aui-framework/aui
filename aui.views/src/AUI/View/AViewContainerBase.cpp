@@ -51,14 +51,17 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext ctx) {
         return;
     }
 
+    if (!ctx.clipRect.isIntersects(ARect<float>::fromTopLeftPositionAndSize(view->getPosition() - 8, view->getSize() + 16))) {
+        return;
+    }
+
     auto saved = ctx.canvas.save();
 
-    glm::mat4 t(1.f);
-    view->getTransform(t);
-    ctx.canvas.setTransform(t);
+    auto shiftedContext = ctx.withShiftedPosition(view->getPosition());
+
     try {
-        view->render(ctx);
-        view->postRender(ctx);
+        view->render(shiftedContext);
+        view->postRender(shiftedContext);
     } catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Unable to render view: " << e;
         return;
@@ -233,6 +236,9 @@ void AViewContainerBase::removeView(size_t index) {
 }
 
 void AViewContainerBase::render(ARenderContext context) {
+    if (mOverflow == AOverflow::HIDDEN || mOverflow == AOverflow::HIDDEN_FROM_THIS) {
+        //context.clipRect = context.clipRect.intersect(ARect<float>::fromTopLeftPositionAndSize({0, 0}, getSize()));
+    }
     AView::render(context);
     renderChildren(context);
 }

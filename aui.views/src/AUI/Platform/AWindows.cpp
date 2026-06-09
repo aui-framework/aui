@@ -66,11 +66,13 @@ void AWindow::doDrawWindow() {
         highlightRedrawRequests = p->highlightRedrawRequests;
     }
 
+    ARect<float> clipRect = ARect<float>::fromTopLeftPositionAndSize({0, 0}, getSize());
     if (!highlightRedrawRequests && getInvalidArea()) {
         ARect<int> expandedArea = getInvalidArea().value();
         expandedArea.p1 -= 8;
         expandedArea.p2 += 8;
-        rc.canvas().pushClipRect(ARect<float>::fromTopLeftPositionAndSize(expandedArea.min(), expandedArea.size()));
+        clipRect = ARect<float>::fromTopLeftPositionAndSize(expandedArea.min(), expandedArea.size());
+        rc.canvas().pushClipRect(clipRect);
         APaint clear_paint;
         clear_paint.blending = Blending::CLEAR;
         rc.canvas().rectangle(clear_paint, expandedArea.min(), expandedArea.size());
@@ -82,6 +84,7 @@ void AWindow::doDrawWindow() {
         .canvas = rc.canvas(),
         .backend = rc.backend(),
         .render = rc.renderer(),
+        .clipRect = clipRect,
     });
 
     if (highlightRedrawRequests && getInvalidArea()) {
