@@ -212,12 +212,13 @@ public:
 
     void draw(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 
+private:
     void reorderAndBatch();
     void computeOverlaps();
+
     void resolvePhysicalMasks(IRendererBackend& renderer);
     void resolvePasses(IRendererBackend& renderer, const _<ITexture>& windowTarget);
 
-private:
     AVector<StoredCommand> mCommands;
     AVector<ARect<float>> mOpaqueRects;
 

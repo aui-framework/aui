@@ -15,17 +15,18 @@
 #include <AUI/Traits/callables.h>
 
 namespace {
+
 bool isBarrier(const ADrawList::StoredCommand::Command& cmd) {
     return std::visit(aui::lambda_overloaded {
-        [](const ADrawList::PushLayer&)            { return true; },
-        [](const ADrawList::PopLayer&)             { return true; },
-        [](const ADrawList::PushMask&)             { return true; },
-        [](const ADrawList::PopMask&)              { return true; },
-        [](const ADrawList::PushClipRect&)         { return true; },
-        [](const ADrawList::PushClipRoundedRect&)  { return true; },
-        [](const ADrawList::PopClipRect&)          { return true; },
-        [](const ADrawList::Clear&)                { return true; },
-        [](const auto&)                               { return false; }
+        [](const ADrawList::PushLayer&)           { return true; },
+        [](const ADrawList::PopLayer&)            { return true; },
+        [](const ADrawList::PushMask&)            { return true; },
+        [](const ADrawList::PopMask&)             { return true; },
+        [](const ADrawList::PushClipRect&)        { return true; },
+        [](const ADrawList::PushClipRoundedRect&) { return true; },
+        [](const ADrawList::PopClipRect&)         { return true; },
+        [](const ADrawList::Clear&)               { return true; },
+        [](const auto&)                           { return false; }
     }, cmd);
 }
 
@@ -130,8 +131,8 @@ std::size_t hashLogicalMask(const ADrawList::LogicalMask& m) {
         hash_combine(seed, std::hash<float>()(m.maskRect.w));
     }
 
-    for(int i = 0; i < 4; ++i) {
-        for(int j = 0; j < 4; ++j) {
+    for (int i = 0; i < 4; ++i) {
+        for (int j = 0; j < 4; ++j) {
             hash_combine(seed, std::hash<float>()(m.transform[i][j]));
         }
     }
@@ -169,7 +170,176 @@ bool isMaskScissorOnly(const ADrawList::LogicalMask& mask) {
            mask.op == AClipOp::OP_INTERSECT;
 }
 
+// Returns a key that identifies the "batch type" of a draw command for grouping purposes.
+// Commands with equal keys are candidates for merging (subject to the full tryMerge check).
+// Barriers return an empty optional — they are never batch-keyed.
+struct BatchKey {
+    std::size_t command_type_hash;
+    std::size_t paint_hash;
+    glm::mat4   transform;
+    // Per-type discriminators (texture pointer, radius, etc.)
+    const void* texture_ptr  = nullptr;
+    float       radius       = 0.f;
+    float       line_width   = 0.f;
+    float       border_width = 0.f;
+    float       point_size   = 0.f;
+    bool        premultiplied = false;
+    bool        subpixel      = false;
+    // Gradient params
+    AStaticVector<ALinearGradientBrush::ColorEntry, 2> gradient_colors = {};
+    AAngleRadians gradient_rotation;
+
+    bool operator==(const BatchKey&) const = default;
+};
+
+std::optional<BatchKey> makeBatchKey(const ADrawList::StoredCommand& sc) {
+    if (isBarrier(sc.command)) return std::nullopt;
+
+    BatchKey key;
+    key.command_type_hash = sc.command.index();
+    key.transform         = sc.transform;
+    {
+        std::size_t h = 0;
+        hash_combine(h, std::hash<float>()(sc.paint.color.r));
+        hash_combine(h, std::hash<float>()(sc.paint.color.g));
+        hash_combine(h, std::hash<float>()(sc.paint.color.b));
+        hash_combine(h, std::hash<float>()(sc.paint.color.a));
+        key.paint_hash = h;
+    }
+
+    std::visit(aui::lambda_overloaded {
+        [&](const ADrawList::TexturedRectangles& v) {
+            key.texture_ptr   = v.texture.get();
+            key.premultiplied = v.premultiplied;
+        },
+        [&](const ADrawList::TexturedRoundedRectangles& v) {
+            key.texture_ptr   = v.texture.get();
+            key.radius        = v.radius;
+            key.premultiplied = v.premultiplied;
+        },
+        [&](const ADrawList::SolidRoundedRectangles& v)    { key.radius = v.radius; },
+        [&](const ADrawList::GradientRoundedRectangles& v) {
+            key.radius           = v.radius;
+            key.gradient_colors  = v.colors;
+            key.gradient_rotation = v.rotation;
+        },
+        [&](const ADrawList::GradientRectangles& v) {
+            key.gradient_colors   = v.colors;
+            key.gradient_rotation = v.rotation;
+        },
+        [&](const ADrawList::RectangleBorders& v)        { key.line_width   = v.lineWidth; },
+        [&](const ADrawList::RoundedRectangleBorders& v) {
+            key.radius       = v.radius;
+            key.border_width = v.borderWidth;
+        },
+        [&](const ADrawList::Glyphs& v) {
+            key.texture_ptr = v.texture.get();
+            key.subpixel    = v.isSubpixel;
+        },
+        [&](const ADrawList::Lines& v)      { key.line_width  = v.width; },
+        [&](const ADrawList::LineBatches& v){ key.line_width  = v.width; },
+        [&](const ADrawList::Points& v)     { key.point_size  = v.size; },
+        [&](const auto&) {}
+    }, sc.command);
+
+    return key;
+}
+
+// ─────────────────────────────────────────────────────────────────────────────
+// Core reordering logic
+//
+// Goal: given a segment of draw commands (between two barriers), reorder them
+// so that compatible commands end up adjacent (enabling tryMerge) without
+// changing the visible result.
+//
+// Invariant: command A must stay before command B whenever their bounding
+// boxes overlap (painter's algorithm).  Non-overlapping commands are free to
+// swap.
+//
+// Algorithm: insertion-sort variant.
+//   For each incoming command (index i), walk backward from i-1 toward the
+//   segment start.  We may pass position j only when the new command does NOT
+//   overlap with the command currently at j.  The earliest reachable position
+//   is the insertion point.  We then try to merge with any same-BatchKey
+//   command in the range [insertion_point, i).  If a merge succeeds the new
+//   command disappears; otherwise it is inserted at insertion_point.
+//
+// This is O(n²) in the worst case, which is acceptable for typical frame
+// draw-call counts (hundreds, not millions).
+// ─────────────────────────────────────────────────────────────────────────────
+
+// Reorder [segment_begin, segment_end) in-place.
+// All elements in the range are non-barrier draw commands.
+void reorderSegment(AVector<ADrawList::StoredCommand>& cmds, std::size_t segment_begin, std::size_t segment_end) {
+    if (segment_end <= segment_begin + 1) return;
+
+    // We process each command starting from the second one.
+    // The "already placed" prefix is [segment_begin, i).
+    for (std::size_t i = segment_begin + 1; i < segment_end; ++i) {
+        ADrawList::StoredCommand incoming = std::move(cmds[i]);
+        const ARect<float>& incoming_bb = incoming.worldBoundingBox;
+
+        std::optional<BatchKey> incoming_key = makeBatchKey(incoming);
+
+        // Walk backward to find the earliest position we can insert without
+        // violating painter's-order constraints.
+        std::size_t insert_pos = i; // default: leave in place
+        for (int j = static_cast<int>(i) - 1; j >= static_cast<int>(segment_begin); --j) {
+            if (rectsOverlap(cmds[j].worldBoundingBox, incoming_bb)) {
+                // Can't move past j — j and incoming overlap visually.
+                break;
+            }
+            // No overlap: we can slide past this command.
+            insert_pos = static_cast<std::size_t>(j);
+        }
+
+        // Разрешаем мерж с блокирующим элементом.
+        // Если мы остановились из-за перекрытия, блокирующий элемент находится
+        // по индексу (insert_pos - 1). Так как tryMerge делает append (<<),
+        // порядок отрисовки сохраняется, и слияние безопасно.
+        std::size_t merge_start = (insert_pos > segment_begin) ? insert_pos - 1 : insert_pos;
+
+        // Если есть шанс на слияние, ищем цель в [merge_start, i)
+        if (incoming_key) {
+            for (std::size_t k = merge_start; k < i; ++k) {
+                std::optional<BatchKey> candidate_key = makeBatchKey(cmds[k]);
+                if (candidate_key && *candidate_key == *incoming_key) {
+                    if (tryMerge(cmds[k], incoming.command, incoming.transform, incoming.paint)) {
+                        // Expand bounding box of the merged command.
+                        cmds[k].worldBoundingBox.p1 = glm::min(cmds[k].worldBoundingBox.p1, incoming_bb.p1);
+                        cmds[k].worldBoundingBox.p2 = glm::max(cmds[k].worldBoundingBox.p2, incoming_bb.p2);
+
+                        // incoming is consumed; erase the empty slot.
+                        cmds.erase(cmds.begin() + static_cast<std::ptrdiff_t>(i));
+                        --segment_end; // segment shrank
+                        --i;           // reprocess this index (now holds what was i+1)
+                        goto next_command;
+                    }
+                }
+            }
+        }
+
+        // No merge found — physically relocate incoming to insert_pos so
+        // future commands have a better chance of merging with it.
+        if (insert_pos < i) {
+            // Rotate: move element at i to insert_pos, shift [insert_pos, i) right by 1.
+            std::rotate(
+                cmds.begin() + static_cast<std::ptrdiff_t>(insert_pos),
+                cmds.begin() + static_cast<std::ptrdiff_t>(i),
+                cmds.begin() + static_cast<std::ptrdiff_t>(i + 1));
+            // incoming is now at insert_pos; restore from our local copy
+            cmds[insert_pos] = std::move(incoming);
+        } else {
+            cmds[i] = std::move(incoming);
+        }
+
+        next_command:;
+    }
+}
+
 } // namespace
+
+// ─────────────────────────────────────────────────────────────────────────────
 
 void ADrawList::applyTransform(StoredCommand::Command& command, const glm::mat4& transform) {
     if (transform == glm::mat4(1.f)) return;
@@ -259,7 +429,7 @@ void ADrawList::applyTransform(StoredCommand::Command& command, const glm::mat4&
         },
         [&](ADrawList::LineBatches& v) {
             for (auto& p : v.points) {
-                p.first = glm::vec2(transform * glm::vec4(p.first, 0.f, 1.f));
+                p.first  = glm::vec2(transform * glm::vec4(p.first,  0.f, 1.f));
                 p.second = glm::vec2(transform * glm::vec4(p.second, 0.f, 1.f));
             }
         },
@@ -283,7 +453,7 @@ void ADrawList::applyTransform(StoredCommand::Command& command, const glm::mat4&
             auto lower = glm::floor(r.p1);
             auto upper = glm::ceil(r.p2);
             v.position = glm::ivec2(lower);
-            v.size = glm::ivec2(upper - lower);
+            v.size     = glm::ivec2(upper - lower);
         },
         [&](auto&) {}
     }, command);
@@ -350,7 +520,7 @@ ARect<float> ADrawList::boundingBoxOfCommand(const StoredCommand::Command& cmd, 
 
 void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APaint paint) {
     if (isBarrier(cmd)) {
-        // State update
+        // ── State update ──────────────────────────────────────────────────────
         std::visit(aui::lambda_overloaded {
             [&](const PushClipRect& v) {
                 mClipStack << mCurrentClipRect;
@@ -368,7 +538,6 @@ void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APai
                 if (v.op == AClipOp::OP_INTERSECT) {
                     mCurrentClipRect = mCurrentClipRect.intersect(world_rect);
                 }
-                // Normalise: radius == 0 is equivalent to a plain rect mask.
                 const LogicalMask::Type mask_type = (v.radius == 0.f)
                     ? LogicalMask::Type::Rect
                     : LogicalMask::Type::RoundedRect;
@@ -392,14 +561,19 @@ void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APai
             [&](const auto&) {}
         }, cmd);
 
+        // Flush reordering for the segment that just ended, then emit the barrier.
+        if (mCurrentSegmentStart < mCommands.size()) {
+            reorderSegment(mCommands, mCurrentSegmentStart, mCommands.size());
+        }
+
         mCommands << StoredCommand{std::move(cmd), transform, std::move(paint), {}, mCurrentClipRect};
         mCurrentSegmentStart = mCommands.size();
         return;
     }
 
-    // Draw command
+    // ── Draw command ──────────────────────────────────────────────────────────
     auto final_transform = transform;
-    auto final_command = std::move(cmd);
+    auto final_command   = std::move(cmd);
 
     if (ACanvas::isSimple(final_transform)) {
         applyTransform(final_command, final_transform);
@@ -408,22 +582,13 @@ void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APai
 
     auto bbox = boundingBoxOfCommand(final_command, final_transform);
 
+    // Trivial clip-rect cull
     if (bbox.p2.x <= mCurrentClipRect.p1.x || bbox.p1.x >= mCurrentClipRect.p2.x ||
         bbox.p2.y <= mCurrentClipRect.p1.y || bbox.p1.y >= mCurrentClipRect.p2.y) {
         return;
     }
 
-    for (int i = int(mCommands.size()) - 1; i >= int(mCurrentSegmentStart); --i) {
-        if (tryMerge(mCommands[i], final_command, final_transform, paint)) {
-            mCommands[i].worldBoundingBox.p1 = glm::min(mCommands[i].worldBoundingBox.p1, bbox.p1);
-            mCommands[i].worldBoundingBox.p2 = glm::max(mCommands[i].worldBoundingBox.p2, bbox.p2);
-            return;
-        }
-        if (rectsOverlap(mCommands[i].worldBoundingBox, bbox)) {
-            break;
-        }
-    }
-
+    // ── Build StoredCommand ───────────────────────────────────────────────────
     StoredCommand sc{std::move(final_command), final_transform, std::move(paint), bbox, mCurrentClipRect};
 
     auto isFullyInside = [](const ARect<float>& inner, const ARect<float>& outer) {
@@ -443,7 +608,8 @@ void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APai
 
         ARect<float> mask_world;
         if (eff_type == LogicalMask::Type::Texture) {
-            mask_world = transformRect(ARect<float>::fromTopLeftPositionAndSize({mask.maskRect.x, mask.maskRect.y}, {mask.maskRect.z, mask.maskRect.w}), mask.transform);
+            mask_world = transformRect(ARect<float>::fromTopLeftPositionAndSize(
+                {mask.maskRect.x, mask.maskRect.y}, {mask.maskRect.z, mask.maskRect.w}), mask.transform);
         } else {
             mask_world = transformRect(mask.rect, mask.transform);
         }
@@ -452,38 +618,34 @@ void ADrawList::add(StoredCommand::Command cmd, const glm::mat4& transform, APai
             ARect<float> safe_inner = { mask_world.p1 + glm::vec2(mask.radius), mask_world.p2 - glm::vec2(mask.radius) };
 
             if (mask.op == AClipOp::OP_INTERSECT) {
-                 if (isFullyOutside(bbox, mask_world)) {
-                    return; // Culled
-                 }
-                 if (isFullyInside(bbox, safe_inner)) continue;
+                if (isFullyOutside(bbox, mask_world))  return;
+                if (isFullyInside(bbox, safe_inner))   continue;
             } else if (mask.op == AClipOp::OP_DIFFERENCE) {
-                 if (isFullyInside(bbox, safe_inner)) {
-                     return; // Culled
-                 }
-                 if (isFullyOutside(bbox, mask_world)) continue;
+                if (isFullyInside(bbox, safe_inner))   return;
+                if (isFullyOutside(bbox, mask_world))  continue;
             }
-        }
-        else if (eff_type == LogicalMask::Type::Rect) {
+        } else if (eff_type == LogicalMask::Type::Rect) {
             if (mask.op == AClipOp::OP_INTERSECT) {
-                if (isFullyOutside(bbox, mask_world)) {
-                    return; // Culled
-                }
-                if (isFullyInside(bbox, mask_world)) continue;
+                if (isFullyOutside(bbox, mask_world))  return;
+                if (isFullyInside(bbox, mask_world))   continue;
             } else if (mask.op == AClipOp::OP_DIFFERENCE) {
-                if (isFullyInside(bbox, mask_world)) {
-                    return; // Culled
-                }
-                if (isFullyOutside(bbox, mask_world)) continue;
+                if (isFullyInside(bbox, mask_world))   return;
+                if (isFullyOutside(bbox, mask_world))  continue;
             }
         }
 
         sc.activeMasks.push_back(mask);
     }
+
     mCommands << std::move(sc);
 }
 
 void ADrawList::reorderAndBatch() {
-    // Now a no-op as it is done in add()
+    // Flush any open segment at the end of the command list.
+    if (mCurrentSegmentStart < mCommands.size()) {
+        reorderSegment(mCommands, mCurrentSegmentStart, mCommands.size());
+        mCurrentSegmentStart = mCommands.size();
+    }
 }
 
 void ADrawList::computeOverlaps() {
@@ -493,8 +655,7 @@ void ADrawList::computeOverlaps() {
 
         if (isBarrier(it->command)) continue;
 
-        const auto& clip = it->clipRect;
-        const auto& bb   = it->worldBoundingBox;
+        const auto& bb = it->worldBoundingBox;
 
         if (it->mask) {
             float mx1 = it->maskRect.x;
@@ -522,10 +683,10 @@ void ADrawList::computeOverlaps() {
         } else {
             bool opaque = std::visit(
                 aui::lambda_overloaded {
-                  [](const SolidRectangles& v) {
-                      return v.instances.size() == 1 && v.instances[0].color.a >= 0.999f;
-                  },
-                  [](const auto&) { return false; }
+                    [](const SolidRectangles& v) {
+                        return v.instances.size() == 1 && v.instances[0].color.a >= 0.999f;
+                    },
+                    [](const auto&) { return false; }
                 }, it->command);
             if (opaque) mOpaqueRects << bb;
         }
@@ -535,14 +696,14 @@ void ADrawList::computeOverlaps() {
 void ADrawList::resolvePhysicalMasks(IRendererBackend& renderer) {
     struct PhysicalMaskState {
         _<ITexture> texture;
-        glm::vec4 rect;
+        glm::vec4   rect;
     };
 
     std::unordered_map<std::size_t, PhysicalMaskState> mask_cache;
 
     for (auto& entity : mCommands) {
         if (entity.culled || entity.activeMasks.empty() || isBarrier(entity.command)) {
-            entity.mask = nullptr;
+            entity.mask     = nullptr;
             entity.maskRect = glm::vec4(0.f);
             continue;
         }
@@ -553,22 +714,22 @@ void ADrawList::resolvePhysicalMasks(IRendererBackend& renderer) {
         }
 
         if (auto it = mask_cache.find(combined_hash); it != mask_cache.end()) {
-            entity.mask = it->second.texture;
+            entity.mask     = it->second.texture;
             entity.maskRect = it->second.rect;
             continue;
         }
 
         _<ITexture> composite_texture = nullptr;
-        glm::vec4 composite_rect(0.f);
+        glm::vec4   composite_rect(0.f);
 
         auto applyMask = [&](const _<ITexture>& new_mask, const glm::vec4& new_rect) {
             if (!composite_texture) {
                 composite_texture = new_mask;
-                composite_rect = new_rect;
+                composite_rect    = new_rect;
             } else {
-                auto merged = renderer.mergeMasks(composite_texture, composite_rect, new_mask, new_rect);
+                auto merged       = renderer.mergeMasks(composite_texture, composite_rect, new_mask, new_rect);
                 composite_texture = merged.texture;
-                composite_rect = merged.rect;
+                composite_rect    = merged.rect;
             }
         };
 
@@ -576,22 +737,21 @@ void ADrawList::resolvePhysicalMasks(IRendererBackend& renderer) {
             const LogicalMask::Type eff_type = effectiveMaskType(mask);
 
             if (eff_type == LogicalMask::Type::Texture) {
-                auto r = transformRect(ARect<float>::fromTopLeftPositionAndSize({mask.maskRect.x, mask.maskRect.y}, {mask.maskRect.z, mask.maskRect.w}), mask.transform);
-
+                auto r = transformRect(ARect<float>::fromTopLeftPositionAndSize(
+                    {mask.maskRect.x, mask.maskRect.y}, {mask.maskRect.z, mask.maskRect.w}), mask.transform);
                 glm::vec4 display_list_rect(r.p1.x, r.p1.y, r.size().x, r.size().y);
                 applyMask(mask.texture, display_list_rect);
             } else {
-                ARect<float> world_rect = transformRect(mask.rect, mask.transform);
+                ARect<float> world_rect  = transformRect(mask.rect, mask.transform);
                 ARect<float> mask_bounds = { world_rect.p1 - glm::vec2(2.f), world_rect.p2 + glm::vec2(2.f) };
 
                 if (mask_bounds.size().x > 0.f && mask_bounds.size().y > 0.f) {
                     _<ITexture> generated_mask = nullptr;
-                    glm::vec4 rect_for_apply(mask_bounds.p1.x, mask_bounds.p1.y, mask_bounds.size().x, mask_bounds.size().y);
+                    glm::vec4   rect_for_apply(mask_bounds.p1.x, mask_bounds.p1.y, mask_bounds.size().x, mask_bounds.size().y);
 
                     if (eff_type == LogicalMask::Type::RoundedRect) {
                         generated_mask = renderer.createRoundedRectMask(world_rect, mask.radius, mask.op == AClipOp::OP_DIFFERENCE, mask_bounds);
                     } else {
-                        // LogicalMask::Type::Rect (including RoundedRect with radius == 0)
                         generated_mask = renderer.createRectMask(world_rect, true, mask_bounds);
                     }
 
@@ -603,8 +763,7 @@ void ADrawList::resolvePhysicalMasks(IRendererBackend& renderer) {
         }
 
         mask_cache[combined_hash] = { composite_texture, composite_rect };
-
-        entity.mask = composite_texture;
+        entity.mask     = composite_texture;
         entity.maskRect = composite_rect;
     }
 }
@@ -618,6 +777,7 @@ void ADrawList::resolvePasses(IRendererBackend& renderer, const _<ITexture>& win
 void ADrawList::draw(IRendererBackend& renderer, const _<ITexture>& windowTarget) {
     resolvePhysicalMasks(renderer);
     resolvePasses(renderer, windowTarget);
+
     for (const auto& pass : mPasses) {
         renderer.beginRenderPass(pass.target);
         renderer.setRenderTarget(pass.target, pass.size);
@@ -626,15 +786,15 @@ void ADrawList::draw(IRendererBackend& renderer, const _<ITexture>& windowTarget
         for (const auto& entity : pass.entities) {
             bool isControl = std::visit(
                 aui::lambda_overloaded {
-                  [&](const PushLayer&) { return true; },
-                  [&](const PopLayer&) { return true; },
-                  [&](const PushMask&) { return true; },
-                  [&](const PopMask&) { return true; },
-                  [&](const PushClipRect&) { return true; },
-                  [&](const PushClipRoundedRect&) { return true; },
-                  [&](const PopClipRect&) { return true; },
-                  [&](const Clear& v) { renderer.clear(v.color); return true; },
-                  [&](const auto&) { return false; }
+                    [&](const PushLayer&)            { return true; },
+                    [&](const PopLayer&)             { return true; },
+                    [&](const PushMask&)             { return true; },
+                    [&](const PopMask&)              { return true; },
+                    [&](const PushClipRect&)         { return true; },
+                    [&](const PushClipRoundedRect&)  { return true; },
+                    [&](const PopClipRect&)          { return true; },
+                    [&](const Clear& v)              { renderer.clear(v.color); return true; },
+                    [&](const auto&)                 { return false; }
                 },
                 entity.command);
 
@@ -643,41 +803,41 @@ void ADrawList::draw(IRendererBackend& renderer, const _<ITexture>& windowTarget
                 renderer.setMask(entity.mask, entity.maskRect);
                 std::visit(
                     aui::lambda_overloaded {
-                      [&](const SolidRectangles& v) { renderer.solidRectangles(v, entity.transform, entity.paint); },
-                      [&](const GradientRectangles& v) { renderer.gradientRectangles(v, entity.transform, entity.paint); },
-                      [&](const TexturedRectangles& v) {
-                          if (v.texture && v.texture->getOrigin() == TextureOrigin::BOTTOM_LEFT) {
-                              auto copy = v;
-                              copy.uv1.y = 1.f - copy.uv1.y;
-                              copy.uv2.y = 1.f - copy.uv2.y;
-                              renderer.texturedRectangles(copy, entity.transform, entity.paint);
-                          } else {
-                              renderer.texturedRectangles(v, entity.transform, entity.paint);
-                          }
-                      },
-                      [&](const SolidRoundedRectangles& v) { renderer.solidRoundedRectangles(v, entity.transform, entity.paint); },
-                      [&](const GradientRoundedRectangles& v) { renderer.gradientRoundedRectangles(v, entity.transform, entity.paint); },
-                      [&](const TexturedRoundedRectangles& v) {
-                          if (v.texture && v.texture->getOrigin() == TextureOrigin::BOTTOM_LEFT) {
-                              auto copy = v;
-                              copy.uv1.y = 1.f - copy.uv1.y;
-                              copy.uv2.y = 1.f - copy.uv2.y;
-                              renderer.texturedRoundedRectangles(copy, entity.transform, entity.paint);
-                          } else {
-                              renderer.texturedRoundedRectangles(v, entity.transform, entity.paint);
-                          }
-                      },
-                      [&](const RectangleBorders& v) { renderer.rectangleBorders(v, entity.transform, entity.paint); },
-                      [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, entity.transform, entity.paint); },
-                      [&](const BoxShadow& v) { renderer.boxShadow(v, entity.transform, entity.paint); },
-                      [&](const BoxShadowInner& v) { renderer.boxShadowInner(v, entity.transform, entity.paint); },
-                      [&](const Glyphs& v) { renderer.glyphs(v, entity.transform, entity.paint); },
-                      [&](const Lines& v) { renderer.lines(v, entity.transform, entity.paint); },
-                      [&](const Points& v) { renderer.points(v, entity.transform, entity.paint); },
-                      [&](const LineBatches& v) { renderer.lines(v, entity.transform, entity.paint); },
-                      [&](const SquareSector& v) { renderer.squareSector(v, entity.transform, entity.paint); },
-                      [&](const Backdrop& v) { renderer.backdrops(v, entity.transform); },
-                      [&](const auto&) {}
+                        [&](const SolidRectangles& v)         { renderer.solidRectangles(v, entity.transform, entity.paint); },
+                        [&](const GradientRectangles& v)      { renderer.gradientRectangles(v, entity.transform, entity.paint); },
+                        [&](const TexturedRectangles& v) {
+                            if (v.texture && v.texture->getOrigin() == TextureOrigin::BOTTOM_LEFT) {
+                                auto copy = v;
+                                copy.uv1.y = 1.f - copy.uv1.y;
+                                copy.uv2.y = 1.f - copy.uv2.y;
+                                renderer.texturedRectangles(copy, entity.transform, entity.paint);
+                            } else {
+                                renderer.texturedRectangles(v, entity.transform, entity.paint);
+                            }
+                        },
+                        [&](const SolidRoundedRectangles& v)  { renderer.solidRoundedRectangles(v, entity.transform, entity.paint); },
+                        [&](const GradientRoundedRectangles& v){ renderer.gradientRoundedRectangles(v, entity.transform, entity.paint); },
+                        [&](const TexturedRoundedRectangles& v) {
+                            if (v.texture && v.texture->getOrigin() == TextureOrigin::BOTTOM_LEFT) {
+                                auto copy = v;
+                                copy.uv1.y = 1.f - copy.uv1.y;
+                                copy.uv2.y = 1.f - copy.uv2.y;
+                                renderer.texturedRoundedRectangles(copy, entity.transform, entity.paint);
+                            } else {
+                                renderer.texturedRoundedRectangles(v, entity.transform, entity.paint);
+                            }
+                        },
+                        [&](const RectangleBorders& v)        { renderer.rectangleBorders(v, entity.transform, entity.paint); },
+                        [&](const RoundedRectangleBorders& v) { renderer.roundedRectangleBorders(v, entity.transform, entity.paint); },
+                        [&](const BoxShadow& v)               { renderer.boxShadow(v, entity.transform, entity.paint); },
+                        [&](const BoxShadowInner& v)          { renderer.boxShadowInner(v, entity.transform, entity.paint); },
+                        [&](const Glyphs& v)                  { renderer.glyphs(v, entity.transform, entity.paint); },
+                        [&](const Lines& v)                   { renderer.lines(v, entity.transform, entity.paint); },
+                        [&](const Points& v)                  { renderer.points(v, entity.transform, entity.paint); },
+                        [&](const LineBatches& v)             { renderer.lines(v, entity.transform, entity.paint); },
+                        [&](const SquareSector& v)            { renderer.squareSector(v, entity.transform, entity.paint); },
+                        [&](const Backdrop& v)                { renderer.backdrops(v, entity.transform); },
+                        [&](const auto&)                      {}
                     },
                     entity.command);
             }
@@ -688,4 +848,5 @@ void ADrawList::draw(IRendererBackend& renderer, const _<ITexture>& windowTarget
 
 void ADrawList::optimize() {
     computeOverlaps();
+    reorderAndBatch();
 }
