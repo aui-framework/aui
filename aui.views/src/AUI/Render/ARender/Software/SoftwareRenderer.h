@@ -84,6 +84,7 @@ public:
     const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
 
 private:
+    float getMaskVal(glm::ivec2 pos);
     void putPixel(glm::ivec2 pos, AColor color, const APaint& paint);
     void drawLine(glm::ivec2 p0, glm::ivec2 p1, float width, AColor color, const APaint& paint);
 

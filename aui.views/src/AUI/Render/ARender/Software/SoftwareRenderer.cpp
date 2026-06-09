@@ -109,12 +109,23 @@ float roundedRectBorderCoverage(glm::vec2 localPos, glm::vec2 size, float radius
     return glm::clamp(0.5f - sdf_border * scale, 0.f, 1.f);
 }
 
-AColor sample(const AImage& img, glm::vec2 uv, TextureFilter filter) {
+AColor sample(const AImage& img, glm::vec2 uv, TextureFilter filter, bool clampToEdge = false) {
     if (img.width() == 0 || img.height() == 0) return AColor::BLACK;
+
+    auto getSafe = [&](int x, int y) {
+        if (clampToEdge) {
+            x = glm::clamp(x, 0, (int)img.width() - 1);
+            y = glm::clamp(y, 0, (int)img.height() - 1);
+        } else {
+            if (x < 0 || y < 0 || x >= (int)img.width() || y >= (int)img.height()) return glm::vec4(0.f);
+        }
+        return glm::vec4(img.get({(uint32_t)x, (uint32_t)y}));
+    };
+
     if (filter == TextureFilter::NEAREST) {
-        int x = (int)(uv.x * (float)img.width());
-        int y = (int)(uv.y * (float)img.height());
-        return img.get({(uint32_t)glm::clamp(x, 0, (int)img.width() - 1), (uint32_t)glm::clamp(y, 0, (int)img.height() - 1)});
+        int x = (int)std::floor(uv.x * (float)img.width());
+        int y = (int)std::floor(uv.y * (float)img.height());
+        return getSafe(x, y);
     }
     float tx = uv.x * (float)img.width() - 0.5f;
     float ty = uv.y * (float)img.height() - 0.5f;
@@ -125,10 +136,6 @@ AColor sample(const AImage& img, glm::vec2 uv, TextureFilter filter) {
 
     float fx = tx - (float)x0;
     float fy = ty - (float)y0;
-
-    auto getSafe = [&](int x, int y) {
-        return glm::vec4(img.get({(uint32_t)glm::clamp(x, 0, (int)img.width() - 1), (uint32_t)glm::clamp(y, 0, (int)img.height() - 1)}));
-    };
 
     glm::vec4 c00 = getSafe(x0, y0);
     glm::vec4 c10 = getSafe(x1, y0);
@@ -225,6 +232,17 @@ void gaussianBlur(AImage& image, int radius) {
 SoftwareRenderer::SoftwareRenderer() :
     mFontCache(AFontManager::inst().createCache(this)) {}
 
+float SoftwareRenderer::getMaskVal(glm::ivec2 pos) {
+    if (!mMask) return 1.f;
+    auto s = _cast<SoftwareTexture>(mMask);
+    if (!s) return 1.f;
+
+    glm::vec2 texSize = s->getImage().size();
+    glm::vec2 relativePos = glm::vec2(pos) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y);
+    glm::vec2 uv = glm::clamp(relativePos, glm::vec2(0.f), glm::vec2(mMaskRect.z, mMaskRect.w)) / texSize;
+    return glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR, true)).r;
+}
+
 void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& paint) {
     if (mRenderTarget && mRenderTarget->format() == APixelFormat::R8_UNORM) {
         color = AColor(color.a, 0.f, 0.f, color.a);
@@ -242,15 +260,7 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
     
     if (pos.x < mClipRect.p1.x || pos.y < mClipRect.p1.y || pos.x >= mClipRect.p2.x || pos.y >= mClipRect.p2.y) return;
 
-    float maskVal = 1.f;
-    if (mMask) {
-        auto s = _cast<SoftwareTexture>(mMask);
-        if (s) {
-            glm::vec2 texSize = s->getImage().size();
-            glm::vec2 uv = (glm::vec2(pos) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y)) / texSize;
-            maskVal = glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR)).r;
-        }
-    }
+    float maskVal = getMaskVal(pos);
     if (maskVal <= 0.001f) return;
     color = color * maskVal;
 
@@ -738,14 +748,7 @@ void SoftwareRenderer::glyphs(const ADrawList::Glyphs& v, const glm::mat4& trans
 
                         if (x < mClipRect.p1.x || y < mClipRect.p1.y || x >= mClipRect.p2.x || y >= mClipRect.p2.y) continue;
 
-                        float globalMaskVal = 1.f;
-                        if (mMask) {
-                            auto s = _cast<SoftwareTexture>(mMask);
-                            if (s) {
-                                glm::vec2 uv = (glm::vec2(x, y) + 0.5f - glm::vec2(mMaskRect.x, mMaskRect.y)) / glm::vec2(s->getImage().size());
-                                globalMaskVal = glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR)).r;
-                            }
-                        }
+                        float globalMaskVal = getMaskVal({x, y});
 
                         glm::vec4 dst;
                         if (mRenderTarget) {
@@ -988,10 +991,8 @@ _<ITexture> SoftwareRenderer::createRectMask(const ARect<float>& rect, bool inve
             float ax = bounds.p1.x + dx + 0.5f;
             float ay = bounds.p1.y + dy + 0.5f;
             
-            bool inside = ax >= rect.p1.x && ax <= rect.p2.x &&
-                          ay >= rect.p1.y && ay <= rect.p2.y;
-            
-            float val = (inside ^ inverted) ? 1.f : 0.f;
+            float val = roundedRectCoverage({ax - rect.p1.x, ay - rect.p1.y}, rect.size(), 0.f, 1.f);
+            if (inverted) val = 1.f - val;
             destImg.set({dx, dy}, AColor(val, 0.f, 0.f, 1.f));
         }
     }
@@ -1008,29 +1009,19 @@ _<ITexture> SoftwareRenderer::createRoundedRectMask(const ARect<float>& rect, fl
         mRoundedRectMaskCache.erase(it);
     }
 
-    auto usefulBounds = inverted ? bounds : rect.intersect(bounds);
-    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(usefulBounds.size().x)), std::max(1u, (unsigned)std::ceil(usefulBounds.size().y)));
+    glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(bounds.size().x)), std::max(1u, (unsigned)std::ceil(bounds.size().y)));
     auto destTexture = createTexture(size, APixelFormat::R8_UNORM);
     AImage destImg(size, APixelFormat::R8_UNORM);
 
-    const auto rectMin = rect.min();
-    const auto rectMax = rect.max();
     const auto rectSize = rect.size();
     radius = std::max(0.f, std::min(radius, std::min(rectSize.x, rectSize.y) * 0.5f));
 
-    auto insideRoundedRect = [&](float ax, float ay) {
-        auto qx = std::abs(ax - (rectMin.x + rectMax.x) * 0.5f) - (rectSize.x * 0.5f - radius);
-        auto qy = std::abs(ay - (rectMin.y + rectMax.y) * 0.5f) - (rectSize.y * 0.5f - radius);
-        auto outer = glm::length(glm::max(glm::vec2(qx, qy), glm::vec2(0.f)));
-        auto inner = std::min(std::max(qx, qy), 0.f);
-        return outer + inner <= radius;
-    };
-
     for (unsigned dy = 0; dy < size.y; ++dy) {
         for (unsigned dx = 0; dx < size.x; ++dx) {
-            float ax = usefulBounds.p1.x + dx + 0.5f;
-            float ay = usefulBounds.p1.y + dy + 0.5f;
-            float val = (insideRoundedRect(ax, ay) ^ inverted) ? 1.f : 0.f;
+            float ax = bounds.p1.x + dx + 0.5f;
+            float ay = bounds.p1.y + dy + 0.5f;
+            float val = roundedRectCoverage({ax - rect.p1.x, ay - rect.p1.y}, rectSize, radius, 1.f);
+            if (inverted) val = 1.f - val;
             destImg.set({dx, dy}, AColor(val, 0.f, 0.f, 1.f));
         }
     }
@@ -1063,7 +1054,6 @@ IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& ma
     glm::u32vec2 size(std::max(1u, (unsigned)std::ceil(mergedRect.z)), std::max(1u, (unsigned)std::ceil(mergedRect.w)));
     auto destTexture = createTexture(size, APixelFormat::R8_UNORM);
     AImage destImg(size, APixelFormat::R8_UNORM);
-    std::memset(destImg.modifiableBuffer().data(), 0, destImg.modifiableBuffer().getSize());
 
     auto s1 = _cast<SoftwareTexture>(mask1);
     auto s2 = _cast<SoftwareTexture>(mask2);
@@ -1077,12 +1067,9 @@ IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& ma
             if (ax >= mask1Rect.x && ax <= mask1Rect.x + mask1Rect.z &&
                 ay >= mask1Rect.y && ay <= mask1Rect.y + mask1Rect.w) {
                 if (s1) {
-                    glm::uvec2 m1Size = s1->getImage().size();
-                    float tx = (ax - mask1Rect.x) / mask1Rect.z * m1Size.x;
-                    float ty = (ay - mask1Rect.y) / mask1Rect.w * m1Size.y;
-                    unsigned px = glm::clamp((unsigned)tx, 0u, m1Size.x - 1);
-                    unsigned py = glm::clamp((unsigned)ty, 0u, m1Size.y - 1);
-                    val1 = glm::vec4(s1->getImage().get({px, py})).r / 255.f;
+                    glm::vec2 texSize = s1->getImage().size();
+                    glm::vec2 uv = (glm::vec2(ax, ay) - glm::vec2(mask1Rect.x, mask1Rect.y)) / texSize;
+                    val1 = glm::vec4(sample(s1->getImage(), uv, TextureFilter::LINEAR)).r;
                 }
             }
 
@@ -1090,12 +1077,9 @@ IRendererBackend::AMergedMask SoftwareRenderer::mergeMasks(const _<ITexture>& ma
             if (ax >= mask2Rect.x && ax <= mask2Rect.x + mask2Rect.z &&
                 ay >= mask2Rect.y && ay <= mask2Rect.y + mask2Rect.w) {
                 if (s2) {
-                    glm::uvec2 m2Size = s2->getImage().size();
-                    float tx = (ax - mask2Rect.x) / mask2Rect.z * m2Size.x;
-                    float ty = (ay - mask2Rect.y) / mask2Rect.w * m2Size.y;
-                    unsigned px = glm::clamp((unsigned)tx, 0u, m2Size.x - 1);
-                    unsigned py = glm::clamp((unsigned)ty, 0u, m2Size.y - 1);
-                    val2 = glm::vec4(s2->getImage().get({px, py})).r / 255.f;
+                    glm::vec2 texSize = s2->getImage().size();
+                    glm::vec2 uv = (glm::vec2(ax, ay) - glm::vec2(mask2Rect.x, mask2Rect.y)) / texSize;
+                    val2 = glm::vec4(sample(s2->getImage(), uv, TextureFilter::LINEAR)).r;
                 }
             }
 
