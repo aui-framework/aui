@@ -14,6 +14,8 @@
 #include <AUI/View/AView.h>
 #include <AUI/Render/ARender/GL/Program.h>
 #include <AUI/Render/ARender/GL/Texture2D.h>
+#include <AUI/Render/ARender/GL/Framebuffer.h>
+#include <AUI/Render/ARender/GL/Vao.h>
 
 class FractalView : public AView {
 private:
@@ -21,7 +23,13 @@ private:
     _<gl::Texture2D> mTexture;
     glm::mat4 mTransform;
 
+    gl::Framebuffer mFbo;
+    gl::Texture2D mFboTexture;
+    gl::Vao mQuadVao;
+    _<ITexture> mWrappedFboTexture;
+
     float mAspectRatio;
+    unsigned mIterations = 100;
 
     void handleMatrixUpdated();
 
