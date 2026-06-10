@@ -62,28 +62,3 @@
    fun:do_dlopen
    ...
 }
-
-{
-   <GTK_Init_Leaks>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:malloc
-   obj:*/libgtk-3*
-}
-
-{
-   <OpenGL_Leaks>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:malloc
-   obj:*/libGL*
-}
-
-{
-   <Signal_Slot_Reachable>
-   Memcheck:Leak
-   match-leak-kinds: reachable
-   fun:_Znwm
-   ...
-   fun:*SignalSlot*
-}
