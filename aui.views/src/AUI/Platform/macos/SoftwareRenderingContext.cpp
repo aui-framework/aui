@@ -21,12 +21,7 @@ SoftwareRenderingContext::SoftwareRenderingContext() {
 
 }
 
-SoftwareRenderingContext::~SoftwareRenderingContext() {
-    if (mBitmapBlob) {
-        free(mBitmapBlob);
-        mBitmapBlob = nullptr;
-    }
-}
+SoftwareRenderingContext::~SoftwareRenderingContext() {}
 
 IRendererBackend& SoftwareRenderingContext::backend() {
     return *mRenderer;
@@ -39,7 +34,7 @@ void SoftwareRenderingContext::destroyNativeWindow(ASurface &window) {
 void SoftwareRenderingContext::beginPaint(ASurface &window) {
     CommonRenderingContext::beginPaint(window);
     mDrawList.clear();
-    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize, { mBitmapBlob, mBitmapSize.x * mBitmapSize.y * 4 });
+    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize, { reinterpret_cast<uint8_t*>(mBitmapBlob.data()), mBitmapSize.x * mBitmapSize.y * 4 });
 }
 
 void SoftwareRenderingContext::endPaint(ASurface &window) {
@@ -74,8 +69,5 @@ void SoftwareRenderingContext::reallocate(const ASurface& window) {
 }
 
 void SoftwareRenderingContext::reallocate() {
-    if (mBitmapBlob) {
-        free(mBitmapBlob);
-    }
-    mBitmapBlob = static_cast<uint8_t *>(malloc(mBitmapSize.x * mBitmapSize.y * 4));
+    mBitmapBlob.reallocate(mBitmapSize.x * mBitmapSize.y * 4);
 }

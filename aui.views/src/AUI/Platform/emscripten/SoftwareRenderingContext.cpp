@@ -36,7 +36,7 @@ void SoftwareRenderingContext::destroyNativeWindow(ASurface &window) {
 void SoftwareRenderingContext::beginPaint(ASurface &window) {
     CommonRenderingContext::beginPaint(window);
     mDrawList.clear();
-    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize, { mBitmapBlob, mBitmapSize.x * mBitmapSize.y * 4 });
+    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize, { reinterpret_cast<uint8_t*>(mBitmapBlob.data()), mBitmapSize.x * mBitmapSize.y * 4 });
 }
 
 void SoftwareRenderingContext::endPaint(ASurface &window) {

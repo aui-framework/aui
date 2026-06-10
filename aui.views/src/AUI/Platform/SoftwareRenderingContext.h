@@ -68,6 +68,8 @@ protected:
     glm::uvec2 mBitmapSize;
 #if AUI_PLATFORM_LINUX
     std::uint8_t* mBitmapBlob = nullptr;
+#else
+    AByteBuffer mBitmapBlob;
 #endif
 
     void reallocate(const ASurface& window);
@@ -75,10 +77,6 @@ protected:
 
 private:
 #if AUI_PLATFORM_WIN
-    AByteBuffer mBitmapBlob;
     BITMAPINFO* mBitmapInfo;
-#endif
-#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_APPLE || AUI_PLATFORM_EMSCRIPTEN
-    std::uint8_t* mBitmapBlob = nullptr;
 #endif
 };
