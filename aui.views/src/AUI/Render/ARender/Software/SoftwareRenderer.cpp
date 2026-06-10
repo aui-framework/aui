@@ -893,7 +893,7 @@ void SoftwareRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span
 
     for (uint32_t y = 0; y < area.height(); ++y) {
         for (uint32_t x = 0; x < area.width(); ++x) {
-            putPixel(clippedPosition + glm::ivec2(x, y), area.get({x, y}), APaint {});
+            putPixel(clippedPosition + glm::ivec2(x, y), area.get({x, y}), Blending::NORMAL);
         }
     }
 }
