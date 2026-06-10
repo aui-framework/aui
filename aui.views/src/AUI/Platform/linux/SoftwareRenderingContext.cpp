@@ -67,7 +67,7 @@ void SoftwareRenderingContext::reallocate() {
         free(mBitmapBlob);
     }
     mBitmapBlob = static_cast<uint8_t *>(malloc(mBitmapSize.x * mBitmapSize.y * 4));
-    memset(mBitmapInfo, 0, mBitmapSize.x * mBitmapSize.y * 4);
+    memset(mBitmapBlob, 0, mBitmapSize.x * mBitmapSize.y * 4);
 }
 
 AImage SoftwareRenderingContext::makeScreenshot() {
