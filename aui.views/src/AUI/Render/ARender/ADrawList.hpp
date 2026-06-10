@@ -52,17 +52,17 @@ public:
     };
     struct SolidRoundedRectangles {
         AVector<RectInstance> instances;
-        float radius;
+        float radius = {};
     };
     struct GradientRoundedRectangles {
         AVector<RectInstance> instances;
-        float radius;
+        float radius = {};
         AStaticVector<ALinearGradientBrush::ColorEntry, 2> colors;
         AAngleRadians rotation;
     };
     struct TexturedRoundedRectangles {
         AVector<RectInstance> instances;
-        float radius;
+        float radius = {};
         _<ITexture> texture;
         glm::vec2 uv1 = { 0.f, 0.f };
         glm::vec2 uv2 = { 1.f, 1.f };
@@ -70,25 +70,25 @@ public:
     };
     struct RectangleBorders {
         AVector<RectInstance> instances;
-        float lineWidth;
+        float lineWidth = {};
     };
     struct RoundedRectangleBorders {
         AVector<RectInstance> instances;
-        float radius;
-        int borderWidth;
+        float radius = {};
+        int borderWidth = {};
     };
     struct BoxShadow {
         glm::vec2 position;
         glm::vec2 size;
-        float blurRadius;
+        float blurRadius = {};
         AColor color;
     };
     struct BoxShadowInner {
         glm::vec2 position;
         glm::vec2 size;
-        float blurRadius;
-        float spreadRadius;
-        float borderRadius;
+        float blurRadius = {};
+        float spreadRadius = {};
+        float borderRadius = {};
         AColor color;
         glm::vec2 offset;
     };
@@ -103,7 +103,7 @@ public:
         AVector<GlyphInstance> instances;
         _<ITexture> texture;
         AColor color;
-        bool isSubpixel;
+        bool isSubpixel = {};
     };
     struct Lines {
         AVector<glm::vec2> points;
