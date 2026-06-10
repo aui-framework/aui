@@ -35,6 +35,10 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
     aui_module(aui.views EXPORT aui)
     aui_enable_tests(aui.views)
 
+    # comment this on conflict with other glad
+    target_compile_definitions(aui.views PUBLIC GLAD_GLAPI_EXPORT)
+    target_compile_definitions(aui.views PRIVATE GLAD_GLAPI_EXPORT_BUILD)
+
     if (AUI_PLATFORM_LINUX)
         auib_use_system_libs_begin()
         find_package(PkgConfig REQUIRED)
