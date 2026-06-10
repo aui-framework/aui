@@ -303,6 +303,7 @@ void reorderSegment(AVector<ADrawList::StoredCommand>& cmds, std::size_t segment
         if (incoming_key) {
             for (std::size_t k = merge_start; k < i; ++k) {
                 std::optional<BatchKey> candidate_key = makeBatchKey(cmds[k]);
+                // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
                 if (candidate_key && *candidate_key == *incoming_key) {
                     if (tryMerge(cmds[k], incoming.command, incoming.transform, incoming.paint)) {
                         // Expand bounding box of the merged command.
@@ -712,6 +713,21 @@ void ADrawList::resolvePhysicalMasks(IRendererBackend& renderer) {
         for (const auto& mask : entity.activeMasks) {
             hash_combine(combined_hash, hashLogicalMask(mask));
         }
+        // Для DIFFERENCE маски хэш должен включать bounding box entity,
+        // так как mask_bounds зависит от него.
+        bool has_difference = false;
+        for (const auto& mask : entity.activeMasks) {
+            if (mask.op == AClipOp::OP_DIFFERENCE && !isMaskScissorOnly(mask)) {
+                has_difference = true;
+                break;
+            }
+        }
+        if (has_difference) {
+            hash_combine(combined_hash, std::hash<float>()(entity.worldBoundingBox.p1.x));
+            hash_combine(combined_hash, std::hash<float>()(entity.worldBoundingBox.p1.y));
+            hash_combine(combined_hash, std::hash<float>()(entity.worldBoundingBox.p2.x));
+            hash_combine(combined_hash, std::hash<float>()(entity.worldBoundingBox.p2.y));
+        }
 
         if (auto it = mask_cache.find(combined_hash); it != mask_cache.end()) {
             entity.mask     = it->second.texture;
@@ -742,17 +758,41 @@ void ADrawList::resolvePhysicalMasks(IRendererBackend& renderer) {
                 glm::vec4 display_list_rect(r.p1.x, r.p1.y, r.size().x, r.size().y);
                 applyMask(mask.texture, display_list_rect);
             } else {
-                ARect<float> world_rect  = transformRect(mask.rect, mask.transform);
-                ARect<float> mask_bounds = { world_rect.p1 - glm::vec2(2.f), world_rect.p2 + glm::vec2(2.f) };
+                ARect<float> world_rect = transformRect(mask.rect, mask.transform);
+
+                // Для DIFFERENCE маски текстура должна покрывать весь entity,
+                // иначе пиксели за пределами mask_bounds окажутся за границей
+                // текстуры и будут некорректно обрезаны (баг с "кропнутой" маской).
+                ARect<float> mask_bounds;
+                if (mask.op == AClipOp::OP_DIFFERENCE) {
+                    // Объединяем area маски и area самого элемента + небольшой padding.
+                    mask_bounds = {
+                        glm::min(world_rect.p1, entity.worldBoundingBox.p1) - glm::vec2(2.f),
+                        glm::max(world_rect.p2, entity.worldBoundingBox.p2) + glm::vec2(2.f)
+                    };
+                } else {
+                    // OP_INTERSECT: достаточно покрыть только саму маску.
+                    mask_bounds = {
+                        world_rect.p1 - glm::vec2(2.f),
+                        world_rect.p2 + glm::vec2(2.f)
+                    };
+                }
 
                 if (mask_bounds.size().x > 0.f && mask_bounds.size().y > 0.f) {
                     _<ITexture> generated_mask = nullptr;
-                    glm::vec4   rect_for_apply(mask_bounds.p1.x, mask_bounds.p1.y, mask_bounds.size().x, mask_bounds.size().y);
+                    glm::vec4   rect_for_apply(mask_bounds.p1.x, mask_bounds.p1.y,
+                                               mask_bounds.size().x, mask_bounds.size().y);
 
                     if (eff_type == LogicalMask::Type::RoundedRect) {
-                        generated_mask = renderer.createRoundedRectMask(world_rect, mask.radius, mask.op == AClipOp::OP_DIFFERENCE, mask_bounds);
+                        generated_mask = renderer.createRoundedRectMask(
+                            world_rect, mask.radius,
+                            mask.op == AClipOp::OP_DIFFERENCE,
+                            mask_bounds);
                     } else {
-                        generated_mask = renderer.createRectMask(world_rect, true, mask_bounds);
+                        generated_mask = renderer.createRectMask(
+                            world_rect,
+                            true,
+                            mask_bounds);
                     }
 
                     if (generated_mask) {

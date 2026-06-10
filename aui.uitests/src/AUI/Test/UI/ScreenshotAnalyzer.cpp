@@ -18,6 +18,6 @@
 #include "AUI/Util/AStubWindowManager.h"
 
 ScreenshotAnalyzer ScreenshotAnalyzer::makeScreenshot() {
-    return static_cast<AStubWindowManager&>(ASurface::getWindowManager()).makeScreenshot(*static_cast<AWindow*>(AWindow::current()));
+    return dynamic_cast<AStubWindowManager&>(ASurface::getWindowManager()).makeScreenshot(*dynamic_cast<AWindow*>(AWindow::current()));
 }
 

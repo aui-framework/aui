@@ -263,7 +263,7 @@ OpenGLBackend::OpenGLBackend() :
     mEmptyMask = createTexture({1, 1}, APixelFormat::R8_UNORM);
     AImage emptyImg({1, 1}, APixelFormat::R8_UNORM);
     std::memset(emptyImg.modifiableBuffer().data(), 0, emptyImg.modifiableBuffer().getSize());
-    static_cast<OpenGLTexture2D*>(mEmptyMask.get())->upload(emptyImg);
+    dynamic_cast<OpenGLTexture2D*>(mEmptyMask.get())->upload(emptyImg);
 
     mBatchVao.bind();
     mVertexBuffer.bind();
@@ -1687,7 +1687,7 @@ void OpenGLBackend::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<co
     mTexturedShader->set(aui::ShaderUniforms::COLOR, glm::vec4(1.f));
     mTexturedShader->set(aui::ShaderUniforms::PREMULTIPLIED, true);
     setupMask(*mTexturedShader);
-    static_cast<OpenGLTexture2D*>(areaOfInterest->framebuffer->renderTarget.get())->bind();
+    dynamic_cast<OpenGLTexture2D*>(areaOfInterest->framebuffer->renderTarget.get())->bind();
 
     auto rectVertices = getVerticesForRect(glm::vec2(position), glm::vec2(size));
     auto uvSize = glm::vec2(areaOfInterest->size) / glm::vec2(areaOfInterest->framebuffer->framebuffer.size());
