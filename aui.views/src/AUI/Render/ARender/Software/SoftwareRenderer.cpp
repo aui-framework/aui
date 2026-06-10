@@ -243,7 +243,7 @@ float SoftwareRenderer::getMaskVal(glm::ivec2 pos) {
     return glm::vec4(sample(s->getImage(), uv, TextureFilter::LINEAR, true)).r;
 }
 
-void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& paint) {
+void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, Blending blending) {
     if (!mRenderTarget) return;
     if (mRenderTarget->format() == APixelFormat::R8_UNORM) {
         color = AColor(color.a, 0.f, 0.f, color.a);
@@ -263,19 +263,19 @@ void SoftwareRenderer::putPixel(glm::ivec2 pos, AColor color, const APaint& pain
     glm::vec4 dst = glm::vec4(mRenderTarget->get(glm::uvec2(pos)));
 
     AColor combined;
-    if (paint.blending == Blending::CLEAR) {
+    if (blending == Blending::CLEAR) {
         combined = AColor(0.f, 0.f, 0.f, 0.f);
-    } else if (paint.blending == Blending::INVERSE_DST) {
+    } else if (blending == Blending::INVERSE_DST) {
         combined.r = colorWithMask.r * (1.f - dst.r);
         combined.g = colorWithMask.g * (1.f - dst.g);
         combined.b = colorWithMask.b * (1.f - dst.b);
         combined.a = colorWithMask.a * (1.f - dst.a) + dst.a;
-    } else if (paint.blending == Blending::ADDITIVE) {
+    } else if (blending == Blending::ADDITIVE) {
         combined.r = colorWithMask.r + dst.r;
         combined.g = colorWithMask.g + dst.g;
         combined.b = colorWithMask.b + dst.b;
         combined.a = colorWithMask.a * (1.f - dst.a) + dst.a;
-    } else if (paint.blending == Blending::INVERSE_SRC) {
+    } else if (blending == Blending::INVERSE_SRC) {
         combined.r = dst.r * (1.f - colorWithMask.r);
         combined.g = dst.g * (1.f - colorWithMask.g);
         combined.b = dst.b * (1.f - colorWithMask.b);
@@ -307,7 +307,7 @@ void SoftwareRenderer::solidRectangles(const ADrawList::SolidRectangles& v, cons
                 glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y);
                 if (localPos.x >= inst.position.x && localPos.x <= inst.position.x + inst.size.x &&
                     localPos.y >= inst.position.y && localPos.y <= inst.position.y + inst.size.y) {
-                    putPixel({x, y}, color, paint);
+                    putPixel({x, y}, color, paint.blending);
                 }
             }
         }
@@ -324,12 +324,12 @@ void SoftwareRenderer::drawLine(glm::ivec2 p0, glm::ivec2 p1, float width, AColo
 
     while (true) {
         if (w == 1) {
-            putPixel(p0, color, paint);
+            putPixel(p0, color, paint.blending);
         } else {
             int r = w / 2;
             for (int dy_brush = -r; dy_brush < w - r; ++dy_brush) {
                 for (int dx_brush = -r; dx_brush < w - r; ++dx_brush) {
-                    putPixel({p0.x + dx_brush, p0.y + dy_brush}, color, paint);
+                    putPixel({p0.x + dx_brush, p0.y + dy_brush}, color, paint.blending);
                 }
             }
         }
@@ -377,7 +377,7 @@ void SoftwareRenderer::gradientRectangles(const ADrawList::GradientRectangles& v
                     glm::vec3 transformedUv = helper.matrix * glm::vec3(uv, 1.f);
                     float t = glm::clamp(transformedUv.x, 0.f, 1.f);
                     AColor color = glm::mix(c1, c2, t) * inst.color.premultiply();
-                    putPixel({x, y}, color, paint);
+                    putPixel({x, y}, color, paint.blending);
                 }
             }
         }
@@ -414,7 +414,7 @@ void SoftwareRenderer::texturedRectangles(const ADrawList::TexturedRectangles& v
                     if (!v.premultiplied) {
                         texColor = texColor.premultiply();
                     }
-                    putPixel({x, y}, texColor * inst.color, paint);
+                    putPixel({x, y}, texColor * inst.color, paint.blending);
                 }
             }
         }
@@ -447,7 +447,7 @@ void SoftwareRenderer::solidRoundedRectangles(const ADrawList::SolidRoundedRecta
                 glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y) - inst.position;
                 float a = roundedRectCoverage(localPos, inst.size, radius, scale);
                 if (a > 0.001f) {
-                    putPixel({x, y}, color * a, paint);
+                    putPixel({x, y}, color * a, paint.blending);
                 }
             }
         }
@@ -493,7 +493,7 @@ void SoftwareRenderer::gradientRoundedRectangles(const ADrawList::GradientRounde
                     glm::vec3 transformedUv = helper.matrix * glm::vec3(uv, 1.f);
                     float t = glm::clamp(transformedUv.x, 0.f, 1.f);
                     AColor gradColor = glm::mix(c1, c2, t);
-                    putPixel({x, y}, color * gradColor * a, paint);
+                    putPixel({x, y}, color * gradColor * a, paint.blending);
                 }
             }
         }
@@ -538,7 +538,7 @@ void SoftwareRenderer::texturedRoundedRectangles(const ADrawList::TexturedRounde
                     if (!v.premultiplied) {
                         texColor = texColor.premultiply();
                     }
-                    putPixel({x, y}, texColor * color * a, paint);
+                    putPixel({x, y}, texColor * color * a, paint.blending);
                 }
             }
         }
@@ -568,7 +568,7 @@ void SoftwareRenderer::rectangleBorders(const ADrawList::RectangleBorders& v, co
                     bool inner = localPos.x >= inst.position.x + v.lineWidth && localPos.x <= inst.position.x + inst.size.x - v.lineWidth &&
                                  localPos.y >= inst.position.y + v.lineWidth && localPos.y <= inst.position.y + inst.size.y - v.lineWidth;
                     if (!inner) {
-                        putPixel({x, y}, color, paint);
+                        putPixel({x, y}, color, paint.blending);
                     }
                 }
             }
@@ -602,7 +602,7 @@ void SoftwareRenderer::roundedRectangleBorders(const ADrawList::RoundedRectangle
                 glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y) - inst.position;
                 float a = roundedRectBorderCoverage(localPos, inst.size, radius, (float)v.borderWidth, scale);
                 if (a > 0.001f) {
-                    putPixel({x, y}, color * a, paint);
+                    putPixel({x, y}, color * a, paint.blending);
                 }
             }
         }
@@ -636,7 +636,7 @@ void SoftwareRenderer::boxShadow(const ADrawList::BoxShadow& v, const glm::mat4&
             glm::vec4 integral = glm::vec4(0.5f) + glm::vec4(0.5f) * erfVal;
             float shadowFactor = glm::clamp((integral.z - integral.x) * (integral.w - integral.y), 0.f, 1.f);
             if (shadowFactor > 0.001f) {
-                putPixel({x, y}, color * shadowFactor, paint);
+                putPixel({x, y}, color * shadowFactor, paint.blending);
             }
         }
     }
@@ -675,7 +675,7 @@ void SoftwareRenderer::boxShadowInner(const ADrawList::BoxShadowInner& v, const 
             float factor = (1.f - shadowFactor) * a;
 
             if (factor > 0.001f) {
-                putPixel({x, y}, color * factor, paint);
+                putPixel({x, y}, color * factor, paint.blending);
             }
         }
     }
@@ -718,7 +718,7 @@ void SoftwareRenderer::glyphs(const ADrawList::Glyphs& v, const glm::mat4& trans
 
                     if (!v.isSubpixel) {
                         AColor finalColor = pColor * maskColor.r;
-                        putPixel({x, y}, finalColor, paint);
+                        putPixel({x, y}, finalColor, paint.blending);
                     } else {
                         if (!mRenderTarget) continue;
                         glm::uvec2 bitmapSize = mRenderTarget->size();
@@ -780,7 +780,7 @@ void SoftwareRenderer::points(const ADrawList::Points& v, const glm::mat4& trans
         glm::ivec2 center = { (int)p.x, (int)p.y };
         for (int dy = -r; dy < w - r; ++dy) {
             for (int dx = -r; dx < w - r; ++dx) {
-                putPixel({center.x + dx, center.y + dy}, color, paint);
+                putPixel({center.x + dx, center.y + dy}, color, paint.blending);
             }
         }
     }
@@ -821,7 +821,7 @@ void SoftwareRenderer::squareSector(const ADrawList::SquareSector& v, const glm:
                 glm::vec2 localPos = glm::vec2(localPos4.x, localPos4.y);
                 if (localPos.x >= v.position.x && localPos.x <= v.position.x + v.size.x &&
                     localPos.y >= v.position.y && localPos.y <= v.position.y + v.size.y) {
-                    putPixel({x, y}, color, paint);
+                    putPixel({x, y}, color, paint.blending);
                 }
             }
         }
@@ -857,7 +857,7 @@ void SoftwareRenderer::squareSector(const ADrawList::SquareSector& v, const glm:
                 }
 
                 if (inside) {
-                    putPixel({x, y}, color, paint);
+                    putPixel({x, y}, color, paint.blending);
                 }
             }
         }

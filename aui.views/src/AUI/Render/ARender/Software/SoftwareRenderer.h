@@ -85,7 +85,7 @@ public:
 
 private:
     float getMaskVal(glm::ivec2 pos);
-    void putPixel(glm::ivec2 pos, AColor color, const APaint& paint);
+    void putPixel(glm::ivec2 pos, AColor color, Blending blending);
     void drawLine(glm::ivec2 p0, glm::ivec2 p1, float width, AColor color, const APaint& paint);
 
     AImage* mRenderTarget = nullptr;
