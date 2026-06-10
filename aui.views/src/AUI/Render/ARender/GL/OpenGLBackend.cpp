@@ -1557,6 +1557,7 @@ void OpenGLBackend::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<co
         };
 
         glDisable(GL_BLEND);
+        glDisable(GL_SCISSOR_TEST);
 
         for (const auto& backdrop : backdrops) {
             std::visit(aui::lambda_overloaded{
