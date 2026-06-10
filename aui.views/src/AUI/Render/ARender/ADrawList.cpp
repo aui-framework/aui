@@ -170,9 +170,6 @@ bool isMaskScissorOnly(const ADrawList::LogicalMask& mask) {
            mask.op == AClipOp::OP_INTERSECT;
 }
 
-// Returns a key that identifies the "batch type" of a draw command for grouping purposes.
-// Commands with equal keys are candidates for merging (subject to the full tryMerge check).
-// Barriers return an empty optional — they are never batch-keyed.
 struct BatchKey {
     std::size_t command_type_hash;
     std::size_t paint_hash;
@@ -268,62 +265,44 @@ std::optional<BatchKey> makeBatchKey(const ADrawList::StoredCommand& sc) {
 // draw-call counts (hundreds, not millions).
 // ─────────────────────────────────────────────────────────────────────────────
 
-// Reorder [segment_begin, segment_end) in-place.
-// All elements in the range are non-barrier draw commands.
 void reorderSegment(AVector<ADrawList::StoredCommand>& cmds, std::size_t segment_begin, std::size_t segment_end) {
     if (segment_end <= segment_begin + 1) return;
 
-    // We process each command starting from the second one.
-    // The "already placed" prefix is [segment_begin, i).
     for (std::size_t i = segment_begin + 1; i < segment_end; ++i) {
         ADrawList::StoredCommand incoming = std::move(cmds[i]);
         const ARect<float>& incoming_bb = incoming.worldBoundingBox;
 
         std::optional<BatchKey> incoming_key = makeBatchKey(incoming);
 
-        // Walk backward to find the earliest position we can insert without
-        // violating painter's-order constraints.
         std::size_t insert_pos = i; // default: leave in place
         for (int j = static_cast<int>(i) - 1; j >= static_cast<int>(segment_begin); --j) {
             if (rectsOverlap(cmds[j].worldBoundingBox, incoming_bb)) {
-                // Can't move past j — j and incoming overlap visually.
                 break;
             }
-            // No overlap: we can slide past this command.
             insert_pos = static_cast<std::size_t>(j);
         }
 
-        // Разрешаем мерж с блокирующим элементом.
-        // Если мы остановились из-за перекрытия, блокирующий элемент находится
-        // по индексу (insert_pos - 1). Так как tryMerge делает append (<<),
-        // порядок отрисовки сохраняется, и слияние безопасно.
         std::size_t merge_start = (insert_pos > segment_begin) ? insert_pos - 1 : insert_pos;
 
-        // Если есть шанс на слияние, ищем цель в [merge_start, i)
         if (incoming_key) {
             for (std::size_t k = merge_start; k < i; ++k) {
                 std::optional<BatchKey> candidate_key = makeBatchKey(cmds[k]);
                 // NOLINTNEXTLINE(bugprone-unchecked-optional-access)
                 if (candidate_key && *candidate_key == *incoming_key) {
                     if (tryMerge(cmds[k], incoming.command, incoming.transform, incoming.paint)) {
-                        // Expand bounding box of the merged command.
                         cmds[k].worldBoundingBox.p1 = glm::min(cmds[k].worldBoundingBox.p1, incoming_bb.p1);
                         cmds[k].worldBoundingBox.p2 = glm::max(cmds[k].worldBoundingBox.p2, incoming_bb.p2);
 
-                        // incoming is consumed; erase the empty slot.
                         cmds.erase(cmds.begin() + static_cast<std::ptrdiff_t>(i));
-                        --segment_end; // segment shrank
-                        --i;           // reprocess this index (now holds what was i+1)
+                        --segment_end;
+                        --i;
                         goto next_command;
                     }
                 }
             }
         }
 
-        // No merge found — physically relocate incoming to insert_pos so
-        // future commands have a better chance of merging with it.
         if (insert_pos < i) {
-            // Rotate: move element at i to insert_pos, shift [insert_pos, i) right by 1.
             std::rotate(
                 cmds.begin() + static_cast<std::ptrdiff_t>(insert_pos),
                 cmds.begin() + static_cast<std::ptrdiff_t>(i),
@@ -339,8 +318,6 @@ void reorderSegment(AVector<ADrawList::StoredCommand>& cmds, std::size_t segment
 }
 
 } // namespace
-
-// ─────────────────────────────────────────────────────────────────────────────
 
 void ADrawList::applyTransform(StoredCommand::Command& command, const glm::mat4& transform) {
     if (transform == glm::mat4(1.f)) return;
