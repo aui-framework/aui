@@ -11,8 +11,7 @@
 
 #pragma once
 
-
-#include "AViewContainer.h"
+#include <AUI/View/AViewContainer.h>
 #include <AUI/Util/Declarative/Containers.h>
 
 /**
@@ -36,25 +35,21 @@
  */
 class API_AUI_VIEWS AGroupBox: public AViewContainerBase {
 public:
-    AGroupBox(_<AView> titleView, _<AView> contentView);
-
-    void applyGeometryToChildren() override;
+  AGroupBox(_<AView> titleView, _<AView> contentView);
 
 private:
-    _<AView> mTitle;
-    _<AView> mContent;
-    _<AView> mFrame;
+  _<AView> mTitle;
+  _<AView> mContent;
+  _<AView> mFrame;
 
-    void updateCheckboxState(bool checked);
+  void updateCheckboxState(bool checked);
 };
 
-
-
 namespace declarative {
-    /**
-     * @declarativeformof{AGroupBox}
-     */
-    struct GroupBox: aui::ui_building::view<AGroupBox> {
-        GroupBox(_<AView> titleView, _<AView> contentView): aui::ui_building::view<AGroupBox>(std::move(titleView), std::move(contentView)) {}
-    };
+/**
+ * @declarativeformof{AGroupBox}
+ */
+struct GroupBox: aui::ui_building::view<AGroupBox> {
+    GroupBox(_<AView> titleView, _<AView> contentView): aui::ui_building::view<AGroupBox>(std::move(titleView), std::move(contentView)) {}
+};
 }

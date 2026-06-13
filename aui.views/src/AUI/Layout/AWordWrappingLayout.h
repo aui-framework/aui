@@ -24,16 +24,14 @@ private:
     AVector<AViewEntry> mViewEntry;
 
 public:
-    void onResize(int x, int y, int width, int height) override;
+    void layout(int x, int y, int width, int height) override;
 
-    int getMinimumWidth() override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
 
-    int getMinimumHeight() override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
     void addView(const _<AView>& view, AOptional<size_t> index) override;
 
     void removeView(aui::no_escape<AView> view, size_t index) override;
 
 };
-
-

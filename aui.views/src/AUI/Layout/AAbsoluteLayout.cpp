@@ -11,45 +11,52 @@
 
 #include "AAbsoluteLayout.h"
 
-void AAbsoluteLayout::onResize(int x, int y, int width, int height) {
+void AAbsoluteLayout::layout(int x, int y, int width, int height) {
     for (const auto& i : mViews) {
         if (i.pivotX && i.pivotY) {
-            i.view->setGeometry(
-                i.pivotX->getValuePx(), i.pivotY->getValuePx(),
-                i.sizeX ? i.sizeX->getValuePx() : i.view->getMinimumWidth(),
-                i.sizeY ? i.sizeY->getValuePx() : i.view->getMinimumHeight());
+            const int measuredHeight =
+                i.sizeY ? static_cast<int>(i.sizeY->getValuePx()) : i.view->measure(AConstraints {}).y;
+            i.view->layout(
+                i.pivotX->getValuePx() + x, i.pivotY->getValuePx() + y,
+                i.sizeX ? i.sizeX->getValuePx() : i.view->computeMinMaxAxis().max,
+                measuredHeight);
             continue;
         }
-        i.view->setGeometry(i.view->getPosition(), i.view->getSize());
+        i.view->layout(i.view->getPosition(), i.view->getSize());
     }
 }
 
-int AAbsoluteLayout::getMinimumWidth() {
-    int v = 0;
+glm::ivec2 AAbsoluteLayout::onIntrinsicMeasure(AConstraints constraints) {
+    glm::ivec2 size = {};
     for (const auto& i : mViews) {
-        int x = i.pivotX.valueOr(0).getValuePx();
-        if (i.sizeX) {
-            x += i.sizeX->getValuePx();
-        }
-        v = glm::max(v, x);
+        const int x = i.pivotX.valueOr(AMetric(0)).getValuePx();
+        const int y = i.pivotY.valueOr(AMetric(0)).getValuePx();
+        const auto measured = i.view->measure({
+            .minInline = 0,
+            .maxInline = i.sizeX ? static_cast<int>(i.sizeX->getValuePx()) : constraints.maxInline,
+            .minBlock = 0,
+            .maxBlock = i.sizeY ? static_cast<int>(i.sizeY->getValuePx()) : constraints.maxBlock,
+        });
+        size.x = glm::max(size.x, x + (i.sizeX ? static_cast<int>(i.sizeX->getValuePx()) : measured.x));
+        size.y = glm::max(size.y, y + (i.sizeY ? static_cast<int>(i.sizeY->getValuePx()) : measured.y));
     }
-    return v;
+    return size;
 }
 
-int AAbsoluteLayout::getMinimumHeight() {
-    int v = 0;
+AMinMaxAxis AAbsoluteLayout::onComputeIntrinsicMinMaxAxis(int) {
+    AMinMaxAxis result;
     for (const auto& i : mViews) {
-        int x = i.pivotY.valueOr(0).getValuePx();
-        if (i.sizeY) {
-            x += i.sizeY->getValuePx();
-        }
-        v = glm::max(v, x);
+        const auto minMax = i.view->computeMinMaxAxis();
+        const int x = i.pivotX.valueOr(AMetric(0)).getValuePx();
+        result.min = glm::max(result.min, x + (i.sizeX ? static_cast<int>(i.sizeX->getValuePx()) : minMax.min));
+        result.max = glm::max(result.max, x + (i.sizeX ? static_cast<int>(i.sizeX->getValuePx()) : minMax.max));
     }
-    return v;
+    return result;
 }
 
 void AAbsoluteLayout::add(aui::detail::AbsoluteLayoutCell cell) {
     mViews << std::move(cell);
+    requestLayout();
 }
 
 void AAbsoluteLayout::addView(const _<AView>& view, AOptional<size_t> index) {

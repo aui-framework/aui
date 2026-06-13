@@ -41,13 +41,14 @@ public:
 public:
     AScrollArea();
 
-    void setSize(glm::ivec2 size) override;
     void setContents(_<AView> content) {
         mInner->setContents(std::move(content));
+        requestLayout();
     }
 
-    int getContentMinimumWidth() override;
-    int getContentMinimumHeight() override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
+    void onLayout(int w, int h) override;
 
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
@@ -193,6 +194,16 @@ protected:
     explicit AScrollArea(const Builder& builder);
 
 private:
+    struct LayoutGeometry {
+        glm::ivec2 viewportSize = {};
+        glm::ivec2 contentSize = {};
+        glm::ivec2 outerSize = {};
+        int verticalScrollbarWidth = 0;
+        int horizontalScrollbarHeight = 0;
+        bool hasVerticalScrollbar = false;
+        bool hasHorizontalScrollbar = false;
+    };
+
     _<AScrollAreaViewport> mInner;
     _<AScrollbar> mVerticalScrollbar;
     _<AScrollbar> mHorizontalScrollbar;
@@ -201,5 +212,19 @@ private:
      * @brief Determines whether AScrollArea can be scrolled with mouse wheel or can be scrolled with touch only.
      */
     bool mIsWheelScrollable = true;
-};
 
+    [[nodiscard]]
+    LayoutGeometry calculateLayout(glm::ivec2 availableSize, bool widthBounded, bool heightBounded) const;
+
+    [[nodiscard]]
+    bool hasInternalVerticalScrollbar() const noexcept;
+
+    [[nodiscard]]
+    bool hasInternalHorizontalScrollbar() const noexcept;
+
+    [[nodiscard]]
+    int measureVerticalScrollbarWidth(int availableHeight) const;
+
+    [[nodiscard]]
+    int measureHorizontalScrollbarHeight(int availableWidth) const;
+};

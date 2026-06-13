@@ -89,17 +89,17 @@ public:
                             }
 
                             connect(mSublistOnHoverDisplayDelay->fired, [this, view, items] {
-                                auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinimumSize().x, 0);
+                                auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinSize().x, 0);
                                 mSubWindow = _new<MenuContainer>(items, pos);
 
                                 ASurface* window = nullptr;
                                 if (auto s = mSurface.lock()) {
                                     window = s->getParentWindow();
                                 } else {
-                                    window = AWindow::current();
+                                    window = ASurface::current();
                                 }
 
-                                auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize());
+                                auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinSize());
                                 surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
                                 surfaceContainer->addView(mSubWindow);
                                 mSubWindow->setSurface(surfaceContainer);
@@ -140,14 +140,16 @@ public:
 };
 
 void AEmbedMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
-    closeMenu();
-    auto mousePos = AWindow::current()->getMousePos();
-    mMenuContainer = _new<MenuContainer>(vector, mousePos);
+  closeMenu();
+  auto mousePos = ASurface::current()->getMousePos();
+  mMenuContainer = _new<MenuContainer>(vector, mousePos);
+  auto size = mMenuContainer->measure(AConstraints {});
+  mMenuContainer->layout(glm::ivec2(0, 0), size);
 
-    auto surfaceContainer = AWindow::current()->createOverlappingSurface(mousePos, mMenuContainer->getMinimumSize());
-    surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
-    surfaceContainer->addView(mMenuContainer);
-    mMenuContainer->setSurface(surfaceContainer);
+  auto surfaceContainer = ASurface::current()->createOverlappingSurface(mousePos, size);
+  surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
+  surfaceContainer->addView(mMenuContainer);
+  mMenuContainer->setSurface(surfaceContainer);
 }
 
 void AEmbedMenuProvider::closeMenu() {

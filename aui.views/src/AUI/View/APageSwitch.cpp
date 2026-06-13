@@ -28,7 +28,3 @@ APageSwitch::APageSwitch(const AString& text, unsigned pageNumber, const _<APage
         pageView->setPageId(pageNumber);
     });
 }
-
-int APageSwitch::getContentMinimumWidth() {
-    return ALabel::getContentMinimumWidth();
-}

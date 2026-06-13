@@ -24,22 +24,33 @@ class API_AUI_VIEWS AScrollbar;
 
 class AScrollbarButton: public AView {
 public:
-    AScrollbarButton() {
+    explicit AScrollbarButton(AScrollbar& scrollbar) : mScrollbar(scrollbar) {}
 
-    }
+    void onLayout(int w, int h) override;
+
+private:
+    AScrollbar& mScrollbar;
 };
 class AScrollbarHandle: public AView {friend class API_AUI_VIEWS AScrollbar;
 private:
-    int mScrollOffset = 0;
     bool mDragging = false;
+    int mInitialScroll = 0;
+    glm::vec2 mInitialMousePos;
 
 public:
-    void setSize(glm::ivec2 size) override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
+    void onLayout(int w, int h) override;
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
     void setOverridenSize(int overridenSize) {
+        if (mOverridenSize == overridenSize) {
+            return;
+        }
         mOverridenSize = overridenSize;
+        requestLayout();
+        redraw();
     }
 
 private:
@@ -54,14 +65,7 @@ public:
     AScrollbarOffsetSpacer(): ASpacerExpanding(0, 0) {
 
     }
-
-    int getMinimumWidth() override {
-        return 0;
-    }
-
-    int getMinimumHeight() override {
-        return 0;
-    }
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override { return {}; }
 };
 
 /**
@@ -75,6 +79,7 @@ public:
  */
 class API_AUI_VIEWS AScrollbar: public AViewContainerBase {
     friend class AScrollbarHandle;
+    friend class AScrollbarButton;
 public:
 
     explicit AScrollbar(ALayoutDirection direction = ALayoutDirection::VERTICAL);
@@ -129,7 +134,9 @@ public:
 
     void onPointerPressed(const APointerPressedEvent& event) override;
 
-    void setSize(glm::ivec2 size) override;
+    void onLayout(int w, int h) override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
     static const _<ATimer>& buttonTimer();
 
@@ -171,7 +178,7 @@ protected:
     void scrollForward();
     void scrollBackward();
 
-    void handleScrollbar(int s);
+    void handleScrollbar(float delta, int baseScroll);
 
 
 private:
@@ -190,6 +197,9 @@ private:
      */
     AOptional<StickToEnd> mStickToEnd;
     ass::ScrollbarAppearance::AxisValue mAppearance = ass::ScrollbarAppearance::ON_DEMAND;
+
+    int getMeasuredButtonOccupiedSpace(const _<AView>& view) const;
+    int getMeasuredHandleOccupiedSpace() const;
+    int chromeThickness() const;
+    int minimumChromeLength() const;
 };
-
-

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -12,11 +12,13 @@
 #include "AListView.h"
 
 #include <AUI/ASS/Property/ScrollbarAppearance.h>
+#include <AUI/ASS/ASS.h>
 #include <AUI/Common/SharedPtrTypes.h>
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/Layout/AVerticalLayout.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Util/AMetric.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 
 #include "ALabel.h"
@@ -27,9 +29,9 @@ class AListViewContainer : public AViewContainer {
     mutable std::size_t mIndex = -1;
 
    public:
-    void applyGeometryToChildren() override {
+    void onLayout(int w, int h) override {
         if (getLayout())
-            getLayout()->onResize(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
+            getLayout()->layout(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
                                   getSize().y - mPadding.vertical());
     }
 
@@ -56,7 +58,7 @@ class AListViewContainer : public AViewContainer {
 
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
-        applyGeometryToChildrenIfNecessary();
+        onLayout(getWidth(), getHeight());
     }
 
     size_t getIndex() const { return mIndex; }
@@ -69,7 +71,10 @@ class AListItem : public ALabel, public ass::ISelectable {
    public:
     AListItem() { addAssName(".list-item"); }
 
-    AListItem(const AString& text) : ALabel(text) { addAssName(".list-item"); }
+    AListItem(const AString& text) : ALabel(text) {
+        addAssName(".list-item");
+        setExpanding({1, 0});
+    }
 
     virtual ~AListItem() = default;
 
@@ -98,6 +103,9 @@ class AListItem : public ALabel, public ass::ISelectable {
 AListView::~AListView() {}
 
 AListView::AListView(_<IListModel<AString>> model) {
+    setCustomStyle({
+        ass::MinSize { AMetric(0, AMetric::T_PX), AMetric(0, AMetric::T_PX) },
+    });
     mObserver = _new<AListModelObserver<AString>>(this);
     setModel(std::move(model));
 }
@@ -150,7 +158,7 @@ void AListView::updateItem(size_t at, const AString& value) {
 
 void AListView::removeItem(size_t at) { mContent->removeView(at); }
 
-void AListView::onDataCountChanged() { markMinContentSizeInvalid(); }
+void AListView::onDataCountChanged() { requestLayout(); }
 
 void AListView::onDataChanged() { redraw(); }
 

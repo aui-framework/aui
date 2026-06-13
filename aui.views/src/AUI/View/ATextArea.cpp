@@ -185,6 +185,21 @@ ATextArea::~ATextArea() {
 
 }
 
+AMinMaxAxis ATextArea::onComputeIntrinsicMinMaxAxis(int widthConstraint) {
+    auto minMax = ATextBase::onComputeIntrinsicMinMaxAxis(widthConstraint);
+
+    int minContentWidth = 0;
+    for (const auto& entry : mEngine.entries()) {
+        if (entry->forcesNextLine() || entry->escapesEdges()) {
+            continue;
+        }
+        minContentWidth = glm::max(minContentWidth, entry->getSize().x);
+    }
+
+    minMax.min = minContentWidth;
+    return minMax;
+}
+
 AString ATextArea::toString() const {
     return text();
 }
@@ -438,8 +453,8 @@ void ATextArea::onCursorIndexChanged() {
                                                        {1, getFontStyle().size}));
 }
 
-void ATextArea::setSize(glm::ivec2 size) {
-    ATextBase::setSize(size);
+void ATextArea::onLayout(int w, int h) {
+    ATextBase::onLayout(w, h);
     if (auto scrollArea = findScrollArea()) {
         for (const auto& scrollbar: {scrollArea->horizontalScrollbar(), scrollArea->verticalScrollbar()}) {
             if (!scrollbar) {
@@ -543,8 +558,10 @@ void ATextArea::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas)
     auto ascender = glm::ivec2 {0,
                                 getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()
     };
+    const int textHeight =
+        this->measure(AConstraints::fixedInline(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
     if (mVerticalAlign == VerticalAlign::MIDDLE) {
-        ascender.y += (getContentHeight() - this->getContentMinimumHeight()) / 2;
+        ascender.y += (getContentHeight() - textHeight) / 2;
     }
 
     auto wordEntries = entities()
@@ -566,4 +583,3 @@ bool ATextArea::isPasswordField() const noexcept {
 ATextInputType ATextArea::textInputType() const noexcept {
     return ATextInputType::MULTILINE;
 }
-

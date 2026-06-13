@@ -26,8 +26,8 @@ public:
 };
 
 AScrollAreaViewport::AScrollAreaViewport() {
-    addAssName("AScrollAreaViewport");
-    addView(mInner = _new<Inner>());
+  addAssName("AScrollAreaViewport");
+  addView(mInner = _new<Inner>());
 }
 
 AScrollAreaViewport::~AScrollAreaViewport() {
@@ -35,30 +35,55 @@ AScrollAreaViewport::~AScrollAreaViewport() {
 }
 
 void AScrollAreaViewport::setContents(_<AView> content) {
-    mInner->setPosition({0, 0});
-    ALayoutInflater::inflate(mInner, content);
-    mContents = std::move(content);
-    updateContentsScroll();
+  ALayoutInflater::inflate(mInner, content);
+  mContents = std::move(content);
+  mInner->setSkipUntilLayoutUpdate(false);
+  mInner->setPosition(-glm::ivec2(mScroll));
+  requestLayout();
+  redraw();
 }
 
-void AScrollAreaViewport::applyGeometryToChildren() {
-    AViewContainerBase::applyGeometryToChildren();
-    mInner->setSize(glm::max(mInner->getMinimumSize(), getSize()));
-    if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
-        if (!IRenderViewToTexture::isEnabledForView(*mInner)) {
-            auto w = AWindow::current();
-            if (!w) {
-                return;
-            }
+void AScrollAreaViewport::setScrollSurfaceSize(glm::ivec2 size) {
+  size = glm::max(size, glm::ivec2(0));
+  if (mScrollSurfaceSize == size) {
+    return;
+  }
+  mScrollSurfaceSize = size;
+  requestLayout();
+  redraw();
+}
 
-            IRenderViewToTexture::enableForView(w->getRenderingContext()->renderer(), *mInner);
-        }
-    } else {
-        IRenderViewToTexture::disableForView(*mInner);
+glm::ivec2 AScrollAreaViewport::onIntrinsicMeasure(AConstraints constraints) {
+  if (constraints.isInlineTight() && constraints.maxInline == 0) {
+    return { 0, constraints.minBlock };
+  }
+  return mInner->measure(constraints);
+}
+
+AMinMaxAxis AScrollAreaViewport::onComputeIntrinsicMinMaxAxis(int height) {
+  return mInner->computeMinMaxAxis(height);
+}
+
+void AScrollAreaViewport::onLayout(int w, int h) {
+  mInner->setSkipUntilLayoutUpdate(false);
+  mInner->layout(-glm::ivec2(mScroll), mScrollSurfaceSize);
+  if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
+    if (!IRenderViewToTexture::isEnabledForView(*mInner)) {
+      auto w = ASurface::current();
+      if (!w) {
+        return;
+      }
+
+      IRenderViewToTexture::enableForView(w->getRenderingContext()->renderer(), *mInner);
     }
+  } else {
+    IRenderViewToTexture::disableForView(*mInner);
+  }
 }
+
 void AScrollAreaViewport::updateContentsScroll() {
-    mInner->setPosition(-glm::ivec2(mScroll));
-    emit mScrollChanged(mScroll);
-    redraw();
+  mInner->setSkipUntilLayoutUpdate(false);
+  mInner->setPosition(-glm::ivec2(mScroll));
+  emit mScrollChanged(mScroll);
+  redraw();
 }

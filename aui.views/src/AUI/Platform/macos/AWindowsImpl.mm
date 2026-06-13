@@ -128,18 +128,15 @@ void AWindow::flagRedraw() {
     }
 }
 
-
-void AWindow::setSize(glm::ivec2 size) {
-    auto s = static_cast<NSWindow*>(mHandle);
-    float dpi = getDpiRatio();
-    [s setMinSize:NSSizeFromCGSize({getMinimumWidth() / dpi, getMinimumHeight() / dpi})];
-    [s setMaxSize:NSSizeFromCGSize({getMaxSize().x / dpi, getMaxSize().y / dpi})];
-    [s setContentSize:NSSizeFromCGSize({size.x / dpi, size.y / dpi})];
-}
-
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
     AViewContainer::setSize({width, height});
+
+    auto s = static_cast<NSWindow*>(mHandle);
+    float dpi = getDpiRatio();
+    [s setMinSize:NSSizeFromCGSize({getMinSize().x / dpi, getMinSize().y / dpi})];
+    [s setMaxSize:NSSizeFromCGSize({getMaxSize().x / dpi, getMaxSize().y / dpi})];
+    [s setContentSize:NSSizeFromCGSize({width / dpi, height / dpi})];
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {

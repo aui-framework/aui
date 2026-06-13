@@ -89,7 +89,8 @@ public:
 
 protected:
     void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
-    void applyGeometryToChildren() override;
+    void onLayout(int w, int h) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
 private:
     class WordEntry final : public aui::detail::WordEntry {
@@ -115,6 +116,6 @@ private:
 
     static ParsedFlags parseFlags(const Flags& flags);
 
-    void processString(const AString& string, const ParsedFlags& parsedFlags,
+    void processString(AStringView string, const ParsedFlags& parsedFlags,
                        Entries& entries);
 };

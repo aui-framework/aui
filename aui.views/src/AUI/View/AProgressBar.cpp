@@ -29,13 +29,13 @@ AProgressBar::~AProgressBar() {
 
 }
 
-void AProgressBar::setSize(glm::ivec2 size) {
-    AViewContainerBase::setSize(size);
+void AProgressBar::onLayout(int w, int h) {
+    AViewContainerBase::onLayout(w, h);
     updateInnerWidth();
 }
 
 void AProgressBar::updateInnerWidth() {
-    mInner->setGeometry(mPadding.left,
+    mInner->layout(mPadding.left,
                         mPadding.top,
                         int(mValue * float(getContentWidth())),
                         getContentHeight());

@@ -39,7 +39,17 @@ public:
         return mContents;
     }
 
-    void applyGeometryToChildren() override;
+    void setScrollSurfaceSize(glm::ivec2 size);
+
+    [[nodiscard]]
+    glm::ivec2 scrollSurfaceSize() const noexcept {
+        return mScrollSurfaceSize;
+    }
+
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
+
+    void onLayout(int w, int h) override;
 
     bool consumesClick(const glm::ivec2& position) override {
         return true;
@@ -99,6 +109,7 @@ public:
 private:
     _<Inner> mInner;
     _<AView> mContents;
+    glm::ivec2 mScrollSurfaceSize = {};
 
     glm::uvec2 mScroll = {0, 0};
     emits<glm::uvec2> mScrollChanged;

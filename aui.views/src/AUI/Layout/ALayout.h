@@ -10,11 +10,14 @@
  */
 
 #pragma once
-#include "AUI/Common/AObject.h"
-#include "AUI/Common/ADeque.h"
-#include "AUI/View/AView.h"
-#include "AUI/Common/SharedPtr.h"
-#include "AUI/Util/ALayoutDirection.h"
+
+#include <AUI/Common/AObject.h>
+#include <AUI/Common/ADeque.h>
+#include <AUI/Common/AFixedSizeCache.hpp>
+#include <AUI/View/AView.h>
+#include <AUI/Common/SharedPtr.h>
+#include <AUI/Util/ALayoutDirection.h>
+#include <limits>
 
 class AViewContainer;
 
@@ -283,50 +286,23 @@ class AViewContainer;
  *
  *     FixedSize nullifies Expanding's action (on per axis basic).
  *
- * ## Implementation details
- *
- * The process of applying position and size involves several key functions:
- * ```
- * AWindow::redraw()
- * └─> AWindow::applyGeometryToChildrenIfNecessary()
- *     └─> AWindow::applyGeometryToChildren()
- *         └─> ALayout::onResize()                                                  ┐
- *             └─> AViewContainerBase::getMinimumSize()              ┐              │
- *                 └─> AViewContainerBase::getContentMinimumWidth()  │              │
- *                     └─> ALayout::getMinimumWidth()                │              │
- *                         └─> AView::getMinimumWidth()              │ cached       │
- *                 └─> AViewContainerBase::getContentMinimumHeight() │              │ potentially
- *                     └─> ALayout::getMinimumHeight()               │              │ recursive
- *                         └─> AView::getMinimumHeight()             ┘              │
- *             └─> AViewContainerBase::setGeometry()                                │
- *                 └─> AViewContainerBase::setSize()                                │
- *                     └─> AViewContainerBase::applyGeometryToChildrenIfNecessary() │
- *                         └─> AViewContainerBase::applyGeometryToChildren()        │
- *                             └─> ALayout::onResize()                              ┘
- *                                 └─> AView::setGeometry()
- * ```
- *
  * ### Applying size
  *
- * - Size of each view in tree is [calculated](#SIZE_CALCULATION) on this phase
- * - [AView::redraw](AWindow::redraw) - geometry is applied before rendering
- * - [applyGeometryToChildrenIfNecessary](AViewContainerBase::applyGeometryToChildrenIfNecessary) - applies geometry
- *   only if really needed (i.e., if there were a resize event, or views were added or removed)
- * - [applyGeometryToChildren](AViewContainerBase::applyGeometryToChildren) - applies geometry to its children with
- *   no preconditions
- * - [ALayout::onResize] - implemented by layout manager, whose have their own algorithms of arranging views
- * - [AView::setGeometry] - sets geometry of a view (which might be a container)
+ * - Size of each view in tree is [calculated](#SIZE_CALCULATION) during this phase.
+ * - [AView::redraw] - triggers surface redraw. Surface applies layout before rendering.
+ * - [AView::layout] - entry point for positioning and sizing a view. Performs layout only if really needed (i.e., if
+ *   there was a resize event, or [AView::requestLayout] was called). Sets position and size.
  *
  * ### Size calculation { #SIZE_CALCULATION }
  *
- * - Layout manager queries **Minimum size** which is determined with [AView::getMinimumSize()] and cached until the
- *   view or its children call [AView::markMinContentSizeInvalid()]. It considers:
- *     - Children's minimum sizes (if any). A child includes its [ass::Padding] to its minimum size.
+ * - Layout manager queries **Measure** which is determined with [AView::measure()] and cached until the
+ *   view or its children call [AView::requestLayout()]. It considers:
+ *     - Children's intrinsic sizes (if any). A child includes its [ass::Padding] to its intrinsic size.
  *     - Children's [ass::Margin]
  *     - Container's [ass::Padding]
  *     - Container's [ass::LayoutSpacing]
  *     - Other constraints such as [ass::FixedSize]
- * - After minimum sizes of children are calculated, layout manager queries their **expanding** ratios, and gives such
+ * - After measured sizes of children are calculated, layout manager queries their **expanding** ratios, and gives such
  *   views a share of free space if available. Unlike minimum size, [EXPANDING] ratio does not depend on children's
  *   [EXPANDING] ratios.
  *
@@ -344,7 +320,9 @@ class AViewContainer;
 class API_AUI_VIEWS ALayout : public AObject {
 public:
     ALayout() = default;
-    virtual ~ALayout() = default;
+    ~ALayout() override = default;
+
+    virtual void requestLayout();
 
     /**
      * @brief Applies geometry to children.
@@ -355,7 +333,7 @@ public:
      * @details
      * See [layout-managers] for more info.
      */
-    virtual void onResize(int x, int y, int width, int height) = 0;
+    virtual void layout(int x, int y, int width, int height) = 0;
 
     /**
      * @brief Attaches view to the layout.
@@ -377,8 +355,23 @@ public:
      */
     virtual void removeView(aui::no_escape<AView> view, size_t index) = 0;
 
-    virtual int getMinimumWidth() = 0;
-    virtual int getMinimumHeight() = 0;
+    AMinMaxAxis computeMinMaxAxis(int height = -1);
+
+    glm::ivec2 measure(AConstraints constraints);
+
+    int getMinimumWidth();
+    int getMinimumHeight();
+    glm::ivec2 getMinimumSize() { return { getMinimumWidth(), getMinimumHeight() }; }
+
+    virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints) {
+        const auto minMax = onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedBlock() ? -1 : constraints.maxBlock);
+        const int maxInline = constraints.isUnlimitedInline() ? std::numeric_limits<int>::max() : constraints.maxInline;
+        return {
+            std::clamp(minMax.max, constraints.minInline, maxInline),
+            constraints.minBlock,
+        };
+    }
+    virtual AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) = 0;
 
     /**
      * @brief Visits all views in the layout.
@@ -392,4 +385,8 @@ public:
      * @param spacing spacing in px.
      */
     virtual void setSpacing(int spacing);
+
+protected:
+    AFixedSizeCache<AConstraints, glm::ivec2, 8> mMeasureCache;
+    AFixedSizeCache<int, AMinMaxAxis, 4> mMinMaxSizesCache;
 };

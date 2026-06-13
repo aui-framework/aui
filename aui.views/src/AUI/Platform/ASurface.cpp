@@ -35,44 +35,55 @@
 
 static constexpr auto LOG_TAG = "ASurface";
 
+ASurface* ASurface::current() {
+  return currentWindowStorage();
+}
+
 ASurface::ASurface() {
 }
 
 ASurface::~ASurface() {
-    if (currentWindowStorage() == this) {
-        currentWindowStorage() = nullptr;
-    }
+  if (currentWindowStorage() == this) {
+    currentWindowStorage() = nullptr;
+  }
 }
 
 float ASurface::fetchDpiFromSystem() const {
-    return 1.0f;
+  return 1.0f;
+}
+
+void ASurface::onResize(int width, int height) {
+  setSize({width, height});
+  requestLayout();
 }
 
 void ASurface::updateDpi() {
-    emit dpiChanged;
-    mDpiRatio = [&]() -> float {
-        float systemDpi = fetchDpiFromSystem();
-        float ratio = mScalingParams.scalingFactor * (UITestState::isTesting() ? 1.f : systemDpi);
-        if (!mScalingParams.minimalWindowSizeDp) {
-            return ratio;
-        }
+  float newDpi = [&]() -> float {
+    float systemDpi = fetchDpiFromSystem();
+    float ratio = mScalingParams.scalingFactor * (UITestState::isTesting() ? 1.f : systemDpi);
+    if (!mScalingParams.minimalWindowSizeDp) {
+      return ratio;
+    }
 
-        glm::vec2 maxDpiRatios = glm::vec2(getSize()) / glm::vec2(*mScalingParams.minimalWindowSizeDp);
-        float maxDpiRatio = glm::min(maxDpiRatios.x, maxDpiRatios.y);
-        maxDpiRatio = glm::round(maxDpiRatio / 0.25f) * 0.25f;
-        return glm::min(ratio, maxDpiRatio);
-    }();
-    onDpiChanged();
+    glm::vec2 maxDpiRatios = glm::vec2(getSize()) / glm::vec2(*mScalingParams.minimalWindowSizeDp);
+    float maxDpiRatio = glm::min(maxDpiRatios.x, maxDpiRatios.y);
+    maxDpiRatio = glm::round(maxDpiRatio / 0.25f) * 0.25f;
+    return glm::min(ratio, maxDpiRatio);
+  }();
+  if (mDpiRatio == newDpi) return;
+  mDpiRatio = newDpi;
+  emit dpiChanged;
+  onDpiChanged();
 }
 
 void ASurface::setScalingParams(ScalingParams params) {
-    mScalingParams = std::move(params);
-    updateDpi();
+   mScalingParams = std::move(params);
+   updateDpi();
 }
 
 _unique<AWindowManager>& ASurface::getWindowManagerImpl() {
-    thread_local _unique<AWindowManager> ourWindowManager = std::make_unique<AWindowManager>();
-    return ourWindowManager;
+  thread_local _unique<AWindowManager> ourWindowManager = std::make_unique<AWindowManager>();
+  return ourWindowManager;
 }
 
 void ASurface::setFocusedView(const _<AView>& view) {
@@ -395,133 +406,132 @@ void ASurface::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
 }
 
 void ASurface::onKeyDown(AInput::Key key) {
-    currentWindowStorage() = this;
-    AViewContainer::onKeyDown(key);
-    emit keyDown(key);
+  currentWindowStorage() = this;
+  AViewContainer::onKeyDown(key);
+  emit keyDown(key);
 
 #if AUI_DEBUG
-    if (key == AInput::F12 && AInput::isKeyDown(AInput::LCONTROL)) {
-        createDevtoolsWindow();
-    }
+  if (key == AInput::F12 && AInput::isKeyDown(AInput::LCONTROL) ||
+      key == AInput::I && AInput::isKeyDown(AInput::LCONTROL) && AInput::isKeyDown(AInput::LSHIFT)) {
+    createDevtoolsWindow();
+  }
 #endif
 }
 
 void ASurface::onKeyRepeat(AInput::Key key) {
-    currentWindowStorage() = this;
-    AViewContainerBase::onKeyRepeat(key);
+  currentWindowStorage() = this;
+  AViewContainerBase::onKeyRepeat(key);
 }
 
 void ASurface::onKeyUp(AInput::Key key) {
-    currentWindowStorage() = this;
-    AViewContainerBase::onKeyUp(key);
+  currentWindowStorage() = this;
+  AViewContainerBase::onKeyUp(key);
 }
 
 void ASurface::createDevtoolsWindow() {
-    auto surface = createOverlappingSurface({0, 0}, { 500_dp, 400_dp });
-    surface->setCloseOnClick(false);
-    ALayoutInflater::inflate(surface, _new<DevtoolsPanel>(this));
+  auto surface = createOverlappingSurface({0, 0}, { 500_dp, 400_dp });
+  surface->setCloseOnClick(false);
+  ALayoutInflater::inflate(surface, _new<DevtoolsPanel>(this));
 }
 
 void ASurface::flagRedraw() {
 
 }
 
-void ASurface::applyGeometryToChildren() {
-    APerformanceSection updateLayout("layout update");
-    AUI_REPEAT(2) {   // AText may trigger extra layout update
-        AViewContainer::applyGeometryToChildren();
-    }
-    emit layoutUpdateComplete;
+void ASurface::onLayout(int w, int h) {
+  APerformanceSection updateLayout("layout update");
+  AViewContainer::onLayout(w, h);
+  emit layoutUpdateComplete;
 }
 
 void ASurface::render(ARenderContext context) {
-    APerformanceSection root("render");
-    currentWindowStorage() = this;
+  APerformanceSection root("render");
+  currentWindowStorage() = this;
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
-    AWindow::getWindowManager().watchdog().runOperation([&] {
+  AWindow::getWindowManager().watchdog().runOperation([&] {
 #endif
-    {
-        APerformanceSection root("before frame");
-        std::exchange(mBeforeFrameQueue, {}).processMessages(context.render);
-    }
-    processTouchscreenKeyboardRequest();
+  {
+    APerformanceSection root("before frame");
+    std::exchange(mBeforeFrameQueue, {}).processMessages(context.render);
+  }
+  processTouchscreenKeyboardRequest();
 
-    mScrolls.erase(std::remove_if(mScrolls.begin(), mScrolls.end(), [&](Scroll& scroll) {
-        auto delta = scroll.scroller.gatherKineticScrollValue();
-        if (!delta) {
-            return false;
-        }
-        if (*delta == glm::ivec2(0, 0)) {
-            return true;
-        }
-
-#if AUI_SHOW_TOUCHES
-        ALogger::info("AUI_SHOW_TOUCHES") << "onScroll(pointerIndex = " << scroll.pointer << ", delta = " << *delta << ", kinetic = true)";
-#endif
-        onScroll(AScrollEvent {
-                .origin       = scroll.scroller.origin(),
-                .delta        = *delta,
-                .kinetic      = true,
-                .pointerIndex = scroll.pointer,
-        });
-        flagRedraw();
+  mScrolls.erase(std::remove_if(mScrolls.begin(), mScrolls.end(), [&](Scroll& scroll) {
+    auto delta = scroll.scroller.gatherKineticScrollValue();
+    if (!delta) {
         return false;
-    }), mScrolls.end());
-
-    AViewContainer::render(context);
-
-    if (auto& p = profiling()) {
-        if (auto v = p->highlightView->lock()) {
-            AViewProfiler::displayBoundsOn(*v, context);
-        }
+    }
+    if (*delta == glm::ivec2(0, 0)) {
+        return true;
     }
 
 #if AUI_SHOW_TOUCHES
-    for (const auto&[pointerIndex, data] : mShowTouches) {
-        {
-            AVector<glm::vec2> lines;
-            lines << data.press;
-            lines << data.moves;
+    ALogger::info("AUI_SHOW_TOUCHES") << "onScroll(pointerIndex = " << scroll.pointer << ", delta = " << *delta << ", kinetic = true)";
+#endif
+    onScroll(AScrollEvent {
+      .origin       = scroll.scroller.origin(),
+      .delta        = *delta,
+      .kinetic      = true,
+      .pointerIndex = scroll.pointer,
+    });
+    flagRedraw();
+    return false;
+  }), mScrolls.end());
 
-            if (data.release) {
-                lines << *data.release;
-            }
-            context.render.lines(ASolidBrush{AColor::BLUE}, lines);
-        }
-        context.render.points(ASolidBrush{AColor::RED}, data.moves, 6_dp);
-        glm::vec2 p[1] = { data.press };
-        context.render.points(ASolidBrush{AColor::GREEN}, p, 6_dp);
+  AViewContainer::render(context);
 
-        if (data.release) {
-            glm::vec2 p[1] = { *data.release };
-            context.render.points(ASolidBrush{AColor::GREEN.transparentize(0.3f)}, p, 6_dp);
-        }
+  if (auto& p = profiling()) {
+    if (auto v = p->highlightView->lock()) {
+      AViewProfiler::displayBoundsOn(*v, context);
     }
+  }
+
+#if AUI_SHOW_TOUCHES
+  for (const auto&[pointerIndex, data] : mShowTouches) {
+    {
+      AVector<glm::vec2> lines;
+      lines << data.press;
+      lines << data.moves;
+
+      if (data.release) {
+        lines << *data.release;
+      }
+      context.render.lines(ASolidBrush{AColor::BLUE}, lines);
+    }
+    context.render.points(ASolidBrush{AColor::RED}, data.moves, 6_dp);
+    glm::vec2 p[1] = { data.press };
+    context.render.points(ASolidBrush{AColor::GREEN}, p, 6_dp);
+
+    if (data.release) {
+      glm::vec2 p[1] = { *data.release };
+      context.render.points(ASolidBrush{AColor::GREEN.transparentize(0.3f)}, p, 6_dp);
+    }
+  }
 #endif
 
-    using namespace std::chrono;
-    using namespace std::chrono_literals;
-    auto now = high_resolution_clock::now();
-    ++mFpsCounter;
-    if (auto delta = duration_cast<microseconds>(now - mLastTimeFpsCaptured).count();
-        delta >= duration_cast<microseconds>(1s).count()) {
-        mLastCapturedFps = duration_cast<microseconds>(1s).count() * (mFpsCounter) / delta;
-        mFpsCounter = 0;
-        mLastTimeFpsCaptured = now;
-    }
+  using namespace std::chrono;
+  using namespace std::chrono_literals;
+  auto now = high_resolution_clock::now();
+  ++mFpsCounter;
+  if (auto delta = duration_cast<microseconds>(now - mLastTimeFpsCaptured).count();
+      delta >= duration_cast<microseconds>(1s).count()) {
+      mLastCapturedFps = duration_cast<microseconds>(1s).count() * (mFpsCounter) / delta;
+      mFpsCounter = 0;
+      mLastTimeFpsCaptured = now;
+  }
 #if AUI_PLATFORM_IOS || AUI_PLATFORM_ANDROID
-    });
+  });
 #endif
 }
 
 ASurface*& ASurface::currentWindowStorage() {
-    thread_local ASurface* threadLocal = nullptr;
-    static ASurface* global = nullptr;
-    if (threadLocal)
-        return threadLocal;
-    return global;
+  thread_local ASurface* threadLocal = nullptr;
+  static ASurface* global = nullptr;
+  if (threadLocal) {
+    return threadLocal;
+  }
+  return global;
 }
-
 
 void ASurface::onFocusLost() {
     AView::onFocusLost();
@@ -614,15 +624,14 @@ void ASurface::processTouchscreenKeyboardRequest() {
     mKeyboardRequestedState = KeyboardRequest::NO_OP;
 }
 
-
-void ASurface::markMinContentSizeInvalid() {
+void ASurface::requestLayout() {
     if (auto& p = profiling()) {
         if (p->breakpointOnMarkMinContentSizeInvalid) {
             p->breakpointOnMarkMinContentSizeInvalid = false;
             AUI_BREAKPOINT();
         }
     }
-    AViewContainer::markMinContentSizeInvalid();
+    AViewContainer::requestLayout();
     flagRedraw();
 }
 

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -20,16 +20,16 @@
 
 using HVLayout = aui::HVLayout<ALayoutDirection::VERTICAL>;
 
-void AVerticalLayout::onResize(int x, int y, int width, int height) {
-    HVLayout::onResize({ x, y }, { width, height }, mViews, mSpacing);
+void AVerticalLayout::layout(int x, int y, int width, int height) {
+    HVLayout::layout({ x, y }, { width, height }, mViews, mSpacing);
 }
 
-int AVerticalLayout::getMinimumWidth() {
-    return HVLayout::getMinimumWidth(mViews, mSpacing);
+glm::ivec2 AVerticalLayout::onIntrinsicMeasure(AConstraints constraints) {
+    return HVLayout::onIntrinsicMeasure(mViews, mSpacing, constraints);
 }
 
-int AVerticalLayout::getMinimumHeight() {
-    return HVLayout::getMinimumHeight(mViews, mSpacing);
+AMinMaxAxis AVerticalLayout::onComputeIntrinsicMinMaxAxis(int) {
+    return HVLayout::computeIntrinsicMinMaxSizes(mViews, mSpacing);
 }
 
 void AVerticalLayout::setSpacing(int spacing) {
@@ -37,10 +37,11 @@ void AVerticalLayout::setSpacing(int spacing) {
         return;
     }
     mSpacing = spacing;
+    requestLayout();
     if (mViews.empty()) {
         return;
     }
-    AUI_NULLSAFE(mViews.first()->getParent())->markMinContentSizeInvalid();
+    AUI_NULLSAFE(mViews.first()->getParent())->requestLayout();
 }
 
 ALayoutDirection AVerticalLayout::getLayoutDirection() {

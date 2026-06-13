@@ -83,6 +83,9 @@ public:
 
     void setMax(int64_t max);
 
+protected:
+    void onLayout(int w, int h) override;
+
 signals:
     /**
      * @brief Number changed.

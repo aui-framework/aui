@@ -30,16 +30,12 @@ namespace {
             LinearLayoutImpl::removeView(view, index);
         }
 
-        void onResize(int x, int y, int width, int height) override {
+        void layout(int x, int y, int width, int height) override {
 
         }
 
-        int getMinimumWidth() override {
-            return 0;
-        }
-
-        int getMinimumHeight() override {
-            return 0;
+        AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
+            return {};
         }
 
         static void markViewToBeCentered(AView& v) {
@@ -91,7 +87,7 @@ void ADragArea::ADraggableHandle::onPointerPressed(const APointerPressedEvent& e
     connect(mouseMove, dragArea, &ADragArea::handleMouseMove);
     dragArea->startDragging(container);
 
-    connect(AWindow::current()->mouseMove,
+    connect(ASurface::current()->mouseMove,
             this,
             [this](const glm::ivec2& windowPos) {
                 if (mDragging) {
@@ -131,23 +127,25 @@ void ADragArea::handleMouseMove() {
     }
 }
 
-void ADragArea::applyGeometryToChildren() {
+void ADragArea::onLayout(int width, int height) {
     const auto x = getPadding().left;
     const auto y = getPadding().top;
-    const auto width = getWidth() - mPadding.horizontal();
-    const auto height = getHeight() - mPadding.vertical();
 
     for (const auto& v : getViews()) {
         v->ensureAssUpdated();
         auto margins = v->getMargin();
-        auto finalWidth = v->getMinimumWidth() + margins.horizontal();
+        auto measuredSize = v->measure({
+            .maxInline = std::max(0, width - margins.horizontal()),
+            .maxBlock = std::max(0, height - margins.vertical()),
+        });
+        auto finalWidth = measuredSize.x + margins.horizontal();
         auto finalX = (width - finalWidth) / 2;
 
-        auto finalHeight = v->getMinimumHeight() + margins.vertical();
+        auto finalHeight = measuredSize.y + margins.vertical();
         auto finalY = (height - finalHeight) / 2;
 
         if (DragAreaLayout::isViewMarkedToBeCentered(*v)) {
-            v->setGeometry(finalX + x + margins.left,
+            v->layout(finalX + x + margins.left,
                            finalY + y + margins.top,
                            finalWidth - margins.horizontal(),
                            finalHeight - margins.vertical());
@@ -157,7 +155,7 @@ void ADragArea::applyGeometryToChildren() {
             setValidPositionFor(v, v->getPosition());
         }
     }
-    AViewContainerBase::applyGeometryToChildren();
+    AViewContainerBase::onLayout(width, height);
 }
 
 void ADragArea::endDragging() {
@@ -182,6 +180,6 @@ _<ADragArea::ADraggableHandle> ADragArea::convertToDraggableContainer(const _<AV
     auto v = _new<ADraggableHandle>(checkForClickConsumption);
     v->setContents(view);
     v->setExpanding(view->getExpanding());
-    v->applyGeometryToChildrenIfNecessary();
+    v->requestLayout();
     return v;
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -11,52 +11,74 @@
 
 #include "AStackedLayout.h"
 
-
-void ::AStackedLayout::onResize(int x, int y, int width, int height) {
-    for (auto& v: mViews) {
-        v->ensureAssUpdated();
-        int finalX, finalY, finalWidth, finalHeight;
-        auto margins = v->getMargin();
-        if (v->getExpandingHorizontal() == 0) {
-            finalWidth = glm::min(v->getMinimumWidth() + margins.horizontal(), width);
-            finalX = (width - finalWidth) / 2;
-        } else {
-            finalX = 0;
-            finalWidth = width;
-        }
-        if (v->getExpandingVertical() == 0) {
-            finalHeight = glm::min(v->getMinimumHeight() + margins.vertical(), height);
-            finalY = (height - finalHeight) / 2;
-        } else {
-            finalY = 0;
-            finalHeight = height;
-        }
-        v->setGeometry(finalX + x + margins.left,
-                       finalY + y + margins.top,
-                       finalWidth - margins.horizontal(),
-                       finalHeight - margins.vertical());
-        // if view rejected the specified size, then we would recenter it
-        if (v->getSize() != glm::ivec2(finalWidth - margins.horizontal(), finalHeight - margins.vertical())) {
-            glm::ivec2 correctedSize = v->getSize() + margins.horizontal();
-            glm::ivec2 correctedPos = (glm::ivec2(width, height) - correctedSize) / 2;
-            v->setPosition(correctedPos + glm::ivec2(x + margins.left, y + margins.top));
-        }
+void AStackedLayout::layout(int x, int y, int width, int height) {
+  for (auto& v: mViews) {
+    if (!(v->getVisibility() & Visibility::FLAG_RENDER_NEEDED)) {
+      continue;
     }
+
+    v->ensureAssUpdated();
+    auto margins = v->getMargin();
+
+    AConstraints constraints;
+    if (v->getExpandingHorizontal() == 0) {
+      constraints.minInline = 0;
+      constraints.maxInline = std::max(0, width - margins.horizontal());
+    } else {
+      constraints.minInline = constraints.maxInline = std::max(0, width - margins.horizontal());
+    }
+
+    if (v->getExpandingVertical() == 0) {
+      constraints.minBlock = 0;
+      constraints.maxBlock = std::max(0, height - margins.vertical());
+    } else {
+      constraints.minBlock = constraints.maxBlock = std::max(0, height - margins.vertical());
+    }
+
+    auto measuredSize = v->measure(constraints);
+
+    int finalWidth = measuredSize.x + margins.horizontal();
+    int finalHeight = measuredSize.y + margins.vertical();
+
+    int finalX = (width - finalWidth) / 2;
+    int finalY = (height - finalHeight) / 2;
+
+    v->layout(finalX + x + margins.left,
+                   finalY + y + margins.top,
+                   measuredSize.x,
+                   measuredSize.y);
+  }
 }
 
-int ::AStackedLayout::getMinimumWidth() {
-    int m = 0;
-    for (auto& v: mViews)
-        if (!!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE))
-            m = glm::max(int(v->getMinimumWidth() + v->getMargin().horizontal()), m);
-    return m;
+glm::ivec2 AStackedLayout::onIntrinsicMeasure(AConstraints constraints) {
+  int width = 0;
+  int height = 0;
+  for (auto& v: mViews) {
+    if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+      continue;
+    }
+    auto margins = v->getMargin().occupiedSize();
+    auto measured = v->measure({
+      .minInline = 0,
+      .maxInline = constraints.isUnlimitedInline() ? -1 : std::max(0, constraints.maxInline - margins.x),
+      .minBlock = 0,
+      .maxBlock = constraints.isUnlimitedBlock() ? -1 : std::max(0, constraints.maxBlock - margins.y),
+    });
+    width = glm::max(width, measured.x + margins.x);
+    height = glm::max(height, measured.y + margins.y);
+  }
+  return { width, height };
 }
 
-int ::AStackedLayout::getMinimumHeight() {
-    int m = 0;
-    for (auto& v: mViews) {
-        if (!!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE))
-            m = glm::max(int(v->getMinimumHeight() + v->getMargin().vertical()), m);
+AMinMaxAxis AStackedLayout::onComputeIntrinsicMinMaxAxis(int) {
+  AMinMaxAxis result;
+  for (const auto& view : mViews) {
+    if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+      continue;
     }
-    return m;
+    const auto minMax = view->computeMinMaxAxis();
+    result.min = glm::max(result.min, minMax.min + view->getMargin().horizontal());
+    result.max = glm::max(result.max, minMax.max + view->getMargin().horizontal());
+  }
+  return result;
 }

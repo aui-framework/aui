@@ -16,7 +16,7 @@
 #include "AUI/Util/AFraction.h"
 
 template<typename Container>
-void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, const glm::ivec2& size) {
+void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, const glm::ivec2& size, bool writePositions) {
     if (mEntries.empty()) {
         mHeight = 0;
         return;
@@ -34,10 +34,11 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
         int occupiedHorizontalSpace;
         int remainingHeight;
         glm::ivec2 position;
+        bool writePositions = true;
 
         void setPosition(glm::ivec2 p) {
             position = p;
-            if (p.x == UNDEFINED_POSITION_MARKER || p.y == UNDEFINED_POSITION_MARKER) {
+            if (!writePositions || p.x == UNDEFINED_POSITION_MARKER || p.y == UNDEFINED_POSITION_MARKER) {
                 return;
             }
             entry->setPosition(p);
@@ -110,7 +111,9 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
                     currentX = offset.x + leftPadding;
                     int index = 0;
                     for (auto& i: *currentRow) {
-                        i.entry->setPosition({currentX + (spacing * index).toInt(), currentYWithLineHeightApplied});
+                        if (writePositions) {
+                            i.entry->setPosition({currentX + (spacing * index).toInt(), currentYWithLineHeightApplied});
+                        }
                         currentX += i.occupiedHorizontalSpace;
                         ++index;
                     }
@@ -123,7 +126,9 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
                     currentX += i.occupiedHorizontalSpace;
                 }
                 for (auto& i: *currentRow) {
-                    i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    if (writePositions) {
+                        i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    }
                     currentX += i.occupiedHorizontalSpace;
                 }
                 break;
@@ -147,7 +152,9 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
 
                 currentX = leftPadding + (size.x - leftPadding - rightPadding - actualRowWidth) / 2;
                 for (auto& i: *currentRow) {
-                    i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    if (writePositions) {
+                        i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    }
                     currentX += i.occupiedHorizontalSpace;
                 }
                 break;
@@ -160,7 +167,9 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
                 for (auto& i : rightFloat) actualRowWidth += i.occupiedHorizontalSpace;
                 currentX = size.x - actualRowWidth;
                 for (auto& i : *currentRow) {
-                    i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    if (writePositions) {
+                        i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    }
                     currentX += i.occupiedHorizontalSpace;
                 }
                 break;
@@ -211,13 +220,13 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
         switch ((*currentItem)->getFloat()) {
             case AFloat::LEFT: {
                 int position = ranges::accumulate(leftFloat, 0, std::plus<>{}, &FloatingEntry::occupiedHorizontalSpace);
-                leftFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
+                leftFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y, {}, writePositions});
                 leftFloat.last().setPosition({position, UNDEFINED_POSITION_MARKER });
                 break;
             }
 
             case AFloat::RIGHT: {
-                rightFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
+                rightFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y, {}, writePositions});
                 int position = ranges::accumulate(rightFloat, offset.x + size.x, std::minus<>{}, &FloatingEntry::occupiedHorizontalSpace);
                 rightFloat.last().setPosition({position, UNDEFINED_POSITION_MARKER });
                 break;

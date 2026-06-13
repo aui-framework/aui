@@ -75,7 +75,7 @@ public:
     using Entries = Container;
 
     // include AWordWrappingEngineImpl.h for implementation
-    void performLayout(const glm::ivec2& offset, const glm::ivec2& size);
+    void performLayout(const glm::ivec2& offset, const glm::ivec2& size, bool writePositions = true);
 
     void setEntries(Container entries) {
         mEntries = std::move(entries);
@@ -95,5 +95,4 @@ public:
 private:
     Container mEntries;
 };
-
 

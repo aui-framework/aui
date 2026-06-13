@@ -77,6 +77,9 @@ public:
     void decrease();
     void changeBy(double v);
 
+protected:
+    void onLayout(int w, int h) override;
+
    signals:
     /**
      * @brief Number changed.

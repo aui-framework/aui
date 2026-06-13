@@ -598,7 +598,7 @@ public:
         if (!img)
             return;
 
-        if (AWindow::current()->profiling()->showBaseline) {
+        if (ASurface::current()->profiling()->showBaseline) {
             mRenderer->rectangle(
                 ASolidBrush { AColor::RED.transparentize(0.5f) }, { 0, 0 }, { mTextWidth, 1 });   // debug baseline
         }
@@ -1220,7 +1220,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
                 };
                 mRenderer.mRectangleVao.insertIfKeyMismatches(1, AArrayView(uvs), "OpenGLRenderViewToTexture");
                 mRenderer.drawRectImpl({0, 0}, mFramebuffer.size());
-                if (auto& p = AWindow::current()->profiling(); p && p->renderToTextureDecay) [[unlikely]] {
+                if (auto& p = ASurface::current()->profiling(); p && p->renderToTextureDecay) [[unlikely]] {
                     // decays to fast. attach it to time
                     using namespace std::chrono;
                     using namespace std::chrono_literals;

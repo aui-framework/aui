@@ -40,6 +40,29 @@ bool isDefinitelyInvisible(AView& view) {
 }
 }
 
+void AViewContainerBase::onLayout(int w, int h) {
+  AView::onLayout(w, h);
+  AUI_ASSERT(!mRepaintTrap.hasValue());
+  mRepaintTrap.emplace();
+  AUI_DEFER {
+    mRepaintTrap.reset();
+  };
+  if (mLayout) {
+    std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
+    if (!lock) {
+      throw AException("onLayout: can't ensure safe iteration");
+    }
+    mLayout->layout(mPadding.left, mPadding.top,
+                      getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+  }
+  if (mRepaintTrap->triggered) {
+    // if the trap is triggered during resize, it means at least one view has changed its position or size hence
+    // we would like to repaint whole container
+    redraw();
+  }
+  mConsumesClickCache.reset();
+}
+
 void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
     if (aui::view::impl::isDefinitelyInvisible(*view)) [[unlikely]] {
         return;
@@ -61,7 +84,7 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
 
     const bool showRedraw = [&] {
       if (view->mRedrawRequested) [[unlikely]] {
-          if (auto w = AWindow::current()) [[unlikely]] {
+          if (auto w = ASurface::current()) [[unlikely]] {
               if (auto& p = w->profiling()) {
                   if (p->highlightRedrawRequests) {
                       return true;
@@ -129,7 +152,7 @@ AViewContainerBase::~AViewContainerBase() {
 void AViewContainerBase::addViews(AVector<_<AView>> views) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use addViews when render/layout is in progress; please enqueue such operation");
     }
     for (const auto& view: views) {
         view->mParent = this;
@@ -150,7 +173,7 @@ void AViewContainerBase::addViews(AVector<_<AView>> views) {
 void AViewContainerBase::addView(const _<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use addView when render/layout is in progress; please enqueue such operation");
     }
     AUI_NULLSAFE(view->mParent)->removeViewImpl(view, lock);
     view->mSkipUntilLayoutUpdate = true;
@@ -165,11 +188,11 @@ void AViewContainerBase::addView(const _<AView>& view) {
 void AViewContainerBase::addViewCustomLayout(const _<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addViewCustomLayout when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use addViewCustomLayout when render/layout is in progress; please enqueue such operation");
     }
     mViews << view;
     view->mParent = this;
-    view->setSize(view->getMinimumSize());
+    view->setSize(view->measure(AConstraints {}));
     view->mSkipUntilLayoutUpdate = true;
     AUI_NULLSAFE(mLayout)->addView(view);
     view->onViewGraphSubtreeChanged();
@@ -180,7 +203,7 @@ void AViewContainerBase::addViewCustomLayout(const _<AView>& view) {
 void AViewContainerBase::addView(size_t index, const _<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use addView when render/layout is in progress; please enqueue such operation");
     }
     view->mSkipUntilLayoutUpdate = true;
     mViews.insert(mViews.begin() + index, view);
@@ -194,7 +217,7 @@ void AViewContainerBase::addView(size_t index, const _<AView>& view) {
 void AViewContainerBase::setLayout(_unique<ALayout> layout) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use setLayout when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use setLayout when render/layout is in progress; please enqueue such operation");
     }
     setLayoutImpl(std::move(layout), lock);
 }
@@ -222,7 +245,7 @@ void AViewContainerBase::setLayoutImpl(_unique<ALayout> layout, std::unique_lock
 void AViewContainerBase::removeView(const _<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use removeView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use removeView when render/layout is in progress; please enqueue such operation");
     }
     removeViewImpl(view, lock);
 }
@@ -245,7 +268,7 @@ void AViewContainerBase::removeViewImpl(const _<AView>& view, std::unique_lock<A
 void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::const_iterator> views) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use removeViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use removeViews when render/layout is in progress; please enqueue such operation");
     }
     if (views.empty()) {
         return;
@@ -264,7 +287,7 @@ void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::const_iterato
 void AViewContainerBase::removeView(size_t index) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use removeView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use removeView when render/layout is in progress; please enqueue such operation");
     }
     auto view = std::move(mViews[index]);
     view->mParent = nullptr;
@@ -314,20 +337,6 @@ void AViewContainerBase::onMouseLeave() {
             view->onMouseLeave();
         }
     }
-}
-
-int AViewContainerBase::getContentMinimumWidth() {
-    if (mLayout) {
-        return (glm::max)(mLayout->getMinimumWidth(), AView::getContentMinimumWidth());
-    }
-    return AView::getContentMinimumWidth();
-}
-
-int AViewContainerBase::getContentMinimumHeight() {
-    if (mLayout) {
-        return (glm::max)(mLayout->getMinimumHeight(), AView::getContentMinimumHeight());
-    }
-    return AView::getContentMinimumHeight();
 }
 
 void AViewContainerBase::onPointerPressed(const APointerPressedEvent& event) {
@@ -492,59 +501,10 @@ _<AView> AViewContainerBase::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewL
     return target;
 }
 
-void AViewContainerBase::setSize(glm::ivec2 size) {
-    mSizeSet = true;
-    AView::setSize(size);
-    applyGeometryToChildrenIfNecessary();
-}
-
-void AViewContainerBase::invalidateAllStyles() {
-    AView::invalidateAllStyles();
-    if (mSizeSet)
-        applyGeometryToChildrenIfNecessary();
-}
-
-void AViewContainerBase::applyGeometryToChildren() {
-    if (!mLayout) {
-        // no layout = no update.
-        return;
-    }
-
-    std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
-    if (!lock) {
-        throw AException("applyGeometryToChildren: can't ensure safe iteration");
-    }
-    mLayout->onResize(mPadding.left, mPadding.top,
-                      getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
-}
-
-void AViewContainerBase::applyGeometryToChildrenIfNecessary() {
-    if (!mWantsLayoutUpdate) { // check if this container is part of invalidated min content size chain
-        if (mLastLayoutUpdateSize == getSize()) {
-            // no need to go deeper.
-            return;
-        }
-    }
-    mWantsLayoutUpdate = false;
-    mLastLayoutUpdateSize = getSize();
-    AUI_ASSERT(!mRepaintTrap.hasValue());
-    mRepaintTrap.emplace();
-    AUI_DEFER {
-      mRepaintTrap.reset();
-    };
-    applyGeometryToChildren();
-    if (mRepaintTrap->triggered) {
-        // if the trap is triggered during resize, it means at least one view has changed its position or size hence
-        // we would like to repaint whole container
-        redraw();
-    }
-    mConsumesClickCache.reset();
-}
-
 void AViewContainerBase::removeAllViews() {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use removeAllViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use removeAllViews when render/layout is in progress; please enqueue such operation");
     }
     removeAllViewsImpl(lock);
 }
@@ -579,7 +539,7 @@ void AViewContainerBase::onDpiChanged() {
 void AViewContainerBase::setContents(const _<AViewContainer>& container) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use setLayout when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use setLayout when render/layout is in progress; please enqueue such operation");
     }
     // NOLINTBEGIN(clang-diagnostic-potentially-evaluated-expression)
     AUI_ASSERTX(typeid(*container.get()) == typeid(AViewContainer),
@@ -624,6 +584,11 @@ bool AViewContainerBase::onGesture(const glm::ivec2& origin, const AGestureEvent
     return false;
 }
 
+void AViewContainerBase::requestLayout() {
+    AView::requestLayout();
+    AUI_NULLSAFE(mLayout)->requestLayout();
+}
+
 void AViewContainerBase::invalidateAssHelper() {
     AView::invalidateAssHelper();
     for (const auto& v: mViews) {
@@ -663,7 +628,7 @@ void AViewContainerBase::onClickPrevented() {
 
 void AViewContainerBase::invalidateCaches() {
     mConsumesClickCache.reset();
-    markMinContentSizeInvalid();
+    requestLayout();
     redraw();
 }
 
@@ -687,7 +652,7 @@ _<AView> AViewContainerBase::pointerEventsMapping(APointerIndex index) {
 void AViewContainerBase::setViews(AVector<_<AView>> views) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use setViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use setViews when render/layout is in progress; please enqueue such operation");
     }
     removeAllViewsImpl(lock);
     views.removeIf([](const _<AView>& v) { return v == nullptr; });
@@ -701,9 +666,14 @@ void AViewContainerBase::setViews(AVector<_<AView>> views) {
     }
 }
 
-void AViewContainerBase::markMinContentSizeInvalid() {
-    AView::markMinContentSizeInvalid();
-    mWantsLayoutUpdate = true;
+glm::ivec2 AViewContainerBase::onIntrinsicMeasure(AConstraints constraints) {
+    if (mLayout) return mLayout->measure(constraints);
+    return AView::onIntrinsicMeasure(constraints);
+}
+
+AMinMaxAxis AViewContainerBase::onComputeIntrinsicMinMaxAxis(int height) {
+    if (mLayout) return mLayout->computeMinMaxAxis(height);
+    return AView::onComputeIntrinsicMinMaxAxis(height);
 }
 
 void AViewContainerBase::forceUpdateLayoutRecursively() {
@@ -712,7 +682,7 @@ void AViewContainerBase::forceUpdateLayoutRecursively() {
     for (const auto& view: mViews) {
         view->forceUpdateLayoutRecursively();
     }
-    applyGeometryToChildrenIfNecessary();
+    onLayout(getSize().x, getSize().y);
 }
 
 void AViewContainerBase::markPixelDataInvalid(ARect<int> invalidArea) {

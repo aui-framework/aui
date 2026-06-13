@@ -48,23 +48,23 @@ public:
 
     void setValue(aui::float_within_0_1 value) {
         mValue = value;
-        markMinContentSizeInvalid();
+        requestLayout();
     }
 
-    int getMinimumWidth() override {
-        return mHandle->getMinimumWidth();
-    }
-
-    int getMinimumHeight() override {
-        return mHandle->getMinimumHeight();
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int) override {
+        auto minMax = mHandle->computeMinMaxAxis();
+        return {
+            .min = minMax.min,
+            .max = minMax.max,
+        };
     }
 
     emits<aui::float_within_0_1> valueChanged;
 
 protected:
-    void applyGeometryToChildren() override {
-        auto handleSize = mHandle->getMinimumSize();
-        mHandle->setGeometry({getSize().x * mValue - handleSize.x / 2.f, 0}, { handleSize.x, getSize().y });
+    void onLayout(int w, int h) override {
+        auto handleSize = mHandle->measure(AConstraints::fixedBlock(h));
+        mHandle->layout({w * mValue - handleSize.x / 2.f, 0}, { handleSize.x, h });
     }
 
 private:

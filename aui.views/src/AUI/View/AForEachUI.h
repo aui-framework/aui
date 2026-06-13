@@ -61,8 +61,7 @@ public:
     using List = aui::any_view<Entry>;
     AForEachUIBase() {}
     ~AForEachUIBase() override = default;
-    void setPosition(glm::ivec2 position) override;
-    void setSize(glm::ivec2 size) override;
+    void onLayout(int w, int h) override;
 
 protected:
     struct Cache {
@@ -73,9 +72,11 @@ protected:
     };
 
     AOptional<Cache> mCache;
+    glm::ivec2 mLastOnLayoutSize = {0, 0};
 
     void onViewGraphSubtreeChanged() override;
-    void applyGeometryToChildren() override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
     /**
      * @brief Notifies that range was changed or iterators might have invalidated.
@@ -95,9 +96,19 @@ protected:
 
 private:
     _weak<AScrollAreaViewport> mViewport;
+    ASurface* mLastKnownWindow = nullptr;
     List mViewsModel;
     aui::dyn_range_capabilities mViewsModelCapabilities;
     AOptional<glm::ivec2> mLastInflatedScroll {};
+    AVector<aui::for_each_ui::Key> mPendingSharedCacheKeys;
+
+    void ensureViewsForMeasurement(AConstraints constraints);
+    void ensureViewsForLazyMeasurement(AConstraints constraints);
+    void materializeAllViewsForMeasurement();
+    void restoreLazyViewportAfterMeasurement();
+    void clearUnusedSharedCacheEntries();
+    bool measurementRequiresFullMaterialization(AConstraints constraints) const;
+    bool isModelEmpty() const;
 
     void addView(List::iterator iterator, AOptional<std::size_t> index = std::nullopt);
     void removeViews(aui::range<AVector<_<AView>>::const_iterator> iterators);
@@ -257,9 +268,7 @@ public:
     using KeyFunction = std::function<aui::for_each_ui::Key(const T&)>;
 
     AForEachUI() {}
-    ~AForEachUI() override {
-        putOurViewsToSharedCache();
-    }
+    ~AForEachUI() override = default;
 
     template <aui::detail::RangeFactory<T> RangeFactory>
     AForEachUI(RangeFactory&& rangeFactory) {
@@ -293,7 +302,7 @@ public:
                                if (view != nullptr) {
                                    ALOG_TRACE("AForEachUIBase")
                                        << this << "(" << AReflect::name(this) << ") (HIT) Taken view from cache: " << key;
-                                   mViewsSharedCache->erase(c);
+                                   mViewsSharedCache->erase(*c);
                                    return AForEachUIBase::Entry { .view = std::move(view), .id = key };
                                }
                            }

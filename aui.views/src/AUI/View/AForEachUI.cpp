@@ -16,27 +16,47 @@ static constexpr auto RENDER_TO_TEXTURE_TILE_SIZE = 256;
 static constexpr auto INFLATE_THRESHOLD_PX = RENDER_TO_TEXTURE_TILE_SIZE / 2;
 static constexpr auto INFLATE_STEP_PX = RENDER_TO_TEXTURE_TILE_SIZE * 2;
 static constexpr auto POTENTIAL_PERFORMANCE_ISSUE_VIEWS_COUNT_THRESHOLD = 100;
+static constexpr auto INITIAL_MEASUREMENT_VIEWS_COUNT_LIMIT = 64;
 static constexpr auto LOG_TAG = "AForEachUIBase";
 
 void AForEachUIBase::setModelImpl(AForEachUIBase::List model) {
+    if (auto w = getWindow()) {
+        mLastKnownWindow = w;
+    }
     putOurViewsToSharedCache();
     mViewsModelCapabilities = model.capabilities();
     mViewsModel = std::move(model);
+    mLastOnLayoutSize = {};
+
+    ensureViewport();
+    if (auto viewport = mViewport.lock();
+        viewport && getLayout() && getParent() != nullptr && !isModelEmpty() && getWidth() > 0 && getHeight() > 0) {
+        mCache.emplace();
+        mLastInflatedScroll = glm::ivec2(*viewport->scroll());
+        inflate();
+        clearUnusedSharedCacheEntries();
+    } else {
+        mLastInflatedScroll.reset();
+    }
+
+    requestLayout();
+    redraw();
 }
 
 void AForEachUIBase::putOurViewsToSharedCache() {
     removeAllViews();
+    mPendingSharedCacheKeys.clear();
     if (!mCache) {
         return;
     }
     if (auto viewsCache = getViewsCache()) {
         for (auto& e : mCache->items) {
             (*viewsCache)[e.id] = std::move(e.view);
+            mPendingSharedCacheKeys << e.id;
 //            ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") Cached view for id: " << e.id;
         }
-
-        if (auto w = AWindow::current()) {
-            connect(w->layoutUpdateComplete, AObject::GENERIC_OBSERVER, [viewsCache] {
+        if (!mPendingSharedCacheKeys.empty()) {
+            getThread()->enqueue([viewsCache] {
                 viewsCache->clear();
             });
         }
@@ -44,41 +64,60 @@ void AForEachUIBase::putOurViewsToSharedCache() {
     mCache.reset();
 }
 
-void AForEachUIBase::applyGeometryToChildren() {
-    auto viewport = mViewport.lock();
-    if (!viewport) {
-        if (!mCache) {
-            mCache.emplace();
-            removeAllViews();
-            for (auto i = mViewsModel.begin(); i != mViewsModel.end(); ++i) {
-                addView(i);
-            }
-        }
-        AViewContainerBase::applyGeometryToChildren();
-        return;
+glm::ivec2 AForEachUIBase::onIntrinsicMeasure(AConstraints constraints) {
+    if (isModelEmpty()) {
+        return {
+            constraints.isUnlimitedInline() ? constraints.minInline
+                                            : std::clamp(0, constraints.minInline, constraints.maxInline),
+            constraints.isUnlimitedBlock() ? constraints.minBlock
+                                           : std::clamp(0, constraints.minBlock, constraints.maxBlock),
+        };
     }
 
-    if (!mLastInflatedScroll) {
-        mLastInflatedScroll = -calculateOffsetWithinViewportSlidingSurface();
+    ensureViewport();
+    if (measurementRequiresFullMaterialization(constraints)) {
+        materializeAllViewsForMeasurement();
+        AUI_DEFER {
+            restoreLazyViewportAfterMeasurement();
+        };
+    } else {
+        ensureViewsForMeasurement(constraints);
     }
 
-    if (!mCache) {
-        mCache.emplace();
-        inflate();
-        return;
+    const auto minMax =
+        AViewContainerBase::onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedBlock() ? -1 : constraints.maxBlock);
+    const int width = constraints.isUnlimitedInline()
+        ? std::max(minMax.max, constraints.minInline)
+        : std::clamp(minMax.max, constraints.minInline, constraints.maxInline);
+
+    return AViewContainerBase::onIntrinsicMeasure({
+        .minInline = width,
+        .maxInline = width,
+        .minBlock = constraints.minBlock,
+        .maxBlock = constraints.maxBlock,
+    });
+}
+
+AMinMaxAxis AForEachUIBase::onComputeIntrinsicMinMaxAxis(int height) {
+    if (isModelEmpty()) {
+        return {};
     }
 
-    if (getViews().empty()) {
-        return;
+    ensureViewport();
+    if (mViewport.lock()) {
+        ensureViewsForMeasurement({});
+        return AViewContainerBase::onComputeIntrinsicMinMaxAxis(height);
     }
-    //    ALOG_DEBUG(LOG_TAG) << this << " compensateLayoutUpdatesByScroll";
-    viewport->compensateLayoutUpdatesByScroll(
-        getViews().first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
+    materializeAllViewsForMeasurement();
+    return AViewContainerBase::onComputeIntrinsicMinMaxAxis(height);
 }
 
 void AForEachUIBase::onViewGraphSubtreeChanged() {
 //    ALOG_DEBUG(LOG_TAG) << this << "(" << AReflect::name(this) << ") onViewGraphSubtreeChanged";
     AViewContainerBase::onViewGraphSubtreeChanged();
+    if (auto w = getWindow()) {
+        mLastKnownWindow = w;
+    }
 
     AUI_DEFER {
         // if parent [AUI_DECLARATIVE_FOR] was invalidated, it would call ours onViewGraphSubtreeChanged. We might depend
@@ -119,39 +158,55 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
     mViewport = std::move(viewport);
 }
 
-void AForEachUIBase::setPosition(glm::ivec2 position) {
-    auto prevPosition = getPosition();
-    AView::setPosition(position);
-    if (getPosition() == prevPosition) {
-        return;
+void AForEachUIBase::onLayout(int w, int h) {
+    if (auto window = getWindow()) {
+        mLastKnownWindow = window;
     }
-    if (mViewport.lock() == nullptr) {
-        mCache.reset();
-        return;
-    }
-    if (!mCache) {
-        return;
-    }
-    mLastInflatedScroll.reset();
-    inflate();
-}
-
-void AForEachUIBase::setSize(glm::ivec2 size) {
-    auto prevSize = getSize();
-    AViewContainerBase::setSize(size);
     if (!getLayout()) {
+        AViewContainerBase::onLayout(w, h);
+        clearUnusedSharedCacheEntries();
+        mLastOnLayoutSize = {w, h};
         return;
     }
-    if (!mViewport.lock()) {
+
+    auto viewport = mViewport.lock();
+    if (!viewport) {
+        if (!mCache) {
+            mCache.emplace();
+            removeAllViews();
+            for (auto i = mViewsModel.begin(); i != mViewsModel.end(); ++i) {
+                addView(i);
+            }
+        }
+        AViewContainerBase::onLayout(w, h);
+        clearUnusedSharedCacheEntries();
+        mLastOnLayoutSize = {w, h};
         return;
     }
+
+    if (!mLastInflatedScroll) {
+        mLastInflatedScroll = -calculateOffsetWithinViewportSlidingSurface();
+    }
+
+    if (!mCache) {
+        mCache.emplace();
+        inflate();
+    }
+
+    if (getViews().empty()) {
+        AViewContainerBase::onLayout(w, h);
+        clearUnusedSharedCacheEntries();
+        mLastOnLayoutSize = {w, h};
+        return;
+    }
+
     int diff = [&] {
         switch (getLayout()->getLayoutDirection()) {
             case ALayoutDirection::HORIZONTAL:
-                return prevSize.x - size.x;
+                return mLastOnLayoutSize.x - w;
 
             case ALayoutDirection::VERTICAL:
-                return prevSize.y - size.y;
+                return mLastOnLayoutSize.y - h;
 
             case ALayoutDirection::NONE:
                 break;
@@ -159,9 +214,15 @@ void AForEachUIBase::setSize(glm::ivec2 size) {
         return 0;
     }();
     if (diff == 0) {
+        AViewContainerBase::onLayout(w, h);
+        clearUnusedSharedCacheEntries();
+        mLastOnLayoutSize = {w, h};
         return;
     }
     inflate({ .backward = diff < 0, .forward = diff > 0 });
+    AViewContainerBase::onLayout(w, h);
+    clearUnusedSharedCacheEntries();
+    mLastOnLayoutSize = {w, h};
 }
 
 void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
@@ -237,7 +298,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             addView(it, 0);
 
             viewport->compensateLayoutUpdatesByScroll(
-                prevFirstView, [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
+                prevFirstView, [this] { AViewContainerBase::onLayout(getWidth(), getHeight()); }, axisMask());
             auto diff = prevFirstView->getPosition() - getViews().first()->getPosition();
             inflateTill += diff;
 
@@ -270,12 +331,12 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             addView(it);
             needsMinSizeUpdate = true;
             viewport->compensateLayoutUpdatesByScroll(
-                getViews().first(), [this] { AViewContainerBase::applyGeometryToChildren(); }, axisMask());
+                getViews().first(), [this] { AViewContainerBase::onLayout(getWidth(), getHeight()); }, axisMask());
         }
     }
 
     if (needsMinSizeUpdate) {
-        markMinContentSizeInvalid();
+        requestLayout();
     }
 }
 
@@ -357,4 +418,153 @@ void AForEachUIBase::ensureViewport() {
         return;
     }
     mViewport = findViewport();
+}
+
+void AForEachUIBase::ensureViewsForMeasurement(AConstraints constraints) {
+    ensureViewport();
+
+    if (mViewport.lock()) {
+        ensureViewsForLazyMeasurement(constraints);
+        return;
+    }
+
+    if (mCache) {
+        if (!getViews().empty()) {
+            return;
+        }
+        mCache->items.clear();
+    } else {
+        mCache.emplace();
+    }
+
+    for (auto i = mViewsModel.begin(); i != mViewsModel.end(); ++i) {
+        addView(i);
+    }
+}
+
+void AForEachUIBase::ensureViewsForLazyMeasurement(AConstraints constraints) {
+    if (mCache) {
+        if (!getViews().empty()) {
+            return;
+        }
+        mCache->items.clear();
+    } else {
+        mCache.emplace();
+    }
+
+    auto it = mViewsModel.begin();
+    const auto end = mViewsModel.end();
+    if (it == end) {
+        return;
+    }
+
+    const auto direction = getLayout()
+        ? getLayout()->getLayoutDirection()
+        : ALayoutDirection::VERTICAL;
+    const int targetPrimarySpan = [&] {
+        auto viewport = mViewport.lock();
+        switch (direction) {
+            case ALayoutDirection::HORIZONTAL:
+                if (viewport && viewport->getWidth() > 0) {
+                    return viewport->getWidth() + INFLATE_STEP_PX;
+                }
+                if (!constraints.isUnlimitedInline()) {
+                    return constraints.maxInline + INFLATE_STEP_PX;
+                }
+                return INFLATE_STEP_PX;
+
+            case ALayoutDirection::VERTICAL:
+                if (viewport && viewport->getHeight() > 0) {
+                    return viewport->getHeight() + INFLATE_STEP_PX;
+                }
+                if (!constraints.isUnlimitedBlock()) {
+                    return constraints.maxBlock + INFLATE_STEP_PX;
+                }
+                return INFLATE_STEP_PX;
+
+            case ALayoutDirection::NONE:
+                break;
+        }
+        return INFLATE_STEP_PX;
+    }();
+
+    for (std::size_t added = 0; it != end && added < INITIAL_MEASUREMENT_VIEWS_COUNT_LIMIT; ++it, ++added) {
+        addView(it);
+
+        if (targetPrimarySpan <= 0) {
+            break;
+        }
+
+        const auto measured = AViewContainerBase::onIntrinsicMeasure(constraints);
+        const int primarySpan = direction == ALayoutDirection::HORIZONTAL ? measured.x : measured.y;
+        if (primarySpan >= targetPrimarySpan) {
+            break;
+        }
+    }
+}
+
+void AForEachUIBase::materializeAllViewsForMeasurement() { // TODO(Nelonn): calls always when not needed
+    if (mCache) {
+        removeAllViews();
+        mCache->items.clear();
+    } else {
+        mCache.emplace();
+    }
+
+    for (auto i = mViewsModel.begin(); i != mViewsModel.end(); ++i) {
+        addView(i);
+    }
+}
+
+void AForEachUIBase::restoreLazyViewportAfterMeasurement() {
+    if (!mViewport.lock()) {
+        return;
+    }
+    putOurViewsToSharedCache();
+    mCache.emplace();
+    mLastInflatedScroll.reset();
+    inflate();
+}
+
+void AForEachUIBase::clearUnusedSharedCacheEntries() {
+    if (mPendingSharedCacheKeys.empty() && !mCache) {
+        return;
+    }
+    if (auto viewsCache = getViewsCache()) {
+        if (mCache) {
+            for (const auto& item : mCache->items) {
+                if (auto cached = viewsCache->contains(item.id)) {
+                    viewsCache->erase(*cached);
+                }
+            }
+        }
+        for (const auto key : mPendingSharedCacheKeys) {
+            if (auto cached = viewsCache->contains(key)) {
+                viewsCache->erase(*cached);
+            }
+        }
+    }
+    mPendingSharedCacheKeys.clear();
+}
+
+bool AForEachUIBase::measurementRequiresFullMaterialization(AConstraints constraints) const {
+    if (mViewport.lock()) {
+        return false;
+    }
+    if (!getLayout()) {
+        return true;
+    }
+    switch (getLayout()->getLayoutDirection()) {
+        case ALayoutDirection::HORIZONTAL:
+            return constraints.isUnlimitedInline();
+        case ALayoutDirection::VERTICAL:
+            return constraints.isUnlimitedBlock();
+        case ALayoutDirection::NONE:
+            return true;
+    }
+    return true;
+}
+
+bool AForEachUIBase::isModelEmpty() const {
+    return mViewsModel.begin() == mViewsModel.end();
 }

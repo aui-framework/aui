@@ -40,7 +40,7 @@ public:
 
     void endDragging();
 
-    void applyGeometryToChildren() override;
+    void onLayout(int w, int h) override;
 
     class API_AUI_VIEWS ADraggableHandle: public AViewContainerBase {
         friend class ADragArea;

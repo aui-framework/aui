@@ -133,6 +133,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case WM_MOVING: {
             auto r = (LPRECT)lParam;
             emit moving(glm::ivec2{r->left, r->top});
+            mPosition = glm::ivec2(r->left, r->top);
             return 0;
         }
 
@@ -152,7 +153,8 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
                 GetWindowRect(mHandle, &windowRect);
                 GetClientRect(mHandle, &clientRect);
                 AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
-                AViewContainer::setSize({LOWORD(lParam), HIWORD(lParam)});
+                mPosition = getWindowPosition();
+                onResize(LOWORD(lParam), HIWORD(lParam));
 
                 switch (wParam) {
                     case SIZE_MAXIMIZED:
@@ -260,7 +262,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case WM_GETMINMAXINFO: {
             MINMAXINFO* info = reinterpret_cast<MINMAXINFO*>(lParam);
 
-            RECT r = {0, 0, getMinimumWidth(), getMinimumHeight()};
+            RECT r = {0, 0, getMinSize().x, getMinSize().y};
             AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
             info->ptMinTrackSize.x = r.right - r.left;
             info->ptMinTrackSize.y = r.bottom - r.top;
@@ -387,105 +389,101 @@ bool AWindow::isMinimized() const {
     return IsIconic(mHandle);
 }
 
-
 bool AWindow::isMaximized() const {
-    if (!mHandle) return false;
-    return IsZoomed(mHandle);
+  if (!mHandle) return false;
+  return IsZoomed(mHandle);
 }
 
 void AWindow::maximize() {
-    if (mHandle) ShowWindow(mHandle, SW_MAXIMIZE);
+  if (mHandle) ShowWindow(mHandle, SW_MAXIMIZE);
 }
 
 glm::ivec2 AWindow::getWindowPosition() const {
-    if (!mHandle) return {0, 0};
-    RECT r;
-    GetWindowRect(mHandle, &r);
-    return {r.left, r.top};
+  if (!mHandle) return {0, 0};
+  RECT r;
+  GetWindowRect(mHandle, &r);
+  return {r.left, r.top};
 }
 
 void AWindow::flagRedraw() {
-    if (mRedrawFlag && mHandle) {
-        getThread()->enqueue([handle = mHandle] {
-            InvalidateRect(handle, nullptr, true);
-        });
-        mRedrawFlag = false;
-    }
-}
-
-
-void AWindow::setSize(glm::ivec2 size) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
+  if (mRedrawFlag && mHandle) {
+    getThread()->enqueue([handle = mHandle] {
+      InvalidateRect(handle, nullptr, true);
+    });
+    mRedrawFlag = false;
+  }
 }
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
-    AViewContainer::setPosition({x, y});
-    AViewContainer::setSize({width, height});
+  mPosition = {x, y};
+  AViewContainer::setSize({width, height});
 
-    if (!mHandle) return;
+  if (!mHandle) return;
 
-    RECT r = {0, 0, width, height};
-    AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
-    MoveWindow(mHandle, x, y, r.right - r.left, r.bottom - r.top, false);
+  RECT r = {0, 0, width, height};
+  AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
+  MoveWindow(mHandle, x, y, r.right - r.left, r.bottom - r.top, false);
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
-    if (!mHandle) return position;
-    POINT p = {position.x, position.y};
-    ScreenToClient(mHandle, &p);
-    return {p.x, p.y};
+  if (!mHandle) return position;
+  POINT p = {position.x, position.y};
+  ScreenToClient(mHandle, &p);
+  return {p.x, p.y};
 }
+
 glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
-    if (!mHandle) return position;
-    POINT p = {position.x, position.y};
-    ClientToScreen(mHandle, &p);
-    return {p.x, p.y};
+  if (!mHandle) return position;
+  POINT p = {position.x, position.y};
+  ClientToScreen(mHandle, &p);
+  return {p.x, p.y};
 }
 
 void AWindow::show() {
-    if (!getWindowManager().mWindows.contains(_cast<AWindow>(aui::ptr::shared_from_this(this)))) {
-        getWindowManager().mWindows << _cast<AWindow>(aui::ptr::shared_from_this(this));
-    }
-    try {
-        mSelfHolder = _cast<AWindow>(aui::ptr::shared_from_this(this));
-    } catch (...) {
-        mSelfHolder = nullptr;
-    }
-    AThread::current() << [this, self = shared_from_this()]() {
-        redraw();
-    };
+  if (!getWindowManager().mWindows.contains(_cast<AWindow>(aui::ptr::shared_from_this(this)))) {
+    getWindowManager().mWindows << _cast<AWindow>(aui::ptr::shared_from_this(this));
+  }
+  try {
+    mSelfHolder = _cast<AWindow>(aui::ptr::shared_from_this(this));
+  } catch (...) {
+    mSelfHolder = nullptr;
+  }
+  AThread::current() << [this, self = shared_from_this()]() {
+    redraw();
+  };
 
-    UpdateWindow(mHandle);
-    ShowWindow(mHandle, SW_SHOWNORMAL);
+  UpdateWindow(mHandle);
+  ShowWindow(mHandle, SW_SHOWNORMAL);
 
-    emit shown();
+  updateDpi();
+
+  emit shown();
 }
+
 void AWindow::setIcon(const AImage& image) {
-    if (!mHandle) return;
-    AUI_ASSERT(image.format() & APixelFormat::BYTE);
+  if (!mHandle) return;
+  AUI_ASSERT(image.format() & APixelFormat::BYTE);
 
-    if (mIcon) {
-        DestroyIcon(mIcon);
-    }
+  if (mIcon) {
+    DestroyIcon(mIcon);
+  }
 
+  auto bmpColor = aui::win32::imageRgbToBitmap(image);
+  auto bmpMask = aui::win32::imageRgbToBitmap(image, aui::win32::BitmapMode::A);
 
-    auto bmpColor = aui::win32::imageRgbToBitmap(image);
-    auto bmpMask = aui::win32::imageRgbToBitmap(image, aui::win32::BitmapMode::A);
+  ICONINFO ii;
+  ii.fIcon = TRUE;
+  ii.hbmMask = bmpMask;
+  ii.hbmColor = bmpColor;
+  mIcon = CreateIconIndirect(&ii);
 
-    ICONINFO ii;
-    ii.fIcon = TRUE;
-    ii.hbmMask = bmpMask;
-    ii.hbmColor = bmpColor;
-    mIcon = CreateIconIndirect(&ii);
-
-    SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon);
+  SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon);
 }
 
 void AWindow::hide() {
-    if (!mHandle) return;
-    ShowWindow(mHandle, SW_HIDE);
+  if (!mHandle) return;
+  ShowWindow(mHandle, SW_HIDE);
 }
-
 
 void AWindowManager::notifyProcessMessages() {
     if (!mWindows.empty()) {
@@ -573,13 +571,13 @@ void AWindow::hideTouchscreenKeyboardImpl() {
 }
 
 void AWindow::moveToCenter() {
-    auto m = MonitorFromWindow(mHandle, MONITOR_DEFAULTTOPRIMARY);
-    MONITORINFO info;
-    info.cbSize = sizeof(info);
-    GetMonitorInfo(m, &info);
-    glm::ivec2 topLeft = { info.rcMonitor.left, info.rcMonitor.top };
-    glm::ivec2 bottomRight = { info.rcMonitor.right, info.rcMonitor.bottom };
-    setPosition(topLeft + (bottomRight - topLeft - getSize()) / 2);
+  auto m = MonitorFromWindow(mHandle, MONITOR_DEFAULTTOPRIMARY);
+  MONITORINFO info;
+  info.cbSize = sizeof(info);
+  GetMonitorInfo(m, &info);
+  glm::ivec2 topLeft = { info.rcMonitor.left, info.rcMonitor.top };
+  glm::ivec2 bottomRight = { info.rcMonitor.right, info.rcMonitor.bottom };
+  setPosition(topLeft + (bottomRight - topLeft - getSize()) / 2);
 }
 
 void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {

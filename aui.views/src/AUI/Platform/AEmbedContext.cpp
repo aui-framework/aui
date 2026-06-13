@@ -72,7 +72,7 @@ public:
 
         auto windowSize = getSize();
 
-        container->setGeometry(position.x, position.y, size.x, size.y);
+        container->layout(position.x, position.y, size.x, size.y);
         return container;
     }
 
@@ -80,7 +80,7 @@ public:
         removeView(surface);
     }
 
-    void markMinContentSizeInvalid() override {
+    void requestLayout() override {
         flagRedraw();
         mRequiresLayoutUpdate = true;
     }
@@ -112,41 +112,40 @@ AEmbedContext::AEmbedContext():
 }
 
 void AEmbedContext::windowMakeCurrent() {
-    mContainer->makeCurrent();
+  mContainer->makeCurrent();
 }
 
 void AEmbedContext::windowRender() {
-    AThread::processMessages();
-    auto& render = mContainer->getRenderingContext()->renderer();
-    render.setWindow(mContainer.get());
-    if (mContainer->mRequiresLayoutUpdate) {
-        mContainer->mRequiresLayoutUpdate = false;
-        mContainer->applyGeometryToChildrenIfNecessary();
-    }
-    AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
-    mContainer->mRequiresRedraw = false;
-    mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .render = render });
-    AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
+  AThread::processMessages();
+  auto& render = mContainer->getRenderingContext()->renderer();
+  render.setWindow(mContainer.get());
+  if (mContainer->mRequiresLayoutUpdate) {
+    mContainer->layout(0, 0, mSize.x, mSize.y);
+    mContainer->mRequiresLayoutUpdate = false;
+  }
+  AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
+  mContainer->mRequiresRedraw = false;
+  mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .render = render });
+  AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 
 void AEmbedContext::setContainer(const _<AViewContainer>& container) {
-    ALayoutInflater::inflate(mContainer, container);
-    mContainer->setPosition({0, 0});
-    container->setPosition({0, 0});
-    mContainer->makeCurrent();
-    mContainer->markMinContentSizeInvalid();
-    mContainer->flagRedraw();
+  ALayoutInflater::inflate(mContainer, container);
+  mContainer->setPosition({0, 0});
+  container->setPosition({0, 0});
+  mContainer->makeCurrent();
+  mContainer->requestLayout();
+  mContainer->flagRedraw();
 }
 
 void AEmbedContext::setViewportSize(int width, int height) {
-    mContainer->makeCurrent();
-    mSize = { width, height };
-    AUI_NULLSAFE(mContainer->getRenderingContext())->beginResize(*mContainer);
-    mContainer->setSize({width, height});
-    AUI_NULLSAFE(mContainer->getRenderingContext())->endResize(*mContainer);
-    mContainer->mRequiresRedraw = true;
+  mContainer->makeCurrent();
+  mSize = { width, height };
+  AUI_NULLSAFE(mContainer->getRenderingContext())->beginResize(*mContainer);
+  mContainer->onResize(width, height);
+  AUI_NULLSAFE(mContainer->getRenderingContext())->endResize(*mContainer);
+  mContainer->mRequiresRedraw = true;
 }
-
 
 void AEmbedContext::onPointerPressed(int x, int y, APointerIndex pointerIndex) {
     mContainer->makeCurrent();
