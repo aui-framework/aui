@@ -206,7 +206,7 @@ else()
 endif()
 set(BUILD_SHARED_LIBS ${_build_shared})
 
-if (MSVC)
+if (MSVC OR (CLANG AND WIN32))
     if (NOT CMAKE_MSVC_RUNTIME_LIBRARY)
         set(CMAKE_MSVC_RUNTIME_LIBRARY "MultiThreaded$<$<CONFIG:Debug>:Debug>DLL")
         message(STATUS "AUI.Boot CMAKE_MSVC_RUNTIME_LIBRARY is not set - defaulting to ${CMAKE_MSVC_RUNTIME_LIBRARY}")
