@@ -20,6 +20,7 @@
 #include <variant>
 #include <AUI/Common/AColor.h>
 #include <AUI/Common/ASmallVector.h>
+#include <AUI/Common/AStaticVector.h>
 #include <AUI/Enum/Repeat.h>
 #include "AUI/Enum/ImageRendering.h"
 #include "AUI/Util/AAngleRadians.h"
@@ -50,7 +51,8 @@ struct ALinearGradientBrush {
         aui::float_within_0_1 position;
         AColor color;
     };
-    AVector<ColorEntry> colors;
+
+    AStaticVector<ColorEntry, 2> colors;
 
     /**
      * @brief Clockwise gradient angle.

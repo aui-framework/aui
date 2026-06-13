@@ -31,6 +31,7 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     switch (uMsg)
     {
         case WM_CREATE: {
+            updateDpi();
             const MARGINS shadow = {1, 1, 1, 1};
             DwmExtendFrameIntoClientArea((HWND) getNativeHandle(), &shadow);
 
