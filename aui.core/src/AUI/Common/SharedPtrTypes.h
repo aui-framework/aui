@@ -239,7 +239,7 @@ struct ptr {
     static AWeakArc<T> weak_from_this(T* raw) {
         // std::weak_ptr not having an aliasing constructor is clearly intentional rather than oversight --
         // although i dont understand reasons behind it
-        return _weak<T>(shared_from_this(raw));
+        return AWeakArc<T>(shared_from_this(raw));
     }
 
     /**
@@ -429,7 +429,7 @@ public:
      * @details
      * Throws `std::bad_weak_ptr` if expired.
      */
-    Arc(const _weak<T>& v): std::shared_ptr<T>(v) {}
+    Arc(const WeakArc<T>& v): std::shared_ptr<T>(v) {}
 
     template <typename F>
     Arc(F&& f)
