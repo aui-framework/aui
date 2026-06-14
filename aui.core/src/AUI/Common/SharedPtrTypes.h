@@ -115,197 +115,13 @@ public:
     }
 };
 
-}
-
-template<typename T>
-using AArc = aui::Arc<T>;
-
-template<typename T>
-using AWeakArc = aui::WeakArc<T>;
-
-template<typename T, typename Deleter = std::default_delete<T>>
-using AUnique = aui::Unique<T, Deleter>;
-
-/**
- * Deprecated, use AArc or aui::Arc instead
- */
-template<typename T>
-using _ = AArc<T>;
-
-/**
- * Deprecated, use AWeakArc or aui::WeakArc instead
- */
-template<typename T>
-using _weak = AWeakArc<T>;
-
-/**
- * Deprecated, use AUnique or aui::Unique instead
- */
-template<typename T, typename Deleter = std::default_delete<T>>
-using _unique = AUnique<T, Deleter>;
-
-namespace aui {
-
 /**
  * @brief Allows to specialize an implicit conversion for `shared_ptr<T>` from `F`.
  */
 template <typename F>
 struct implicit_shared_ptr_ctor;
 
-struct ptr {
-    /**
-     * @brief Creates unique_ptr from raw pointer and a deleter.
-     * @tparam T The type of the object to manage.
-     * @tparam Deleter The type of the custom deleter function or functor.
-     * @param ptr A raw pointer to the object that the unique pointer will manage.
-     * @param deleter A custom deleter that will be used to destroy the managed object.
-     * @return A unique pointer that takes ownership of the raw pointer using the specified deleter.
-     * @details
-     * Creates a unique pointer with a custom deleter.
-     *
-     * `unique_ptr` could not deduce T and Deleter by itself. Use this function to avoid this restriction.
-     * By using this function, the lifetime of the pointer is delegated to std::unique_ptr. Specified Deleter will
-     * free the wrapped pointer. The default deleter is std::default_delete. You may want to specialize
-     * `std::default_delete<T>` struct to specify a default deleter for T, in this case you can omit the deleter
-     * argument of this function.
-     */
-    template<typename T, typename Deleter = std::default_delete<T>>
-    static _unique<T, Deleter> manage_unique(T* ptr, Deleter deleter = Deleter{}) {
-        return { ptr, std::move(deleter) };
-    }
-
-    /**
-     * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is
-     * returned.
-     * @tparam T any type
-     * @param raw raw pointer to manage memory of
-     * @return shared pointer
-     */
-    template<typename T>
-    static AArc<T> manage_shared(T* raw);
-
-    /**
-     * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is
-     * returned, with a deleter functor.
-     * @tparam T any type
-     * @tparam Deleter object implementing <code>operator()(T*)</code>
-     * @param raw raw pointer to manage memory of
-     * @param deleter
-     * @return shared pointer
-     */
-    template<typename T, typename Deleter>
-    static AArc<T> manage_shared(T* raw, Deleter deleter);
-
-    /**
-     * @brief Creates fake shared pointer to <code>T* raw</code> with empty destructor, which does nothing. It's useful
-     * when some function accepts a shared pointer but you have only a raw one.
-     * @tparam T any type.
-     * @param raw raw pointer to manage memory of.
-     * @return shared pointer.
-     */
-    template<typename T>
-    static AArc<T> fake_shared(T* raw);
-
-    /**
-     * @brief Downcasts `std::enable_shared_from_this<base class>` to the derived class `T`.
-     * @tparam T class which derived from a class that implements `std::enable_shared_from_this`.
-     * @param raw pointer to the `T` class.
-     * @return Shared pointer.
-     * @details
-     * `std::enable_shared_from_this` provides a shared pointer to itself, however, if inheritance takes place, type
-     * is lost, requiring manual downcasting.
-     *
-     * Downcasts `std::enable_shared_from_this<base class>` to the derived class `T` by the aliasing constructor of
-     * the shared pointer. This eliminates the need of expensive downcasting, maintaining memory safety.
-     */
-    template <typename T>
-    static AArc<T> shared_from_this(T* raw) {
-        return AArc<T>(raw->shared_from_this(), raw);
-    }
-
-    /**
-     * @brief Downcasts `std::enable_shared_from_this<base class>` to the derived class `T`.
-     * @tparam T class which derived from a class that implements `std::enable_shared_from_this`.
-     * @param raw pointer to the `T` class.
-     * @return Weak pointer.
-     * @details
-     * `std::enable_shared_from_this` provides a shared pointer to itself, however, if inheritance takes place, type
-     * is lost, requiring manual downcasting.
-     *
-     * Downcasts `std::enable_shared_from_this<base class>` to the derived class `T` by the aliasing constructor of
-     * the shared pointer. This eliminates the need of expensive downcasting, maintaining memory safety.
-     */
-    template <typename T>
-    static AWeakArc<T> weak_from_this(T* raw) {
-        // std::weak_ptr not having an aliasing constructor is clearly intentional rather than oversight --
-        // although i dont understand reasons behind it
-        return AWeakArc<T>(shared_from_this(raw));
-    }
-
-    /**
-     * @brief Constructs an alias to shared_ptr.
-     * @param owner the shared_ptr to share ownership information with.
-     * @param to unmanaged reference
-     * @details
-     * Shares ownership information with the initial value of `owner`, but holds an unrelated and unmanaged pointer
-     * `&to`. If this `shared_ptr` is the last of the group to go out of scope, it will call the stored deleter for
-     * the object originally managed by `owner`. However, calling `get()` on this `shared_ptr` will always return a
-     * copy of `&to`.
-     *
-     * It is the responsibility of the programmer to make sure that this ptr remains valid as long as this
-     * `shared_ptr` exists, such as in the typical use cases where `to` is a member of the object managed by `owner`
-     * or is an alias (e.g., downcast) of `owner.get()`.
-     *
-     * To reduce error proneness while using `aui::ptr::alias`, it is recommended to use `AUI_PTR_ALIAS` macro
-     * instead, which semantically restricts usage of `aui::ptr::alias` to the fields of `owner`.
-     */
-    template<typename Owner, typename To>
-    static auto alias(const _<Owner>& owner, To& to) -> _<To> {
-        return std::shared_ptr<To>(owner, &to);
-    }
-};
-
-}
-
-
-/**
- * @brief An std::shared_ptr with AUI extensions.
- * @brief Constructs an alias shared_ptr.
- * @param owner the shared_ptr to share ownership information with
- * @param field the owner's field name
- * @details
- * Shares ownership information with the initial value of `owner`, but holds a pointer to field whose name is specified
- * by `field`. If this shared_ptr is the last of the group to go out of scope, it will call the stored deleter for the
- * object originally managed by `owner`. However, calling `get()` on this `shared_ptr` will always return a copy of
- * pointer to the field.
- *
- * ```cpp
- * _<AView> minimalCheckBox(_<AProperty<bool>> state) {
- *    // lifetime is managed by _<State> in the outer scope, however,
- *    // the bool field is all we need.
- *    return CheckBox { .value = AUI_REACT(*state), ... };
- * }
- *
- * AUI_ENTRY {
- *   auto window = _new<AWindow>("Checkbox", 300_dp, 100_dp);
- *   _<State> state = _new<State>();
- *   window->setContents(
- *      Vertical {
- *         minimalCheckBox(AUI_PTR_ALIAS(state, checked)),
- *      }
- *   );
- *   window->show();
- *   return 0;
- * }
- * ```
- *
- * This macro enable developers to create `shared_ptr` that manage the lifetime of a parent object while directly
- * referencing a specific member or sub-object. This enhances flexibility in managing object ownership where a component
- * might only need a pointer to a specific property within a larger state object, as demonstrated by the example above.
- */
-#define AUI_PTR_ALIAS(owner, field) aui::ptr::alias(owner, owner->field)
-
-namespace aui {
+struct ptr;
 
 /**
  * @brief An std::shared_ptr with AUI extensions.
@@ -457,8 +273,8 @@ public:
      * @return weak reference
      */
     [[nodiscard]]
-    AWeakArc<T> weak() const {
-        return AWeakArc<T>(*this);
+    WeakArc<T> weak() const {
+        return WeakArc<T>(*this);
     }
 
     template<typename SignalField, typename Object, typename Function>
@@ -609,6 +425,150 @@ public:
     }
 };
 
+}
+
+template<typename T>
+using AArc = aui::Arc<T>;
+
+template<typename T>
+using AWeakArc = aui::WeakArc<T>;
+
+template<typename T, typename Deleter = std::default_delete<T>>
+using AUnique = aui::Unique<T, Deleter>;
+
+/**
+ * Deprecated, use AArc or aui::Arc instead
+ */
+template<typename T>
+using _ = AArc<T>;
+
+/**
+ * Deprecated, use AWeakArc or aui::WeakArc instead
+ */
+template<typename T>
+using _weak = AWeakArc<T>;
+
+/**
+ * Deprecated, use AUnique or aui::Unique instead
+ */
+template<typename T, typename Deleter = std::default_delete<T>>
+using _unique = AUnique<T, Deleter>;
+
+namespace aui {
+
+struct ptr {
+    /**
+     * @brief Creates unique_ptr from raw pointer and a deleter.
+     * @tparam T The type of the object to manage.
+     * @tparam Deleter The type of the custom deleter function or functor.
+     * @param ptr A raw pointer to the object that the unique pointer will manage.
+     * @param deleter A custom deleter that will be used to destroy the managed object.
+     * @return A unique pointer that takes ownership of the raw pointer using the specified deleter.
+     * @details
+     * Creates a unique pointer with a custom deleter.
+     *
+     * `unique_ptr` could not deduce T and Deleter by itself. Use this function to avoid this restriction.
+     * By using this function, the lifetime of the pointer is delegated to std::unique_ptr. Specified Deleter will
+     * free the wrapped pointer. The default deleter is std::default_delete. You may want to specialize
+     * `std::default_delete<T>` struct to specify a default deleter for T, in this case you can omit the deleter
+     * argument of this function.
+     */
+    template<typename T, typename Deleter = std::default_delete<T>>
+    static _unique<T, Deleter> manage_unique(T* ptr, Deleter deleter = Deleter{}) {
+        return { ptr, std::move(deleter) };
+    }
+
+    /**
+     * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is
+     * returned.
+     * @tparam T any type
+     * @param raw raw pointer to manage memory of
+     * @return shared pointer
+     */
+    template<typename T>
+    static AArc<T> manage_shared(T* raw);
+
+    /**
+     * @brief Delegates memory management of the raw pointer <code>T* raw</code> to the shared pointer, which is
+     * returned, with a deleter functor.
+     * @tparam T any type
+     * @tparam Deleter object implementing <code>operator()(T*)</code>
+     * @param raw raw pointer to manage memory of
+     * @param deleter
+     * @return shared pointer
+     */
+    template<typename T, typename Deleter>
+    static AArc<T> manage_shared(T* raw, Deleter deleter);
+
+    /**
+     * @brief Creates fake shared pointer to <code>T* raw</code> with empty destructor, which does nothing. It's useful
+     * when some function accepts a shared pointer but you have only a raw one.
+     * @tparam T any type.
+     * @param raw raw pointer to manage memory of.
+     * @return shared pointer.
+     */
+    template<typename T>
+    static AArc<T> fake_shared(T* raw);
+
+    /**
+     * @brief Downcasts `std::enable_shared_from_this<base class>` to the derived class `T`.
+     * @tparam T class which derived from a class that implements `std::enable_shared_from_this`.
+     * @param raw pointer to the `T` class.
+     * @return Shared pointer.
+     * @details
+     * `std::enable_shared_from_this` provides a shared pointer to itself, however, if inheritance takes place, type
+     * is lost, requiring manual downcasting.
+     *
+     * Downcasts `std::enable_shared_from_this<base class>` to the derived class `T` by the aliasing constructor of
+     * the shared pointer. This eliminates the need of expensive downcasting, maintaining memory safety.
+     */
+    template <typename T>
+    static AArc<T> shared_from_this(T* raw) {
+        return AArc<T>(raw->shared_from_this(), raw);
+    }
+
+    /**
+     * @brief Downcasts `std::enable_shared_from_this<base class>` to the derived class `T`.
+     * @tparam T class which derived from a class that implements `std::enable_shared_from_this`.
+     * @param raw pointer to the `T` class.
+     * @return Weak pointer.
+     * @details
+     * `std::enable_shared_from_this` provides a shared pointer to itself, however, if inheritance takes place, type
+     * is lost, requiring manual downcasting.
+     *
+     * Downcasts `std::enable_shared_from_this<base class>` to the derived class `T` by the aliasing constructor of
+     * the shared pointer. This eliminates the need of expensive downcasting, maintaining memory safety.
+     */
+    template <typename T>
+    static AWeakArc<T> weak_from_this(T* raw) {
+        // std::weak_ptr not having an aliasing constructor is clearly intentional rather than oversight --
+        // although i dont understand reasons behind it
+        return AWeakArc<T>(shared_from_this(raw));
+    }
+
+    /**
+     * @brief Constructs an alias to shared_ptr.
+     * @param owner the shared_ptr to share ownership information with.
+     * @param to unmanaged reference
+     * @details
+     * Shares ownership information with the initial value of `owner`, but holds an unrelated and unmanaged pointer
+     * `&to`. If this `shared_ptr` is the last of the group to go out of scope, it will call the stored deleter for
+     * the object originally managed by `owner`. However, calling `get()` on this `shared_ptr` will always return a
+     * copy of `&to`.
+     *
+     * It is the responsibility of the programmer to make sure that this ptr remains valid as long as this
+     * `shared_ptr` exists, such as in the typical use cases where `to` is a member of the object managed by `owner`
+     * or is an alias (e.g., downcast) of `owner.get()`.
+     *
+     * To reduce error proneness while using `aui::ptr::alias`, it is recommended to use `AUI_PTR_ALIAS` macro
+     * instead, which semantically restricts usage of `aui::ptr::alias` to the fields of `owner`.
+     */
+    template<typename Owner, typename To>
+    static auto alias(const _<Owner>& owner, To& to) -> _<To> {
+        return std::shared_ptr<To>(owner, &to);
+    }
+};
+
 template<typename T>
 Arc<T> ptr::manage_shared(T* raw) {
     return Arc<T>(raw, std::nullopt);
@@ -625,6 +585,43 @@ Arc<T> ptr::manage_shared(T* raw, Deleter deleter) {
 }
 
 }
+
+/**
+ * @brief An std::shared_ptr with AUI extensions.
+ * @brief Constructs an alias shared_ptr.
+ * @param owner the shared_ptr to share ownership information with
+ * @param field the owner's field name
+ * @details
+ * Shares ownership information with the initial value of `owner`, but holds a pointer to field whose name is specified
+ * by `field`. If this shared_ptr is the last of the group to go out of scope, it will call the stored deleter for the
+ * object originally managed by `owner`. However, calling `get()` on this `shared_ptr` will always return a copy of
+ * pointer to the field.
+ *
+ * ```cpp
+ * _<AView> minimalCheckBox(_<AProperty<bool>> state) {
+ *    // lifetime is managed by _<State> in the outer scope, however,
+ *    // the bool field is all we need.
+ *    return CheckBox { .value = AUI_REACT(*state), ... };
+ * }
+ *
+ * AUI_ENTRY {
+ *   auto window = _new<AWindow>("Checkbox", 300_dp, 100_dp);
+ *   _<State> state = _new<State>();
+ *   window->setContents(
+ *      Vertical {
+ *         minimalCheckBox(AUI_PTR_ALIAS(state, checked)),
+ *      }
+ *   );
+ *   window->show();
+ *   return 0;
+ * }
+ * ```
+ *
+ * This macro enable developers to create `shared_ptr` that manage the lifetime of a parent object while directly
+ * referencing a specific member or sub-object. This enhances flexibility in managing object ownership where a component
+ * might only need a pointer to a specific property within a larger state object, as demonstrated by the example above.
+ */
+#define AUI_PTR_ALIAS(owner, field) aui::ptr::alias(owner, owner->field)
 
 template<typename TO, typename FROM>
 inline TO* _cast(const _unique<FROM>& object)
@@ -656,8 +653,6 @@ inline AArc<TO> _cast(std::shared_ptr<FROM>&& object)
 {
     return std::dynamic_pointer_cast<TO, FROM>(std::move(object));
 }
-
-
 
 /**
  * @brief nullsafe call (see examples).
