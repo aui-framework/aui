@@ -58,14 +58,12 @@ namespace aui {
      *       ```
      *     </td>
      *   </tr>
-     * </table>
+
      */
     namespace parameter_pack {
         template<typename Callable, typename... Args>
         static void for_each(Callable&& c, Args&&... args) requires (... && aui::invocable<Callable, Args>) {
-            (..., [&] {
-                c(std::forward<Args>(args));
-            }());
+            (..., std::invoke(c, std::forward<Args>(args)));
         }
 
         template<typename... Types>

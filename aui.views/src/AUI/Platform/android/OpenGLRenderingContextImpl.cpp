@@ -22,30 +22,31 @@
 
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/GL/State.h>
-
+#include <EGL/egl.h>
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
+    gladLoadGLES2Loader(reinterpret_cast<GLADloadproc>(eglGetProcAddress));
     mRenderer = ourRenderer();
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(AWindowBase& window) {
+void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
+void OpenGLRenderingContext::beginPaint(ASurface& window) {
     beginFramebuffer(window.getSize());
     mRenderer->beginPaint(window.getSize());
 }
 
-void OpenGLRenderingContext::beginResize(AWindowBase& window) {
+void OpenGLRenderingContext::beginResize(ASurface& window) {
 }
 
-void OpenGLRenderingContext::endResize(AWindowBase& window) {
+void OpenGLRenderingContext::endResize(ASurface& window) {
 
 }
 
-void OpenGLRenderingContext::endPaint(AWindowBase& window) {
+void OpenGLRenderingContext::endPaint(ASurface& window) {
     endFramebuffer();
     mRenderer->endPaint();
     CommonRenderingContext::endPaint(window);

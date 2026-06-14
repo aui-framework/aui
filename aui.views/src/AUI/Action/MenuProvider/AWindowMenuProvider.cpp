@@ -22,6 +22,7 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/ALabel.h>
 
+using namespace declarative;
 using namespace std::chrono_literals;
 
 class AMenuContainer : public AViewContainerBase {
@@ -35,7 +36,7 @@ class AMenuContainer : public AViewContainerBase {
         auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinimumSize().x, 0);
         mSubWindow = _new<AMenuContainer>(items, pos);
 
-        AWindowBase* window = nullptr;
+        ASurface* window = nullptr;
         if (auto s = mSurface.lock())
             window = s->getParentWindow();
         else

@@ -76,24 +76,22 @@ void OpenGLRenderingContext::init(const Init& init) {
 
     [static_cast<NSOpenGLContext*>(ourContext) makeCurrentContext];
 
+    if (!gladLoadGL()) {
+        throw AException("glad load failed");
+    }
+
     GLint stencilBits = 0;
     glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
 
-    if (!glewExperimental) {
-        glewExperimental = true;
-        if (glewInit() != GLEW_OK) {
-            throw AException("glewInit failed");
-        }
-    }
     mRenderer = ourRenderer();
     ALogger::info("OpenGL context is ready");
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(AWindowBase& window) {
+void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
+void OpenGLRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
     if (auto nativeWindow = dynamic_cast<AWindow*>(&window)) {
         auto contentView  = [static_cast<NSWindow*>(nativeWindow->mHandle) contentView];
@@ -104,7 +102,7 @@ void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
     mRenderer->beginPaint(window.getSize());
 }
 
-void OpenGLRenderingContext::beginResize(AWindowBase& window) {
+void OpenGLRenderingContext::beginResize(ASurface& window) {
     [static_cast<NSOpenGLContext*>(ourContext) update];
     [static_cast<NSOpenGLContext*>(ourContext) makeCurrentContext];
     if (auto nativeWindow = dynamic_cast<AWindow*>(&window)) {
@@ -115,12 +113,12 @@ void OpenGLRenderingContext::beginResize(AWindowBase& window) {
     [static_cast<NSOpenGLContext*>(ourContext) setValues:&swapInterval forParameter:NSOpenGLContextParameterSwapInterval];
 }
 
-void OpenGLRenderingContext::endResize(AWindowBase& window) {
+void OpenGLRenderingContext::endResize(ASurface& window) {
     [static_cast<NSOpenGLContext*>(ourContext) update];
     [static_cast<NSOpenGLContext*>(ourContext) makeCurrentContext];
 }
 
-void OpenGLRenderingContext::endPaint(AWindowBase& window) {
+void OpenGLRenderingContext::endPaint(ASurface& window) {
     endFramebuffer();
     mRenderer->endPaint();
     [static_cast<NSOpenGLContext*>(ourContext) flushBuffer];

@@ -106,6 +106,14 @@ inline std::ostream& operator<<(std::ostream& o, const AUuid& u) {
     return o;
 }
 
+template <>
+struct fmt::formatter<AUuid> : fmt::formatter<AString> {
+    template <typename FormatContext>
+    auto format(const AUuid& uuid, FormatContext& ctx) const {
+        return fmt::formatter<AString>::format(uuid.toString(), ctx);
+    }
+};
+
 
 class AUuidException: public AException {
 private:

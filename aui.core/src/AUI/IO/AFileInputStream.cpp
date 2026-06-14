@@ -34,8 +34,8 @@ size_t AFileInputStream::read(char* dst, size_t size) {
     return r;
 }
 
-void AFileInputStream::seek(std::streamoff offset, ASeekDir dir) noexcept {
-    fseek(mFile, offset, [&] {
+void AFileInputStream::seek(std::streamoff offset, ASeekDir dir) {
+    auto whence = [&] {
         switch (dir) {
             case ASeekDir::BEGIN:
                 return SEEK_SET;
@@ -45,7 +45,14 @@ void AFileInputStream::seek(std::streamoff offset, ASeekDir dir) noexcept {
                 return SEEK_END;
         }
         return 0;
-    }());
+    }();
+#if AUI_PLATFORM_WIN
+    if (_fseeki64(mFile, offset, whence) != 0) {
+#else
+    if (fseeko(mFile, offset, whence) != 0) {
+#endif
+        aui::impl::unix_based::lastErrorToException("AFileInputStream: fseek failed");
+    }
 }
 
 std::streampos AFileInputStream::tell() noexcept { return ftell(mFile); }

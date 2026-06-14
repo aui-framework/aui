@@ -15,6 +15,8 @@
 #include <AUI/View/AButton.h>
 #include "AUI/Util/ALayoutInflater.h"
 
+using namespace declarative;
+
 namespace {
 class ViewMock: public AView {
 public:
@@ -73,7 +75,7 @@ protected:
                 },
                 mOverlay = Vertical::Expanding {
                   SpacerExpanding{},
-                  Button { "Another bullshit" }
+                  Button { Label { "Another bullshit" }, []{} },
                 },
               }
             });

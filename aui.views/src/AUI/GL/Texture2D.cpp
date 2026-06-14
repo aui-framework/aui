@@ -21,7 +21,7 @@
 #include "TextureFormatRecognition.h"
 
 #include <AUI/Platform/AWindow.h>
-#include <AUI/Platform/AWindowBase.h>
+#include <AUI/Platform/ASurface.h>
 
 template
 class gl::Texture<gl::TEXTURE_2D>;

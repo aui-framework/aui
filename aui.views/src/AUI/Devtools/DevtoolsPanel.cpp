@@ -15,13 +15,15 @@
 #include "AUI/Devtools/DevtoolsLayoutTab.h"
 #include "AUI/Devtools/DevtoolsPerformanceTab.h"
 #include "AUI/Devtools/DevtoolsPointerInspect.h"
-#include "AUI/Platform/AWindowBase.h"
+#include "AUI/Platform/ASurface.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/ATabView.h"
 #include "DevtoolsProfilingOptions.h"
 #include "DevtoolsThreadsTab.h"
 
-DevtoolsPanel::DevtoolsPanel(AWindowBase* targetWindow) {
+using namespace declarative;
+
+DevtoolsPanel::DevtoolsPanel(ASurface* targetWindow) {
     auto tabs = _new<ATabView>();
     tabs->setExpanding();
 

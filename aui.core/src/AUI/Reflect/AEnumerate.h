@@ -222,7 +222,12 @@ template <typename T> struct fmt::formatter<T, char, std::enable_if_t<aui::is_co
     // parse is inherited from formatter<string_view>.
     template <typename FormatContext>
     auto format(T c, FormatContext& ctx) const {
-        return formatter<string_view>::format(AEnumerate<T>::valueToNameMap()[c].toStdString(), ctx);
+        if (auto str = AEnumerate<T>::valueToNameMap().contains(c)) {
+            return formatter<string_view>::format(str->second, ctx);
+        }
+
+        // hopefully this won't trigger
+        return formatter<string_view>::format(fmt::format("(unknown enum {})", int(c)), ctx);
     }
 };
 

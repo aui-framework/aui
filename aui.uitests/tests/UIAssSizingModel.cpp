@@ -41,7 +41,7 @@ TEST_F(UIAssSizingModel, AllBoxesAreIdential) {
 
     static auto testView = [] {
         return Centered {
-            Label { "all boxes should be equal" } AUI_WITH_STYLE {
+            Label { "all boxes should be equal" } AUI_OVERRIDE_STYLE {
                   Border { 1_px, AColor::BLACK },
                   Margin { 0 },
                   Padding { 0 },
@@ -52,13 +52,13 @@ TEST_F(UIAssSizingModel, AllBoxesAreIdential) {
 
     mTestWindow->setContents(Vertical {
       Centered {
-        testView() AUI_WITH_STYLE { Padding { 10_dp }, Border { 1_px, AColor::BLACK }, FixedSize { 200_dp, {} } },
+        testView() AUI_OVERRIDE_STYLE { Padding { 10_dp }, Border { 1_px, AColor::BLACK }, FixedSize { 200_dp, {} } },
       },
       Centered {
-        testView() AUI_WITH_STYLE { Padding { 10_dp }, Border { 1_px, AColor::BLACK }, MinSize { 200_dp, {} } },
+        testView() AUI_OVERRIDE_STYLE { Padding { 10_dp }, Border { 1_px, AColor::BLACK }, MinSize { 200_dp, {} } },
       },
       Centered {
-        testView() AUI_WITH_STYLE { Padding { 10_dp }, Border { 1_px, AColor::BLACK }, MaxSize { 200_dp, {} }, Expanding {} },
+        testView() AUI_OVERRIDE_STYLE { Padding { 10_dp }, Border { 1_px, AColor::BLACK }, MaxSize { 200_dp, {} }, Expanding {} },
       },
     });
     // AUI_DOCS_CODE_END

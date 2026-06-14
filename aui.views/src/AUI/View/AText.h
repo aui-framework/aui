@@ -47,13 +47,14 @@ public:
 public:
     AText();
 
-    ~AText() override;
+    ~AText() override = default;
 
     void clearContent() override;
 
     void setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags = {});
 
     void setHtml(const AString& html, const Flags& flags = {});
+    void setMarkdown(const AString& md, const Flags& flags = {});
 
     void setString(const AString& string, const Flags& flags = {});
 
@@ -79,8 +80,16 @@ public:
         return v;
     }
 
+    static _<AText> fromMarkdown(const AString& string, const Flags& flags = {}) {
+        auto v = aui::ptr::manage_shared(new AText());
+        v->setMarkdown(string, flags);
+        return v;
+    }
+
+
 protected:
     void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
+    void applyGeometryToChildren() override;
 
 private:
     class WordEntry final : public aui::detail::WordEntry {
@@ -92,6 +101,7 @@ private:
     public:
         using aui::detail::CharEntry::CharEntry;
     };
+    _<AViewContainer> mViewsContainer;
 
     ADeque<WordEntry> mWordEntries;
     ADeque<CharEntry> mCharEntries;

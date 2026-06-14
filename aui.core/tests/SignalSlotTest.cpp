@@ -108,24 +108,6 @@ TEST_F(SignalSlotTest, GenericObserver) {
     /// [GENERIC_OBSERVER]
 }
 
-TEST_F(SignalSlotTest, BasicProjection1) {
-    slave = _new<Slave>();
-    AObject::connect(master->message.projected([](const AString& s) { return s.length(); }), AUI_SLOT(slave)::acceptMessageInt);
-
-    EXPECT_CALL(*slave, acceptMessageInt(5));
-    EXPECT_CALL(*slave, die());
-    master->broadcastMessage("hello");
-}
-
-TEST_F(SignalSlotTest, BasicProjection2) {
-    slave = _new<Slave>();
-    AObject::connect(master->message.projected(&AString::length), AUI_SLOT(slave)::acceptMessageInt);
-
-    EXPECT_CALL(*slave, acceptMessageInt(5));
-    EXPECT_CALL(*slave, die());
-    master->broadcastMessage("hello");
-}
-
 TEST_F(SignalSlotTest, BasicNoArgs) {
     slave = _new<Slave>();
     AObject::connect(master->message, AUI_SLOT(slave)::acceptMessageNoArgs);

@@ -23,6 +23,7 @@ using namespace std::chrono_literals;
 
 static constexpr high_resolution_clock::duration MAX_DURATION = 60s;
 
+/// [example]
 class TimerWindow : public AWindow {
 public:
     TimerWindow() : AWindow("AUI - 7GUIs - Timer", 300_dp, 50_dp) {
@@ -36,28 +37,23 @@ public:
                         it->setCustomStyle({ Expanding { 1, 0 } });
                     },
               },
-            },
-            Label {} & mElapsedTime.readProjected([](high_resolution_clock::duration d) {
-                return "{:.1f}s"_format(duration_cast<milliseconds>(d).count() / 1000.f);
-            }),
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+            Label { AUI_REACT("{:.1f}s"_format(duration_cast<milliseconds>(*mElapsedTime).count() / 1000.f)) },
             Horizontal {
               Label { "Duration:" },
-              _new<ASlider>() AUI_LET {
-                      it&& mDuration.biProjected(aui::lambda_overloaded {
-                        [](high_resolution_clock::duration d) -> aui::float_within_0_1 {
-                            return float(d.count()) / float(MAX_DURATION.count());
-                        },
-                        [](aui::float_within_0_1 d) -> high_resolution_clock::duration {
-                            return high_resolution_clock::duration(long(float(d) * float(MAX_DURATION.count())));
-                        },
-                      });
-                      it->setCustomStyle({ Expanding {} });
-                  },
-            },
-            _new<AButton>("Reset Timer") AUI_WITH_STYLE {
+              Slider {
+                .value = AUI_REACT(float(mDuration->count()) / float(MAX_DURATION.count())),
+                .onValueChanged =
+                    [this](aui::float_within_0_1 newValue) {
+                        mDuration =
+                            high_resolution_clock::duration(long(float(MAX_DURATION.count()) * float(newValue)));
+                    },
+              } AUI_OVERRIDE_STYLE { Expanding { 1, 0 } },
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+            _new<AButton>("Reset Timer") AUI_OVERRIDE_STYLE {
                   Expanding { 1, 0 },
                 } AUI_LET { connect(it->clicked, me::reset); },
-          },
+          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
         });
 
         connect(mTimer->fired, me::update);
@@ -82,6 +78,7 @@ private:
 
     void reset() { mStartTime = high_resolution_clock::now(); }
 };
+/// [example]
 
 AUI_ENTRY {
     _new<TimerWindow>()->show();

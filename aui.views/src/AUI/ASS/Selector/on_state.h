@@ -28,9 +28,9 @@ namespace ass::on_state {
      * @brief Hovered LESS-style subselector.
      * @ingroup ass_selectors
      * @details
-     * It's convenient to use it with AUI_WITH_STYLE:
+     * It's convenient to use it with AUI_OVERRIDE_STYLE:
      * ```cpp
-     * _new<AView>() AUI_WITH_STYLE {
+     * _new<AView>() AUI_OVERRIDE_STYLE {
      *   MinSize { 16_dp },
      *   BackgroundSolid { AColor::BLACK },
      *   on_state::Hovered {
@@ -51,9 +51,9 @@ namespace ass::on_state {
      * @brief Activated LESS-style subselector.
      * @ingroup ass_selectors
      * @details
-     * It's convenient to use it with AUI_WITH_STYLE:
+     * It's convenient to use it with AUI_OVERRIDE_STYLE:
      * ```cpp
-     * _new<AView>() AUI_WITH_STYLE {
+     * _new<AView>() AUI_OVERRIDE_STYLE {
      *   MinSize { 16_dp },
      *   BackgroundSolid { AColor::BLACK },
      *   on_state::Activated {
@@ -74,9 +74,9 @@ namespace ass::on_state {
      * @brief Focused LESS-style subselector.
      * @ingroup ass_selectors
      * @details
-     * It's convenient to use it with AUI_WITH_STYLE:
+     * It's convenient to use it with AUI_OVERRIDE_STYLE:
      * ```cpp
-     * _new<AView>() AUI_WITH_STYLE {
+     * _new<AView>() AUI_OVERRIDE_STYLE {
      *   MinSize { 16_dp },
      *   BackgroundSolid { AColor::BLACK },
      *   on_state::Focused {
@@ -97,9 +97,9 @@ namespace ass::on_state {
      * @brief Disabled LESS-style subselector.
      * @ingroup ass_selectors
      * @details
-     * It's convenient to use it with AUI_WITH_STYLE:
+     * It's convenient to use it with AUI_OVERRIDE_STYLE:
      * ```cpp
-     * _new<AView>() AUI_WITH_STYLE {
+     * _new<AView>() AUI_OVERRIDE_STYLE {
      *   MinSize { 16_dp },
      *   BackgroundSolid { AColor::BLACK },
      *   on_state::Disabled {

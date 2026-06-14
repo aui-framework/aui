@@ -18,6 +18,8 @@
 #include "AUI/ASS/Property/LayoutSpacing.h"
 #include "AUI/Test/UI/By.h"
 #include "AUI/Util/ALayoutInflater.h"
+#include "AUI/View/AGroupBox.h"
+#include "AUI/View/ASpacerFixed.h"
 
 using namespace declarative;
 
@@ -59,22 +61,27 @@ TEST_F(UILayoutTest, SmallCorner1) {
         }
     };
 
-    auto cornerLabel = _new<View>("26") AUI_WITH_STYLE {
-        ATextAlign::RIGHT, FontSize { 8_dp }, LineHeight { 9.68 },           MinSize(12_dp, 8_dp),
-        Padding(0),        Margin(0),         BackgroundSolid(0xff00ff_rgb),
+    auto cornerLabel = _new<View>("26") AUI_OVERRIDE_STYLE {
+        ATextAlign::RIGHT,
+        FontSize { 8_dp },
+        LineHeight { 9.68 },
+        MinSize(12_dp, 8_dp),
+        Padding(0),
+        Margin(0),
+        BackgroundSolid(0xff00ff_rgb),
     };
-    _<AView> box = Horizontal {
-        SpacerExpanding() AUI_WITH_STYLE { MinSize(0) }, Vertical {
-            SpacerExpanding() AUI_WITH_STYLE { MinSize(0) },
-            cornerLabel,
-        } AUI_WITH_STYLE {
-            MinSize(0)
+    _<AView> box =
+        Horizontal {
+            SpacerExpanding() AUI_OVERRIDE_STYLE { MinSize(0) },
+            Vertical {
+              SpacerExpanding() AUI_OVERRIDE_STYLE { MinSize(0) },
+              cornerLabel,
+            } AUI_OVERRIDE_STYLE { MinSize(0) }
         }
-    } << "Box"
-    AUI_WITH_STYLE {
-        FixedSize(22_dp),
-        BackgroundSolid(0xffffff_rgb),
-    };
+        << "Box" AUI_OVERRIDE_STYLE {
+               FixedSize(22_dp),
+               BackgroundSolid(0xffffff_rgb),
+           };
 
     inflate(Centered::Expanding { box });
 
@@ -85,39 +92,70 @@ TEST_F(UILayoutTest, SmallCorner1) {
 
 TEST_F(UILayoutTest, LayoutSpacing1) {
     inflate(Horizontal::Expanding {
-      Button { "1" } AUI_WITH_STYLE { Expanding {} },
-    } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
-    auto b = By::type<AButtonEx>().one();
+      Button { Label { "1" } } AUI_OVERRIDE_STYLE { Expanding {} },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
+    auto b = By::type<AButton>().one();
 
     // checks the buttons margins are perfectly equal
     auto parent = b->getParent();
     EXPECT_EQ((parent->getSize() - b->getSize()) / 2, b->getPosition());
 }
+
 TEST_F(UILayoutTest, LayoutSpacing2) {
     inflate(Horizontal::Expanding {
-      Button { "1" } AUI_WITH_STYLE { Expanding {} },
-      Button { "2" } AUI_WITH_STYLE { Expanding {} },
-    } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
+      Button { Label { "1" } } AUI_OVERRIDE_STYLE { Expanding {} },
+      Button { Label { "2" } } AUI_OVERRIDE_STYLE { Expanding {} },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
 
-    By::type<AButtonEx>().check(sameWidth(), "widths of the buttons are not equal");
+    By::type<AButton>().check(sameWidth(), "widths of the buttons are not equal");
 }
 
 TEST_F(UILayoutTest, LayoutSpacing3) {
     inflate(Horizontal::Expanding {
-      Button { "1" } AUI_WITH_STYLE { Expanding {} },
-      Button { "2" } AUI_WITH_STYLE { Expanding {} },
-      Button { "3" } AUI_WITH_STYLE { Expanding {} },
-      Button { "4" } AUI_WITH_STYLE { Expanding {} },
-    } AUI_WITH_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
+      Button { Label { "1" } } AUI_OVERRIDE_STYLE { Expanding {} },
+      Button { Label { "2" } } AUI_OVERRIDE_STYLE { Expanding {} },
+      Button { Label { "3" } } AUI_OVERRIDE_STYLE { Expanding {} },
+      Button { Label { "4" } } AUI_OVERRIDE_STYLE { Expanding {} },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp }, FixedSize(200_dp, {}) });
 
-    By::type<AButtonEx>().check(sameWidth(), "widths of the buttons are not equal");
+    By::type<AButton>().check(sameWidth(), "widths of the buttons are not equal");
+}
+
+TEST_F(UILayoutTest, LayoutSpacing4) {
+    inflate(Vertical::Expanding {
+        Button { Label { "1" } } AUI_OVERRIDE_STYLE {},
+        Button { Label { "2" } } AUI_OVERRIDE_STYLE { Expanding {} },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { -8_dp }, FixedSize(200_dp, {}) });
+
+    uitest::frame();
+    auto i = By::type<AButton>().toVector();
+    EXPECT_GT(i[0]->getPosition().y + i[0]->getSize().y, i[1]->getPosition().y);
+    EXPECT_LT(mWindow->getContentMinimumHeight(), i[0]->getMinimumHeight() + i[1]->getMinimumHeight());
+}
+
+TEST_F(UILayoutTest, LayoutSpacing5) {
+    auto groupBox =
+        GroupBox {
+            Label { "Test" },
+            Vertical {
+                Label { "Test" },
+            }
+        } AUI_OVERRIDE_STYLE { Expanding {} };
+    inflate(Centered::Expanding {
+            groupBox
+    } AUI_OVERRIDE_STYLE { FixedSize(200_dp, {}) });
+
+    uitest::frame();
+    auto title = groupBox->getViews()[0];
+    auto body = groupBox->getViews()[1];
+    EXPECT_GT(title->position()->y + title->size()->y, body->position()->y);
 }
 
 TEST_F(UILayoutTest, ExpandingWithMinSize1) {
     inflate(Horizontal::Expanding {
-      _new<AView>() << ".expanding_minsize" AUI_WITH_STYLE { Expanding {}, MinSize { 200_dp, {} } },
-      _new<AView>() << ".expanding" AUI_WITH_STYLE { Expanding {} },
-    } AUI_WITH_STYLE { FixedSize(300_dp, {}) });
+      _new<AView>() << ".expanding_minsize" AUI_OVERRIDE_STYLE { Expanding {}, MinSize { 200_dp, {} } },
+      _new<AView>() << ".expanding" AUI_OVERRIDE_STYLE { Expanding {} },
+    } AUI_OVERRIDE_STYLE { FixedSize(300_dp, {}) });
 
     By::name(".expanding_minsize").check(width(200_dp), "width of .expanding_minsize is invalid");
     By::name(".expanding").check(width(100_dp), "width of .expanding is invalid");
@@ -125,9 +163,9 @@ TEST_F(UILayoutTest, ExpandingWithMinSize1) {
 
 TEST_F(UILayoutTest, ExpandingWithMinSize2) {
     inflate(Horizontal::Expanding {
-      _new<AView>() << ".expanding" AUI_WITH_STYLE { Expanding {} },
-      _new<AView>() << ".expanding_minsize" AUI_WITH_STYLE { Expanding {}, MinSize { 200_dp, {} } },
-    } AUI_WITH_STYLE { FixedSize(300_dp, {}) });
+      _new<AView>() << ".expanding" AUI_OVERRIDE_STYLE { Expanding {} },
+      _new<AView>() << ".expanding_minsize" AUI_OVERRIDE_STYLE { Expanding {}, MinSize { 200_dp, {} } },
+    } AUI_OVERRIDE_STYLE { FixedSize(300_dp, {}) });
 
     By::name(".expanding_minsize").check(width(200_dp), "width of .expanding_minsize is invalid");
     By::name(".expanding").check(width(100_dp), "width of .expanding is invalid");
@@ -135,9 +173,9 @@ TEST_F(UILayoutTest, ExpandingWithMinSize2) {
 
 TEST_F(UILayoutTest, ExpandingWithMaxSize1) {
     inflate(Horizontal::Expanding {
-        _new<AView>() << ".expanding_maxsize" AUI_WITH_STYLE { Expanding {}, MaxSize { 100_dp, {} } },
-        _new<AView>() << ".expanding" AUI_WITH_STYLE { Expanding {} },
-    } AUI_WITH_STYLE { FixedSize(300_dp, {}) });
+        _new<AView>() << ".expanding_maxsize" AUI_OVERRIDE_STYLE { Expanding {}, MaxSize { 100_dp, {} } },
+        _new<AView>() << ".expanding" AUI_OVERRIDE_STYLE { Expanding {} },
+    } AUI_OVERRIDE_STYLE { FixedSize(300_dp, {}) });
 
     By::name(".expanding_maxsize").check(width(100_dp), "width of .expanding_maxsize is invalid");
     By::name(".expanding").check(width(200_dp), "width of .expanding is invalid");
@@ -145,9 +183,9 @@ TEST_F(UILayoutTest, ExpandingWithMaxSize1) {
 
 TEST_F(UILayoutTest, ExpandingWithMaxSize2) {
     inflate(Horizontal::Expanding {
-        _new<AView>() << ".expanding" AUI_WITH_STYLE { Expanding {} },
-        _new<AView>() << ".expanding_maxsize" AUI_WITH_STYLE { Expanding {}, MaxSize { 100_dp, {} } },
-    } AUI_WITH_STYLE { FixedSize(300_dp, {}) });
+        _new<AView>() << ".expanding" AUI_OVERRIDE_STYLE { Expanding {} },
+        _new<AView>() << ".expanding_maxsize" AUI_OVERRIDE_STYLE { Expanding {}, MaxSize { 100_dp, {} } },
+    } AUI_OVERRIDE_STYLE { FixedSize(300_dp, {}) });
 
     By::name(".expanding_maxsize").check(width(100_dp), "width of .expanding_maxsize is invalid");
     By::name(".expanding").check(width(200_dp), "width of .expanding is invalid");
@@ -200,4 +238,199 @@ TEST_F(UILayoutTest, GetContentMinimumWidthPerformance2) {
 
     // extra layout update that should call LabelMock::getContentMinimumWidth one more time
     l1->getWindow()->applyGeometryToChildrenIfNecessary();
+}
+
+namespace {
+
+class ViewGeometryMock : public AView {
+public:
+    MOCK_METHOD(void, setGeometry, (int x, int y, int width, int height), (override));
+};
+
+}
+
+TEST_F(UILayoutTest, Padding1) {
+    auto mock = _new<ViewGeometryMock>();
+    mock->setExpanding();
+
+    EXPECT_CALL(*mock, setGeometry(10, 10, 80, 80)).Times(2);
+
+    inflate(Centered {
+        mock
+    } AUI_OVERRIDE_STYLE { FixedSize(100_dp), Padding { 10_dp } });
+
+    AUI_REPEAT(10) {
+        uitest::frame();
+    }
+}
+
+TEST_F(UILayoutTest, Padding2) {
+    auto mock = _new<ViewGeometryMock>();
+    mock->setExpanding();
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 90, 80)).Times(2);
+
+    inflate(Centered {
+        mock
+    } AUI_OVERRIDE_STYLE { FixedSize(100_dp), Padding { 10_dp, 5_dp } });
+
+    AUI_REPEAT(10) {
+        uitest::frame();
+    }
+}
+
+TEST_F(UILayoutTest, Padding3) {
+    auto mock = _new<ViewGeometryMock>();
+    mock->setExpanding();
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 90, 70)).Times(2);
+
+    inflate(Centered { mock } AUI_OVERRIDE_STYLE { FixedSize(100_dp), Padding { 10_dp, 5_dp, 20_dp } });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Padding4) {
+    auto mock = _new<ViewGeometryMock>();
+    mock->setExpanding();
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 85, 70)).Times(2);
+
+    inflate(Centered { mock } AUI_OVERRIDE_STYLE { FixedSize(100_dp), Padding { 10_dp, 10_dp, 20_dp, 5_dp } });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Padding5) {
+    auto mock = _new<ViewGeometryMock>();
+    mock->setExpanding();
+
+    EXPECT_CALL(*mock, setGeometry(10, 10, 80, 70)).Times(2);
+
+    inflate(Horizontal {
+        SpacerFixed { 5_dp },
+        mock,
+    } AUI_OVERRIDE_STYLE { FixedSize(100_dp), Padding { 10_dp, 10_dp, 20_dp, 5_dp } });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Padding6) {
+    auto mock = _new<ViewGeometryMock>();
+    mock->setExpanding();
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 80, 70)).Times(2);
+
+    inflate(Horizontal {
+        mock,
+        SpacerFixed { 5_dp },
+    } AUI_OVERRIDE_STYLE { FixedSize(100_dp), Padding { 10_dp, 10_dp, 20_dp, 5_dp } });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Margin1) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(10, 10, 80, 80)).Times(2);
+
+    inflate(Centered {
+        mock
+    } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    AUI_REPEAT(10) {
+        uitest::frame();
+    }
+}
+
+TEST_F(UILayoutTest, Margin2) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp, 5_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 90, 80)).Times(2);
+
+    inflate(Centered { mock } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Margin3) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp, 5_dp, 20_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 90, 70)).Times(2);
+
+    inflate(Centered { mock } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Margin4) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp, 5_dp, 20_dp, 10_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(10, 10, 85, 70)).Times(2);
+
+    inflate(Centered { mock } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Margin5) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp, 10_dp, 20_dp, 5_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(10, 10, 80, 70)).Times(2);
+
+    inflate(
+        Horizontal {
+          SpacerFixed { 5_dp },
+          mock,
+        } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Margin6) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp, 10_dp, 20_dp, 5_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(5, 10, 80, 70)).Times(2);
+
+    inflate(
+        Horizontal {
+          mock,
+          SpacerFixed { 5_dp },
+        } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+    AUI_REPEAT(10) { uitest::frame(); }
+}
+
+TEST_F(UILayoutTest, Margin7) {
+    auto mock = _new<ViewGeometryMock>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+        Margin { 10_dp, 10_dp, 20_dp, 5_dp },
+    };
+
+    EXPECT_CALL(*mock, setGeometry(20, 10, 70, 70)).Times(2);
+
+    inflate(
+        Horizontal {
+          SpacerFixed { 5_dp } AUI_OVERRIDE_STYLE { Margin { 5_dp } },
+          mock,
+        } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    AUI_REPEAT(10) { uitest::frame(); }
 }

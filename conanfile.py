@@ -14,7 +14,7 @@ from conan.tools.cmake import CMakeToolchain, CMake, cmake_layout, CMakeDeps
 
 class AUIRecipe(ConanFile):
     name = "aui"
-    version = "1.0"
+    version = "8.0.0"
 
     # Optional metadata
     license = "MPL2"
@@ -68,14 +68,14 @@ class AUIRecipe(ConanFile):
         if self.settings.os == "Linux":
             self.requires("libbacktrace/cci.20240730")
         # Crypt
-        self.requires("openssl/3.5.2")
+        self.requires("mbedtls/3.6.4")
         # CURL
         self.requires("libcurl/8.15.0")
         # Image
         self.requires("lunasvg/3.0.1")
         self.requires("libwebp/1.5.0")
         # Views
-        self.requires("freetype/2.13.3")
+        self.requires("freetype/2.14.1")
         if str(self.settings.os) in {"Windows", "Linux", "Macos"}:
             self.requires("glew/2.2.0")
 

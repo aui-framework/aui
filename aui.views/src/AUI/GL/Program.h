@@ -37,8 +37,8 @@ struct GLSLOptions {
      * @brief Turns off #version prefix for custom shaders
      */
     bool custom = false;
-    Precision floatp = Precision::mediump;
-    Precision intp = Precision::mediump;
+    Precision floatp = Precision::highp;
+    Precision intp = Precision::highp;
 };
 
 class API_AUI_VIEWS Program: public aui::noncopyable {
@@ -83,10 +83,8 @@ public:
 
     void set(const gl::Program::Uniform& uniform, int value) const;
     void set(const gl::Program::Uniform& uniform, float value) const;
-    void set(const gl::Program::Uniform& uniform, double value) const;
     void set(const gl::Program::Uniform& uniform, glm::mat4 value) const;
     void set(const gl::Program::Uniform& uniform, glm::mat3 value) const;
-    void set(const gl::Program::Uniform& uniform, glm::dmat4 value) const;
     void set(const gl::Program::Uniform& uniform, glm::vec2 value) const;
     void set(const gl::Program::Uniform& uniform, glm::vec3 value) const;
     void set(const gl::Program::Uniform& uniform, glm::vec4 value) const;

@@ -10,9 +10,10 @@
  */
 
 #pragma once
+
 #include <condition_variable>
-#include "AThread.h"
-#include "AUI/Performance/APerformanceSection.h"
+#include <AUI/Thread/AThread.h>
+#include <AUI/Performance/APerformanceSection.h>
 
 /**
  * @brief Represents a condition variable.

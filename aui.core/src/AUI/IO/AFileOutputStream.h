@@ -11,7 +11,7 @@
 
 #pragma once
 #include <cstdio>
-#include "IOutputStream.h"
+#include "ISeekableOutputStream.h"
 #include "AUI/Core.h"
 
 class AString;
@@ -20,7 +20,7 @@ class AString;
  * @brief Opens a file for a binary write.
  * @ingroup io
  */
-class API_AUI_CORE AFileOutputStream : public IOutputStream
+class API_AUI_CORE AFileOutputStream : public aui::ISeekableOutputStream
 {
 private:
     FILE* mFile;
@@ -31,6 +31,10 @@ public:
     AFileOutputStream(AString path, bool append = false);
 
     virtual ~AFileOutputStream();
+
+    void seek(std::streamoff offset, ASeekDir seekDir) override;
+    std::streampos tell() noexcept override;
+    bool isEof() override;
 
     void write(const char* src, size_t size) override;
     void close();

@@ -32,7 +32,7 @@ glm::ivec2 ADesktop::getMousePosition() {
 
 void ADesktop::setMousePos(const glm::ivec2& pos) { SetCursorPos(pos.x, pos.y); }
 
-AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& startingLocation) {
+AFuture<APath> ADesktop::browseForDir(ASurface* parent, const APath& startingLocation) {
     _<AAbstractThread> ui;
     if (auto* w = dynamic_cast<AWindow*>(parent))
         ui = w->getThread();
@@ -94,7 +94,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
     return promise;
 }
 
-AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
+AFuture<APath> ADesktop::browseForFile(ASurface* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
     _<AAbstractThread> ui;
     if (auto* w = dynamic_cast<AWindow*>(parent))
         ui = w->getThread();
@@ -116,18 +116,18 @@ AFuture<APath> ADesktop::browseForFile(AWindowBase* parent, const APath& startin
 
             // Build filters
             AVector<COMDLG_FILTERSPEC> filter;
-            AVector<AString> storage;
+            AVector<std::u16string> storage;
             filter.reserve(extensions.size());
             storage.reserve(extensions.size() * 2);
 
             for (const auto& ext : extensions) {
                 auto extMask = "*." + ext.extension;
-                storage << extMask;
-                storage << ext.name + " (" + extMask + ")";
-                auto w1 = aui::win32::toWchar(*(storage.end() - 1));
-                auto w2 = aui::win32::toWchar(*(storage.end() - 2));
+                storage << extMask.toUtf16();
+                storage << (ext.name + " (" + extMask + ")").toUtf16();
+                auto w1 = (storage.end() - 1)->c_str();
+                auto w2 = (storage.end() - 2)->c_str();
                 filter << COMDLG_FILTERSPEC {
-                    w1.c_str(), w2.c_str()
+                        reinterpret_cast<LPCWSTR>(w1), reinterpret_cast<LPCWSTR>(w2)
                 };
             }
 

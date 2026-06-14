@@ -12,6 +12,8 @@
 #pragma once
 
 #include <cstddef>
+#include <string>
+#include <AUI/Core.h>
 
 template <typename StoredType, std::size_t MaxSize>
 class AStaticVector;
@@ -20,7 +22,7 @@ class AStaticVector;
  * @brief Represents a single 32-bit char.
  * @ingroup core
  */
-class AChar {
+class API_AUI_CORE AChar {
 private:
     char32_t mValue;
 
@@ -59,54 +61,56 @@ public:
     constexpr AChar(char32_t c): mValue(isValidUnicode(c) ? c : INVALID_CHAR) {}
 
     [[nodiscard]]
-    bool digit() const {
+    constexpr bool digit() const {
         return mValue >= '0' && mValue <= '9';
     }
 
     [[nodiscard]]
-    bool alpha() const {
+    constexpr bool alpha() const {
         return (mValue >= 'a' && mValue <= 'z') || (mValue >= 'A' && mValue <= 'Z');
     }
 
     [[nodiscard]]
-    bool alnum() const {
+    constexpr bool alnum() const {
         return alpha() || digit();
     }
 
     [[nodiscard]]
-    bool isAscii() const {
+    constexpr bool isAscii() const {
         return mValue <= 0x7F;
     }
 
     [[nodiscard]]
-    char asAscii() const {
+    constexpr char asAscii() const {
         return isAscii() ? static_cast<char>(mValue) : ' ';
     }
 
     AStaticVector<char, 4> toUtf8() const noexcept;
+    std::string toString() const;
 
-    char32_t codepoint() const noexcept {
+    constexpr char32_t codepoint() const noexcept {
         return mValue;
     }
 
-    operator char32_t() const noexcept {
+    constexpr operator char32_t() const noexcept {
         return mValue;
     }
 };
 
-inline bool operator==(AChar lhs, AChar rhs) noexcept {
+constexpr inline bool operator==(AChar lhs, AChar rhs) noexcept {
     return lhs.codepoint() == rhs.codepoint();
 }
-inline bool operator==(AChar lhs, char rhs) noexcept {
+
+constexpr inline bool operator==(AChar lhs, char rhs) noexcept {
     return lhs == AChar(rhs);
 }
-inline bool operator==(AChar lhs, char32_t rhs) noexcept {
+constexpr inline bool operator==(AChar lhs, char32_t rhs) noexcept {
     return lhs == AChar(rhs);
 }
-inline bool operator==(char lhs, AChar rhs) noexcept {
+constexpr inline bool operator==(char lhs, AChar rhs) noexcept {
     return AChar(lhs) == rhs;
 }
-inline bool operator==(char32_t lhs, AChar rhs) noexcept {
+constexpr inline bool operator==(char32_t lhs, AChar rhs) noexcept {
     return AChar(lhs) == rhs;
 }
 

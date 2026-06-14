@@ -16,6 +16,7 @@
 #include <optional>
 #include <type_traits>
 #include <AUI/Util/Assert.h>
+#include <AUI/Traits/concepts.h>
 
 class AObject;
 
@@ -134,6 +135,12 @@ using _unique = std::unique_ptr<T, Deleter>;
 
 namespace aui {
 
+    /**
+     * @brief Allows to specialize an implicit conversion for `shared_ptr<T>` from `F`.
+     */
+    template <typename F>
+    struct implicit_shared_ptr_ctor;
+
     struct ptr {
         /**
          * @brief Creates unique_ptr from raw pointer and a deleter.
@@ -223,8 +230,68 @@ namespace aui {
             // although i dont understand reasons behind it
             return _weak<T>(shared_from_this(raw));
         }
+
+        /**
+         * @brief Constructs an alias to shared_ptr.
+         * @param owner the shared_ptr to share ownership information with.
+         * @param to unmanaged reference
+         * @details
+         * Shares ownership information with the initial value of `owner`, but holds an unrelated and unmanaged pointer
+         * `&to`. If this `shared_ptr` is the last of the group to go out of scope, it will call the stored deleter for
+         * the object originally managed by `owner`. However, calling `get()` on this `shared_ptr` will always return a
+         * copy of `&to`.
+         *
+         * It is the responsibility of the programmer to make sure that this ptr remains valid as long as this
+         * `shared_ptr` exists, such as in the typical use cases where `to` is a member of the object managed by `owner`
+         * or is an alias (e.g., downcast) of `owner.get()`.
+         *
+         * To reduce error proneness while using `aui::ptr::alias`, it is recommended to use `AUI_PTR_ALIAS` macro
+         * instead, which semantically restricts usage of `aui::ptr::alias` to the fields of `owner`.
+         */
+        template<typename Owner, typename To>
+        static auto alias(const _<Owner>& owner, To& to) -> _<To> {
+            return std::shared_ptr<To>(owner, &to);
+        }
     };
 }
+
+
+/**
+ * @brief An std::shared_ptr with AUI extensions.
+ * @brief Constructs an alias shared_ptr.
+ * @param owner the shared_ptr to share ownership information with
+ * @param field the owner's field name
+ * @details
+ * Shares ownership information with the initial value of `owner`, but holds a pointer to field whose name is specified
+ * by `field`. If this shared_ptr is the last of the group to go out of scope, it will call the stored deleter for the
+ * object originally managed by `owner`. However, calling `get()` on this `shared_ptr` will always return a copy of
+ * pointer to the field.
+ *
+ * ```cpp
+ * _<AView> minimalCheckBox(_<AProperty<bool>> state) {
+ *    // lifetime is managed by _<State> in the outer scope, however,
+ *    // the bool field is all we need.
+ *    return CheckBox { .value = AUI_REACT(*state), ... };
+ * }
+ *
+ * AUI_ENTRY {
+ *   auto window = _new<AWindow>("Checkbox", 300_dp, 100_dp);
+ *   _<State> state = _new<State>();
+ *   window->setContents(
+ *      Vertical {
+ *         minimalCheckBox(AUI_PTR_ALIAS(state, checked)),
+ *      }
+ *   );
+ *   window->show();
+ *   return 0;
+ * }
+ * ```
+ *
+ * This macro enable developers to create `shared_ptr` that manage the lifetime of a parent object while directly
+ * referencing a specific member or sub-object. This enhances flexibility in managing object ownership where a component
+ * might only need a pointer to a specific property within a larger state object, as demonstrated by the example above.
+ */
+#define AUI_PTR_ALIAS(owner, field) aui::ptr::alias(owner, owner->field)
 
 
 /**
@@ -302,12 +369,60 @@ public:
 
     using std::shared_ptr<T>::shared_ptr;
 
+    /**
+     * @brief Constructs a shared_ptr which shares ownership of the object managed by `v`.
+     * @details
+     * Constructs a shared_ptr which shares ownership of the object managed by `v`. If `v` manages no object, `*this`
+     * manages no object either.
+     */
     AArc(const std::shared_ptr<T>& v): std::shared_ptr<T>(v) {}
+
+    /**
+     * @brief Move-constructs a shared_ptr from `v`.
+     * @details
+     * After the construction, `*this` contains a copy of the previous state of `v`, `v` is empty and its stored pointer
+     * is null.
+     *
+     * In comparison to copy-constructing, the move-constructor is cheaper, as it does not require an atomic operation.
+     */
     AArc(std::shared_ptr<T>&& v) noexcept: std::shared_ptr<T>(std::move(v)) {}
+
+    /**
+     * @brief Constructs a shared_ptr which shares ownership of the object managed by `v`.
+     * @details
+     * Constructs a shared_ptr which shares ownership of the object managed by `v`. If `v` manages no object, `*this`
+     * manages no object either.
+     */
     AArc(const AArc& v): std::shared_ptr<T>(v) {}
+
+    /**
+     * @brief Move-constructs a shared_ptr from `v`.
+     * @details
+     * After the construction, `*this` contains a copy of the previous state of `v`, `v` is empty and its stored pointer
+     * is null.
+     *
+     * In comparison to copy-constructing, the move-constructor is cheaper, as it does not require an atomic operation.
+     */
     AArc(AArc&& v) noexcept: std::shared_ptr<T>(std::move(v)) {}
+
+    /**
+     * @brief Constructs a shared_ptr which shares ownership of the object managed by `v`.
+     * @details
+     * Throws `std::bad_weak_ptr` if expired.
+     */
     AArc(const std::weak_ptr<T>& v): std::shared_ptr<T>(v) {}
-    AArc(const AWeakArc<T>& v): std::shared_ptr<T>(v) {}
+
+    /**
+     * @brief Constructs a shared_ptr which shares ownership of the object managed by `v`.
+     * @details
+     * Throws `std::bad_weak_ptr` if expired.
+     */
+    AArc(const _weak<T>& v): std::shared_ptr<T>(v) {}
+
+    template <typename F>
+    AArc(F&& f)
+        requires requires { aui::implicit_shared_ptr_ctor<F>{}; }
+      : std::shared_ptr<T>(aui::implicit_shared_ptr_ctor<F>{}(std::forward<F>(f))) {}
 
     AArc& operator=(const AArc& rhs) noexcept {
         std::shared_ptr<T>::operator=(rhs);
@@ -354,7 +469,7 @@ public:
      * undefined.
      */
     [[nodiscard]]
-    std::add_lvalue_reference_t<T> value() const noexcept {
+    std::add_lvalue_reference_t<T> value() const {
 #if AUI_DEBUG
         AUI_ASSERTX(super::get() != nullptr, "an attempt to dereference a null pointer");
 #endif
@@ -368,7 +483,7 @@ public:
      * undefined.
      */
     [[nodiscard]]
-    std::add_lvalue_reference_t<T> operator*() const noexcept {
+    std::add_lvalue_reference_t<T> operator*() const {
         return value();
     }
 
@@ -379,7 +494,7 @@ public:
      * undefined.
      */
     [[nodiscard]]
-    std::add_pointer_t<T> operator->() const noexcept {
+    std::add_pointer_t<T> operator->() const {
         return &value();
     }
 

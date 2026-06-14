@@ -114,6 +114,16 @@ public:
      */
     void moveCursorRight();
 
+    /**
+     * @brief Performs move up operation (like AInput::UP)
+     */
+    void moveCursorUp();
+
+    /**
+     * @brief Performs move up operation (like AInput::DOWN)
+     */
+    void moveCursorDown();
+
     virtual void emitTextChanged(const AString& text) = 0;
     virtual void emitTextChanging(const AString& text) = 0;
     virtual void emitActionButtonPressed() = 0;

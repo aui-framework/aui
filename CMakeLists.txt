@@ -30,9 +30,12 @@ if(AUI_USE_CCACHE)
     endif()
 endif()
 
-if (MINGW AND NOT AUI_IGNORE_MINGW)
-    message(FATAL_ERROR "MinGW is not supported. See https://aui-framework.github.io/develop/getting-started/")
-endif()
+if (MINGW)
+    if (BUILD_SHARED_LIBS AND NOT AUI_IGNORE_MINGW)
+        message(FATAL_ERROR "Building shared libs with MinGW is not supported. Use -DBUILD_SHARED_LIBS=OFF to use static linkage. See https://aui-framework.github.io/master/getting-started/")
+    endif()
+    add_compile_options(-Wa,-mbig-obj)
+endif ()
 
 if(MSVC)
     if (AUI_BUILD_FOR STREQUAL "winxp")    # MT / MTd
@@ -103,9 +106,8 @@ endfunction()
 if(AUIB_DISABLE)
     find_package(ZLIB REQUIRED)
 else()
-    auib_import(ZLIB https://github.com/aui-framework/zlib
-                VERSION 448a9c76a97202a21f68bd82e453dd743e944a3a
-                CMAKE_ARGS -DZLIB_BUILD_EXAMPLES=OFF)
+    auib_import(ZLIB https://github.com/aui-framework/zlib-ng
+                VERSION b583a325937227d7834ae541cf88c1f273da113e)
 endif()
 
 # define all components
@@ -125,6 +127,7 @@ define_aui_component(xml)
 define_aui_component(json)
 define_aui_component(audio)
 define_aui_component(updater)
+define_aui_component(remote_tools)
 
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)

@@ -242,6 +242,7 @@ AOptional<AUpdater::InstallCmdline> AUpdater::loadInstallCmdline() const {
             AUI_DEFER { path.removeFile(); };
             auto result = aui::from_json<AUpdater::InstallCmdline>(AJson::fromStream(AFileInputStream(path)));
             ALogger::info(LOG_TAG) << "Successfully loaded update installation cmd line from prev session: " << path;
+            return result;
         }
     } catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Can't restore InstallCmdline: " << e;

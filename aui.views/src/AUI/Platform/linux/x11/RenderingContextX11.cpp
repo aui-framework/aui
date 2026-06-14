@@ -15,6 +15,7 @@
 #include "AUI/Util/kAUI.h"
 #include "AUI/Logging/ALogger.h"
 #include <AUI/UITestState.h>
+#include <AUI/AppInfo.h>
 
 void RenderingContextX11::xInitNativeWindow(
     const IRenderingContext::Init& init, XSetWindowAttributes& swa, XVisualInfo* vi) {
@@ -48,6 +49,17 @@ void RenderingContextX11::xInitNativeWindow(
 
     PlatformAbstractionX11::setNativeHandle(window, handle);
 
+    // Set WM_CLASS from app_id or fallback to random class
+    mWindowClass = aui::app_info::app_id;
+    // Use the part after the last dot as the instance name (e.g., "AUI" from "com.example.AUI")
+    auto lastDot = mWindowClass.rfind('.');
+    AString instanceName = (lastDot != AString::npos) ? AString(mWindowClass.substr(lastDot + 1)) : mWindowClass;
+    
+    XClassHint classHint;
+    classHint.res_name = const_cast<char*>(instanceName.c_str());
+    classHint.res_class = const_cast<char*>(mWindowClass.c_str());
+    XSetClassHint(PlatformAbstractionX11::ourDisplay, handle, &classHint);
+
     // XSync
     {
         XSyncValue value;
@@ -75,7 +87,7 @@ void RenderingContextX11::xInitNativeWindow(
     init.window.updateDpi();
 }
 
-void RenderingContextX11::xDestroyNativeWindow(AWindowBase& window) {
+void RenderingContextX11::xDestroyNativeWindow(ASurface& window) {
     XDestroyIC(mIC);
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         XDestroyWindow(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(*w));

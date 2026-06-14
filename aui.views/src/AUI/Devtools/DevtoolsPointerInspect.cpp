@@ -38,7 +38,7 @@
 #include "AUI/Model/ITreeModel.h"
 #include "AUI/Performance/APerformanceFrame.h"
 #include "AUI/Performance/APerformanceSection.h"
-#include "AUI/Platform/AWindowBase.h"
+#include "AUI/Platform/ASurface.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Platform/AWindow.h"
@@ -57,6 +57,7 @@
 #include "glm/vector_relational.hpp"
 
 using namespace ass;
+using namespace declarative;
 
 static constexpr auto LOG_TAG = "DevtoolsPointerInspect";
 
@@ -77,7 +78,7 @@ public:
         AViewContainerBase::render(ctx);
         auto view = mView.lock();
         if (!view) {
-            ctx.render.string({0, 0}, "Expired");
+            ctx.render.string({0, 10}, "Expired");
             return;
         }
 
@@ -122,7 +123,7 @@ public:
 
     void render(ARenderContext context) override {
         AViewContainerBase::render(context);
-        
+
         auto v = mFake->view();
         mButton->setEnabled(!(v == nullptr || v->getParent() == nullptr));
     }
@@ -151,15 +152,13 @@ private:
 
 using namespace declarative;
 
-DevtoolsPointerInspect::DevtoolsPointerInspect(AWindowBase* targetWindow) : mTargetWindow(targetWindow) {
-
-
+DevtoolsPointerInspect::DevtoolsPointerInspect(ASurface* targetWindow) : mTargetWindow(targetWindow) {
     setContents(Vertical {
         Centered {
           Horizontal {
             Label { "Address (AView*):" },
             mAddress,
-            Button { "Inspect" }.clicked(this, [this] {
+            Button { .content = Label { "Inspect" }, .onClick = [this] {
                 try {
                     auto ptr = [&] {
                         auto ptr = (*mAddress->text()).toStdString();
@@ -175,7 +174,7 @@ DevtoolsPointerInspect::DevtoolsPointerInspect(AWindowBase* targetWindow) : mTar
                     ALayoutInflater::inflate(mResultView, Label { e.getMessage() });
                     ALogger::err(LOG_TAG) << "Unable to inspect: " << e;
                 }
-            }),
+            }},
           },
         },
         Centered { mResultView },

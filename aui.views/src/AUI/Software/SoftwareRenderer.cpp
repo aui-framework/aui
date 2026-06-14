@@ -456,7 +456,7 @@ public:
         int prevWidth = -1;
 
         int advanceX = position.x;
-        int advanceY = position.y - mFontStyle.font->getDescenderHeight(mFontStyle.size);
+        int advanceY = position.y;
         size_t counter = 0;
         int advance = advanceX;
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
@@ -479,7 +479,9 @@ public:
                     continue;
                 }
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
-                    glm::ivec2 pos{ advance + ch.bearingX, ch.advanceY + advanceY };
+                    glm::ivec2 pos{ advance,  advanceY };
+                    pos.x += ch.horizontal.bearing.x;
+                    pos.y -= ch.horizontal.bearing.y;
                     notifySymbolAdded({pos});
                     mCharEntries.push_back(CharEntry{
                             pos,
@@ -496,7 +498,7 @@ public:
                     }
                 }
 
-                advance += ch.advanceX;
+                advance += ch.horizontal.advance;
                 advance = glm::floor(advance);
             }
         }
@@ -508,7 +510,7 @@ public:
     }
 
     void addString(const glm::ivec2& position, AStringView text) noexcept override {
-        addStringT(position, text);
+        addStringT(position, text.utf8());
     }
 
     void addString(const glm::ivec2& position, std::u32string_view text) noexcept override {
@@ -544,15 +546,13 @@ _<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 pos
     return c.finalize();
 }
 
-_unique<ITexture> SoftwareRenderer::createNewTexture() {
-    return std::make_unique<SoftwareTexture>();
-}
+_unique<ITexture> SoftwareRenderer::createNewTexture() { return std::make_unique<SoftwareTexture>(); }
 
 _<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style) {
     return _new<SoftwareMultiStringCanvas>(this, style);
 }
 
-void SoftwareRenderer::setWindow(AWindowBase* window) {
+void SoftwareRenderer::setWindow(ASurface* window) {
     IRenderer::setWindow(window);
     if (auto context = dynamic_cast<SoftwareRenderingContext*>(window->getRenderingContext().get())) {
         mContext = context;

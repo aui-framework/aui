@@ -24,7 +24,7 @@ namespace ass {
      * @ingroup ass_properties
      */
     struct TextColor {
-        AColor color;
+        std::variant<AColor, inherit_t> color;
     };
 
 

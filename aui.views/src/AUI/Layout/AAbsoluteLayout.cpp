@@ -13,17 +13,21 @@
 
 void AAbsoluteLayout::onResize(int x, int y, int width, int height) {
     for (const auto& i : mViews) {
-        i.view->setGeometry(i.pivotX.getValuePx(),
-                            i.pivotY.getValuePx(),
-                            i.sizeX ? i.sizeX->getValuePx() : i.view->getMinimumWidth(),
-                            i.sizeY ? i.sizeY->getValuePx() : i.view->getMinimumHeight());
+        if (i.pivotX && i.pivotY) {
+            i.view->setGeometry(
+                i.pivotX->getValuePx(), i.pivotY->getValuePx(),
+                i.sizeX ? i.sizeX->getValuePx() : i.view->getMinimumWidth(),
+                i.sizeY ? i.sizeY->getValuePx() : i.view->getMinimumHeight());
+            continue;
+        }
+        i.view->setGeometry(i.view->getPosition(), i.view->getSize());
     }
 }
 
 int AAbsoluteLayout::getMinimumWidth() {
     int v = 0;
     for (const auto& i : mViews) {
-        int x = i.pivotX.getValuePx();
+        int x = i.pivotX.valueOr(0).getValuePx();
         if (i.sizeX) {
             x += i.sizeX->getValuePx();
         }
@@ -35,7 +39,7 @@ int AAbsoluteLayout::getMinimumWidth() {
 int AAbsoluteLayout::getMinimumHeight() {
     int v = 0;
     for (const auto& i : mViews) {
-        int x = i.pivotY.getValuePx();
+        int x = i.pivotY.valueOr(0).getValuePx();
         if (i.sizeY) {
             x += i.sizeY->getValuePx();
         }

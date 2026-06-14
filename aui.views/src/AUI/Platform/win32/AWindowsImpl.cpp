@@ -28,7 +28,7 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/AWindowManager.h>
 #include <AUI/Platform/ADesktop.h>
-#include <AUI/Platform/AWindowBase.h>
+#include <AUI/Platform/ASurface.h>
 #include <AUI/Platform/ACustomWindow.h>
 
 #include <chrono>
@@ -44,12 +44,12 @@
 #include <AUI/Util/ALayoutInflater.h>
 #include <AUI/GL/OpenGLRenderer.h>
 
-#include <GL/wglew.h>
 #include <AUI/Util/Cache.h>
 #include <AUI/Action/AMenu.h>
 #include <AUI/Util/AViewProfiler.h>
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/win32/AComBase.h>
+#include <AUI/Platform/win32/Theme.h>
 
 LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
@@ -93,6 +93,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             */
 
         case WM_CREATE: // used for ACustomWindow
+            updateDpi();
             return 0;
 
         case WM_USER:
@@ -249,6 +250,13 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return 0;
         }
 
+        case WM_SETTINGCHANGE: {
+            if (wParam == 0 && lParam != 0 && wcscmp(reinterpret_cast<wchar_t*>(lParam), L"ImmersiveColorSet") == 0) {
+                aui::UpdateDarkModeForHWND(hwnd);
+            }
+            return 0;
+        }
+
         case WM_GETMINMAXINFO: {
             MINMAXINFO* info = reinterpret_cast<MINMAXINFO*>(lParam);
 
@@ -355,7 +363,12 @@ float AWindow::fetchDpiFromSystem() const {
         if (GetDpiForWindow) {
             return GetDpiForWindow(mHandle) / 96.f;
         } else {
-            return APlatform::getDpiRatio();
+            typedef UINT(WINAPI* GetDpiForSystem_t)();
+            static auto GetDpiForSystem = (GetDpiForSystem_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForSystem");
+            if (GetDpiForSystem) {
+                return GetDpiForSystem() / 96.f;
+            }
+            return 1.f;
         }
     }
     return 1.f;
@@ -507,7 +520,7 @@ void AWindow::blockUserInput(bool blockUserInput) {
 void AWindow::allowDragNDrop() {
     class DropTarget: public AComBase<DropTarget, IDropTarget> {
     public:
-        DropTarget(AWindowBase* window) : mWindow(window) {}
+        DropTarget(ASurface* window) : mWindow(window) {}
 
         HRESULT __stdcall DragEnter(IDataObject* pDataObj, DWORD grfKeyState, POINTL pt, DWORD* pdwEffect) override {
             auto effect = DROPEFFECT_NONE;
@@ -542,7 +555,7 @@ void AWindow::allowDragNDrop() {
 
     private:
         AMimedData mMimed;
-        AWindowBase* mWindow;
+        ASurface* mWindow;
         DWORD mOleEffect;
     };
     Ole::inst();
@@ -552,11 +565,11 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::showTouchscreenKeyboardImpl() {
-    AWindowBase::showTouchscreenKeyboardImpl();
+    ASurface::showTouchscreenKeyboardImpl();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
-    AWindowBase::hideTouchscreenKeyboardImpl();
+    ASurface::hideTouchscreenKeyboardImpl();
 }
 
 void AWindow::moveToCenter() {

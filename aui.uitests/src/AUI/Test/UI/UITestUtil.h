@@ -16,6 +16,7 @@
 
 namespace uitest {
     API_AUI_UITESTS void frame();
+    API_AUI_UITESTS void setup();
 
     namespace impl {
         template<int axisIndex>

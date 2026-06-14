@@ -1,12 +1,12 @@
 # yaml-language-server: $schema=https://squidfunk.github.io/mkdocs-material/schema.json
 site_name: AUI Framework
-site_url: https://aui-framework.github.io/develop/
+site_url: https://aui-framework.github.io/master/
 site_author: Alex2772
 site_description: Cross-platform base for C++ UI apps
 use_directory_urls: true
 repo_url: https://github.com/aui-framework/aui
 repo_name: aui-framework/aui
-edit_uri: edit/develop/docs/
+edit_uri: edit/master/docs/
 copyright: >
   © 2025 AUI Framework Contributors. Documentation contributions included herein are the copyrights of their respective
   owners. The documentation provided herein is licensed under the terms of the GNU Free Documentation License version
@@ -125,6 +125,7 @@ nav:
     - code-style.md
     - troubleshoot-list.md
     - crosscompiling.md
+    - 'Hot Code Reload': ahotcodereload.md
 
   - 'UI Architecture':
     - ui-building-overview.md
@@ -135,7 +136,12 @@ nav:
     - 'Handling HiDPI': ametric.md
 
   - 'Views':
-    - 'Overview': views.md
+    - 'Overview': views-overview.md
+    - 'Button': abutton.md
+    - 'Check box': acheckbox.md
+    - 'Label': alabel.md
+    - 'List': aforeachui.md
+    - 'Radio button': aradiobutton.md
 
   - 'Styling':
     - ass.md
@@ -168,6 +174,18 @@ nav:
           - aui_module.md
           - aui-configure-flags.md
           - app-build-overview.md
+      - 'aui::core': core.md
+      - 'aui::views':
+        - 'Overview': views.md
+        - 'Window Management': awindow.md
+        - 'Rendering': irenderer.md
+      - 'aui::crypt': crypt.md
+      - 'aui::curl': curl.md
+      - 'aui::json': json.md
+      - 'aui::network': network.md
+      - 'aui::updater': updater.md
+      - 'aui::image': image.md
+      - 'aui::xml': xml.md
 
   - contributing.md
 

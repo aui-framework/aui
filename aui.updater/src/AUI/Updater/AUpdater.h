@@ -23,12 +23,30 @@
  * @defgroup updater aui::updater
  * @brief Deliver updates on non-centralized distribution methods
  * @details
- *
  * <!-- aui:experimental -->
  *
  * This module is purposed for delivering updates to your end users on distribution methods that do not support that by
  * themselves (i.e., occasional Windows installers, portables for Windows and Linux, macOS app bundles downloaded from
- * your website).
+ * your website). Here's small breakdown:
+ *
+ * | Platform   | Distribution method           | Auto updating solution |
+ * | ---------- | ----------------------------- | ---------------------- |
+ * | [windows]  | Installer/exe                 | [updater]              |
+ * | [windows]  | Microsoft Store (used rarely) | Microsoft Store        |
+ * | [linux]    | Portables                     | [updater]              |
+ * | [linux]    | Flatpak                       | Flathub                |
+ * | [macos]    | DMG (*.app)                   | -                      |
+ * | [macos]    | Apple App Store               | Apple App Store        |
+ * | [android]  | APK                           | Google Play Store      |
+ * | [ios]      | IPA                           | Apple App Store        |
+ *
+ * ??? note "What is portable?"
+ *
+ *     Portable is a term used to describe a software distribution method that does not require the user to install
+ *     the software on their computer.
+ *
+ *     Portable software is typically distributed as a single executable file (i.e., a single file with all
+ *     dependencies packed into it), usually not requiring to "install" it to the system.
  *
  * `aui.updater` module expects your program to be installed to user's directory (i.e., updating does not require admin
  * privileges). If that's not your case, you'll need to update your installer configuration ([INNOSETUP]) to install

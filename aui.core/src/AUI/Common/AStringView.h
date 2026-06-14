@@ -15,103 +15,140 @@
 
 #pragma once
 
-#include <AUI/Common/AUtf8.h>
+#include <AUI/Common/detail/util.hpp>
+#include <AUI/Common/AUtf8.hpp>
 #include <AUI/Traits/values.h>
 #include <fmt/format.h>
-
-template<typename OutT, typename InT>
-constexpr const OutT* pointer_cast(const InT* ptr) {
-    static_assert(sizeof(InT) == sizeof(OutT), "Size mismatch");
-    static_assert(alignof(InT) == alignof(OutT), "Alignment mismatch");
-
-    union Converter {
-        const InT* from;
-        const OutT* to;
-
-        constexpr Converter(const InT* p) : from(p) {}
-    };
-
-    return Converter(ptr).to;
-}
-
-template<typename OutT, typename InT>
-constexpr const OutT* pointer_cast(InT* ptr) {
-    static_assert(sizeof(InT) == sizeof(OutT), "Size mismatch");
-    static_assert(alignof(InT) == alignof(OutT), "Alignment mismatch");
-
-    union Converter {
-        InT* from;
-        OutT* to;
-
-        constexpr Converter(InT* p) : from(p) {}
-    };
-
-    return Converter(ptr).to;
-}
 
 class API_AUI_CORE AByteBuffer;
 class API_AUI_CORE AStringVector;
 
 
 /**
- * @brief Represents a UTF-8 string view.
+ * @brief Non-owning view into a UTF-8 string - a lightweight `const` reference to character data you don't own.
  * @ingroup core
  * @details
- * AStringView stores a pointer and size of constant 8-bit integer sequence representing UTF-8 code units. Each Unicode
- * character (codepoint) is encoded using 1-4 consecutive code units, supporting the full Unicode standard.
+ * `AStringView` is the read-only counterpart to @ref AString. It inherits from `std::string_view` and holds
+ * only a pointer and a length - **no heap allocation, no copy**. This makes it the correct type to use
+ * for any function parameter that only needs to *read* a string, regardless of whether the caller holds
+ * an `AString`, a `std::string`, a `const char*`, or a string literal.
  *
- * Unicode provides comprehensive support for international writing systems and symbols.
+ * ## Why `AStringView` exists
+ * Before non-owning views, a function that accepted a string had two bad options:
+ * - Take `const AString&` - forces the caller to own an `AString`; a raw `const char*` or `std::string`
+ *   triggers a silent heap allocation just to call the function.
+ * - Take `const char*` - loses the length, breaks on embedded nulls, and can't accept `std::string`
+ *   without `.c_str()`.
  *
- * AStringView points to constant data. For owning version of AStringView, see [AString].
+ * `AStringView` eliminates both problems. It constructs implicitly from `const char*`, `std::string_view`,
+ * `AString`, and `char8_t*` with zero overhead, so callers pass whatever they already have:
+ * @code{.cpp}
+ * void log(AStringView message); // one signature, every string type accepted
  *
- * To work with raw bytes, use AStringView::bytes() function.
+ * log("literal");            // const char*  - no allocation
+ * log(some_astring);         // AString      - no copy
+ * log(some_std_string_view); // string_view  - no copy
+ * @endcode
+ *
+ * ## Lifetime responsibility
+ * `AStringView` does **not** own its data. It is only valid as long as the underlying string is alive.
+ * Never store an `AStringView` that outlives its source, and never return one that points into a local:
+ * @code{.cpp}
+ * AStringView bad() {
+ *     AString local = "hello";
+ *     return local.trim();    // dangling - local is destroyed on return
+ * }
+ * @endcode
+ * When ownership is needed, convert to @ref AString explicitly:
+ * @code{.cpp}
+ * AString owned = AString(view);
+ * @endcode
+ *
+ * ## Typical usage
+ * @code{.cpp}
+ * AStringView s = "  Hello, World!  ";
+ *
+ * s = s.trim()                     // "Hello, World!"  (returns a new view, no allocation)
+ * s.startsWith("Hello")            // true
+ * s.contains("World")              // true
+ * AString upper = s.uppercase();   // "  HELLO, WORLD!  "  (allocates only here)
+ *
+ * auto parts = s.trim().split(", "); // AStringVector{"Hello", "World!"}
+ * @endcode
+ *
+ * ## Numeric parsing
+ * @code{.cpp}
+ * AStringView("42").toInt()        // AOptional<int32_t>{42}
+ * AStringView("0xFF").toInt()      // AOptional<int32_t>{255}  (hex prefix auto-detected)
+ * AStringView("bad").toInt()       // AOptional<int32_t>{nullopt}
+ * @endcode
+ *
+ * @note Methods that must produce a new string - `uppercase()`, `lowercase()`, `replacedAll()`,
+ * `split()`, `encode()` - return an @ref AString or @ref AStringVector and allocate only at that point.
+ * Pure view operations (`trim`, `substr`, `startsWith`, `contains`) return `AStringView` and never allocate.
+ *
+ * @see AString, AUtf8View, AByteBuffer, AStringVector
  */
-class API_AUI_CORE AStringView: private std::string_view {
+class API_AUI_CORE AStringView: public std::string_view {
 private:
     using super = std::string_view;
 
 public:
     using bytes_type = super;
 
-    using iterator = AUtf8ConstIterator;
-    using const_iterator = AUtf8ConstIterator;
-    using reverse_iterator = AUtf8ConstReverseIterator;
-    using const_reverse_iterator = AUtf8ConstReverseIterator;
+    auto constexpr static NPOS = super::npos;
+
+    static constexpr auto TO_NUMBER_BASE_BIN = 2;
+    static constexpr auto TO_NUMBER_BASE_OCT = 8;
+    static constexpr auto TO_NUMBER_BASE_DEC = 10;
+    static constexpr auto TO_NUMBER_BASE_HEX = 16;
 
     using super::super;
 
-    constexpr AStringView(const char8_t* utf8_str, size_t length) noexcept : super(pointer_cast<char>(utf8_str), length) {}
+    constexpr AStringView(const char8_t* utf8_str, size_t length) noexcept : super(aui::detail::pointer_cast<char>(utf8_str), length) {}
 
-    constexpr AStringView(const char8_t* utf8_str) noexcept : super(pointer_cast<char>(utf8_str)) {}
+    constexpr AStringView(const char8_t* utf8_str) noexcept : super(aui::detail::pointer_cast<char>(utf8_str)) {}
 
     constexpr AStringView(std::string_view str) noexcept : super(str) {}
 
-    bool startsWith(AStringView prefix) const noexcept {
-        if (prefix.size() > size()) {
-            return false;
-        }
-        return substr(0, prefix.size()) == prefix;
+    explicit AStringView(const std::string& str) noexcept : super(str) {}
+
+    constexpr bool startsWith(AStringView prefix) const noexcept {
+        if (prefix.size() > size()) return false;
+        return bytes().substr(0, prefix.size()) == prefix.bytes(); // NOLINT(*-use-starts-ends-with)
     }
 
-    bool endsWith(AStringView suffix) const noexcept {
-        if (suffix.size() > size()) {
-            return false;
-        }
-        return substr(size() - suffix.size()) == suffix;
+    constexpr bool startsWith(char prefix) const noexcept {
+        if (empty()) return false;
+        return at(0) == prefix;
     }
 
-    bool contains(char c) const noexcept;
-    bool contains(AChar c) const noexcept;
+    constexpr bool endsWith(AStringView suffix) const noexcept {
+        if (suffix.size() > size()) return false;
+        return bytes().substr(size() - suffix.size()) == suffix.bytes();
+    }
+
+    constexpr bool endsWith(char prefix) const noexcept {
+        if (empty()) return false;
+        return at(size() - 1) == prefix;
+    }
+
+    [[nodiscard]]
+    constexpr bool empty() const noexcept {
+        return super::empty();
+    }
+
     bool contains(AStringView str) const noexcept;
 
-    bool operator==(std::string_view other) const noexcept {
-        return bytes() == other;
+    bool contains(char c) const noexcept;
+
+    constexpr bool operator==(AStringView other) const noexcept {
+        return bytes() == other.bytes();
     }
 
-    bool operator!=(std::string_view other) const noexcept {
-        return bytes() != other;
+    constexpr bool operator!=(AStringView other) const noexcept {
+        return bytes() != other.bytes();
     }
-
 
     /**
      * @brief Raw `const char*` pointer to the string.
@@ -136,35 +173,9 @@ public:
      * operates on top of UTF-8 code points. `pos` and `count` are interpreted as code points positions, not as byte.
      */
     [[nodiscard]]
-    AStringView substr(size_type pos = 0, size_type count = npos) const noexcept;
-
-    /**
-     * @brief Returns the number of bytes in the UTF-8 encoded string
-     * @sa length
-     */
-    size_type sizeBytes() const noexcept {
-        return super::size();
+    constexpr AStringView substr(size_type pos = 0, size_type count = npos) const noexcept {
+        return AStringView(super::substr(pos, count));
     }
-
-    /**
-     * @brief Unchecked access to the UTF-8 character at the specified position.
-     * @param i The position of the character to return.
-     * @return The character at the specified position.
-     */
-    [[nodiscard]]
-    AChar operator[](size_type i) const {
-        if (empty()) {
-            return AChar();
-        }
-        return *(begin() + i);
-    }
-
-    /**
-     * @brief Returns the number of Unicode characters in the string
-     * @sa sizeBytes
-     */
-    [[nodiscard]]
-    size_type length() const noexcept;
 
     /**
      * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
@@ -184,50 +195,56 @@ public:
      */
     std::u32string toUtf32() const;
 
-    std::string_view bytes() const noexcept {
+    constexpr std::string_view bytes() const noexcept {
         return *this;
     }
 
-    iterator begin() const noexcept {
-        return AUtf8ConstIterator(data(), data(), data() + size(), 0);
+    constexpr AStringView trimLeft(AChar symbol = ' ') const {
+        for (auto i = begin(); i != end(); ++i) {
+            if (*i != symbol) {
+                return AStringView(&*i, static_cast<size_t>(end() - i));
+            }
+        }
+        return {};
     }
 
-    iterator end() const noexcept {
-        return AUtf8ConstIterator(data(), data(), data() + size(), size());
+    constexpr AStringView trimRight(AChar symbol = ' ') const {
+        for (auto i = rbegin(); i != rend(); ++i) {
+            if (*i != symbol) {
+                return AStringView(data(), static_cast<size_t>(i.base() - begin()));
+            }
+        }
+        return {};
     }
 
-    const_iterator cbegin() const noexcept {
-        return begin();
+    constexpr AStringView trim(AChar symbol = ' ') const {
+        return trimLeft(symbol).trimRight(symbol);
     }
 
-    const_iterator cend() const noexcept {
-        return end();
-    }
+    AString uppercase() const;
 
-    reverse_iterator rbegin() const noexcept {
-        return AUtf8ConstReverseIterator(end());
-    }
+    AString lowercase() const;
 
-    reverse_iterator rend() const noexcept {
-        return AUtf8ConstReverseIterator(begin());
-    }
+    AString replacedAll(AStringView from, AStringView to) const;
 
-    const_reverse_iterator crbegin() const noexcept {
-        return rbegin();
-    }
+    AString replacedAll(AChar from, AChar to) const;
 
-    const_reverse_iterator crend() const noexcept {
-        return rend();
-    }
+    AString removedAll(AStringView seq) const;
 
-    AChar first() const {
+    AString removedAll(AChar c) const;
+
+    AStringVector split(AStringView separator) const;
+
+    AStringVector split(AChar separator) const;
+
+    constexpr AChar first() const {
         if (empty()) {
             return AChar();
         }
         return *begin();
     }
 
-    AChar last() const {
+    constexpr AChar last() const {
         if (empty()) {
             return AChar();
         }
@@ -329,32 +346,13 @@ public:
         return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", bytes()).c_str());
     }
 
-    AStringVector split(AChar c) const;
-
-    [[nodiscard]]
-    AStringView trimLeft(AChar symbol = ' ') const;
-
-    [[nodiscard]]
-    AStringView trimRight(AChar symbol = ' ') const;
-
-    [[nodiscard]]
-    AStringView trim(AChar symbol = ' ') const
-    {
-        return trimLeft(symbol).trimRight(symbol);
+    std::string toStdString() const {
+        return std::string(bytes());
     }
 
-    [[nodiscard]]
-    AString lowercase() const;
-
-    [[nodiscard]]
-    AString uppercase() const;
-
-    AString removedAll(AChar c);
-
-    static constexpr auto TO_NUMBER_BASE_BIN = 2;
-    static constexpr auto TO_NUMBER_BASE_OCT = 8;
-    static constexpr auto TO_NUMBER_BASE_DEC = 10;
-    static constexpr auto TO_NUMBER_BASE_HEX = 16;
+    AUtf8View utf8() const noexcept {
+        return AUtf8View(bytes());
+    }
 
 };
 
@@ -371,6 +369,23 @@ struct std::hash<AStringView>
 inline void PrintTo(AStringView s, std::ostream* stream) {
     *stream << s.bytes();
 }
+
+inline std::ostream& operator<<(std::ostream& o, const AStringView& s)
+{
+    o << s.bytes();
+    return o;
+}
+
+
+#if defined(FMT_VERSION) && (FMT_VERSION < 100000)
+template <> struct fmt::detail::is_string<AStringView>: std::false_type {};
+#endif
+
+template <> struct fmt::formatter<AStringView>: fmt::formatter<std::string_view> {
+    auto format(const AStringView& s, fmt::format_context& ctx) const {
+        return fmt::formatter<std::string_view>::format(s.bytes(), ctx);
+    }
+};
 
 #if AUI_PLATFORM_WIN
 namespace aui::win32 {

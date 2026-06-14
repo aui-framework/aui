@@ -33,7 +33,7 @@
 #include "AUI/Model/ITreeModel.h"
 #include "AUI/Performance/APerformanceFrame.h"
 #include "AUI/Performance/APerformanceSection.h"
-#include "AUI/Platform/AWindowBase.h"
+#include "AUI/Platform/ASurface.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABrush.h"
@@ -213,7 +213,8 @@ namespace {
 
         [[nodiscard]]
         unsigned plotScale() const {
-            return unsigned(APlatform::getDpiRatio() * 2.f);
+            // TODO: maybe dpi here
+            return 2;
         }
 
         static int timeToY(high_resolution_clock::duration t) {
@@ -258,18 +259,18 @@ namespace {
 
         _<AView> makeChip(const APerformanceSection::Data& i) {
             return Horizontal {
-                Label { i.name } AUI_WITH_STYLE {
+                Label { i.name } AUI_OVERRIDE_STYLE {
                     TextColor { i.color.readableBlackOrWhite() },
                 },
-                Label { "{}μs"_format(duration_cast<microseconds>(i.duration).count()) } AUI_WITH_STYLE {
+                Label { "{}μs"_format(duration_cast<microseconds>(i.duration).count()) } AUI_OVERRIDE_STYLE {
                     TextColor { AColor::WHITE.transparentize(0.3f) },
                     BackgroundSolid { AColor::BLACK },
                 },
-                mVerboseMode ? _new<ALabel>(i.verboseInfo) AUI_WITH_STYLE {
+                mVerboseMode ? _new<ALabel>(i.verboseInfo) AUI_OVERRIDE_STYLE {
                     TextColor { AColor::WHITE.transparentize(0.3f) },
                     BackgroundSolid { AColor::BLACK },
                 } : nullptr,
-            } AUI_WITH_STYLE {
+            } AUI_OVERRIDE_STYLE {
                 BackgroundSolid { i.color },
                 BorderRadius { 6_pt },
                 Margin { 2_dp, 4_dp },
@@ -282,7 +283,7 @@ namespace {
                 return;
             }
             for (const auto& section : sections) {
-                _<AViewContainer> v = Vertical{} AUI_WITH_STYLE {
+                _<AViewContainer> v = Vertical{} AUI_OVERRIDE_STYLE {
                     BorderLeft { 2_dp, section.color },
                 };
                 container.addView(v);
@@ -290,7 +291,7 @@ namespace {
                 if (section.children.empty()) {
                     continue;
                 }
-                _<AViewContainer> root = Vertical{} AUI_WITH_STYLE {
+                _<AViewContainer> root = Vertical{} AUI_OVERRIDE_STYLE {
                     Padding { {}, {}, {}, 8_dp },
                 };
                 populate(*root, section.children, remainingDepth - 1);
@@ -303,7 +304,7 @@ namespace {
 }
 
 
-DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTargetWindow(targetWindow) {
+DevtoolsPerformanceTab::DevtoolsPerformanceTab(ASurface* targetWindow) : mTargetWindow(targetWindow) {
     using namespace declarative;
 
 #if AUI_PROFILING
@@ -352,7 +353,7 @@ DevtoolsPerformanceTab::DevtoolsPerformanceTab(AWindowBase* targetWindow) : mTar
                 Vertical::Expanding {
                     treeView,
                 }
-            ).build() AUI_WITH_STYLE { Visibility::UNREACHABLE },
+            ).build() AUI_OVERRIDE_STYLE { Visibility::UNREACHABLE },
         } AUI_LET {
             connect(mState, [=](const State& state) {
                 using namespace ass;

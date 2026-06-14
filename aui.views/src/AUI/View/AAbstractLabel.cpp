@@ -9,6 +9,8 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <range/v3/all.hpp>
+
 #include "AAbstractLabel.h"
 #include <AUI/Render/RenderHints.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -19,6 +21,7 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/kAUI.h>
 
+static constexpr char32_t ELLIPSIS = U'…';
 
 AAbstractLabel::AAbstractLabel() {
 
@@ -32,8 +35,14 @@ void AAbstractLabel::render(ARenderContext context) {
 }
 
 int AAbstractLabel::getContentMinimumWidth() {
-    if (mTextOverflow != ATextOverflow::NONE)
-        return 0;
+    switch (mTextOverflow) {
+        case ATextOverflow::ELLIPSIS:
+            return getFontStyle().getWidth(AString::fromUtf32(std::u32string_view(&ELLIPSIS, 1)));
+        case ATextOverflow::CLIP:
+            return 0;
+        case ATextOverflow::NONE:
+            break;
+    }
 
     int acc = mPrerendered ? mPrerendered->getWidth() : getFontStyle().getWidth(mText);
     if (mIcon) {
@@ -46,7 +55,79 @@ int AAbstractLabel::getContentMinimumHeight() {
     if (mText.empty())
         return 0;
 
-    return getFontStyle().size;
+    // Normally, text will be rendered as this:
+    //
+    //
+    //      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //      ^                          *@@@@@                                                 ^
+    //      |                          #@@@@@                                                 |
+    //    A |                          #@@@@@                                                 |
+    //    S |                          #@@@@@                                                 |
+    //    C |                          #@@@@@                                                 |
+    //    E |        .:-=+******+=-.   #@@@@@     :+++++=                   .++++++.          |
+    //    N |     .-*@@@@@@@@@@@@@@@#-.+@@@@@      +@@@@@+.                .#@@@@@-           |
+    //    D |   .+@@@@@@%*-:...::=*%@@@%@@@@@       =@@@@@+.              .#@@@@@-            |
+    //    E |  .%@@@@@#.            .#@@@@@@@        =@@@@@+              #@@@@@-             |
+    //    R |  #@@@@@=.              .+@@@@@@        .-@@@@@+            *@@@@@-              | S
+    //      | :@@@@@#.                .@@@@@@          -@@@@@+          +@@@@@-               | I
+    //      | +@@@@@+                  #@@@@@           -@@@@@+        +@@@@@-                | Z
+    //      | +@@@@@=                  *@@@@@            -@@@@@+.     =@@@@@=                 | E
+    //      | -@@@@@*                  #@@@@@             :@@@@@+.   =@@@@@=                  |
+    //      | .@@@@@@:                :@@@@@@              :@@@@@=  -@@@@@=                   |
+    //      |  :@@@@@@-              :@@@@@@@               .@@@@@-.@@@@@=.                   |
+    //      |   :#@@@@@%+-..   ...-+%@@@@@@@@                .%@@@%%@@@@=                     |
+    //      |    .-*@@@@@@@@@@@@@@@@@*-:@@@@@                 .%@@@@@@@=                      |
+    // -----+------ .:=**#%%%%%##*+-. - +#### ---------------- .%@@@@@= ----------------------------> baseline
+    //    D |                                                 .=@@@@@=                        |
+    //    E |                                                .+@@@@@=                         |
+    //    S |                                               .%@@@@@-.                         |
+    //    C |                                      --:::-=*%@@@@@*.                           |
+    //    E |                                      %@@@@@@@@@@%+:.                            |
+    //    N v                                      =**####*+-:.                               V
+    //    D - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //    E
+    //    R
+    //
+    // However, it feels like it stuck to the top of the border. So, we'll just add the height of descender, so it
+    // basically mirrors the descender at the bottom. This way, CAPITALS are centered, and text feels natural.
+    //
+    //      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //      ^
+    //      |
+    //      |   <-------- added height
+    //      |
+    //      |
+    //      | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //      ^                          *@@@@@                                                 ^
+    //      |                          #@@@@@                                                 |
+    //    A |                          #@@@@@                                                 |
+    //    S |                          #@@@@@                                                 |
+    //    C |                          #@@@@@                                                 |
+    //    E |        .:-=+******+=-.   #@@@@@     :+++++=                   .++++++.          |
+    //    N |     .-*@@@@@@@@@@@@@@@#-.+@@@@@      +@@@@@+.                .#@@@@@-           |
+    //    D |   .+@@@@@@%*-:...::=*%@@@%@@@@@       =@@@@@+.              .#@@@@@-            |
+    //    E |  .%@@@@@#.            .#@@@@@@@        =@@@@@+              #@@@@@-             |
+    //    R |  #@@@@@=.              .+@@@@@@        .-@@@@@+            *@@@@@-              | S
+    //      | :@@@@@#.                .@@@@@@          -@@@@@+          +@@@@@-               | I
+    //      | +@@@@@+                  #@@@@@           -@@@@@+        +@@@@@-                | Z
+    //      | +@@@@@=                  *@@@@@            -@@@@@+.     =@@@@@=                 | E
+    //      | -@@@@@*                  #@@@@@             :@@@@@+.   =@@@@@=                  |
+    //      | .@@@@@@:                :@@@@@@              :@@@@@=  -@@@@@=                   |
+    //      |  :@@@@@@-              :@@@@@@@               .@@@@@-.@@@@@=.                   |
+    //      |   :#@@@@@%+-..   ...-+%@@@@@@@@                .%@@@%%@@@@=                     |
+    //      |    .-*@@@@@@@@@@@@@@@@@*-:@@@@@                 .%@@@@@@@=                      |
+    // -----+------ .:=**#%%%%%##*+-. - +#### ---------------- .%@@@@@= ----------------------------> baseline
+    //    D |                                                 .=@@@@@=                        |
+    //    E |                                                .+@@@@@=                         |
+    //    S |                                               .%@@@@@-.                         |
+    //    C |                                      --:::-=*%@@@@@*.                           |
+    //    E |                                      %@@@@@@@@@@%+:.                            |
+    //    N v                                      =**####*+-:.                               V
+    //    D - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //    E
+    //    R
+
+    return getFontStyle().size * (1 + ranges::count(mText.toStdString(), '\n')) + getFontStyle().font->getDescenderHeight(getFontStyle().size);
 }
 
 
@@ -59,40 +140,28 @@ void AAbstractLabel::setSize(glm::ivec2 size) {
 }
 
 template<class Iterator>
-Iterator AAbstractLabel::findFirstOverflowedIndex(const Iterator& begin,
-                                                  const Iterator& end,
-                                                  int overflowingWidth) {
+Iterator findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int maxWidth, const AFontStyle& fontStyle) {
+    maxWidth = std::max(maxWidth, 0);
     size_t gotWidth = 0;
     for (Iterator it = begin; it != end; ++it) {
-        gotWidth += getFontStyle().getWidth(it, it + 1);
-        if (gotWidth <= overflowingWidth)
-            continue;
-
+        gotWidth += fontStyle.getWidth(it, it + 1);
+        if (gotWidth <= maxWidth) continue;
         return it;
     }
-
     return end;
 }
 
 template<class Iterator>
-void AAbstractLabel::processTextOverflow(Iterator begin, Iterator end, int overflowingWidth) {
-    static constexpr char32_t ELLIPSIS = U'…';
-    auto firstOverflowedIt = findFirstOverflowedIndex(
-        begin, end, overflowingWidth - (mTextOverflow == ATextOverflow::ELLIPSIS ? getFontStyle().getWidth({&ELLIPSIS, 1}) : 0));
-    if (firstOverflowedIt == end) {
-        return;
+Iterator findTruncationPoint(Iterator begin, Iterator end, int maxWidth, ATextOverflow text_overflow, const AFontStyle& fontStyle) {
+    int availableWidth = maxWidth;
+    if (text_overflow == ATextOverflow::ELLIPSIS) {
+        availableWidth -= fontStyle.getWidth({&ELLIPSIS, 1});
     }
-    if (mTextOverflow == ATextOverflow::ELLIPSIS) {
-        *firstOverflowedIt = ELLIPSIS;
-        firstOverflowedIt++;
-    }
-
-    std::fill(firstOverflowedIt, end, ' ');
+    return findFirstOverflowedIndex(begin, end, availableWidth, fontStyle);
 }
 
 void AAbstractLabel::processTextOverflow(AString& text) {
-    if (mTextOverflow == ATextOverflow::NONE)
-        return;
+    if (mTextOverflow == ATextOverflow::NONE) return;
 
     int overflowingWidth;
     if (getFixedSize().x == 0) {
@@ -104,10 +173,15 @@ void AAbstractLabel::processTextOverflow(AString& text) {
     overflowingWidth = std::min(overflowingWidth, mSize.x);
 
     mIsTextTooLarge = getFontStyle().getWidth(text) > overflowingWidth;
-    if (!mIsTextTooLarge)
-        return;
+    if (!mIsTextTooLarge) return;
 
-    processTextOverflow(text.begin(), text.end(), overflowingWidth);
+    auto truncation_point = findTruncationPoint(text.begin(), text.end(), overflowingWidth, mTextOverflow, getFontStyle());
+    text.erase(truncation_point, text.end());
+
+    if (mTextOverflow == ATextOverflow::ELLIPSIS) {
+        auto ending = AChar(ELLIPSIS).toUtf8();
+        text.append(AStringView(ending.begin(), ending.end()));
+    }
 }
 
 void AAbstractLabel::doPrerender(IRenderer& render) {
@@ -191,17 +265,18 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
         }
 
         if (mPrerendered) {
-            int y = mPadding.top;
+            int y = mPadding.top + getFontStyle().getAscenderHeight();
+
+            // adding height of descender we established in getContentMinimumHeight, see explanation there.
+            y += getFontStyle().font->getDescenderHeight(getFontStyle().size);
 
             if (mVerticalAlign == VerticalAlign::MIDDLE) {
-                auto ascenderHeight = getFontStyle().font->getAscenderHeight(getFontStyle().size);
-                auto descenderHeight = getFontStyle().font->getDescenderHeight(getFontStyle().size);
                 y = (glm::max)(y,
-                               y + int(glm::ceil((getContentHeight() - int(ascenderHeight + descenderHeight)) / 2.0)));
+                               y + int(glm::ceil((getContentHeight() - getContentMinimumHeight())) / 2.0));
             }
             RenderHints::PushMatrix m(render);
             render.translate({mTextLeftOffset + mPadding.left, y});
-            render.setColor(getTextColor());
+            render.setColor(textColor());
             mPrerendered->draw();
         }
     }

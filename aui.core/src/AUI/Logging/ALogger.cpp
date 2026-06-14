@@ -20,12 +20,12 @@
 
 #endif
 
-ALogger::ALogger()
-{
+ALogger::ALogger() {
 #ifdef AUI_SHARED_PTR_FIND_INSTANCES
-    log(WARN, "Performance", "AUI_SHARED_PTR_FIND_INSTANCES is enabled which dramatically drops performance"
-                             " since it creates stacktrace on every shared_ptr (_<T>) construction. Use it if"
-                             " and only if it's actually needed.");
+    log(WARN, "Performance",
+        "AUI_SHARED_PTR_FIND_INSTANCES is enabled which dramatically drops performance"
+        " since it creates stacktrace on every shared_ptr (_<T>) construction. Use it if"
+        " and only if it's actually needed.");
 #endif
 }
 
@@ -42,6 +42,9 @@ static const char* levelCStr(ALogger::Level level) {
 
         case ALogger::DEBUG:
             return "DEBUG";
+
+        case ALogger::TRACE:
+            return "TRACE";
     }
 
     return "UNKNOWN";
@@ -51,22 +54,17 @@ static ALogger& globalImpl(AOptional<APath> path = std::nullopt) {
 #if AUI_PLATFORM_EMSCRIPTEN
     static ALogger l;
 #else
-    static ALogger l(std::move(path.valueOr(APath::getDefaultPath(APath::TEMP).makeDirs() / "aui.{}.log"_format(AProcess::self()->getPid()))));
+    static ALogger l(std::move(
+        path.valueOr(APath::getDefaultPath(APath::TEMP).makeDirs() / "aui.{}.log"_format(AProcess::self()->getPid()))));
 #endif
     return l;
 }
 
-ALogger& ALogger::global()
-{
-    return globalImpl();
-}
+ALogger& ALogger::global() { return globalImpl(); }
 
-void ALogger::setLogFileForGlobal(APath path) {
-    globalImpl(std::move(path));
-}
+void ALogger::setLogFileForGlobal(APath path) { globalImpl(std::move(path)); }
 
-void ALogger::log(Level level, std::string_view prefix, std::string_view message)
-{
+void ALogger::log(Level level, AStringView prefix, AStringView message) {
     {
         std::unique_lock lock(mOnLogged);
         if (mOnLogged.value()) {
@@ -96,8 +94,7 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
     }
     if (message.length() == 0) {
         __android_log_print(prio, "AUI", "%s", prefix.data());
-    }
-    else {
+    } else {
         __android_log_print(prio, prefix.data(), "%s", message.data());
     }
 
@@ -112,17 +109,17 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
         std::string threadName;
         if (auto currentThread = AThread::current()) {
             threadName = currentThread->threadName().toStdString();
-        }
-        else {
+        } else {
             threadName = "?";
         }
 
         std::unique_lock lock(mLogSync);
         if (message.length() == 0) {
-            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
-        }
-        else {
-            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
+            fprintf(
+                mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
+        } else {
+            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(),
+                    levelName, message.data());
         }
         fflush(mLogFile->nativeHandle());
     }
@@ -137,8 +134,7 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
     std::string threadName;
     if (auto currentThread = AThread::current()) {
         threadName = currentThread->threadName().toStdString();
-    }
-    else {
+    } else {
         threadName = "?";
     }
 
@@ -148,13 +144,14 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
     if (message.length() == 0) {
         printf("[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
         if (mLogFile) {
-            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
+            fprintf(
+                mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
         }
-    }
-    else {
+    } else {
         printf("[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
         if (mLogFile) {
-            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
+            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(),
+                    levelName, message.data());
         }
     }
     fflush(stdout);
@@ -164,12 +161,13 @@ void ALogger::log(Level level, std::string_view prefix, std::string_view message
 #endif
 }
 
-
 void ALogger::setLogFileImpl(AString path) {
     mLogFile = AFileOutputStream(std::move(path));
-    log(INFO, "Logger",  ("Log file: " + mLogFile->path()).toStdString());
+    log(INFO, "Logger", ("Log file: " + mLogFile->path()));
 }
 
-ALogger::~ALogger() {
-    mLogFile.reset();
+ALogger::~ALogger() { mLogFile.reset(); }
+
+bool ALogger::isTraceImpl() {
+    return std::getenv("AUI_TRACE") != nullptr;
 }

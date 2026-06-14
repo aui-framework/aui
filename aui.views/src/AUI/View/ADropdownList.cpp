@@ -66,8 +66,9 @@ void ADropdownList::updateText() {
     }
     setText(mModel->listItemAt(mSelectionId));
 }
+
 void ADropdownList::render(ARenderContext context) {
-    AAbstractLabel::render(context);
+    AButton::render(context);
     if (auto arrow = IDrawable::fromUrl(":uni/svg/combo.svg")) {
         auto size = arrow->getSizeHint();
         IDrawable::Params p;
@@ -78,7 +79,7 @@ void ADropdownList::render(ARenderContext context) {
 }
 
 int ADropdownList::getContentMinimumWidth() {
-    return AAbstractLabel::getContentMinimumWidth() + 20;
+    return AButton::getContentMinimumWidth() + 20;
 }
 
 void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
@@ -89,7 +90,7 @@ void ADropdownList::onPointerReleased(const APointerReleasedEvent& event) {
         auto parentWindow = getWindow();
         if (!parentWindow) return;
 
-        auto list = _new<AListView>(mModel) AUI_WITH_STYLE { ass::Margin { 0 }, ass::Expanding{}, ass::MinSize {  AMetric(getWidth(), AMetric::T_PX), 0, } };
+        auto list = _new<AListView>(mModel) AUI_OVERRIDE_STYLE { ass::Margin { 0 }, ass::Expanding{}, ass::MinSize {  AMetric(getWidth(), AMetric::T_PX), 0, } };
         list << ".combobox_list";
         int listHeight = list->getContentFullHeight() + list->getMinimumHeight() + 2; // bias
         auto comboBoxPos = getPositionInWindow();

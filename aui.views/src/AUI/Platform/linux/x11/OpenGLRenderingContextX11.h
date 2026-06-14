@@ -13,17 +13,18 @@
 
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/Platform/linux/x11/RenderingContextX11.h>
+#include <GL/glx.h>
 
 class OpenGLRenderingContextX11: public OpenGLRenderingContext, public RenderingContextX11 {
 public:
     using OpenGLRenderingContext::OpenGLRenderingContext;
 
     ~OpenGLRenderingContextX11() override = default;
-    void init(const Init& init) override;
-    void destroyNativeWindow(AWindowBase& window) override;
-    void beginPaint(AWindowBase& window) override;
-    void endPaint(AWindowBase& window) override;
-    void beginResize(AWindowBase& window) override;
+    void init(const Init& init);
+    void destroyNativeWindow(ASurface& window) override;
+    void beginPaint(ASurface& window) override;
+    void endPaint(ASurface& window) override;
+    void beginResize(ASurface& window) override;
 
 private:
     static GLXContext ourContext;

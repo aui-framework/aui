@@ -48,6 +48,30 @@ public:
 
     void registerCallback(int fd, ABitField<UnixPollEvent> flags, Callback callback) noexcept;
     void unregisterCallback(int fd) noexcept;
+    static const _<AThread>& thread() noexcept {
+        return inst().mThread;
+    }
+
+    /**
+     * @brief A simplified version of registerCallback/unregisterCallback for waiting events on file descriptor.
+     * @param fd file descriptor to watch on.
+     * @param flags which events to listen
+     * @return AFuture with bitfield on which events was triggerred
+     * @details
+     * ```cpp
+     * AAsyncHolder async;
+     * async << []() -> AFuture<> {
+     *    int signalFd = signalfd(-1, &procMask, SFD_CLOEXEC);
+     *    for (;;) {
+     *        co_await UnixIoThread::inst().waitForEvent(signalFd, UnixPollEvent::IN);
+     *        read(signalFd, ...);
+     *    }
+     *    close(signalFd);
+     * };
+     * ```
+     */
+    [[nodiscard]]
+    AFuture<ABitField<UnixPollEvent>> waitForEvent(int fd, ABitField<UnixPollEvent> flags);
 
 private:
     friend class UnixIoEventLoop;

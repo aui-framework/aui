@@ -11,6 +11,8 @@
 
 #include "OpenGLRenderingContextX11.h"
 
+#include <dlfcn.h>
+
 /* Typedef for the GL 3.0 context creation function */
 typedef GLXContext (*PFNGLXCREATECONTEXTATTRIBSARBPROC)(
     Display* dpy, GLXFBConfig config, GLXContext share_context, Bool direct, const int* attrib_list);
@@ -21,10 +23,31 @@ static PFNGLXSWAPINTERVALEXTPROC glXSwapIntervalEXT = nullptr;
 
 GLXContext OpenGLRenderingContextX11::ourContext = nullptr;
 
+void* AUI_GLX_HANDLE = nullptr;
+
 void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
+    PlatformAbstractionX11::ensureXLibInitialized();
     static XSetWindowAttributes swa;
     static XVisualInfo* vi;
     if (ourContext == nullptr) {
+        //static const char* NAMES[] = {"libGL.so.1", "libGL.so"};
+//
+        //GLADloadproc gladGetProcAddressPtr = nullptr;
+//
+        //for (unsigned index = 0; index < std::size(NAMES); index++) {
+        //    AUI_GLX_HANDLE = dlopen(NAMES[index], RTLD_NOW | RTLD_GLOBAL);
+        //    if (AUI_GLX_HANDLE) {
+        //        gladGetProcAddressPtr = (GLADloadproc)dlsym(AUI_GLX_HANDLE, "glXGetProcAddressARB");
+        //        if (gladGetProcAddressPtr) {
+        //            break;
+        //        }
+        //    }
+        //}
+
+        //if (!gladLoadGLXLoader(gladGetProcAddressPtr, nullptr, 0)) {
+        //    return;
+        //}
+
         glXCreateContextAttribsARB = reinterpret_cast<PFNGLXCREATECONTEXTATTRIBSARBPROC>(
             glXGetProcAddress(reinterpret_cast<const GLubyte*>("glXCreateContextAttribsARB")));
 
@@ -148,13 +171,10 @@ void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
     xInitNativeWindow(init, swa, vi);
     glXMakeCurrent(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(init.window), ourContext);
 
-    if (!glewExperimental) {
-        glewExperimental = true;
-        if (auto s = glewInit(); s != GLEW_OK) {
-            throw AException("glewInit failed");
-        }
-        ALogger::info("OpenGL context is ready");
+    if (!OpenGLRenderer::loadGL((OpenGLRenderer::GLLoadProc)glXGetProcAddressARB)) {
+        throw AException("glad load failed");
     }
+    ALogger::info("OpenGL context is ready");
 
     if (init.parent) {
         XSetTransientForHint(
@@ -177,9 +197,9 @@ void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
     mRenderer = ourRenderer();
 }
 
-void OpenGLRenderingContextX11::destroyNativeWindow(AWindowBase& window) { xDestroyNativeWindow(window); }
+void OpenGLRenderingContextX11::destroyNativeWindow(ASurface& window) { xDestroyNativeWindow(window); }
 
-void OpenGLRenderingContextX11::beginPaint(AWindowBase& window) {
+void OpenGLRenderingContextX11::beginPaint(ASurface& window) {
     // order is intentional
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         glXMakeCurrent(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(*w), ourContext);
@@ -187,14 +207,14 @@ void OpenGLRenderingContextX11::beginPaint(AWindowBase& window) {
     OpenGLRenderingContext::beginPaint(window);
 }
 
-void OpenGLRenderingContextX11::endPaint(AWindowBase& window) {
+void OpenGLRenderingContextX11::endPaint(ASurface& window) {
     OpenGLRenderingContext::endPaint(window);
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         glXSwapBuffers(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(*w));
     }
 }
 
-void OpenGLRenderingContextX11::beginResize(AWindowBase& window) {
+void OpenGLRenderingContextX11::beginResize(ASurface& window) {
     OpenGLRenderingContext::beginResize(window);
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         glXMakeCurrent(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(*w), ourContext);

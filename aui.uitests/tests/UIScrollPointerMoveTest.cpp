@@ -52,7 +52,7 @@ protected:
                                        Label { "Some bullshit" },
                                        Label { "Some bullshit" },
                                        Label { "Some bullshit" },
-                                       mView = _new<ViewMock>() AUI_WITH_STYLE {
+                                       mView = _new<ViewMock>() AUI_OVERRIDE_STYLE {
                                          MinSize { 16_dp },
                                          BackgroundSolid { AColor::BLACK },
                                          on_state::Hovered {
@@ -65,7 +65,7 @@ protected:
                                        Label { "Some bullshit" },
                                        Label { "Some bullshit" },
                                        Label { "Some bullshit" },
-                                     }).build() AUI_WITH_STYLE {
+                                     }).build() AUI_OVERRIDE_STYLE {
                                        MinSize { 100_dp },
                                      }
                                    }

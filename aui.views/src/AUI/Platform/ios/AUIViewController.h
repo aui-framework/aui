@@ -12,7 +12,7 @@
 #pragma once
 
 #import <UIKit/UIKit.h>
-#import <GLKit/GLKit.h>
+//#import <GLKit/GLKit.h>
 
 
 @interface AUIViewController : UIViewController

@@ -23,6 +23,8 @@
 #include <AUI/View/AScrollArea.h>
 #include <gtest/gtest.h>
 
+using namespace declarative;
+
 /**
  * This test suite checks that views that 100% should not be rendered (i.e. outside of scroll area bounding box) are
  * not actually rendered.
@@ -49,11 +51,11 @@ class UIRenderOptimizationTest: public testing::UITest {
             TestWindow() {
                 setContents(Centered {
                     mScroll = AScrollArea::Builder().withContents(Vertical {
-                        mTop = _new<ViewMock>() AUI_WITH_STYLE { ass::FixedSize { 10_px } },
+                        mTop = _new<ViewMock>() AUI_OVERRIDE_STYLE { ass::FixedSize { 10_px } },
                         // big enough to push away bottom view
-                        mCenter = _new<ViewMock>() AUI_WITH_STYLE { ass::FixedSize { 1000_px } }, 
-                        mBottom = _new<ViewMock>() AUI_WITH_STYLE { ass::FixedSize { 10_px } },
-                    }).build() AUI_WITH_STYLE { ass::FixedSize(200_px) },
+                        mCenter = _new<ViewMock>() AUI_OVERRIDE_STYLE { ass::FixedSize { 1000_px } },
+                        mBottom = _new<ViewMock>() AUI_OVERRIDE_STYLE { ass::FixedSize { 10_px } },
+                    }).build() AUI_OVERRIDE_STYLE { ass::FixedSize(200_px) },
                 });
 
                 pack();

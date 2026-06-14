@@ -26,15 +26,17 @@ graph TD
 # Standard routine
 cmake_minimum_required(VERSION 3.16)
 project(project_template_assets_ui)
-
 set(AUI_VERSION v8.0.0-rc.8)
 
 # Use AUI.Boot
-file(
-        DOWNLOAD
-        https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
-include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+#
+# Download aui.boot.cmake (one-time):
+#   curl https://raw.githubusercontent.com/aui-framework/aui/refs/heads/master/aui.boot.cmake -o aui.boot.cmake
+#
+# Or use CLI mode:
+#   cmake -P aui.boot.cmake update
+#
+include(aui.boot.cmake)
 
 # import AUI
 auib_import(aui https://github.com/aui-framework/aui
@@ -79,7 +81,7 @@ MainWindow::MainWindow(): AWindow("Project template app", 300_dp, 200_dp) {
     setContents(
         Centered{
             Vertical{
-                Centered { Icon { ":img/logo.svg" } AUI_WITH_STYLE { FixedSize(64_dp) } },
+                Centered { Icon { ":img/logo.svg" } AUI_OVERRIDE_STYLE { FixedSize(64_dp) } },
                 Centered { Label { "Hello world from AUI!" } },
                 _new<AButton>("Visit GitHub repo").connect(&AView::clicked, this, [] {
                     APlatform::openUrl("https://github.com/aui-framework/aui");

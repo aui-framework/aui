@@ -10,6 +10,7 @@
  */
 
 #pragma once
+#include "AUI/Software/SoftwareRenderer.h"
 
 /**
  * @brief Window manager used to stub the default window manager.
@@ -30,4 +31,20 @@ public:
     void initNativeWindow(const IRenderingContext::Init& init) override;
     static AImage makeScreenshot(aui::no_escape<AWindow> window);
     static void drawFrame();
+
+    /**
+     * @brief Stub window manager configuration to narrow ui test/benchmark scope.
+     */
+    struct Config {
+
+        /**
+         * @brief Renderer used for window manager.
+         */
+        _unique<IRenderer> renderer = std::make_unique<SoftwareRenderer>();
+    };
+
+    static void setConfig(Config config);
+
+private:
+
 };

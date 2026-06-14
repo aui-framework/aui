@@ -149,6 +149,17 @@ struct std::hash<AByteBufferView>
 {
     size_t operator()(AByteBufferView t) const noexcept
     {
-        return std::hash<std::string_view>{}(t.toStdStringView());
+        if (t.data() == nullptr || t.size() == 0) {
+            return 0;
+        }
+        constexpr size_t FNV_offset_basis = 14695981039346656037ULL;
+        constexpr size_t FNV_prime = 1099511628211ULL;
+
+        size_t hash = FNV_offset_basis;
+        for (size_t i = 0; i < t.size(); ++i) {
+            hash ^= static_cast<size_t>(t.data()[i]);
+            hash *= FNV_prime;
+        }
+        return hash;
     }
 };

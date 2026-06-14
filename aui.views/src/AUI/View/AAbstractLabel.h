@@ -13,7 +13,7 @@
 
 #include <AUI/Enum/VerticalAlign.h>
 #include <AUI/Enum/TextTransform.h>
-#include "AUI/Platform/AWindowBase.h"
+#include "AUI/Platform/ASurface.h"
 #include "AView.h"
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Common/AString.h"
@@ -22,7 +22,6 @@
 #include "AUI/Font/IFontView.h"
 #include <AUI/Util/ADataBinding.h>
 #include <AUI/Common/IStringable.h>
-#include <AUI/Util/Declarative.h>
 
 /**
  * @brief Represents an abstract text display view.
@@ -56,11 +55,13 @@ public:
 
     AString toString() const override;
 
+    [[deprecated("rudimentary API")]]
     void setIcon(const _<IDrawable>& drawable) {
         mIcon = drawable;
         redraw();
     }
 
+    [[deprecated("rudimentary API")]]
     void setIconColor(const AColor& iconColor) {
         mIconColor = iconColor;
     }
@@ -122,6 +123,7 @@ private:
     _<IDrawable> mIcon;
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
     TextTransform mTextTransform = TextTransform::NONE;
+
     AColor mIconColor = {1, 1, 1, 1};
 
     glm::ivec2 getIconSize() const;
@@ -134,12 +136,6 @@ private:
     AString getTransformedText();
 
     void processTextOverflow(AString& text);
-
-    template<class Iterator>
-    Iterator findFirstOverflowedIndex(const Iterator& begin, const Iterator& end, int overflowingWidth);
-
-    template<class Iterator>
-    void processTextOverflow(Iterator begin, Iterator end, int overflowingWidth);
 
 };
 

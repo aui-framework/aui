@@ -61,7 +61,7 @@ void AViewProfiler::displayBoundsOn(AView& v, ARenderContext ctx) {
             .fontRendering = FontRendering::ANTIALIASING,
         };
 
-        auto s = ctx.render.prerenderString({x + 2_dp, y + 1_dp },
+        auto s = ctx.render.prerenderString({x + 2_dp, y + 1_dp + fs.getAscenderHeight() },
                                          v.getAssNames().empty()
                                          ? typeid(v).name()
                                          : *v.getAssNames().begin() + "\n"_as + AString::number(v.getSize().x) + "x"_as + AString::number(v.getSize().y), fs);

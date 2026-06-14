@@ -78,7 +78,12 @@ public:
         char buf[0x800];
         char path[0x100];
         *fmt::format_to_n(std::begin(path), sizeof(path), "/proc/{}/exe", mHandle).out = '\0';
-        return APath(buf, readlink(path, buf, sizeof(buf)));
+        APath p(buf, readlink(path, buf, sizeof(buf)));
+        static constexpr std::string_view ENDS_WITH = " (deleted)";
+        if (p.endsWith(ENDS_WITH)) {
+            p.resize(p.size() - ENDS_WITH.size());
+        }
+        return p;
     }
 
     uint32_t getPid() const noexcept override { return mHandle; }

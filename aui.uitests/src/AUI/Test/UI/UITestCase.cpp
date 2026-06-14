@@ -100,10 +100,9 @@ void testing::UITest::SetUp() {
     AUI_DO_ONCE {
         testing::UnitTest::GetInstance()->listeners().Append(new MyListener);
     }
-    UITestState::beginUITest();
     Test::SetUp();
-    AWindow::setWindowManager<AStubWindowManager>();
-    AWindowBase::currentWindowStorage() = nullptr;
+    uitest::setup();
+    ASurface::currentWindowStorage() = nullptr;
 }
 
 void testing::UITest::TearDown() {

@@ -12,16 +12,16 @@
 #pragma once
 
 #include "AUI/View/ATreeView.h"
-#include "AUI/Platform/AWindowBase.h"
+#include "AUI/Platform/ASurface.h"
 #include "ViewPropertiesView.h"
 
 class DevtoolsLayoutTab: public AViewContainerBase {
 public:
-    DevtoolsLayoutTab(AWindowBase* targetWindow);
+    DevtoolsLayoutTab(ASurface* targetWindow);
     ~DevtoolsLayoutTab() override;
 
 private:
-    AWindowBase* mTargetWindow;
+    ASurface* mTargetWindow;
 
     _<ATreeView> mViewHierarchyTree;
     _<ViewPropertiesView> mViewPropertiesView;

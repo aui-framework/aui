@@ -99,6 +99,7 @@ class DoxygenEntry:
 class CppClass:
     def __init__(self):
         self.name = None
+        self.overview_page_title = None
         self.doc = None
         self.methods = []
         self.fields = []
@@ -338,7 +339,7 @@ class _Parser:
         assert self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER
         clazz = CppClass()
         clazz.generic_kind = kind
-        clazz.name = self.last_token[1]
+        clazz.overview_page_title = clazz.name = self.last_token[1]
         clazz.doc = self._consume_doc()
         clazz.location = self.location
 
@@ -376,6 +377,7 @@ class _Parser:
         return clazz
 
     def _parse_file(self):
+        prev_doc = None
         for self.last_token in self.iterator:
             # print(f'_parse_file iteration {self.last_token}')
             prev_doc = self.last_doc
@@ -444,6 +446,10 @@ class _Parser:
                 clazz = self._parse_class()
                 if clazz.doc:
                     yield clazz
+        if self.last_doc is not None:
+            entry = DoxygenEntry(doc=self.last_doc)
+            entry.location = self.location
+            yield entry
 
     def parse(self):
         return self._parse_file()

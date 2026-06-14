@@ -21,13 +21,12 @@
 
 static constexpr auto LOG_TAG = "ADBus";
 
-ADBus& ADBus::inst() {
+ADBus& ADBus::session() {
     static ADBus d;
     return d;
 }
 
-
-template<aui::invocable Callback>
+template <aui::invocable Callback>
 void ADBus::throwExceptionOnError(Callback&& callback) {
     callback();
     if (dbus_error_is_set(mError.ptr())) {
@@ -36,64 +35,44 @@ void ADBus::throwExceptionOnError(Callback&& callback) {
 }
 dbus_bool_t ADBus::addWatch(DBusWatch* watch, void* data) {
     auto bus = reinterpret_cast<ADBus*>(data);
-    UnixIoThread::inst().registerCallback(dbus_watch_get_unix_fd(watch), UnixPollEvent::IN | UnixPollEvent::OUT, [=](ABitField<UnixPollEvent> f) {
-        if (bus->mProcessingScheduled.exchange(true)) {
-            return;
-        }
-        int dbusFlags = 0;
-        if (f.test(UnixPollEvent::IN)) {
-            dbusFlags |= DBUS_WATCH_READABLE;
-        }
-        if (f.test(UnixPollEvent::OUT)) {
-            dbusFlags |= DBUS_WATCH_WRITABLE;
-        }
-        auto process = [=] {
-            dbus_watch_handle(watch, dbusFlags);
-            bus->mProcessingScheduled.exchange(false);
+    UnixIoThread::inst().registerCallback(
+        dbus_watch_get_unix_fd(watch), UnixPollEvent::IN, [=](ABitField<UnixPollEvent> f) {
+            unsigned int flags = 0;
+            if (f.test(UnixPollEvent::IN)) {
+                flags |= DBUS_WATCH_READABLE;
+            }
+            if (f.test(UnixPollEvent::OUT)) {
+                flags |= DBUS_WATCH_WRITABLE;
+            }
+            dbus_watch_handle(watch, flags);
             bus->processMessages();
-        };
-        if (auto w = AWindow::current()) {
-            w->getThread()->enqueue(process);
-            return;
-        }
-
-        process();
-    });
+        });
     return true;
 }
 void removeWatch(DBusWatch* watch, void* data) {
     UnixIoThread::inst().unregisterCallback(dbus_watch_get_unix_fd(watch));
 }
 void watchToggled(DBusWatch* watch, void* data) {
-
+    ALOG_DEBUG("ADBus") << "watchToggled";
 }
-void watchFree(void* data) {
-
-}
-
+void watchFree(void* data) {}
 
 ADBus::ADBus() {
     throwExceptionOnError([&] { dbus_error_init(mError.ptr()); });
     throwExceptionOnError([&] { mConnection = dbus_bus_get(DBUS_BUS_SESSION, mError.ptr()); });
     ALogger::info(LOG_TAG) << "Connected to session bus";
-    throwExceptionOnError([&] {
-        dbus_bus_add_match(mConnection, "type='signal'", mError.ptr());
-    });
+    throwExceptionOnError([&] { dbus_bus_add_match(mConnection, "type='signal'", mError.ptr()); });
     if (!dbus_connection_set_watch_functions(mConnection, addWatch, removeWatch, watchToggled, this, watchFree)) {
         throw Exception("dbus_connection_set_watch_functions failed");
     }
-
 }
 
 ADBus::~ADBus() {
     throwExceptionOnError([&] { dbus_error_free(mError.ptr()); });
 }
 
-DBusHandlerResult ADBus::listener(DBusConnection     *connection,
-                                  DBusMessage        *message,
-                                  void               *user_data) noexcept {
-
-    auto listener = reinterpret_cast<RawMessageListener*>(user_data);
+DBusHandlerResult ADBus::listener(DBusConnection* connection, DBusMessage* message, void* user_data) noexcept {
+    auto listener = reinterpret_cast<MessageFilter*>(user_data);
     try {
         AUI_ASSERT(connection == listener->parent->mConnection);
         auto r = listener->function(message);
@@ -110,10 +89,10 @@ DBusHandlerResult ADBus::listener(DBusConnection     *connection,
     }
 }
 void ADBus::deleter(void* userdata) noexcept {
-    auto listener = reinterpret_cast<RawMessageListener*>(userdata);
+    auto listener = reinterpret_cast<MessageFilter*>(userdata);
     auto listenerIt = std::find_if(
         listener->parent->mListeners.begin(), listener->parent->mListeners.end(),
-        [&](const RawMessageListener& lhs) { return &lhs == userdata; });
+        [&](const MessageFilter& lhs) { return &lhs == userdata; });
 
     if (listenerIt == listener->parent->mListeners.end()) {
         return;
@@ -121,27 +100,36 @@ void ADBus::deleter(void* userdata) noexcept {
     listener->parent->mListeners.erase(listenerIt);
 }
 
-std::function<void()> ADBus::addListener(RawMessageListener::Callback listener) {
+ADBus::MessageFilter::Ownership ADBus::addFilter(MessageFilter::Callback listener) {
     const auto it = mListeners.insert(mListeners.end(), { this, std::move(listener) });
-    dbus_connection_add_filter(mConnection, ADBus::listener, &(*it), deleter);
+    if (!dbus_connection_add_filter(mConnection, ADBus::listener, &(*it), deleter)) {
+        throw Exception("dbus_connection_add_filter failed");
+    }
 
-    return [this, it] {
-        dbus_connection_remove_filter(mConnection, ADBus::listener, &(*it));
-    };
+    ADBus::MessageFilter::Ownership result(&(*it), [](MessageFilter* p) {
+      dbus_connection_remove_filter(p->parent->mConnection, ADBus::listener, p);
+    });
+
+    return result;
 }
 
 void ADBus::processMessages() {
+    dbus_connection_read_write(mConnection, 0);
     while (dbus_connection_get_dispatch_status(mConnection) == DBUS_DISPATCH_DATA_REMAINS)
         dbus_connection_dispatch(mConnection);
 }
 
+std::string_view ADBus::uniqueName() const noexcept { return dbus_bus_get_unique_name(mConnection); }
+
 void aui::dbus::converter<aui::dbus::Variant>::iter_append(DBusMessageIter* iter, const Variant& t) {
-    std::visit([&]<typename T>(const T& containedValue) {
-      DBusMessageIter sub;
-      dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<T>::signature.c_str(), &sub);
-      AUI_DEFER { dbus_message_iter_close_container(iter, &sub); };
-      aui::dbus::iter_append<T>(&sub, containedValue);
-    }, t);
+    std::visit(
+        [&]<typename T>(const T& containedValue) {
+            DBusMessageIter sub;
+            dbus_message_iter_open_container(iter, DBUS_TYPE_VARIANT, converter<T>::signature.c_str(), &sub);
+            AUI_DEFER { dbus_message_iter_close_container(iter, &sub); };
+            aui::dbus::iter_append<T>(&sub, containedValue);
+        },
+        t);
 }
 
 aui::dbus::Variant aui::dbus::converter<aui::dbus::Variant>::iter_get(DBusMessageIter* iter) {
@@ -151,19 +139,32 @@ aui::dbus::Variant aui::dbus::converter<aui::dbus::Variant>::iter_get(DBusMessag
     DBusMessageIter sub;
     dbus_message_iter_recurse(iter, &sub);
     switch (auto t = dbus_message_iter_get_arg_type(&sub)) {
-        case DBUS_TYPE_INVALID:     return aui::dbus::iter_get<std::nullopt_t  >(&sub);
-        case DBUS_TYPE_BYTE:        return aui::dbus::iter_get<std::uint8_t    >(&sub);
-        case DBUS_TYPE_BOOLEAN:     return aui::dbus::iter_get<bool            >(&sub);
-        case DBUS_TYPE_INT16:       return aui::dbus::iter_get<std::int16_t    >(&sub);
-        case DBUS_TYPE_UINT16:      return aui::dbus::iter_get<std::uint16_t   >(&sub);
-        case DBUS_TYPE_INT32:       return aui::dbus::iter_get<std::int32_t    >(&sub);
-        case DBUS_TYPE_UINT32:      return aui::dbus::iter_get<std::uint32_t   >(&sub);
-        case DBUS_TYPE_INT64:       return aui::dbus::iter_get<std::int64_t    >(&sub);
-        case DBUS_TYPE_UINT64:      return aui::dbus::iter_get<std::uint64_t   >(&sub);
-        case DBUS_TYPE_DOUBLE:      return aui::dbus::iter_get<double          >(&sub);
-        case DBUS_TYPE_STRING:      return aui::dbus::iter_get<std::string     >(&sub);
-        case DBUS_TYPE_OBJECT_PATH: return aui::dbus::iter_get<ObjectPath      >(&sub);
-        case DBUS_TYPE_ARRAY:       return aui::dbus::iter_get<AVector<Unknown>>(&sub);
+        case DBUS_TYPE_INVALID:
+            return aui::dbus::iter_get<std::nullopt_t>(&sub);
+        case DBUS_TYPE_BYTE:
+            return aui::dbus::iter_get<std::uint8_t>(&sub);
+        case DBUS_TYPE_BOOLEAN:
+            return aui::dbus::iter_get<bool>(&sub);
+        case DBUS_TYPE_INT16:
+            return aui::dbus::iter_get<std::int16_t>(&sub);
+        case DBUS_TYPE_UINT16:
+            return aui::dbus::iter_get<std::uint16_t>(&sub);
+        case DBUS_TYPE_INT32:
+            return aui::dbus::iter_get<std::int32_t>(&sub);
+        case DBUS_TYPE_UINT32:
+            return aui::dbus::iter_get<std::uint32_t>(&sub);
+        case DBUS_TYPE_INT64:
+            return aui::dbus::iter_get<std::int64_t>(&sub);
+        case DBUS_TYPE_UINT64:
+            return aui::dbus::iter_get<std::uint64_t>(&sub);
+        case DBUS_TYPE_DOUBLE:
+            return aui::dbus::iter_get<double>(&sub);
+        case DBUS_TYPE_STRING:
+            return aui::dbus::iter_get<std::string>(&sub);
+        case DBUS_TYPE_OBJECT_PATH:
+            return aui::dbus::iter_get<ObjectPath>(&sub);
+        case DBUS_TYPE_ARRAY:
+            return aui::dbus::iter_get<AVector<Unknown>>(&sub);
         default:
             throw AException("unable to process variant: {:c}"_format(t));
     }

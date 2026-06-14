@@ -16,7 +16,7 @@
 namespace aui::detail {
     struct AbsoluteLayoutCell {
         aui::non_null<_<AView>> view;
-        AMetric pivotX = 0, pivotY = 0;
+        AOptional<AMetric> pivotX, pivotY;
         AOptional<AMetric> sizeX, sizeY;
 
         operator _<AView>() const {

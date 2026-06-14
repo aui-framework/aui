@@ -32,13 +32,13 @@ SortIncludes: Never
 BracedInitializerIndentWidth: 2
 ConstructorInitializerIndentWidth: 2
 
-# better spacing around AUI_WITH_STYLE and AUI_LET.
+# better spacing around AUI_OVERRIDE_STYLE and AUI_LET.
 # before:
-# view AUI_WITH_STYLE{Expanding()},
+# view AUI_OVERRIDE_STYLE{Expanding()},
 # view AUI_LET{printf("Hello");},
 #
 # after:
-# view AUI_WITH_STYLE { Expanding() },
+# view AUI_OVERRIDE_STYLE { Expanding() },
 # view AUI_LET { printf("Hello"); },
 Cpp11BracedListStyle: false
 SpaceBeforeCpp11BracedList: true
@@ -64,4 +64,4 @@ Macros:
   - AUI_THREADPOOL=[]
   - AUI_DECLARATIVE_FOR(a,b,c)=[v2=b,v3=c](a)
   - AUI_DECLARATIVE_FOR_EX(a,b,c,d)=[d,v2=b,v3=c](a)
-  - AUI_WITH_STYLE=+std::vector
+  - AUI_OVERRIDE_STYLE=+std::vector

@@ -13,30 +13,39 @@
 
 #include <AUI/Common/AStaticVector.h>
 
+static char toByte(uint32_t value) {
+    return static_cast<char>(static_cast<unsigned char>(value));
+}
+
 AStaticVector<char, 4> AChar::toUtf8() const noexcept {
     if (mValue <= 0x7F) {
-        return { static_cast<char>(mValue) };
+        return { toByte(mValue) };
     }
     if (mValue <= 0x7FF) {
-        return { static_cast<char>(0xC0 | (mValue >> 6)), static_cast<char>(0x80 | (mValue & 0x3F)) };
+        return { toByte(0xC0 | (mValue >> 6)), toByte(0x80 | (mValue & 0x3F)) };
     }
     if (mValue <= 0xFFFF) {
         if (mValue >= 0xD800 && mValue <= 0xDFFF) {
-            return {}; // Invalid Unicode code point
+            return {};
         }
         return {
-            static_cast<char>(0xE0 | (mValue >> 12)),
-            static_cast<char>(0x80 | ((mValue >> 6) & 0x3F)),
-            static_cast<char>(0x80 | (mValue & 0x3F))
+            toByte(0xE0 | (mValue >> 12)),
+            toByte(0x80 | ((mValue >> 6) & 0x3F)),
+            toByte(0x80 | (mValue & 0x3F))
         };
     }
     if (mValue <= 0x10FFFF) {
         return {
-            static_cast<char>(0xF0 | (mValue >> 18)),
-            static_cast<char>(0x80 | ((mValue >> 12) & 0x3F)),
-            static_cast<char>(0x80 | ((mValue >> 6) & 0x3F)),
-            static_cast<char>(0x80 | (mValue & 0x3F))
+            toByte(0xF0 | (mValue >> 18)),
+            toByte(0x80 | ((mValue >> 12) & 0x3F)),
+            toByte(0x80 | ((mValue >> 6) & 0x3F)),
+            toByte(0x80 | (mValue & 0x3F))
         };
     }
     return {}; // Invalid Unicode code point
+}
+
+std::string AChar::toString() const {
+    auto tmp = toUtf8();
+    return std::string(tmp.begin(), tmp.end());
 }

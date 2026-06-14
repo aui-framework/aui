@@ -36,6 +36,7 @@
 #endif
 
 
+using namespace declarative;
 
 bool AWindow::consumesClick(const glm::ivec2& pos) {
     return AViewContainer::consumesClick(pos);
@@ -60,7 +61,9 @@ void AWindow::createDevtoolsWindow() {
 
     protected:
         void createDevtoolsWindow() override {
-            // stub
+            // you can comment out this to forbid issuing devtools on a devtools window, but who I am to disable such a
+            // meme thing?
+            AWindow::createDevtoolsWindow();
         }
     };
     auto window = _new<DevtoolsWindow>();
@@ -163,7 +166,7 @@ void AWindow::onFocusAcquired() {
 }
 
 void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-    AWindowBase::onPointerMove(pos, event);
+    ASurface::onPointerMove(pos, event);
     if (UITestState::isTesting()) {
         return;
     }
@@ -172,14 +175,14 @@ void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
 
 void AWindow::onFocusLost() {
     mIsFocused = false;
-    AWindowBase::onFocusLost();
+    ASurface::onFocusLost();
     if (AMenu::isOpen()) {
         AMenu::close();
     }
 }
 
 void AWindow::onKeyDown(AInput::Key key) {
-    AWindowBase::onKeyDown(key);
+    ASurface::onKeyDown(key);
     if (mFocusNextViewOnTab && key == AInput::Key::TAB) {
         focusNextView();
     }
@@ -190,7 +193,7 @@ void AWindow::onKeyRepeat(AInput::Key key) {
         v->onKeyRepeat(key);
 }
 
-AWindowBase* AWindow::current() {
+ASurface* AWindow::current() {
     return currentWindowStorage();
 }
 
@@ -244,6 +247,14 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     AUI_UI_THREAD {
         emit mSizeChanged(getSize());
     };
+
+#if AUI_PLATFORM_LINUX
+    // on linux, we have to manually provide an icon for the system.
+    // __aui/icon_512x512.png is provided by aui_app cmake command.
+    if (auto _icon = AImage::fromUrl(":__aui/icon_512x512.png")) {
+        IPlatformAbstraction::current().windowSetIcon(*this,*_icon);
+    }
+#endif
 }
 
 _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
@@ -289,7 +300,7 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     return surface;
 }
 
-void AWindow::closeOverlappingSurfaceImpl(AOverlappingSurface* surface) {
+void AWindow::closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) {
     if (auto c = dynamic_cast<AWindow*>(surface->getParent())) {
         c->close();
     }
@@ -299,7 +310,7 @@ void AWindow::forceUpdateCursor() {
     if (mForceUpdateCursorGuard) {
         return;
     }
-    AWindowBase::forceUpdateCursor();
+    ASurface::forceUpdateCursor();
     if (!mCursor) {
         mCursor = ACursor::DEFAULT;
     }

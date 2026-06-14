@@ -41,7 +41,7 @@ public:
 
     FILE* nativeHandle() const { return mFile; }
 
-    void seek(std::streamoff offset, ASeekDir seekDir) noexcept override;
+    void seek(std::streamoff offset, ASeekDir seekDir) override;
     [[nodiscard]] std::streampos tell() noexcept override;
     bool isEof() override;
     std::size_t read(char* dst, size_t size) override;

@@ -43,8 +43,9 @@
 #undef max
 #undef min
 
+static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
 
-AWindowBase* AView::getWindow() const
+ASurface* AView::getWindow() const
 {
 
     AView* parent = nullptr;
@@ -53,7 +54,7 @@ AWindowBase* AView::getWindow() const
         parent = target;
     }
 
-    return dynamic_cast<AWindowBase*>(parent);
+    return dynamic_cast<ASurface*>(parent);
 }
 
 AView::AView()
@@ -200,19 +201,10 @@ static void walkToParentStack(AView* view, aui::invocable<AView*> auto&& callbac
 
 void AView::invalidateAllStyles()
 {
-    static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
     auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusMargin() : glm::ivec2(DEFINITELY_INVALID_SIZE);
     AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
-    mCursor.reset();
-    mOverflow = AOverflow::VISIBLE;
-    mMargin = {};
-    mMinSize = {};
-    mBorderRadius = 0.f;
-    //mForceStencilForBackground = false;
-    mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
-    mOpacity = 1;
 
-    auto applyStylesheet = [this](const AStylesheet& sh) {
+    auto collectRules = [this](const AStylesheet& sh) {
         for (const auto& r : sh.getRules()) {
             if (r.getSelector().isPossiblyApplicable(this)) {
                 mAssHelper->mPossiblyApplicableRules << r;
@@ -221,13 +213,13 @@ void AView::invalidateAllStyles()
         }
     };
 
-    applyStylesheet(AStylesheet::global());
+    collectRules(AStylesheet::global());
 
     walkToParentStack(this, [&](AView* v) {
         if (!v->mExtraStylesheet) {
             return;
         }
-        applyStylesheet(*v->mExtraStylesheet);
+        collectRules(*v->mExtraStylesheet);
     });
 
     invalidateStateStylesImpl(prevMinSize);
@@ -235,6 +227,15 @@ void AView::invalidateAllStyles()
 
 void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     if (!mAssHelper) return;
+    mCursor.reset();
+    mOverflow = AOverflow::VISIBLE;
+    mMargin = {};
+    mMinSize = {};
+    mBorderRadius = 0.f;
+    //mForceStencilForBackground = false;
+    mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+    mOpacity = 1;
+    mTextColor = AColor::BLACK;
     aui::zero(mAss);
     mAssHelper->state.backgroundCropping.size.reset();
     mAssHelper->state.backgroundCropping.offset.reset();
@@ -671,7 +672,12 @@ ALayoutDirection AView::parentLayoutDirection() const noexcept {
 void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     AUI_ASSERT_UI_THREAD_ONLY();
     mCustomStyleRule = std::move(rule);
-    invalidateAssHelper();
+    if (mAssHelper == nullptr) {
+        return;
+    }
+    auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusMargin() : glm::ivec2(DEFINITELY_INVALID_SIZE);
+    AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
+    invalidateStateStylesImpl(prevMinSize);
 }
 
 
@@ -703,7 +709,7 @@ void AView::onClickPrevented() {
 
 void AView::setCursor(AOptional<ACursor> cursor) {
     mCursor = std::move(cursor);
-    if (mParent) { // AWindowBase does not have parent
+    if (mParent) { // ASurface does not have parent
         AWindow::current()->forceUpdateCursor();
     }
 }
@@ -722,6 +728,7 @@ void AView::setVisibility(Visibility visibility) noexcept
         mMarkedMinContentSizeInvalid = false; // force
         markMinContentSizeInvalid();
     }
+    redraw();
     emit mVisibilityChanged(visibility);
 }
 

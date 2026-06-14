@@ -40,7 +40,7 @@
 #include <AUI/GL/Vbo.h>
 #include <AUI/GL/State.h>
 #include <AUI/GL/RenderTarget/RenderbufferRenderTarget.h>
-#include <AUI/Platform/AWindowBase.h>
+#include <AUI/Platform/ASurface.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUISL/Generated/basic.vsh.glsl120.h>
 #include <AUISL/Generated/basic_uv.vsh.glsl120.h>
@@ -220,6 +220,21 @@ inline void useAuislShader(AOptional<gl::Program>& out) {
 }
 }
 
+bool OpenGLRenderer::loadGL(GLLoadProc load_proc, bool es) {
+    return es ? gladLoadGLES2Loader((GLADloadproc)load_proc) :
+                gladLoadGLLoader((GLADloadproc)load_proc);
+}
+
+bool OpenGLRenderer::loadGL(GLLoadProc load_proc) {
+    auto* get_string_proc = reinterpret_cast<PFNGLGETSTRINGPROC>(load_proc("glGetString"));
+    if (get_string_proc == nullptr) return false;
+    const GLubyte* ret_string = get_string_proc(GL_VERSION);
+    if (!ret_string) return false;
+    std::string_view version(reinterpret_cast<const char*>(ret_string));
+    bool is_es = version.find("OpenGL ES") != std::string_view::npos;
+    return loadGL(load_proc, is_es);
+}
+
 OpenGLRenderer::OpenGLRenderer() {
     ALogger::info(LOG_TAG) << "GL_VERSION = " << ((const char*) glGetString(GL_VERSION));
     ALogger::info(LOG_TAG) << "GL_VENDOR = " << ((const char*) glGetString(GL_VENDOR));
@@ -281,8 +296,9 @@ OpenGLRenderer::OpenGLRenderer() {
 }
 
 glm::mat4 OpenGLRenderer::getProjectionMatrix() const {
-    return glm::ortho(0.0f, static_cast<float>(mWindow->getWidth()) - 0.0f,
-                      static_cast<float>(mWindow->getHeight()) - 0.0f, 0.0f, -1.f, 1.f);
+    return glm::ortho(0.0f, static_cast<float>(mWindow->getWidth()),
+                      static_cast<float>(mWindow->getHeight()), 0.0f,
+                      -1.f, 1.f);
 }
 
 void OpenGLRenderer::uploadToShaderCommon() {
@@ -582,6 +598,11 @@ public:
         if (!img)
             return;
 
+        if (AWindow::current()->profiling()->showBaseline) {
+            mRenderer->rectangle(
+                ASolidBrush { AColor::RED.transparentize(0.5f) }, { 0, 0 }, { mTextWidth, 1 });   // debug baseline
+        }
+
         auto width = img->width();
 
         float uvScale = 1.f / float(width);
@@ -673,9 +694,9 @@ public:
         const bool hasKerning = font->isHasKerning();
 
         int advanceX = position.x;
-        int advanceY = position.y - mFontStyle.font->getDescenderHeight(mFontStyle.size);
+        int advanceY = position.y;
         size_t counter = 0;
-        int advance = advanceX;
+        float advance = advanceX;
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
             AChar c = *i;
             if (c == ' ') {
@@ -683,7 +704,7 @@ public:
                 advance += mFontStyle.getSpaceWidth();
             } else if (c == '\n') {
                 notifySymbolAdded({glm::ivec2{advance, advanceY}});
-                advanceX = (glm::max)(advanceX, advance);
+                advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
                 advance = position.x;
                 advanceY += mFontStyle.getLineHeight();
                 nextLine();
@@ -695,7 +716,8 @@ public:
                 }
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
 
-                    int posX = advance + ch.bearingX;
+                    int posX = advance + ch.horizontal.bearing.x;
+                    int posY = advanceY - ch.horizontal.bearing.y;
                     int width = ch.image->width();
                     int height = ch.image->height();
 
@@ -716,14 +738,14 @@ public:
                         uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(ch.rendererData)->uv;
                     }
 
-                    notifySymbolAdded({glm::ivec2{posX, ch.advanceY + advanceY}});
-                    mVertices.push_back({glm::vec2(posX, ch.advanceY + height + advanceY),
+                    notifySymbolAdded({glm::ivec2{posX, posY}});
+                    mVertices.push_back({glm::vec2(posX, posY + height),
                                          glm::vec2(uv.x, uv.w)});
-                    mVertices.push_back({glm::vec2(posX + width, ch.advanceY + height + advanceY),
+                    mVertices.push_back({glm::vec2(posX + width, posY + height),
                                          glm::vec2(uv.z, uv.w)});
-                    mVertices.push_back({glm::vec2(posX, ch.advanceY + advanceY),
+                    mVertices.push_back({glm::vec2(posX, posY),
                                          glm::vec2(uv.x, uv.y)});
-                    mVertices.push_back({glm::vec2(posX + width, ch.advanceY + advanceY),
+                    mVertices.push_back({glm::vec2(posX + width, posY),
                                          glm::vec2(uv.z, uv.y)});
 
                 }
@@ -736,19 +758,18 @@ public:
                     }
                 }
 
-                advance += ch.advanceX;
-                advance = glm::floor(advance);
+                advance += ch.horizontal.advance;
             }
         }
 
         notifySymbolAdded({glm::ivec2{advance, advanceY}});
 
-        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
+        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
     }
 
     void addString(const glm::ivec2& position, AStringView text) noexcept override {
-        addStringT(position, text);
+        addStringT(position, text.utf8());
     }
 
     void addString(const glm::ivec2& position, std::u32string_view text) noexcept override {
@@ -869,8 +890,8 @@ bool OpenGLRenderer::setupLineShader(const ABrush& brush, const ABorderStyle& st
           }, brush);
           float dashWidth = dashed.dashWidth.valueOr(1.f) * widthPx;
           float sumOfLengths = dashWidth + dashed.spaceBetweenDashes.valueOr(2.f) * widthPx;
-          dashWidth *= APlatform::getDpiRatio();
-          sumOfLengths *= APlatform::getDpiRatio();
+          dashWidth *= mRenderScale;
+          sumOfLengths *= mRenderScale;
           gl::Program::currentShader()->set(aui::ShaderUniforms::DIVIDER, sumOfLengths);
           gl::Program::currentShader()->set(aui::ShaderUniforms::THRESHOLD, dashWidth);
 
@@ -887,8 +908,7 @@ struct LineVertex {
 };
 }
 
-void
-OpenGLRenderer::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
+void OpenGLRenderer::lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) {
     if (points.size() < 2) return;
     const auto widthPx = width.getValuePx();
     bool computeDistances = setupLineShader(brush, style, widthPx);

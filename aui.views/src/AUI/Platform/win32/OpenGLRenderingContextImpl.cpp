@@ -14,20 +14,17 @@
 //
 
 #include <AUI/GL/gl.h>
+#include <AUI/GL/GLDebug.h>
+#include <glad/glad_wgl.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
-#include <AUI/GL/GLDebug.h>
-
-#include <GL/wglew.h>
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/GL/State.h>
-#include "AUI/Util/kAUI.h"
-
+#include <AUI/Util/kAUI.h>
 #include <tuple>
 #include <string_view>
-
 
 HGLRC OpenGLRenderingContext::ourHrc = nullptr;
 
@@ -87,8 +84,14 @@ void OpenGLRenderingContext::init(const Init& init) {
         // context initialization
         ourHrc = wglCreateContext(fakeWindow.mDC);
         makeCurrent(fakeWindow.mDC);
+        gladLoadWGL(fakeWindow.mDC);
 
         ALogger::info(LOG_TAG) << ("Initialized temporary context");
+
+        if (!gladLoadGL()) {
+            AMessageBox::show(nullptr, "OpenGL", "Could not initialize context");
+            throw AException("glad load failed");
+        }
 
         using namespace std::string_view_literals;
 
@@ -113,7 +116,7 @@ void OpenGLRenderingContext::init(const Init& init) {
             std::make_tuple("Microsoft"sv, "GDI Generic"sv),
         };
 
-        for (const auto&[blacklistedVendor, blacklistedRenderer] : BLACK_LIST) {
+        for (const auto& [blacklistedVendor, blacklistedRenderer] : BLACK_LIST) {
             if (vendor.find(blacklistedVendor) != std::string_view::npos && renderer.find(blacklistedRenderer) != std::string_view::npos) {
                 throw AException("Blacklisted OpenGL driver: {} / {}"_format(vendor, renderer));
             }
@@ -139,13 +142,6 @@ void OpenGLRenderingContext::init(const Init& init) {
             ALogger::info(LOG_TAG) << "GL_EXTENSIONS is NULL – context/profile may be invalid";
 
 
-        if (!glewExperimental) {
-            glewExperimental = true;
-            if (glewInit() != GLEW_OK) {
-                AMessageBox::show(nullptr, "OpenGL", "Could not initialize context");
-                throw AException("glewInit failed");
-            }
-        }
         bool k;
 
         auto makeContext = [&](unsigned i) {
@@ -222,12 +218,12 @@ void OpenGLRenderingContext::init(const Init& init) {
     glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
 }
 
-void OpenGLRenderingContext::destroyNativeWindow(AWindowBase& window) {
+void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
     CommonRenderingContext::destroyNativeWindow(window);
     makeCurrent(nullptr);
 }
 
-void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
+void OpenGLRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
 
     makeCurrent(mSmoothResize ? mPainterDC : mWindowDC);
@@ -235,15 +231,15 @@ void OpenGLRenderingContext::beginPaint(AWindowBase& window) {
     mRenderer->beginPaint(window.getSize());
 }
 
-void OpenGLRenderingContext::beginResize(AWindowBase& window) {
+void OpenGLRenderingContext::beginResize(ASurface& window) {
     makeCurrent(mWindowDC);
 }
 
-void OpenGLRenderingContext::endResize(AWindowBase& window) {
+void OpenGLRenderingContext::endResize(ASurface& window) {
 
 }
 
-void OpenGLRenderingContext::endPaint(AWindowBase& window) {
+void OpenGLRenderingContext::endPaint(ASurface& window) {
     endFramebuffer();
     mRenderer->endPaint();
     SwapBuffers(mSmoothResize ? mPainterDC : mWindowDC);

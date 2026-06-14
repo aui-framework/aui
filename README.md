@@ -16,8 +16,8 @@ programming languages and external compilers.
 <div align = center>
 
 **[<kbd> <br> Documentation <br> </kbd>](https://aui-framework.github.io)**
-**[<kbd> <br> Examples <br> </kbd>](https://aui-framework.github.io/develop/examples.html)**
-**[<kbd> <br> Getting started <br> </kbd>](https://aui-framework.github.io/master/md_docs_2Getting_01started_01with_01AUI.html)**
+**[<kbd> <br> Examples <br> </kbd>](https://aui-framework.github.io/master/examples/)**
+**[<kbd> <br> Getting Started <br> </kbd>](https://aui-framework.github.io/master/getting-started/)**
 **[<kbd> <br> Roadmap <br> </kbd>](https://github.com/orgs/aui-framework/projects/3/views/1)**
 **[<kbd> <br> News <br> </kbd>](https://github.com/aui-framework/aui/discussions/categories/announcements)**
 **[<kbd> <br> Discussions <br> </kbd>](https://github.com/aui-framework/aui/discussions)**
@@ -35,12 +35,12 @@ If you are using Linux, install following dependencies:
 #### Debian/Ubuntu
 ```bash
 sudo apt update
-sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev git cmake g++
+sudo apt install pkg-config libglew-dev zlib1g-dev libssl-dev libcurl4-openssl-dev libgtk-3-dev libdbus-1-dev libfontconfig-dev ninja-build libpulse-dev git cmake g++ libxcursor-dev libxi-dev libxrandr-dev libstdc++-static libpulse-dev libdbus-1-dev libepoxy-dev
 ```
 
 #### Fedora
 ```bash
-sudo dnf install fontconfig-devel gtk3-devel dbus-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel git cmake g++
+sudo dnf install fontconfig-devel libXi libglvnd-devel libstdc++-static glew-devel pulseaudio-libs-devel libepoxy-devel
 ```
 
 ### AUI App Template ⚡
@@ -49,13 +49,21 @@ Use our setup-free repository templates for quick start:
 
 1. [Minimal UI](https://github.com/aui-framework/example_minimal_ui) - an absolute minimum to start a graphical UI application, without any boilerplate.
 2. [Minimal UI with assets](https://github.com/aui-framework/example_assets_ui) - same as above but with assets.
-3. [Full-fledged App Template](https://aui-framework.github.io/develop/example_app_template.html) - a complete template to create a GitHub-hosted app project with CI/CD building,
+3. [Full-fledged App Template](https://aui-framework.github.io/master/app-template/) - a complete template to create a GitHub-hosted app project with CI/CD building,
    testing, releasing, auto updating, code quality checking and more.
 
 ## Integrating AUI to existing CMake project
 
 To link AUI to your project, use the following CMake script. This script is self sufficient and does not require additional setup, AUI is imported to your project thanks to
-[AUI.Boot](https://aui-framework.github.io/develop/md_docs_2AUI_01Boot.html).
+[AUI.Boot](https://aui-framework.github.io/master/aui.boot).
+
+Download aui.boot (one-time):
+
+```bash
+curl https://raw.githubusercontent.com/aui-framework/aui/refs/heads/master/aui.boot.cmake -o aui.boot.cmake
+```
+
+Update CMakeLists.txt
 
 `CMakeLists.txt`:
 ```cmake
@@ -63,14 +71,8 @@ To link AUI to your project, use the following CMake script. This script is self
 cmake_minimum_required(VERSION 3.16)
 project(aui_app)
 
-set(AUI_VERSION v9.5.0)
-
-# Use AUI.Boot
-file(
-        DOWNLOAD
-        https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
-include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+include(aui.boot.cmake)
+set(AUI_VERSION v8.0.0-rc.21)
 
 # import AUI
 auib_import(aui https://github.com/aui-framework/aui
@@ -116,13 +118,8 @@ AUI_ENTRY {
 
 Result:
 
-![Example window](https://github.com/aui-framework/aui/blob/develop/docs/imgs/Screenshot_20241218_144940.png?raw=true)
+![Example window](https://github.com/aui-framework/aui/blob/master/docs/imgs/Screenshot_20241218_144940.png?raw=true)
 
-
-Visit [layout building page](https://aui-framework.github.io/master/group__layout__managers.html) and our [introduction
-guide](https://aui-framework.github.io/develop/md_docs_2Getting_01started_01with_01AUI.html) for more info.
-
-Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io/develop/md_docs_2IDE_01Plugins.html) to set up the project.
 
 ## Key features
 - Extended common types (containers, strings, streams, etc...)
@@ -158,41 +155,43 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 
 | Feature or module | Windows Vista+ | Windows XP | Linux | Android | MacOS | iOS |
 |-------------------|----------------|------------|-------|---------|-------|-----|
-| aui.core          | #              |     #      |   #   |    #    |   #   |  #  |
-| aui.crypt         | #              |     #      |   #   |    #    |   #   |  #  |
-| aui.curl          | #              |     #      |   #   |    #    |   #   |  #  |
-| aui.image         | #              |     #      |   #   |    #    |   #   |  #  |
-| aui.json          | #              |     #      |   #   |    #    |   #   |  #  |
-| aui.network       | #              |     #      |   #   |    #    |   +   |  +  |
-| aui.toolbox       | #              |     #      |   #   |         |   #   |     |
-| aui.views         | #              |     ?      |   +   |    +    |   +   |  +  |
-| aui.xml           | #              |     #      |   #   |    #    |   #   |  #  |
-| Assets            | #              |     #      |   #   |    #    |   #   |  #  |
-| App packaging     | #              |     #      |   #   |    #    |   #   |  #  |
-| HiDPI             | #              |     #      |   #   |    #    |   #   |  #  |
-| Filesystem        | #              |     #      |   #   |    #    |   +   |  +  |
-| Prebuilt binaries | #              |     -      |   #   |    ?    |   ?   |  ?  |
-| Process creation  | #              |     #      |   #   |         |   ?   |     |
-| AUI Devtools      | #              |     #      |   #   |    -    |   #   |  -  |
-| Custom window     | #              |     #      |   #   |    ?    |   ?   |  ?  |
-| IME               | -              |     -      |   +   |    -    |   +   |  -  |
-| Touch             | -              |     -      |   -   |    #    |   -   |  #  |
-| Drag n drop       | +              |     -      |   -   |         |   -   |  -  |
+| aui.core          | #              | #          |   #   |    #    |   #   |  #  |
+| aui.crypt         | #              | #          |   #   |    #    |   #   |  #  |
+| aui.curl          | #              | #          |   #   |    #    |   #   |  #  |
+| aui.image         | #              | #          |   #   |    #    |   #   |  #  |
+| aui.json          | #              | #          |   #   |    #    |   #   |  #  |
+| aui.network       | #              | #          |   #   |    #    |   +   |  +  |
+| aui.toolbox       | #              | #          |   #   |         |   #   |     |
+| aui.views         | #              | ?          |   +   |    +    |   +   |  +  |
+| aui.xml           | #              | #          |   #   |    #    |   #   |  #  |
+| Assets            | #              | #          |   #   |    #    |   #   |  #  |
+| App packaging     | #              | #          |   #   |    #    |   #   |  #  |
+| HiDPI             | #              | #          |   #   |    #    |   #   |  #  |
+| Filesystem        | #              | #          |   #   |    #    |   +   |  +  |
+| Prebuilt binaries | #              | -          |   #   |    ?    |   ?   |  ?  |
+| Process creation  | #              | #          |   #   |         |   ?   |     |
+| AUI Devtools      | #              | #          |   #   |    -    |   #   |  -  |
+| Custom window     | #              | #          |   #   |    ?    |   ?   |  ?  |
+| IME               | -              | -          |   +   |    -    |   +   |  -  |
+| Touch             | -              | -          |   -   |    #    |   -   |  #  |
+| Drag n drop       | +              | -          |   -   |         |   -   |  -  |
 | Global menu       |                |            |   ?   |         |   ?   |     |
-| OpenGL renderer   | #              |     #      |   #   |    #    |   #   |  #  |
-| Software renderer | #              |     #      |   #   |         |   ?   |     |
+| OpenGL renderer   | #              | #          |   #   |    #    |   #   |  #  |
+| Software renderer | #              | #          |   #   |         |   ?   |     |
+| Hot Code Reload   | -              | -          |   #   |    -    |   -   |  -  |
 
 | Compiler                     | Support       |
 |------------------------------|---------------|
 | MSVC 19+ (Visual Studio 20+) | Full          |
 | gcc (13+)                    | Full          |
-| MinGW (13+)                  | Won't compile |
-| Cross-compile MinGW          | Won't compile |
+| MinGW (13+)                  | Static only*  |
+| Cross-compile MinGW          | Static only*  |
 | clang                        | Full          |
+\* Use `-DBUILD_SHARED_LIBS=OFF`
 
 ## Used libraries
 - [libcurl](https://curl.se/) for http/https requests
-- [OpenSSL](https://github.com/openssl/openssl) for encryption
+- [MbedTLS](https://github.com/Mbed-TLS/mbedtls) for encryption
 - `OpenGL` as graphics hardware acceleration backend
 - [glm](https://github.com/g-truc/glm) for linear algebra
 - [stbimage](https://github.com/nothings/stb) for image loading
@@ -203,28 +202,29 @@ Optionally, you can use one of [our IDE plugins](https://aui-framework.github.io
 
 ## IDE Plugins
 
-[Refer to documentation page](https://aui-framework.github.io/develop/md_docs_2IDE_01Plugins.html)
+[Refer to documentation page](https://aui-framework.github.io/master/ide-plugins/)
 
 ## Projects using AUI
 
 - [AUI Telegram Client](https://github.com/aui-framework/telegram_client)
   ![AUI Telegram Client](https://github.com/aui-framework/telegram_client/blob/f985af77711be2b17b6aab11bfafb2a864800a1e/demo/demo.jpg?raw=true)
 - [Magicsea Online](https://magicseaonline.com/)
-  ![Magicsea Online](https://github.com/aui-framework/aui/blob/develop/docs/imgs/owrfuihw34iosdfjnfj.jpg?raw=true)
+  ![Magicsea Online](https://github.com/aui-framework/aui/blob/master/docs/imgs/owrfuihw34iosdfjnfj.jpg?raw=true)
 - [Amplitude Studio](https://studio.amplitudeaudiosdk.com)
-  ![Amplitude Studio](https://github.com/aui-framework/aui/blob/develop/docs/imgs/2njkb4fhjkcbjkw.jpg?raw=true)
+  ![Amplitude Studio](https://github.com/aui-framework/aui/blob/master/docs/imgs/2njkb4fhjkcbjkw.jpg?raw=true)
 
 ## Examples
 
-Check the [examples](https://aui-framework.github.io/develop/examples.html) page in our
+Check the [examples](https://aui-framework.github.io/master/examples/) page in our
 [docs](https://aui-framework.github.io) or [examples/](https://github.com/aui-framework/aui/tree/master/examples) dir in
 our repo.
 
-![Fractal](https://sun9-42.userapi.com/impf/WruyOdMmMBrRfpjJ7QrhFepZj7obL3VMGxNSaw/Tr8XxKqdVV8.jpg?size=1261x740&quality=96&proxy=1&sign=f6b851a26a7c40a5f1c22367a34f4c71&type=album)
+![Fractal](https://github.com/user-attachments/assets/6c67cfb2-adba-42e9-9201-0b87b2dbb3b8)
 
-![Views](https://sun9-37.userapi.com/impg/1JYHdZ7PlYsCPvZnP3qeObUT4anFIH5GDghEEA/_JOtAwNfaLI.jpg?size=1261x1007&quality=96&sign=46300730d3b638ea9300e0238f8a511a&type=album)
+![Views](https://github.com/user-attachments/assets/f0071fe4-c7d4-4d02-b677-2c02be51edd1)
 
-![Minesweeper](https://sun9-10.userapi.com/impf/AW9aUF7nuKdkiOfEz7WtsKqhYARlwVaFb_qV0g/0EGtNBty3NI.jpg?size=392x481&quality=96&proxy=1&sign=adbaf47dada836ab25868abf8db9b9d5&type=album)
+![Minesweeper](https://github.com/user-attachments/assets/3299da4c-6ae3-4be8-9714-f01622a38fb2)
+
 
 ## Licensing
 

@@ -6,20 +6,25 @@
 #  This Source Code Form is subject to the terms of the Mozilla Public
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
+import io
 import logging
 import re
 from pathlib import Path
 
-from mkdocs.structure.files import Files, File
-from mkdocs.structure.pages import Page
+from mkdocs.structure.files import File
 
-from docs.python.generators import parse_tests, examples_page, common
+from docs.python.generators import parse_tests, examples_page, common, cpp_parser, doxygen
+from docs.python.generators.cpp_parser import CppClass, CppEnum
 
 log = logging.getLogger('mkdocs')
 
 def handle_comment_macros(markdown: str, file: File):
     def replace_comment(match: re.Match):
         indentation, type, args = match.groups()
+
+        def fix_indentation(text: str):
+            return "\n".join([f'{indentation}{i}' for i in text.splitlines()])
+
         args = args.strip()
         if type == "example-file-count":
             return _badge_for_file_count(args)
@@ -30,9 +35,11 @@ def handle_comment_macros(markdown: str, file: File):
         if type == "icon":
             return _badge_for_icon(args)
         if type == "include":
-            return "\n".join([f'{indentation}{i}' for i in _include(args).splitlines()])
+            return fix_indentation(_include(args))
         if type == "snippet":
-            return _snippet(args)
+            return fix_indentation(_snippet(args))
+        if type == "steal_documentation":
+            return _steal_documentation(args)
         if type == "parse_tests":
             return parse_tests.parse_tests(Path(args))
         if type == "experimental":
@@ -91,7 +98,7 @@ def _snippet(args: str):
     section = [i for i in find_section()]
     if not section:
         log.warning(f"Can't find section '{section_name}' in {file_path}")
-        section = f"/* can't find section: {args} */"
+        section = [f"/* can't find section: {args} in {file_path} */"]
 
     section = "\n".join(common.strip_indentation(section))
 
@@ -102,6 +109,20 @@ def _snippet(args: str):
 ```
 """
 
+def _steal_documentation(args: str):
+    i = [i for i in cpp_parser.index if (isinstance(i, CppClass) or isinstance(i, CppEnum)) and i.namespaced_name() == args]
+    if not i:
+        log.warning(f"Can't find class '{args}' in index")
+        return f"Can't find class: {args} in index"
+    i = i[0]
+    if not "<!-- aui:no_dedicated_page -->" in i.doc:
+        log.warning(f"Docs of '{args}' are to be stolen but they must contain  <!-- aui:no_dedicated_page -->.")
+
+    with io.StringIO() as fos:
+        print(f'<!-- aui:index_alias {i.namespaced_name()} -->\n', file=fos)
+        print(f'`{i.generic_kind} {i.namespaced_name()}`', file=fos)
+        doxygen.embed_doc(i, fos)
+        return fos.getvalue()
 
 def _experimental(name):
     return """

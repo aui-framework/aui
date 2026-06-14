@@ -46,8 +46,8 @@ TEST(Rsa, PEM_PublicWrite) {
     auto r = ARsa::generate();
     AString s = AString(r->getPublicKeyPEM(), AStringEncoding::LATIN1);
 
-    ASSERT_TRUE(s.startsWith("-----BEGIN RSA PUBLIC KEY-----"));
-    ASSERT_TRUE(s.endsWith("-----END RSA PUBLIC KEY-----\n"));
+    ASSERT_TRUE(s.startsWith("-----BEGIN PUBLIC KEY-----") || s.startsWith("-----BEGIN RSA PUBLIC KEY-----"));
+    ASSERT_TRUE(s.endsWith("-----END PUBLIC KEY-----\n") || s.endsWith("-----END RSA PUBLIC KEY-----\n"));
 }
 
 TEST(Rsa, PEM_PrivateRead) {

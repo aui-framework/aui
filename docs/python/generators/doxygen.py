@@ -17,7 +17,7 @@ import re
 
 import mkdocs_gen_files
 
-from docs.python.generators import cpp_parser, common, group_page, examples_page
+from docs.python.generators import cpp_parser, common, group_page, examples_page, regexes
 from docs.python.generators.cpp_parser import DoxygenEntry, CppClass
 from pathlib import Path
 from docs.python.generators.examples_helpers import (
@@ -30,7 +30,7 @@ from docs.python.generators.examples_helpers import (
 from docs.python.generators.examples_helpers import _find_unquoted_word_on_nontrivial_line
 
 log = logging.getLogger('mkdocs')
- 
+
 
 def _has_unquoted_match(snippet: str, names: list[str]) -> bool:
     """Return True if any of the names appears in snippet outside double quotes."""
@@ -53,6 +53,27 @@ def _has_unquoted_match(snippet: str, names: list[str]) -> bool:
 
 
 
+def _extract_example_names(parse_entry):
+    t = [parse_entry.namespaced_name(), parse_entry.name]
+    def _extract_aliases(doc: str):
+        def _impl():
+            for i in doc.splitlines():
+                if m := regexes.INDEX_ALIAS.match(i):
+                    yield m.group(1)
+                    continue
+                if m := regexes.STEAL_DOCUMENTATION.match(i):
+                    yield m.group(1)
+                    continue
+        for i in _impl():
+            yield i
+            for omit in common.OMIT_NAMESPACES:
+                namespaced = f"{omit}::"
+                if i.startswith(namespaced):
+                    yield i[len(namespaced):]
+    t += _extract_aliases(parse_entry.doc)
+    return t
+
+
 def _format_token_sequence(tokens: list[str]):
     output = " ".join(tokens)
     for i in [",", "&&", ">", "&", "*"]:
@@ -61,6 +82,93 @@ def _format_token_sequence(tokens: list[str]):
         output = output.replace(f"{i} ", i)
         output = output.replace(f" {i}", i)
     return output
+
+
+def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=set()):
+    doxygen = common.parse_doxygen(nested.doc)
+
+    # todo add a check for @brief to exist
+    for i in [i for i in doxygen if i[0] == '@brief']:
+        print(i[1], file=fos)
+
+    for i in doxygen:
+        if i[0] in ['', '@details']:
+            print(f'{i[1]}', file=fos)
+
+            # Examples for nested types
+            exs = _examples_for_symbol_with_snippets(names_to_search_examples, anchors=names_to_search_examples, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None))
+            exs = _dedupe_examples_list(exs)
+            exs = _filter_examples_by_relevance(exs, names_to_search_examples, strict=True)
+            if not exs:
+                fallback_list = _dedupe_examples_list(_examples_for_symbol(names_to_search_examples, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)))
+                exs = _filter_examples_by_relevance(fallback_list, names_to_search_examples, strict=False)
+            if exs:
+                print('\n**Examples:**\n', file=fos)
+                for ex in exs:
+                    if not ex or 'src' not in ex or not ex.get('snippet'):
+                        continue
+                    try:
+                        src_rel = ex['src'].relative_to(Path.cwd())
+                    except Exception:
+                        src_rel = ex['src']
+                    pair = (ex.get('id'), str(src_rel))
+                    if pair in printed_example_pairs:
+                        continue
+                    printed_example_pairs.add(pair)
+                    extension = common.determine_extension(ex['src'])
+                    # compute hl_lines using nested type tokens
+                    tokens = [i for i in names_to_search_examples]
+                    snippet = ex.get('snippet','') or ''
+                    try:
+                        if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
+                            tokens.append('AUI_DECLARATIVE_FOR')
+                    except Exception:
+                        pass
+                    hl = _compute_hl_lines(snippet, tokens)
+                    hl_attr = f' hl_lines="{hl}"' if hl else ''
+                    print(f"\n??? note \"{src_rel}\"", file=fos)
+                    print(file=fos)
+                    print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                    print(file=fos)
+                    print(f"    ```{extension}{hl_attr}", file=fos)
+                    for line in ex['snippet'].splitlines():
+                        print(f"    {line}", file=fos)
+                    print(f"    ```", file=fos)
+
+    # enums - see APath::DefaultPath
+    if hasattr(nested, 'enum_values'):
+        print('<table markdown>', file=fos)
+        print('<tr markdown>', file=fos)
+        print('<th>Constant</th>', file=fos)
+        print('<th>Description</th>', file=fos)
+        print('</tr>', file=fos)
+        for v in nested.enum_values:
+            print('<tr markdown>', file=fos)
+            print('<td markdown>', file=fos)
+            print(f'`#!cpp {nested.name}::{v[0]}`', file=fos)
+            print('</td>', file=fos)
+            print('<td markdown>', file=fos)
+            for i in common.parse_doxygen(v[1]):
+                print(i[1], file=fos)
+            print('</td>', file=fos)
+            print('</tr>', file=fos)
+
+        print('</table>', file=fos)
+
+    # nested struct - see AUpdater::InstallCmdline, AButton
+    if hasattr(nested, 'fields'):
+        if nested.fields:
+            print('<dl style="padding-left:1em" markdown>', file=fos)
+            for v in nested.fields:
+                print(f'<dt markdown>`#!cpp {v.type_str} {v.name}`</dt>', file=fos)
+                print(f'<dd markdown>', file=fos)
+                for i in common.parse_doxygen(v.doc):
+                    print(i[1], file=fos)
+                print('</dd>', file=fos)
+            print('</dl>', file=fos)
+        else:
+            print('\n\n_Empty structure._', file=fos)
+    pass
 
 
 def gen_pages():
@@ -76,9 +184,38 @@ def gen_pages():
         slugged_name = parse_entry.namespaced_name().lower().replace('::', '_')
         parse_entry.page_url = f'{slugged_name}.md'
         with mkdocs_gen_files.open(parse_entry.page_url, 'w') as fos:
+            def _parse_page_metadata():
+                """
+                Finds the following block in the doxygen comment:
+
+                ---
+                title: Custom title
+                icon: custom-icon
+                ---
+
+                https://squidfunk.github.io/mkdocs-material/reference/#setting-the-page-icon
+                """
+
+                iterator = iter(parse_entry.doc.splitlines())
+                for i in iterator:
+                    if i == '---':
+                        print('---', file=fos)
+                        for j in iterator:
+                            print(j, file=fos)
+
+                            if m := re.match('title: (.+)', j):
+                                # hack: use the overrided name if it exists
+                                parse_entry.overview_page_title = m.group(1)
+
+                            if j == '---':
+                                print('', file=fos)
+                                return
+            _parse_page_metadata()
+
             print(f'# {parse_entry.namespaced_name()}', file=fos)
             print(f'', file=fos)
             doxygen = common.parse_doxygen(parse_entry.doc)
+
             page_examples: list[dict] = []
             # per-page set to avoid printing same example (id, src) multiple times
             printed_example_pairs: set = set()
@@ -278,12 +415,12 @@ def gen_pages():
             # For classes: print class-level examples once (used as fallback reference).
             if isinstance(parse_entry, CppClass) and class_examples:
                 try:
-                    exs = _examples_for_symbol_with_snippets([parse_entry.namespaced_name(), parse_entry.name], anchors=[parse_entry.namespaced_name(), parse_entry.name, parse_entry.name.split('::')[-1] if '::' in parse_entry.namespaced_name() else None], examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None))
+                    filter_names = _extract_example_names(parse_entry)
+                    exs = _examples_for_symbol_with_snippets(filter_names, anchors=filter_names+[parse_entry.name.split('::')[-1] if '::' in parse_entry.namespaced_name() else None], examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None))
                     exs = _dedupe_examples_list(exs)
                     # include known macro alias in the filter names so macro-only
                     # snippets (AUI_DECLARATIVE_FOR) are considered relevant for
                     # AForEachUI class pages
-                    filter_names = [parse_entry.namespaced_name(), parse_entry.name]
                     try:
                         if 'AForEachUI' in filter_names and 'AUI_DECLARATIVE_FOR' not in filter_names:
                             filter_names.append('AUI_DECLARATIVE_FOR')
@@ -294,7 +431,7 @@ def gen_pages():
                     exs = _filter_examples_by_relevance(exs, filter_names, strict=True)
                     # fallback to a relaxed filter if strict yields nothing (avoid empty class pages)
                     if not exs:
-                        fallback_list = _dedupe_examples_list(_examples_for_symbol([parse_entry.namespaced_name(), parse_entry.name], examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)))
+                        fallback_list = _dedupe_examples_list(_examples_for_symbol(_extract_example_names(parse_entry), examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)))
                         exs = _filter_examples_by_relevance(fallback_list, filter_names, strict=False)
                     # Prefer examples with unquoted occurrences when available (based on source file, nontrivial lines)
                     try:
@@ -305,7 +442,7 @@ def gen_pages():
                             except Exception:
                                 pass
                             # expand alias pair similar to helpers so macro-form usages are counted
-                            check_names = [n for n in [parse_entry.namespaced_name(), parse_entry.name] if n]
+                            check_names = [n for n in _extract_example_names(parse_entry) if n]
                             try:
                                 if 'AForEachUI' in check_names and 'AUI_DECLARATIVE_FOR' not in check_names:
                                     check_names.append('AUI_DECLARATIVE_FOR')
@@ -363,7 +500,7 @@ def gen_pages():
                             extension = common.determine_extension(ex['src'])
                             # emit admonition header with no blank line after it
                             # compute hl_lines using class tokens
-                            tokens = [parse_entry.namespaced_name(), parse_entry.name]
+                            tokens = _extract_example_names(parse_entry)
                             snippet = ex.get('snippet', '') or ''
                             try:
                                 if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
@@ -518,108 +655,16 @@ def gen_pages():
                 if types:
                     print('', file=fos)
                     print('## Public Types', file=fos)
-                    for type_entry in types:
-                        full_name = f"{parse_entry.namespaced_name()}::{type_entry.name}"
-                        _render_invisible_header(toc=type_entry.name, id=full_name, on_other_pages=full_name)
+                    for nested in types:
                         print('', file=fos)
                         print('---', file=fos)
                         print('', file=fos)
-                        print(f'`{type_entry.generic_kind} {parse_entry.namespaced_name()}::{type_entry.name}`', file=fos)
+                        full_name = f"{parse_entry.namespaced_name()}::{nested.name}"
+                        _render_invisible_header(toc=nested.name, id=full_name, on_other_pages=full_name)
+                        print(f'`{nested.generic_kind} {parse_entry.namespaced_name()}::{nested.name}`', file=fos)
                         print(f'', file=fos)
-
-                        doxygen = common.parse_doxygen(type_entry.doc)
-
-                        # todo add a check for @brief to exist
-                        for i in [i for i in doxygen if i[0] == '@brief']:
-                            print(i[1], file=fos)
-
-                        for i in doxygen:
-                            if i[0] in ['', '@details']:
-                                print(f'{i[1]}', file=fos)
-
-                        # Examples for nested types
-                        names_to_search = [full_name, type_entry.name]
-                        exs = _examples_for_symbol_with_snippets(names_to_search, anchors=[full_name, type_entry.name], examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None))
-                        exs = _dedupe_examples_list(exs)
-                        exs = _filter_examples_by_relevance(exs, names_to_search, strict=True)
-                        if not exs:
-                            fallback_list = _dedupe_examples_list(_examples_for_symbol(names_to_search, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)))
-                            exs = _filter_examples_by_relevance(fallback_list, names_to_search, strict=False)
-                        if exs:
-                            print('\n## Examples', file=fos)
-                            for ex in exs:
-                                if not ex or 'src' not in ex or not ex.get('snippet'):
-                                    continue
-                                try:
-                                    src_rel = ex['src'].relative_to(Path.cwd())
-                                except Exception:
-                                    src_rel = ex['src']
-                                pair = (ex.get('id'), str(src_rel))
-                                if pair in printed_example_pairs:
-                                    continue
-                                printed_example_pairs.add(pair)
-                                extension = common.determine_extension(ex['src'])
-                                # compute hl_lines using nested type tokens
-                                tokens = [full_name, type_entry.name]
-                                snippet = ex.get('snippet','') or ''
-                                try:
-                                    if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
-                                        tokens.append('AUI_DECLARATIVE_FOR')
-                                except Exception:
-                                    pass
-                                hl = _compute_hl_lines(snippet, tokens)
-                                hl_attr = f' hl_lines="{hl}"' if hl else ''
-                                print(f"\n??? note \"{src_rel}\"", file=fos)
-                                print(file=fos)
-                                print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
-                                print(file=fos)
-                                print(f"    ```{extension}{hl_attr}", file=fos)
-                                for line in ex['snippet'].splitlines():
-                                    print(f"    {line}", file=fos)
-                                print(f"    ```", file=fos)
-
-                        # enums - see APath::DefaultPath
-                        if hasattr(type_entry, 'enum_values'):
-                            print('<table markdown>', file=fos)
-                            print('<tr markdown>', file=fos)
-                            print('<th>Constant</th>', file=fos)
-                            print('<th>Description</th>', file=fos)
-                            print('</tr>', file=fos)
-                            for v in type_entry.enum_values:
-                                print('<tr markdown>', file=fos)
-                                print('<td markdown>', file=fos)
-                                print(f'`#!cpp {type_entry.name}::{v[0]}`', file=fos)
-                                print('</td>', file=fos)
-                                print('<td markdown>', file=fos)
-                                for i in common.parse_doxygen(v[1]):
-                                    print(i[1], file=fos)
-                                print('</td>', file=fos)
-                                print('</tr>', file=fos)
-
-                            print('</table>', file=fos)
-
-                        # nested struct - see AUpdater::InstallCmdline
-                        if hasattr(type_entry, 'fields'):
-                            if type_entry.fields:
-                                print('<table markdown>', file=fos)
-                                print('<tr markdown>', file=fos)
-                                print('<th>Field</th>', file=fos)
-                                print('<th>Description</th>', file=fos)
-                                print('</tr>', file=fos)
-                                for v in type_entry.fields:
-                                    print('<tr markdown>', file=fos)
-                                    print('<td markdown>', file=fos)
-                                    print(f'`#!cpp {v.type_str} {v.name}`', file=fos)
-                                    print('</td>', file=fos)
-                                    print('<td markdown>', file=fos)
-                                    for i in common.parse_doxygen(v.doc):
-                                        print(i[1], file=fos)
-                                    print('</td>', file=fos)
-                                    print('</tr>', file=fos)
-
-                                print('</table>', file=fos)
-                            else:
-                                print('\n\n_Empty structure._', file=fos)
+                        names_to_search_examples = [full_name]
+                        embed_doc(nested, fos, names_to_search_examples=names_to_search_examples, printed_example_pairs=printed_example_pairs)
 
 
             if hasattr(parse_entry, 'fields'):
@@ -693,7 +738,8 @@ def gen_pages():
                         methods_grouped.setdefault(i.name, []).append(i)
                     for name, overloads in sorted(methods_grouped.items(), key=lambda x: x[0] if x[0] != parse_entry.name else '!!!ctor'):
                         full_name = f"{parse_entry.namespaced_name()}::{name}"
-                        _render_invisible_header(toc=f"{name}", id=full_name, on_other_pages=f'{full_name}()')
+                        toc_name = name if name != parse_entry.name else 'constructor'
+                        _render_invisible_header(toc=toc_name, id=full_name, on_other_pages=f'{full_name}()')
                         for overload in overloads:
                             print('', file=fos)
                             print('---', file=fos)
@@ -758,7 +804,7 @@ def gen_pages():
                                     filtered_fallback = [ex for ex in fallback_list if ex.get('snippet') and member_pattern.search(ex.get('snippet'))]
                                     method_exs = _filter_examples_by_relevance(filtered_fallback, method_names, strict=False)
                                 if method_exs:
-                                    print('\n## Examples', file=fos)
+                                    print('\n**Examples:**\n', file=fos)
                                     for ex in method_exs:
                                         if not ex or 'src' not in ex or not ex.get('snippet'):
                                             continue

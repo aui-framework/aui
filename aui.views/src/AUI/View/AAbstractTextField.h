@@ -118,4 +118,6 @@ private:
     void updateTextAlignOffset();
 
     int getPosByIndexAbsolute(size_t index);
+
+    int getVerticalAlignmentOffset() noexcept;
 };

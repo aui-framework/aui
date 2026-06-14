@@ -11,14 +11,20 @@
 
 #include <AUI/Util/AWordWrappingEngineImpl.h>
 #include "AText.h"
+
+#include "ALabel.h"
+#include "AUI/IO/AByteBufferInputStream.h"
+#include "AUI/Util/ATokenizer.h"
+
 #include <AUI/Xml/AXml.h>
 #include <AUI/IO/AStringStream.h>
 #include <AUI/Util/AViewEntry.h>
 #include <stack>
 
-AText::AText() = default;
+AText::AText() {
+    addView(mViewsContainer = _new<AViewContainer>());
+}
 
-AText::~AText() = default;
 
 void AText::pushWord(Entries& entries,
                      AString word,
@@ -47,6 +53,7 @@ AText::ParsedFlags AText::parseFlags(const AText::Flags& flags) {
 void AText::clearContent() {
     mWordEntries.clear();
     mCharEntries.clear();
+    mViewsContainer->removeAllViews();
     ATextBase::clearContent();
 }
 
@@ -103,7 +110,7 @@ void AText::setItems(const AVector<std::variant<AString, _<AView>>>& init, const
                     processString(string, parsedFlags, entries);
                 },
                 [&](const _<AView>& view) {
-                    addView(view);
+                    mViewsContainer->addView(view);
                     entries << _new<AViewEntry>(view);
                 },
         }, item);
@@ -173,16 +180,131 @@ void AText::setHtml(const AString& html, const Flags& flags) {
     mEngine.setEntries(std::move(entityVisitor.entries));
 }
 
+void AText::setMarkdown(const AString& md, const Flags& flags) {
+    clearContent();
+    auto parsedFlags = parseFlags(flags);
+    Entries entries;
+    ATokenizer tokenizer(_new<AByteBufferInputStream>(AByteBufferView(md.data(), md.size())));
+    std::string lastWord;
+    bool rightAfterNewLine = true;
+    bool italic = false;
+    bool bold = false;
+    int headerLevel = 0;
+
+    auto handleWord = [&] {
+        if (lastWord.empty()) {
+            return;
+        }
+        auto label = _new<ALabel>(std::exchange(lastWord, {}));
+        label->getFontStyle().italic = italic;
+        label->getFontStyle().bold = bold;
+        label->setCustomStyle({
+          ass::FontSize { [&] {
+              // TODO: hardcoded: need to provide a way to adjust these
+              switch (headerLevel) {
+                  default:
+                  case 0:
+                      return 10_pt;
+                  case 1:
+                      return 24_pt;
+                  case 2:
+                      return 18_pt;
+                  case 3:
+                      return 16_pt;
+                  case 4:
+                      return 14_pt;
+                  case 5:
+                      return 12_pt;
+              }
+          }() },
+        });
+        mViewsContainer->addView(label);
+        entries << _new<AViewEntry>(std::move(label));
+    };
+    try {
+        for (;;) {
+            std::function<void()> doAfterWord; // lol dirty
+            switch (auto c = tokenizer.readChar()) {
+                case '*':
+                    doAfterWord = [&] {
+                        if (tokenizer.readChar() == '*') {
+                            bold = !bold;
+                        } else {
+                            tokenizer.reverseByte();
+                            italic = !italic;
+                        }
+                    };
+                    break;
+
+                case ' ':
+                case '\t':
+                    if (rightAfterNewLine) {
+                        continue; // skip dangling whitespaces
+                    }
+                    doAfterWord = [&] {
+                        entries << aui::ptr::fake_shared(&mWhitespaceEntry);
+                        // auto dot = _new<ALabel>("\u00b7") AUI_OVERRIDE_STYLE { ass::Opacity { 0.8f} };
+                        // mViewsContainer->addView(dot);
+                        // entries << _new<AViewEntry>(std::move(dot));
+                    };
+                    break;
+                case '\n':
+                    doAfterWord = [&] {
+                        rightAfterNewLine = true;
+                        entries << aui::ptr::fake_shared(&mNextLineEntry);
+                        headerLevel = 0;
+                    };
+                    break;
+
+                case '#':
+                    if (rightAfterNewLine) {
+                        // treat this as header only if we have started from a fresh line.
+                        doAfterWord = [&] {
+                            headerLevel++;
+                        };
+                        break;
+                    }
+                    [[fallthrough]];
+
+                default:
+                    rightAfterNewLine = false;
+                    lastWord += c;
+                    continue;
+            }
+
+            handleWord();
+            AUI_NULLSAFE(doAfterWord)();
+        }
+    } catch (const AEOFException& e) {}
+    handleWord();
+    mEngine.setEntries(std::move(entries));
+    mParsedFlags = parsedFlags;
+}
+
 void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
-    for (auto& wordEntry: mWordEntries) {
-        canvas->addString(wordEntry.getPosition(), wordEntry.getWord());
+    auto ascender = glm::ivec2 {0,
+                                 getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()
+    };
+    if (mVerticalAlign == VerticalAlign::MIDDLE) {
+        ascender += (getContentHeight() - ATextBase<>::getContentMinimumHeight()) / 2;
     }
-    AString str(1, ' ');
+    for (auto& wordEntry: mWordEntries) {
+        canvas->addString(wordEntry.getPosition() + ascender, wordEntry.getWord());
+    }
     for (auto& charEntry: mCharEntries) {
         auto c = charEntry.getChar();
         if (c != ' ') {
-            str.first() = c;
-            canvas->addString(charEntry.getPosition(), str);
+            AString str(1, c);
+            canvas->addString(charEntry.getPosition() + ascender, str);
         }
     }
+}
+void AText::applyGeometryToChildren() {
+    AViewContainerBase::applyGeometryToChildren();
+
+    int y = 0;
+    if (mVerticalAlign == VerticalAlign::MIDDLE) {
+        y += (getContentHeight() - ATextBase<>::getContentMinimumHeight()) / 2;
+    }
+    mViewsContainer->setGeometry(0, y, getWidth(), getHeight());
 }
