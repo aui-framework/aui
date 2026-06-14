@@ -50,14 +50,14 @@ inline void PrintTo(const AArc<T>& ptr, std::ostream* stream) {
 
 template<typename T>
 template<typename SignalField, typename Object, typename Function>
-inline AArc<T>& AArc<T>::connect(SignalField signalField, Object object, Function&& function) {
+inline aui::Arc<T>& aui::Arc<T>::connect(SignalField signalField, Object object, Function&& function) {
     AObject::connect(super::get()->*signalField, object, std::forward<Function>(function));
     return *this;
 }
 
 template<typename T>
 template<typename SignalField, typename Function>
-inline AArc<T>& AArc<T>::connect(SignalField signalField, Function&& function) {
+inline aui::Arc<T>& aui::Arc<T>::connect(SignalField signalField, Function&& function) {
     AObject::connect(super::get()->*signalField, super::get(), std::forward<Function>(function));
     return *this;
 }
