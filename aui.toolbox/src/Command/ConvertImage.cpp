@@ -114,8 +114,8 @@ void ConvertImage::run(Toolbox& t) {
     if (canvasSize == glm::ivec2(0)) {
         canvasSize = img.getSizeHint();
     }
-    AFormattedImage<APixelFormat::RGBA_BYTE> result(canvasSize);
-    result.fill(AFormattedColor<APixelFormat::RGBA_BYTE>{0, 0, 0, 0});
+    AFormattedImage<APixelFormat::R8G8B8A8_UNORM> result(canvasSize);
+    result.fill(AFormattedColor<APixelFormat::R8G8B8A8_UNORM>{0, 0, 0, 0});
 
     // contain
     auto imageSize = resize.valueOr(contain(canvasSize, img.getSizeHint()));

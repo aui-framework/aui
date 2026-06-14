@@ -16,7 +16,7 @@
 #pragma once
 
 #include "IProperty.h"
-#include <AUI/Render/FontRendering.h> // defined here
+#include <AUI/Font/FontRendering.hpp>
 
 namespace ass {
     namespace prop {

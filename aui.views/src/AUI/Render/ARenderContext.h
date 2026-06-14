@@ -16,7 +16,9 @@
 #include <AUI/Geometry2D/ARect.h>
 #include <AUI/Common/AStaticVector.h>
 
+class ACanvas;
 class IRenderer;
+class IRendererBackend;
 
 /**
  * @brief Render context passed to AView::render.
@@ -39,22 +41,17 @@ class IRenderer;
  *
  * See UIRenderOptimizationTest for tests.
  */
-struct API_AUI_VIEWS ARenderContext
-{
-    using Rectangles = AStaticVector<ARect<int>, 8>;
-
-    /**
-     * @brief Axis aligned bounding boxes where the rendering is performed in, used for optimization.
-     */
-    Rectangles clippingRects;
+struct API_AUI_VIEWS ARenderContext {
+    ACanvas& canvas;
+    IRendererBackend& backend;
+    [[deprecated("Use canvas instead")]]
     IRenderer& render;
 
-    void clip(ARect<int> clipping);
+    /**
+     * @brief Clip rectangle relative to the view's coordinate space.
+     */
+    ARect<float> clipRect;
 
     [[nodiscard]]
-    ARenderContext withShiftedPosition(glm::ivec2 by) const noexcept{
-        auto copy = *this;
-        for (auto& r : copy.clippingRects) r.translate(by);
-        return copy;
-    }
+    ARenderContext withShiftedPosition(const glm::vec2& position) const;
 };

@@ -10,17 +10,21 @@
  */
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
-#include <AUI/Software/SoftwareRenderer.h>
+#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ARender/Software/SoftwareRenderer.h>
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
+#include <AUI/Render/RendererCanvas.h>
+#include <AUI/Common/AByteBuffer.h>
+#include <AUI/Image/AImage.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext() {
 
 }
 
-SoftwareRenderingContext::~SoftwareRenderingContext() {
-    if (mBitmapBlob) {
-        free(mBitmapBlob);
-        mBitmapBlob = nullptr;
-    }
+SoftwareRenderingContext::~SoftwareRenderingContext() {}
+
+IRendererBackend& SoftwareRenderingContext::backend() {
+    return *mRenderer;
 }
 
 void SoftwareRenderingContext::destroyNativeWindow(ASurface &window) {
@@ -29,9 +33,14 @@ void SoftwareRenderingContext::destroyNativeWindow(ASurface &window) {
 
 void SoftwareRenderingContext::beginPaint(ASurface &window) {
     CommonRenderingContext::beginPaint(window);
+    mDrawList.clear();
+    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize, { reinterpret_cast<uint8_t*>(mBitmapBlob.data()), mBitmapSize.x * mBitmapSize.y * 4 });
 }
 
 void SoftwareRenderingContext::endPaint(ASurface &window) {
+    mDrawList.optimize();
+    mDrawList.draw(*mRenderer, mWindowTarget);
+    mDrawList.clear();
     CommonRenderingContext::endPaint(window);
 }
 
@@ -41,13 +50,17 @@ void SoftwareRenderingContext::beginResize(ASurface &window) {
 
 void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     CommonRenderingContext::init(init);
+    mRenderer = _new<SoftwareRenderer>();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
+
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
 }
 
 void SoftwareRenderingContext::endResize(ASurface &window) {
 
 }
 AImage SoftwareRenderingContext::makeScreenshot() {
-    return AImage{};
+    return mRenderer->readback(mWindowTarget);
 }
 
 void SoftwareRenderingContext::reallocate(const ASurface& window) {
@@ -56,15 +69,5 @@ void SoftwareRenderingContext::reallocate(const ASurface& window) {
 }
 
 void SoftwareRenderingContext::reallocate() {
-    if (mBitmapBlob) {
-        free(mBitmapBlob);
-    }
-    mBitmapBlob = static_cast<uint8_t *>(malloc(mBitmapSize.x * mBitmapSize.y * 4));
-
-    mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
-}
-
-IRenderer& SoftwareRenderingContext::renderer() {
-    static SoftwareRenderer r;
-    return r;
+    mBitmapBlob.reallocate(mBitmapSize.x * mBitmapSize.y * 4);
 }

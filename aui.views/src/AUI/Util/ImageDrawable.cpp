@@ -15,10 +15,10 @@
 //
 
 #include "AUI/Common/AException.h"
-#include "AUI/Render/IRenderer.h"
+#include <AUI/Render/ACanvas.hpp>
 #include "AImageDrawable.h"
 #include "AUI/Render/ITexture.h"
-#include <AUI/Platform/AWindow.h>
+#include <AUI/Render/IRendererBackend.h>
 #include <variant>
 
 AImageDrawable::AImageDrawable(_<AImage> image): mSize(image->size()), mStorage(std::move(image)) {
@@ -33,20 +33,24 @@ glm::ivec2 AImageDrawable::getSizeHint() {
 }
 
 
-void AImageDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
+void AImageDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) {
     if (auto asImage = std::get_if<_<AImage>>(&mStorage)) {
-        auto texture = render.getNewTexture();
-        texture->setImage(**asImage);
+        auto& backend = ctx.backend;
+        auto texture = backend.createTexture((*asImage)->size(), (*asImage)->format(), TextureFilter::LINEAR);
+        texture->upload(**asImage);
         mStorage = std::move(texture);
     }
     const auto& texture = std::get<_<ITexture>>(mStorage);
 
-    render.rectangle(ATexturedBrush{
+    ctx.canvas.rectangle(APaint {
+        .brush = ATexturedBrush {
             .texture = texture,
             .uv1 = params.cropUvTopLeft,
             .uv2 = params.cropUvBottomRight,
             .imageRendering = params.imageRendering,
             .repeat = params.repeat,
+        },
+        .color = params.color,
     }, params.offset, params.size);
 }
 

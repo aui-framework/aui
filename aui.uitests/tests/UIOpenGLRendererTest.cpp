@@ -11,7 +11,7 @@
 
 #include <gmock/gmock.h>
 #include "AUI/UITest.h"
-#include "AUI/GL/OpenGLRenderer.h"
+#include "AUI/Render/ARender/GL/OpenGLBackend.hpp"
 #include "AUI/Util/UIBuildingHelpers.h"
 
 using namespace ass;
@@ -48,13 +48,31 @@ protected:
     _<AWindow> mWindow;
 };
 
+#include <iostream>
+#include <AUI/Image/png/PngImageLoader.h>
+#include <AUI/IO/AFileOutputStream.h>
+
 TEST_F(UIOpenGLRendererTest, CheckRenderer) {
-    EXPECT_TRUE(dynamic_cast<OpenGLRenderer*>(&AWindow::current()->getRenderingContext()->renderer()));
+    EXPECT_TRUE(dynamic_cast<OpenGLBackend*>(&AWindow::current()->getRenderingContext()->backend()));
     mWindow->setContents(Centered {
       _new<AView>() << ".test" AUI_OVERRIDE_STYLE {
         BackgroundSolid { AColor::RED },
         FixedSize { 32_dp },
       },
     });
+    auto view = By::name(".test").one();
+    auto analyzer = ScreenshotAnalyzer::makeScreenshot();
+    auto img = analyzer.image();
+    std::cout << "DEBUG: img size: " << img.width() << "x" << img.height() << std::endl;
+    if (view) {
+        auto clipAnalyzer = analyzer.clip(view);
+        auto avg = clipAnalyzer.averageColor();
+        std::cout << "DEBUG: clip size: " << clipAnalyzer.image().width() << "x" << clipAnalyzer.image().height() << std::endl;
+        std::cout << "DEBUG: avg color: " << avg.r << ", " << avg.g << ", " << avg.b << ", " << avg.a << std::endl;
+    }
+    if (!img.buffer().empty()) {
+        AFileOutputStream fos("debug_checkrenderer.png");
+        PngImageLoader::save(fos, img);
+    }
     By::name(".test").check(averageColor(AColor::RED));
 }

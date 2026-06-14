@@ -10,29 +10,33 @@
  */
 
 #include "ANoiseDrawable.h"
-#include <AUI/Render/IRenderer.h>
+#include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/IRendererBackend.h>
 #include <AUI/Util/ARandom.h>
 
-void ANoiseDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
+void ANoiseDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) {
     if (!mNoise) {
-        mNoise = render.getNewTexture();
+        auto& backend = ctx.backend;
+        mNoise = backend.createTexture({ 32, 32 }, APixelFormat::R8G8B8A8_UNORM);
 
-        AFormattedImage<APixelFormat::RGBA_BYTE> data({ 32, 32 });
+        AFormattedImage<APixelFormat::R8G8B8A8_UNORM> data({ 32, 32 });
         ARandom r;
         for (auto& color : data) {
             color.r = color.g = color.b = uint8_t(r.nextInt());
             color.a = 255;
         }
+        mNoise->upload(AImageView(data));
+        }
 
-        mNoise->setImage(AImageView(data));
-    }
-
-    render.rectangle(ATexturedBrush {
-      .texture = mNoise,
-      .uv1 = glm::vec2(0),
-      .uv2 = glm::vec2(params.size) * glm::vec2(0.37390528174893522421f, 0.37577434667f),
-      .imageRendering = ImageRendering::SMOOTH,
-      .repeat = Repeat::X_Y,
+    ctx.canvas.rectangle(APaint {
+        .brush = ATexturedBrush {
+            .texture = mNoise,
+            .uv1 = glm::vec2(0),
+            .uv2 = glm::vec2(params.size) * glm::vec2(0.37390528174893522421f, 0.37577434667f),
+            .imageRendering = ImageRendering::SMOOTH,
+            .repeat = Repeat::X_Y,
+        },
+        .color = params.color,
     }, params.offset, params.size);
 }
 

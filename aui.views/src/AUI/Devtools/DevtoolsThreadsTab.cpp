@@ -12,6 +12,7 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Util/ARandom.h>
 #include "DevtoolsThreadsTab.h"
+#include <AUI/Render/ACanvas.hpp>
 #include <AUI/View/AScrollArea.h>
 
 using namespace declarative;
@@ -49,7 +50,6 @@ private:
         if (mCurrentValue <= 0) {
             return;
         }
-        RenderHints::PushColor s(ctx.render);
 
         auto color = AColor::WHITE;
         if (mCurrentValue < 5) {
@@ -74,7 +74,7 @@ private:
         color = 0xff0000_rgb;
 
     paint:
-        ctx.render.rectangle(ASolidBrush { color }, { 0, 0 }, getSize());
+            ctx.canvas.rectangle(APaint{ASolidBrush { color }}, { 0, 0 }, getSize());
     }
 };
 }   // namespace

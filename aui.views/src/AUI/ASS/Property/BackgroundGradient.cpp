@@ -14,6 +14,7 @@
 //
 
 #include <AUI/Render/RenderHints.h>
+#include <AUI/Render/ACanvas.hpp>
 #include "BackgroundGradient.h"
 #include "IProperty.h"
 
@@ -21,12 +22,11 @@
 
 void ass::prop::Property<ass::BackgroundGradient>::renderFor(AView* view, const ARenderContext& ctx) {
     if (!mInfo.gradient) { return; }
-    RenderHints::PushColor x(ctx.render);
 
     if (view->getBorderRadius() > 0) {
-        ctx.render.roundedRectangle(ABrush(*mInfo.gradient), {0, 0}, view->getSize(), view->getBorderRadius());
+        ctx.canvas.roundedRectangle(APaint{ABrush(*mInfo.gradient)}, {0, 0}, view->getSize(), view->getBorderRadius());
     } else  {
-        ctx.render.rectangle(ABrush(*mInfo.gradient), {0, 0}, view->getSize());
+        ctx.canvas.rectangle(APaint{ABrush(*mInfo.gradient)}, {0, 0}, view->getSize());
     }
     IPropertyBase::renderFor(view, ctx);
 }

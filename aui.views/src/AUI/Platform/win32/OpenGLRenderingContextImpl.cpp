@@ -13,15 +13,15 @@
 // Created by Alex2772 on 12/7/2021.
 //
 
-#include <AUI/GL/gl.h>
-#include <AUI/GL/GLDebug.h>
+#include <AUI/Render/ARender/GL/gl.h>
+#include <AUI/Render/ARender/GL/GLDebug.h>
 #include <glad/glad_wgl.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
-#include <AUI/GL/OpenGLRenderer.h>
-#include <AUI/GL/State.h>
+#include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
+#include <AUI/Render/ARender/GL/State.h>
 #include <AUI/Util/kAUI.h>
 #include <tuple>
 #include <string_view>
@@ -45,6 +45,7 @@ void OpenGLRenderingContext::makeCurrent(HDC hdc) noexcept {
 
 void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
+    mViewportSize = { init.width, init.height };
 
     // INITIALIZE OPENGL
     static PIXELFORMATDESCRIPTOR pfd;
@@ -136,10 +137,11 @@ void OpenGLRenderingContext::init(const Init& init) {
 
         // Check what extensions are actually exposed
         const GLubyte* exts = glGetString(GL_EXTENSIONS);
-        if (exts)
-            ALogger::info(LOG_TAG) << "GL_EXTENSIONS: " << exts;
-        else
+        if (exts) {
+            //ALogger::info(LOG_TAG) << "GL_EXTENSIONS: " << exts;
+        } else {
             ALogger::info(LOG_TAG) << "GL_EXTENSIONS is NULL – context/profile may be invalid";
+        }
 
 
         bool k;
@@ -210,6 +212,8 @@ void OpenGLRenderingContext::init(const Init& init) {
     }
 
     mRenderer = ourRenderer();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
     makeCurrent(mWindowDC);
     // vsync
     wglSwapIntervalEXT(!(ARenderingContextOptions::get().flags & ARenderContextFlags::NO_VSYNC));
@@ -226,9 +230,10 @@ void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
 void OpenGLRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
 
+    mDrawList.clear();
+
     makeCurrent(mSmoothResize ? mPainterDC : mWindowDC);
     beginFramebuffer(window.getSize());
-    mRenderer->beginPaint(window.getSize());
 }
 
 void OpenGLRenderingContext::beginResize(ASurface& window) {
@@ -240,8 +245,11 @@ void OpenGLRenderingContext::endResize(ASurface& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ASurface& window) {
-    endFramebuffer();
-    mRenderer->endPaint();
+    mDrawList.optimize();
+    mDrawList.draw(*mRenderer, mWindowTarget);
+    presentToBackbuffer();
+    mDrawList.clear();
+
     SwapBuffers(mSmoothResize ? mPainterDC : mWindowDC);
     if (mSmoothResize) {
         makeCurrent(nullptr);
@@ -253,6 +261,6 @@ void OpenGLRenderingContext::endPaint(ASurface& window) {
 OpenGLRenderingContext::~OpenGLRenderingContext() {
 }
 
-AImage OpenGLRenderingContext::makeScreenshot() {
-    return AImage();
+void OpenGLRenderingContext::bindContext() {
+    makeCurrent(mWindowDC);
 }

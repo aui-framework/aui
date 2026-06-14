@@ -13,15 +13,15 @@
 // Created by Alex2772 on 12/7/2021.
 //
 
-#include <AUI/GL/gl.h>
+#include <AUI/Render/ARender/GL/gl.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
-#include <AUI/GL/GLDebug.h>
+#include <AUI/Render/ARender/GL/GLDebug.h>
 
-#include <AUI/GL/OpenGLRenderer.h>
-#include <AUI/GL/State.h>
+#include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
+#include <AUI/Render/ARender/GL/State.h>
 //#include <GL/glx.h>
 
 
@@ -29,14 +29,17 @@ OpenGLRenderingContext::~OpenGLRenderingContext() {}
 
 void OpenGLRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
+    mDrawList.clear();
     beginFramebuffer(window.getSize());
-    mRenderer->beginPaint(window.getSize());
 }
 
 void OpenGLRenderingContext::endPaint(ASurface& window) {
+    mDrawList.optimize();
+    mDrawList.draw(*mRenderer, mWindowTarget);
+    presentToBackbuffer();
+    mDrawList.clear();
+    mRenderer->flush();
     CommonRenderingContext::endPaint(window);
-    endFramebuffer();
-    mRenderer->endPaint();
 }
 
 void OpenGLRenderingContext::beginResize(ASurface& window) {
@@ -44,16 +47,4 @@ void OpenGLRenderingContext::beginResize(ASurface& window) {
 
 void OpenGLRenderingContext::endResize(ASurface& window) {
 
-}
-
-AImage OpenGLRenderingContext::makeScreenshot() {
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        fb->bindForRead();
-        AImage result(mViewportSize, APixelFormat::RGBA_BYTE);
-        glReadPixels(0, 0, result.width(), result.height(), GL_RGBA, GL_UNSIGNED_BYTE, static_cast<void*>(result.modifiableBuffer().data()));
-        result.mirrorVertically();
-        gl::Framebuffer::unbind();
-        return result;
-    }
-    return {};
 }

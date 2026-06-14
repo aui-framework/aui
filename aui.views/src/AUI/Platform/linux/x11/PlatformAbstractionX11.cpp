@@ -603,6 +603,10 @@ void PlatformAbstractionX11::windowManagerLoop() {
 }
 
 void PlatformAbstractionX11::windowManagerInitNativeWindow(const IRenderingContext::Init& init) {
+    //auto context = std::make_unique<SoftwareRenderingContextX11>();
+    //context->init(init);
+    //init.setRenderingContext(std::move(context));
+    //return;
     for (const auto& graphicsApi : ARenderingContextOptions::get().initializationOrder) {
         try {
             std::visit(aui::lambda_overloaded{

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -11,7 +11,7 @@
 
 #include "CellView.h"
 
-#include "AUI/Render/IRenderer.h"
+#include <AUI/Render/ACanvas.hpp>
 
 CellView::CellView(FieldCell& cell) : mCell(cell), mCellValueCopy(cell) {
     connect(clickedButton, this, [&]() {
@@ -60,8 +60,9 @@ void CellView::render(ARenderContext context) {
                     break;
             }
 
-            context.render.setColor(color);
-            context.render.string({getWidth() / 3, (getHeight() - fs.size) / 2 + fs.getAscenderHeight()}, AString::number(count), fs);
+            APaint paint;
+            paint.color = color;
+            context.canvas.string(paint, {getWidth() / 3, (getHeight() - fs.size) / 2 + fs.getAscenderHeight()}, AString::number(count), fs);
         }
     }
 }

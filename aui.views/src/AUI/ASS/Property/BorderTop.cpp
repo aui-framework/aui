@@ -10,12 +10,12 @@
  */
 
 #include <AUI/Render/RenderHints.h>
+#include <AUI/Render/ACanvas.hpp>
 #include "BorderTop.h"
 
 void ass::prop::Property<ass::BorderTop>::renderFor(AView* view, const ARenderContext& ctx) {
-    RenderHints::PushColor x(ctx.render);
     int w = mInfo.width;
-    ctx.render.rectangle(ASolidBrush{mInfo.color},
+    ctx.canvas.rectangle(APaint{ASolidBrush{mInfo.color}},
                          {0, 0},
                          {view->getWidth(), w});
 }

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -14,14 +14,11 @@
 #include <string>
 #include <glm/glm.hpp>
 #include <AUI/Url/AUrl.h>
-
-#include "AUI/Render/FontRendering.h"
-
-#include "AUI/Render/SimpleTexturePacker.h"
-
-#include "AUI/Common/AStringVector.h"
-#include "AFontFamily.h"
+#include <AUI/Font/FontRendering.hpp>
+#include <AUI/Common/AStringVector.h>
+#include <AUI/Font/AFontFamily.h>
 #include <AUI/Common/AByteBuffer.h>
+#include <AUI/Image/AImage.h>
 
 class AString;
 
@@ -84,8 +81,6 @@ public:
         bool empty() const {
             return image == nullptr;
         }
-
-        void* rendererData = nullptr;
     };
 
     struct FontKey {
@@ -103,7 +98,6 @@ public:
 
     struct FontData {
         AVector<AOptional<Character>> characters;
-        void* rendererData = nullptr;
     };
 
 
@@ -200,4 +194,6 @@ public:
 
     [[nodiscard]]
     bool isItalic() const;
+
+    void* mRendererData = nullptr;
 };

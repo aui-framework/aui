@@ -16,6 +16,7 @@
 
 #include "ARulerView.h"
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Render/ACanvas.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 ARulerView::ARulerView(ALayoutDirection layoutDirection) : mLayoutDirection(layoutDirection) {
@@ -35,7 +36,7 @@ void ARulerView::render(ARenderContext ctx) {
     AView::render(ctx);
 
     if (mLayoutDirection == ALayoutDirection::VERTICAL) {
-        ctx.render.setTransform(glm::translate(
+        ctx.canvas.setTransform(glm::translate(
                     glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3{0, 0, 1.f}),
                     glm::vec3{0, -getWidth(), 0}));
     }
@@ -53,16 +54,14 @@ void ARulerView::render(ARenderContext ctx) {
      *
      */
     {
-        RenderHints::PushColor c(ctx.render);
-        ctx.render.setColor(textColor());
         for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
             // large dashes
-            ctx.render.rectangle(ASolidBrush{},
+            ctx.canvas.rectangle(APaint{ASolidBrush{}, textColor()},
                                  {mOffsetPx + operator ""_dp(i * delayLarge), 0.f},
                                  {1, totalHeight});
 
             // medium dashes
-            ctx.render.rectangle(ASolidBrush{},
+            ctx.canvas.rectangle(APaint{ASolidBrush{}, textColor()},
                                  {mOffsetPx + operator ""_dp(i * delayLarge + delayMedium), totalHeight / 2},
                                  {1, totalHeight / 2});
 
@@ -70,12 +69,12 @@ void ARulerView::render(ARenderContext ctx) {
             // small dashes
             for (int j = 1; j <= 4; ++j) {
                 int smallDashOffset = j * delaySmall;
-                ctx.render.rectangle(ASolidBrush{},
+                ctx.canvas.rectangle(APaint{ASolidBrush{}, textColor()},
                                      {mOffsetPx + operator ""_dp(i * delayLarge + smallDashOffset),
                                       3 * totalHeight / 4},
                                      {1, totalHeight / 4});
 
-                ctx.render.rectangle(ASolidBrush{},
+                ctx.canvas.rectangle(APaint{ASolidBrush{}, textColor()},
                                      {mOffsetPx + operator ""_dp(i * delayLarge + smallDashOffset + delayMedium),
                                       3 * totalHeight / 4},
                                      {1, totalHeight / 4});
@@ -86,7 +85,7 @@ void ARulerView::render(ARenderContext ctx) {
     // number display
     {
         for (int i = 0; i * delayLarge < getLongestSide(); ++i) {
-            ctx.render.string({mOffsetPx + operator ""_dp(i * delayLarge) + 2_dp, -1.f},
+            ctx.canvas.string({}, {mOffsetPx + operator ""_dp(i * delayLarge) + 2_dp, -1.f},
                             AString::number(i * delayLarge),
                             getFontStyle());
         }

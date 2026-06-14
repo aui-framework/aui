@@ -20,6 +20,7 @@
 
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/IRenderer.h"
+#include <AUI/Render/ACanvas.hpp>
 #include "AUI/Render/RenderHints.h"
 #include "AUI/Util/ARaiiHelper.h"
 #include <AUI/Util/AMetric.h>
@@ -304,13 +305,11 @@ void AAbstractTypeable::updateSelectionOnTextSet(const AString& t) {
     mCursorSelection = 0;
 }
 
-void AAbstractTypeable::drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned int lineHeight) {
+void AAbstractTypeable::drawCursorImpl(ACanvas& canvas, glm::ivec2 position, unsigned int lineHeight) {
     if (!isCursorBlinkVisible()) {
         return;
     }
-    renderer.setBlending(Blending::INVERSE_DST);
-    AUI_DEFER { renderer.setBlending(Blending::NORMAL); };
-    renderer.rectangle(ASolidBrush{}, position, {1, lineHeight});
+    canvas.rectangle(APaint{ASolidBrush{}, AColor::WHITE, Blending::INVERSE_DST}, position, {1, lineHeight});
 }
 
 void AAbstractTypeable::moveCursorLeft() {

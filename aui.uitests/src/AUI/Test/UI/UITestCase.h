@@ -19,7 +19,7 @@
 #include <gtest/gtest.h>
 
 #include <AUI/Platform/AWindow.h>
-#include <AUI/Software/SoftwareRenderer.h>
+#include <AUI/Render/ARender/Software/SoftwareRenderer.h>
 
 
 namespace testing {

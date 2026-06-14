@@ -15,34 +15,66 @@
 
 #include "AAnimatedDrawable.h"
 #include "AUI/Image/gif/GifImageFactory.h"
+#include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/View/AView.h>
 
 AAnimatedDrawable::AAnimatedDrawable(_<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
 }
 
-void AAnimatedDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
+void AAnimatedDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) {
     APerformanceSection s("AAnimatedDrawable::draw");
-    if (!mTexture)
-        mTexture = render.getNewTexture();
 
     if (mFactory->isNewImageAvailable()) {
         auto img = [&] {
             APerformanceSection s2("provideImage");
             return mFactory->provideImage(params.size);
         }();
+
+        if (!mTexture || mTexture->getSize() != glm::u32vec2(img.size())) {
+            auto& backend = ctx.backend;
+            mTexture = backend.createTexture(img.size(), img.format(), TextureFilter::NEAREST);
+        }
+
         if (mFactory->hasAnimationFinished()) {
             emit animationFinished;
         }
         APerformanceSection s2("upload");
-        mTexture->setImage(img);
+        mTexture->upload(img);
+
+        auto frameLength = std::chrono::milliseconds(mFactory->getCurrentFrameLength());
+        if (!mTimer) {
+            mTimer = _new<ATimer>(frameLength);
+            AObject::connect(mTimer->fired, this, [&, timer = mTimer] {
+                if (mTimer != timer) return;
+                mFactory->prepareNextFrame();
+                emit dirty(mFactory->getDirtyRect());
+            });
+            mTimer->start();
+        } else {
+            // we restart only if it's already running to adjust for potential frame duration change
+            mTimer->stop();
+            mTimer = _new<ATimer>(frameLength);
+            AObject::connect(mTimer->fired, this, [&, timer = mTimer] {
+                if (mTimer != timer) return;
+                mFactory->prepareNextFrame();
+                emit dirty(mFactory->getDirtyRect());
+            });
+            mTimer->start();
+        }
     }
 
     APerformanceSection s2("draw");
-    render.rectangle(ATexturedBrush{
-            mTexture,
-            params.cropUvTopLeft,
-            params.cropUvBottomRight,
-            params.imageRendering,
-    }, params.offset, params.size);
+    ctx.canvas.rectangle(APaint{
+                                 .brush = ATexturedBrush{
+                                         mTexture,
+                                         params.cropUvTopLeft,
+                                         params.cropUvBottomRight,
+                                         params.imageRendering,
+                                 },
+                                 .color = params.color,
+                         }, params.offset, params.size);
 }
 
 glm::ivec2 AAnimatedDrawable::getSizeHint() {

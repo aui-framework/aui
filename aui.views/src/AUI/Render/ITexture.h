@@ -15,6 +15,19 @@
 
 
 /**
+ * @brief Texture filtering mode.
+ */
+enum class TextureFilter {
+    NEAREST,
+    LINEAR,
+};
+
+enum class TextureOrigin {
+    TOP_LEFT,
+    BOTTOM_LEFT,
+};
+
+/**
  * @brief Renderer-friendly image representation.
  */
 class ITexture {
@@ -22,6 +35,20 @@ public:
     /**
      * @brief Copies image to the texture image representation (i.e. to GPU memory).
      */
-    virtual void setImage(AImageView image) = 0;
+    virtual void upload(AImageView image) = 0;
+
+    [[nodiscard]]
+    virtual glm::u32vec2 getSize() const = 0;
+
+    [[nodiscard]]
+    virtual APixelFormat getFormat() const = 0;
+
+    [[nodiscard]]
+    TextureOrigin getOrigin() const { return mOrigin; }
+    void setOrigin(TextureOrigin origin) { mOrigin = origin; }
+
     virtual ~ITexture() = default;
+
+protected:
+    TextureOrigin mOrigin = TextureOrigin::BOTTOM_LEFT;
 };

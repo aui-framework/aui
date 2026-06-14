@@ -14,6 +14,7 @@
 //
 
 #include <AUI/Render/RenderHints.h>
+#include <AUI/Render/ACanvas.hpp>
 #include "BackgroundSolid.h"
 #include "IProperty.h"
 
@@ -21,12 +22,12 @@
 void ass::prop::Property<ass::BackgroundSolid>::renderFor(AView* view, const ARenderContext& ctx) {
     ASolidBrush brush = { mInfo.color };
     if (view->getBorderRadius() > 0) {
-        ctx.render.roundedRectangle(brush,
+        ctx.canvas.roundedRectangle(APaint{brush},
                              {0, 0},
                              view->getSize(),
                              view->getBorderRadius());
     } else  {
-        ctx.render.rectangle(brush,
+        ctx.canvas.rectangle(APaint{brush},
                              {0, 0},
                              view->getSize());
 

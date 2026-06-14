@@ -13,70 +13,99 @@
 #include "UIBenchmarkScene.h"
 #include "AUI/UITest.h"
 #include "AUI/Util/AStubWindowManager.h"
+#include <AUI/Render/FontAtlas.hpp>
+#include <AUI/Platform/AFontManager.h>
 
 namespace {
 
-class StubRenderer : public IRenderer {
+class StubRenderer : public IRendererBackend {
 public:
-    class StubPrerenderedString : public IPrerenderedString {
+    class StubPrerenderedString : public IRenderer::IPrerenderedString {
     public:
-        void draw() override {}
+        void draw(ACanvas& canvas) override {}
         ~StubPrerenderedString() override = default;
         int getWidth() override { return 1; }
         int getHeight() override { return 1; }
     };
 
-    StubRenderer() = default;
+    StubRenderer() : mFontCache(AFontManager::inst().createCache(this)) {}
     ~StubRenderer() override = default;
-    _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override {
-        class Stub : public IMultiStringCanvas {
+    _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override {
+        class Stub : public IRenderer::IMultiStringCanvas {
         public:
             ~Stub() override = default;
             void addString(const glm::ivec2& position, AStringView text) noexcept override {}
             void addString(const glm::ivec2& position, std::u32string_view text) noexcept override {}
             _<IRenderer::IPrerenderedString> finalize() noexcept override { return _new<StubPrerenderedString>(); }
         };
+        return _new<Stub>();
     }
-    void rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) override {}
-    void roundedRectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius) override {}
-    void rectangleBorder(const ABrush& brush, glm::vec2 position, glm::vec2 size, float lineWidth) override {}
-    void roundedRectangleBorder(
-        const ABrush& brush, glm::vec2 position, glm::vec2 size, float radius, int borderWidth) override {}
-    void boxShadow(glm::vec2 position, glm::vec2 size, float blurRadius, const AColor& color) override {}
-    void boxShadowInner(
-        glm::vec2 position, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius,
-        const AColor& color, glm::vec2 offset) override {}
-    void string(glm::vec2 position, const AString& string, const AFontStyle& fs) override {}
-    _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override {
+    void solidRectangles(const ADrawList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+    void gradientRectangles(const ADrawList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+    void texturedRectangles(const ADrawList::TexturedRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+    void solidRoundedRectangles(const ADrawList::SolidRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+    void gradientRoundedRectangles(const ADrawList::GradientRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+    void texturedRoundedRectangles(const ADrawList::TexturedRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+    void rectangleBorders(const ADrawList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) override {}
+    void roundedRectangleBorders(const ADrawList::RoundedRectangleBorders& v, const glm::mat4& transform, const APaint& paint) override {}
+    void boxShadow(const ADrawList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) override {}
+    void boxShadowInner(const ADrawList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) override {}
+    void glyphs(const ADrawList::Glyphs& v, const glm::mat4& transform, const APaint& paint) override {}
+    _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override {
         return _new<StubPrerenderedString>();
     }
-    void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override {}
-    void points(const ABrush& brush, AArrayView<glm::vec2> points, AMetric size) override {}
-    void
-    lines(const ABrush& brush, AArrayView<std::pair<glm::vec2, glm::vec2>> points, const ABorderStyle& style,
-          AMetric width) override {}
-    void squareSector(
-        const ABrush& brush, const glm::vec2& position, const glm::vec2& size, AAngleRadians begin,
-        AAngleRadians end) override {}
-    void pushMaskBefore() override {}
-    void pushMaskAfter() override {}
-    void popMaskBefore() override {}
-    void popMaskAfter() override {}
-    void setBlending(Blending blending) override {}
-    [[nodiscard]] _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override { return nullptr; }
-    void setWindow(AWindowBase* window) override {}
+    void lines(const ADrawList::Lines& v, const glm::mat4& transform, const APaint& paint) override {}
+    void points(const ADrawList::Points& v, const glm::mat4& transform, const APaint& paint) override {}
+    void lines(const ADrawList::LineBatches& v, const glm::mat4& transform, const APaint& paint) override {}
+    void squareSector(const ADrawList::SquareSector& v, const glm::mat4& transform, const APaint& paint) override {}
+
     glm::mat4 getProjectionMatrix() const override { return glm::mat4(1.0f); }
 
-protected:
-    _unique<ITexture> createNewTexture() override {
-        class Stub : public ITexture {
-        public:
-            void setImage(AImageView image) override {}
-            ~Stub() override = default;
-        };
-        return std::make_unique<Stub>();
+    class Stub : public ITexture {
+    public:
+        void upload(AImageView image) override { mSize = image.size(); }
+        [[nodiscard]] glm::u32vec2 getSize() const override { return mSize; }
+        [[nodiscard]] APixelFormat getFormat() const override { return APixelFormat::R8G8B8A8_UNORM; }
+        ~Stub() override = default;
+    private:
+        glm::u32vec2 mSize = { 0, 0 };
+    };
+
+    _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format, TextureFilter filter) override {
+        auto t = _new<Stub>();
+        return t;
     }
-    void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<ass::Backdrop::Preprocessed> backdrops) override {}
+    void setMask(const _<ITexture>& mask, const glm::vec4& maskRect) override {}
+    AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
+                           const _<ITexture>& mask2, const glm::vec4& mask2Rect) override {
+        return { nullptr, glm::vec4(0.f) };
+    }
+    _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) override {
+        return nullptr;
+    }
+    _<ITexture> createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) override {
+        return nullptr;
+    }
+    void setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) override {}
+    void setClipRect(const ARect<float>& rect) override {}
+    glm::uvec2 getViewportSize() const override {
+        return {};
+    }
+    void setRenderMaskMode(bool enabled) override {}
+    void clear(const AColor& color) override {}
+    void beginRenderPass(const _<ITexture>& target) override {}
+    void endRenderPass() override {}
+    void flush() override {}
+    _unique<IOffscreenRenderPass> beginOffscreen(const _<ITexture>& renderTarget) override { return nullptr; }
+    void endOffscreen(_unique<IOffscreenRenderPass> pass) override {}
+    void setAllowRenderToTexture(bool allow) override {}
+    bool allowRenderToTexture() const noexcept override { return true; }
+    void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override {}
+    const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
+
+
+private:
+    _<aui::AFontCache> mFontCache;
 };
 
 }   // namespace

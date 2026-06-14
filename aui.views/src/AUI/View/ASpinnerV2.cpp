@@ -12,6 +12,9 @@
 #include "ASpinnerV2.h"
 
 #include <AUI/Render/IRenderer.h>
+#include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/RenderHints.h>
+#include <chrono>
 
 using namespace std::chrono;
 using namespace std::chrono_literals;
@@ -23,11 +26,12 @@ void ASpinnerV2::render(ARenderContext ctx) {
         AView::render(ctx);
         return;
     }
-    ctx.render.translate(glm::vec2(getSize()) / 2.f);
+    RenderHints::PushState s(ctx.canvas);
+    ctx.canvas.translate(glm::vec2(getSize()) / 2.f);
     const auto now = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-    ctx.render.rotate(
+    ctx.canvas.rotate(
         AAngleRadians(float((now % mConfiguration.period) * mConfiguration.steps / mConfiguration.period) / float(mConfiguration.steps) * 2.f * glm::pi<float>()));
-    ctx.render.translate(-glm::vec2(getSize()) / 2.f);
+    ctx.canvas.translate(-glm::vec2(getSize()) / 2.f);
     AView::render(ctx);
 }
 

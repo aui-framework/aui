@@ -10,7 +10,11 @@
  */
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
-#include <AUI/Software/SoftwareRenderer.h>
+#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ARender/Software/SoftwareRenderer.h>
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
+#include <AUI/Render/RendererCanvas.h>
+#include <AUI/Image/AImage.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext()
 {
@@ -19,8 +23,16 @@ SoftwareRenderingContext::SoftwareRenderingContext()
 SoftwareRenderingContext::~SoftwareRenderingContext() {
 }
 
+IRendererBackend& SoftwareRenderingContext::backend() {
+    return *mRenderer;
+}
+
 void SoftwareRenderingContext::init(const IRenderingContext::Init& init) {
     CommonRenderingContext::init(init);
+    mRenderer = _new<SoftwareRenderer>();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
+
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
 }
 
 void SoftwareRenderingContext::destroyNativeWindow(ASurface& window) {
@@ -29,24 +41,26 @@ void SoftwareRenderingContext::destroyNativeWindow(ASurface& window) {
 
 void SoftwareRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
-    std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
-    for (size_t i = 0; i < mBitmapSize.x * mBitmapSize.y; ++i) {
-        auto dataPtr = reinterpret_cast<uint32_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO) + i * 4);
-        *dataPtr = 0;
-    }
+    mDrawList.clear();
+    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize, { reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)), mBitmapSize.x * mBitmapSize.y * 4 });
 }
 
-void SoftwareRenderingContext::endPaint(ASurface& window) {
+void SoftwareRenderingContext::endPaint(ASurface &window) {
+    mDrawList.optimize();
+    mDrawList.draw(*mRenderer, mWindowTarget);
+    mDrawList.clear();
+
     if (mPainterDC != 0) {
-        StretchDIBits(mPainterDC,
-                      0, 0,
-                      mBitmapSize.x, mBitmapSize.y,
-                      0, 0,
-                      mBitmapSize.x, mBitmapSize.y,
-                      mBitmapInfo->bmiColors,
-                      mBitmapInfo,
-                      DIB_RGB_COLORS,
-                      SRCCOPY);
+        SetDIBitsToDevice(mPainterDC,
+                  0, 0,
+                  mBitmapSize.x, mBitmapSize.y,
+                  0, 0,
+                  0,
+                  mBitmapSize.y,
+                  mBitmapInfo->bmiColors,
+                  mBitmapInfo,
+                  DIB_RGB_COLORS
+        );
     }
     CommonRenderingContext::endPaint(window);
 }
@@ -61,7 +75,6 @@ void SoftwareRenderingContext::endResize(ASurface& window) {
 void SoftwareRenderingContext::reallocate(const ASurface &window) {
     mBitmapSize = window.getSize();
     mBitmapBlob.reallocate(mBitmapSize.x * mBitmapSize.y * 4 + sizeof(*mBitmapInfo));
-    mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
     mBitmapInfo = reinterpret_cast<BITMAPINFO*>(mBitmapBlob.data());
 
     mBitmapInfo->bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -78,20 +91,5 @@ void SoftwareRenderingContext::reallocate() {
 }
 
 AImage SoftwareRenderingContext::makeScreenshot() {
-    AByteBuffer data;
-    size_t s = mBitmapSize.x * mBitmapSize.y * 4;
-    data.resize(s);
-    for (size_t i = 0; i < s; i += 4) {
-        uint8_t* ptr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFOHEADER) + i);
-        data.at<std::uint8_t>(i    ) = ptr[2];
-        data.at<std::uint8_t>(i + 1) = ptr[1];
-        data.at<std::uint8_t>(i + 2) = ptr[0];
-        data.at<std::uint8_t>(i + 3) = ptr[3];
-    }
-    return {std::move(data), mBitmapSize, APixelFormat::RGBA | APixelFormat::BYTE};
-}
-
-IRenderer& SoftwareRenderingContext::renderer() {
-    static SoftwareRenderer r;
-    return r;
+    return mRenderer->readback(mWindowTarget);
 }

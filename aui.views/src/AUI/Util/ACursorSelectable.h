@@ -23,6 +23,7 @@
 #include <AUI/Render/RenderHints.h>
 #include <AUI/Platform/AInput.h>
 #include <AUI/View/AView.h>
+#include <AUI/Render/ACanvas.hpp>
 
 class API_AUI_VIEWS ACursorSelectable {
 public:
@@ -131,28 +132,22 @@ protected:
     void handleMouseMove(const glm::ivec2& pos);
 
     template<aui::invocable Callback>
-    void drawSelectionBeforeAndAfter(IRenderer& render, std::span<ARect<int>> rects, Callback&& drawText) {
+    void drawSelectionBeforeAndAfter(ACanvas& render, std::span<ARect<int>> rects, Callback&& drawText) {
         if (rects.empty()) {
             drawText();
             return;
         }
 
-        auto drawRects = [&] {
+        auto drawRects = [&](Blending blending, const AColor& color) {
             for (auto r : rects) {
-                render.rectangle(ASolidBrush{}, r.p1, r.size());
+                render.rectangle(APaint{ASolidBrush{}, color, blending}, r.p1, r.size());
             }
         };
-        {
-            RenderHints::PushColor c(render);
-            render.setColor(AColor(1.f) - AColor(0x0078d700u));
-            drawRects();
-        }
+        drawRects(Blending::NORMAL, AColor(1.f) - AColor(0x0078d700u));
 
         drawText();
 
-        render.setBlending(Blending::INVERSE_DST);
-        AUI_DEFER { render.setBlending(Blending::NORMAL); };
-        drawRects();
+        drawRects(Blending::INVERSE_DST, AColor::WHITE);
     }
 
 private:

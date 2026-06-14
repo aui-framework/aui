@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -16,6 +16,8 @@
 
 
 
+#include <AUI/Render/FontAtlas.hpp>
+
 AFontManager::~AFontManager() = default;
 
 
@@ -26,4 +28,8 @@ _<AFont> AFontManager::loadFont(const AUrl& url) {
 AFontManager& AFontManager::inst() {
     static AFontManager f;
     return f;
+}
+
+_<aui::AFontCache> AFontManager::createCache(IRendererBackend* renderer) {
+    return _new<aui::AFontCache>(*renderer);
 }

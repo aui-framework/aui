@@ -14,25 +14,16 @@
 //
 
 #include "Border.h"
-#include <AUI/Render/IRenderer.h>
+#include <AUI/Render/ACanvas.hpp>
 #include <AUI/Render/RenderHints.h>
 
 
 void ass::prop::Property<ass::Border>::renderFor(AView* view, const ARenderContext& ctx) {
-    /*
-    if (view->getBorderRadius() < 0.1f) {
-        ctx.render.drawRectBorder(ASolidBrush{mInfo.color},
-                               {0, 0},
-                               view->getSize(),
-                               mInfo.width);
-    } else {
-        */
-    ctx.render.roundedRectangleBorder(ASolidBrush{mInfo.color},
+    ctx.canvas.roundedRectangleBorder(APaint{ASolidBrush{mInfo.color}},
                                       {0, 0},
                                       view->getSize(),
                                       view->getBorderRadius(),
                                       mInfo.width);
-    //}
 }
 
 bool ass::prop::Property<ass::Border>::isNone() {

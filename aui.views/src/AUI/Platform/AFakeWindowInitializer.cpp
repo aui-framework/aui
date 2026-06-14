@@ -9,29 +9,89 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by Alex2772 on 12/7/2021.
-//
+#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/RendererCanvas.h>
+#include <AUI/Render/ARender/ADrawList.hpp>
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
+#include <AUI/Render/FontAtlas.hpp>
+#include <AUI/Platform/AFontManager.h>
+#include <AUI/Image/AImage.h>
 
-#include "AFakeWindowInitializer.h"
-#include "ASurface.h"
+namespace {
+    class FakeBackend: public IRendererBackend {
+    public:
+        FakeBackend() : mFontCache(AFontManager::inst().createCache(this)) {}
 
+        AImage readback(const _<ITexture>& texture) override {
+            return {};
+        }
 
-void AFakeWindowInitializer::init(const IRenderingContext::Init& init) {
+        void solidRectangles(const ADrawList::SolidRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+        void gradientRectangles(const ADrawList::GradientRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+        void texturedRectangles(const ADrawList::TexturedRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+        void solidRoundedRectangles(const ADrawList::SolidRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+        void gradientRoundedRectangles(const ADrawList::GradientRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+        void texturedRoundedRectangles(const ADrawList::TexturedRoundedRectangles& v, const glm::mat4& transform, const APaint& paint) override {}
+        void rectangleBorders(const ADrawList::RectangleBorders& v, const glm::mat4& transform, const APaint& paint) override {}
+        void roundedRectangleBorders(const ADrawList::RoundedRectangleBorders& v, const glm::mat4& transform, const APaint& paint) override {}
+        void boxShadow(const ADrawList::BoxShadow& v, const glm::mat4& transform, const APaint& paint) override {}
+        void boxShadowInner(const ADrawList::BoxShadowInner& v, const glm::mat4& transform, const APaint& paint) override {}
+        void glyphs(const ADrawList::Glyphs& v, const glm::mat4& transform, const APaint& paint) override {}
+        void lines(const ADrawList::Lines& v, const glm::mat4& transform, const APaint& paint) override {}
+        void points(const ADrawList::Points& v, const glm::mat4& transform, const APaint& paint) override {}
+        void lines(const ADrawList::LineBatches& v, const glm::mat4& transform, const APaint& paint) override {}
+        void squareSector(const ADrawList::SquareSector& v, const glm::mat4& transform, const APaint& paint) override {}
+        void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) override {}
+
+        _<IRenderer::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override {
+            auto entryData = aui::getFontEntryData(style, mFontCache);
+            return _new<aui::MultiStringCanvas>(*this, entryData, style);
+        }
+        _<IRenderer::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override {
+            auto c = newMultiStringCanvas(fs);
+            c->addString(position, text);
+            return c->finalize();
+        }
+
+        _<ITexture> createTexture(glm::u32vec2 size, APixelFormat format, TextureFilter filter) override { return nullptr; }
+        void setAllowRenderToTexture(bool allow) override {}
+        bool allowRenderToTexture() const noexcept override { return true; }
+        glm::mat4 getProjectionMatrix() const override { return glm::mat4(1.0f); }
+
+        void setMask(const _<ITexture>& mask, const glm::vec4& maskRect) override {}
+        void setRenderTarget(const _<ITexture>& texture, glm::uvec2 size) override {}
+        void setClipRect(const ARect<float>& rect) override {}
+        [[nodiscard]]
+        glm::uvec2 getViewportSize() const override { return glm::uvec2(0); }
+        void setRenderMaskMode(bool enabled) override {}
+        void clear(const AColor& color) override {}
+        _unique<IOffscreenRenderPass> beginOffscreen(const _<ITexture>& renderTarget) override { return nullptr; }
+        void endOffscreen(_unique<IOffscreenRenderPass> pass) override {}
+        void beginRenderPass(const _<ITexture>& target) override {}
+        void endRenderPass() override {}
+        void flush() override {}
+        const _<aui::AFontCache>& getFontCache() override { return mFontCache; }
+        AMergedMask mergeMasks(const _<ITexture>& mask1, const glm::vec4& mask1Rect,
+                               const _<ITexture>& mask2, const glm::vec4& mask2Rect) override {
+            return { nullptr, glm::vec4(0.f) };
+        }
+        _<ITexture> createRectMask(const ARect<float>& rect, bool inverted, const ARect<float>& bounds) override {
+            return nullptr;
+        }
+        _<ITexture> createRoundedRectMask(const ARect<float>& rect, float radius, bool inverted, const ARect<float>& bounds) override {
+            return nullptr;
+        }
+
+    private:
+        _<aui::AFontCache> mFontCache;
+    };
 }
 
-void AFakeWindowInitializer::destroyNativeWindow(ASurface& window) {
-
-}
-
-void AFakeWindowInitializer::beginPaint(ASurface& window) {
-
-}
-
-void AFakeWindowInitializer::endPaint(ASurface& window) {
-
-}
-
-void AFakeWindowInitializer::beginResize(ASurface& window) {
-
-}
+struct AFakeWindowInitializer {
+    FakeBackend backend;
+    ADrawList dl;
+    ADisplayListCanvas canvas;
+    RendererCanvas renderer;
+    AFakeWindowInitializer(): canvas(dl, backend), renderer(canvas, backend) {}
+};

@@ -22,6 +22,7 @@
 /**
  * @brief Base class for AAbstractTypeableView which is template class.
  */
+class ACanvas;
 class API_AUI_VIEWS AAbstractTypeable: public ACursorSelectable {
 public:
     AAbstractTypeable();
@@ -215,7 +216,7 @@ private:
     friend class AAbstractTypeableView;
 
     virtual void typeableInvalidateFont() = 0;
-    void drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned lineHeight);
+    void drawCursorImpl(ACanvas& canvas, glm::ivec2 position, unsigned lineHeight);
 
     void fastenSelection();
     void eraseSelection();

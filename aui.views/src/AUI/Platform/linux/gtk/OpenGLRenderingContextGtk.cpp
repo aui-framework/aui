@@ -73,13 +73,16 @@ void OpenGLRenderingContextGtk::gtkRealize(GtkWidget* widget) {
     }
     bool is_desktop_gl = is_desktop_gl_fn();
 
-    if (!OpenGLRenderer::loadGL(aui::epoxy_fake::get_proc_address, !is_desktop_gl)) {
+    if (!OpenGLBackend::loadGL(aui::epoxy_fake::get_proc_address, !is_desktop_gl)) {
         throw AException("Failed to load GL");
     }
 
     auto acquired = contextScope();
 
     mRenderer = ourRenderer();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
+    mFlipY = true;
 }
 
 void OpenGLRenderingContextGtk::gtkSnapshot(GtkWidget* widget, GtkSnapshot* snapshot) {
@@ -136,21 +139,6 @@ void OpenGLRenderingContextGtk::gtkSnapshot(GtkWidget* widget, GtkSnapshot* snap
         gtk_snapshot_append_scaled_texture(snapshot, mTexture->gl_texture, GSK_SCALING_FILTER_NEAREST, &rect);
     }
     gtk_snapshot_restore(snapshot);
-}
-void OpenGLRenderingContextGtk::endFramebuffer() {
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        // gtk can't flip the Y axis by itself, so we need to do it manually
-        fb->bindForRead();
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
-        glBlitFramebuffer(
-            0, 0,                                                 // src pos
-            fb->supersampledSize().x, fb->supersampledSize().y,   // src size
-            0, fb->size().y,                                      // dst pos
-            fb->size().x, 0,                                      // dst size
-            GL_COLOR_BUFFER_BIT,                                  // mask
-            GL_LINEAR);                                           // filter
-        gl::Framebuffer::unbind();
-    }
 }
 
 void OpenGLRenderingContextGtk::gtkUnrealize(GtkWidget* widget) {

@@ -189,6 +189,14 @@ struct ARect {
         return glm::abs(p2 - p1);
     }
 
+    [[nodiscard]]
+    ARect intersect(const ARect& other) const noexcept {
+        return {
+            .p1 = glm::max(min(), other.min()),
+            .p2 = glm::min(max(), other.max())
+        };
+    }
+
     ARect& translate(glm::ivec2 by) noexcept {
         p1 += by;
         p2 += by;

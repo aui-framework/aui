@@ -13,15 +13,20 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Render/ARender/ADrawList.hpp>
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
+#include <AUI/Render/RendererCanvas.h>
+
+class SoftwareRenderer;
 
 class API_AUI_VIEWS SoftwareRenderingContext: public aui::noncopyable, public CommonRenderingContext {
 public:
     SoftwareRenderingContext();
     ~SoftwareRenderingContext() override;
 
+    void init(const Init& init) override;
 #if !AUI_PLATFORM_LINUX
     // to be implemented by IPlatformAbstraction
-    void init(const Init& init) override;
     void destroyNativeWindow(ASurface& window) override;
 #endif
 
@@ -29,71 +34,42 @@ public:
     void endPaint(ASurface& window) override;
     void beginResize(ASurface& window) override;
 
-    IRenderer& renderer() override;
+    IRenderer& renderer() override {
+        return *mRendererWrapper;
+    }
+
+    IRendererBackend& backend() override;
+
+    ACanvas& canvas() override {
+        return *mCanvas;
+    }
 
     AImage makeScreenshot() override;
-
-    inline uint8_t& stencil(const glm::uvec2& position) {
-        return mStencilBlob.at<uint8_t>(mBitmapSize.x * position.y + position.x);
-    }
 
     [[nodiscard]]
     glm::uvec2 bitmapSize() const {
         return mBitmapSize;
     }
 
-    inline void putPixel(const glm::uvec2& position, const glm::u8vec3& color) noexcept {
-        putPixel(position, glm::u8vec4(color, 255));
+    [[nodiscard]]
+    const glm::uvec2& getBitmapSize() const noexcept {
+        return mBitmapSize;
     }
-#if AUI_PLATFORM_WIN
-    inline void putPixel(const glm::uvec2& position, const glm::u8vec4& color) noexcept {
-        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
-
-        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
-            + (mBitmapSize.x * position.y + position.x) * 4);
-        dataPtr[0] = color[2];
-        dataPtr[1] = color[1];
-        dataPtr[2] = color[0];
-        dataPtr[3] = color[3];
-    }
-    inline glm::u8vec4 getPixel(const glm::uvec2& position) noexcept {
-        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
-
-        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob.data() + sizeof(BITMAPINFO)
-                                                  + (mBitmapSize.x * position.y + position.x) * 4);
-
-        return { dataPtr[2], dataPtr[1], dataPtr[0], dataPtr[3] };
-    }
-#else
-    inline void putPixel(const glm::uvec2& position, const glm::u8vec4& color) noexcept {
-        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
-
-        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob + (mBitmapSize.x * position.y + position.x) * 4);
-        dataPtr[0] = color[2];
-        dataPtr[1] = color[1];
-        dataPtr[2] = color[0];
-        dataPtr[3] = color[3];
-    }
-    inline glm::u8vec4 getPixel(const glm::uvec2& position) noexcept {
-        AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
-
-        auto dataPtr = reinterpret_cast<uint8_t*>(mBitmapBlob + (mBitmapSize.x * position.y + position.x) * 4);
-        return {
-            dataPtr[2],
-            dataPtr[1],
-            dataPtr[0],
-            dataPtr[3],
-        };
-    }
-#endif
 
     void endResize(ASurface& window) override;
 
 protected:
-    AByteBuffer mStencilBlob;
+    _<SoftwareRenderer> mRenderer;
+    ADrawList mDrawList;
+    _unique<ADisplayListCanvas> mCanvas;
+    _unique<RendererCanvas> mRendererWrapper;
+
+    _<ITexture> mWindowTarget;
     glm::uvec2 mBitmapSize;
 #if AUI_PLATFORM_LINUX
     std::uint8_t* mBitmapBlob = nullptr;
+#else
+    AByteBuffer mBitmapBlob;
 #endif
 
     void reallocate(const ASurface& window);
@@ -101,10 +77,6 @@ protected:
 
 private:
 #if AUI_PLATFORM_WIN
-    AByteBuffer mBitmapBlob;
     BITMAPINFO* mBitmapInfo;
-#endif
-#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_APPLE || AUI_PLATFORM_EMSCRIPTEN
-    std::uint8_t* mBitmapBlob = nullptr;
 #endif
 };

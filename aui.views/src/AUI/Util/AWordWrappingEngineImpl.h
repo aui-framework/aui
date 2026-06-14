@@ -176,31 +176,26 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
         bool escapesEdges = (*currentItem)->escapesEdges();
 
         // check if entry fits into the row
-        if (forcesNextLine || (currentRowWidth + currentItemSize.x > size.x && !escapesEdges)) {
-            // if current row is empty, we must place this element (unless forcesNextLine)
-            if (!currentRow->empty() || forcesNextLine) {
-                // jump to the next row
-
-                auto removeRedundantItems = [&currentRowHeight](AVector<FloatingEntry>& fl) {
-                    for (auto it = fl.begin(); it != fl.end();) {
-                        it->remainingHeight -= currentRowHeight;
-                        if (it->remainingHeight <= 0) {
-                            it = fl.erase(it);
-                        } else {
-                            ++it;
-                        }
+        if (currentRowWidth + currentItemSize.x > size.x && !escapesEdges && !currentRow->empty()) {
+            auto removeRedundantItems = [&currentRowHeight](AVector<FloatingEntry>& fl) {
+                for (auto it = fl.begin(); it != fl.end();) {
+                    it->remainingHeight -= currentRowHeight;
+                    if (it->remainingHeight <= 0) {
+                        it = fl.erase(it);
+                    } else {
+                        ++it;
                     }
-                };
+                }
+            };
 
-                flushRow(false);
+            flushRow(false);
 
-                removeRedundantItems(leftFloat);
-                removeRedundantItems(rightFloat);
+            removeRedundantItems(leftFloat);
+            removeRedundantItems(rightFloat);
 
-                currentY += int(float(currentRowHeight) * mLineHeight);
-                currentRowHeight = 0;
-                beginRow();
-            }
+            currentY += int(float(currentRowHeight) * mLineHeight);
+            currentRowHeight = 0;
+            beginRow();
         }
         if (firstItem) {
             if (mTextAlign == ATextAlign::JUSTIFY && (*currentItem)->escapesEdges()) {
@@ -230,6 +225,28 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
         }
 
         currentRowWidth += currentItemSize.x;
+
+        if (forcesNextLine) {
+            auto removeRedundantItems = [&currentRowHeight](AVector<FloatingEntry>& fl) {
+                for (auto it = fl.begin(); it != fl.end();) {
+                    it->remainingHeight -= currentRowHeight;
+                    if (it->remainingHeight <= 0) {
+                        it = fl.erase(it);
+                    } else {
+                        ++it;
+                    }
+                }
+            };
+
+            flushRow(false);
+
+            removeRedundantItems(leftFloat);
+            removeRedundantItems(rightFloat);
+
+            currentY += int(float(currentRowHeight) * mLineHeight);
+            currentRowHeight = 0;
+            beginRow();
+        }
     }
     flushRow(true);
 

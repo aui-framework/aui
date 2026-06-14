@@ -10,8 +10,8 @@
  */
 
 
-#include "AUI/GL/gl.h"
-#include "AUI/GL/GLDebug.h"
+#include "AUI/Render/ARender/GL/gl.h"
+#include "AUI/Render/ARender/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Render/IRenderer.h"
@@ -20,7 +20,7 @@
 
 
 #include "AUI/Util/ARandom.h"
-#include "AUI/GL/State.h"
+#include "AUI/Render/ARender/GL/State.h"
 #include "AUI/Thread/AThread.h"
 #include "Ole.h"
 #include "Win32Util.h"
@@ -42,7 +42,7 @@
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Devtools/DevtoolsPanel.h>
 #include <AUI/Util/ALayoutInflater.h>
-#include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
 
 #include <AUI/Util/Cache.h>
 #include <AUI/Action/AMenu.h>
@@ -462,7 +462,7 @@ void AWindow::show() {
 }
 void AWindow::setIcon(const AImage& image) {
     if (!mHandle) return;
-    AUI_ASSERT(image.format() & APixelFormat::BYTE);
+    AUI_ASSERT(image.format() == APixelFormat::R8_UNORM);
 
     if (mIcon) {
         DestroyIcon(mIcon);

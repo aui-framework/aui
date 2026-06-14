@@ -18,9 +18,10 @@
 #include <AUI/Render/IRenderer.h>
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/AImageDrawable.h>
+#include <AUI/Image/AAnimatedDrawable.h>
 
 ADrawableView::ADrawableView(_<IDrawable> drawable) : mDrawable(std::move(drawable)) {
-
+    setDrawable(mDrawable);
 }
 
 void ADrawableView::render(ARenderContext context) {
@@ -35,6 +36,21 @@ void ADrawableView::render(ARenderContext context) {
 
 ADrawableView::ADrawableView(const AUrl& url): ADrawableView(IDrawable::fromUrl(url)) {
 
+}
+
+void ADrawableView::setDrawable(const _<IDrawable>& drawable) {
+    mDrawable = drawable;
+    if (auto animated = _cast<AAnimatedDrawable>(mDrawable)) {
+        AObject::connect(animated->dirty, this, [this, animated](ARect<int> rect) {
+            auto imageSize = glm::vec2(animated->getSizeHint());
+            auto scale = glm::vec2(getSize()) / imageSize;
+            markPixelDataInvalid({
+                glm::ivec2(glm::vec2(rect.p1) * scale),
+                glm::ivec2(glm::vec2(rect.p2) * scale)
+            });
+        });
+    }
+    redraw();
 }
 
 ADrawableView::ADrawableView() {
