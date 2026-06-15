@@ -984,7 +984,7 @@ function(auib_import AUI_MODULE_NAME URL)
     if(AUI_BOOT_SOURCEDIR_COMPAT)
         unset(SOURCE_BINARY_DIRS_ARG)
     else()
-        if (NOT AUI_BOOT AND NOT AUIB_SKIP_REPOSITORY_WAIT AND NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG) # recursive deadlock fix
+        if (NOT AUI_BOOT_INSIDE AND NOT AUIB_SKIP_REPOSITORY_WAIT AND NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG) # recursive deadlock fix
             if (NOT _locked)
                 set(_locked TRUE)
                 file(LOCK "${AUIB_CACHE_DIR}/repo.lock" RESULT_VARIABLE _error TIMEOUT 1) # try lock without the message
@@ -1099,6 +1099,7 @@ function(auib_import AUI_MODULE_NAME URL)
                 endforeach()
                 set(FINAL_CMAKE_ARGS
                         -DAUI_BOOT=TRUE
+                        -DAUI_BOOT_INSIDE=TRUE
                         --no-warn-unused-cli # zaebalo
                         ${FORWARDED_LIBS}
                         ${AUIB_IMPORT_CMAKE_ARGS}
