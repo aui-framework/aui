@@ -9,12 +9,12 @@
 
 class UnaryOperatorNode: public ExpressionNode {
 private:
-    _<ExpressionNode> mChild;
+    AArc<ExpressionNode> mChild;
 
 public:
-    UnaryOperatorNode(const _<ExpressionNode>& child) : mChild(child) {}
+    UnaryOperatorNode(const AArc<ExpressionNode>& child) : mChild(child) {}
 
-    const _<ExpressionNode>& child() const {
+    const AArc<ExpressionNode>& child() const {
         return mChild;
     }
 };

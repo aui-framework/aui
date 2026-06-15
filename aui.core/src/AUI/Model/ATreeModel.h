@@ -33,8 +33,8 @@ class ATreeModel: public ITreeModel<T> {
 private:
     struct Node {
         T value;
-        AVector<_<Node>> children;
-        _weak<Node> parent;
+        AVector<AArc<Node>> children;
+        AWeakArc<Node> parent;
     };
 
 public:
@@ -44,7 +44,7 @@ public:
     };
 
 private:
-    static _<Node> itemToNode(Item& item) {
+    static AArc<Node> itemToNode(Item& item) {
         auto result = _new<Node>(Node {
             .value = std::move(item.value),
         });
@@ -66,20 +66,20 @@ public:
 
 
     size_t childrenCount(const ATreeModelIndexOrRoot& vertex) override {
-        auto& container = vertex == ATreeModelIndex::ROOT ? mChildren : (*vertex).as<_<Node>>()->children;
+        auto& container = vertex == ATreeModelIndex::ROOT ? mChildren : (*vertex).as<AArc<Node>>()->children;
         return container.size();
     }
 
      T itemAt(const ATreeModelIndex& index) override {
-        return index.as<_<Node>>()->value;
+        return index.as<AArc<Node>>()->value;
      }
 
     ATreeModelIndex indexOfChild(size_t row, size_t column, const ATreeModelIndexOrRoot& vertex) override {
-        auto& container = vertex == ATreeModelIndex::ROOT ? mChildren : (*vertex).as<_<Node>>()->children;
+        auto& container = vertex == ATreeModelIndex::ROOT ? mChildren : (*vertex).as<AArc<Node>>()->children;
         return ATreeModelIndex(row, column, container[row]);
     }
 
-    ATreeModelIndex makeIndex(_<Node> node) {
+    ATreeModelIndex makeIndex(AArc<Node> node) {
         auto parent = node->parent.lock();
         auto& children = parent ? parent->children : mChildren;
         const auto row = children.indexOf(node).valueOr(0);
@@ -87,7 +87,7 @@ public:
     }
 
     ATreeModelIndexOrRoot parent(const ATreeModelIndex& vertex) override {
-        if (auto p = vertex.as<_<Node>>()->parent.lock()) {
+        if (auto p = vertex.as<AArc<Node>>()->parent.lock()) {
             return makeIndex(std::move(p));
         }
         return ATreeModelIndex::ROOT;
@@ -95,5 +95,5 @@ public:
 
 private:
 
-    AVector<_<Node>> mChildren;
+    AVector<AArc<Node>> mChildren;
 };

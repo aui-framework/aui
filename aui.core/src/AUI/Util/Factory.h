@@ -18,19 +18,19 @@ class Factory
 {
 public:
 	virtual ~Factory() = default;
-	virtual _<BaseType> createObject() = 0;
+	virtual AArc<BaseType> createObject() = 0;
 
-	_<BaseType> operator()()
+	AArc<BaseType> operator()()
 	{
 		return createObject();
 	}
 
 	template <typename DerivedType>
-	static _<Factory<BaseType>> makeFactoryOf() {
+	static AArc<Factory<BaseType>> makeFactoryOf() {
 		class MyFactory: public Factory<BaseType>
 		{
 		public:
-			_<BaseType> createObject() override
+			AArc<BaseType> createObject() override
 			{
 				return _new<DerivedType>();
 			}

@@ -29,7 +29,7 @@ struct ColorView {
      */
     contract::In<AColor> color;
 
-    _<AView> operator()() {
+    AArc<AView> operator()() {
         auto color = this->color;
         return Centered {
             _new<AView>() AUI_LET {
@@ -75,7 +75,7 @@ struct SlidersRGB {
     /**
      * @brief Factory used to create individual sliders.
      */
-    std::function<_<AView>(contract::In<AColor> color, std::function<void(AColor)> onColorChanged, Channel channel)>
+    std::function<AArc<AView>(contract::In<AColor> color, std::function<void(AColor)> onColorChanged, Channel channel)>
         sliderFactory = defaultSlider;
 
     /**
@@ -85,7 +85,7 @@ struct SlidersRGB {
      * @param channel Pointer to the channel member.
      * @return A view containing the slider.
      */
-    static _<AView>
+    static AArc<AView>
     defaultSlider(contract::In<AColor> color, std::function<void(AColor)> onColorChanged, Channel channel) {
         return Slider {
             .value = AUI_REACT(std::invoke(channel, color)),
@@ -120,7 +120,7 @@ struct SlidersRGB {
         };
     }
 
-    _<AView> operator()() {
+    AArc<AView> operator()() {
         return Vertical {
             sliderFactory(color, onColorChanged, &AColor::r),
             sliderFactory(color, onColorChanged, &AColor::g),

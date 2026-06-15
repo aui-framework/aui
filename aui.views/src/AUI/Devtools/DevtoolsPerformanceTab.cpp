@@ -208,7 +208,7 @@ namespace {
         using SectionStatMap = AMap<AString /* section name */, SectionStat>;
 
         AFormattedImage<APixelFormat::RGBA_BYTE> mImage;
-        _<ITexture> mTexture;
+        AArc<ITexture> mTexture;
         unsigned mFrameIndex = 0;
 
         [[nodiscard]]
@@ -245,7 +245,7 @@ namespace {
         }
 
         void onPerformanceFrame(const APerformanceSection::Datas& sections) {
-            _<AViewContainer> root = Vertical{};
+            AArc<AViewContainer> root = Vertical{};
             populate(*root, sections);
             setContents(Horizontal { root });
         }
@@ -257,7 +257,7 @@ namespace {
     private:
         bool mVerboseMode  = false;
 
-        _<AView> makeChip(const APerformanceSection::Data& i) {
+        AArc<AView> makeChip(const APerformanceSection::Data& i) {
             return Horizontal {
                 Label { i.name } AUI_OVERRIDE_STYLE {
                     TextColor { i.color.readableBlackOrWhite() },
@@ -283,7 +283,7 @@ namespace {
                 return;
             }
             for (const auto& section : sections) {
-                _<AViewContainer> v = Vertical{} AUI_OVERRIDE_STYLE {
+                AArc<AViewContainer> v = Vertical{} AUI_OVERRIDE_STYLE {
                     BorderLeft { 2_dp, section.color },
                 };
                 container.addView(v);
@@ -291,7 +291,7 @@ namespace {
                 if (section.children.empty()) {
                     continue;
                 }
-                _<AViewContainer> root = Vertical{} AUI_OVERRIDE_STYLE {
+                AArc<AViewContainer> root = Vertical{} AUI_OVERRIDE_STYLE {
                     Padding { {}, {}, {}, 8_dp },
                 };
                 populate(*root, section.children, remainingDepth - 1);

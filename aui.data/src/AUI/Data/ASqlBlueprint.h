@@ -42,7 +42,7 @@ private:
 	AString mTableName;
 
 
-	ASqlBlueprintTable(_<ASqlDatabase> db, const AString& name);
+	ASqlBlueprintTable(AArc<ASqlDatabase> db, const AString& name);
 public:
 	ASqlBlueprintTable(const AString& name):
 		ASqlBlueprintTable(Autumn::get<ASqlDatabase>(), name)

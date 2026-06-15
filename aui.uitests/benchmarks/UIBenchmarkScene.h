@@ -29,7 +29,7 @@
 #include "AUI/View/AScrollArea.h"
 #include "AUI/View/ATextArea.h"
 
-static _<AView> radioButtonsDemo() {
+static AArc<AView> radioButtonsDemo() {
     using namespace declarative;
     using namespace ass;
     auto selection = _new<AProperty<int>>(0);
@@ -58,7 +58,7 @@ static _<AView> radioButtonsDemo() {
 }
 
 
-static _<AView> checkBoxesDemo() {
+static AArc<AView> checkBoxesDemo() {
     using namespace declarative;
     using namespace ass;
     struct State {
@@ -83,7 +83,7 @@ static _<AView> checkBoxesDemo() {
           };
 }
 
-static _<AView> uiBenchmarkScene() {
+static AArc<AView> uiBenchmarkScene() {
     using namespace declarative;
     using namespace ass;
 

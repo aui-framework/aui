@@ -124,7 +124,7 @@ class AObject;
  *   }
  *
  * private:
- *   _<Counter> mCounter = _new<Counter>();
+ *   AArc<Counter> mCounter = _new<Counter>();
  *
  *   void printCounter(int value) {
  *     ALogger::info("MyApp") << value;
@@ -238,7 +238,7 @@ class AObject;
  *   }
  *
  * private:
- *   _<Counter> mCounter = _new<Counter>();
+ *   AArc<Counter> mCounter = _new<Counter>();
  * };
  *
  * AUI_ENTRY {
@@ -395,14 +395,14 @@ public:
      * @brief Connection owner which destroys the connection in destructor.
      */
     struct AutoDestroyedConnection {
-        _<Connection> value = nullptr;
+        AArc<Connection> value = nullptr;
 
         AutoDestroyedConnection() = default;
-        AutoDestroyedConnection(_<Connection> connection) noexcept : value(std::move(connection)) {}
+        AutoDestroyedConnection(AArc<Connection> connection) noexcept : value(std::move(connection)) {}
         AutoDestroyedConnection(const AutoDestroyedConnection&) = default;
         AutoDestroyedConnection(AutoDestroyedConnection&&) noexcept = default;
 
-        AutoDestroyedConnection& operator=(_<Connection> rhs) noexcept {
+        AutoDestroyedConnection& operator=(AArc<Connection> rhs) noexcept {
             if (value == rhs) {
                 return *this;
             }
@@ -454,17 +454,17 @@ public:
      * @param receiver receiver object.
      * @param observer function to be called when signal is fired.
      */
-    virtual _<Connection> addGenericObserver(AObjectBase* receiver, std::function<void()> observer) = 0;
+    virtual AArc<Connection> addGenericObserver(AObjectBase* receiver, std::function<void()> observer) = 0;
 
 protected:
     /* some handy functions accessed from public headers */
 
-    static _weak<AObject> weakPtrFromObject(AObject* object);
+    static AWeakArc<AObject> weakPtrFromObject(AObject* object);
 
     /**
      * @brief Adds a connection to the specified object.
      */
-    static void addIngoingConnectionIn(aui::no_escape<AObjectBase> object, _<Connection> connection);
+    static void addIngoingConnectionIn(aui::no_escape<AObjectBase> object, AArc<Connection> connection);
 
     /**
      * @brief Removes a connection from the specified object.

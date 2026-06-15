@@ -31,7 +31,7 @@ namespace ass {
             return l.isStateApplicable(view) && r.isStateApplicable(view);
         }
 
-        void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+        void setupConnections(AView* view, const AArc<AAssHelper>& helper) override {
             l.setupConnections(view, helper);
             r.setupConnections(view, helper);
         }

@@ -218,7 +218,7 @@ public:
      */
     template <AAnySignalOrProperty Connectable, aui::derived_from<AObjectBase> Object, ACompatibleSlotFor<Connectable> Function>
     static decltype(auto)
-    connect(const Connectable& connectable, _<Object> object, Function&& function) {
+    connect(const Connectable& connectable, AArc<Object> object, Function&& function) {
         return connect(connectable, object.get(), std::forward<Function>(function));
     }
 
@@ -266,7 +266,7 @@ public:
      */
     template <AAnyProperty Property, typename Object, ACompatibleSlotFor<Property> Function>
     static void
-    connect(const Property& property, _<Object> object, Function&& function)
+    connect(const Property& property, AArc<Object> object, Function&& function)
         requires (!aui::derived_from<Object, AObject>)
     {
         property.changed.makeRawInvocable(function)(*property);
@@ -286,11 +286,11 @@ public:
     }
 
     [[nodiscard]]
-    const _<AAbstractThread>& getThread() const noexcept { return mAttachedThread; }
+    const AArc<AAbstractThread>& getThread() const noexcept { return mAttachedThread; }
 
     bool isSlotsCallsOnlyOnMyThread() const noexcept { return mSlotsCallsOnlyOnMyThread; }
 
-    static void moveToThread(aui::no_escape<AObject> object, _<AAbstractThread> thread);
+    static void moveToThread(aui::no_escape<AObject> object, AArc<AAbstractThread> thread);
 
     void setSlotsCallsOnlyOnMyThread(bool slotsCallsOnlyOnMyThread) {
         mSlotsCallsOnlyOnMyThread = slotsCallsOnlyOnMyThread;
@@ -300,10 +300,10 @@ protected:
     /**
      * @brief Set thread of the object.
      */
-    void setThread(_<AAbstractThread> thread) { mAttachedThread = std::move(thread); }
+    void setThread(AArc<AAbstractThread> thread) { mAttachedThread = std::move(thread); }
 
 private:
-    _<AAbstractThread> mAttachedThread;
+    AArc<AAbstractThread> mAttachedThread;
     bool mSignalsEnabled = true;
 
     /**

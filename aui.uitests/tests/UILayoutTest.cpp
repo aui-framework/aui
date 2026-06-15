@@ -31,7 +31,7 @@ public:
 protected:
     void SetUp() override { UITest::SetUp(); }
 
-    void inflate(_<AView> view) {
+    void inflate(AArc<AView> view) {
         mWindow = _new<AWindow>();
         using namespace declarative;
         ALayoutInflater::inflate(mWindow, std::move(view));
@@ -44,8 +44,8 @@ protected:
         UITest::TearDown();
     }
 
-    _<AWindow> mWindow;
-    _<AView> mView;
+    AArc<AWindow> mWindow;
+    AArc<AView> mView;
 };
 }   // namespace
 
@@ -70,7 +70,7 @@ TEST_F(UILayoutTest, SmallCorner1) {
         Margin(0),
         BackgroundSolid(0xff00ff_rgb),
     };
-    _<AView> box =
+    AArc<AView> box =
         Horizontal {
             SpacerExpanding() AUI_OVERRIDE_STYLE { MinSize(0) },
             Vertical {

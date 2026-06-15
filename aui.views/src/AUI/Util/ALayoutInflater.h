@@ -25,7 +25,7 @@ public:
      *
      * Stolen from Android.
      */
-    static void inflate(aui::no_escape<AViewContainer> root, const _<AView>& view);
+    static void inflate(aui::no_escape<AViewContainer> root, const AArc<AView>& view);
 };
 
 

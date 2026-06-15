@@ -46,7 +46,7 @@ ASqlBlueprintColumn& ASqlBlueprintColumn::notNull()
 	return *this;
 }
 
-ASqlBlueprintTable::ASqlBlueprintTable(_<ASqlDatabase> db, const AString& name):
+ASqlBlueprintTable::ASqlBlueprintTable(AArc<ASqlDatabase> db, const AString& name):
 	mTableName(name)
 {
 	Autumn::put(db);

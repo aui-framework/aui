@@ -19,7 +19,7 @@
  */
 class ARawSoundStream : public ISoundInputStream {
 public:
-    ARawSoundStream(AAudioFormat format, _<IInputStream>);
+    ARawSoundStream(AAudioFormat format, AArc<IInputStream>);
 
     size_t read(char* dst, size_t size) override;
 
@@ -27,5 +27,5 @@ public:
 
 private:
     AAudioFormat mFormat;
-    _<IInputStream> mStream;
+    AArc<IInputStream> mStream;
 };

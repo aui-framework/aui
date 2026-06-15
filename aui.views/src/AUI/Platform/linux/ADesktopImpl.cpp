@@ -162,6 +162,6 @@ AFuture<APath> ADesktop::browseForDir(ASurface *parent, const APath &startingLoc
     return f;
 }
 
-_<IDrawable> ADesktop::iconOfFile(const APath &file) { return nullptr; }
+AArc<IDrawable> ADesktop::iconOfFile(const APath &file) { return nullptr; }
 
 void ADesktop::playSystemSound(ADesktop::SystemSound s) {}

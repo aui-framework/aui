@@ -14,13 +14,13 @@
 #include "AAbstractSignal.h"
 #include "AObject.h"
 
-void AAbstractSignal::addIngoingConnectionIn(aui::no_escape<AObjectBase> object, _<Connection> connection) {
+void AAbstractSignal::addIngoingConnectionIn(aui::no_escape<AObjectBase> object, AArc<Connection> connection) {
     std::unique_lock lock(AObjectBase::SIGNAL_SLOT_GLOBAL_SYNC);
     object->mIngoingConnections.emplace_back(std::move(connection));
 }
 
 void AAbstractSignal::removeIngoingConnectionIn(aui::no_escape<AObjectBase> object, Connection& connection, std::unique_lock<ASpinlockMutex>& lock) {
-    auto c = [&]() -> _<Connection> {
+    auto c = [&]() -> AArc<Connection> {
         auto it = ranges::find(object->mIngoingConnections, &connection, [](const auto& v) { return v.value.get(); });
         if (it == object->mIngoingConnections.end()) {
             return nullptr;
@@ -33,7 +33,7 @@ void AAbstractSignal::removeIngoingConnectionIn(aui::no_escape<AObjectBase> obje
     c.reset();
 }
 
-_weak<AObject> AAbstractSignal::weakPtrFromObject(AObject* object) {
+AWeakArc<AObject> AAbstractSignal::weakPtrFromObject(AObject* object) {
     try {
         return aui::ptr::weak_from_this(object);
     } catch (const std::bad_weak_ptr&) {

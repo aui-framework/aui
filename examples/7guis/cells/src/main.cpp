@@ -26,7 +26,7 @@ struct State {
     AProperty<AString> currentExpression;
 };
 
-static _<AView> labelTitle(AString s) {
+static AArc<AView> labelTitle(AString s) {
     return _new<ALabel>(std::move(s)) AUI_OVERRIDE_STYLE {
         Opacity { 0.5f },
         ATextAlign::CENTER,
@@ -35,12 +35,12 @@ static _<AView> labelTitle(AString s) {
 
 class CellView : public AViewContainer {
 public:
-    CellView(_<State> state, Cell& cell) : mState(std::move(state)), mCell(cell) { inflateLabel(); }
+    CellView(AArc<State> state, Cell& cell) : mState(std::move(state)), mCell(cell) { inflateLabel(); }
     int getContentMinimumWidth() override { return 0; }
     int getContentMinimumHeight() override { return 0; }
 
 private:
-    _<State> mState;
+    AArc<State> mState;
     Cell& mCell;
     AAbstractSignal::AutoDestroyedConnection mConnection;
 
@@ -50,10 +50,10 @@ private:
                 this,
                 std::visit(
                     aui::lambda_overloaded {
-                      [](std::nullopt_t) -> _<AView> { return _new<AView>(); },
-                      [](double v) -> _<AView> { return Label { "{}"_format(v) } AUI_OVERRIDE_STYLE { ATextAlign::RIGHT }; },
-                      [](const AString& v) -> _<AView> { return Label { "{}"_format(v) }; },
-                      [](const formula::Range& v) -> _<AView> { return Label { "#RANGE?" }; },
+                      [](std::nullopt_t) -> AArc<AView> { return _new<AView>(); },
+                      [](double v) -> AArc<AView> { return Label { "{}"_format(v) } AUI_OVERRIDE_STYLE { ATextAlign::RIGHT }; },
+                      [](const AString& v) -> AArc<AView> { return Label { "{}"_format(v) }; },
+                      [](const formula::Range& v) -> AArc<AView> { return Label { "#RANGE?" }; },
                     },
                     v));
             connect(getViews().first()->clicked, me::inflateEditor);
@@ -83,13 +83,13 @@ private:
 
 class CellsView : public AViewContainer {
 public:
-    CellsView(_<State> state) : mState(std::move(state)) {
+    CellsView(AArc<State> state) : mState(std::move(state)) {
         ALayoutInflater::inflate(
             this,
             AGridSplitter::Builder()
                     .noDefaultSpacers()
                     .withItems([&] {
-                        AVector<AVector<_<AView>>> views;
+                        AVector<AVector<AArc<AView>>> views;
                         views.resize(mState->spreadsheet.size().y + 1);
                         for (auto& c : views) {
                             c.resize(mState->spreadsheet.size().x + 1);
@@ -114,7 +114,7 @@ public:
     }
 
 private:
-    _<State> mState;
+    AArc<State> mState;
 };
 
 class CellsWindow : public AWindow {

@@ -72,7 +72,7 @@ struct Label {
      */
     AOptional<contract::In<AString>> text;
 
-    _<ALabel> operator()() {
+    AArc<ALabel> operator()() {
         auto label = _new<ALabel>();
         AUI_NULLSAFE(text)->bindTo(label->text().assignment());
         return label;
@@ -84,11 +84,11 @@ struct Label {
 template<>
 struct ADataBindingDefault<ALabel, AString> {
 public:
-    static auto property(const _<ALabel>& view) {
+    static auto property(const AArc<ALabel>& view) {
         return view->text();
     }
 
-    static void setup(const _<ALabel>& view) {
+    static void setup(const AArc<ALabel>& view) {
     }
 
     static auto getSetter() { return &ALabel::setText; }

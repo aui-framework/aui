@@ -21,10 +21,10 @@ bool GifImageLoader::matches(AByteBufferView buffer) {
             memcmp(buffer.data(), "GIF89a", 6) == 0;
 }
 
-_<IImageFactory> GifImageLoader::getImageFactory(AByteBufferView buffer) {
+AArc<IImageFactory> GifImageLoader::getImageFactory(AByteBufferView buffer) {
     return _new<GifImageFactory>(buffer);
 }
 
-_<AImage> GifImageLoader::getRasterImage(AByteBufferView buffer) {
+AArc<AImage> GifImageLoader::getRasterImage(AByteBufferView buffer) {
     return nullptr;
 }

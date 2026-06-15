@@ -17,7 +17,7 @@
 
 static void ensureMetaTableExists()
 {
-    static _weak<ASqlDatabase> db;
+    static AWeakArc<ASqlDatabase> db;
     if (Autumn::get<ASqlDatabase>() != db.lock()) {
         auto newDb = Autumn::get<ASqlDatabase>();
         newDb->execute("CREATE TABLE IF NOT EXISTS aui_meta (meta_key varchar(16), meta_value varchar(32), PRIMARY KEY (meta_key))");

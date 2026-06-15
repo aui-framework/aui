@@ -19,7 +19,7 @@
 
 class IndexedAttributesDeclarationNode: public INode {
 public:
-    using Fields = AMap<int, _<VariableDeclarationNode>>;
+    using Fields = AMap<int, AArc<VariableDeclarationNode>>;
     IndexedAttributesDeclarationNode(KeywordToken type, Fields fields) :
         mType(type),
         mFields(std::move(fields)) {}

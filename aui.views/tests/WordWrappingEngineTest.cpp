@@ -57,7 +57,7 @@ public:
 
 TEST(WordWrappingEngine, SimpleLeft) {
     AWordWrappingEngine engine;
-    engine.setEntries(AVector<_<AWordWrappingEngineBase::Entry>>{
+    engine.setEntries(AVector<AArc<AWordWrappingEngineBase::Entry>>{
         _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{0, 0}),
         _new<MyEntry>(glm::ivec2{20, 15}, glm::ivec2{30, 0}),
         _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{50, 0}),
@@ -68,7 +68,7 @@ TEST(WordWrappingEngine, SimpleLeft) {
 
 TEST(WordWrappingEngine, SimpleLeftFloatLeft) {
     AWordWrappingEngine engine;
-    engine.setEntries(AVector<_<AWordWrappingEngineBase::Entry>>{
+    engine.setEntries(AVector<AArc<AWordWrappingEngineBase::Entry>>{
         _new<FloatingEntry>(glm::ivec2{30, 20}, glm::ivec2{0, 0}, AFloat::LEFT),
         _new<MyEntry>(glm::ivec2{20, 15}, glm::ivec2{30, 0}),
         _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{50, 0}),
@@ -78,7 +78,7 @@ TEST(WordWrappingEngine, SimpleLeftFloatLeft) {
 }
 TEST(WordWrappingEngine, SimpleLeftFloatLeftStartFromBeginning) {
     AWordWrappingEngine engine;
-    engine.setEntries(AVector<_<AWordWrappingEngineBase::Entry>>{
+    engine.setEntries(AVector<AArc<AWordWrappingEngineBase::Entry>>{
         _new<FloatingEntry>(glm::ivec2{30, 20}, glm::ivec2{0, 0}, AFloat::LEFT),
         _new<MyEntry>(glm::ivec2{60, 15}, glm::ivec2{30, 0}),
         _new<MyEntry>(glm::ivec2{60, 15}, glm::ivec2{30, 15}),
@@ -89,7 +89,7 @@ TEST(WordWrappingEngine, SimpleLeftFloatLeftStartFromBeginning) {
 
 TEST(WordWrappingEngine, SimpleLeftFloatRight1) {
     AWordWrappingEngine engine;
-    engine.setEntries(AVector<_<AWordWrappingEngineBase::Entry>>{
+    engine.setEntries(AVector<AArc<AWordWrappingEngineBase::Entry>>{
             _new<FloatingEntry>(glm::ivec2{30, 20}, glm::ivec2{70, 0}, AFloat::RIGHT),
             _new<MyEntry>(glm::ivec2{20, 15}, glm::ivec2{00, 0}),
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{20, 0}),
@@ -100,7 +100,7 @@ TEST(WordWrappingEngine, SimpleLeftFloatRight1) {
 
 TEST(WordWrappingEngine, SimpleLeftFloatRight2) {
     AWordWrappingEngine engine;
-    engine.setEntries(AVector<_<AWordWrappingEngineBase::Entry>>{
+    engine.setEntries(AVector<AArc<AWordWrappingEngineBase::Entry>>{
             _new<FloatingEntry>(glm::ivec2{30, 20}, glm::ivec2{70, 0}, AFloat::RIGHT),
             _new<MyEntry>(glm::ivec2{50, 15}, glm::ivec2{0, 00}),
             _new<MyEntry>(glm::ivec2{50, 20}, glm::ivec2{0, 15}),
@@ -112,7 +112,7 @@ TEST(WordWrappingEngine, SimpleLeftFloatRight2) {
 
 TEST(WordWrappingEngine, SimpleLeftFloatBoth) {
     AWordWrappingEngine engine;
-    engine.setEntries(AVector<_<AWordWrappingEngineBase::Entry>>{
+    engine.setEntries(AVector<AArc<AWordWrappingEngineBase::Entry>>{
             _new<FloatingEntry>(glm::ivec2{30, 20}, glm::ivec2{0, 0}, AFloat::LEFT),
             _new<FloatingEntry>(glm::ivec2{30, 20}, glm::ivec2{70, 0}, AFloat::RIGHT),
             _new<MyEntry>(glm::ivec2{20, 15}, glm::ivec2{30, 00}),
@@ -129,7 +129,7 @@ TEST(WordWrappingEngine, SimpleLeftFloatBoth) {
 
 TEST(WordWrappingEngine, SimpleRight) {
     AWordWrappingEngine engine;
-    engine.setEntries(AVector<_<AWordWrappingEngineBase::Entry>>{
+    engine.setEntries(AVector<AArc<AWordWrappingEngineBase::Entry>>{
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{20, 0}),
             _new<MyEntry>(glm::ivec2{20, 15}, glm::ivec2{50, 0}),
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{70, 0}),
@@ -141,7 +141,7 @@ TEST(WordWrappingEngine, SimpleRight) {
 
 TEST(WordWrappingEngine, SimpleCenter) {
     AWordWrappingEngine engine;
-    engine.setEntries(AVector<_<AWordWrappingEngineBase::Entry>>{
+    engine.setEntries(AVector<AArc<AWordWrappingEngineBase::Entry>>{
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{10, 0}),
             _new<MyEntry>(glm::ivec2{20, 15}, glm::ivec2{40, 0}),
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{60, 0}),
@@ -153,7 +153,7 @@ TEST(WordWrappingEngine, SimpleCenter) {
 
 TEST(WordWrappingEngine, SimpleJustify) {
     AWordWrappingEngine engine;
-    engine.setEntries(AVector<_<AWordWrappingEngineBase::Entry>>{
+    engine.setEntries(AVector<AArc<AWordWrappingEngineBase::Entry>>{
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{0, 0}),
             _new<MyEntry>(glm::ivec2{20, 15}, glm::ivec2{40, 0}),
             _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{70, 0}),
@@ -165,7 +165,7 @@ TEST(WordWrappingEngine, SimpleJustify) {
 
 TEST(WordWrappingEngine, FloatingEntryConsumesHeight) {
     AWordWrappingEngine engine;
-    engine.setEntries(AVector<_<AWordWrappingEngineBase::Entry>>{
+    engine.setEntries(AVector<AArc<AWordWrappingEngineBase::Entry>>{
         _new<MyEntry>(glm::ivec2{30, 10}, glm::ivec2{0, 0}),
         _new<FloatingEntry>(glm::ivec2{10, 100}, glm::ivec2{90, 0}, AFloat::RIGHT),
     });

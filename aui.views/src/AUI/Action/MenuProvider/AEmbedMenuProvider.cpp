@@ -26,9 +26,9 @@ using namespace std::chrono_literals;
 
 class AEmbedMenuProvider::MenuContainer: public AViewContainerBase {
 private:
-    _<MenuContainer> mSubWindow;
-    _weak<AOverlappingSurface> mSurface;
-    _<ATimer> mSublistOnHoverDisplayDelay;
+    AArc<MenuContainer> mSubWindow;
+    AWeakArc<AOverlappingSurface> mSurface;
+    AArc<ATimer> mSublistOnHoverDisplayDelay;
     glm::ivec2 mOriginPosition;
 public:
     MenuContainer(const AVector<AMenuItem>& vector, glm::ivec2 originPosition = {}) : mOriginPosition(originPosition) {
@@ -38,7 +38,7 @@ public:
         addAssName(".menu-background");
         setLayout(std::make_unique<AVerticalLayout>());
         for (auto& i : vector) {
-            _<AView> view;
+            AArc<AView> view;
 
             switch (i.type) {
                 case AMenu::SINGLE: {
@@ -136,7 +136,7 @@ public:
         }
     }
 
-    void setSurface(const _<AOverlappingSurface>& surface) { mSurface = surface; }
+    void setSurface(const AArc<AOverlappingSurface>& surface) { mSurface = surface; }
 };
 
 void AEmbedMenuProvider::createMenu(const AVector<AMenuItem>& vector) {

@@ -197,7 +197,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
                 const auto uninflateFrom =
                     lastScroll - posWithinSlidingSurface + glm::ivec2(INFLATE_STEP_PX) + viewport->getSize() * 3;
                 auto firstValidView =
-                    ranges::find_if(getViews() | ranges::views::reverse, [&](const _<AView>& view) {
+                    ranges::find_if(getViews() | ranges::views::reverse, [&](const AArc<AView>& view) {
                         return glm::all(glm::lessThanEqual(view->getPosition(), uninflateFrom));
                     }).base();
                 if (firstValidView == getViews().end()) {
@@ -210,7 +210,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             [&] {
                 const auto uninflateFrom =
                     lastScroll - posWithinSlidingSurface - glm::ivec2(INFLATE_STEP_PX) - viewport->getSize() * 2;
-                auto firstValidView = ranges::find_if(getViews(), [&](const _<AView>& view) {
+                auto firstValidView = ranges::find_if(getViews(), [&](const AArc<AView>& view) {
                     return glm::all(glm::greaterThan(view->getPosition() + view->getSize(), uninflateFrom));
                 });
                 if (firstValidView == getViews().begin()) {
@@ -320,7 +320,7 @@ void AForEachUIBase::addView(List::iterator iterator, AOptional<std::size_t> ind
     mCache->items.insert(at, std::move(entry));
 }
 
-void AForEachUIBase::removeViews(aui::range<AVector<_<AView>>::const_iterator> iterators) {
+void AForEachUIBase::removeViews(aui::range<AVector<AArc<AView>>::const_iterator> iterators) {
     if (!mCache) {
         AViewContainerBase::removeViews(iterators);
         return;
@@ -339,7 +339,7 @@ glm::ivec2 AForEachUIBase::axisMask() {
     return glm::ivec2 { 0, 1 };
 }
 
-_<AScrollAreaViewport> AForEachUIBase::findViewport() {
+AArc<AScrollAreaViewport> AForEachUIBase::findViewport() {
     for (auto p = getParent(); p != nullptr; p = p->getParent()) {
         try {
             if (auto viewport = _cast<AScrollAreaViewport>(p->shared_from_this())) {

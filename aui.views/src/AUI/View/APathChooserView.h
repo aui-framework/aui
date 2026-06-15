@@ -30,7 +30,7 @@
  */
 class API_AUI_VIEWS AFileChooserView: public AViewContainerBase {
 private:
-    _<ATextField> mPathField;
+    AArc<ATextField> mPathField;
     AAsyncHolder mAsync;
 
 public:
@@ -57,9 +57,9 @@ signals:
 template<>
 struct ADataBindingDefault<AFileChooserView, APath> {
 public:
-    static auto setup(const _<AFileChooserView>& v) {}
+    static auto setup(const AArc<AFileChooserView>& v) {}
 
-    static auto property(const _<AFileChooserView>& v) {
+    static auto property(const AArc<AFileChooserView>& v) {
         return v->path();
     }
 
@@ -80,7 +80,7 @@ public:
  */
 class API_AUI_VIEWS ADirChooserView: public AViewContainerBase {
 private:
-    _<ATextField> mPathField;
+    AArc<ATextField> mPathField;
     AAsyncHolder mAsync;
 
 public:
@@ -107,9 +107,9 @@ signals:
 template<>
 struct ADataBindingDefault<ADirChooserView, APath> {
 public:
-    static auto setup(const _<ADirChooserView>& v) {}
+    static auto setup(const AArc<ADirChooserView>& v) {}
 
-    static auto property(const _<ADirChooserView>& v) {
+    static auto property(const AArc<ADirChooserView>& v) {
         return v->path();
     }
 

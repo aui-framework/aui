@@ -58,7 +58,7 @@ public:
      * @return customizable container inside caption.
      */
     [[nodiscard]]
-    const _<AViewContainer>& getCaptionContainer() const
+    const AArc<AViewContainer>& getCaptionContainer() const
     {
         return mCaptionContainer;
     }
@@ -67,7 +67,7 @@ public:
      * @return actual window contents.
      */
     [[nodiscard]]
-    const _<AViewContainer>& getContentContainer() const
+    const AArc<AViewContainer>& getContentContainer() const
     {
         return mContentContainer;
     }

@@ -24,7 +24,7 @@ using namespace declarative;
 static constexpr auto EDITOR_CONTENT_MAX_WIDTH = 400_dp;
 
 namespace {
-_<AView> profilePhoto(const _<Contact>& contact) {
+AArc<AView> profilePhoto(const AArc<Contact>& contact) {
     return Centered {
         Label {
           AUI_REACT(contact->displayName->empty() ? "?" : AString(1, contact->displayName->first()).uppercase())
@@ -37,28 +37,28 @@ _<AView> profilePhoto(const _<Contact>& contact) {
 }
 
 template <typename T>
-_<AView> viewer(AProperty<T>& property) {
+AArc<AView> viewer(AProperty<T>& property) {
     return Label { AUI_REACT("{}"_format(*property)) };
 }
 
 template <typename T>
-_<AView> editor(AProperty<T>& property);
+AArc<AView> editor(AProperty<T>& property);
 
 template <>
-_<AView> editor(AProperty<AString>& property) {
+AArc<AView> editor(AProperty<AString>& property) {
     return _new<ATextField>() && property;
 }
 }   // namespace
 
 template <typename T>
-_<AView> ContactDetailsView::presentation(AProperty<T>& property) {
+AArc<AView> ContactDetailsView::presentation(AProperty<T>& property) {
     if (mEditorMode) {
         return editor(property) << ".row-value";
     }
     return viewer(property) << ".row-value";
 }
 
-ContactDetailsView::ContactDetailsView(_<Contact> contact) : mContact(std::move(contact)) {
+ContactDetailsView::ContactDetailsView(AArc<Contact> contact) : mContact(std::move(contact)) {
     mOriginalContact = mContact;
     setExtraStylesheet(AStylesheet {
       {
@@ -130,7 +130,7 @@ void ContactDetailsView::toggleEdit() {
 }
 
 template <typename T>
-_<AView> ContactDetailsView::row(AString title, AProperty<T>& property) {
+AArc<AView> ContactDetailsView::row(AString title, AProperty<T>& property) {
     if (!mEditorMode) {
         if (property == T {}) {
             return nullptr;

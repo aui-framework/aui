@@ -140,12 +140,12 @@ public:
 		return 0;
 	}
 
-	_<ISqlDriverRow> begin() override
+	AArc<ISqlDriverRow> begin() override
 	{
 		return next(_new<Row>(this));
 	}
 
-	_<ISqlDriverRow> next(const _<ISqlDriverRow>& previous) override
+	AArc<ISqlDriverRow> next(const AArc<ISqlDriverRow>& previous) override
 	{
 		int r = mysql_stmt_fetch(mResult);
 		switch (r)
@@ -277,7 +277,7 @@ public:
 		return mysql_stmt_affected_rows(s.mHandle);
 	}
 
-	_<ISqlDriverResult> query(const AString& query, const AVector<AVariant>& params) override
+	AArc<ISqlDriverResult> query(const AString& query, const AVector<AVariant>& params) override
 	{
 	    auto& mysql = getMysql();
 		STMT s(&mysql);
@@ -303,7 +303,7 @@ AString AMysql::getDriverName()
 	return "mysql";
 }
 
-_<ISqlDatabase> AMysql::openDriverConnection(const AString& address, uint16_t port, const AString& databaseName,
+AArc<ISqlDatabase> AMysql::openDriverConnection(const AString& address, uint16_t port, const AString& databaseName,
                                              const AString& username, const AString& password)
 {
 	return _new<MysqlDatabase>(address, port, databaseName, username, password);

@@ -20,9 +20,9 @@ class WebpImageLoader : public IImageLoader {
 public:
     bool matches(AByteBufferView buffer) override;
 
-    _<IImageFactory> getImageFactory(AByteBufferView buffer) override;
+    AArc<IImageFactory> getImageFactory(AByteBufferView buffer) override;
 
-    _<AImage> getRasterImage(AByteBufferView buffer) override;
+    AArc<AImage> getRasterImage(AByteBufferView buffer) override;
 
     API_AUI_IMAGE static void save(aui::no_escape<IOutputStream> outputStream, AImageView image, const WebPConfig& config);
 };

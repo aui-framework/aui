@@ -19,19 +19,19 @@
 template<typename T, typename Container, typename K = AString>
 class Cache {
 private:
-    AMap<K, _<T>> mContainer;
+    AMap<K, AArc<T>> mContainer;
     AMutex mSync;
 
 protected:
-    virtual _<T> load(const K& key) = 0;
+    virtual AArc<T> load(const K& key) = 0;
 
-    virtual bool isShouldBeCached(const K& key, const _<T>& image) {
+    virtual bool isShouldBeCached(const K& key, const AArc<T>& image) {
         return true;
     }
 
 public:
 
-    static _<T> get(const K& key) {
+    static AArc<T> get(const K& key) {
         Cache& i = Container::inst();
         {
             std::unique_lock lock(i.mSync);
@@ -46,7 +46,7 @@ public:
         return value;
     }
 
-    static void put(const K& key, _<T> value) {
+    static void put(const K& key, AArc<T> value) {
         std::unique_lock lock(Container::inst().mSync);
         Container::inst().mContainer[key] = value;
     }

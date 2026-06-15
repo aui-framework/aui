@@ -75,7 +75,7 @@ _unique<AWindowManager>& ASurface::getWindowManagerImpl() {
     return ourWindowManager;
 }
 
-void ASurface::setFocusedView(const _<AView>& view) {
+void ASurface::setFocusedView(const AArc<AView>& view) {
     if (mFocusedView.lock() == view) {
         return;
     }
@@ -105,14 +105,14 @@ void ASurface::setFocusedView(const _<AView>& view) {
 
 void ASurface::updateFocusChain() {
     if (auto focusedView = mFocusedView.lock()) {
-        _weak<AView> focusChainTarget = mFocusedView;
+        AWeakArc<AView> focusChainTarget = mFocusedView;
         if (auto container = _cast<AViewContainer>(focusedView)) {
             container->setFocusChainTarget({});
         }
 
         for (auto target = focusedView->getParent(); target != nullptr; target = target->getParent()) {
             target->setFocusChainTarget(std::move(focusChainTarget));
-            focusChainTarget = _weak<AView>(aui::ptr::weak_from_this(target));
+            focusChainTarget = AWeakArc<AView>(aui::ptr::weak_from_this(target));
         }
     }
 }
@@ -194,7 +194,7 @@ void ASurface::focusNextView() {
 
 void ASurface::closeOverlappingSurfacesOnClick() {
     // creating copy because of comodification
-    AVector<_<AOverlappingSurface>> surfacesToClose;
+    AVector<AArc<AOverlappingSurface>> surfacesToClose;
     surfacesToClose.reserve(mOverlappingSurfaces.size());
     for (auto& surface : mOverlappingSurfaces) {
         if (surface->isCloseOnClick()) {

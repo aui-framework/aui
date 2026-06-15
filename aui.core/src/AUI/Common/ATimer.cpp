@@ -56,8 +56,8 @@ bool ATimer::isStarted()
 	return mTimer.hasValue();
 }
 
-_<AThread>& ATimer::timerThread() {
-    static _<AThread> thread = [] {
+AArc<AThread>& ATimer::timerThread() {
+    static AArc<AThread> thread = [] {
         auto t = _new<AThread>([&]()
             {
                 AThread::setName("Timer thread");
@@ -84,7 +84,7 @@ AScheduler& ATimer::scheduler() {
         AScheduler scheduler;
 
         // make sure scheduler thread is started.
-        _<AThread> thread = ATimer::timerThread();
+        AArc<AThread> thread = ATimer::timerThread();
 
         GlobalScheduler() {
         }

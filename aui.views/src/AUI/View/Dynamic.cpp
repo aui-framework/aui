@@ -6,7 +6,7 @@ public:
     DynamicView() {
     }
 
-    void setContent(_<AView> v) {
+    void setContent(AArc<AView> v) {
         ALayoutInflater::inflate(this, std::move(v));
     }
 };
@@ -14,7 +14,7 @@ public:
 
 namespace declarative::experimental {
 
-_<AView> Dynamic::operator()() {
+AArc<AView> Dynamic::operator()() {
     auto v = _new<DynamicView>();
     content.bindTo(ASlotDef{AUI_SLOT(v.get())::setContent});
     return v;

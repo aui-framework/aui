@@ -60,14 +60,14 @@ struct API_AUI_VIEWS Slider {
      * simple rectangular track. Users can replace this with a custom view
      * to change the appearance.
      */
-    _<AView> track = defaultTrack(value);
+    AArc<AView> track = defaultTrack(value);
 
     /**
      * @brief View representing the slider handle.
      * @details
      * The default implementation is provided by `defaultHandle()`.
      */
-    _<AView> handle = defaultHandle();
+    AArc<AView> handle = defaultHandle();
 
     /**
      * @brief Creates a default track view.
@@ -81,7 +81,7 @@ struct API_AUI_VIEWS Slider {
      * <!-- aui:snippet aui.views/src/AUI/View/ASlider.cpp defaultTrack -->
      *
      */
-    static _<AView> defaultTrack(const contract::In<aui::float_within_0_1>& value);
+    static AArc<AView> defaultTrack(const contract::In<aui::float_within_0_1>& value);
 
     /**
      * @brief Creates a default handle view.
@@ -92,8 +92,8 @@ struct API_AUI_VIEWS Slider {
      *
      * <!-- aui:snippet aui.views/src/AUI/View/ASlider.cpp defaultHandle -->
      */
-    static _<AView> defaultHandle();
+    static AArc<AView> defaultHandle();
 
-    _<AView> operator()();
+    AArc<AView> operator()();
 };
 }   // namespace declarative

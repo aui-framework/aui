@@ -23,5 +23,5 @@ public:
 private:
     std::unordered_map<AString, void*> mSymbols;
     std::unordered_map<AString, void**> mGot;
-    AVector<_<void>> mAllocatedPages;
+    AVector<AArc<void>> mAllocatedPages;
 };

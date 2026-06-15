@@ -37,7 +37,7 @@ public:
           }
         });
 
-        auto FILTER_VIEW = ranges::views::filter([this](const _<User>& user) {
+        auto FILTER_VIEW = ranges::views::filter([this](const AArc<User>& user) {
             return user->displayName->startsWith(*mFilterPrefix);
         });
 
@@ -80,9 +80,9 @@ public:
     }
 
 private:
-    AProperty<AVector<_<User>>> mUsers;
+    AProperty<AVector<AArc<User>>> mUsers;
     User mEditedUser;
-    AProperty<_<User>> mSelectedUser;
+    AProperty<AArc<User>> mSelectedUser;
     AProperty<AString> mFilterPrefix;
     APropertyPrecomputed<bool> mCreateEnabled = [this] { return !(mEditedUser.surname->empty() || mEditedUser.name->empty()); };
     APropertyPrecomputed<bool> mDeleteEnabled = [this] { return mSelectedUser != nullptr; };

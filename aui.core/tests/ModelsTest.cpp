@@ -21,7 +21,7 @@
 
 
 namespace {
-    _<AListModel<int>> testModel() {
+    AArc<AListModel<int>> testModel() {
         return AListModel<int>::make({1, 5, 72, 23, 14, 35, 66, 37, 28, 19});
     }
 

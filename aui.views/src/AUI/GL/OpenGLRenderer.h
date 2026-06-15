@@ -76,7 +76,7 @@ private:
 
     struct FramebufferWithTextureRT {
         gl::Framebuffer framebuffer;
-        _<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>> rendertarget;
+        AArc<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>> rendertarget;
     };
 
     struct FramebufferBackToPool {
@@ -172,13 +172,13 @@ public:
                 const AString& string,
                 const AFontStyle& fs) override;
 
-    _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
+    AArc<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override;
 
     void drawRectImpl(glm::vec2 position, glm::vec2 size);
 
     void setBlending(Blending blending) override;
 
-    _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
+    AArc<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
 
     glm::mat4 getProjectionMatrix() const override;
 

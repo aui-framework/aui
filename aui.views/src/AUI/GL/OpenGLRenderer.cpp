@@ -776,7 +776,7 @@ public:
         addStringT(position, text);
     }
 
-    _<IRenderer::IPrerenderedString> finalize() noexcept override {
+    AArc<IRenderer::IPrerenderedString> finalize() noexcept override {
         gl::Vao::unbind();
         gl::VertexBuffer vertexBuffer;
         vertexBuffer.set(mVertices);
@@ -807,7 +807,7 @@ public:
     ~OpenGLMultiStringCanvas() override = default;
 };
 
-_<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position,
+AArc<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 position,
                                                                  const AString& text,
                                                                  const AFontStyle& fs) {
     //    ALOG_DEBUG("OpenGL") << "prerenderString: " << text;
@@ -835,7 +835,7 @@ _unique<ITexture> OpenGLRenderer::createNewTexture() {
     return std::make_unique<OpenGLTexture2D>();
 }
 
-_<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle& style) {
+AArc<IRenderer::IMultiStringCanvas> OpenGLRenderer::newMultiStringCanvas(const AFontStyle& style) {
     return _new<OpenGLMultiStringCanvas>(this, style);
 }
 
@@ -1256,7 +1256,7 @@ _unique<IRenderViewToTexture> OpenGLRenderer::newRenderViewToTexture() noexcept 
         private:
             OpenGLRenderer& mRenderer;
             gl::Framebuffer mFramebuffer;
-            _<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>> mTexture;
+            AArc<gl::TextureRenderTarget<gl::InternalFormat::RGBA8, gl::Type::UNSIGNED_BYTE, gl::Format::RGBA>> mTexture;
         };
         return std::make_unique<OpenGLRenderViewToTexture>(*this);
     } catch (const AException& e) {

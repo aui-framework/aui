@@ -114,7 +114,7 @@ void PlatformAbstractionX11::ensureXLibInitialized() {
 
 void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
     struct NotFound {};
-    auto locateWindow = [&](Window xWindow) -> _<AWindow> {
+    auto locateWindow = [&](Window xWindow) -> AArc<AWindow> {
         for (auto& w : AWindow::getWindowManager().getWindows()) {
             if (w->nativeHandle() == xWindow) {
                 setCurrentWindow(w.get());
@@ -127,7 +127,7 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
         while (XPending(ourDisplay)) {
             AWindow::getWindowManager().watchdog().runOperation([&] {
                 XNextEvent(ourDisplay, &ev);
-                _<AWindow> window;
+                AArc<AWindow> window;
                 switch (ev.type) {
                     case Expose: {
                         window = locateWindow(ev.xexpose.window);
@@ -585,7 +585,7 @@ void PlatformAbstractionX11::windowManagerLoop() {
         // [1000 ms timeout] sometimes, leaving an always rerendering window (game) work a long time deadlocks the loop
         // in infinite poll.
         const auto timeout =
-            mFastPathNotify || ranges::any_of(wm.getWindows(), [](const _<AWindow>& window) { return redrawFlag(*window); })
+            mFastPathNotify || ranges::any_of(wm.getWindows(), [](const AArc<AWindow>& window) { return redrawFlag(*window); })
                 ? 0
                 : 1000;
         if (int p = poll(ps, std::size(ps), timeout); p < 0) {

@@ -11,7 +11,7 @@
 
 #include "ARawSoundStream.h"
 
-ARawSoundStream::ARawSoundStream(AAudioFormat format, _<IInputStream> stream) : mStream(std::move(stream)), mFormat(format) {
+ARawSoundStream::ARawSoundStream(AAudioFormat format, AArc<IInputStream> stream) : mStream(std::move(stream)), mFormat(format) {
 }
 
 size_t ARawSoundStream::read(char *dst, size_t size) {

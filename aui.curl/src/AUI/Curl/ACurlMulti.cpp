@@ -79,7 +79,7 @@ void ACurlMulti::run(bool infinite) {
 }
 
 
-ACurlMulti& ACurlMulti::operator<<(_<ACurl> curl) {
+ACurlMulti& ACurlMulti::operator<<(AArc<ACurl> curl) {
     mFunctionQueue << [this, curl = std::move(curl)]() mutable {
         connect(curl->closeRequested, [this, curl = curl.weak()] {
             if (auto c = curl.lock()) {
@@ -93,14 +93,14 @@ ACurlMulti& ACurlMulti::operator<<(_<ACurl> curl) {
     return *this;
 }
 
-ACurlMulti& ACurlMulti::operator>>(const _<ACurl>& curl) {
+ACurlMulti& ACurlMulti::operator>>(const AArc<ACurl>& curl) {
     mFunctionQueue << [=] {
         removeCurl(curl);
     };
     return *this;
 }
 
-void ACurlMulti::removeCurl(const _<ACurl>& curl) {
+void ACurlMulti::removeCurl(const AArc<ACurl>& curl) {
     curl_multi_remove_handle(mMulti, curl->handle());
     mEasyCurls.erase(curl->handle());
     curl->closeRequested.clearAllOutgoingConnectionsWith(curl.get());
@@ -119,7 +119,7 @@ void ACurlMulti::clear() {
 ACurlMulti& ACurlMulti::global() noexcept {
     static struct Instance {
         AOptional<ACurlMulti> multi;
-        _<AThread> thread = _new<AThread>([this] {
+        AArc<AThread> thread = _new<AThread>([this] {
             AThread::setName("AUI CURL IO");
             ARaiiHelper h = [&] {
                 multi.reset();

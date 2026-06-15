@@ -99,7 +99,7 @@ private:
 }   // namespace
 
 template <typename Layout>
-_<AView> ASplitter::Builder<Layout>::build() {
+AArc<AView> ASplitter::Builder<Layout>::build() {
     auto splitter = aui::ptr::manage_shared(new ASplitter);
     splitter->setExpanding(mExpanding);
     splitter->mHelper.setDirection(Layout::DIRECTION);
@@ -123,5 +123,5 @@ _<AView> ASplitter::Builder<Layout>::build() {
     return splitter;
 }
 
-template _<AView> ASplitter::Builder<AHorizontalLayout>::build();
-template _<AView> ASplitter::Builder<AVerticalLayout>::build();
+template AArc<AView> ASplitter::Builder<AHorizontalLayout>::build();
+template AArc<AView> ASplitter::Builder<AVerticalLayout>::build();

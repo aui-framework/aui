@@ -28,7 +28,7 @@ public:
      * @brief Shader code for tests
      */
     virtual AString shaderCode() = 0;
-    virtual void parseShader(const _<AST>& ast) = 0;
+    virtual void parseShader(const AArc<AST>& ast) = 0;
 
     virtual void writeCpp(const APath& destination) = 0;
 

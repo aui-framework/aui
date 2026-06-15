@@ -30,7 +30,7 @@ ATcpServerSocket::~ATcpServerSocket()
 {
 }
 
-_<ATcpSocket> ATcpServerSocket::accept()
+AArc<ATcpSocket> ATcpServerSocket::accept()
 {
 	int res = listen(getHandle(), SOMAXCONN);
 	if (res < 0)

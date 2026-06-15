@@ -109,7 +109,7 @@ TEST(SharedPtrs, Performance1) {
         AUI_REPEAT (10'000) {
             buffer << uint8_t(228);
         }
-        _<AByteBuffer> shared_ptr = _new<AByteBuffer>(buffer);
+        AArc<AByteBuffer> shared_ptr = _new<AByteBuffer>(buffer);
     }
 }
 

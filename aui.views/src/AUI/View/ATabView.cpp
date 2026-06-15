@@ -30,7 +30,7 @@ ATabView::ATabView() {
     });
 }
 
-void ATabView::addTab(const _<AView>& view, const AString& name) {
+void ATabView::addTab(const AArc<AView>& view, const AString& name) {
     mPageView->addPage(view);
     view->setExpanding();
     auto id = mRow->getContents()->getViews().size();

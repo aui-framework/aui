@@ -18,7 +18,7 @@
 template<typename T, typename Filter>
 class AListModelFilter: public IListModel<T> {
 private:
-    _<IListModel<T>> mOther;
+    AArc<IListModel<T>> mOther;
     Filter mFilter;
     AVector<size_t> mMapping;
 
@@ -32,7 +32,7 @@ private:
 public:
     using value_type = T;
 
-    explicit AListModelFilter(const _<IListModel<T>>& other, Filter&& adapter) :
+    explicit AListModelFilter(const AArc<IListModel<T>>& other, Filter&& adapter) :
             mOther(other),
             mFilter(std::forward<Filter>(adapter)) {
         fill();
@@ -99,7 +99,7 @@ public:
 
 namespace AModels {
     template <typename Container, typename Filter>
-    auto filter(const _<Container>& other, Filter&& filter) -> _<AListModelFilter<typename Container::value_type, Filter>> {
+    auto filter(const AArc<Container>& other, Filter&& filter) -> AArc<AListModelFilter<typename Container::value_type, Filter>> {
         return aui::ptr::manage_shared(new AListModelFilter<typename Container::value_type, Filter>(other, std::forward<Filter>(filter)));
     }
 }

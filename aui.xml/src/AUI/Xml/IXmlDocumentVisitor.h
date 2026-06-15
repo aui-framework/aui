@@ -24,5 +24,5 @@ public:
     /**
      * @brief Visits xml header.
      */
-	virtual _<IXmlHeaderVisitor> visitHeader() { return nullptr; };
+	virtual AArc<IXmlHeaderVisitor> visitHeader() { return nullptr; };
 };

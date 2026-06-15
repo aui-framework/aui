@@ -22,7 +22,7 @@ struct State {
     AProperty<bool> checked = false;
 };
 
-_<AView> minimalCheckBox(_<AProperty<bool>> state) {
+AArc<AView> minimalCheckBox(AArc<AProperty<bool>> state) {
     return CheckBox {
         .checked = AUI_REACT(*state),
         .onCheckedChange = [state](bool checked) { *state = checked; },

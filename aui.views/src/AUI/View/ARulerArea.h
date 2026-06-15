@@ -25,9 +25,9 @@
  */
 class API_AUI_VIEWS ARulerArea: public AViewContainerBase, public IFontView {
 private:
-    _<AView> mWrappedView;
-    _<ARulerView> mHorizontalRuler;
-    _<ARulerView> mVerticalRuler;
+    AArc<AView> mWrappedView;
+    AArc<ARulerView> mHorizontalRuler;
+    AArc<ARulerView> mVerticalRuler;
     glm::ivec2 mMousePos;
 
     void setWrappedViewPosition(const glm::ivec2& pos);
@@ -38,7 +38,7 @@ protected:
     void updatePosition();
 
 public:
-    ARulerArea(const _<AView>& wrappedView);
+    ARulerArea(const AArc<AView>& wrappedView);
     void setSize(glm::ivec2 size) override;
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 

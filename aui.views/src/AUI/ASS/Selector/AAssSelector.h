@@ -29,13 +29,13 @@ namespace ass {
     public:
         virtual bool isPossiblyApplicable(AView* view) = 0;
         virtual bool isStateApplicable(AView* view);
-        virtual void setupConnections(AView* view, const _<AAssHelper>& helper);
+        virtual void setupConnections(AView* view, const AArc<AAssHelper>& helper);
         virtual ~IAssSubSelector() = default;
     };
 
     class API_AUI_VIEWS AAssSelector final: public IAssSubSelector {
     private:
-        AVector<_<IAssSubSelector>> mSubSelectors;
+        AVector<AArc<IAssSubSelector>> mSubSelectors;
 
         template<typename SubSelector, std::enable_if_t<!std::is_pointer_v<SubSelector>, bool> = true>
         void processSubSelector(SubSelector&& subSelector) {
@@ -44,7 +44,7 @@ namespace ass {
 
         template<typename SubSelector, std::enable_if_t<std::is_pointer_v<SubSelector>, bool> = true>
         void processSubSelector(SubSelector&& subSelector) {
-            mSubSelectors << _<IAssSubSelector>(subSelector);
+            mSubSelectors << AArc<IAssSubSelector>(subSelector);
         }
 
         template<typename SubSelector, typename...SubSelectors>
@@ -96,8 +96,8 @@ namespace ass {
         bool isStateApplicable(AView* view) override {
             return constMe()->isStateApplicable(view);
         }
-        void setupConnections(AView* view, const _<AAssHelper>& helper) const;
-        void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+        void setupConnections(AView* view, const AArc<AAssHelper>& helper) const;
+        void setupConnections(AView* view, const AArc<AAssHelper>& helper) override {
             constMe()->setupConnections(view, helper);
         }
         template<typename SubSelector, std::enable_if_t<!std::is_pointer_v<SubSelector>, bool> = true>
@@ -106,7 +106,7 @@ namespace ass {
         }
 
         [[nodiscard]]
-        const AVector<_<IAssSubSelector>>& getSubSelectors() const {
+        const AVector<AArc<IAssSubSelector>>& getSubSelectors() const {
             return mSubSelectors;
         }
 

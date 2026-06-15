@@ -31,7 +31,7 @@
 class API_AUI_VIEWS ARulerView: public AView, public IFontView {
 private:
     ALayoutDirection mLayoutDirection;
-    _<gl::Vao> mPrecompiledLines;
+    AArc<gl::Vao> mPrecompiledLines;
 
     int mOffsetPx = 0;
 

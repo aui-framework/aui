@@ -45,7 +45,7 @@ protected:
         mWindow->show();
     }
 
-    _<AWindow> mWindow;
+    AArc<AWindow> mWindow;
     Observer mTestObserver;
 
     void validateOrder() {

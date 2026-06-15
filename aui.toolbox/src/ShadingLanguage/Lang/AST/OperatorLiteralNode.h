@@ -12,10 +12,10 @@
 class OperatorLiteralNode: public ExpressionNode, public IStringable {
 private:
     AString mLiteralName;
-    _<ExpressionNode> mChild;
+    AArc<ExpressionNode> mChild;
 
 public:
-    OperatorLiteralNode(const AString& literalName, const _<ExpressionNode>& child) : mLiteralName(literalName),
+    OperatorLiteralNode(const AString& literalName, const AArc<ExpressionNode>& child) : mLiteralName(literalName),
                                                                                       mChild(child) {}
 
     void acceptVisitor(INodeVisitor& v) override;
@@ -26,7 +26,7 @@ public:
         return mLiteralName;
     }
 
-    const _<ExpressionNode>& getChild() const {
+    const AArc<ExpressionNode>& getChild() const {
         return mChild;
     }
 };

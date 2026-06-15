@@ -12,10 +12,10 @@
 class OperatorCallNode: public ExpressionNode {
 private:
     AString mCallee;
-    AVector<_<ExpressionNode>> mArgs;
+    AVector<AArc<ExpressionNode>> mArgs;
 
 public:
-    OperatorCallNode(const AString& callee, const AVector<_<ExpressionNode>>& args) : mCallee(callee), mArgs(args) {}
+    OperatorCallNode(const AString& callee, const AVector<AArc<ExpressionNode>>& args) : mCallee(callee), mArgs(args) {}
 
     void acceptVisitor(INodeVisitor& v) override;
 
@@ -23,7 +23,7 @@ public:
         return mCallee;
     }
 
-    const AVector<_<ExpressionNode>>& getArgs() const {
+    const AVector<AArc<ExpressionNode>>& getArgs() const {
         return mArgs;
     }
 };

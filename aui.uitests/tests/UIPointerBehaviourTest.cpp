@@ -89,10 +89,10 @@ protected:
         UITest::TearDown();
     }
 
-    _<AWindow> mWindow;
-    _<AViewContainer> mContainer;
-    _<AViewContainer> mOverlay;
-    _<ViewMock> mView;
+    AArc<AWindow> mWindow;
+    AArc<AViewContainer> mContainer;
+    AArc<AViewContainer> mOverlay;
+    AArc<ViewMock> mView;
 };
 
 

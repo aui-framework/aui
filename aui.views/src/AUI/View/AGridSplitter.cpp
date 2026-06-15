@@ -158,8 +158,8 @@ void AGridSplitter::onPointerReleased(const APointerReleasedEvent& event) {
 
 void AGridSplitter::updateSplitterItems() {
     setLayout(std::make_unique<AGridSplitterLayout>(mItems.first().size(), mItems.size(), *this));
-    AVector<_<AView>> horizontal;
-    AVector<_<AView>> vertical;
+    AVector<AArc<AView>> horizontal;
+    AVector<AArc<AView>> vertical;
 
     for (auto& row : mItems) {
         for (auto& v : row) {

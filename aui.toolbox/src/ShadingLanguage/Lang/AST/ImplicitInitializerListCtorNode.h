@@ -12,14 +12,14 @@
 
 class ImplicitInitializerListCtorNode: public ExpressionNode, public IStringable {
 private:
-    AVector<_<ExpressionNode>> mElements;
+    AVector<AArc<ExpressionNode>> mElements;
 
 public:
-    ImplicitInitializerListCtorNode(const AVector<_<ExpressionNode>>& elements) : mElements(elements) {}
+    ImplicitInitializerListCtorNode(const AVector<AArc<ExpressionNode>>& elements) : mElements(elements) {}
 
     void acceptVisitor(INodeVisitor& v) override;
 
-    [[nodiscard]] const AVector<_<ExpressionNode>>& getElements() const {
+    [[nodiscard]] const AVector<AArc<ExpressionNode>>& getElements() const {
         return mElements;
     }
 

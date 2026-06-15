@@ -23,7 +23,7 @@
 #include "AProcess.h"
 #include "AUI/IO/AFileOutputStream.h"
 
-_<AChildProcess>
+AArc<AChildProcess>
 AProcess::create(AProcess::ProcessCreationInfo args) {
     auto p = aui::ptr::manage_shared(new AChildProcess);
     p->mInfo = std::move(args);
@@ -42,13 +42,13 @@ int AProcess::executeWaitForExit(AString applicationFile, AString args, APath wo
     return p->waitForExitCode();
 }
 
-_<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
+AArc<AProcess> AProcess::findAnotherSelfInstance(const AString& yourProjectName) {
     // try to find in task list
     auto list = all();
     auto s = self();
     auto name = s->getModuleName();
     auto pid = s->getPid();
-    auto it = std::find_if(list.begin(), list.end(), [&](const _<AProcess>& v) {
+    auto it = std::find_if(list.begin(), list.end(), [&](const AArc<AProcess>& v) {
         return v->getModuleName() == name && pid != v->getPid();
     });
     if (it != list.end()) {

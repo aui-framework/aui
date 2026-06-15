@@ -41,7 +41,7 @@ private:
         bool isValidText(std::u32string_view text) override;
     };
 
-    _<ANumberPickerField> mTextField;
+    AArc<ANumberPickerField> mTextField;
 
     int64_t mMin = 0;
     int64_t mMax = 100;
@@ -99,10 +99,10 @@ namespace aui::impl {
     template<typename Num>
     struct ADataBindingDefaultNumberPicker {
     public:
-        static auto property(const _<ANumberPicker>& view) {
+        static auto property(const AArc<ANumberPicker>& view) {
             return view->value();
         }
-        static void setup(const _<ANumberPicker>& view) {}
+        static void setup(const AArc<ANumberPicker>& view) {}
 
         static auto getGetter() { return &ANumberPicker::valueChanged; }
 
@@ -114,10 +114,10 @@ namespace aui::impl {
                  aui::convertible_to<decltype(max), UnderlyingType>
     struct ADataBindingRangedNumberPicker {
     public:
-        static auto property(const _<ANumberPicker>& view) {
+        static auto property(const AArc<ANumberPicker>& view) {
             return view->value();
         }
-        static void setup(const _<ANumberPicker>& view) {
+        static void setup(const AArc<ANumberPicker>& view) {
             view->setMin(aui::ranged_number<UnderlyingType, min, max>::MIN);
             view->setMax(aui::ranged_number<UnderlyingType, min, max>::MAX);
         }

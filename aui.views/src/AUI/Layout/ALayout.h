@@ -364,7 +364,7 @@ public:
      * @details
      * See ABasicLayout for basic implementation of this method.
      */
-    virtual void addView(const _<AView>& view, AOptional<size_t> index = std::nullopt) = 0;
+    virtual void addView(const AArc<AView>& view, AOptional<size_t> index = std::nullopt) = 0;
 
     /**
      * @brief Detaches view from the layout.
@@ -383,7 +383,7 @@ public:
     /**
      * @brief Visits all views in the layout.
      */
-    virtual AVector<_<AView>> getAllViews() = 0;
+    virtual AVector<AArc<AView>> getAllViews() = 0;
 
     virtual ALayoutDirection getLayoutDirection();
 

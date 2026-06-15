@@ -90,7 +90,7 @@ public:
     }
 
     [[nodiscard]]
-    const _<AView>& innerView() const noexcept {
+    const AArc<AView>& innerView() const noexcept {
         return mInner;
     }
 
@@ -98,7 +98,7 @@ public:
      * Set custom inner view.
      * @param inner custom inner view to use instead of default one
      */
-    void setInnerView(_<AView> inner) {
+    void setInnerView(AArc<AView> inner) {
         if (mInner) {
             removeView(mInner);
         }
@@ -117,7 +117,7 @@ private:
     aui::float_within_0_1 mValue = 0.f;
     emits<aui::float_within_0_1> mValueChanged;
     void updateInnerWidth();
-    _<AView> mInner;
+    AArc<AView> mInner;
 };
 
 namespace declarative {
@@ -142,7 +142,7 @@ struct ProgressBar {
      * View's width will be automatically adjusted based on the `progress` value, so the view should be designed to look
      * good at various widths.
      */
-    _<AView> inner = defaultInner();
+    AArc<AView> inner = defaultInner();
 
     /**
      * @brief Creates a default inner view for the progress bar.
@@ -151,9 +151,9 @@ struct ProgressBar {
      * The returned view is a simple rectangle that visually represents
      * the progress bar's fill area.
      */
-    static _<AView> defaultInner();
+    static AArc<AView> defaultInner();
 
-    API_AUI_VIEWS _<AView> operator()();
+    API_AUI_VIEWS AArc<AView> operator()();
 };
 }   // namespace declarative
 
@@ -162,9 +162,9 @@ struct ProgressBar {
 template<>
 struct ADataBindingDefault<AProgressBar, aui::float_within_0_1> {
 public:
-    static auto property(const _<AProgressBar>& view) {
+    static auto property(const AArc<AProgressBar>& view) {
         return view->value();
     }
-    static void setup(const _<AProgressBar>& view) {}
+    static void setup(const AArc<AProgressBar>& view) {}
 };
 

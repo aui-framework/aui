@@ -154,7 +154,7 @@ void MinesweeperWindow::beginGame(int columns, int rows, int bombs) {
 }
 /// [beginGame]
 
-void MinesweeperWindow::setupEventHandlers(int x, int y, const _<CellView>& cell) {
+void MinesweeperWindow::setupEventHandlers(int x, int y, const AArc<CellView>& cell) {
     /// [clicked]
     connect(cell->clicked, this, [&, x, y]() {
         if (mReveal) {

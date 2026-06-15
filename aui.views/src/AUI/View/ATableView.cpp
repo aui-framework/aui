@@ -20,7 +20,7 @@ ATableView::~ATableView()
 }
 
 
-void ATableView::setModel(_<ITableModel> model)
+void ATableView::setModel(AArc<ITableModel> model)
 {
 	mModel = model;
 

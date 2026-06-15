@@ -34,7 +34,7 @@ AScrollAreaViewport::~AScrollAreaViewport() {
 
 }
 
-void AScrollAreaViewport::setContents(_<AView> content) {
+void AScrollAreaViewport::setContents(AArc<AView> content) {
     mInner->setPosition({0, 0});
     ALayoutInflater::inflate(mInner, content);
     mContents = std::move(content);

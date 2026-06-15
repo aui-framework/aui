@@ -14,7 +14,7 @@ class AUrl;
  */
 class ISoundInputStream: public IInputStream {
 public:
-    static _<ISoundInputStream> fromUrl(const AUrl& url);
+    static AArc<ISoundInputStream> fromUrl(const AUrl& url);
 
     /**
      * @brief Get general info about sound stream
@@ -31,6 +31,6 @@ private:
         static _unique<IInputStream> get(const AUrl& key);
 
     private:
-        AMap<AUrl, _<AByteBuffer>> mEntries;
+        AMap<AUrl, AArc<AByteBuffer>> mEntries;
     };
 };

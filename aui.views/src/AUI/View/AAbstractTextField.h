@@ -72,7 +72,7 @@ public:
     glm::ivec2 getCursorPosition() override;
 
 protected:
-    _<IRenderer::IPrerenderedString> mPrerenderedString;
+    AArc<IRenderer::IPrerenderedString> mPrerenderedString;
     std::u32string mContents;
     AString mSuffix;
 

@@ -71,7 +71,7 @@ public:
 
     ACursor(System systemCursor): mValue(systemCursor) {}
     explicit ACursor(AImageView image, int size = 16);
-    explicit ACursor(aui::non_null<_<IDrawable>> drawable, int size = 16);
+    explicit ACursor(aui::non_null<AArc<IDrawable>> drawable, int size = 16);
     explicit ACursor(AUrl imageUrl, int size = 16);
 
     ~ACursor();
@@ -81,10 +81,10 @@ public:
     struct Custom {
         virtual ~Custom() = default;
     };
-    const std::variant<System, _<Custom>, _<IDrawable>>& value() const { return mValue; }
+    const std::variant<System, AArc<Custom>, AArc<IDrawable>>& value() const { return mValue; }
     int size() const { return mSize; }
 
 private:
-    std::variant<System, _<Custom>, _<IDrawable>> mValue;
+    std::variant<System, AArc<Custom>, AArc<IDrawable>> mValue;
     int mSize;
 };

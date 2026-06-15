@@ -11,7 +11,7 @@
 
 #include "AAdvancedGridLayout.h"
 
-int AAdvancedGridLayout::indexOf(_<AView> view)
+int AAdvancedGridLayout::indexOf(AArc<AView> view)
 {
     int counter = 0;
     for (auto& i : mCells)
@@ -30,10 +30,10 @@ int& AAdvancedGridLayout::indexAt(int x, int y)
     return mIndices[y * cellsX + x];
 }
 
-AVector<_<AView>> AAdvancedGridLayout::getRow(int row)
+AVector<AArc<AView>> AAdvancedGridLayout::getRow(int row)
 {
     ASet<int> indices;
-    AVector<_<AView>> result;
+    AVector<AArc<AView>> result;
 
     for (auto i : mIndices)
     {
@@ -51,10 +51,10 @@ AVector<_<AView>> AAdvancedGridLayout::getRow(int row)
     return result;
 }
 
-AVector<_<AView>> AAdvancedGridLayout::getColumn(int column)
+AVector<AArc<AView>> AAdvancedGridLayout::getColumn(int column)
 {
     ASet<int> indices;
-    AVector<_<AView>> result;
+    AVector<AArc<AView>> result;
 
     for (auto i : mIndices)
     {
@@ -171,7 +171,7 @@ void AAdvancedGridLayout::prepareCache(AVector<CompositionCache>& columns, AVect
     }
 }
 
-void AAdvancedGridLayout::addView(const _<AView>& view, AOptional<size_t> index) {
+void AAdvancedGridLayout::addView(const AArc<AView>& view, AOptional<size_t> index) {
     if (mCurrentIndex >= mIndices.size())
     {
         // dynamically populated rows?
@@ -183,7 +183,7 @@ void AAdvancedGridLayout::addView(const _<AView>& view, AOptional<size_t> index)
     mCurrentIndex += 1;
 }
 
-void AAdvancedGridLayout::addView(const _<AView>& view, int x, int y)
+void AAdvancedGridLayout::addView(const AArc<AView>& view, int x, int y)
 {
     auto& index = indexAt(x, y);
     if (index != -1)
@@ -239,7 +239,7 @@ int AAdvancedGridLayout::getMinimumHeight()
     return min;
 }
 
-AVector<_<AView>> AAdvancedGridLayout::getAllViews() {
+AVector<AArc<AView>> AAdvancedGridLayout::getAllViews() {
     return { mCells.begin(), mCells.end() };
 }
 

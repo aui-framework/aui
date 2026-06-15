@@ -67,11 +67,11 @@ public:
     static gl::Framebuffer newOffscreenRenderingFramebuffer(glm::uvec2 initialSize);
 
 protected:
-    _<OpenGLRenderer> mRenderer;
+    AArc<OpenGLRenderer> mRenderer;
     glm::uvec2 mViewportSize;
     struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
-    static _<OpenGLRenderer> ourRenderer() {
-        static _weak<OpenGLRenderer> g;
+    static AArc<OpenGLRenderer> ourRenderer() {
+        static AWeakArc<OpenGLRenderer> g;
         if (auto v = g.lock()) {
             return v;
         }

@@ -22,7 +22,7 @@ class AString;
 
 
 struct API_AUI_VIEWS AFontStyle {
-    mutable _<AFont> font = AFontManager::inst().getDefaultFont();
+    mutable AArc<AFont> font = AFontManager::inst().getDefaultFont();
     unsigned size = 12;
     bool formatting = false;
     ATextAlign align = ATextAlign::LEFT;

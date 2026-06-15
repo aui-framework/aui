@@ -538,7 +538,7 @@ AScrollArea* ATextArea::findScrollArea() {
     return nullptr;
 }
 
-void ATextArea::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
+void ATextArea::fillStringCanvas(const AArc<IRenderer::IMultiStringCanvas>& canvas) {
 
     auto ascender = glm::ivec2 {0,
                                 getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()

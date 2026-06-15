@@ -48,7 +48,7 @@ AI18n::AI18n() {
     }
 }
 
-void AI18n::loadFromStreamInto(const _<IInputStream>& iis, AMap<AString, AString>& langData) {
+void AI18n::loadFromStreamInto(const AArc<IInputStream>& iis, AMap<AString, AString>& langData) {
     ATokenizer t(iis);
     bool running = true;
     try {
@@ -85,7 +85,7 @@ void AI18n::loadFromLang(const ALanguageCode& languageCode) {
     loadFromStream(AUrl(":lang/{}.lang"_format(languageCode.toString())).open());
 }
 
-void AI18n::loadFromStream(const _<IInputStream>& iis) {
+void AI18n::loadFromStream(const AArc<IInputStream>& iis) {
     loadFromStreamInto(iis, mLangData);
 }
 

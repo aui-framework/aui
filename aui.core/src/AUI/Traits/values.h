@@ -139,7 +139,7 @@ public:
  * If initialized with `nullptr` itself, throws a compile-time error.
  *
  * ```cpp
- * void render(aui::non_null<_<AView>> view) {
+ * void render(aui::non_null<AArc<AView>> view) {
  *     view->render();
  * }
  *
@@ -193,7 +193,7 @@ public:
     no_escape(T&& value) : value(&value) { AUI_ASSERTX(no_escape::value != nullptr, "the argument could not be null"); }
     no_escape(T* value) : value(value) { AUI_ASSERTX(no_escape::value != nullptr, "the argument could not be null"); }
 
-    no_escape(const _<T>& value) : value(&*value) {
+    no_escape(const AArc<T>& value) : value(&*value) {
         AUI_ASSERTX(no_escape::value != nullptr, "the argument could not be null");
     }
     no_escape(const _unique<T>& value) : value(&*value) {
@@ -203,7 +203,7 @@ public:
     template <
         typename DerivedFromT,
         std::enable_if_t<std::is_base_of_v<T, DerivedFromT> && !std::is_same_v<DerivedFromT, T>, bool> = true>
-    no_escape(const _<DerivedFromT>& value) : value(&*value) {
+    no_escape(const AArc<DerivedFromT>& value) : value(&*value) {
         AUI_ASSERTX(no_escape::value != nullptr, "the argument could not be null");
     }
 

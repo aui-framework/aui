@@ -77,7 +77,7 @@ static constexpr auto MAX_RADIUS = 128.f;
 
 class CircleDrawArea : public AView {
 public:
-    CircleDrawArea(_<State> state) : mState(std::move(state)) {
+    CircleDrawArea(AArc<State> state) : mState(std::move(state)) {
         setCustomStyle({
           Expanding(),
           BackgroundSolid(AColor::WHITE),
@@ -184,20 +184,20 @@ public:
         }
         class ActionAddCircle : public IAction {
         public:
-            ActionAddCircle(_<State> state, Circle circle) : mState(std::move(state)), mCircle(std::move(circle)) {}
+            ActionAddCircle(AArc<State> state, Circle circle) : mState(std::move(state)), mCircle(std::move(circle)) {}
             ~ActionAddCircle() override = default;
             void undo() override { mState->circles.writeScope()->pop_back(); }
             void redo() override { mState->circles.writeScope()->push_back(mCircle); }
 
         private:
-            _<State> mState;
+            AArc<State> mState;
             Circle mCircle;
         };
         mState->history.add(std::make_unique<ActionAddCircle>(mState, Circle { .position = event.position }));
     }
 
 private:
-    _<State> mState;
+    AArc<State> mState;
     AProperty<Circle*> mHoveredCircle = nullptr;
 };
 

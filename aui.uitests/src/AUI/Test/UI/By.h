@@ -21,7 +21,7 @@
 namespace By {
     API_AUI_UITESTS UIMatcher text(const AString& text);
     API_AUI_UITESTS UIMatcher name(const AString& name);
-    API_AUI_UITESTS UIMatcher value(const _<AView>& value);
+    API_AUI_UITESTS UIMatcher value(const AArc<AView>& value);
 
     template<typename T>
     UIMatcher type() {
@@ -29,7 +29,7 @@ namespace By {
         public:
             ~TypeMatcher() override = default;
 
-            bool matches(const _<AView>& view) override {
+            bool matches(const AArc<AView>& view) override {
                 return dynamic_cast<T*>(view.get()) != nullptr;
             }
         };
@@ -41,7 +41,7 @@ namespace By {
         public:
             ~ExactTypeMatcher() override = default;
 
-            bool matches(const _<AView>& view) override {
+            bool matches(const AArc<AView>& view) override {
                 return typeid(*view.get()) == typeid(T);
             }
         };

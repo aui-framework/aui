@@ -25,7 +25,7 @@ public:
         setContents(Vertical {
           AText::fromString(message),
           Centered {
-            [&]() -> _<AView> {
+            [&]() -> AArc<AView> {
                 switch (b) {
                     case AMessageBox::Button::OK:
                         return Button { .content = Label { "OK"_i18n }, .onClick = { me::onOk } };

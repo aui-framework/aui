@@ -253,7 +253,7 @@ public:
     /**
      * @see mExtraStylesheet
      */
-    void setExtraStylesheet(_<AStylesheet> extraStylesheet) {
+    void setExtraStylesheet(AArc<AStylesheet> extraStylesheet) {
         mExtraStylesheet = std::move(extraStylesheet);
         invalidateAssHelper();
     }
@@ -267,7 +267,7 @@ public:
      * @see mExtraStylesheet
      */
     [[nodiscard]]
-    const _<AStylesheet>& extraStylesheet() const noexcept {
+    const AArc<AStylesheet>& extraStylesheet() const noexcept {
         return mExtraStylesheet;
     }
 
@@ -555,12 +555,12 @@ public:
         setExpanding(2);
     }
 
-    const _<AAnimator>& getAnimator() const {
+    const AArc<AAnimator>& getAnimator() const {
         return mAnimator;
     }
 
 
-    void setAnimator(const _<AAnimator>& animator);
+    void setAnimator(const AArc<AAnimator>& animator);
     void getTransform(glm::mat4& transform) const;
 
     [[nodiscard]]
@@ -716,7 +716,7 @@ public:
     /**
      * @brief Checks if the specified view is an indirect parent of this view.
      */
-    bool hasIndirectParent(const _<AView>& v);
+    bool hasIndirectParent(const AArc<AView>& v);
 
     /**
      * @return Coords of this AView relative to window
@@ -764,7 +764,7 @@ public:
         return *this;
     }
 
-    const _<AAssHelper>& getAssHelper() const {
+    const AArc<AAssHelper>& getAssHelper() const {
         return mAssHelper;
     }
 
@@ -1008,7 +1008,7 @@ signals:
     emits<> focusAcquired;
     emits<> focusLost;
 
-    emits<_<AView>> childFocused;
+    emits<AArc<AView>> childFocused;
 
 protected:
     /**
@@ -1158,7 +1158,7 @@ private:
     /**
      * @brief Animation.
      */
-    _<AAnimator> mAnimator;
+    AArc<AAnimator> mAnimator;
 
     /**
      * @brief Controls how does the overflow (stencil) mask is produced.
@@ -1176,7 +1176,7 @@ private:
     /**
      * @brief Helper middleware object for handling ASS state updates (hover, active, etc...)
      */
-    _<AAssHelper> mAssHelper;
+    AArc<AAssHelper> mAssHelper;
 
     /**
      * @brief border-radius, specified in ASS.
@@ -1208,7 +1208,7 @@ private:
      *
      * Extra stylesheet overrides the global stylesheet on conflicts.
      */
-    _<AStylesheet> mExtraStylesheet;
+    AArc<AStylesheet> mExtraStylesheet;
 
     /**
      * @brief Called when parent's enable state is changed. Overridden in AViewContainer.
@@ -1274,13 +1274,13 @@ private:
      */
     virtual void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField);
 
-    void notifyParentChildFocused(const _<AView>& view);
+    void notifyParentChildFocused(const AArc<AView>& view);
 };
 
 API_AUI_VIEWS std::ostream& operator<<(std::ostream& os, const AView& view);
 
 template <typename Factory>
-requires aui::not_overloaded_lambda<Factory> && aui::factory<Factory, _<AView>>
+requires aui::not_overloaded_lambda<Factory> && aui::factory<Factory, AArc<AView>>
 struct aui::implicit_shared_ptr_ctor<Factory> {
     auto operator()(Factory&& factory) {
         auto view = std::invoke(std::forward<Factory>(factory));

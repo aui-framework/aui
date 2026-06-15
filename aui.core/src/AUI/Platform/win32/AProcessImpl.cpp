@@ -104,7 +104,7 @@ public:
     
 };
 
-AVector<_<AProcess>> AProcess::all() {
+AVector<AArc<AProcess>> AProcess::all() {
     // get the list of process identifiers.
     DWORD pids[4096], processCountInBytes, processCount;
     unsigned int i;
@@ -118,7 +118,7 @@ AVector<_<AProcess>> AProcess::all() {
     // calculate how many process identifiers were returned.
     processCount = processCountInBytes / sizeof(DWORD);
 
-    AVector<_<AProcess>> result;
+    AVector<AArc<AProcess>> result;
     for ( i = 0; i < processCount; i++ )
     {
         if(pids[i] != 0 )
@@ -132,7 +132,7 @@ AVector<_<AProcess>> AProcess::all() {
     return result;
 }
 
-_<AProcess> AProcess::self() {
+AArc<AProcess> AProcess::self() {
     return _new<AOtherProcess>(GetCurrentProcess());
 }
 
@@ -273,7 +273,7 @@ int AChildProcess::waitForExitCode() {
 
 AChildProcess::~AChildProcess() = default;
 
-_<AProcess> AProcess::fromPid(uint32_t pid) {
+AArc<AProcess> AProcess::fromPid(uint32_t pid) {
     auto handle = OpenProcess( PROCESS_QUERY_INFORMATION | PROCESS_VM_READ | SYNCHRONIZE, false, pid);
     if (handle) {
         DWORD exitCode;

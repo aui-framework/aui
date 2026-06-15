@@ -12,10 +12,10 @@
 class StructClassDefinition: public INode {
 private:
     AString mName;
-    AVector<_<INode>> mNodes;
+    AVector<AArc<INode>> mNodes;
 
 public:
-    StructClassDefinition(const AString& name, const AVector<_<INode>>& nodes) : mName(name), mNodes(nodes) {}
+    StructClassDefinition(const AString& name, const AVector<AArc<INode>>& nodes) : mName(name), mNodes(nodes) {}
 
     void acceptVisitor(INodeVisitor& v) override;
 
@@ -23,7 +23,7 @@ public:
         return mName;
     }
 
-    const AVector<_<INode>>& getNodes() const {
+    const AVector<AArc<INode>>& getNodes() const {
         return mNodes;
     }
 };

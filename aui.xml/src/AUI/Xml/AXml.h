@@ -27,5 +27,5 @@ namespace AXml
      * @brief Parses xml from the input stream to the IXmlDocumentVisitor.
      * @ingroup xml
      */
-	void API_AUI_XML read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor);
+	void API_AUI_XML read(const AArc<IInputStream>& is, const AArc<IXmlDocumentVisitor>& visitor);
 }

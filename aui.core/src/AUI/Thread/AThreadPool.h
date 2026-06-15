@@ -71,7 +71,7 @@ public:
 
 protected:
     typedef std::function<void()> task;
-    AVector<_<Worker>> mWorkers;
+    AVector<AArc<Worker>> mWorkers;
     AQueue<task> mQueueHighest;
     AQueue<task> mQueueMedium;
     AQueue<task> mQueueLowest;
@@ -115,7 +115,7 @@ public:
     static AThreadPool& global();
 
     [[nodiscard]]
-    const AVector<_<Worker>>& workers() const {
+    const AVector<AArc<Worker>>& workers() const {
         return mWorkers;
     }
 

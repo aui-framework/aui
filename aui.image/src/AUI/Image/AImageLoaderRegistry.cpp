@@ -13,22 +13,22 @@
 
 #include "AUI/Common/AByteBuffer.h"
 
-void AImageLoaderRegistry::registerLoader(ADeque<_<IImageLoader>> &d, _<IImageLoader> loader, AString name) {
+void AImageLoaderRegistry::registerLoader(ADeque<AArc<IImageLoader>> &d, AArc<IImageLoader> loader, AString name) {
     d << std::move(loader);
     if (!name.empty()) {
         mSupportedFormats << std::move(name);
     }
 }
 
-void AImageLoaderRegistry::registerRasterLoader(_<IImageLoader> imageLoader, AString formatName) {
+void AImageLoaderRegistry::registerRasterLoader(AArc<IImageLoader> imageLoader, AString formatName) {
     registerLoader(mRasterLoaders, std::move(imageLoader), std::move(formatName));
 }
 
-void AImageLoaderRegistry::registerVectorLoader(_<IImageLoader> imageLoader, AString formatName) {
+void AImageLoaderRegistry::registerVectorLoader(AArc<IImageLoader> imageLoader, AString formatName) {
     registerLoader(mVectorLoaders, std::move(imageLoader), std::move(formatName));
 }
 
-void AImageLoaderRegistry::registerAnimatedLoader(_<IImageLoader> imageLoader, AString formatName) {
+void AImageLoaderRegistry::registerAnimatedLoader(AArc<IImageLoader> imageLoader, AString formatName) {
     registerLoader(mAnimatedLoaders, std::move(imageLoader), std::move(formatName));
 }
 
@@ -36,7 +36,7 @@ const ADeque<AString>& AImageLoaderRegistry::supportedFormats() const noexcept {
     return mSupportedFormats;
 }
 
-_<IImageFactory> AImageLoaderRegistry::loadVector(AByteBufferView buffer)
+AArc<IImageFactory> AImageLoaderRegistry::loadVector(AByteBufferView buffer)
 {
     for (auto& loader : mVectorLoaders)
     {
@@ -56,7 +56,7 @@ _<IImageFactory> AImageLoaderRegistry::loadVector(AByteBufferView buffer)
     return nullptr;
 }
 
-_<AImage> AImageLoaderRegistry::loadRaster(AByteBufferView buffer) {
+AArc<AImage> AImageLoaderRegistry::loadRaster(AByteBufferView buffer) {
     for (auto& loader : mRasterLoaders)
     {
         try {
@@ -75,7 +75,7 @@ _<AImage> AImageLoaderRegistry::loadRaster(AByteBufferView buffer) {
     return nullptr;
 }
 
-_<AImage> AImageLoaderRegistry::loadImage(const AUrl& url) {
+AArc<AImage> AImageLoaderRegistry::loadImage(const AUrl& url) {
     auto buffer = AByteBuffer::fromStream(url.open());
     if (auto r = loadRaster(buffer))
         return r;
@@ -88,7 +88,7 @@ AImageLoaderRegistry& AImageLoaderRegistry::inst() {
     return a;
 }
 
-_<IAnimatedImageFactory> AImageLoaderRegistry::loadAnimated(AByteBufferView buffer) {
+AArc<IAnimatedImageFactory> AImageLoaderRegistry::loadAnimated(AByteBufferView buffer) {
     for (auto& loader : mAnimatedLoaders)
     {
         try {

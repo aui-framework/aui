@@ -38,7 +38,7 @@ public:
     AByteBuffer getPrivateKeyPEM() const;
     AByteBuffer getPublicKeyPEM() const;
 
-    static _<ARsa> generate(int bits = 0x800);
-    static _<ARsa> fromPrivateKeyPEM(AByteBufferView buffer);
-    static _<ARsa> fromPublicKeyPEM(AByteBufferView buffer);
+    static AArc<ARsa> generate(int bits = 0x800);
+    static AArc<ARsa> fromPrivateKeyPEM(AByteBufferView buffer);
+    static AArc<ARsa> fromPublicKeyPEM(AByteBufferView buffer);
 };

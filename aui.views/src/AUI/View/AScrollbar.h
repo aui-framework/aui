@@ -131,7 +131,7 @@ public:
 
     void setSize(glm::ivec2 size) override;
 
-    static const _<ATimer>& buttonTimer();
+    static const AArc<ATimer>& buttonTimer();
 
 
     /**
@@ -158,10 +158,10 @@ signals:
 
 protected:
     ALayoutDirection mDirection;
-    _<ASpacerExpanding> mOffsetSpacer;
-    _<AScrollbarHandle> mHandle;
-    _<AScrollbarButton> mForwardButton;
-    _<AScrollbarButton> mBackwardButton;
+    AArc<ASpacerExpanding> mOffsetSpacer;
+    AArc<AScrollbarHandle> mHandle;
+    AArc<AScrollbarButton> mForwardButton;
+    AArc<AScrollbarButton> mBackwardButton;
 
     size_t mViewportSize = 0, mFullSize = 0;
     int mCurrentScroll = 0;

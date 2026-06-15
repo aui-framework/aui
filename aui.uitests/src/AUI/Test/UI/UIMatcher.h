@@ -20,12 +20,12 @@
 
 class API_AUI_UITESTS UIMatcher {
 private:
-    _<IMatcher> mMatcher;
+    AArc<IMatcher> mMatcher;
     bool mIncludeInvisibleViews = false;
 
 
     template<typename Container>
-    void processContainer(Container& destination, const _<AViewContainerBase>& container) const;
+    void processContainer(Container& destination, const AArc<AViewContainerBase>& container) const;
 
     template<typename T, typename = int>
     struct ignores_visibility : std::false_type { };
@@ -34,7 +34,7 @@ private:
     struct ignores_visibility<T, decltype((T::IGNORE_VISIBILITY::value, 0))> : T::IGNORE_VISIBILITY { };
 
     template<class Assertion>
-    void performHintChecks(const char* msg, ASet<_<AView>>& set) {
+    void performHintChecks(const char* msg, ASet<AArc<AView>>& set) {
         currentImpl() = this;
         if constexpr (ignores_visibility<Assertion>::value) {
             set = toSet();
@@ -49,7 +49,7 @@ private:
     static UIMatcher*& currentImpl();
 
 public:
-    UIMatcher(const _<IMatcher>& matcher) : mMatcher(matcher) {}
+    UIMatcher(const AArc<IMatcher>& matcher) : mMatcher(matcher) {}
 
     ~UIMatcher() {
         if (current() == this) {
@@ -61,10 +61,10 @@ public:
         return currentImpl();
     }
 
-    ASet<_<AView>> toSet() const;
-    AVector<_<AView>> toVector() const;
+    ASet<AArc<AView>> toSet() const;
+    AVector<AArc<AView>> toVector() const;
 
-    _<AView> one() const {
+    AArc<AView> one() const {
         auto set = toSet();
         if (set.empty()) {
             SCOPED_TRACE("no views selected");
@@ -123,7 +123,7 @@ public:
 
         auto nearestToView = (*targets.begin());
         auto nearestToPoint = glm::vec2(nearestToView->getPositionInWindow() + nearestToView->getSize());
-        auto target = std::min_element(mySet.begin(), mySet.end(), [&](const _<AView>& lhs, const _<AView>& rhs) {
+        auto target = std::min_element(mySet.begin(), mySet.end(), [&](const AArc<AView>& lhs, const AArc<AView>& rhs) {
             float dst1 = glm::distance2(nearestToPoint, glm::vec2(lhs->getCenterPointInWindow()));
             float dst2 = glm::distance2(nearestToPoint, glm::vec2(rhs->getCenterPointInWindow()));
             return dst1 < dst2;
@@ -132,13 +132,13 @@ public:
 
         class ToOneMatcher: public IMatcher {
         public:
-            explicit ToOneMatcher(_<AView> view) : mView(std::move(view)) {}
+            explicit ToOneMatcher(AArc<AView> view) : mView(std::move(view)) {}
 
-            bool matches(const _<AView>& view) override {
+            bool matches(const AArc<AView>& view) override {
                 return view == mView;
             }
         private:
-            _<AView> mView;
+            AArc<AView> mView;
         };
 
         return { _new<ToOneMatcher>(std::move(*target)) };
@@ -163,11 +163,11 @@ public:
 
         struct ParentMatcher: public IMatcher {
         private:
-            _<IMatcher> childMatcher;
+            AArc<IMatcher> childMatcher;
         public:
-            ParentMatcher(const _<IMatcher>& childMatcher) : childMatcher(childMatcher) {}
+            ParentMatcher(const AArc<IMatcher>& childMatcher) : childMatcher(childMatcher) {}
 
-            bool matches(const _<AView>& view) override {
+            bool matches(const AArc<AView>& view) override {
                 if (auto container = _cast<AViewContainer>(view)) {
                     for (const auto& childView : container) {
                         if (childMatcher->matches(childView)) return true;
@@ -184,11 +184,11 @@ public:
 
         struct ChildMatcher: public IMatcher {
         private:
-            _<IMatcher> childMatcher;
+            AArc<IMatcher> childMatcher;
         public:
-            ChildMatcher(const _<IMatcher>& childMatcher) : childMatcher(childMatcher) {}
+            ChildMatcher(const AArc<IMatcher>& childMatcher) : childMatcher(childMatcher) {}
 
-            bool matches(const _<AView>& view) override {
+            bool matches(const AArc<AView>& view) override {
                 return childMatcher->matches(aui::ptr::fake_shared(view->getParent()));
             }
         };
@@ -201,12 +201,12 @@ private:
     template<class BinaryOperator>
     struct BinaryOperatorMatcher: public IMatcher {
     private:
-        _<IMatcher> lhs;
-        _<IMatcher> rhs;
+        AArc<IMatcher> lhs;
+        AArc<IMatcher> rhs;
     public:
-        BinaryOperatorMatcher(const _<IMatcher>& lhs, const _<IMatcher>& rhs) : lhs(lhs), rhs(rhs) {}
+        BinaryOperatorMatcher(const AArc<IMatcher>& lhs, const AArc<IMatcher>& rhs) : lhs(lhs), rhs(rhs) {}
 
-        bool matches(const _<AView>& view) override {
+        bool matches(const AArc<AView>& view) override {
             return BinaryOperator()(lhs->matches(view), rhs->matches(view));
         }
     };

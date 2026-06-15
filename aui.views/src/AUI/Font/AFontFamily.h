@@ -35,13 +35,13 @@ public:
 
 private:
     struct {
-        _<AFont> nonItalic;
-        _<AFont> italic;
+        AArc<AFont> nonItalic;
+        AArc<AFont> italic;
     } mFonts[9]; // weights 100-900;
 
 
     template<bool italic>
-    _<AFont> getEitherWeight() {
+    AArc<AFont> getEitherWeight() {
         for (auto& e : {
             W400,
             W500,
@@ -60,7 +60,7 @@ private:
         return nullptr;
     }
     template<bool italicPrefer>
-    _<AFont> getEitherWeightItalicPreferred() {
+    AArc<AFont> getEitherWeightItalicPreferred() {
         if (auto f = getEitherWeight<italicPrefer>()) {
             return f;
         }
@@ -68,7 +68,7 @@ private:
     }
 
 public:
-    _<AFont>& get(Weight weight, bool isItalic) {
+    AArc<AFont>& get(Weight weight, bool isItalic) {
         auto& r = mFonts[weight];
         return isItalic ? r.italic : r.nonItalic;
     }
@@ -78,7 +78,7 @@ public:
      * @return instance of <code>AFont</code> of this font family with weight of 400. If font family does not have
      *         font with weight of 400, the nearest to this weight existing font is returned instead.
      */
-    _<AFont> getEither(bool italicPreferred = false) {
+    AArc<AFont> getEither(bool italicPreferred = false) {
         if (italicPreferred) {
             return getEitherWeightItalicPreferred<true>();
         }

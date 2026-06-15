@@ -21,11 +21,11 @@
 static constexpr auto CACHE_SIZE_THRESHOLD = 1024 * 1024 * 10; // 10 MB
 
 
-_<AImage> AImage::fromFile(const APath& path) {
+AArc<AImage> AImage::fromFile(const APath& path) {
     return fromUrl(AUrl("file://" + path));
 }
 
-_<AImage> AImage::fromBuffer(AByteBufferView buffer) {
+AArc<AImage> AImage::fromBuffer(AByteBufferView buffer) {
     try {
         if (auto raster = AImageLoaderRegistry::inst().loadRaster(buffer))
             return raster;
@@ -35,7 +35,7 @@ _<AImage> AImage::fromBuffer(AByteBufferView buffer) {
     return nullptr;
 }
 
-_<AImage> AImage::fromUrl(const AUrl& url) {
+AArc<AImage> AImage::fromUrl(const AUrl& url) {
     try {
         auto buffer = AByteBuffer::fromStream(AUrl(url).open(), 0x10000000);
 

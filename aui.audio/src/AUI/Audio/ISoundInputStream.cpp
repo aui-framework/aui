@@ -6,7 +6,7 @@
 #include "AUI/Audio/ABadFormatException.h"
 #include "AUI/Logging/ALogger.h"
 
-_<ISoundInputStream> ISoundInputStream::fromUrl(const AUrl& url) {
+AArc<ISoundInputStream> ISoundInputStream::fromUrl(const AUrl& url) {
 
     try {
         return _new<AWavSoundStream>(Cache::get(url));

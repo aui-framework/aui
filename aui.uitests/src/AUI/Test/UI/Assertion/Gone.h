@@ -19,7 +19,7 @@
 struct ViewAssertionGone {
     using IGNORE_VISIBILITY = std::true_type;
 
-    bool operator()(const _<AView>& v) {
+    bool operator()(const AArc<AView>& v) {
         return v->getVisibility() == Visibility::GONE;
     }
 };

@@ -123,7 +123,7 @@ TEST(Json, ListModel) {
     EXPECT_EQ(str, R"(["1","2","3"])");
 
     // and back
-    auto parsed = aui::from_json<_<AListModel<AString>>>(AJson::fromString(str));
+    auto parsed = aui::from_json<AArc<AListModel<AString>>>(AJson::fromString(str));
     EXPECT_EQ(parsed->size(), list->size());
     EXPECT_EQ(*parsed, *list);
 }

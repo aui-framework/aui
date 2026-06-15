@@ -70,13 +70,13 @@ void AAnimator::translateToCorner(AView* view, IRenderer& render) {
                                                 view->getSize().y + view->getTotalFieldVertical() - 1) / 2.f, 0.f)));
 }
 
-_<AAnimator> AAnimator::combine(const AVector<_<AAnimator>>& animators) {
+AArc<AAnimator> AAnimator::combine(const AVector<AArc<AAnimator>>& animators) {
     class ACombiningAnimator: public AAnimator {
     private:
-        AVector<_<AAnimator>> mAnimator;
+        AVector<AArc<AAnimator>> mAnimator;
 
     public:
-        ACombiningAnimator(const AVector<_<AAnimator>>& animator) : mAnimator(animator) {}
+        ACombiningAnimator(const AVector<AArc<AAnimator>>& animator) : mAnimator(animator) {}
 
     protected:
         void doAnimation(AView* view, float theta, IRenderer& render) override {

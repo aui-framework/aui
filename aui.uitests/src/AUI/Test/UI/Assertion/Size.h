@@ -23,7 +23,7 @@ struct ViewAssertionSize {
     int value;
     explicit ViewAssertionSize(const AMetric& value): value(value.getValuePx()) {}
 
-    bool operator()(const _<AView>& v) {
+    bool operator()(const AArc<AView>& v) {
         auto viewSize = v->getSize()[I];
         EXPECT_EQ(viewSize, value);
         return viewSize == value;
@@ -34,7 +34,7 @@ template<int I>
 struct ViewAssertionSizeSame {
     AOptional<int> value;
 
-    bool operator()(const _<AView>& v) {
+    bool operator()(const AArc<AView>& v) {
         if (!value) {
             value = v->getSize()[I];
             return true;
@@ -47,7 +47,7 @@ template<int I>
 struct ViewAssertionSizeIsMinimal {
     AOptional<int> value;
 
-    bool operator()(const _<AView>& v) {
+    bool operator()(const AArc<AView>& v) {
         return v->getSize()[I] == v->getMinimumSize()[I];
     }
 };

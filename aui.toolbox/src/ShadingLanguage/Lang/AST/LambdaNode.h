@@ -11,11 +11,11 @@
 
 class LambdaNode: public ExpressionNode {
 private:
-    AVector<_<VariableDeclarationNode>> mArgs;
-    AVector<_<INode>> mCode;
+    AVector<AArc<VariableDeclarationNode>> mArgs;
+    AVector<AArc<INode>> mCode;
 
 public:
-    LambdaNode(const AVector<_<VariableDeclarationNode>>& args, const AVector<_<INode>>& code) : mArgs(args),
+    LambdaNode(const AVector<AArc<VariableDeclarationNode>>& args, const AVector<AArc<INode>>& code) : mArgs(args),
                                                                                                  mCode(code) {}
 
     void acceptVisitor(INodeVisitor& v) override;

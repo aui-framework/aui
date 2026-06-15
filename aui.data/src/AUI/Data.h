@@ -23,7 +23,7 @@ namespace Autumn
 	namespace detail
 	{
 		template<>
-		API_AUI_DATA _<ASqlDatabase>& threadLocalStorage();
+		API_AUI_DATA AArc<ASqlDatabase>& threadLocalStorage();
 	}
 }
 

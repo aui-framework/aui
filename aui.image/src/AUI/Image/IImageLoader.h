@@ -36,7 +36,7 @@ public:
      * @details
      * Called if and only if <code>matches</code> returned true.
      */
-    virtual _<IImageFactory> getImageFactory(AByteBufferView buffer) { return nullptr; };
+    virtual AArc<IImageFactory> getImageFactory(AByteBufferView buffer) { return nullptr; };
 
     /**
      * @brief The image loader implementation (raster).
@@ -44,7 +44,7 @@ public:
      * @details
      * Called if and only if <code>matches</code> returned true.
      */
-    virtual _<AImage> getRasterImage(AByteBufferView buffer) = 0;
+    virtual AArc<AImage> getRasterImage(AByteBufferView buffer) = 0;
 };
 
 #include "AUI/Common/AByteBuffer.h"

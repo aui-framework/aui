@@ -24,7 +24,7 @@ ALogger::ALogger() {
 #ifdef AUI_SHARED_PTR_FIND_INSTANCES
     log(WARN, "Performance",
         "AUI_SHARED_PTR_FIND_INSTANCES is enabled which dramatically drops performance"
-        " since it creates stacktrace on every shared_ptr (_<T>) construction. Use it if"
+        " since it creates stacktrace on every shared_ptr (AArc<T>) construction. Use it if"
         " and only if it's actually needed.");
 #endif
 }

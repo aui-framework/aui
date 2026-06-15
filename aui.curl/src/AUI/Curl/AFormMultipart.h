@@ -7,7 +7,7 @@
 #include <AUI/IO/IInputStream.h>
 
 struct AFormMultipartEntry {
-    std::variant<_<IInputStream>, AString, AByteBuffer> value;
+    std::variant<AArc<IInputStream>, AString, AByteBuffer> value;
     AOptional<AString> filename;
     AOptional<AString> mimeType;
 };
@@ -19,7 +19,7 @@ class AFormMultipart: public AMap<AString, AFormMultipartEntry> {
 public:
     using AMap<AString, AFormMultipartEntry>::AMap;
 
-    _<IInputStream> makeInputStream() const;
+    AArc<IInputStream> makeInputStream() const;
 
     [[nodiscard]]
     const AString& boundary() const noexcept {

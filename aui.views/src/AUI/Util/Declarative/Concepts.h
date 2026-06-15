@@ -22,12 +22,12 @@ namespace aui::ui_building {
 /**
  * @brief Shared pointer to AView alias.
  */
-using View = _<AView>;
+using View = AArc<AView>;
 
 /**
  * @brief List of AView's. Like a container, but not assigned to any layout yet.
  */
-using ViewGroup = AVector<_<AView>>;
+using ViewGroup = AVector<AArc<AView>>;
 
 /**
  * @brief Either View or ViewGroup.
@@ -37,7 +37,7 @@ using ViewOrViewGroup = std::variant<View, ViewGroup>;
 /**
  * @brief Shared pointer to AViewContainer alias.
  */
-using ViewContainer = _<AViewContainer>;
+using ViewContainer = AArc<AViewContainer>;
 
 /**
  * @brief Denotes any shared pointer to a subclass of AView.
@@ -46,7 +46,7 @@ template <typename T>
 concept LayoutItemView = aui::convertible_to<T, View>;
 
 /**
- * @brief Denotes anything that can be converted to ViewGroup, i.e, std::initializer_list<_<AView>>.
+ * @brief Denotes anything that can be converted to ViewGroup, i.e, std::initializer_list<AArc<AView>>.
  */
 template <typename T>
 concept LayoutItemViewGroup = aui::convertible_to<T, ViewGroup>;

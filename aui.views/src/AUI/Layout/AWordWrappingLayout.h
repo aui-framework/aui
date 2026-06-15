@@ -30,7 +30,7 @@ public:
 
     int getMinimumHeight() override;
 
-    void addView(const _<AView>& view, AOptional<size_t> index) override;
+    void addView(const AArc<AView>& view, AOptional<size_t> index) override;
 
     void removeView(aui::no_escape<AView> view, size_t index) override;
 

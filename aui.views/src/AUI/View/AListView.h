@@ -58,10 +58,10 @@ public:
     };
 
     AListView() : AListView(nullptr) {}
-    explicit AListView(_<IListModel<AString>> model);
+    explicit AListView(AArc<IListModel<AString>> model);
     virtual ~AListView();
 
-    void setModel(_<IListModel<AString>> model);
+    void setModel(AArc<IListModel<AString>> model);
 
     void updateSelectionOnItem(size_t i, AListView::SelectAction action);
 
@@ -92,9 +92,9 @@ signals:
     void clearSelection();
 
 private:
-    _<AListViewContainer> mContent;
+    AArc<AListViewContainer> mContent;
     ASet<AListModelIndex> mSelectionModel;
-    _<AListModelObserver<AString>> mObserver;
+    AArc<AListModelObserver<AString>> mObserver;
     bool mAllowMultipleSelection = false;
 
     void handleMousePressed(AListItem* item);

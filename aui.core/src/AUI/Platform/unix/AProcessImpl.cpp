@@ -91,8 +91,8 @@ public:
     size_t processMemory() const override { return ::processMemory(mHandle); }
 };
 
-AVector<_<AProcess>> AProcess::all() {
-    AVector<_<AProcess>> result;
+AVector<AArc<AProcess>> AProcess::all() {
+    AVector<AArc<AProcess>> result;
     for (auto& f : APath("/proc/").listDir(AFileListFlags::DIRS)) {
         if (auto pid = f.filename().toUInt()) {
             result << _new<AOtherProcess>(*pid);
@@ -102,12 +102,12 @@ AVector<_<AProcess>> AProcess::all() {
 }
 
 #if !AUI_PLATFORM_APPLE
-_<AProcess> AProcess::self() {
+AArc<AProcess> AProcess::self() {
     char buf[0x100];
     return _new<AOtherProcess>(*AString(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
 }
 
-_<AProcess> AProcess::fromPid(uint32_t pid) { return _new<AOtherProcess>(pid_t(pid)); }
+AArc<AProcess> AProcess::fromPid(uint32_t pid) { return _new<AOtherProcess>(pid_t(pid)); }
 #endif
 
 extern char** environ;

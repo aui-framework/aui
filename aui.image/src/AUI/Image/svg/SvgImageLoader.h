@@ -20,7 +20,7 @@ public:
 
 	bool matches(AByteBufferView buffer) override;
 
-    _<AImage> getRasterImage(AByteBufferView buffer) override;
+    AArc<AImage> getRasterImage(AByteBufferView buffer) override;
 
-    _<IImageFactory> getImageFactory(AByteBufferView buffer) override;
+    AArc<IImageFactory> getImageFactory(AByteBufferView buffer) override;
 };

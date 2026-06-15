@@ -12,18 +12,18 @@
 
 class IfOperatorNode: public INode {
 private:
-    _<ExpressionNode> mCondition;
-    AVector<_<INode>> mCode;
+    AArc<ExpressionNode> mCondition;
+    AVector<AArc<INode>> mCode;
 
 public:
-    IfOperatorNode(const _<ExpressionNode>& condition, const AVector<_<INode>>& code) : mCondition(condition),
+    IfOperatorNode(const AArc<ExpressionNode>& condition, const AVector<AArc<INode>>& code) : mCondition(condition),
                                                                                         mCode(code) {}
 
-    const _<ExpressionNode>& getCondition() const {
+    const AArc<ExpressionNode>& getCondition() const {
         return mCondition;
     }
 
-    const AVector<_<INode>>& getCode() const {
+    const AVector<AArc<INode>>& getCode() const {
         return mCode;
     }
 

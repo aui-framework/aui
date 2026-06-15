@@ -13,10 +13,10 @@
 #include "UIBenchmarkScene.h"
 
 static void Layout(benchmark::State& state) {
-    _<AWindow> window = _new<AWindow>();
+    AArc<AWindow> window = _new<AWindow>();
 
     for (auto _2 : state) {
-        _<AViewContainer> v = declarative::Centered { uiBenchmarkScene() };
+        AArc<AViewContainer> v = declarative::Centered { uiBenchmarkScene() };
         v->pack();
         v->applyGeometryToChildrenIfNecessary();
     }

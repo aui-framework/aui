@@ -17,7 +17,7 @@
 #include "AWordWrappingLayout.h"
 
 
-void AWordWrappingLayout::addView(const _<AView>& view, AOptional<size_t> index) {
+void AWordWrappingLayout::addView(const AArc<AView>& view, AOptional<size_t> index) {
     ALinearLayout::addView(view, index);
 
     if (index) {
@@ -51,7 +51,7 @@ int AWordWrappingLayout::getMinimumHeight() {
 }
 
 void AWordWrappingLayout::onResize(int x, int y, int width, int height) {
-    AVector<_<AWordWrappingEngineBase::Entry>> entries;
+    AVector<AArc<AWordWrappingEngineBase::Entry>> entries;
     for (auto& v : mViewEntry) {
         entries << aui::ptr::fake_shared(&v);
     }

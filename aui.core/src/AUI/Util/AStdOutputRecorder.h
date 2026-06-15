@@ -16,7 +16,7 @@
 
 class AStdOutputRecorder: public AObject {
 public:
-    AStdOutputRecorder(const _<AChildProcess>& process) {
+    AStdOutputRecorder(const AArc<AChildProcess>& process) {
         connect(process->stdOut, [&](const AByteBuffer& buffer) {
             mStdout << buffer;
         });

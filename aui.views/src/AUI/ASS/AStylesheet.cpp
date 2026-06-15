@@ -692,7 +692,7 @@ AColor AStylesheet::getOsThemeColor() {
 
 AStylesheet& AStylesheet::global() { return *globalStorage(); }
 
-_<AStylesheet>& AStylesheet::globalStorage() {
-    static _<AStylesheet> s = _new<AStylesheet>();
+AArc<AStylesheet>& AStylesheet::globalStorage() {
+    static AArc<AStylesheet> s = _new<AStylesheet>();
     return s;
 }

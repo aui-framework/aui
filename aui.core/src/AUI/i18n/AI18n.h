@@ -29,14 +29,14 @@ class API_AUI_CORE AI18n {
 private:
     AMap<AString, AString> mLangData;
 
-    static void loadFromStreamInto(const _<IInputStream>& iis, AMap<AString, AString>& langData);
+    static void loadFromStreamInto(const AArc<IInputStream>& iis, AMap<AString, AString>& langData);
 public:
     AI18n();
 
     static AI18n& inst();
 
     void loadFromLang(const ALanguageCode& languageCode);
-    void loadFromStream(const _<IInputStream>& iis);
+    void loadFromStream(const AArc<IInputStream>& iis);
 
     static ALanguageCode userLanguage();
 

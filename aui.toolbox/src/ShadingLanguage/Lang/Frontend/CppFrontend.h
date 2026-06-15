@@ -44,12 +44,12 @@ protected:
 
     void emitFunctionDeclArguments(const FunctionDeclarationNode& node, bool first) override;
 
-    void emitFunctionCallArguments(const BuiltinOrDeclaredFunction& function, const AVector<_<ExpressionNode>>& args, bool first) override;
+    void emitFunctionCallArguments(const BuiltinOrDeclaredFunction& function, const AVector<AArc<ExpressionNode>>& args, bool first) override;
 
 private:
     AStringStream mHeaderOutput;
     AVector<NonIndexedAttributesDeclarationNode> mHeaderNonIndexedAttributesDeclarations;
 
     void emitAttributeKeyword(KeywordToken::Type type);
-    void emitAttributeDeclarationField(_<VariableDeclarationNode> node);
+    void emitAttributeDeclarationField(AArc<VariableDeclarationNode> node);
 };

@@ -14,14 +14,14 @@ protected:
     public:
         bool containerFocused = false;
         TestWindow() {
-            _<AViewContainer> inner;
+            AArc<AViewContainer> inner;
             auto container = Centered {
                     inner = Vertical {
                             _new<AButton>("Say hello") AUI_LET { it->setDefault(); }
                     }
             };
 
-            inner.connect(&AView::childFocused, this, [] (_<AView> child) {
+            inner.connect(&AView::childFocused, this, [] (AArc<AView> child) {
                 child->setVisibility(Visibility::INVISIBLE);
             });
 
@@ -34,7 +34,7 @@ protected:
         }
     };
 
-    _<TestWindow> mTestWindow;
+    AArc<TestWindow> mTestWindow;
     void SetUp() override {
         UITest::SetUp();
         mTestWindow = _new<TestWindow>();

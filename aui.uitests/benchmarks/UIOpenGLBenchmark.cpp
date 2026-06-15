@@ -24,7 +24,7 @@ static void OpenGLRendering(benchmark::State& state) {
       .flags = ARenderContextFlags::NO_SMOOTH | ARenderContextFlags::NO_VSYNC,
     });
 
-    _<AWindow> window;
+    AArc<AWindow> window;
     try {
         window = _new<AWindow>();
         window->show();

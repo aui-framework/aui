@@ -97,6 +97,6 @@ private:
     Lockable mMutex;
 
 #if AUI_DEBUG
-    _<AAbstractThread> mOwnerThread;
+    AArc<AAbstractThread> mOwnerThread;
 #endif
 };

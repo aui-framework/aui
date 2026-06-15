@@ -13,7 +13,7 @@ namespace {
     }
 }
 
-AAudioResampler::AAudioResampler(size_t requestedSampleRate, _<ISoundInputStream> source) : mSource(std::move(source)) {
+AAudioResampler::AAudioResampler(size_t requestedSampleRate, AArc<ISoundInputStream> source) : mSource(std::move(source)) {
     if (!mSource) return;
     mInputFormat = mSource->info();
     mOutputFormat.sampleRate = requestedSampleRate;

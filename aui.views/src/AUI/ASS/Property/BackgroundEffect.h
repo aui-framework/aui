@@ -21,7 +21,7 @@ namespace ass {
      * @see background_effect
      */
     struct BackgroundEffect {
-        AVector<_<IBackgroundEffect>> mEffects;
+        AVector<AArc<IBackgroundEffect>> mEffects;
 
         BackgroundEffect(std::nullptr_t) {}
 

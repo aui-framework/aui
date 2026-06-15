@@ -658,7 +658,7 @@ public:
     /**
      * @brief Hello
      */
-    _<Test> hello() {
+    AArc<Test> hello() {
         if (test) {
         }
     }
@@ -672,7 +672,7 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        CppFunction(return_type='_<Test>', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='AArc<Test>', name='hello', doc='@brief Hello'),
         CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
@@ -686,7 +686,7 @@ public:
     /**
      * @brief Hello
      */
-    const _<Test>& hello() {
+    const AArc<Test>& hello() {
         if (test) {
         }
     }
@@ -700,7 +700,7 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        CppFunction(return_type='const _<Test>&', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='const AArc<Test>&', name='hello', doc='@brief Hello'),
         CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
@@ -715,7 +715,7 @@ public:
     /**
      * @brief Hello
      */
-    _<Test> hello(_<Test> test) {
+    AArc<Test> hello(AArc<Test> test) {
         if (test) {
         }
     }
@@ -729,7 +729,7 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        CppFunction(return_type='_<Test>', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='AArc<Test>', name='hello', doc='@brief Hello'),
         CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
@@ -743,7 +743,7 @@ public:
     /**
      * @brief Hello
      */
-    _<Test> hello(_<Test> test) const noexcept {
+    AArc<Test> hello(AArc<Test> test) const noexcept {
         if (test) {
         }
     }
@@ -757,7 +757,7 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        CppFunction(return_type='_<Test>', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='AArc<Test>', name='hello', doc='@brief Hello'),
         CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
@@ -772,7 +772,7 @@ public:
     /**
      * @brief Hello
      */
-    _<Test> hello(_<Test> test) const noexcept {
+    AArc<Test> hello(AArc<Test> test) const noexcept {
         if (test < 0) {
         }
     }
@@ -786,7 +786,7 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        CppFunction(return_type='_<Test>', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='AArc<Test>', name='hello', doc='@brief Hello'),
         CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
@@ -803,7 +803,7 @@ public:
      * @brief Hello
      */
     [[nodiscard]]
-    _<Test> hello(_<Test> test) const noexcept {
+    AArc<Test> hello(AArc<Test> test) const noexcept {
         if (test) {
         }
     }
@@ -817,7 +817,7 @@ public:
     assert clazz.name == "Test"
     assert clazz.doc == '@brief Test'
     assert clazz.methods == [
-        CppFunction(return_type='_<Test>', name='hello', doc='@brief Hello'),
+        CppFunction(return_type='AArc<Test>', name='hello', doc='@brief Hello'),
         CppFunction(return_type='int', name='world', doc='@brief World'),
     ]
 
@@ -880,7 +880,7 @@ def test_parse_aobject():
         "CppFunction('connect', 'void', None)",
         "CppFunction('setSignalsEnabled', 'void', None)",
         "CppFunction('isSignalsEnabled', 'bool', None)",
-        "CppFunction('getThread', 'const _<AAbstractThread>&', None)",
+        "CppFunction('getThread', 'const AArc<AAbstractThread>&', None)",
         "CppFunction('isSlotsCallsOnlyOnMyThread', 'bool', None)",
         "CppFunction('moveToThread', 'void', None)",
         "CppFunction('setSlotsCallsOnlyOnMyThread', 'void', None)",

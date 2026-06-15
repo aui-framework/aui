@@ -10,12 +10,12 @@
 
 class AST {
 private:
-    AVector<_<INode>> mNodes;
+    AVector<AArc<INode>> mNodes;
 
 public:
-    AST(AVector<_<INode>> nodes) : mNodes(std::move(nodes)) {}
+    AST(AVector<AArc<INode>> nodes) : mNodes(std::move(nodes)) {}
 
-    const AVector<_<INode>>& nodes() const {
+    const AVector<AArc<INode>>& nodes() const {
         return mNodes;
     }
 

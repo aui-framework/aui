@@ -17,7 +17,7 @@ struct ViewActionScroll {
     glm::ivec2 delta;
     ViewActionScroll(const glm::ivec2& delta) : delta(delta) {}
 
-    void operator()(const _<AView>& view) {
+    void operator()(const AArc<AView>& view) {
         view->onScroll({{0, 0}, delta});
         uitest::frame();
     }

@@ -25,22 +25,22 @@ namespace uitest::impl {
 
     template<>
     struct side_value<ASide::LEFT> {
-        int operator()(const _<AView>& view) { return view->getPositionInWindow().x; }
+        int operator()(const AArc<AView>& view) { return view->getPositionInWindow().x; }
     };
 
     template<>
     struct side_value<ASide::TOP> {
-        int operator()(const _<AView>& view) { return view->getPositionInWindow().y; }
+        int operator()(const AArc<AView>& view) { return view->getPositionInWindow().y; }
     };
 
     template<>
     struct side_value<ASide::RIGHT> {
-        int operator()(const _<AView>& view) { return view->getPositionInWindow().x + view->getSize().x; }
+        int operator()(const AArc<AView>& view) { return view->getPositionInWindow().x + view->getSize().x; }
     };
 
     template<>
     struct side_value<ASide::BOTTOM> {
-        int operator()(const _<AView>& view) { return view->getPositionInWindow().y + view->getSize().y; }
+        int operator()(const AArc<AView>& view) { return view->getPositionInWindow().y + view->getSize().y; }
     };
 
 
@@ -48,7 +48,7 @@ namespace uitest::impl {
     struct align {
         AOptional<int> value;
 
-        bool operator()(const _<AView>& v) {
+        bool operator()(const AArc<AView>& v) {
             int current = side_value<side>{}(v);
             if (!value) {
                 value = current;
@@ -64,9 +64,9 @@ namespace uitest::impl {
 
         less_of(UIMatcher matcher) : matcher(std::move(matcher)) {}
 
-        bool operator()(const _<AView>& lhs) {
+        bool operator()(const AArc<AView>& lhs) {
             auto views = matcher.toSet();
-            return std::all_of(views.begin(), views.end(), [&](const _<AView>& rhs) {
+            return std::all_of(views.begin(), views.end(), [&](const AArc<AView>& rhs) {
                 return side_value<side>{}(lhs) < side_value<side>{}(rhs);
             });
         }
@@ -78,9 +78,9 @@ namespace uitest::impl {
 
         greater_of(UIMatcher matcher) : matcher(std::move(matcher)) {}
 
-        bool operator()(const _<AView>& lhs) {
+        bool operator()(const AArc<AView>& lhs) {
             auto views = matcher.toSet();
-            return std::all_of(views.begin(), views.end(), [&](const _<AView>& rhs) {
+            return std::all_of(views.begin(), views.end(), [&](const AArc<AView>& rhs) {
                 return side_value<side>{}(lhs) > side_value<side>{}(rhs);
             });
         }

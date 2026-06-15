@@ -16,7 +16,7 @@
 #include "AXmlParseError.h"
 #include "AUI/Util/ATokenizer.h"
 
-void AXml::read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor) {
+void AXml::read(const AArc<IInputStream>& is, const AArc<IXmlDocumentVisitor>& visitor) {
     ATokenizer p(is);
 
     char c;
@@ -99,8 +99,8 @@ void AXml::read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor
                                 p.reverseByte();
                                 auto entityName = p.readString();
 
-                                std::function<void(_<IXmlEntityVisitor>)> handleEntity;
-                                handleEntity = [&](_<IXmlEntityVisitor> entityVisitor) {
+                                std::function<void(AArc<IXmlEntityVisitor>)> handleEntity;
+                                handleEntity = [&](AArc<IXmlEntityVisitor> entityVisitor) {
                                     if (!entityVisitor)
                                         return;
                                     bool endFlag = false;

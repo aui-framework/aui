@@ -25,11 +25,11 @@ class AString;
 class API_AUI_DATA ASqlDatabase
 {
 private:
-	static AMap<AString, _<ISqlDriver>>& getDrivers();
+	static AMap<AString, AArc<ISqlDriver>>& getDrivers();
 
-	_<ISqlDatabase> mDriverInterface;
+	AArc<ISqlDatabase> mDriverInterface;
 
-	explicit ASqlDatabase(const _<ISqlDatabase>& driver_interface, const AString& driverName)
+	explicit ASqlDatabase(const AArc<ISqlDatabase>& driver_interface, const AString& driverName)
 		: mDriverInterface(driver_interface)
 	{
 	}
@@ -45,7 +45,7 @@ public:
      * @return query result
      * \throws SQLException when any error occurs
      */
-	_<ASqlQueryResult> query(const AString& query, const AVector<AVariant>& params = {});
+	AArc<ASqlQueryResult> query(const AString& query, const AVector<AVariant>& params = {});
 
 	/**
 	 * @brief Execute a query with no result (UPDATE, INSERT, DELETE, etc.)
@@ -72,7 +72,7 @@ public:
      * @return object for communicating with the database; in some DBMS - optional
      * \throws SQLException when any error occurs
 	 */
-	static _<ASqlDatabase> connect(const AString& driverName, const AString& address, uint16_t port = 0,
+	static AArc<ASqlDatabase> connect(const AString& driverName, const AString& address, uint16_t port = 0,
 	                               const AString& databaseName = {}, const AString& username = {},
 	                               const AString& password = {});
 
@@ -82,5 +82,5 @@ public:
 	 */
 	SqlDriverType getDriverType();
 
-	static void registerDriver(_<ISqlDriver> driver);
+	static void registerDriver(AArc<ISqlDriver> driver);
 };

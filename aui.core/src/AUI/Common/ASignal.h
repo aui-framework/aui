@@ -122,7 +122,7 @@ public:
 
     void clearAllOutgoingConnections() const noexcept override { mOutgoingConnections.clear(); }
     void clearAllOutgoingConnectionsWith(aui::no_escape<AObjectBase> object) const noexcept override {
-        clearOutgoingConnectionsIf([&](const _<ConnectionImpl>& p) { return p->receiverBase == object.ptr(); });
+        clearOutgoingConnectionsIf([&](const AArc<ConnectionImpl>& p) { return p->receiverBase == object.ptr(); });
     }
 
     [[nodiscard]] bool hasOutgoingConnections() const noexcept {
@@ -251,10 +251,10 @@ private:
      * @brief Connection owner which destroys the connection from the sender side in destructor.
      */
     struct SenderConnectionOwner {
-        _<ConnectionImpl> value = nullptr;
+        AArc<ConnectionImpl> value = nullptr;
 
         SenderConnectionOwner() = default;
-        explicit SenderConnectionOwner(_<ConnectionImpl> connection) noexcept : value(std::move(connection)) {}
+        explicit SenderConnectionOwner(AArc<ConnectionImpl> connection) noexcept : value(std::move(connection)) {}
         SenderConnectionOwner(const SenderConnectionOwner&) = default;
         SenderConnectionOwner(SenderConnectionOwner&&) noexcept = default;
         SenderConnectionOwner& operator=(const SenderConnectionOwner& rhs) {
@@ -305,12 +305,12 @@ private:
      * @brief Helper function for AObject::connect to make connection.
      */
     template <aui::convertible_to<AObjectBase*> Object, aui::not_overloaded_lambda Lambda>
-    const _<ConnectionImpl>& connect(Object objectBase, Lambda&& lambda) {
+    const AArc<ConnectionImpl>& connect(Object objectBase, Lambda&& lambda) {
         AObject* object = nullptr;
         if constexpr (std::is_base_of_v<AObject, std::remove_pointer_t<Object>>) {
             object = objectBase;
         }
-        const auto& connection = [&]() -> _<ConnectionImpl>& {
+        const auto& connection = [&]() -> AArc<ConnectionImpl>& {
             auto conn = _new<ConnectionImpl>();
             conn->sender = this;
             conn->receiverBase = objectBase;
@@ -330,7 +330,7 @@ private:
         return connection;
     }
 
-    _<Connection> addGenericObserver(AObjectBase* receiver, std::function<void()> observer) override {
+    AArc<Connection> addGenericObserver(AObjectBase* receiver, std::function<void()> observer) override {
         return connect(receiver, [observer = std::move(observer)] { observer(); });
     }
 
@@ -364,11 +364,11 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
     if (mOutgoingConnections.empty())
         return;
 
-    _<AObject> senderPtr, receiverPtr;
+    AArc<AObject> senderPtr, receiverPtr;
 
     if (sender != nullptr) {
         if (auto sharedPtr = weakPtrFromObject(sender).lock()) {   // avoid sender removal during signal processing
-            senderPtr = std::move(static_cast<_<AObject>>(sharedPtr));
+            senderPtr = std::move(static_cast<AArc<AObject>>(sharedPtr));
         }
     }
 
@@ -393,14 +393,14 @@ void ASignal<Args...>::invokeSignal(AObject* sender, std::tuple<const Args&...> 
         }
     };
     for (auto i = outgoingConnections.begin(); i != outgoingConnections.end();) {
-        _<ConnectionImpl>& outgoingConnection = i->value;
+        AArc<ConnectionImpl>& outgoingConnection = i->value;
         if (!lock.owns_lock()) lock.lock();
         if (outgoingConnection->toBeRemoved) {
             lock.unlock();
             i = outgoingConnections.erase(i);
             continue;
         }
-        _weak<AObject> receiverWeakPtr;
+        AWeakArc<AObject> receiverWeakPtr;
         if (outgoingConnection->receiver != nullptr) {
             receiverWeakPtr = weakPtrFromObject(outgoingConnection->receiver);
             if (outgoingConnection->receiver->isSlotsCallsOnlyOnMyThread() &&

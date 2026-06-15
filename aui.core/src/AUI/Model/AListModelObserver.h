@@ -32,7 +32,7 @@ public:
     };
 
 private:
-    _<IListModel<T>> mModel;
+    AArc<IListModel<T>> mModel;
     IListModelListener* mListener;
 
 public:
@@ -41,7 +41,7 @@ public:
     }
 
 
-    void setModel(const _<IListModel<T>>& model) {
+    void setModel(const AArc<IListModel<T>>& model) {
         if (mModel) {
             mModel->dataInserted.clearAllOutgoingConnectionsWith(this);
             mModel->dataChanged.clearAllOutgoingConnectionsWith(this);
@@ -80,7 +80,7 @@ public:
     }
 
     [[nodiscard]]
-    const _<IListModel<T>>& getModel() const {
+    const AArc<IListModel<T>>& getModel() const {
         return mModel;
     }
 };

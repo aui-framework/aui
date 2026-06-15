@@ -482,7 +482,7 @@ void AView::updateEnableState()
     redraw();
 }
 
-void AView::setAnimator(const _<AAnimator>& animator) {
+void AView::setAnimator(const AArc<AAnimator>& animator) {
     mAnimator = animator;
     if (mAnimator)
         mAnimator->setView(this);
@@ -561,7 +561,7 @@ bool AView::consumesClick(const glm::ivec2& pos) {
     return true;
 }
 
-void AView::notifyParentChildFocused(const _<AView>& view) {
+void AView::notifyParentChildFocused(const AArc<AView>& view) {
     if (mParent == nullptr)
         return;
 
@@ -681,7 +681,7 @@ void AView::setCustomStyle(ass::PropertyListRecursive rule) {
 }
 
 
-bool AView::hasIndirectParent(const _<AView>& v) {
+bool AView::hasIndirectParent(const AArc<AView>& v) {
     for (auto p = getParent(); p != nullptr; p = p->getParent()) {
         if (p == v.get()) {
             return true;

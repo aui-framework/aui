@@ -165,7 +165,7 @@ AFieldObservableAdapter<T, std::decay_t<AdapterCallable>> AFieldObservable<T>::o
 
 
 template<typename View, typename Data>
-_<View> operator&&(const _<View>& object, AFieldObservable<Data>& observable) {
+AArc<View> operator&&(const AArc<View>& object, AFieldObservable<Data>& observable) {
     using ObserverHandle = typename std::decay_t<decltype(observable)>::ObserverHandle;
     auto observerHandle = _new<ObserverHandle>(nullptr);
     if (ADataBindingDefault<View, Data>::getSetter()) {
@@ -187,7 +187,7 @@ _<View> operator&&(const _<View>& object, AFieldObservable<Data>& observable) {
 }
 
 template<typename View, typename ModelData, typename AdapterCallback>
-_<View> operator&&(const _<View>& object, AFieldObservableAdapter<ModelData, AdapterCallback> observableAdapter) {
+AArc<View> operator&&(const AArc<View>& object, AFieldObservableAdapter<ModelData, AdapterCallback> observableAdapter) {
     using Data = typename AFieldObservableAdapter<ModelData, AdapterCallback>::return_t;
     auto& observable = observableAdapter.field;
     using ObserverHandle = typename std::decay_t<decltype(observable)>::ObserverHandle;

@@ -22,11 +22,11 @@
 struct ViewAssertionParentOf {
     using IGNORE_VISIBILITY = std::true_type;
 
-    _<AView> checkedParent;
+    AArc<AView> checkedParent;
 
-    explicit ViewAssertionParentOf(_<AView> checkedParent) : checkedParent(std::move(checkedParent)) {}
+    explicit ViewAssertionParentOf(AArc<AView> checkedParent) : checkedParent(std::move(checkedParent)) {}
 
-    bool operator()(const _<AView>& v) {
+    bool operator()(const AArc<AView>& v) {
         return checkedParent->hasIndirectParent(v);
     }
 };

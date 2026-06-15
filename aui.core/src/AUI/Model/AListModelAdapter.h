@@ -17,14 +17,14 @@
 template<typename ItemTo, typename ItemFrom, typename Adapter>
 class AListModelAdapter: public IRemovableListModel<ItemTo> {
 private:
-    _<IListModel<ItemFrom>> mOther;
+    AArc<IListModel<ItemFrom>> mOther;
     IRemovableListModel<ItemFrom>* mOtherMutable;
     Adapter mAdapter;
 
 public:
     using value_type = ItemTo;
 
-    explicit AListModelAdapter(const _<IListModel<ItemFrom>>& other, Adapter&& adapter) :
+    explicit AListModelAdapter(const AArc<IListModel<ItemFrom>>& other, Adapter&& adapter) :
             mOther(other),
             mAdapter(std::forward<Adapter>(adapter)) {
         mOtherMutable = dynamic_cast<IRemovableListModel<ItemFrom>*>(mOther.get());
@@ -66,7 +66,7 @@ public:
 
 namespace AModels {
     template <typename ItemTo, typename Container, typename Adapter>
-    auto adapt(const _<Container>& other, Adapter&& adapter) -> _<AListModelAdapter<ItemTo, typename Container::value_type, Adapter>> {
+    auto adapt(const AArc<Container>& other, Adapter&& adapter) -> AArc<AListModelAdapter<ItemTo, typename Container::value_type, Adapter>> {
         return aui::ptr::manage_shared(new AListModelAdapter<ItemTo, typename Container::value_type, Adapter>(other, std::forward<Adapter>(adapter)));
     }
 }

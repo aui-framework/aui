@@ -197,7 +197,7 @@ protected:
     void handleKey(AInput::Key key);
 
 private:
-    _<ATimer> mBlinkTimer = blinkTimer();
+    AArc<ATimer> mBlinkTimer = blinkTimer();
 
     /**
      * @see ATextInputActionIcon
@@ -209,7 +209,7 @@ private:
     bool mIsCopyable = true;
 
 private:
-    static _<ATimer> blinkTimer();
+    static AArc<ATimer> blinkTimer();
 
     template<aui::derived_from<AView> Super>
     friend class AAbstractTypeableView;

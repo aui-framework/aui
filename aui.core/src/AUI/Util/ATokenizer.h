@@ -22,7 +22,7 @@ class API_AUI_CORE ATokenizer
 {
 
 public:
-    ATokenizer(_<IInputStream> inputStream)
+    ATokenizer(AArc<IInputStream> inputStream)
         : mInput(std::move(inputStream))
     {
     }
@@ -227,7 +227,7 @@ public:
 
 
 private:
-    _<IInputStream> mInput;
+    AArc<IInputStream> mInput;
     AString mTemporaryAStringBuffer;
     std::string mTemporaryStringBuffer;
 

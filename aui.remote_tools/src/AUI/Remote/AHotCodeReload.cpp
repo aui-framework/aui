@@ -44,7 +44,7 @@ AHotCodeReload& AHotCodeReload::inst() {
 
 struct AHotCodeReload::Priv {
     ELFObjectLoader loader = AProcess::self()->getPathToExecutable();
-    _<AINotifyFileWatcher> watcher = _new<AINotifyFileWatcher>();
+    AArc<AINotifyFileWatcher> watcher = _new<AINotifyFileWatcher>();
 };
 
 void AHotCodeReload::loadBinary(const APath& path) {

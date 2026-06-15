@@ -71,7 +71,7 @@ class API_AUI_VIEWS ARadioButton
   : public AViewContainerBase {
 public:
     ARadioButton(): ARadioButton(nullptr) {}
-    ARadioButton(_<AView> content);
+    ARadioButton(AArc<AView> content);
 
     virtual ~ARadioButton();
 
@@ -96,17 +96,17 @@ public:
 
     class API_AUI_VIEWS [[deprecated("use declarative::RadioButton instead.")]] Group : public AObject {
     private:
-        AMap<int, _<ARadioButton>> mButtons;
-        _weak<ARadioButton> mSelectedRadio;
+        AMap<int, AArc<ARadioButton>> mButtons;
+        AWeakArc<ARadioButton> mSelectedRadio;
         int mSelectedId = -1;
 
     public:
         Group() = default;
         ~Group() override = default;
 
-        _<ARadioButton> addRadioButton(const _<ARadioButton>& radio, int id = -1);
+        AArc<ARadioButton> addRadioButton(const AArc<ARadioButton>& radio, int id = -1);
 
-        [[nodiscard]] _<ARadioButton> getSelectedRadio() const;
+        [[nodiscard]] AArc<ARadioButton> getSelectedRadio() const;
         [[nodiscard]] int getSelectedId() const;
 
         void setSelectedId(int id);
@@ -141,7 +141,7 @@ public:
     };
 
 private:
-    _<Circle> mCircle;
+    AArc<Circle> mCircle;
 };
 
 namespace declarative {
@@ -171,8 +171,8 @@ struct RadioButton {
      *
      * Clicking or activating this view will cause the radio button to be checked.
      */
-    _<AView> content;
+    AArc<AView> content;
 
-    API_AUI_VIEWS _<AView> operator()();
+    API_AUI_VIEWS AArc<AView> operator()();
 };
 }   // namespace declarative

@@ -188,7 +188,7 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H3
 
     class MyWindow: public AWindow {
     public:
-        MyWindow(const _<User>& user) {
+        MyWindow(const AArc<User>& user) {
             setContents(Centered {
                 _new<ALabel>() AUI_LET {
                   // Data goes from left to right:
@@ -247,7 +247,7 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H3
 
     class MyWindow: public AWindow {
     public:
-        MyWindow(const _<User>& user) {
+        MyWindow(const AArc<User>& user) {
             setContents(Centered {
               // AUI_DOCS_CODE_BEGIN
               _new<ALabel>() AUI_LET {
@@ -307,7 +307,7 @@ TEST_F(UIDataBindingTest, Bidirectional_connection) { // HEADER_H3
 
     class MyWindow: public AWindow {
     public:
-        MyWindow(const _<User>& user) {
+        MyWindow(const AArc<User>& user) {
             setContents(Centered {
                 // AUI_DOCS_CODE_BEGIN
                 _new<ATextField>() AUI_LET {
@@ -388,7 +388,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
 
     class MyWindow: public AWindow {
     public:
-        MyWindow(const _<User>& user) {
+        MyWindow(const AArc<User>& user) {
             setContents(Centered {
               Label { AUI_REACT(user->name) },
             });
@@ -453,7 +453,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
     // template<>
     // struct ADataBindingDefault<ALabel, AString> {
     // public:
-    //     static auto property(const _<ALabel>& view) { return view->text(); }
+    //     static auto property(const AArc<ALabel>& view) { return view->text(); }
     // };
     // ```
     //
@@ -467,7 +467,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // H
 
     class MyWindow: public AWindow {
     public:
-        MyWindow(const _<User>& user) {
+        MyWindow(const AArc<User>& user) {
             setContents(Centered {
                 // AUI_DOCS_CODE_BEGIN
                 _new<ALabel>() & user->name
@@ -542,10 +542,10 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
     // template <aui::arithmetic UnderlyingType, auto min, auto max>
     // struct ADataBindingDefault<ANumberPicker, aui::ranged_number<UnderlyingType, min, max>> {
     // public:
-    //     static auto property(const _<ANumberPicker>& view) {
+    //     static auto property(const AArc<ANumberPicker>& view) {
     //         return view->value();
     //     }
-    //     static void setup(const _<ANumberPicker>& view) {
+    //     static void setup(const AArc<ANumberPicker>& view) {
     //         view->setMin(aui::ranged_number<UnderlyingType, min, max>::MIN);
     //         view->setMax(aui::ranged_number<UnderlyingType, min, max>::MAX);
     //     }
@@ -562,7 +562,7 @@ TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEAD
 
     class MyWindow: public AWindow {
     public:
-        MyWindow(const _<User>& user) {
+        MyWindow(const AArc<User>& user) {
             static constexpr auto& GENDERS = aui::enumerate::ALL_VALUES<Gender>;
             setContents(Centered {
               // AUI_DOCS_CODE_BEGIN
@@ -607,7 +607,7 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER_H3
 
     class MyWindow: public AWindow {
     public:
-        MyWindow(const _<User>& user) {
+        MyWindow(const AArc<User>& user) {
             setContents(Centered {
                 Label { AUI_REACT(user->name->uppercase()) },
             });
@@ -647,8 +647,8 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot1) {
 
     class MyWindow: public AWindow {
     public:
-        MyWindow(const _<User>& user) {
-            _<ALabel> label;
+        MyWindow(const AArc<User>& user) {
+            AArc<ALabel> label;
             setContents(Centered {
                 _new<ALabel>() & user->name > [](ALabel& label, const AString& s) {
                   label.setText("custom slot! {}"_format(s));
@@ -678,8 +678,8 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot2) {
 
     class MyWindow: public AWindow {
     public:
-        MyWindow(const _<User>& user) {
-            _<ALabel> label;
+        MyWindow(const AArc<User>& user) {
+            AArc<ALabel> label;
             setContents(Centered {
                 _new<ALabel>() & user->name > &ALabel::setText
             });
@@ -707,8 +707,8 @@ TEST_F(UIDataBindingTest, Declarative_custom_slot3) {
 
     class MyWindow: public AWindow {
     public:
-        MyWindow(const _<User>& user) {
-            _<ALabel> label;
+        MyWindow(const AArc<User>& user) {
+            AArc<ALabel> label;
             setContents(Centered {
               _new<ALabel>() AUI_LET {
                   AObject::connect(user->name, it, [&it = *it](const AString& s) { it.setVisible(s != "hide"); });
@@ -744,7 +744,7 @@ TEST_F(UIDataBindingTest, Declarative_bidirectional_connection) { // HEADER_H3
 
     class MyWindow: public AWindow {
     public:
-        MyWindow(const _<User>& user) {
+        MyWindow(const AArc<User>& user) {
             setContents(Centered {
               // AUI_DOCS_CODE_BEGIN
               _new<ATextField>() && user->name

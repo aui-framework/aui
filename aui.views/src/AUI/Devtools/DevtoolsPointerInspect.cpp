@@ -64,7 +64,7 @@ static constexpr auto LOG_TAG = "DevtoolsPointerInspect";
 namespace {
 class FakeContainer: public AViewContainerBase {
 public:
-    FakeContainer(_weak<AView> view): mView(std::move(view)) {
+    FakeContainer(AWeakArc<AView> view): mView(std::move(view)) {
         connect(redrawn, [&] {
             if (mRedrawLock.is_locked()) {
                 return;
@@ -100,23 +100,23 @@ public:
     }
 
     [[nodiscard]]
-    _<AView> view() {
+    AArc<AView> view() {
         return mView.lock();
     }
 
-    void setView(_weak<AView> view) {
+    void setView(AWeakArc<AView> view) {
         mView = std::move(view);
         markMinContentSizeInvalid();
     }
 
 private:
     ASpinlockMutex mRedrawLock;
-    _weak<AView> mView;
+    AWeakArc<AView> mView;
 };
 
 class ParentHelper: public AViewContainerBase {
 public:
-    ParentHelper(_<FakeContainer> fake): mFake(std::move(fake)) {
+    ParentHelper(AArc<FakeContainer> fake): mFake(std::move(fake)) {
         setContents(Centered { mButton = _new<AButton>("Reinflate to parent") });
         connect(mButton->clicked, me::reinflateToParent);
     }
@@ -131,8 +131,8 @@ signals:
     emits<AView*> reinflate;
 
 private:
-    _<FakeContainer> mFake;
-    _<AButton> mButton;
+    AArc<FakeContainer> mFake;
+    AArc<AButton> mButton;
 
     void reinflateToParent() {
         auto v = mFake->view();

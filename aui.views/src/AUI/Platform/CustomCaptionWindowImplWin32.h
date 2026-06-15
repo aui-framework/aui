@@ -20,11 +20,11 @@
 
 class API_AUI_VIEWS CustomCaptionWindowImplWin32 {
 protected:
-    _<AViewContainer> mCaptionContainer;
-    _<AViewContainer> mContentContainer;
-    _<AButton> mMinimizeButton; // _
-    _<AButton> mMiddleButton; // []
-    _<AButton> mCloseButton; // X
+    AArc<AViewContainer> mCaptionContainer;
+    AArc<AViewContainer> mContentContainer;
+    AArc<AButton> mMinimizeButton; // _
+    AArc<AButton> mMiddleButton; // []
+    AArc<AButton> mCloseButton; // X
 
     void updateMiddleButtonIcon();
     void initCustomCaption(const AString& name, bool stacked, AViewContainer* to);

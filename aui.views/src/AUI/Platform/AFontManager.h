@@ -24,37 +24,37 @@ public:
 
     static AFontManager& inst();
 
-	[[nodiscard]] _<AFontFamily> getDefaultFamily() {
+	[[nodiscard]] AArc<AFontFamily> getDefaultFamily() {
         return mDefaultFamily;
     }
-	[[nodiscard]] _<AFont> getDefaultFont() {
+	[[nodiscard]] AArc<AFont> getDefaultFont() {
         return mDefaultFont;
     }
 
     [[nodiscard]]
-    _<AFontFamily> getFontFamily(const AString& name) const {
+    AArc<AFontFamily> getFontFamily(const AString& name) const {
         if (auto c = mFamilies.contains(name)) {
             return c->second;
         }
         return nullptr;
     }
     [[nodiscard]]
-    _<AFont> getFont(const AUrl& url) {
+    AArc<AFont> getFont(const AUrl& url) {
         if (auto c = mLoadedFont.contains(url)) {
             return c->second;
         }
         return mLoadedFont[url] = loadFont(url);
     }
 private:
-    AMap<AUrl, _<AFont>> mLoadedFont;
-    AMap<AString, _<AFontFamily>> mFamilies;
-    _<FreeType> mFreeType;
-    _<AFontFamily> mDefaultFamily;
-    _<AFont> mDefaultFont;
+    AMap<AUrl, AArc<AFont>> mLoadedFont;
+    AMap<AString, AArc<AFontFamily>> mFamilies;
+    AArc<FreeType> mFreeType;
+    AArc<AFontFamily> mDefaultFamily;
+    AArc<AFont> mDefaultFont;
 
 	AString getPathToFont(const AString& family);
 
-    _<AFont> loadFont(const AUrl& url);
+    AArc<AFont> loadFont(const AUrl& url);
 
 
 	friend class AFont;

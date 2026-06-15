@@ -40,7 +40,7 @@ bool isDefinitelyInvisible(AView& view) {
 }
 }
 
-void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
+void AViewContainerBase::drawView(const AArc<AView>& view, ARenderContext contextOfTheContainer) {
     if (aui::view::impl::isDefinitelyInvisible(*view)) [[unlikely]] {
         return;
     }
@@ -126,7 +126,7 @@ AViewContainerBase::~AViewContainerBase() {
     AUI_ASSERTX(bool(lock), "destroying container while it's rendering?");
 }
 
-void AViewContainerBase::addViews(AVector<_<AView>> views) {
+void AViewContainerBase::addViews(AVector<AArc<AView>> views) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
         throw AException("can't use addViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
@@ -147,7 +147,7 @@ void AViewContainerBase::addViews(AVector<_<AView>> views) {
     emit childrenChanged;
 }
 
-void AViewContainerBase::addView(const _<AView>& view) {
+void AViewContainerBase::addView(const AArc<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
         throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
@@ -162,7 +162,7 @@ void AViewContainerBase::addView(const _<AView>& view) {
     emit childrenChanged;
 }
 
-void AViewContainerBase::addViewCustomLayout(const _<AView>& view) {
+void AViewContainerBase::addViewCustomLayout(const AArc<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
         throw AException("can't use addViewCustomLayout when render/applyGeometryToChildren is in progress; please enqueue such operation");
@@ -177,7 +177,7 @@ void AViewContainerBase::addViewCustomLayout(const _<AView>& view) {
     emit childrenChanged;
 }
 
-void AViewContainerBase::addView(size_t index, const _<AView>& view) {
+void AViewContainerBase::addView(size_t index, const AArc<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
         throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
@@ -219,7 +219,7 @@ void AViewContainerBase::setLayoutImpl(_unique<ALayout> layout, std::unique_lock
     emit childrenChanged;
 }
 
-void AViewContainerBase::removeView(const _<AView>& view) {
+void AViewContainerBase::removeView(const AArc<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
         throw AException("can't use removeView when render/applyGeometryToChildren is in progress; please enqueue such operation");
@@ -227,7 +227,7 @@ void AViewContainerBase::removeView(const _<AView>& view) {
     removeViewImpl(view, lock);
 }
 
-void AViewContainerBase::removeViewImpl(const _<AView>& view, std::unique_lock<ASpinlockMutex>& lock) {
+void AViewContainerBase::removeViewImpl(const AArc<AView>& view, std::unique_lock<ASpinlockMutex>& lock) {
 #if AUI_DEBUG
     AUI_ASSERTX(lock.owns_lock(), "removeView: lock is not owned by the caller");
 #endif
@@ -242,7 +242,7 @@ void AViewContainerBase::removeViewImpl(const _<AView>& view, std::unique_lock<A
     emit childrenChanged;
 }
 
-void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::const_iterator> views) {
+void AViewContainerBase::removeViews(aui::range<AVector<AArc<AView>>::const_iterator> views) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
         throw AException("can't use removeViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
@@ -441,8 +441,8 @@ bool AViewContainerBase::consumesClick(const glm::ivec2& pos) {
 }
 
 
-_<AView> AViewContainerBase::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
-    _<AView> possibleOutput = nullptr;
+AArc<AView> AViewContainerBase::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
+    AArc<AView> possibleOutput = nullptr;
 
     for (auto view: aui::reverse_iterator_wrap(mViews)) {
         auto targetPos = pos - view->getPosition();
@@ -478,8 +478,8 @@ _<AView> AViewContainerBase::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlag
     return possibleOutput;
 }
 
-_<AView> AViewContainerBase::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
-    _<AView> target = getViewAt(pos, flags);
+AArc<AView> AViewContainerBase::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
+    AArc<AView> target = getViewAt(pos, flags);
     if (!target)
         return nullptr;
     int depth = 0;
@@ -576,7 +576,7 @@ void AViewContainerBase::onDpiChanged() {
     }
 }
 
-void AViewContainerBase::setContents(const _<AViewContainer>& container) {
+void AViewContainerBase::setContents(const AArc<AViewContainer>& container) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
         throw AException("can't use setLayout when render/applyGeometryToChildren is in progress; please enqueue such operation");
@@ -674,7 +674,7 @@ void AViewContainerBase::onViewGraphSubtreeChanged() {
     }
 }
 
-_<AView> AViewContainerBase::pointerEventsMapping(APointerIndex index) {
+AArc<AView> AViewContainerBase::pointerEventsMapping(APointerIndex index) {
     auto it = std::find_if(mPointerEventsMapping.begin(), mPointerEventsMapping.end(), [&](const PointerEventsMapping& v) {
       return v.pointerIndex == index;
     });
@@ -684,13 +684,13 @@ _<AView> AViewContainerBase::pointerEventsMapping(APointerIndex index) {
     return it->targetView.lock();
 }
 
-void AViewContainerBase::setViews(AVector<_<AView>> views) {
+void AViewContainerBase::setViews(AVector<AArc<AView>> views) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
         throw AException("can't use setViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
     }
     removeAllViewsImpl(lock);
-    views.removeIf([](const _<AView>& v) { return v == nullptr; });
+    views.removeIf([](const AArc<AView>& v) { return v == nullptr; });
     mViews = std::move(views);
 
     for (const auto& view : mViews) {

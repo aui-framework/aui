@@ -24,7 +24,7 @@ public:
 
     using BuiltinOrDeclaredFunction = std::variant<AString, const FunctionDeclarationNode*>;
 
-    void parseShader(const _<AST>& ast) override;
+    void parseShader(const AArc<AST>& ast) override;
 
     void visitNode(const EqualsOperatorNode& node) override;
     void visitNode(const NotEqualsOperatorNode& node) override;
@@ -81,7 +81,7 @@ public:
 
     void writeCpp(const APath& destination) override;
 
-    void visitCodeBlock(const AVector<_<INode>>& codeBlock);
+    void visitCodeBlock(const AVector<AArc<INode>>& codeBlock);
 
     void writeCppHeader(aui::no_escape<IOutputStream> os);
     void writeCppCpp(const APath& headerPath, aui::no_escape<IOutputStream> os);
@@ -91,7 +91,7 @@ protected:
     virtual void emitHeaderDefinition(aui::no_escape<IOutputStream> os);
     virtual void emitCppCreateShader(aui::no_escape<IOutputStream> os);
     virtual void emitFunctionDeclArguments(const FunctionDeclarationNode& node, bool first = true);
-    virtual void emitFunctionCallArguments(const BuiltinOrDeclaredFunction& function, const AVector<_<ExpressionNode>>& args, bool first);
+    virtual void emitFunctionCallArguments(const BuiltinOrDeclaredFunction& function, const AVector<AArc<ExpressionNode>>& args, bool first);
 
     virtual AString mapType(const AString& type) = 0;
     virtual void emitBeforeEntryCode() = 0;
@@ -103,7 +103,7 @@ protected:
     bool mInterDefined = false;
     bool mTextureDefined = false;
 
-    AOptional<AVector<_<INode>>> mEntry;
+    AOptional<AVector<AArc<INode>>> mEntry;
     AStringStream mShaderOutput;
 
     const AString& namespaceName() const {

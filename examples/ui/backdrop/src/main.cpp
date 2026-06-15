@@ -25,7 +25,7 @@
 using namespace declarative;
 using namespace ass;
 
-static auto headerWithContents(_<AView> content) {
+static auto headerWithContents(AArc<AView> content) {
     auto result = Stacked {
         AScrollArea::Builder().withContents(content).build() AUI_OVERRIDE_STYLE {
               Expanding(),

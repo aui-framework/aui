@@ -28,7 +28,7 @@ struct State {
     }
 };
 
-_<AView> parentCheckBox(_<State> state) {
+AArc<AView> parentCheckBox(AArc<State> state) {
     return Vertical {
         CheckBox {
             .checked = AUI_REACT(state->isAllOptionsSelected()),

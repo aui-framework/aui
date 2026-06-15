@@ -31,13 +31,13 @@ public:
 
     class Builder {
     private:
-        _<IListModel<AString>> mModel;
+        AArc<IListModel<AString>> mModel;
         AString mTitle;
         std::function<void()> mNewCallback;
         std::function<void(const AListModelIndex&)> mModifyCallback;
 
     public:
-        Builder(const _<IListModel<AString>>& model): mModel(model) {}
+        Builder(const AArc<IListModel<AString>>& model): mModel(model) {}
 
 
         Builder& withNewButton(const std::function<void()>& onNew) {
@@ -49,7 +49,7 @@ public:
             return *this;
         }
 
-        _<AWindow> buildWindow(const AString& title, AWindow* parent = nullptr) {
+        AArc<AWindow> buildWindow(const AString& title, AWindow* parent = nullptr) {
             auto window = AWindow::wrapViewToWindow(buildContainer(),
                                                     title,
                                                     300_dp,
@@ -61,7 +61,7 @@ public:
             return window;
         }
 
-        _<ABasicListEditor> buildContainer() {
+        AArc<ABasicListEditor> buildContainer() {
             using namespace declarative;
             auto c = _new<ABasicListEditor>();
             auto list = _new<AListView>(mModel);
@@ -71,7 +71,7 @@ public:
                 callback(list->getSelectionModel().first());
             }) : nullptr;
 
-            _<AButton> removeButton;
+            AArc<AButton> removeButton;
             if (auto model = _cast<IRemovableListModel<AString>>(mModel)) {
                 removeButton = _new<AButton>("Remove").connect(&AView::clicked, c, [list, model] {
                     model->removeItems(list->getSelectionModel());

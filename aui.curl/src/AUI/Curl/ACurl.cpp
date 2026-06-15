@@ -95,11 +95,11 @@ ACurl::Builder::~Builder() { assert(mCURL == nullptr); }
 _unique<IInputStream> ACurl::Builder::toInputStream() {
     class CurlInputStream : public IInputStream {
     private:
-        _<ACurl> mCurl;
+        AArc<ACurl> mCurl;
         APipe mPipe;
 
     public:
-        CurlInputStream(_<ACurl> curl) : mCurl(std::move(curl)) {
+        CurlInputStream(AArc<ACurl> curl) : mCurl(std::move(curl)) {
             mCurl->mWriteCallback = [&](ACurl&, AByteBufferView buf) {
                 mPipe << buf;
                 return buf.size();

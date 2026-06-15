@@ -18,7 +18,7 @@
 class IMatcher {
 public:
     virtual ~IMatcher() = default;
-    virtual bool matches(const _<AView>& view) = 0;
+    virtual bool matches(const AArc<AView>& view) = 0;
 };
 
 

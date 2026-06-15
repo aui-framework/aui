@@ -49,7 +49,7 @@ public:
     void setConfiguration(Configuration configuration);
 
 private:
-    _<ATimer> mTimer;
+    AArc<ATimer> mTimer;
     Configuration mConfiguration;
 };
 

@@ -10,14 +10,14 @@ class AST;
 
 class ImportNode: public ExpressionNode {
 private:
-    _<AST> mImportedAST;
+    AArc<AST> mImportedAST;
 
 public:
-    explicit ImportNode(const _<AST>& importedAst) : mImportedAST(importedAst) {
+    explicit ImportNode(const AArc<AST>& importedAst) : mImportedAST(importedAst) {
 
     }
 
-    const _<AST>& importedAst() const {
+    const AArc<AST>& importedAst() const {
         return mImportedAST;
     }
 

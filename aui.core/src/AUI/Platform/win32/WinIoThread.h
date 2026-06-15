@@ -23,7 +23,7 @@ public:
     }
 
 private:
-    _<AThread> mThread;
+    AArc<AThread> mThread;
 
     WinIoThread() noexcept;
 };

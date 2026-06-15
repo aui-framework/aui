@@ -23,7 +23,7 @@ struct State {
     AProperty<bool> showSpoiler = false;
 };
 
-_<AView> minimalCheckBox(_<AProperty<bool>> state) {
+AArc<AView> minimalCheckBox(AArc<AProperty<bool>> state) {
     return CheckBox {
         .checked = AUI_REACT(*state),
         .onCheckedChange = [state](bool checked) { *state = checked; },
@@ -37,7 +37,7 @@ AUI_ENTRY {
     window->setContents(
         Vertical {
             minimalCheckBox(AUI_PTR_ALIAS(state, showSpoiler)),
-            experimental::Dynamic { AUI_REACT(state->showSpoiler ? Label { "UwU" } : _<AView>(nullptr)) }
+            experimental::Dynamic { AUI_REACT(state->showSpoiler ? Label { "UwU" } : AArc<AView>(nullptr)) }
         }
     );
     window->show();

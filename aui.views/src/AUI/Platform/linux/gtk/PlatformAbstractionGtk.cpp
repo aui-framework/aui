@@ -83,7 +83,7 @@ PlatformAbstractionGtk::~PlatformAbstractionGtk() {
     g_main_context_release(mMainContext);
 }
 
-_<ACursor::Custom> PlatformAbstractionGtk::createCustomCursor(AImageView image) { return _<ACursor::Custom>(); }
+AArc<ACursor::Custom> PlatformAbstractionGtk::createCustomCursor(AImageView image) { return AArc<ACursor::Custom>(); }
 void PlatformAbstractionGtk::applyNativeCursor(const ACursor &cursor, AWindow *pWindow) {}
 void PlatformAbstractionGtk::setClipboardText(const AString &text) {}
 AString PlatformAbstractionGtk::getClipboardText() { return AString(); }

@@ -78,11 +78,11 @@ template<typename Layout>
 class ASplitter::Builder {
     friend class ASplitter;
 private:
-    AVector<_<AView>> mItems;
+    AVector<AArc<AView>> mItems;
     glm::ivec2 mExpanding{};
 
 public:
-    Builder& withItems(AVector<_<AView>> items) {
+    Builder& withItems(AVector<AArc<AView>> items) {
         mItems = std::move(items);
         return *this;
     }
@@ -92,9 +92,9 @@ public:
         return *this;
     }
 
-    API_AUI_VIEWS _<AView> build();
+    API_AUI_VIEWS AArc<AView> build();
 
-    operator _<AView>() {
+    operator AArc<AView>() {
         return build();
     }
 };

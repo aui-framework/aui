@@ -25,11 +25,11 @@
  */
 class API_AUI_CORE ALimitedInputStream: public IInputStream {
 private:
-    _<IInputStream> mInputStream;
+    AArc<IInputStream> mInputStream;
     size_t mLimit;
 
 public:
-    ALimitedInputStream(const _<IInputStream>& inputStream, size_t limit) : mInputStream(inputStream), mLimit(limit) {}
+    ALimitedInputStream(const AArc<IInputStream>& inputStream, size_t limit) : mInputStream(inputStream), mLimit(limit) {}
     virtual ~ALimitedInputStream() = default;
 
     size_t read(char* dst, size_t size) override;

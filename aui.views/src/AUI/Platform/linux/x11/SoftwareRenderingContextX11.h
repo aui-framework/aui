@@ -25,7 +25,7 @@ protected:
     void reallocate() override;
 
 private:
-    _<XImage> mXImage;
+    AArc<XImage> mXImage;
     std::unique_ptr<_XGC, void(*)(GC)> mGC = {nullptr, nullptr};
 
 };

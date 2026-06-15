@@ -21,10 +21,10 @@
 
 class API_AUI_VIEWS AAnimatedDrawable : public IDrawable, public AObject {
 private:
-    _<IAnimatedImageFactory> mFactory;
-    _<ITexture> mTexture;
+    AArc<IAnimatedImageFactory> mFactory;
+    AArc<ITexture> mTexture;
 public:
-    explicit AAnimatedDrawable(_<IAnimatedImageFactory> factory);
+    explicit AAnimatedDrawable(AArc<IAnimatedImageFactory> factory);
     ~AAnimatedDrawable() override = default;
 
     void draw(IRenderer& render, const IDrawable::Params& params) override;

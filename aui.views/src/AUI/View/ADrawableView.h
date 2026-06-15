@@ -75,32 +75,32 @@ public:
      * @brief Create an instance from the given drawable.
      * @param drawable The IDrawable to be rendered.
      */
-    explicit ADrawableView(_<IDrawable> drawable);
+    explicit ADrawableView(AArc<IDrawable> drawable);
     ADrawableView();
     ~ADrawableView() override = default;
     void render(ARenderContext context) override;
 
-    void setDrawable(const _<IDrawable>& drawable) {
+    void setDrawable(const AArc<IDrawable>& drawable) {
         mDrawable = drawable;
         redraw();
     }
 
     [[nodiscard]]
-    const _<IDrawable>& getDrawable() const noexcept {
+    const AArc<IDrawable>& getDrawable() const noexcept {
         return mDrawable;
     }
 
 private:
-    _<IDrawable> mDrawable;
-    emits<_<IDrawable>> mDrawableChanged;
+    AArc<IDrawable> mDrawable;
+    emits<AArc<IDrawable>> mDrawableChanged;
 };
 
 template <aui::derived_from<ADrawableView> T>
-struct ADataBindingDefault<T, _<IDrawable>> {
+struct ADataBindingDefault<T, AArc<IDrawable>> {
 public:
-    static auto property(const _<ADrawableView>& view) { return view->drawable(); }
+    static auto property(const AArc<ADrawableView>& view) { return view->drawable(); }
 
-    static void setup(const _<ADrawableView>& view) {}
+    static void setup(const AArc<ADrawableView>& view) {}
 
     static auto getSetter() { return &ADrawableView::setDrawable; }
 };

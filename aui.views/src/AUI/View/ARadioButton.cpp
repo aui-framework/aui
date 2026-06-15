@@ -13,7 +13,7 @@
 #include "AUI/Layout/AHorizontalLayout.h"
 #include "AUI/Util/Declarative/Containers.h"
 
-ARadioButton::ARadioButton(_<AView> content)
+ARadioButton::ARadioButton(AArc<AView> content)
 {
     mCircle = _new<ARadioButton::Circle>();
     setContents(declarative::Horizontal {
@@ -35,7 +35,7 @@ ARadioButton::Circle::Circle() {
     connect(checked.changed, [this] { emit customCssPropertyChanged; });
 }
 
-_<AView> declarative::RadioButton::operator()() {
+AArc<AView> declarative::RadioButton::operator()() {
     auto radiobutton = _new<ARadioButton>(std::move(content));
 //    radiobutton->clicked.clearAllOutgoingConnectionsWith(radiobutton); // removes default legacy behavior
     checked.bindTo(radiobutton->circle()->checked.assignment());
@@ -46,7 +46,7 @@ _<AView> declarative::RadioButton::operator()() {
 
 
 // legacy stuff, subject to be removed =================================================================================
-_<ARadioButton> ARadioButton::Group::addRadioButton(const _<ARadioButton>& radio, int id) {
+AArc<ARadioButton> ARadioButton::Group::addRadioButton(const AArc<ARadioButton>& radio, int id) {
     if (id == -1) id = int(mButtons.size());
     AUI_ASSERTX(!mButtons.contains(id), "this id is already used; please choose another id");
     mButtons[id] = radio;
@@ -64,7 +64,7 @@ _<ARadioButton> ARadioButton::Group::addRadioButton(const _<ARadioButton>& radio
     return radio;
 }
 
-_<ARadioButton> ARadioButton::Group::getSelectedRadio() const {
+AArc<ARadioButton> ARadioButton::Group::getSelectedRadio() const {
     return mSelectedRadio.lock();
 }
 

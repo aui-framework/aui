@@ -29,21 +29,21 @@
  */
 class API_AUI_VIEWS ADropdownList: public AButton {
 private:
-    _<IListModel<AString>> mModel;
+    AArc<IListModel<AString>> mModel;
     int mSelectionId = 0;
     bool mPopup = false;
-    _weak<AOverlappingSurface> mComboWindow;
+    AWeakArc<AOverlappingSurface> mComboWindow;
 
 protected:
     virtual void updateText();
     virtual void onComboBoxWindowCreated();
 
-    _<AViewContainer> comboWindow() {
+    AArc<AViewContainer> comboWindow() {
         return mComboWindow.lock();
     }
 
 public:
-    explicit ADropdownList(const _<IListModel<AString>>& model);
+    explicit ADropdownList(const AArc<IListModel<AString>>& model);
     ADropdownList();
     ~ADropdownList() override;
 
@@ -59,7 +59,7 @@ public:
         };
     }
 
-    void setModel(const _<IListModel<AString>>& model);
+    void setModel(const AArc<IListModel<AString>>& model);
     void render(ARenderContext context) override;
 
     [[nodiscard]] int getSelectionId() const {
@@ -76,7 +76,7 @@ public:
     void destroyWindow();
 
     [[nodiscard]]
-    const _<IListModel<AString>>& getModel() const {
+    const AArc<IListModel<AString>>& getModel() const {
         return mModel;
     }
 

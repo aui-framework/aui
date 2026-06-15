@@ -20,6 +20,6 @@ public:
 	virtual ~ISqlDriverResult() = default;
 	virtual const AVector<SqlColumn>& getColumns() = 0;
 	virtual size_t rowCount() = 0;
-	virtual _<ISqlDriverRow> begin() = 0;
-	virtual _<ISqlDriverRow> next(const _<ISqlDriverRow>& previous) = 0;
+	virtual AArc<ISqlDriverRow> begin() = 0;
+	virtual AArc<ISqlDriverRow> next(const AArc<ISqlDriverRow>& previous) = 0;
 };

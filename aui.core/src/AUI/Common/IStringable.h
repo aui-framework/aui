@@ -61,7 +61,7 @@ public:
      * be returned, AReflect::name() of this pointer otherwise
      */
     template<typename T>
-    static AString toString(const _<T>& t) {
+    static AString toString(const AArc<T>& t) {
         return toString(t.get());
     }
 };

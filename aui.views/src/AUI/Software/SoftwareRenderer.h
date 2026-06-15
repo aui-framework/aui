@@ -103,7 +103,7 @@ public:
             }
         }
     }
-    _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
+    AArc<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override;
 
     void rectangle(const ABrush& brush,
                    glm::vec2 position,
@@ -142,7 +142,7 @@ public:
                 const AString& string,
                 const AFontStyle& fs) override;
 
-    _<IPrerenderedString> prerenderString(glm::vec2 position,
+    AArc<IPrerenderedString> prerenderString(glm::vec2 position,
                                           const AString& text,
                                           const AFontStyle& fs) override;
 

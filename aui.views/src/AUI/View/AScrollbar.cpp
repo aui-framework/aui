@@ -24,8 +24,8 @@
 
 using namespace std::chrono_literals;
 
-const _<ATimer>& AScrollbar::buttonTimer() {
-    static _<ATimer> timer = _new<ATimer>(100ms);
+const AArc<ATimer>& AScrollbar::buttonTimer() {
+    static AArc<ATimer> timer = _new<ATimer>(100ms);
     return timer;
 }
 

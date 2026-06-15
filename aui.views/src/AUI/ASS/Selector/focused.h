@@ -30,7 +30,7 @@ namespace ass {
             return Base::isStateApplicable(view) && view->hasFocus();
         }
 
-        void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+        void setupConnections(AView* view, const AArc<AAssHelper>& helper) override {
             Base::setupConnections(view, helper);
             view->focusState.clearAllOutgoingConnectionsWith(helper.get());
             AObject::connect(view->focusState, AUI_SLOT(helper)::onInvalidateStateAss);

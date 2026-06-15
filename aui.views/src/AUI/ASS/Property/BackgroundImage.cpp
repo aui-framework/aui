@@ -24,7 +24,7 @@
 #include <AUI/Util/AImageDrawable.h>
 
 void ass::prop::Property<ass::BackgroundImage>::draw(
-    const ARenderContext& ctx, AView* view, const _<IDrawable>& drawable, const ass::BackgroundImage& info) {
+    const ARenderContext& ctx, AView* view, const AArc<IDrawable>& drawable, const ass::BackgroundImage& info) {
     ass::BackgroundCropping& cropping = view->getAssHelper()->state.backgroundCropping;
     auto imageRendering = view->getAssHelper()->state.imageRendering;
 
@@ -277,14 +277,14 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARe
     if (info.image &&
         std::visit(
             aui::lambda_overloaded {
-              [](const _<IDrawable>& drawable) { return drawable != nullptr; },
+              [](const AArc<IDrawable>& drawable) { return drawable != nullptr; },
               [](const AString& s) { return !s.empty(); } },
             *info.image)) {
         if (!view->getAssHelper()->state.backgroundImage) {
             // resolve background image by url
             view->getAssHelper()->state.backgroundImage = std::visit(
                 aui::lambda_overloaded {
-                  [](const _<IDrawable>& drawable) { return drawable; },
+                  [](const AArc<IDrawable>& drawable) { return drawable; },
                   [](const AString& s) { return IDrawable::fromUrl(s); } },
                 *info.image);
         }
@@ -308,7 +308,7 @@ AString ass::prop::Property<ass::BackgroundImage>::toString() const {
     }
     return "BackgroundImage({})"_format(std::visit(
 aui::lambda_overloaded {
-  [](const _<IDrawable>& drawable) { return "IDrawable {}"_format((void*)drawable.get()); },
+  [](const AArc<IDrawable>& drawable) { return "IDrawable {}"_format((void*)drawable.get()); },
   [](const AString& s) { return s; } },
 *mInfo.image));
 }

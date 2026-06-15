@@ -19,7 +19,7 @@ class ASplitterHelper {
     friend class ASplitter;
 public:
     struct Item {
-        _<AView> view;
+        AArc<AView> view;
         AOptional<int> overridedSize;
     };
 
@@ -43,8 +43,8 @@ public:
         mItems = std::move(items);
     }
 
-    void setItems(const AVector<_<AView>>& items) {
-        mItems = items.map([](const _<AView>& view) { return Item { .view = view }; });
+    void setItems(const AVector<AArc<AView>>& items) {
+        mItems = items.map([](const AArc<AView>& view) { return Item { .view = view }; });
     }
 
     [[nodiscard]]
@@ -83,7 +83,7 @@ private:
     int mDragOffset; // may be uninitialized
     AVector<Item> mItems;
 
-    float getTotalOccupiedSizeOf(const _<AView>& view) {
+    float getTotalOccupiedSizeOf(const AArc<AView>& view) {
         return mDirection == ALayoutDirection::VERTICAL ? view->getTotalOccupiedHeight() : view->getTotalOccupiedWidth();
     }
 

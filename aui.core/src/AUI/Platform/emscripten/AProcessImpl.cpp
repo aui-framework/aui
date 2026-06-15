@@ -16,6 +16,6 @@
 #include <AUI/Platform/AProcess.h>
 
 
-_<AProcess> AProcess::self() {
+AArc<AProcess> AProcess::self() {
     return nullptr;
 }

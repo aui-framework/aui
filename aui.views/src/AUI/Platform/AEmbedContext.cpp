@@ -45,7 +45,7 @@ public:
         mFrameMillis = frameMillis;
     }
 
-    _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override {
+    AArc<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override {
         class MyOverlappingSurface: public AOverlappingSurface {
         public:
             void setOverlappingSurfacePosition(glm::ivec2 position) override {
@@ -76,7 +76,7 @@ public:
         return container;
     }
 
-    void closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) override {
+    void closeOverlappingSurfaceImpl(AArc<AOverlappingSurface> surface) override {
         removeView(surface);
     }
 
@@ -129,7 +129,7 @@ void AEmbedContext::windowRender() {
     AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 
-void AEmbedContext::setContainer(const _<AViewContainer>& container) {
+void AEmbedContext::setContainer(const AArc<AViewContainer>& container) {
     ALayoutInflater::inflate(mContainer, container);
     mContainer->setPosition({0, 0});
     container->setPosition({0, 0});

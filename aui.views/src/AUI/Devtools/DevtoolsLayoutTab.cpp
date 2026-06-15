@@ -24,10 +24,10 @@
 
 class ViewHierarchyTreeModel : public ITreeModel<AString> {
 private:
-    _<AViewContainerBase> mRoot;
+    AArc<AViewContainerBase> mRoot;
 
 public:
-    ViewHierarchyTreeModel(_<AViewContainerBase> root) : mRoot(std::move(root)) {
+    ViewHierarchyTreeModel(AArc<AViewContainerBase> root) : mRoot(std::move(root)) {
         // scan(mRoot); // crashes
     }
 
@@ -49,7 +49,7 @@ public:
         }
 
         struct ExtraData {
-            AVector<_<AView>> children;
+            AVector<AArc<AView>> children;
         };
 
         connect(
@@ -80,7 +80,7 @@ public:
     }
 
     size_t childrenCount(const ATreeModelIndexOrRoot& vertex) override {
-        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainerBase>((*vertex).as<_<AView>>());
+        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainerBase>((*vertex).as<AArc<AView>>());
         if (c) {
             return c->getViews().size();
         }
@@ -88,11 +88,11 @@ public:
     }
 
     AString itemAt(const ATreeModelIndex& index) override {
-        return Devtools::prettyViewName(index.as<_<AView>>().get());
+        return Devtools::prettyViewName(index.as<AArc<AView>>().get());
     }
 
     ATreeModelIndex indexOfChild(size_t row, size_t column, const ATreeModelIndexOrRoot& vertex) override {
-        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainerBase>((*vertex).as<_<AView>>());
+        auto c = vertex == ATreeModelIndex::ROOT ? mRoot : _cast<AViewContainerBase>((*vertex).as<AArc<AView>>());
         if (!c) {
             throw AException("invalid index");
         }
@@ -100,7 +100,7 @@ public:
     }
 
     ATreeModelIndexOrRoot parent(const ATreeModelIndex& ofChild) override {
-        auto view = ofChild.as<_<AView>>();
+        auto view = ofChild.as<AArc<AView>>();
         auto parent = view->getParent();
 
         if (!parent) {
@@ -132,16 +132,16 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(ASurface* targetWindow) : mTargetWindow(tar
     auto model = _new<ViewHierarchyTreeModel>(aui::ptr::fake_shared(targetWindow));
     mViewHierarchyTree->setModel(model);
     connect(mViewHierarchyTree->itemSelected, [this](const ATreeModelIndex& index) {
-        mViewPropertiesView->setTargetView(index.as<_<AView>>());
+        mViewPropertiesView->setTargetView(index.as<AArc<AView>>());
     });
     connect(mViewHierarchyTree->itemMouseHover, [this](const ATreeModelIndex& index) {
         if (!AInput::isKeyDown(AInput::LCONTROL)) {
             return;
         }
-        mViewPropertiesView->setTargetView(index.as<_<AView>>());
+        mViewPropertiesView->setTargetView(index.as<AArc<AView>>());
     });
     connect(mouseLeave, [this] {
-        AUI_NULLSAFE(mTargetWindow->profiling())->highlightView = _weak<AView>();
+        AUI_NULLSAFE(mTargetWindow->profiling())->highlightView = AWeakArc<AView>();
         mTargetWindow->redraw();
     });
     connect(targetWindow->mouseMove, [this, targetWindow, model](glm::ivec2 position) {
@@ -155,7 +155,7 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(ASurface* targetWindow) : mTargetWindow(tar
 
         mViewPropertiesView->setTargetView(mouseOverView);
         auto indexToSelect = model->find([&](const ATreeModelIndex& index) {
-            return index.as<_<AView>>() == mouseOverView;
+            return index.as<AArc<AView>>() == mouseOverView;
         });
         if (indexToSelect) {
             mViewHierarchyTree->select(*indexToSelect);
@@ -168,7 +168,7 @@ DevtoolsLayoutTab::~DevtoolsLayoutTab() {
         mViewPropertiesView->setTargetView(nullptr);
     }
     if (mTargetWindow) {
-        AUI_NULLSAFE(mTargetWindow->profiling())->highlightView = _weak<AView>();
+        AUI_NULLSAFE(mTargetWindow->profiling())->highlightView = AWeakArc<AView>();
         mTargetWindow->redraw();
     }
 }

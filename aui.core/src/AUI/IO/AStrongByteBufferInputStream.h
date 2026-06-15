@@ -10,17 +10,17 @@
  */
 class API_AUI_CORE AStrongByteBufferInputStream: public ISeekableInputStream {
 private:
-    std::variant<AByteBuffer, _<AByteBuffer>> mRef;
+    std::variant<AByteBuffer, AArc<AByteBuffer>> mRef;
     size_t mReadPos = 0;
 
 public:
-    static _<AStrongByteBufferInputStream> fromUrl(const AUrl& url);
+    static AArc<AStrongByteBufferInputStream> fromUrl(const AUrl& url);
 
     explicit AStrongByteBufferInputStream(AByteBuffer buffer) noexcept: mRef(std::move(buffer)) {
 
     }
 
-    explicit AStrongByteBufferInputStream(_<AByteBuffer> buffer) noexcept: mRef(std::move(buffer)) {
+    explicit AStrongByteBufferInputStream(AArc<AByteBuffer> buffer) noexcept: mRef(std::move(buffer)) {
 
     }
     ~AStrongByteBufferInputStream() override = default;
@@ -39,7 +39,7 @@ public:
             [](AByteBuffer& b) -> AByteBuffer& {
                 return b;
             },
-            [](_<AByteBuffer>& b) -> AByteBuffer& {
+            [](AArc<AByteBuffer>& b) -> AByteBuffer& {
                 return *b;
             },
         }, mRef);

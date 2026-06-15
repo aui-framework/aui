@@ -20,5 +20,5 @@ public:
     glm::ivec2 getSizeHint() override;
 
 private:
-    _<ITexture> mNoise;
+    AArc<ITexture> mNoise;
 };

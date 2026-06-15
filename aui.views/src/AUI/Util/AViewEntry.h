@@ -16,10 +16,10 @@
 
 class API_AUI_VIEWS AViewEntry final: public AWordWrappingEngineBase::Entry {
 private:
-    _<AView> mView;
+    AArc<AView> mView;
 
 public:
-    explicit AViewEntry(_<AView> view) : mView(std::move(view)) {}
+    explicit AViewEntry(AArc<AView> view) : mView(std::move(view)) {}
     AViewEntry() = default;
 
     glm::ivec2 getSize() override;

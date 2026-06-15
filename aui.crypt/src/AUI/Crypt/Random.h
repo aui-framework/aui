@@ -24,7 +24,7 @@ namespace ACrypto {
      * @return buffer with random length of random data.
      * @ingroup crypt
      */
-    API_AUI_CRYPT _<AByteBuffer> safeRandom();
+    API_AUI_CRYPT AArc<AByteBuffer> safeRandom();
 };
 
 

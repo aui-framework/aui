@@ -49,7 +49,7 @@ struct decode_type {
 };
 
 template <typename T>
-struct decode_type<_<T>> {
+struct decode_type<AArc<T>> {
     using type = T;
 };
 

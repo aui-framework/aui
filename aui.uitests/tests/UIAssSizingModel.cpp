@@ -28,7 +28,7 @@ public:
         UITest::TearDown();
     }
 
-    _<AWindow> mTestWindow;
+    AArc<AWindow> mTestWindow;
 };
 
 TEST_F(UIAssSizingModel, AllBoxesAreIdential) {

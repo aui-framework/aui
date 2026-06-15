@@ -21,7 +21,7 @@
 namespace {
     class DragAreaLayout: public ALinearLayout<> {
     public:
-        void addView(const _<AView>& view, AOptional<size_t> index) override {
+        void addView(const AArc<AView>& view, AOptional<size_t> index) override {
             ALinearLayout::addView(view, index);
             markViewToBeCentered(*view);
         }
@@ -164,13 +164,13 @@ void ADragArea::endDragging() {
     mDraggedContainer.reset();
 }
 
-void ADragArea::setValidPositionFor(const _<AView>& targetView, const glm::ivec2& newPosition) {
+void ADragArea::setValidPositionFor(const AArc<AView>& targetView, const glm::ivec2& newPosition) {
     targetView->setPosition(
             glm::clamp(newPosition, glm::ivec2{targetView->getMargin().left, targetView->getMargin().top},
                        getSize() - targetView->getSize() - glm::ivec2{targetView->getMargin().right, targetView->getMargin().bottom}));
 }
 
-_<AView> ADragArea::convertToDraggable(const _<AView>& view, bool checkForClickConsumption) {
+AArc<AView> ADragArea::convertToDraggable(const AArc<AView>& view, bool checkForClickConsumption) {
     auto v = _new<ADraggableHandle>(checkForClickConsumption);
     v->setLayout(std::make_unique<AStackedLayout>());
     v->setExpanding({view->getExpandingHorizontal(), view->getExpandingVertical()});
@@ -178,7 +178,7 @@ _<AView> ADragArea::convertToDraggable(const _<AView>& view, bool checkForClickC
     return v;
 }
 
-_<ADragArea::ADraggableHandle> ADragArea::convertToDraggableContainer(const _<AViewContainer>& view, bool checkForClickConsumption) {
+AArc<ADragArea::ADraggableHandle> ADragArea::convertToDraggableContainer(const AArc<AViewContainer>& view, bool checkForClickConsumption) {
     auto v = _new<ADraggableHandle>(checkForClickConsumption);
     v->setContents(view);
     v->setExpanding(view->getExpanding());

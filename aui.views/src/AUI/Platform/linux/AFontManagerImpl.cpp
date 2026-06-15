@@ -35,7 +35,7 @@ AFontManager::AFontManager() :
     } fc;
 
     mDefaultFont = [&] {
-        _<AFont> result;
+        AArc<AFont> result;
 
         try {
             // try to determine user's font

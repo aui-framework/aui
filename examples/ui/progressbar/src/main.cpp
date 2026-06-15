@@ -22,7 +22,7 @@ struct State {
     AProperty<aui::float_within_0_1> progress = 0.42f;
 };
 
-_<AView> minimalProgress(_<State> state) {
+AArc<AView> minimalProgress(AArc<State> state) {
     return Vertical {
         ProgressBar {
             .progress = AUI_REACT(state->progress),

@@ -182,7 +182,7 @@ private:
     IDirectSoundNotify8* mNotifyInterface = nullptr;
     DSBPOSITIONNOTIFY mNotifyPositions[EVENTS_CNT];
     HANDLE mEvents[EVENTS_CNT + 2];
-    _<AThread> mThread;
+    AArc<AThread> mThread;
     bool mThreadIsActive = false;
     bool mIsPlaying = false;
     DWORD mBytesPerSecond;

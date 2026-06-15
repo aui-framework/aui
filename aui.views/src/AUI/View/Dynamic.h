@@ -5,7 +5,7 @@
 
 namespace declarative::experimental {
 /**
- * @brief A view that exposes a contract::In<_<AView>> to provide dynamic content.
+ * @brief A view that exposes a contract::In<AArc<AView>> to provide dynamic content.
  *
  * The view simply forwards the provided child view as its content. It can be used in declarative UI to inject
  * arbitrary views at runtime.
@@ -13,8 +13,8 @@ namespace declarative::experimental {
 class API_AUI_VIEWS Dynamic {
 public:
     // Declare contract input for a view
-    contract::In<_<AView>> content;
+    contract::In<AArc<AView>> content;
 
-    _<AView> operator()();
+    AArc<AView> operator()();
 };
 }

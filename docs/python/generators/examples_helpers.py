@@ -234,7 +234,7 @@ def filter_examples_by_relevance(exs: List[Dict[str, Any]], names: List[str], st
                 if any([re.search(i, snippet) for i in matches]):
                     matched = True
             else:
-                if re.search(r"_new<" + t_esc + r">", snippet) or re.search(r"_<" + t_esc + r">", snippet) or re.search(t_esc + r"::", snippet) or re.search(r"\b" + t_esc + r"\s*->", snippet) or re.search(r"\b" + t_esc + r"\s*\.", snippet) or re.search(r"\b" + t_esc + r"\s*\(", snippet) or re.search(r"AUI_SLOT\(\s*" + t_esc + r"\s*\)", snippet):
+                if re.search(r"_new<" + t_esc + r">", snippet) or re.search(r"AArc<" + t_esc + r">", snippet) or re.search(t_esc + r"::", snippet) or re.search(r"\b" + t_esc + r"\s*->", snippet) or re.search(r"\b" + t_esc + r"\s*\.", snippet) or re.search(r"\b" + t_esc + r"\s*\(", snippet) or re.search(r"AUI_SLOT\(\s*" + t_esc + r"\s*\)", snippet):
                     matched = True
                 else:
                     if re.search(r"\b" + t_esc + r"\b", snippet) and not var_decl_re.search(snippet):
@@ -276,7 +276,7 @@ def filter_examples_by_relevance(exs: List[Dict[str, Any]], names: List[str], st
                         m_found = True
                         if re.search(r"\b" + re.escape(lhs) + r"\b", local_text):
                             for cname in [nm.split('::')[0] for nm in (names or []) if '::' in (nm or '')]:
-                                if re.search(r"\b" + re.escape(lhs) + r"\s*=\s*_new<\s*" + re.escape(cname) + r"\b", local_text) or re.search(r"_<\s*" + re.escape(cname) + r"\s*>\s*" + re.escape(lhs), local_text) or re.search(r"\b" + re.escape(cname) + r"\s+" + re.escape(lhs) + r"\s*(=|;)", local_text):
+                                if re.search(r"\b" + re.escape(lhs) + r"\s*=\s*_new<\s*" + re.escape(cname) + r"\b", local_text) or re.search(r"AArc<\s*" + re.escape(cname) + r"\s*>\s*" + re.escape(lhs), local_text) or re.search(r"\b" + re.escape(cname) + r"\s+" + re.escape(lhs) + r"\s*(=|;)", local_text):
                                     member_ok = True
                                     break
                         if member_ok:
@@ -288,7 +288,7 @@ def filter_examples_by_relevance(exs: List[Dict[str, Any]], names: List[str], st
                         m_found = True
                         if re.search(r"\b" + re.escape(lhs) + r"\b", local_text):
                             for cname in [nm.split('::')[0] for nm in (names or []) if '::' in (nm or '')]:
-                                if re.search(r"\b" + re.escape(lhs) + r"\s*=\s*_new<\s*" + re.escape(cname) + r"\b", local_text) or re.search(r"_<\s*" + re.escape(cname) + r"\s*>\s*" + re.escape(lhs), local_text) or re.search(r"\b" + re.escape(cname) + r"\s+" + re.escape(lhs) + r"\s*(=|;)", local_text):
+                                if re.search(r"\b" + re.escape(lhs) + r"\s*=\s*_new<\s*" + re.escape(cname) + r"\b", local_text) or re.search(r"AArc<\s*" + re.escape(cname) + r"\s*>\s*" + re.escape(lhs), local_text) or re.search(r"\b" + re.escape(cname) + r"\s+" + re.escape(lhs) + r"\s*(=|;)", local_text):
                                     member_ok = True
                                     break
                         if member_ok:
@@ -299,7 +299,7 @@ def filter_examples_by_relevance(exs: List[Dict[str, Any]], names: List[str], st
                         lhs = m.group(1)
                         if re.search(r"\b" + re.escape(lhs) + r"\b", local_text):
                             for cname in [nm.split('::')[0] for nm in (names or []) if '::' in (nm or '')]:
-                                if re.search(r"\b" + re.escape(lhs) + r"\s*=\s*_new<\s*" + re.escape(cname) + r"\b", local_text) or re.search(r"_<\s*" + re.escape(cname) + r"\s*>\s*" + re.escape(lhs), local_text) or re.search(r"\b" + re.escape(cname) + r"\s+" + re.escape(lhs) + r"\s*(=|;)", local_text):
+                                if re.search(r"\b" + re.escape(lhs) + r"\s*=\s*_new<\s*" + re.escape(cname) + r"\b", local_text) or re.search(r"AArc<\s*" + re.escape(cname) + r"\s*>\s*" + re.escape(lhs), local_text) or re.search(r"\b" + re.escape(cname) + r"\s+" + re.escape(lhs) + r"\s*(=|;)", local_text):
                                     member_ok = True
                                     break
                         if member_ok:
@@ -665,7 +665,7 @@ def examples_for_symbol_with_snippets(names: List[str], anchors: List[str] | Non
                                 continue
                             for m in re.finditer(r"(\w+)\s*=\s*_new<\s*" + re.escape(cname) + r"\b", local_text):
                                 var_names.add(m.group(1))
-                            for m in re.finditer(r"_<\s*" + re.escape(cname) + r"\s*>\s*(\w+)", local_text):
+                            for m in re.finditer(r"AArc<\s*" + re.escape(cname) + r"\s*>\s*(\w+)", local_text):
                                 var_names.add(m.group(1))
                             for m in re.finditer(r"\b" + re.escape(cname) + r"\s+(\w+)\s*(=|;)", local_text):
                                 var_names.add(m.group(1))
@@ -709,7 +709,7 @@ def examples_for_symbol_with_snippets(names: List[str], anchors: List[str] | Non
                                     for cname in class_names:
                                         if not cname:
                                             continue
-                                        if re.search(r"_new<\s*" + re.escape(cname) + r"\b", local_text) or re.search(r"_<\s*" + re.escape(cname) + r"\b", local_text) or re.search(r"\b" + re.escape(cname) + r"\b", local_text):
+                                        if re.search(r"_new<\s*" + re.escape(cname) + r"\b", local_text) or re.search(r"AArc<\s*" + re.escape(cname) + r"\b", local_text) or re.search(r"\b" + re.escape(cname) + r"\b", local_text):
                                             class_inst_ok = True
                                             break
                                     if not class_inst_ok:

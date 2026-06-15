@@ -12,7 +12,7 @@
 #include "InputStreamAsync.h"
 #include <AUI/Common/AByteBuffer.h>
 
-InputStreamAsync::InputStreamAsync(_<IInputStream> inputStream):
+InputStreamAsync::InputStreamAsync(AArc<IInputStream> inputStream):
 	mReadThread(_new<AThread>([&, inputStream]()
 	{
 		try {

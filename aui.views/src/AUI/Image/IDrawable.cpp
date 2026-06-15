@@ -16,11 +16,11 @@
 #include <AUI/Util/AImageDrawable.h>
 
 
-_<IDrawable> IDrawable::fromUrl(const AUrl& url) noexcept {
+AArc<IDrawable> IDrawable::fromUrl(const AUrl& url) noexcept {
     return Cache::get(url);
 }
 
-_<IDrawable> IDrawable::Cache::load(const AUrl& key)
+AArc<IDrawable> IDrawable::Cache::load(const AUrl& key)
 {
     try {
         auto buffer = AByteBuffer::fromStream(AUrl(key).open());

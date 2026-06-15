@@ -50,8 +50,8 @@ public:
         other.mMulti = nullptr;
     }
 
-    ACurlMulti& operator<<(_<ACurl> curl);
-    ACurlMulti& operator>>(const _<ACurl>& curl);
+    ACurlMulti& operator<<(AArc<ACurl> curl);
+    ACurlMulti& operator>>(const AArc<ACurl>& curl);
 
     void run() {
         run(false);
@@ -64,7 +64,7 @@ public:
     void clear();
 
     [[nodiscard]]
-    const AMap<void*, _<ACurl>>& curls() const {
+    const AMap<void*, AArc<ACurl>>& curls() const {
         return mEasyCurls;
     }
 
@@ -82,9 +82,9 @@ private:
 
     void* mMulti;
     bool mCancelled = false;
-    AMap<void*, _<ACurl>> mEasyCurls;
+    AMap<void*, AArc<ACurl>> mEasyCurls;
 
-    void removeCurl(const _<ACurl>& curl);
+    void removeCurl(const AArc<ACurl>& curl);
 };
 
 

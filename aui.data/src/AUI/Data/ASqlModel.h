@@ -105,7 +105,7 @@ struct ASqlModel {
             auto dbResult = Autumn::get<ASqlDatabase>()->query(mSql, mWhereParams);
 
             AVector<size_t> sqlColumnToModelFieldIndexMapping;
-            AVector<_<AField<Model>>> fields;
+            AVector<AArc<AField<Model>>> fields;
             fields << AModelMeta<Model>::getFields().valueVector();
 
             for (auto& row : dbResult) {
@@ -135,7 +135,7 @@ struct ASqlModel {
             return result.first();
         }
     };
-    static _<IncompleteSelectRequest> where(const ASqlBuilder::WhereStatement::WhereExpr& expression) {
+    static AArc<IncompleteSelectRequest> where(const ASqlBuilder::WhereStatement::WhereExpr& expression) {
         AStringVector columnNames;
         columnNames << "id";
         columnNames << Meta::getFields().keyVector();
@@ -162,7 +162,7 @@ struct ASqlModel {
         return result.first();
     }
 
-    static _<IncompleteSelectRequest> all() {
+    static AArc<IncompleteSelectRequest> all() {
         AStringVector columnNames;
         columnNames << "id";
         columnNames << Meta::getFields().keyVector();
@@ -216,7 +216,7 @@ protected:    /* ORM RELATIONSHIP */
      * @see ASqlModel::IncompleteSelectRequest
      */
     template<typename Other>
-    _<typename Other::IncompleteSelectRequest> hasMany() {
+    AArc<typename Other::IncompleteSelectRequest> hasMany() {
         const AString columnName = getIdColumnNameInOtherTables();
         return Other::where(col(columnName) == id);
     }

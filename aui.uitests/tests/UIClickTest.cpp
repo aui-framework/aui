@@ -42,7 +42,7 @@ public:
 protected:
     class TestWindow : public AWindow {
     private:
-        _<ALabel> mHelloLabel;
+        AArc<ALabel> mHelloLabel;
 
     public:
         TestWindow() {
@@ -80,7 +80,7 @@ protected:
         UITest::TearDown();
     }
 
-    _<TestWindow> mTestWindow;
+    AArc<TestWindow> mTestWindow;
 };
 
 /**

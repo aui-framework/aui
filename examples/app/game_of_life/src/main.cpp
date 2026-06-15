@@ -88,7 +88,7 @@ public:
     emits<> frameComplete;
 
 private:
-    _<ATimer> mTimer = _new<ATimer>(100ms);
+    AArc<ATimer> mTimer = _new<ATimer>(100ms);
     AFuture<> mFrame;
     glm::ivec2 mSize {};
     AVector<CellState> mStorage;
@@ -123,7 +123,7 @@ class CellsView : public AView {
 public:
     static constexpr auto SCALE = 8_dp;
 
-    CellsView(_<Cells> cells) : mCells(std::move(cells)) { connect(mCells->frameComplete, me::updateTexture); }
+    CellsView(AArc<Cells> cells) : mCells(std::move(cells)) { connect(mCells->frameComplete, me::updateTexture); }
 
     void render(ARenderContext ctx) override {
         AView::render(ctx);
@@ -155,8 +155,8 @@ public:
     int getContentMinimumHeight() override { return mCells->size().y * SCALE; }
 
 private:
-    _<Cells> mCells;
-    _<ITexture> mTexture;
+    AArc<Cells> mCells;
+    AArc<ITexture> mTexture;
 
     void updateTexture() {
         if (!mTexture) {

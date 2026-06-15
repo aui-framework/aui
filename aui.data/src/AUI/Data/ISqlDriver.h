@@ -19,6 +19,6 @@ class ISqlDriver
 {
 public:
 	virtual AString getDriverName() = 0;
-	virtual _<ISqlDatabase> openDriverConnection(const AString& address, uint16_t port,
+	virtual AArc<ISqlDatabase> openDriverConnection(const AString& address, uint16_t port,
 		const AString& databaseName, const AString& username, const AString& password) = 0;
 };

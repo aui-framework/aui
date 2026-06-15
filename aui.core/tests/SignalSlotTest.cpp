@@ -52,8 +52,8 @@ public:
  */
 class SignalSlotTest : public testing::Test {
 public:
-    _<Master> master;
-    _<Slave> slave;
+    AArc<Master> master;
+    AArc<Slave> slave;
 
     /**
      * Run once per test case before body.

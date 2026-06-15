@@ -23,8 +23,8 @@ public:
 private:
     ASurface* mTargetWindow;
 
-    _<ATreeView> mViewHierarchyTree;
-    _<ViewPropertiesView> mViewPropertiesView;
+    AArc<ATreeView> mViewHierarchyTree;
+    AArc<ViewPropertiesView> mViewPropertiesView;
 
     void forceLayoutUpdate();
 };

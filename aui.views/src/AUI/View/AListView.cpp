@@ -33,7 +33,7 @@ class AListViewContainer : public AViewContainer {
                                   getSize().y - mPadding.vertical());
     }
 
-    _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept override {
+    AArc<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept override {
         switch (getViews().size()) {
             case 0:
                 return nullptr;
@@ -97,12 +97,12 @@ class AListItem : public ALabel, public ass::ISelectable {
 
 AListView::~AListView() {}
 
-AListView::AListView(_<IListModel<AString>> model) {
+AListView::AListView(AArc<IListModel<AString>> model) {
     mObserver = _new<AListModelObserver<AString>>(this);
     setModel(std::move(model));
 }
 
-void AListView::setModel(_<IListModel<AString>> model) {
+void AListView::setModel(AArc<IListModel<AString>> model) {
     horizontalScrollbar()->setAppearance(ass::ScrollbarAppearance::NEVER);
     setContents(mContent = _new<AListViewContainer>());
 

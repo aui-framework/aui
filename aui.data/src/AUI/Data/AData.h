@@ -14,5 +14,5 @@
 
 namespace AData
 {
-	void API_AUI_DATA setDatabase(_<ASqlDatabase> db);
+	void API_AUI_DATA setDatabase(AArc<ASqlDatabase> db);
 };

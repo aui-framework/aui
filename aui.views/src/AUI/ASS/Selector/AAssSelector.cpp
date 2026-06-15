@@ -21,10 +21,10 @@ bool ass::IAssSubSelector::isStateApplicable(AView* view) {
     return true;
 }
 
-void ass::IAssSubSelector::setupConnections(AView* view, const _<AAssHelper>& helper) {
+void ass::IAssSubSelector::setupConnections(AView* view, const AArc<AAssHelper>& helper) {
 }
 
-void ass::AAssSelector::setupConnections(AView* view, const _<AAssHelper>& helper) const {
+void ass::AAssSelector::setupConnections(AView* view, const AArc<AAssHelper>& helper) const {
     for (const auto& s : mSubSelectors) {
         if (s->isPossiblyApplicable(view)) {
             s->setupConnections(view, helper);

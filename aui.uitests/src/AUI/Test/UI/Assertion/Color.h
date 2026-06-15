@@ -25,7 +25,7 @@ struct ViewAssertionAverageColor {
 
     ViewAssertionAverageColor(const AColor& color, aui::float_within_0_1 inaccuracy = 0.1f) : mColor(color), mInaccuracy(inaccuracy) {}
 
-    bool operator()(const _<AView>& v) {
+    bool operator()(const AArc<AView>& v) {
         glm::vec3 average(ScreenshotAnalyzer::makeScreenshot().clip(v).averageColor());
         auto d = glm::length2(average - glm::vec3(mColor)) / 3;
         return d <= mInaccuracy;
@@ -48,7 +48,7 @@ struct ViewAssertionPixelColorAt {
 
     ViewAssertionPixelColorAt(RelativePosition relativePosition, const AColor& color, aui::float_within_0_1 inaccuracy = 0.1f): mRelativePosition(relativePosition), mColor(color), mInaccuracy(inaccuracy) {}
 
-    bool operator()(const _<AView>& v) {
+    bool operator()(const AArc<AView>& v) {
         auto screenshot = ScreenshotAnalyzer::makeScreenshot().clip(v);
         auto mappedPos = glm::uvec2(glm::vec2(screenshot.image().size() - 1u) * glm::vec2(mRelativePosition));
         auto target = glm::vec3(screenshot.image().get(glm::min(mappedPos, screenshot.image().size() - 1u)));

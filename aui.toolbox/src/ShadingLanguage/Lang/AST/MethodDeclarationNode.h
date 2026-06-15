@@ -17,8 +17,8 @@ private:
 
 public:
     MethodDeclarationNode(const AString& returnType, const AString& name,
-                          const AVector<_<VariableDeclarationNode>>& args, const AString& className,
-                          const AVector<_<INode>>& code)
+                          const AVector<AArc<VariableDeclarationNode>>& args, const AString& className,
+                          const AVector<AArc<INode>>& code)
             : FunctionDeclarationNode(returnType, name, args, code), mClassName(className) {}
 
     const AString& getClassName() const {

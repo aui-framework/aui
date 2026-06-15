@@ -86,13 +86,13 @@ namespace aui {
 template<typename T>
 struct ASerializable<T, std::enable_if_t<std::is_arithmetic_v<T>>>: aui::raw_serializable<T> {};
 
-// _<SerializableType>
+// AArc<SerializableType>
 template<typename T>
-struct ASerializable<_<T>> {
-    static void write(IOutputStream& os, const _<T>& value) {
+struct ASerializable<AArc<T>> {
+    static void write(IOutputStream& os, const AArc<T>& value) {
         aui::serialize(os, *value);
     }
-    static void read(IInputStream& is, _<T>& t) {
+    static void read(IInputStream& is, AArc<T>& t) {
         t = _new<T>(std::move(aui::deserialize<T>(is)));
     }
 };
