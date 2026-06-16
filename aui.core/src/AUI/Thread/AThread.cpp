@@ -80,9 +80,17 @@ void executeForcedPayload() {
     }
 }
 }   // namespace aui::impl::AThread
-class CurrentThread : public AAbstractThread {
+
+class NonAUIThread : public AAbstractThread {
 public:
-    using AAbstractThread::AAbstractThread;
+    NonAUIThread(const id& id) noexcept : AAbstractThread(id) {
+#if AUI_PLATFORM_LINUX
+        AString pThreadName;
+        pThreadName.reserve(0x100);
+        pThreadName.resize(pthread_getname_np(pthread_self(), pThreadName.data(), pThreadName.capacity()));
+        mThreadName = "{} ({})"_format(pThreadName, gettid());
+#endif
+    }
 };
 
 AAbstractThread::AAbstractThread(const id& id) noexcept : mId(id) {}
@@ -202,7 +210,7 @@ const _<AAbstractThread>& AThread::current() {
     auto& t = threadStorage();
     if (t == nullptr)   // abstract thread
     {
-        t = aui::ptr::manage_shared(new CurrentThread(std::this_thread::get_id()));
+        t = aui::ptr::manage_shared(new NonAUIThread(std::this_thread::get_id()));
     }
 
     return t;

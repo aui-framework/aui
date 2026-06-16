@@ -116,7 +116,7 @@ TEST(Coroutines, CoAwait) {
 
     AEventLoop loop;
     IEventLoop::Handle h(&loop);
-    while (async.size() > 0) {
+    while (!async.empty()) {
         loop.iteration();
     }
     /// [co_await1]
@@ -137,7 +137,7 @@ TEST(Coroutines, CoAwaitException) {
 
     AEventLoop loop;
     IEventLoop::Handle h(&loop);
-    while (async.size() > 0) {
+    while (!async.empty()) {
         loop.iteration();
     }
 }
@@ -153,7 +153,7 @@ TEST(Coroutines, CoAwaitPreservesThread) {
 
     AEventLoop loop;
     IEventLoop::Handle h(&loop);
-    while (async.size() > 0) {
+    while (!async.empty()) {
         loop.iteration();
     }
     /// [co_await1]
@@ -192,7 +192,7 @@ TEST(Coroutines, CoAwait3rdPartyCoro) {
 
     AEventLoop loop;
     IEventLoop::Handle h(&loop);
-    while (async.size() > 0) {
+    while (!async.empty()) {
         loop.iteration();
     }
     thread.join();

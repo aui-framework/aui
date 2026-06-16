@@ -103,7 +103,13 @@ public:
     [[nodiscard]]
     std::size_t size() const {
         std::unique_lock lock(mSync);
-        return mFutureSet.size();
+        return mFutureSet.size() + mCustomTypeFutures.size();
+    }
+
+    [[nodiscard]]
+    bool empty() const {
+        std::unique_lock lock(mSync);
+        return mFutureSet.empty() && mCustomTypeFutures.empty();
     }
 
     void waitForAll() {

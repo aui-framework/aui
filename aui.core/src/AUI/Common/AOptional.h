@@ -523,13 +523,28 @@ public:
     }
 
     template<typename F>
-    constexpr T& valueOr(F&& alternative) const {
-        if (mPtr) return *mPtr;
-        // For references, alternative must provide a T&
-        if constexpr (std::is_invocable_v<F>) {
-            return alternative();
-        } else {
-            static_assert(std::is_same_v<F, void>, "valueOr for AOptional<T&> requires invocable returning T&");
+    constexpr T valueOr(F&& alternative) const {
+        if (hasValue()) {
+            return value();
+        }
+
+        constexpr bool isSame = std::is_constructible_v<T, F>;
+        constexpr bool isInvocable = std::is_invocable_v<F>;
+
+        static_assert(isSame || isInvocable, "F is neither same as T nor invokable returning T nor invokable throwing a exception");
+
+        if constexpr (isSame) {
+            return std::forward<F>(alternative);
+        } else if constexpr(isInvocable) {
+            if constexpr (std::is_same_v<std::invoke_result_t<F>, void>) {
+                // if F returns void, we expect that used throws an exception in the lambda.
+                alternative();
+                AUI_ASSERT_NO_CONDITION("valueOr lambda returns void; either return a value or throw an exception");
+                // stub exception
+                throw std::runtime_error("valueOr lambda returns void; either return a value or throw an exception");
+            } else {
+                return alternative();
+            }
         }
     }
 
