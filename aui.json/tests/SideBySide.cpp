@@ -25,13 +25,13 @@
 // this suite of cases is designed to test AJson's ability to reproduce exactly the same JSON.
 
 // uncomment this to eat a large json file for further analysis with diff tool.
-TEST(Json, ReproduceFile)
-{
-    AString original = AString::fromUtf8(AByteBuffer::fromStream(AFileInputStream("original.json")));
-    auto processed = AJson::toString(AJson::fromString(original));
-    AFileOutputStream("processed.json") << processed; // for debugging
-    EXPECT_EQ(original, processed);
-}
+// TEST(Json, ReproduceFile)
+// {
+//     AString original = AString::fromUtf8(AByteBuffer::fromStream(AFileInputStream("original.json")));
+//     auto processed = AJson::toString(AJson::fromString(original));
+//     AFileOutputStream("processed.json") << processed; // for debugging
+//     EXPECT_EQ(original, processed);
+// }
 
 
 static void reproduceCase(const AString& string) {
