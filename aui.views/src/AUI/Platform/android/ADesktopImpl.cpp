@@ -37,7 +37,7 @@ ADesktop::browseForFile(ASurface* parent,
 }
 
 
-_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+AArc<IDrawable> ADesktop::iconOfFile(const APath& file) {
     return nullptr;
 }
 

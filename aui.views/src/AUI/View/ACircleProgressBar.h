@@ -58,7 +58,7 @@ public:
     }
 
     [[nodiscard]]
-    const _<Inner>& innerView() const noexcept {
+    const AArc<Inner>& innerView() const noexcept {
         return mInner;
     }
 
@@ -69,7 +69,7 @@ public:
 
 private:
     aui::float_within_0_1 mValue = 0.f;
-    _<Inner> mInner;
+    AArc<Inner> mInner;
 
 
 signals:
@@ -88,7 +88,7 @@ struct CircleProgressBar {
      */
     contract::In<aui::float_within_0_1> progress;
 
-    API_AUI_VIEWS _<AView> operator()();
+    API_AUI_VIEWS AArc<AView> operator()();
 };
 }
 

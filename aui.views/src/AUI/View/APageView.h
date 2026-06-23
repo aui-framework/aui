@@ -29,7 +29,7 @@ private:
 public:
     APageView();
 
-    void addPage(const _<AView>& view);
+    void addPage(const AArc<AView>& view);
     void setPageId(unsigned int pageId);
 
     unsigned getPageId() const {

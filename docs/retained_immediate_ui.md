@@ -33,7 +33,7 @@ public:
     }
 
 private:
-    _<AButton> mButton;
+    AArc<AButton> mButton;
     int mCounter = 0;
 };
 ```
@@ -159,7 +159,7 @@ provide a named-argument syntax. This makes the view's requirements and capabili
 while reducing the amount of boilerplate code needed to create and manage views.
 
 AUI allows you to choose using between retained and declarative mode. Under the hood, both `_new<AButton>` and
-[declarative::Button] evaluate to creating a new instance of `_<AButton>`, which allows you to fall back to retained
+[declarative::Button] evaluate to creating a new instance of `AArc<AButton>`, which allows you to fall back to retained
 mode in declarative UIs if necessary. Due to growing expectations in regard to dynamism and responsiveness, we strongly
 suggest using declarative mode only.
 

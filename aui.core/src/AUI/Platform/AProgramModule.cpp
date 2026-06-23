@@ -23,11 +23,11 @@
 
 #endif
 
-_<AProgramModule> AProgramModule::load(const AString& path) {
+AArc<AProgramModule> AProgramModule::load(const AString& path) {
 #if AUI_PLATFORM_WIN
     auto fullname = path + "." + getDllExtension();
 #else
-    auto doLoad = [](const APath& fp) -> _<AProgramModule> {
+    auto doLoad = [](const APath& fp) -> AArc<AProgramModule> {
         auto name = fp.toStdString();
         auto lib = dlopen(name.c_str(), RTLD_LAZY);
         if (lib) {
@@ -115,7 +115,7 @@ AProgramModule::ProcRawPtr AProgramModule::getProcAddressRawPtr(const AString& n
     return r;
 }
 
-_<AProgramModule> AProgramModule::self() {
+AArc<AProgramModule> AProgramModule::self() {
 #if AUI_PLATFORM_WIN
     return aui::ptr::manage_shared(new AProgramModule(GetModuleHandle(nullptr)));
 #else

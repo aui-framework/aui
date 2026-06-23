@@ -14,5 +14,5 @@
 #include <AUI/View/AView.h>
 
 namespace common_views {
-_<AView> divider();
+AArc<AView> divider();
 }

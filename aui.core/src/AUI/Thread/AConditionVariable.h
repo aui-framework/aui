@@ -43,7 +43,7 @@ private:
     template<typename Predicate>
     struct PredicateHelper {
         Predicate predicate;
-        _<AAbstractThread> thread;
+        AArc<AAbstractThread> thread;
 
         PredicateHelper(Predicate predicate) : predicate(std::move(predicate)), thread(AThread::current()) {}
         bool operator()() noexcept {

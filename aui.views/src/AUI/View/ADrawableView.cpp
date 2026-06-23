@@ -19,7 +19,7 @@
 #include <AUI/ASS/ASS.h>
 #include <AUI/Util/AImageDrawable.h>
 
-ADrawableView::ADrawableView(_<IDrawable> drawable) : mDrawable(std::move(drawable)) {
+ADrawableView::ADrawableView(AArc<IDrawable> drawable) : mDrawable(std::move(drawable)) {
 
 }
 

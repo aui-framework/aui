@@ -52,7 +52,7 @@ public:
         /**
          * @brief View to highlight.
          */
-        AProperty<_weak<AView>> highlightView;
+        AProperty<AWeakArc<AView>> highlightView;
 
         /**
          * @brief Highlight redraw requests.
@@ -116,7 +116,7 @@ public:
     /**
      * @brief Iterates over focus chain, from parent to child.
      */
-    template<aui::invocable<const _<AView>&> Callback>
+    template<aui::invocable<const AArc<AView>&> Callback>
     void iterateOverFocusChain(Callback&& callback) {
         for (auto view = mFocusedView.lock(); view;) {
             callback(view);
@@ -173,12 +173,12 @@ public:
         return mDpiRatio;
     }
 
-    _<AView> getFocusedView() const
+    AArc<AView> getFocusedView() const
     {
         return mFocusedView.lock();
     }
 
-    void setFocusedView(const _<AView>& view);
+    void setFocusedView(const AArc<AView>& view);
     void updateFocusChain();
     void onPointerPressed(const APointerPressedEvent& event) override;
 
@@ -244,7 +244,7 @@ public:
      * auto surfaceContainer = AWindow::current()->createOverlappingSurface(view->getPositionInWindow() + view->getSize(), {100, 100});
      * ```
      */
-    _<AOverlappingSurface> createOverlappingSurface(const glm::ivec2& position,
+    AArc<AOverlappingSurface> createOverlappingSurface(const glm::ivec2& position,
                                                     const glm::ivec2& size,
                                                     bool closeOnClick = false) {
         return createOverlappingSurface([&](unsigned attempt) -> AOptional<glm::ivec2> {
@@ -266,7 +266,7 @@ public:
      *        dropdown and context menus.
      * @return a new surface.
      */
-    _<AOverlappingSurface> createOverlappingSurface(const std::function<AOptional<glm::ivec2>(unsigned)>& positionFactory,
+    AArc<AOverlappingSurface> createOverlappingSurface(const std::function<AOptional<glm::ivec2>(unsigned)>& positionFactory,
                                                     const glm::ivec2& size,
                                                     bool closeOnClick = true) {
         glm::ivec2 position = {0, 0};
@@ -290,7 +290,7 @@ public:
         mOverlappingSurfaces << tmp;
         return tmp;
     }
-    void closeOverlappingSurface(const _<AOverlappingSurface>& surface) {
+    void closeOverlappingSurface(const AArc<AOverlappingSurface>& surface) {
         if (mOverlappingSurfaces.erase(surface) > 0) {
             closeOverlappingSurfaceImpl(surface);
         }
@@ -438,8 +438,8 @@ protected:
     /**
      * @see ASurface::createOverlappingSurface
      */
-    virtual _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
-    virtual void closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) = 0;
+    virtual AArc<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) = 0;
+    virtual void closeOverlappingSurfaceImpl(AArc<AOverlappingSurface> surface) = 0;
 
     virtual void createDevtoolsWindow();
 
@@ -455,7 +455,7 @@ protected:
 private:
     void processTouchscreenKeyboardRequest();
 
-    _weak<AView> mFocusedView;
+    AWeakArc<AView> mFocusedView;
     aui::lazy<Profiling> mProfiling = [] { return Profiling{}; };
     float mDpiRatio = 1.f;
     ScalingParams mScalingParams;
@@ -473,7 +473,7 @@ private:
     KeyboardRequest mKeyboardRequestedState = KeyboardRequest::NO_OP;
 
     glm::ivec2 mMousePos = {0, 0};
-    ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
+    ASet<AArc<AOverlappingSurface>> mOverlappingSurfaces;
 
     struct Scroll {
         APointerIndex pointer;

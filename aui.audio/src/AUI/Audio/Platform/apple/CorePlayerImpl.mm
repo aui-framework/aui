@@ -78,7 +78,7 @@ struct CoreAudioInstance {
     }
     
     [[nodiscard]]
-    const _<AThread> thread() const noexcept {
+    const AArc<AThread> thread() const noexcept {
         return mThread;
     }
     
@@ -103,7 +103,7 @@ struct CoreAudioInstance {
     }
     
 private:
-    _<AThread> mThread;
+    AArc<AThread> mThread;
     AudioQueueRef mAudioQueue = nullptr;
     AVector<AudioQueueBufferRef> mAudioQueueBuffers;
     AQueue<AudioQueueBufferRef> mEmptyBuffers;

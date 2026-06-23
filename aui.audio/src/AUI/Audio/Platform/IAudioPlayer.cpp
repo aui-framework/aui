@@ -21,11 +21,11 @@ using DefaultSystemPlayer = CoreAudioPlayer;
 using DefaultSystemPlayer = StubAudioPlayer;
 #endif
 
-_<IAudioPlayer> IAudioPlayer::fromUrl(AUrl url) {
+AArc<IAudioPlayer> IAudioPlayer::fromUrl(AUrl url) {
     return _new<DefaultSystemPlayer>(std::move(url));
 }
 
-_<IAudioPlayer> IAudioPlayer::fromStream(_<ISoundInputStream> stream) {
+AArc<IAudioPlayer> IAudioPlayer::fromStream(AArc<ISoundInputStream> stream) {
     return _new<DefaultSystemPlayer>(std::move(stream));
 }
 
@@ -33,7 +33,7 @@ IAudioPlayer::IAudioPlayer(AUrl url) : mUrl(std::move(url)) {
     initialize();
 }
 
-IAudioPlayer::IAudioPlayer(_<ISoundInputStream> stream) {
+IAudioPlayer::IAudioPlayer(AArc<ISoundInputStream> stream) {
     mSourceStream = std::move(stream);
     mResamplerStream.emplace(aui::audio::platform::requested_sample_rate, mSourceStream);
     mResamplerStream->setVolume(mVolume);

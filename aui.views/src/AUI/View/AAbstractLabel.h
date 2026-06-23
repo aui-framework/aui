@@ -49,14 +49,14 @@ public:
     int getContentMinimumWidth() override;
     int getContentMinimumHeight() override;
 
-    const _<IDrawable>& getIcon() const {
+    const AArc<IDrawable>& getIcon() const {
         return mIcon;
     }
 
     AString toString() const override;
 
     [[deprecated("rudimentary API")]]
-    void setIcon(const _<IDrawable>& drawable) {
+    void setIcon(const AArc<IDrawable>& drawable) {
         mIcon = drawable;
         redraw();
     }
@@ -103,9 +103,9 @@ public:
     void invalidateAllStyles() override;
 
 protected:
-    _<IRenderer::IPrerenderedString> mPrerendered;
+    AArc<IRenderer::IPrerenderedString> mPrerendered;
 
-    const _<IRenderer::IPrerenderedString>& getPrerendered() {
+    const AArc<IRenderer::IPrerenderedString>& getPrerendered() {
         return mPrerendered;
     }
 
@@ -120,7 +120,7 @@ protected:
 private:
     AString mText;
     emits<AString> mTextChanged;
-    _<IDrawable> mIcon;
+    AArc<IDrawable> mIcon;
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
     TextTransform mTextTransform = TextTransform::NONE;
 
@@ -143,11 +143,11 @@ private:
 template<>
 struct ADataBindingDefault<AAbstractLabel, AString> {
 public:
-    static auto property(const _<AAbstractLabel>& view) {
+    static auto property(const AArc<AAbstractLabel>& view) {
         return view->text();
     }
 
-    static void setup(const _<AAbstractLabel>& view) {}
+    static void setup(const AArc<AAbstractLabel>& view) {}
 
     static auto getGetter() {
         return (ASignal<AString> AAbstractLabel::*) nullptr;

@@ -18,7 +18,7 @@
 #include <random>
 #include <chrono>
 
-_<AByteBuffer> ACrypto::safeRandom() {
+AArc<AByteBuffer> ACrypto::safeRandom() {
     auto bb = _new<AByteBuffer>();
 
     auto seed1 = std::chrono::high_resolution_clock::now().time_since_epoch().count();

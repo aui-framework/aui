@@ -178,7 +178,7 @@ public:
             auto dbResult = Autumn::get<ASqlDatabase>()->query(mSql, mWhereParams);
 
             AVector<size_t> sqlColumnToModelFieldIndexMapping;
-            AVector<_<AField<Model>>> fields;
+            AVector<AArc<AField<Model>>> fields;
             fields << AModelMeta<Model>::getFields().valueVector();
             /*
             {
@@ -189,7 +189,7 @@ public:
                     columnNameToFieldIndexMapping[column.name] = counter++;
                 }
 
-                for (std::pair<AString, _<AField<Model>>>& field : AModelMeta<Model>::fields) {
+                for (std::pair<AString, AArc<AField<Model>>>& field : AModelMeta<Model>::fields) {
                     sqlColumnToModelFieldIndexMapping.push_back(columnNameToFieldIndexMapping[field.first]);
                     fields << field.second;
                 }
@@ -317,7 +317,7 @@ public:
         Insert insertStatement = insert(AModelMeta<Model>::getFields().keyVector());
 
         AVector<AVariant> row;
-        for (std::pair<AString, _<AField<Model>>> field : AModelMeta<Model>::getFields()) {
+        for (std::pair<AString, AArc<AField<Model>>> field : AModelMeta<Model>::getFields()) {
             row << field.second->get(model);
         }
         insertStatement.row(row);
@@ -334,7 +334,7 @@ public:
         Update updateStatement = update();
 
         AVector<AVariant> row;
-        for (const std::pair<AString, _<AField<Model>>>& field : AModelMeta<Model>::getFields()) {
+        for (const std::pair<AString, AArc<AField<Model>>>& field : AModelMeta<Model>::getFields()) {
             if (field.first != "id")
                 updateStatement.set(field.first, field.second->get(model));
         }

@@ -20,7 +20,7 @@ using namespace ass;
 using namespace declarative;
 
 namespace {
-_<AView> coloredRect(AColor c) {
+AArc<AView> coloredRect(AColor c) {
     return Centered {
         _new<AView>() AUI_OVERRIDE_STYLE {
           BackgroundSolid { c },
@@ -29,14 +29,14 @@ _<AView> coloredRect(AColor c) {
     };
 }
 
-_<AView> makeLink(AString text, AUrl destination) {
-    _<AView> l = Label { std::move(text) };
+AArc<AView> makeLink(AString text, AUrl destination) {
+    AArc<AView> l = Label { std::move(text) };
     AObject::connect(l->clicked, l, [destination = std::move(destination)] { APlatform::openUrl(destination); });
     l->setCustomStyle({ ACursor::POINTER, Margin { 0 }, Padding { 0 }, BorderBottom { 1_px, AColor::BLACK } });
     return l;
 }
 
-_<ALabel> header(AString title) {
+AArc<ALabel> header(AString title) {
     return Label { std::move(title) } AUI_OVERRIDE_STYLE { FontSize{16_pt}, Padding{0}, Margin { 4_dp, 24_dp, 8_dp } };
 }
 }   // namespace

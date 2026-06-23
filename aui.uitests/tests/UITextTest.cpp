@@ -85,7 +85,7 @@ TEST_F(UIText, Basic) {
 
 TEST_F(UIText, Visibility) {
     auto w = _new<AWindow>();
-    _<AView> label = Label { "Hello" };
+    AArc<AView> label = Label { "Hello" };
     auto mock = _new<ViewMock>();
 
     testing::InSequence s;

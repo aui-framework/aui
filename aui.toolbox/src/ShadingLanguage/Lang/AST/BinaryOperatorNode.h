@@ -11,18 +11,18 @@
 class BinaryOperatorNode: public ExpressionNode {
     friend class Parser;
 private:
-    _<ExpressionNode> mLeft;
-    _<ExpressionNode> mRight;
+    AArc<ExpressionNode> mLeft;
+    AArc<ExpressionNode> mRight;
 
 public:
-    BinaryOperatorNode(_<ExpressionNode> left, const _<ExpressionNode> right) : mLeft(left), mRight(right) {}
+    BinaryOperatorNode(AArc<ExpressionNode> left, const AArc<ExpressionNode> right) : mLeft(left), mRight(right) {}
 
 
-    const _<ExpressionNode>& getLeft() const {
+    const AArc<ExpressionNode>& getLeft() const {
         return mLeft;
     }
 
-    const _<ExpressionNode>& getRight() const {
+    const AArc<ExpressionNode>& getRight() const {
         return mRight;
     }
 };

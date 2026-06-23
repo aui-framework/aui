@@ -108,5 +108,5 @@ private:
      * Avoid holding a strong reference - we need to keep future cancellation on reference count exceeding
      * even while actual future execution.
      */
-    _weak<typename AFuture<T>::Inner> mFutureWeakReference;
+    AWeakArc<typename AFuture<T>::Inner> mFutureWeakReference;
 };

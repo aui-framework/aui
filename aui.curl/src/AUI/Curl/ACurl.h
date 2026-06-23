@@ -257,7 +257,7 @@ public:
          * @param inputStream input stream to get data to upload from.
          * @return this
          */
-        Builder& withInputStream(_<IInputStream> inputStream) {
+        Builder& withInputStream(AArc<IInputStream> inputStream) {
             withBody([inputStream = std::move(inputStream)](char* dst, std::size_t length) {
                 auto v = inputStream->read(dst, length);
                 if (v == 0) {
@@ -328,7 +328,7 @@ public:
             });
         }
 
-        Builder& withOutputStream(_<IOutputStream> dst) {
+        Builder& withOutputStream(AArc<IOutputStream> dst) {
             return withWriteCallback([dst = std::move(dst)](AByteBufferView b) {
                 (*dst) << b;
                 return b.size();

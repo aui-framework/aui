@@ -20,5 +20,5 @@ public:
     ~DevtoolsThreadsTab() override = default;
 
 private:
-    _<ATimer> mUpdateTimer;
+    AArc<ATimer> mUpdateTimer;
 };

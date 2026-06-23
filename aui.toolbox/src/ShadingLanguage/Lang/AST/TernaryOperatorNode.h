@@ -10,26 +10,26 @@
 
 class TernaryOperatorNode: public ExpressionNode {
 private:
-    _<ExpressionNode> mCondition;
-    _<ExpressionNode> mOnTrue;
-    _<ExpressionNode> mOnFalse;
+    AArc<ExpressionNode> mCondition;
+    AArc<ExpressionNode> mOnTrue;
+    AArc<ExpressionNode> mOnFalse;
 
 public:
 
-    TernaryOperatorNode(const _<ExpressionNode>& condition, const _<ExpressionNode>& onTrue,
-                        const _<ExpressionNode>& onFalse) : mCondition(condition), mOnTrue(onTrue), mOnFalse(onFalse) {}
+    TernaryOperatorNode(const AArc<ExpressionNode>& condition, const AArc<ExpressionNode>& onTrue,
+                        const AArc<ExpressionNode>& onFalse) : mCondition(condition), mOnTrue(onTrue), mOnFalse(onFalse) {}
 
     void acceptVisitor(INodeVisitor& v) override;
 
-    const _<ExpressionNode>& getCondition() const {
+    const AArc<ExpressionNode>& getCondition() const {
         return mCondition;
     }
 
-    const _<ExpressionNode>& getOnTrue() const {
+    const AArc<ExpressionNode>& getOnTrue() const {
         return mOnTrue;
     }
 
-    const _<ExpressionNode>& getOnFalse() const {
+    const AArc<ExpressionNode>& getOnFalse() const {
         return mOnFalse;
     }
 };

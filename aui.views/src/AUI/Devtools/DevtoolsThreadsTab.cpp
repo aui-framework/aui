@@ -97,7 +97,7 @@ DevtoolsThreadsTab::DevtoolsThreadsTab(AThreadPool& targetThreadPool) {
         LayoutSpacing { 1_px },
     };
 
-    auto addThread = [&](const _<AAbstractThread>& thread) {
+    auto addThread = [&](const AArc<AAbstractThread>& thread) {
         views->addViews({
           _new<ALabel>(thread->threadName()),
           _new<WatcherView>([thread] {

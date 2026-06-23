@@ -28,7 +28,7 @@ using AMenuModel = AVector<AMenuItem>;
 
 class API_AUI_VIEWS AMenu {
 private:
-    static _<IMenuProvider>& provider();
+    static AArc<IMenuProvider>& provider();
 public:
     static void show(const AMenuModel& model);
     static void close();

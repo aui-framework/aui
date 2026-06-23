@@ -215,7 +215,7 @@ public:
      * @param ws window style flags
      * @return created window, AWindow::show() is not called
      */
-    static _<AWindow> wrapViewToWindow(const _<AView>& view, const AString& title, int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT);
+    static AArc<AWindow> wrapViewToWindow(const AArc<AView>& view, const AString& title, int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT);
 
     /**
      * @return Current window for current thread.
@@ -228,7 +228,7 @@ public:
      * @param other other window
      * @return coordinates in the space of the other window
      */
-    [[nodiscard]] glm::ivec2 mapPositionTo(const glm::ivec2& position, _<AWindow> other);
+    [[nodiscard]] glm::ivec2 mapPositionTo(const glm::ivec2& position, AArc<AWindow> other);
 
     /**
      * @brief Translates coordinates from the coordinate space of this window to the coordinate space of the monitor.
@@ -244,9 +244,9 @@ public:
      */
     [[nodiscard]] glm::ivec2 mapPosition(const glm::ivec2& position);
 
-    _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override;
+    AArc<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override;
 
-    void closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) override;
+    void closeOverlappingSurfaceImpl(AArc<AOverlappingSurface> surface) override;
     virtual void onCloseButtonClicked();
 
     void forceUpdateCursor() override;
@@ -353,7 +353,7 @@ private:
     /**
      * @brief Handles self shared pointer.
      */
-    _<AWindow> mSelfHolder;
+    AArc<AWindow> mSelfHolder;
 
     AString mWindowTitle;
 

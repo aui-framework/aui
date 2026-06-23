@@ -11,7 +11,7 @@
 
 #include "AGridLayout.h"
 
-int AGridLayout::indexOf(_<AView> view)
+int AGridLayout::indexOf(AArc<AView> view)
 {
 	int counter = 0;
 	for (auto& i : mCells)
@@ -30,10 +30,10 @@ int& AGridLayout::indexAt(int x, int y)
 	return mIndices[y * mCellsX + x];
 }
 
-AVector<_<AView>> AGridLayout::getRow(int row)
+AVector<AArc<AView>> AGridLayout::getRow(int row)
 {
 	ASet<int> indices;
-	AVector<_<AView>> result;
+	AVector<AArc<AView>> result;
 
 	for (auto i : mIndices)
 	{
@@ -51,10 +51,10 @@ AVector<_<AView>> AGridLayout::getRow(int row)
 	return result;
 }
 
-AVector<_<AView>> AGridLayout::getColumn(int column)
+AVector<AArc<AView>> AGridLayout::getColumn(int column)
 {
 	ASet<int> indices;
-	AVector<_<AView>> result;
+	AVector<AArc<AView>> result;
 
 	for (auto i : mIndices)
 	{
@@ -105,7 +105,7 @@ void AGridLayout::onResize(int x, int y, int width, int height)
 	}
 }
 
-void AGridLayout::addView(const _<AView>& view, AOptional<size_t> index) {
+void AGridLayout::addView(const AArc<AView>& view, AOptional<size_t> index) {
 	if (mCurrentIndex < mIndices.size())
 	{
 		addView(view, mCurrentIndex % mCellsX, mCurrentIndex / mCellsX);
@@ -113,7 +113,7 @@ void AGridLayout::addView(const _<AView>& view, AOptional<size_t> index) {
 	}
 }
 
-void AGridLayout::addView(const _<AView>& view, int x, int y)
+void AGridLayout::addView(const AArc<AView>& view, int x, int y)
 {
 	auto& index = indexAt(x, y);
 	if (index != -1)
@@ -165,6 +165,6 @@ int AGridLayout::getMinimumHeight()
 	return min;
 }
 
-AVector<_<AView>> AGridLayout::getAllViews() {
+AVector<AArc<AView>> AGridLayout::getAllViews() {
     return { mCells.begin(), mCells.end() };
 }

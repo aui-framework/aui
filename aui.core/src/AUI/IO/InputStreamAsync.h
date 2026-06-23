@@ -20,12 +20,12 @@
 class API_AUI_CORE InputStreamAsync: public AObject
 {
 private:
-	_<AThread> mReadThread;
+	AArc<AThread> mReadThread;
 	
 public:
-	InputStreamAsync(_<IInputStream> inputStream);
+	InputStreamAsync(AArc<IInputStream> inputStream);
 	
 signals:
-	emits<_<AByteBuffer>> read;
+	emits<AArc<AByteBuffer>> read;
 	emits<> finished;
 };

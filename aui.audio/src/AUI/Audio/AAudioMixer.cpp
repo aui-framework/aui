@@ -7,7 +7,7 @@
 #include "Util.h"
 #include "AUI/Util/kAUI.h"
 
-void AAudioMixer::addSoundSource(aui::non_null<_<IAudioPlayer>> s) {
+void AAudioMixer::addSoundSource(aui::non_null<AArc<IAudioPlayer>> s) {
 #if AUI_DEBUG
     std::unique_lock lock(mConcurrentAccessCheck, std::try_to_lock);
     AUI_ASSERTX(lock.owns_lock(), "concurrent access to AAudioMixer is not allowed");
@@ -23,7 +23,7 @@ void AAudioMixer::addSoundSource(aui::non_null<_<IAudioPlayer>> s) {
     mPlayers.push_back(std::move(s.value));
 }
 
-void AAudioMixer::removeSoundSource(aui::non_null<_<IAudioPlayer>> s) {
+void AAudioMixer::removeSoundSource(aui::non_null<AArc<IAudioPlayer>> s) {
 #if AUI_DEBUG
     std::unique_lock lock(mConcurrentAccessCheck, std::try_to_lock);
     AUI_ASSERTX(lock.owns_lock(), "concurrent access to AAudioMixer is not allowed");
@@ -34,7 +34,7 @@ void AAudioMixer::removeSoundSource(aui::non_null<_<IAudioPlayer>> s) {
 size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
     std::memset(destination.data(), 0, destination.size());
     size_t samples_requested = destination.size() / aui::audio::bytesPerSample(aui::audio::platform::requested_sample_format);
-    ASmallVector<_<IAudioPlayer>, 8> itemsToRemove;
+    ASmallVector<AArc<IAudioPlayer>, 8> itemsToRemove;
     size_t result = 0;
     aui::impl::reserveVector(mMixBuffer, samples_requested);
     std::memset(mMixBuffer.data(), 0, samples_requested * sizeof(float));
@@ -45,7 +45,7 @@ size_t AAudioMixer::readSoundData(std::span<std::byte> destination) {
         mPlayers.erase(
             std::remove_if(
                 mPlayers.begin(), mPlayers.end(),
-                [&](_<IAudioPlayer>& player) {
+                [&](AArc<IAudioPlayer>& player) {
                     auto url = [&] {
                       return player->url().map(&AUrl::full).valueOr("unknown url");
                     };

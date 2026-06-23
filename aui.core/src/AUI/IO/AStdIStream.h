@@ -23,7 +23,7 @@ class API_AUI_CORE AStdIStream: public std::istream {
 public:
     class StreamBuf: public std::streambuf  {
     public:
-        StreamBuf(_<IInputStream> is);
+        StreamBuf(AArc<IInputStream> is);
 
         virtual ~StreamBuf();
 
@@ -31,12 +31,12 @@ public:
         int_type underflow() override;
 
     private:
-        _<IInputStream> mIs;
+        AArc<IInputStream> mIs;
 
         char mBuffer[0x1000]{};
     };
 
-    explicit AStdIStream(_<IInputStream> is);
+    explicit AStdIStream(AArc<IInputStream> is);
     ~AStdIStream() {
         delete rdbuf();
     }

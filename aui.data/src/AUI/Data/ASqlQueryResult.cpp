@@ -12,7 +12,7 @@
 #include "ASqlQueryResult.h"
 
 
-ASqlQueryResult::Iterator::Iterator(const _<ISqlDriverResult>& sql): mResult(sql)
+ASqlQueryResult::Iterator::Iterator(const AArc<ISqlDriverResult>& sql): mResult(sql)
 {
 	if (mResult)
 	{

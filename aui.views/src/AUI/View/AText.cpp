@@ -98,7 +98,7 @@ void AText::processString(const AString& string, const AText::ParsedFlags& parse
 }
 
 
-void AText::setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags) {
+void AText::setItems(const AVector<std::variant<AString, AArc<AView>>>& init, const Flags& flags) {
     clearContent();
     auto parsedFlags = parseFlags(flags);
     mParsedFlags = parsedFlags;
@@ -109,7 +109,7 @@ void AText::setItems(const AVector<std::variant<AString, _<AView>>>& init, const
                 [&](const AString& string) {
                     processString(string, parsedFlags, entries);
                 },
-                [&](const _<AView>& view) {
+                [&](const AArc<AView>& view) {
                     mViewsContainer->addView(view);
                     entries << _new<AViewEntry>(view);
                 },
@@ -139,7 +139,7 @@ void AText::setHtml(const AString& html, const Flags& flags) {
 
         void visitAttribute(const AString& name, AString value) override {};
 
-        _<IXmlEntityVisitor> visitEntity(AString entityName) override {
+        AArc<IXmlEntityVisitor> visitEntity(AString entityName) override {
 
             struct ViewEntityVisitor : IXmlEntityVisitor {
                 CommonEntityVisitor& parent;
@@ -152,7 +152,7 @@ void AText::setHtml(const AString& html, const Flags& flags) {
                     attrs[attributeName] = std::move(value);
                 }
 
-                _<IXmlEntityVisitor> visitEntity(AString entityName) override {
+                AArc<IXmlEntityVisitor> visitEntity(AString entityName) override {
                     return nullptr;
                 }
 
@@ -281,7 +281,7 @@ void AText::setMarkdown(const AString& md, const Flags& flags) {
     mParsedFlags = parsedFlags;
 }
 
-void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
+void AText::fillStringCanvas(const AArc<IRenderer::IMultiStringCanvas>& canvas) {
     auto ascender = glm::ivec2 {0,
                                  getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()
     };

@@ -31,7 +31,7 @@ void APageView::setPageId(unsigned int pageId) {
     emit pageChanged();
 }
 
-void APageView::addPage(const _<AView>& view) {
+void APageView::addPage(const AArc<AView>& view) {
     view->setVisibility(mPageId == getViews().size() ? Visibility::VISIBLE : Visibility::GONE);
     addView(view);
 }

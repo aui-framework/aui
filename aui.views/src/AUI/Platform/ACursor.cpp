@@ -20,7 +20,7 @@ ACursor::~ACursor() {
 
 }
 
-ACursor::ACursor(aui::non_null<_<IDrawable>> drawable, int size): mValue(std::move(drawable)), mSize(size) {
+ACursor::ACursor(aui::non_null<AArc<IDrawable>> drawable, int size): mValue(std::move(drawable)), mSize(size) {
 }
 
 ACursor::ACursor(AUrl imageUrl, int size): mValue([&] {

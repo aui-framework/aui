@@ -95,7 +95,7 @@ void setFontCursor(AWindow* window, int cursor) {
 }
 }   // namespace
 
-_<ACursor::Custom> PlatformAbstractionX11::createCustomCursor(AImageView image) { return _new<CursorCustomX11>(image); }
+AArc<ACursor::Custom> PlatformAbstractionX11::createCustomCursor(AImageView image) { return _new<CursorCustomX11>(image); }
 
 void PlatformAbstractionX11::applyNativeCursor(const ACursor& cursor, AWindow* pWindow) {
     if (!bool(PlatformAbstractionX11::ourDisplay)) {
@@ -132,13 +132,13 @@ void PlatformAbstractionX11::applyNativeCursor(const ACursor& cursor, AWindow* p
                   }
               }
           },
-          [&](const _<ACursor::Custom>& custom) {
+          [&](const AArc<ACursor::Custom>& custom) {
               if (auto impl = _cast<CursorCustomX11>(custom)) {
                   setCursor(pWindow, impl->handle());
               }
           },
-          [&](const _<IDrawable>& drawable) {
-              static AMap<_<IDrawable>, AMap<int, _<CursorCustomX11>>> cache;
+          [&](const AArc<IDrawable>& drawable) {
+              static AMap<AArc<IDrawable>, AMap<int, AArc<CursorCustomX11>>> cache;
 
               auto custom = cache[drawable].getOrInsert(int(pWindow->getDpiRatio() * 10), [&] {
                   return _new<CursorCustomX11>(drawable->rasterize(glm::ivec2(cursor.size() * pWindow->getDpiRatio())));

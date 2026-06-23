@@ -131,7 +131,7 @@ TEST(UpdaterTest, ApplyUpdate) {
 namespace {
 class MainWindow {
 public:
-    MainWindow(const _<AUpdater>& updater) {}
+    MainWindow(const AArc<AUpdater>& updater) {}
     void show() {}
 };
 

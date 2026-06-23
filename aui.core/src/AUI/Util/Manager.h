@@ -19,11 +19,11 @@
 template<class T>
 class Manager {
 protected:
-	AMap<AString, _<T>> mItems;
+	AMap<AString, AArc<T>> mItems;
 	virtual _ <T> newItem(const AString& name) = 0;
 public:
 	virtual ~Manager() {}
-	_<T> get(AString name) {
+	AArc<T> get(AString name) {
 		auto it = mItems.find(name);
 		if (it == mItems.end()) {
 			_ <T> p = this->newItem(name);
@@ -33,7 +33,7 @@ public:
 		return it->second;
 	}
 
-	const std::map<AString, _<T>>& getItems() const {
+	const std::map<AString, AArc<T>>& getItems() const {
 		return mItems;
 	}
 };

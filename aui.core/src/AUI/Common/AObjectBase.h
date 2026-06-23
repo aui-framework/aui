@@ -70,10 +70,10 @@ private:
      * @brief Connection owner which destroys the connection in destructor.
      */
     struct ReceiverConnectionOwner {
-        _<AAbstractSignal::Connection> value = nullptr;
+        AArc<AAbstractSignal::Connection> value = nullptr;
 
         ReceiverConnectionOwner() = default;
-        explicit ReceiverConnectionOwner(_<AAbstractSignal::Connection> connection) noexcept
+        explicit ReceiverConnectionOwner(AArc<AAbstractSignal::Connection> connection) noexcept
           : value(std::move(connection)) {}
         ReceiverConnectionOwner(const ReceiverConnectionOwner&) = default;
         ReceiverConnectionOwner(ReceiverConnectionOwner&&) noexcept = default;

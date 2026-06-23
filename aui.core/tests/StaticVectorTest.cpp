@@ -44,9 +44,9 @@ TEST_F(StaticVector, PushBack) {
 }
 
 TEST_F(StaticVector, Deallocation) {
-    _weak<int> v0, v1, v2, v3;
+    AWeakArc<int> v0, v1, v2, v3;
     {
-        AStaticVector<_<int>, 4> vector;
+        AStaticVector<AArc<int>, 4> vector;
         for (int i = 0; i < 4; ++i) {
             vector.push_back(std::make_shared<int>(i));
         }
@@ -71,9 +71,9 @@ TEST_F(StaticVector, Deallocation) {
 
 
 TEST_F(StaticVector, PopFront) {
-    _weak<int> v0, v1, v2, v3;
+    AWeakArc<int> v0, v1, v2, v3;
     {
-        AStaticVector<_<int>, 4> vector;
+        AStaticVector<AArc<int>, 4> vector;
         for (int i = 0; i < 4; ++i) {
             vector.push_back(std::make_shared<int>(i));
         }

@@ -32,11 +32,11 @@ public:
     class Builder {
         friend class ASplitter;
     private:
-        AVector<AVector<_<AView>>> mItems;
+        AVector<AVector<AArc<AView>>> mItems;
         bool mAddSpacers = true;
 
     public:
-        Builder& withItems(AVector<AVector<_<AView>>> items) {
+        Builder& withItems(AVector<AVector<AArc<AView>>> items) {
             mItems = std::move(items);
             return *this;
         }
@@ -46,28 +46,28 @@ public:
             return *this;
         }
 
-        _<AView> build() {
+        AArc<AView> build() {
             auto splitter = aui::ptr::manage_shared(new AGridSplitter);
             if (mAddSpacers) {
                 for (auto& row: mItems) {
                     row.push_back(_new<ASpacerExpanding>());
                 }
                 mItems.push_back(
-                        AVector<_<AView>>::generate(mItems.first().size(), [](size_t) { return _new<ASpacerExpanding>(); }));
+                        AVector<AArc<AView>>::generate(mItems.first().size(), [](size_t) { return _new<ASpacerExpanding>(); }));
             }
             splitter->mItems = std::move(mItems);
             splitter->updateSplitterItems();
             return splitter;
         }
 
-        operator _<AView>() {
+        operator AArc<AView>() {
             return build();
         }
     };
 
 private:
     friend class Builder;
-    AVector<AVector<_<AView>>> mItems;
+    AVector<AVector<AArc<AView>>> mItems;
     ASplitterHelper mHorizontalHelper;
     ASplitterHelper mVerticalHelper;
 

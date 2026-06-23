@@ -72,5 +72,5 @@ public:
     }
 
 private:
-    static _<AStylesheet>& globalStorage();
+    static AArc<AStylesheet>& globalStorage();
 };

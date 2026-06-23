@@ -17,10 +17,10 @@
 class API_AUI_VIEWS ATableView: public AViewContainerBase
 {
 private:
-	_<ITableModel> mModel;
+	AArc<ITableModel> mModel;
 	
 public:
-	ATableView(const _<ITableModel>& model)
+	ATableView(const AArc<ITableModel>& model)
 	{
 
 		setModel(model);
@@ -33,7 +33,7 @@ public:
 
 	~ATableView() override;
 
-	void setModel(_<ITableModel> model);
+	void setModel(AArc<ITableModel> model);
 	
 };
 */

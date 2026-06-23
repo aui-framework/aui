@@ -19,7 +19,7 @@ struct ViewActionMouseMove {
 
     ViewActionMouseMove(const glm::ivec2& position) : position(position) {}
 
-    void operator()(const _<AView>& view) {
+    void operator()(const AArc<AView>& view) {
         uitest::frame();
         auto coords = view->getPositionInWindow() + (position ? *position : (view->getSize() / 2));
         auto window = view->getWindow();

@@ -86,13 +86,13 @@ void ACursor::applyNativeCursor(AWindow* pWindow) const {
                     }
                 }
             },
-            [](const _<Custom>& custom) {
+            [](const AArc<Custom>& custom) {
                 if (auto impl = dynamic_cast<CursorCustomImpl*>(custom.get())) {
                     SetCursor(impl->cursor());
                 }
             },
-            [&](const _<IDrawable>& drawable) {
-                static AMap<_<IDrawable>, AMap<int, _<CursorCustomImpl>>> cache;
+            [&](const AArc<IDrawable>& drawable) {
+                static AMap<AArc<IDrawable>, AMap<int, AArc<CursorCustomImpl>>> cache;
 
                 auto custom = cache[drawable].getOrInsert(int(pWindow->getDpiRatio() * 10), [&] {
                     return _new<CursorCustomImpl>(drawable->rasterize(glm::ivec2(mSize * pWindow->getDpiRatio())));

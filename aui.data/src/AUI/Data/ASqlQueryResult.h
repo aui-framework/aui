@@ -22,10 +22,10 @@ class API_AUI_DATA ASqlQueryResult
 {
 	friend class ASqlDatabase;
 private:
-	_<ISqlDriverResult> mDriverInterface;
+	AArc<ISqlDriverResult> mDriverInterface;
 
 
-	explicit ASqlQueryResult(const _<ISqlDriverResult>& sql_driver_result)
+	explicit ASqlQueryResult(const AArc<ISqlDriverResult>& sql_driver_result)
 		: mDriverInterface(sql_driver_result)
 	{
 	}
@@ -36,11 +36,11 @@ public:
 	{
 		friend class ASqlQueryResult;
 	private:
-		_<ISqlDriverResult> mResult;
-		_<ISqlDriverRow> mRow;
+		AArc<ISqlDriverResult> mResult;
+		AArc<ISqlDriverRow> mRow;
 
 	public:
-		explicit Iterator(const _<ISqlDriverResult>& sql);
+		explicit Iterator(const AArc<ISqlDriverResult>& sql);
 
 		Iterator& operator++()
 		{

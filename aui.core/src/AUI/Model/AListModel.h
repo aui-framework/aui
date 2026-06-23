@@ -248,7 +248,7 @@ public:
      * @return a new AListModel
      */
     template<typename V = StoredType>
-    static _<AListModel<StoredType>> make(const std::initializer_list<V>& t) {
+    static AArc<AListModel<StoredType>> make(const std::initializer_list<V>& t) {
         auto list = _new<AListModel<StoredType>>();
         list->reserve(t.size());
         for (auto& item : t) {
@@ -265,7 +265,7 @@ public:
      * @return a new AListModel
      */
     template<typename V = StoredType>
-    static _<AListModel<StoredType>> fromVector(AVector<V> t) {
+    static AArc<AListModel<StoredType>> fromVector(AVector<V> t) {
         auto list = _new<AListModel<StoredType>>();
         list->mVector = std::move(t);
         return list;
@@ -279,7 +279,7 @@ public:
      * @return a new AListModel
      */
     template<typename V>
-    static _<AListModel<StoredType>> fromVector(std::vector<V> t) {
+    static AArc<AListModel<StoredType>> fromVector(std::vector<V> t) {
         auto list = _new<AListModel<StoredType>>();
         list->mVector = AVector<StoredType>(std::vector<StoredType>(std::move(t)));
         return list;

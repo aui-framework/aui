@@ -127,7 +127,7 @@ void GLSLFrontend::visitNode(const NonIndexedAttributesDeclarationNode& node) {
     }
 }
 
-void GLSLFrontend::parseShader(const _<AST>& ast) {
+void GLSLFrontend::parseShader(const AArc<AST>& ast) {
     mShaderOutput << "#define glsl120\n";
 
     CBasedFrontend::parseShader(ast);

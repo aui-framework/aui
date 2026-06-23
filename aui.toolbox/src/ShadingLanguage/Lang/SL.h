@@ -11,9 +11,9 @@
 #include "AUI/IO/APath.h"
 
 namespace aui::sl {
-    _<AST> parseCode(_<IInputStream> is, APath fileDir = APath::workingDir());
-    _<ExpressionNode> parseExpression(const AString& text);
-    AVector<_<INode>> parseCodeBlock(const AString& text);
+    AArc<AST> parseCode(AArc<IInputStream> is, APath fileDir = APath::workingDir());
+    AArc<ExpressionNode> parseExpression(const AString& text);
+    AVector<AArc<INode>> parseCodeBlock(const AString& text);
 };
 
 

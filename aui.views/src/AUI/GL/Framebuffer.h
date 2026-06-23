@@ -85,7 +85,7 @@ namespace gl {
             return mHandle;
         }
 
-        void attach(_<IRenderTarget> renderTarget, GLenum attachmentType /* = GL_COLOR_ATTACHEMNT0 */) {
+        void attach(AArc<IRenderTarget> renderTarget, GLenum attachmentType /* = GL_COLOR_ATTACHEMNT0 */) {
             renderTarget->attach(*this, attachmentType);
             unbind();
             mAttachedTargets << std::move(renderTarget);
@@ -110,6 +110,6 @@ namespace gl {
         uint32_t mHandle = 0;
         std::uint32_t mSupersamplingRatio = 1; 
         glm::u32vec2 mSize{0, 0};
-        AVector<_<IRenderTarget>> mAttachedTargets;
+        AVector<AArc<IRenderTarget>> mAttachedTargets;
     };
 }

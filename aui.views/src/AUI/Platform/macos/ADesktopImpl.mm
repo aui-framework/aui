@@ -165,7 +165,7 @@ ADesktop::browseForFile(ASurface* parent, const APath& startingLocation, const A
     return AFuture(APath());
 }
 
-_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+AArc<IDrawable> ADesktop::iconOfFile(const APath& file) {
     NSString* filePath = [NSString stringWithUTF8String:file.c_str()];
 
     NSWorkspace* workspace = [NSWorkspace sharedWorkspace];

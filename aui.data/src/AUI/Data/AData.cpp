@@ -12,7 +12,7 @@
 #include "AData.h"
 #include "AUI/Autumn/Autumn.h"
 
-void AData::setDatabase(_<ASqlDatabase> db)
+void AData::setDatabase(AArc<ASqlDatabase> db)
 {
 	Autumn::put(db);
 }

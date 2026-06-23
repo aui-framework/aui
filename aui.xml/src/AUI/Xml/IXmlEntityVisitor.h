@@ -23,7 +23,7 @@ class IXmlEntityVisitor
 {
 public:
 	virtual void visitAttribute(const AString& name, AString value) {};
-	virtual _<IXmlEntityVisitor> visitEntity(AString entityName) { return nullptr; };
+	virtual AArc<IXmlEntityVisitor> visitEntity(AString entityName) { return nullptr; };
 	virtual void visitTextEntity(const AString& entity) {};
     virtual ~IXmlEntityVisitor() = default;
 };

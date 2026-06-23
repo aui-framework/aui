@@ -13,7 +13,7 @@ class SincResampler;
 
 class AAudioResampler {
 public:
-    AAudioResampler(size_t requestedSampleRate, _<ISoundInputStream> stream);
+    AAudioResampler(size_t requestedSampleRate, AArc<ISoundInputStream> stream);
 
     ~AAudioResampler();
 
@@ -27,7 +27,7 @@ public:
     void setVolume(aui::audio::VolumeLevel volume) noexcept;
 
     [[nodiscard]]
-    const _<ISoundInputStream>& source() const { return mSource; }
+    const AArc<ISoundInputStream>& source() const { return mSource; }
 
 private:
     void readCallback(size_t channel, int frames, float* destination);
@@ -43,7 +43,7 @@ private:
     std::vector<char> mConvertedBuffer;
     std::vector<float> mResamplingBuffer;
     std::vector<char> mMixingBuffer;
-    _<ISoundInputStream> mSource;
+    AArc<ISoundInputStream> mSource;
     AAudioFormat mInputFormat;
     AAudioFormat mOutputFormat;
 };

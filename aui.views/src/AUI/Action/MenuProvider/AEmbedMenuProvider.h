@@ -24,7 +24,7 @@ class AEmbedMenuProvider: public IMenuProvider {
 private:
     class MenuContainer;
 
-    _<MenuContainer> mMenuContainer;
+    AArc<MenuContainer> mMenuContainer;
 
 public:
     void createMenu(const AVector<AMenuItem>& vector) override;

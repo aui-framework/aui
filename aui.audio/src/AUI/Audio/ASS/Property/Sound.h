@@ -29,7 +29,7 @@ namespace ass {
         /**
          * @brief Player of the sound effect.
          */
-        _<IAudioPlayer> sound;
+        AArc<IAudioPlayer> sound;
     };
 
 

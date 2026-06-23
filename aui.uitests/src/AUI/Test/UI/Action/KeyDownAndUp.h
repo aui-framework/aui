@@ -18,7 +18,7 @@ struct ViewActionKeyDownAndUp: ViewActionClick<> {
 
     explicit ViewActionKeyDownAndUp(AShortcut key) : key(std::move(key)) {}
 
-    void operator()(const _<AView>& view) {
+    void operator()(const AArc<AView>& view) {
         // click on it to acquire focus
         view->focus();
 

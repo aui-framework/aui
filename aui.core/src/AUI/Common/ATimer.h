@@ -24,7 +24,7 @@ private:
 
     AOptional<AScheduler::TimerHandle> mTimer;
 
-    static _<AThread>& timerThread();
+    static AArc<AThread>& timerThread();
 
 public:
     explicit ATimer(std::chrono::milliseconds period);

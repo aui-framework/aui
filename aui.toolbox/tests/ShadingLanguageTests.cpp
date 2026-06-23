@@ -22,7 +22,7 @@
 class ShadingLanguage : public ::testing::Test {
 };
 
-static AString toGlslExpression(const _<ExpressionNode>& expr) {
+static AString toGlslExpression(const AArc<ExpressionNode>& expr) {
     GLSLFrontend glsl;
     expr->acceptVisitor(glsl);
     return glsl.shaderCode();

@@ -23,14 +23,14 @@ public:
 
     virtual ~AAdvancedGridLayout() = default;
 
-    _<AView> getViewAt(size_t index) { return mCells.at(index).view; }
+    AArc<AView> getViewAt(size_t index) { return mCells.at(index).view; }
 
-    void setViewAt(size_t index, _<AView> view) { mCells.at(index).view = view; }
+    void setViewAt(size_t index, AArc<AView> view) { mCells.at(index).view = view; }
 
     void onResize(int x, int y, int width, int height) override;
-    void addView(const _<AView>& view, int x, int y);
+    void addView(const AArc<AView>& view, int x, int y);
 
-    void addView(const _<AView>& view, AOptional<size_t> index) override;
+    void addView(const AArc<AView>& view, AOptional<size_t> index) override;
 
     void removeView(aui::no_escape<AView> view, size_t index) override;
 
@@ -38,9 +38,9 @@ public:
 
     int getMinimumHeight() override;
 
-    int indexOf(_<AView> view);
+    int indexOf(AArc<AView> view);
 
-    AVector<_<AView>> getAllViews() override;
+    AVector<AArc<AView>> getAllViews() override;
 
     void setSpacing(int spacing) override;
 
@@ -54,10 +54,10 @@ protected:
     };
 
     struct GridCell {
-        _<AView> view;
+        AArc<AView> view;
         int x, y;
 
-        operator _<AView>() const { return view; }
+        operator AArc<AView>() const { return view; }
     };
 
     int mCurrentIndex = 0;
@@ -70,8 +70,8 @@ protected:
 protected:
     int& indexAt(int x, int y);
 
-    AVector<_<AView>> getRow(int row);
-    AVector<_<AView>> getColumn(int column);
+    AVector<AArc<AView>> getRow(int row);
+    AVector<AArc<AView>> getColumn(int column);
 
     virtual void prepareCache(AVector<CompositionCache>& columns, AVector<CompositionCache>& rows);
 };

@@ -45,7 +45,7 @@ protected:
         }
     }
     void TearDown() override { Test::TearDown(); }
-    _<AWindow> mWindow;
+    AArc<AWindow> mWindow;
 };
 
 TEST_F(UIOpenGLRendererTest, CheckRenderer) {

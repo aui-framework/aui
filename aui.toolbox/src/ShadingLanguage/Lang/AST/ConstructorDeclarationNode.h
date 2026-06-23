@@ -9,18 +9,18 @@
 
 class ConstructorDeclarationNode: public MethodDeclarationNode {
 private:
-    AVector<_<INode>> mInitializerList;
+    AVector<AArc<INode>> mInitializerList;
 
 public:
 
     ConstructorDeclarationNode(const AString& returnType, const AString& name,
-                               const AVector<_<VariableDeclarationNode>>& args, const AString& className,
-                               const AVector<_<INode>>& initializerList,
-                               const AVector<_<INode>>& code) : MethodDeclarationNode(returnType, name, args,
+                               const AVector<AArc<VariableDeclarationNode>>& args, const AString& className,
+                               const AVector<AArc<INode>>& initializerList,
+                               const AVector<AArc<INode>>& code) : MethodDeclarationNode(returnType, name, args,
                                                                                                  className, code),
                                                                            mInitializerList(initializerList) {}
 
-    const AVector<_<INode>>& getInitializerList() const {
+    const AVector<AArc<INode>>& getInitializerList() const {
         return mInitializerList;
     }
 

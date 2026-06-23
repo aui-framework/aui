@@ -21,7 +21,7 @@ struct ViewActionMousePress {
 
     ViewActionMousePress(const glm::ivec2& position) : position(position) {}
 
-    void operator()(const _<AView>& view) {
+    void operator()(const AArc<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : (view->getSize() / 2));
         auto window = view->getWindow();
         AInput::overrideStateForTesting(Button, true);
@@ -37,7 +37,7 @@ struct ViewActionMouseRelease {
 
     ViewActionMouseRelease(const glm::ivec2& position) : position(position) {}
 
-    void operator()(const _<AView>& view) {
+    void operator()(const AArc<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : (view->getSize() / 2));
         auto window = view->getWindow();
         AInput::overrideStateForTesting(Button, false);
@@ -54,7 +54,7 @@ struct ViewActionClick {
 
     ViewActionClick(const glm::ivec2& position) : position(position) {}
 
-    void operator()(const _<AView>& view) {
+    void operator()(const AArc<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : (view->getSize() / 2));
         auto window = view->getWindow();
         AInput::overrideStateForTesting(Button, true);
@@ -79,7 +79,7 @@ struct ViewActionPointerPressed { // for the cases when mouse* actions is not en
     AOptional<glm::ivec2> position;
     APointerIndex pointerIndex = APointerIndex::button(AInput::LBUTTON);
 
-    void operator()(const _<AView>& view) {
+    void operator()(const AArc<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : (view->getSize() / 2));
         auto window = view->getWindow();
         window->onPointerPressed({coords, pointerIndex});
@@ -91,7 +91,7 @@ struct ViewActionPointerReleased { // for the cases when mouse* actions is not e
     AOptional<glm::ivec2> position;
     APointerIndex pointerIndex = APointerIndex::button(AInput::LBUTTON);
 
-    void operator()(const _<AView>& view) {
+    void operator()(const AArc<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : (view->getSize() / 2));
         auto window = view->getWindow();
         window->onPointerReleased({coords, pointerIndex});
@@ -103,7 +103,7 @@ struct ViewActionPointerMoved { // for the cases when mouse* actions is not enou
     AOptional<glm::ivec2> position;
     APointerIndex pointerIndex = APointerIndex::button(AInput::LBUTTON);
 
-    void operator()(const _<AView>& view) {
+    void operator()(const AArc<AView>& view) {
         auto coords = view->getPositionInWindow() + (position ? *position : (view->getSize() / 2));
         auto window = view->getWindow();
         window->onPointerMove(coords, {pointerIndex});

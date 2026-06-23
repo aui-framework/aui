@@ -36,9 +36,9 @@ protected:
 template <>
 struct ADataBindingDefault<ATextField, AString> {
 public:
-    static auto property(const _<ATextField>& view) { return view->text(); }
+    static auto property(const AArc<ATextField>& view) { return view->text(); }
 
-    static void setup(const _<ATextField>& view) {}
+    static void setup(const AArc<ATextField>& view) {}
     static auto getGetter() { return (ASignal<AString> ATextField::*) &ATextField::textChanging; }
     static auto getSetter() { return (void(ATextField::*)(const AString& t)) & ATextField::setText; }
 };

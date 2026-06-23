@@ -25,10 +25,10 @@
  */
 class API_AUI_CORE AConcatInputStream: public IInputStream {
 private:
-    ADeque<_<IInputStream>> mInputStreams;
+    ADeque<AArc<IInputStream>> mInputStreams;
 
 public:
-    explicit AConcatInputStream(ADeque<_<IInputStream>> inputStreams) noexcept: mInputStreams(std::move(inputStreams)) {
+    explicit AConcatInputStream(ADeque<AArc<IInputStream>> inputStreams) noexcept: mInputStreams(std::move(inputStreams)) {
 
     }
 

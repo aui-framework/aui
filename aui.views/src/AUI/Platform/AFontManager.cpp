@@ -19,7 +19,7 @@
 AFontManager::~AFontManager() = default;
 
 
-_<AFont> AFontManager::loadFont(const AUrl& url) {
+AArc<AFont> AFontManager::loadFont(const AUrl& url) {
     return _new<AFont>(this, url);
 }
 

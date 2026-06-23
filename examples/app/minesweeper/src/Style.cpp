@@ -36,7 +36,7 @@ public:
         return false;
     }
 
-    void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+    void setupConnections(AView* view, const AArc<AAssHelper>& helper) override {
         IAssSubSelector::setupConnections(view, helper);
         view->customCssPropertyChanged.clearAllOutgoingConnectionsWith(helper.get());
         AObject::connect(view->customCssPropertyChanged, AUI_SLOT(helper)::onInvalidateStateAss);
@@ -59,7 +59,7 @@ public:
         return false;
     }
 
-    void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+    void setupConnections(AView* view, const AArc<AAssHelper>& helper) override {
         IAssSubSelector::setupConnections(view, helper);
         view->customCssPropertyChanged.clearAllOutgoingConnectionsWith(helper.get());
         AObject::connect(view->customCssPropertyChanged, AUI_SLOT(helper)::onInvalidateStateAss);

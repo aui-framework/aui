@@ -145,7 +145,7 @@ void AWindow::redraw() {
     }
 }
 
-_<AWindow> AWindow::wrapViewToWindow(const _<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {
+AArc<AWindow> AWindow::wrapViewToWindow(const AArc<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {
     view->setExpanding();
 
     auto window = _new<AWindow>(title, width, height, parent, ws);
@@ -207,7 +207,7 @@ void AWindow::setPosition(glm::ivec2 position) {
 }
 
 
-glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) {
+glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, AArc<AWindow> other) {
     return other->mapPosition(unmapPosition(position));
 }
 
@@ -257,7 +257,7 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 #endif
 }
 
-_<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
+AArc<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
     class AOverlappingWindow: public AWindow {
     public:
         AOverlappingWindow(AWindow* parent):
@@ -300,7 +300,7 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     return surface;
 }
 
-void AWindow::closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) {
+void AWindow::closeOverlappingSurfaceImpl(AArc<AOverlappingSurface> surface) {
     if (auto c = dynamic_cast<AWindow*>(surface->getParent())) {
         c->close();
     }

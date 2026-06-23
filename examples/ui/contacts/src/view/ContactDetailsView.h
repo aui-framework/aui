@@ -16,21 +16,21 @@
 
 class ContactDetailsView : public AViewContainerBase {
 public:
-    ContactDetailsView(_<Contact> contact);
+    ContactDetailsView(AArc<Contact> contact);
 
 signals:
     emits<> deleteAction;
 
 private:
-    _<Contact> mContact;
-    _<Contact> mOriginalContact;
+    AArc<Contact> mContact;
+    AArc<Contact> mOriginalContact;
     AProperty<bool> mEditorMode = false;
 
     template<typename T>
-    _<AView> presentation(AProperty<T>& property);
+    AArc<AView> presentation(AProperty<T>& property);
 
     template<typename T>
-    _<AView> row(AString title, AProperty<T>& property);
+    AArc<AView> row(AString title, AProperty<T>& property);
 
     void drop();
     void toggleEdit();

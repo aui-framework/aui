@@ -25,8 +25,8 @@ public:
 
 private:
     ASurface* mTargetWindow;
-    _<ATextField> mAddress = _new<ATextField>();
-    _<AViewContainer> mResultView = _new<AViewContainer>();
+    AArc<ATextField> mAddress = _new<ATextField>();
+    AArc<AViewContainer> mResultView = _new<AViewContainer>();
 
     void inspect(AView* ptr);
 };

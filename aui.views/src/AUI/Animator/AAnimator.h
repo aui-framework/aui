@@ -80,5 +80,5 @@ public:
         mView = view;
     }
 
-    static _<AAnimator> combine(const AVector<_<AAnimator>>& animators);
+    static AArc<AAnimator> combine(const AVector<AArc<AAnimator>>& animators);
 };

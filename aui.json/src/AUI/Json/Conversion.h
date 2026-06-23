@@ -265,7 +265,7 @@ struct AJsonConv<std::shared_ptr<T>> {
 };
 
 template<typename T>
-struct AJsonConv<_<T>>: AJsonConv<std::shared_ptr<T>> {};
+struct AJsonConv<AArc<T>>: AJsonConv<std::shared_ptr<T>> {};
 
 template<>
 struct AJsonConv<int64_t> {

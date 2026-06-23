@@ -67,13 +67,13 @@ public:
     void mirrorVertically();
 
     [[nodiscard]]
-    static _<AImage> fromUrl(const AUrl& url);
+    static AArc<AImage> fromUrl(const AUrl& url);
 
     [[nodiscard]]
-    static _<AImage> fromFile(const APath& path);
+    static AArc<AImage> fromFile(const APath& path);
 
     [[nodiscard]]
-    static _<AImage> fromBuffer(AByteBufferView buffer);
+    static AArc<AImage> fromBuffer(AByteBufferView buffer);
 
 private:
     AByteBuffer mOwnedBuffer;

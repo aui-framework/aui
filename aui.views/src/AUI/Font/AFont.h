@@ -43,7 +43,7 @@ public:
         /**
          * @brief Bitmap of the glyph.
          */
-        _<AImage> image;
+        AArc<AImage> image;
 
         /**
          * @brief Glyph's image bounding box size. It's independent of the layout direction.
@@ -111,7 +111,7 @@ public:
 
 
 private:
-    _<FreeType> ft;
+    AArc<FreeType> ft;
     AByteBuffer mFontDataBuffer;
     FT_FaceRec_* mFace;
 

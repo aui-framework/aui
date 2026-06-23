@@ -18,7 +18,7 @@ struct ViewActionType: ViewActionClick<> {
 
     explicit ViewActionType(const AString& text) : text(text) {}
 
-    void operator()(const _<AView>& view) {
+    void operator()(const AArc<AView>& view) {
         view->focus();
 
         auto window = view->getWindow();

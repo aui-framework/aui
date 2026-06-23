@@ -25,7 +25,7 @@ public:
 
 private:
     class Impl;
-    _<Impl> mImpl;
+    AArc<Impl> mImpl;
 };
 
 

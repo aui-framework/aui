@@ -20,7 +20,7 @@ namespace uitest {
 
     namespace impl {
         template<int axisIndex>
-        inline int axisAlignedDistanceBetween(const _<AView>& v1, const _<AView>& v2) {
+        inline int axisAlignedDistanceBetween(const AArc<AView>& v1, const AArc<AView>& v2) {
             auto begin1 = v1->getPositionInWindow()[axisIndex];
             auto begin2 = v2->getPositionInWindow()[axisIndex];
             auto end1   = begin1 + v1->getSize()[axisIndex];
@@ -31,10 +31,10 @@ namespace uitest {
         }
     }
 
-    inline int horizontalDistanceBetween(const _<AView>& v1, const _<AView>& v2) {
+    inline int horizontalDistanceBetween(const AArc<AView>& v1, const AArc<AView>& v2) {
         return impl::axisAlignedDistanceBetween<0>(v1, v2);
     }
-    inline int verticalDistanceBetween(const _<AView>& v1, const _<AView>& v2) {
+    inline int verticalDistanceBetween(const AArc<AView>& v1, const AArc<AView>& v2) {
         return impl::axisAlignedDistanceBetween<1>(v1, v2);
     }
 }

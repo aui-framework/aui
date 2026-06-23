@@ -32,10 +32,10 @@ public:
     AScrollAreaViewport();
     ~AScrollAreaViewport() override;
 
-    void setContents(_<AView> content);
+    void setContents(AArc<AView> content);
 
     [[nodiscard]]
-    const _<AView>& contents() const noexcept {
+    const AArc<AView>& contents() const noexcept {
         return mContents;
     }
 
@@ -94,11 +94,11 @@ public:
      * The scroll operation made within this method does not prevent scroll animation nor kinetic effects.
      */
     template<aui::invocable ApplyLayoutUpdate>
-    void compensateLayoutUpdatesByScroll(_<AView> anchor, ApplyLayoutUpdate&& applyLayoutUpdate, glm::ivec2 diffMask = glm::ivec2(1, 1));
+    void compensateLayoutUpdatesByScroll(AArc<AView> anchor, ApplyLayoutUpdate&& applyLayoutUpdate, glm::ivec2 diffMask = glm::ivec2(1, 1));
 
 private:
-    _<Inner> mInner;
-    _<AView> mContents;
+    AArc<Inner> mInner;
+    AArc<AView> mContents;
 
     glm::uvec2 mScroll = {0, 0};
     emits<glm::uvec2> mScrollChanged;
@@ -108,7 +108,7 @@ private:
 
 template <aui::invocable ApplyLayoutUpdate>
 void AScrollAreaViewport::compensateLayoutUpdatesByScroll(
-    _<AView> anchor, ApplyLayoutUpdate&& applyLayoutUpdate, glm::ivec2 diffMask) {
+    AArc<AView> anchor, ApplyLayoutUpdate&& applyLayoutUpdate, glm::ivec2 diffMask) {
     auto queryRelativePosition = [&] {
       glm::ivec2 accumulator{};
       for (auto v = anchor.get(); v != nullptr && v->getParent() != this; v = v->getParent()) {

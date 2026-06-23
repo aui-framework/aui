@@ -188,7 +188,7 @@ public:
      * @param args designated-initializer-style args. See ProcessCreationInfo
      * @return AChildProcess instance. Use AChildProcess::run to execute.
      */
-    static _<AChildProcess> create(ProcessCreationInfo args);
+    static AArc<AChildProcess> create(ProcessCreationInfo args);
 
     /**
      * @brief Launches an executable.
@@ -198,7 +198,7 @@ public:
      * @return AChildProcess instance. Use AChildProcess::run to execute.
      */
     [[deprecated("use AProcess::create instead")]]
-    static _<AChildProcess> make(AString applicationFile, AString args = {}, APath workingDirectory = {}) {
+    static AArc<AChildProcess> make(AString applicationFile, AString args = {}, APath workingDirectory = {}) {
         return create(
             { .executable = std::move(applicationFile),
               .args = ArgSingleString { std::move(args) },
@@ -237,18 +237,18 @@ public:
     /**
      * @return data about all other running processes.
      */
-    static AVector<_<AProcess>> all();
+    static AVector<AArc<AProcess>> all();
 
     /**
      * @return data about this process.
      */
-    static _<AProcess> self();
+    static AArc<AProcess> self();
 
     /**
      * @brief tempFileName file name which will be used as lock
      * @return another instance of this application; nullptr, if not found
      */
-    static _<AProcess> findAnotherSelfInstance(const AString& yourProjectName);
+    static AArc<AProcess> findAnotherSelfInstance(const AString& yourProjectName);
 
     /**
      * @details
@@ -258,7 +258,7 @@ public:
      *
      * @return process by id
      */
-    static _<AProcess> fromPid(uint32_t pid);
+    static AArc<AProcess> fromPid(uint32_t pid);
 
     void kill() const noexcept;
 };
@@ -322,7 +322,7 @@ public:
     APath getModuleName() override;
 
     [[nodiscard]]
-    const _<IOutputStream>& getStdInStream() const {
+    const AArc<IOutputStream>& getStdInStream() const {
         return mStdInStream;
     }
     AString toString() const override;
@@ -336,7 +336,7 @@ private:
     AChildProcess() = default;
     ProcessCreationInfo mInfo;
 
-    _<IOutputStream> mStdInStream;
+    AArc<IOutputStream> mStdInStream;
 
 
     AFuture<int> mExitCode;
@@ -346,7 +346,7 @@ private:
     WinIoAsync mStdoutAsync;
 #else
     pid_t mPid;
-    _<AThread> mWatchdog;
+    AArc<AThread> mWatchdog;
     UnixIoAsync mStdoutAsync;
 #endif
 };

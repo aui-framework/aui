@@ -28,11 +28,11 @@
  */
 class API_AUI_VIEWS ADragArea: public AViewContainer {
 private:
-    _weak<AViewContainerBase> mDraggedContainer;
+    AWeakArc<AViewContainerBase> mDraggedContainer;
     glm::ivec2 mInitialMousePos;
 
 
-    void setValidPositionFor(const _<AView>& targetView, const glm::ivec2& newPosition);
+    void setValidPositionFor(const AArc<AView>& targetView, const glm::ivec2& newPosition);
 public:
     ADragArea();
     void startDragging(AViewContainerBase* container);
@@ -59,8 +59,8 @@ public:
         emits<glm::ivec2> mouseMove;
     };
 
-    static _<AView>            convertToDraggable(const _<AView>& view, bool checkForClickConsumption = true);
-    static _<ADraggableHandle> convertToDraggableContainer(const _<AViewContainer>& view, bool checkForClickConsumption = true);
+    static AArc<AView>            convertToDraggable(const AArc<AView>& view, bool checkForClickConsumption = true);
+    static AArc<ADraggableHandle> convertToDraggableContainer(const AArc<AViewContainer>& view, bool checkForClickConsumption = true);
 };
 
 

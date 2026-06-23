@@ -23,7 +23,7 @@ struct ViewAssertionText {
 
     explicit ViewAssertionText(const AString& text) : text(text) {}
 
-    bool operator()(const _<AView>& v) {
+    bool operator()(const AArc<AView>& v) {
         return IStringable::toString(v) == text;
     }
 };

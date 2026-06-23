@@ -51,7 +51,7 @@ public:
 
     void clearContent() override;
 
-    void setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags = {});
+    void setItems(const AVector<std::variant<AString, AArc<AView>>>& init, const Flags& flags = {});
 
     void setHtml(const AString& html, const Flags& flags = {});
     void setMarkdown(const AString& md, const Flags& flags = {});
@@ -62,25 +62,25 @@ public:
         setString(string, {});
     }
 
-    static _<AText> fromItems(std::initializer_list<std::variant<AString, _<AView>>> init, const Flags& flags = {}) {
+    static AArc<AText> fromItems(std::initializer_list<std::variant<AString, AArc<AView>>> init, const Flags& flags = {}) {
         auto v = aui::ptr::manage_shared(new AText());
         v->setItems(init, flags);
         return v;
     }
 
-    static _<AText> fromHtml(const AString& html, const Flags& flags = {}) {
+    static AArc<AText> fromHtml(const AString& html, const Flags& flags = {}) {
         auto v = aui::ptr::manage_shared(new AText());
         v->setHtml(html, flags);
         return v;
     }
 
-    static _<AText> fromString(const AString& string, const Flags& flags = {}) {
+    static AArc<AText> fromString(const AString& string, const Flags& flags = {}) {
         auto v = aui::ptr::manage_shared(new AText());
         v->setString(string, flags);
         return v;
     }
 
-    static _<AText> fromMarkdown(const AString& string, const Flags& flags = {}) {
+    static AArc<AText> fromMarkdown(const AString& string, const Flags& flags = {}) {
         auto v = aui::ptr::manage_shared(new AText());
         v->setMarkdown(string, flags);
         return v;
@@ -88,7 +88,7 @@ public:
 
 
 protected:
-    void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
+    void fillStringCanvas(const AArc<IRenderer::IMultiStringCanvas>& canvas) override;
     void applyGeometryToChildren() override;
 
 private:
@@ -101,7 +101,7 @@ private:
     public:
         using aui::detail::CharEntry::CharEntry;
     };
-    _<AViewContainer> mViewsContainer;
+    AArc<AViewContainer> mViewsContainer;
 
     ADeque<WordEntry> mWordEntries;
     ADeque<CharEntry> mCharEntries;

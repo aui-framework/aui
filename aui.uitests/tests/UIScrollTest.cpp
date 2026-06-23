@@ -39,8 +39,8 @@ public:
     }
 
     MOCK_METHOD(void, setSize, (glm::ivec2), (override));
-    _<ALabel> mBigContent;
-    _<ALabel> mBottomLabel;
+    AArc<ALabel> mBigContent;
+    AArc<ALabel> mBottomLabel;
 };
 
 class UIScrollTest: public testing::UITest {
@@ -56,10 +56,10 @@ protected:
                     }
             });
         }
-        _<AScrollArea> mScrollArea;
-        _<MockedViewContainer> mMockedContainer;
+        AArc<AScrollArea> mScrollArea;
+        AArc<MockedViewContainer> mMockedContainer;
     };
-    _<TestWindow> mTestWindow;
+    AArc<TestWindow> mTestWindow;
 
 
     void SetUp() override {

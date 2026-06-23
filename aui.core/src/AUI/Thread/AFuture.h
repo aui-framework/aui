@@ -133,7 +133,7 @@ namespace aui::impl::future {
             TaskCallback task;
             OnSuccessCallback onSuccess;
             std::function<void(const AException& exception)> onError;
-            _<AAbstractThread> thread;
+            AArc<AAbstractThread> thread;
             bool cancelled = false;
 
             explicit Inner(std::function<Value()> task) noexcept: task(std::move(task)) {
@@ -172,7 +172,7 @@ namespace aui::impl::future {
                 return bool(value);
             }
 
-            bool setThread(_<AAbstractThread> thr) noexcept {
+            bool setThread(AArc<AAbstractThread> thr) noexcept {
                 std::unique_lock lock(mutex);
                 if (cancelled) return true;
                 if (thread) return true;
@@ -180,7 +180,7 @@ namespace aui::impl::future {
                 return false;
             }
 
-            void wait(const _weak<CancellationWrapper<Inner>>& innerWeak, ABitField<AFutureWait> flags = AFutureWait::DEFAULT);
+            void wait(const AWeakArc<CancellationWrapper<Inner>>& innerWeak, ABitField<AFutureWait> flags = AFutureWait::DEFAULT);
 
             void cancel() noexcept {
                 std::unique_lock lock(mutex);
@@ -198,7 +198,7 @@ namespace aui::impl::future {
              * @param innerWeak self weak_ptr
              * @return true, then task is successfully executed and supplied result.
              */
-            bool tryExecute(const _weak<CancellationWrapper<Inner>>& innerWeak) {
+            bool tryExecute(const AWeakArc<CancellationWrapper<Inner>>& innerWeak) {
                 /*
                  * We should assume that this == nullptr or invalid.
                  * We can assert that this pointer is safe only if we hold at least one shared_ptr.
@@ -356,8 +356,8 @@ namespace aui::impl::future {
             }
         };
 
-        using Ptr = _<CancellationWrapper<Inner>>;
-        using PtrWeak = _weak<CancellationWrapper<Inner>>;
+        using Ptr = AArc<CancellationWrapper<Inner>>;
+        using PtrWeak = AWeakArc<CancellationWrapper<Inner>>;
 
 #if AUI_COROUTINES
         /**
@@ -907,7 +907,7 @@ public:
 };
 
 template <typename Value>
-void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapper<Inner>>& innerWeak,
+void aui::impl::future::Future<Value>::Inner::wait(const AWeakArc<CancellationWrapper<Inner>>& innerWeak,
                                                    ABitField<AFutureWait> flags) {
     if (hasResult()) return; // cheap check
     std::unique_lock lock(mutex);

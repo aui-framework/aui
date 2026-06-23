@@ -23,7 +23,7 @@ struct State {
     AProperty<int> selection = 0;
 };
 
-_<AView> radioButtons(_<State> state) {
+AArc<AView> radioButtons(AArc<State> state) {
     static constexpr auto options = std::array {
         std::make_tuple(0, "Option 0"),
         std::make_tuple(1, "Option 1"),

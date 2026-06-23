@@ -70,7 +70,7 @@ class ITexture;
  * Brush which draws texture (raster image).
  */
 struct ATexturedBrush {
-    _<ITexture> texture;
+    AArc<ITexture> texture;
 
     /**
      * Optional. Top left UV coords of the texture.

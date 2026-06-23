@@ -95,7 +95,7 @@ void CppFrontend::visitNode(const ArrayAccessOperatorNode& node) {
     mShaderOutput << "]";
 }
 
-void CppFrontend::emitAttributeDeclarationField(_<VariableDeclarationNode> node) {
+void CppFrontend::emitAttributeDeclarationField(AArc<VariableDeclarationNode> node) {
     mHeaderOutput << mapType(node->typeName()) << " " << node->variableName();
     if (const auto& init = node->initializer()) {
         reportError(*init, "attribute declaration shouldn't have initializer");
@@ -258,7 +258,7 @@ void CppFrontend::emitFunctionDeclArguments(const FunctionDeclarationNode& node,
     CBasedFrontend::emitFunctionDeclArguments(node, false);
 }
 
-void CppFrontend::emitFunctionCallArguments(const BuiltinOrDeclaredFunction& function, const AVector<_<ExpressionNode>>& args, bool first) {
+void CppFrontend::emitFunctionCallArguments(const BuiltinOrDeclaredFunction& function, const AVector<AArc<ExpressionNode>>& args, bool first) {
     if (std::holds_alternative<const FunctionDeclarationNode*>(function)) {
         mShaderOutput << "uniform";
         CBasedFrontend::emitFunctionCallArguments(function, args, false);

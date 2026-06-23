@@ -25,7 +25,7 @@ public:
     void visitNode(const IndexedAttributesDeclarationNode& node) override;
     void visitNode(const NonIndexedAttributesDeclarationNode& node) override;
 
-    void parseShader(const _<AST>& ast) override;
+    void parseShader(const AArc<AST>& ast) override;
 
     void visitNode(const MemberAccessOperatorNode& node) override;
     void visitNode(const VariableReferenceNode& node) override;
@@ -43,10 +43,10 @@ protected:
 
     const AMap<AString, AString>& internalFunctions() override;
 
-    AVector<_<VariableDeclarationNode>> mOutputs;
+    AVector<AArc<VariableDeclarationNode>> mOutputs;
 
 private:
     bool mPrecisionInsterted = false; 
     ASet<AString> mDefinedUniforms;
-    AVector<std::tuple<int, _<VariableDeclarationNode>>> mInputs;
+    AVector<std::tuple<int, AArc<VariableDeclarationNode>>> mInputs;
 };

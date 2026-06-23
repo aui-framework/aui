@@ -64,8 +64,8 @@ protected:
         UITest::TearDown();
     }
 
-    _<AWindow> mWindow;
-    _<AView> mView;
+    AArc<AWindow> mWindow;
+    AArc<AView> mView;
 };
 }   // namespace
 

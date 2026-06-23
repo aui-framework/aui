@@ -84,11 +84,11 @@ public:
         return 0;
     }
 
-    _<ISqlDriverRow> begin() override {
+    AArc<ISqlDriverRow> begin() override {
         return next(_new<SqliteRow>(mStmt));
     }
 
-    _<ISqlDriverRow> next(const _<ISqlDriverRow>& previous) override {
+    AArc<ISqlDriverRow> next(const AArc<ISqlDriverRow>& previous) override {
         switch (sqlite3_step(mStmt)) {
             case SQLITE_DONE:
                 return nullptr;
@@ -121,7 +121,7 @@ public:
         return DT_SQLITE;
     }
 
-    _<ISqlDriverResult> query(const AString& query, const AVector<AVariant>& params) override {
+    AArc<ISqlDriverResult> query(const AString& query, const AVector<AVariant>& params) override {
         sqlite3_stmt* stmt;
 
         auto result = _new<SqliteResult>();
@@ -176,7 +176,7 @@ AString ASqlite::getDriverName() {
     return "sqlite";
 }
 
-_<ISqlDatabase> ASqlite::openDriverConnection(const AString& address, uint16_t port, const AString& databaseName,
+AArc<ISqlDatabase> ASqlite::openDriverConnection(const AString& address, uint16_t port, const AString& databaseName,
                                          const AString& username, const AString& password) {
     return _new<SqliteDatabase>(address);
 }

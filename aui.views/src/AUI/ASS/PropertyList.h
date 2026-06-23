@@ -36,11 +36,11 @@ namespace ass {
 
         }
 
-        [[nodiscard]] const AVector<_<ass::prop::IPropertyBase>>& declarations() const noexcept {
+        [[nodiscard]] const AVector<AArc<ass::prop::IPropertyBase>>& declarations() const noexcept {
             return mProperties;
         }
 
-        void addDeclaration(_<ass::prop::IPropertyBase> declaration) {
+        void addDeclaration(AArc<ass::prop::IPropertyBase> declaration) {
             mProperties << std::move(declaration);
         }
 
@@ -66,6 +66,6 @@ namespace ass {
             }
         }
 
-        AVector<_<ass::prop::IPropertyBase>> mProperties;
+        AVector<AArc<ass::prop::IPropertyBase>> mProperties;
     };
 }

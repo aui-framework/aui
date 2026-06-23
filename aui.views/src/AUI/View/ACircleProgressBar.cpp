@@ -42,7 +42,7 @@ void ACircleProgressBar::render(ARenderContext context) {
 }
 
 
-_<AView> declarative::CircleProgressBar::operator()() {
+AArc<AView> declarative::CircleProgressBar::operator()() {
     auto view = _new<ACircleProgressBar>();
     progress.bindTo(view->value().assignment());
     return view;

@@ -60,7 +60,7 @@ namespace ass {
             return false;
         }
 
-        void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+        void setupConnections(AView* view, const AArc<AAssHelper>& helper) override {
             IAssSubSelector::setupConnections(view, helper);
             mWrapped->setupConnections(view, helper);
 

@@ -241,11 +241,11 @@ public:
 
         /**
          * @brief Bakes multi string canvas to IPrerenderedString which can be used for drawing text.
-         * @return instance of <code>_<IRenderer::IPrerenderedString></code> to drawElements with.
+         * @return instance of <code>AArc<IRenderer::IPrerenderedString></code> to drawElements with.
          * @details
          * Invalidates IMultiStringCanvas which speeds up some implementations of IMultiStringCanvas.
          */
-        virtual _<IRenderer::IPrerenderedString> finalize() noexcept = 0;
+        virtual AArc<IRenderer::IPrerenderedString> finalize() noexcept = 0;
 
         /**
          * @brief Returns text layout helper.
@@ -269,7 +269,7 @@ public:
     /**
      * @brief Creates new texture (image representation optimized for GPU rendering).
      */
-    _<ITexture> getNewTexture() {
+    AArc<ITexture> getNewTexture() {
         return mTexturePool.get();
     }
 
@@ -277,7 +277,7 @@ public:
      * @brief Creates new canvas for batching multiple <code>prerender</code> string calls.
      * @return a new instance of <code>IMultiStringCanvas</code>
      */
-    virtual _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
+    virtual AArc<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
 
     /**
      * @brief Draws simple rectangle.
@@ -382,7 +382,7 @@ public:
      * @param fs font style
      * @return an instance of IPrerenderedString
      */
-    virtual _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
+    virtual AArc<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;
 
     /**
     * @details

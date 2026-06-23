@@ -16,7 +16,7 @@
 #include "AAnimatedDrawable.h"
 #include "AUI/Image/gif/GifImageFactory.h"
 
-AAnimatedDrawable::AAnimatedDrawable(_<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
+AAnimatedDrawable::AAnimatedDrawable(AArc<IAnimatedImageFactory> factory) : mFactory (std::move(factory)) {
 }
 
 void AAnimatedDrawable::draw(IRenderer& render, const IDrawable::Params& params) {

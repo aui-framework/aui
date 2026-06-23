@@ -41,7 +41,7 @@ class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainerBase {
         bool isValidText(std::u32string_view text) override;
     };
 
-    _<ADoubleNumberPickerField> mTextField;
+    AArc<ADoubleNumberPickerField> mTextField;
 
     double mMin = 0;
     double mMax = 100;
@@ -93,7 +93,7 @@ namespace aui::impl {
 template <typename Num>
 struct ADataBindingDefaultDoubleNumberPicker {
    public:
-    static void setup(const _<ADoubleNumberPicker>& view) {}
+    static void setup(const AArc<ADoubleNumberPicker>& view) {}
 
     static auto getGetter() { return &ADoubleNumberPicker::valueChanged; }
 
@@ -104,7 +104,7 @@ template <aui::arithmetic UnderlyingType, auto min, auto max>
     requires aui::convertible_to<decltype(min), UnderlyingType> && aui::convertible_to<decltype(max), UnderlyingType>
 struct ADataBindingRangedDoubleNumberPicker {
    public:
-    static void setup(const _<ADoubleNumberPicker>& view) {
+    static void setup(const AArc<ADoubleNumberPicker>& view) {
         view->setMin(aui::ranged_number<UnderlyingType, min, max>::MIN);
         view->setMax(aui::ranged_number<UnderlyingType, min, max>::MAX);
     }

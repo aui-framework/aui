@@ -56,7 +56,7 @@ public:
 class ATreeView::ItemView: public AViewContainerBase, public ass::ISelectable
 {
 public:
-    ItemView(ATreeView* treeView, const _<AView>& display, bool hasChildren, const ATreeModelIndex& index)
+    ItemView(ATreeView* treeView, const AArc<AView>& display, bool hasChildren, const ATreeModelIndex& index)
             : mDisplay(display),
               mIndex(index),
               mTreeView(treeView)
@@ -165,12 +165,12 @@ public:
         mTreeView->handleMouseMove(this);
     }
 
-    void setChildrenContainer(_<AViewContainer> childrenContainer) {
+    void setChildrenContainer(AArc<AViewContainer> childrenContainer) {
         mChildrenContainer = childrenContainer;
     }
 
     [[nodiscard]]
-    const _<AViewContainer>& childrenContainer() const {
+    const AArc<AViewContainer>& childrenContainer() const {
         return mChildrenContainer;
     }
 
@@ -183,32 +183,32 @@ protected:
     }
 
 private:
-    _<AViewContainer> mChildrenContainer;
+    AArc<AViewContainer> mChildrenContainer;
 
     bool mSelected = false;
     bool mExpanded = false;
-    _<AView> mDisplay;
-    _<ADrawableView> mCollapseDisplay;
+    AArc<AView> mDisplay;
+    AArc<ADrawableView> mCollapseDisplay;
     ATreeModelIndex mIndex;
     ATreeView* mTreeView;
 };
 
 
 ATreeView::ATreeView():
-    mViewFactory([](const _<ITreeModel<AString>>& model, const ATreeModelIndex& index) {
+    mViewFactory([](const AArc<ITreeModel<AString>>& model, const ATreeModelIndex& index) {
         return _new<ALabel>(model->itemAt(index));
     })
 {
 
 }
 
-ATreeView::ATreeView(const _<ITreeModel<AString>>& model):
+ATreeView::ATreeView(const AArc<ITreeModel<AString>>& model):
     ATreeView()
 {
     setModel(model);
 }
 
-void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
+void ATreeView::setModel(const AArc<ITreeModel<AString>>& model) {
     if (mModel) {
         clearAllIngoingConnections();
     }
@@ -228,7 +228,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
         connect(mModel->dataInserted, [this](ATreeModelIndex i) {
             try {
                 auto parent = mModel->parent(i);
-                _<AViewContainer> itemContainer;
+                AArc<AViewContainer> itemContainer;
                 if (parent == ATreeModelIndex::ROOT) {
                     itemContainer = mContent;
                 } else {
@@ -245,7 +245,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
         connect(mModel->dataRemoved, [this](ATreeModelIndex i) {
             try {
                 ATreeModelIndexOrRoot parent = mModel->parent(i);
-                _<AViewContainer> itemContainer;
+                AArc<AViewContainer> itemContainer;
                 if (parent == ATreeModelIndex::ROOT) {
                     itemContainer = mContent;
                 } else {
@@ -261,7 +261,7 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
         connect(mModel->dataChanged, [this](ATreeModelIndex i) {
             try {
                 auto parent = mModel->parent(i);
-                _<AViewContainer> itemContainer;
+                AArc<AViewContainer> itemContainer;
                 if (parent == ATreeModelIndex::ROOT) {
                     itemContainer = mContent;
                 } else {
@@ -285,9 +285,9 @@ void ATreeView::setModel(const _<ITreeModel<AString>>& model) {
     AWindow::current()->flagRedraw();
 }
 
-void ATreeView::makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView) {
+void ATreeView::makeElement(const AArc<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const AArc<ATreeView::ItemView>& itemView) {
     // always add wrapper (even if isGroup = false) to simplify view walkthrough
-    _<AViewContainer> wrapper = declarative::Vertical{};
+    AArc<AViewContainer> wrapper = declarative::Vertical{};
     wrapper->setVisibility(Visibility::GONE);
     wrapper << ".list-item-group";
     container->addView(childIndex.row() * 2, wrapper);
@@ -344,7 +344,7 @@ void ATreeView::handleSelected(ATreeView::ItemView* v) {
     emit itemSelected(v->getIndex());
 }
 
-void ATreeView::fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndexOrRoot& index) {
+void ATreeView::fillViewsRecursively(const AArc<AViewContainer>& content, const ATreeModelIndexOrRoot& index) {
     for (size_t i = 0; i < mModel->childrenCount(index); ++i) {
         auto childIndex = mModel->indexOfChild(i, 0, index);
         bool group = mModel->childrenCount(childIndex) != 0;
@@ -369,7 +369,7 @@ void ATreeView::handleMouseMove(ATreeView::ItemView* pView) {
  * callback function.
  */
 template <aui::invocable<std::size_t /* row */> Callback>
-static void traverseFromRootToTarget(const Callback& callback, const _<ITreeModel<AString>>& model,
+static void traverseFromRootToTarget(const Callback& callback, const AArc<ITreeModel<AString>>& model,
                                      const ATreeModelIndexOrRoot& target) {
     if (target == ATreeModelIndex::ROOT) {
         return;
@@ -398,9 +398,9 @@ void ATreeView::select(const ATreeModelIndex& indexToSelect) {
     }
 }
 
-_<ATreeView::ItemView> ATreeView::indexToView(const ATreeModelIndex& target) {
+AArc<ATreeView::ItemView> ATreeView::indexToView(const ATreeModelIndex& target) {
     auto currentTarget = _cast<AViewContainerBase>(mContent);
-    _<ATreeView::ItemView> itemView;
+    AArc<ATreeView::ItemView> itemView;
     traverseFromRootToTarget([&](std::size_t row) {
         if (!currentTarget) {
             return;

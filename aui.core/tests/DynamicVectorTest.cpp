@@ -38,9 +38,9 @@ TEST_F(DynamicVector, PushBack) {
 }
 
 TEST_F(DynamicVector, Deallocation) {
-    _weak<int> v0, v1, v2, v3;
+    AWeakArc<int> v0, v1, v2, v3;
     {
-        ADynamicVector<_<int>> vector;
+        ADynamicVector<AArc<int>> vector;
         for (int i = 0; i < 4; ++i) {
             vector.push_back(std::make_shared<int>(i));
         }
@@ -65,9 +65,9 @@ TEST_F(DynamicVector, Deallocation) {
 
 
 TEST_F(DynamicVector, PopFront) {
-    _weak<int> v0, v1, v2, v3;
+    AWeakArc<int> v0, v1, v2, v3;
     {
-        ADynamicVector<_<int>> vector;
+        ADynamicVector<AArc<int>> vector;
         for (int i = 0; i < 4; ++i) {
             vector.push_back(std::make_shared<int>(i));
         }

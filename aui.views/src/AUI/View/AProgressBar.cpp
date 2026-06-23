@@ -41,11 +41,11 @@ void AProgressBar::updateInnerWidth() {
                         getContentHeight());
 }
 
-_<AView> declarative::ProgressBar::defaultInner() {
+AArc<AView> declarative::ProgressBar::defaultInner() {
     return _new<AProgressBar::Inner>();
 }
 
-_<AView> declarative::ProgressBar::operator()() {
+AArc<AView> declarative::ProgressBar::operator()() {
     auto view = _new<AProgressBar>();
     progress.bindTo(view->value().assignment());
     if (inner) {

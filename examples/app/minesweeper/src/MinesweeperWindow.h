@@ -30,7 +30,7 @@ private:
     int mBombs;
     int mOpenedCells;
 
-    _<AViewContainer> mGrid;
+    AArc<AViewContainer> mGrid;
     AVector<FieldCell> mField;
 
     void openCell(int x, int y, bool doGameLoseIfBomb);
@@ -43,5 +43,5 @@ private:
     void newGame();
 
     void updateCellViewStyle(int x, int y) const;
-    void setupEventHandlers(int x, int y, const _<CellView>& cell);
+    void setupEventHandlers(int x, int y, const AArc<CellView>& cell);
 };

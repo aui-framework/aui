@@ -156,8 +156,8 @@ AStacktrace AAbstractThread::threadStacktrace() const {
     return *future;
 }
 
-_<AAbstractThread>& AAbstractThread::threadStorage() {
-    thread_local _<AAbstractThread> thread;
+AArc<AAbstractThread>& AAbstractThread::threadStorage() {
+    thread_local AArc<AAbstractThread> thread;
     return thread;
 }
 
@@ -206,7 +206,7 @@ void AThread::sleep(std::chrono::milliseconds duration) {
 
 AAbstractThread::id AAbstractThread::getId() const { return mId; }
 
-const _<AAbstractThread>& AThread::current() {
+const AArc<AAbstractThread>& AThread::current() {
     auto& t = threadStorage();
     if (t == nullptr)   // abstract thread
     {
@@ -299,7 +299,7 @@ AThread::AThread(std::function<void()> functor) : mFunctor(std::move(functor)) {
 
 bool AAbstractThread::messageQueueEmpty() noexcept { return mMessageQueue.messages().empty(); }
 
-const _<AAbstractThread>& AThread::main() noexcept {
+const AArc<AAbstractThread>& AThread::main() noexcept {
     static auto main = current(); // initialized by AUI_ENTRY.
     return main;
 }

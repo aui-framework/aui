@@ -24,7 +24,7 @@ public:
         return mImage.averageColor();
     }
 
-    ScreenshotAnalyzer clip(const _<AView>& view) const {
+    ScreenshotAnalyzer clip(const AArc<AView>& view) const {
         return clip(view->getPositionInWindow(), view->getSize());
     }
     ScreenshotAnalyzer clip(glm::uvec2 position, glm::uvec2 size) const {

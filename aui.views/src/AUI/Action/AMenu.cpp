@@ -22,8 +22,8 @@ void AMenu::show(const AMenuModel& model) {
     provider()->createMenu(model);
 }
 
-_<IMenuProvider>& AMenu::provider() {
-    static _<IMenuProvider> provider = nullptr;
+AArc<IMenuProvider>& AMenu::provider() {
+    static AArc<IMenuProvider> provider = nullptr;
     if (provider == nullptr) {
         if (dynamic_cast<AWindow*>(AWindow::current())) {
             provider = _new<AWindowMenuProvider>();

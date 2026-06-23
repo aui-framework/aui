@@ -24,7 +24,7 @@ UIMatcher*& UIMatcher::currentImpl() {
 }
 
 template<typename Container>
-void UIMatcher::processContainer(Container& destination, const _<AViewContainerBase>& container) const {
+void UIMatcher::processContainer(Container& destination, const AArc<AViewContainerBase>& container) const {
     for (auto& view : container) {
         if (mIncludeInvisibleViews || (view->getVisibility() == Visibility::VISIBLE)) {
             if (mMatcher->matches(view)) {
@@ -37,8 +37,8 @@ void UIMatcher::processContainer(Container& destination, const _<AViewContainerB
     }
 }
 
-ASet<_<AView>> UIMatcher::toSet() const {
-    ASet<_<AView>> result;
+ASet<AArc<AView>> UIMatcher::toSet() const {
+    ASet<AArc<AView>> result;
 
     for (auto& window : ASurface::getWindowManager().getWindows()) {
         processContainer(result, window);
@@ -46,8 +46,8 @@ ASet<_<AView>> UIMatcher::toSet() const {
     return result;
 }
 
-AVector<_<AView>> UIMatcher::toVector() const {
-    AVector<_<AView>> result;
+AVector<AArc<AView>> UIMatcher::toVector() const {
+    AVector<AArc<AView>> result;
 
     for (auto& window : ASurface::getWindowManager().getWindows()) {
         processContainer(result, window);

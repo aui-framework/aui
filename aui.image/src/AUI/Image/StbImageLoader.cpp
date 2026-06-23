@@ -19,7 +19,7 @@
 #include <stb_image_write.h>
 #include <AUI/Util/ARaiiHelper.h>
 
-_<AImage> StbImageLoader::getRasterImage(AByteBufferView buffer) {
+AArc<AImage> StbImageLoader::getRasterImage(AByteBufferView buffer) {
     int x, y, channels;
     if (stbi_uc* data = stbi_load_from_memory((const stbi_uc*) buffer.data(), buffer.size(),
                                               &x, &y, &channels, 4)) {

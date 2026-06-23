@@ -88,7 +88,7 @@ public:
     virtual void visitNode(const FlagDirectiveNode& node) {};
 
     template<class T>
-    static _<T> assume(const _<INode>& n) {
+    static AArc<T> assume(const AArc<INode>& n) {
         if (auto c = _cast<T>(n)) {
             return c;
         }

@@ -50,12 +50,12 @@ struct AModelMetaBase {
  */
 template<class T>
 struct AModelMeta: AModelMetaBase<T> {
-    static AMap<AString, _<AField<T>>> getFields() { AUI_ASSERT(0); return {};}
+    static AMap<AString, AArc<AField<T>>> getFields() { AUI_ASSERT(0); return {};}
     static AString getSqlTable() { AUI_ASSERT(0); return {};}
 };
 
 #define A_META(name) template<> struct AModelMeta< name >: AModelMetaBase< name >
-#define A_FIELDS static AMap<AString, _<AField<Model>>> getFields()
+#define A_FIELDS static AMap<AString, AArc<AField<Model>>> getFields()
 #define A_FIELD(name) { #name, AField<Model>::make(&Model:: name ) },
 #define A_SQL_TABLE(name) static AString getSqlTable() { return name;}
 

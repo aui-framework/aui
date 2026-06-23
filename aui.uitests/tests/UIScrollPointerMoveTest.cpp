@@ -80,8 +80,8 @@ protected:
         UITest::TearDown();
     }
 
-    _<AWindow> mWindow;
-    _<ViewMock> mView;
+    AArc<AWindow> mWindow;
+    AArc<ViewMock> mView;
 };
 
 

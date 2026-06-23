@@ -517,7 +517,7 @@ public:
         addStringT(position, text);
     }
 
-    _<IRenderer::IPrerenderedString> finalize() noexcept override {
+    AArc<IRenderer::IPrerenderedString> finalize() noexcept override {
         return _new<SoftwarePrerenderedString>(mRenderer,
                                                std::move(mCharEntries),
                                                mAdvanceX,
@@ -535,7 +535,7 @@ void SoftwareRenderer::string(glm::vec2 position,
     c.finalize()->draw();
 }
 
-_<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 position,
+AArc<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 position,
                                                                    const AString& text,
                                                                    const AFontStyle& fs) {
     if (text.empty()) return nullptr;
@@ -548,7 +548,7 @@ _<IRenderer::IPrerenderedString> SoftwareRenderer::prerenderString(glm::vec2 pos
 
 _unique<ITexture> SoftwareRenderer::createNewTexture() { return std::make_unique<SoftwareTexture>(); }
 
-_<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style) {
+AArc<IRenderer::IMultiStringCanvas> SoftwareRenderer::newMultiStringCanvas(const AFontStyle& style) {
     return _new<SoftwareMultiStringCanvas>(this, style);
 }
 

@@ -12,10 +12,10 @@
 class ExplicitInitializerListCtorNode: public ExpressionNode {
 private:
     AString mClassName;
-    AVector<_<ExpressionNode>> mArgs;
+    AVector<AArc<ExpressionNode>> mArgs;
 
 public:
-    ExplicitInitializerListCtorNode(const AString& className, const AVector<_<ExpressionNode>>& args) : mClassName(className),
+    ExplicitInitializerListCtorNode(const AString& className, const AVector<AArc<ExpressionNode>>& args) : mClassName(className),
                                                                                                  mArgs(args) {}
 
     void acceptVisitor(INodeVisitor& v) override;
@@ -24,7 +24,7 @@ public:
         return mClassName;
     }
 
-    const AVector<_<ExpressionNode>>& getArgs() const {
+    const AVector<AArc<ExpressionNode>>& getArgs() const {
         return mArgs;
     }
 };

@@ -185,7 +185,7 @@ protected:
             });
         }
     };
-    _<TestWindow> mTestWindow;
+    AArc<TestWindow> mTestWindow;
 
 
     void SetUp() override {

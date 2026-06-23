@@ -27,7 +27,7 @@ struct State {
 
 class MyRenderer : public AView {
 public:
-    MyRenderer(_<State> state) : mState(std::move(state)) {
+    MyRenderer(AArc<State> state) : mState(std::move(state)) {
         // Simple passthrough ES 2.0 shaders
         const char* vsSrc =
             "attribute vec2 aPos;\n"
@@ -121,7 +121,7 @@ public:
     }
 
 private:
-    _<State> mState;
+    AArc<State> mState;
     std::chrono::high_resolution_clock::time_point mLastFrame {};
     GLuint mProgram {};
     GLuint mShaderVertex {};

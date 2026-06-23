@@ -16,7 +16,7 @@
 
 class StbImageLoader: public IImageLoader {
 public:
-    _<AImage> getRasterImage(AByteBufferView buffer) override;
+    AArc<AImage> getRasterImage(AByteBufferView buffer) override;
 };
 
 

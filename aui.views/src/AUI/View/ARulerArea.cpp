@@ -26,16 +26,16 @@ using namespace declarative;
 
 class WrapperContainer: public AViewContainerBase {
 private:
-    _<AView> mWrappedView;
+    AArc<AView> mWrappedView;
 
 public:
-    WrapperContainer(const _<AView>& wrappedView) : mWrappedView(wrappedView) {
+    WrapperContainer(const AArc<AView>& wrappedView) : mWrappedView(wrappedView) {
         addView(mWrappedView);
     }
 
 };
 
-ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) {
+ARulerArea::ARulerArea(const AArc<AView>& wrappedView) : mWrappedView(wrappedView) {
 
     auto wrapper = _new<WrapperContainer>(mWrappedView) << ".arulerarea-content" AUI_OVERRIDE_STYLE { Expanding { 2, 2 } };
 

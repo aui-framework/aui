@@ -22,7 +22,7 @@ bool WebpImageLoader::matches(AByteBufferView buffer) {
     return WebPGetInfo(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size(), nullptr, nullptr);
 }
 
-_<IImageFactory> WebpImageLoader::getImageFactory(AByteBufferView buffer) {
+AArc<IImageFactory> WebpImageLoader::getImageFactory(AByteBufferView buffer) {
     WebPBitstreamFeatures features;
     WebPGetFeatures(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size(), &features);
     if (features.has_animation) {
@@ -32,7 +32,7 @@ _<IImageFactory> WebpImageLoader::getImageFactory(AByteBufferView buffer) {
     return nullptr;
 }
 
-_<AImage> WebpImageLoader::getRasterImage(AByteBufferView buffer) {
+AArc<AImage> WebpImageLoader::getRasterImage(AByteBufferView buffer) {
     WebPBitstreamFeatures features;
     WebPGetFeatures(reinterpret_cast<const uint8_t*>(buffer.data()), buffer.size(), &features);
     if (features.has_animation) {

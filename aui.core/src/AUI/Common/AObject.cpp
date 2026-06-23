@@ -21,6 +21,6 @@ AObject::AObject() { mAttachedThread = AThread::current(); }
 
 bool& AObject::isDisconnected() { return gIsDisconnected; }
 
-void AObject::moveToThread(aui::no_escape<AObject> object, _<AAbstractThread> thread) {
+void AObject::moveToThread(aui::no_escape<AObject> object, AArc<AAbstractThread> thread) {
     object->setThread(std::move(thread));
 }

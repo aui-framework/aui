@@ -11,7 +11,7 @@ private:
     AString mTemplateArg;
 
 public:
-    TemplateOperatorCallNode(const AString& callee, const AVector<_<ExpressionNode>>& args, const AString& templateArg)
+    TemplateOperatorCallNode(const AString& callee, const AVector<AArc<ExpressionNode>>& args, const AString& templateArg)
             : OperatorCallNode(callee, args), mTemplateArg(templateArg) {}
 
     const AString& getTemplateArg() const {

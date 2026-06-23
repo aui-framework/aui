@@ -15,12 +15,12 @@ public:
     }
 
     [[nodiscard]]
-    const _<oboe::AudioStream>& stream() const noexcept {
+    const AArc<oboe::AudioStream>& stream() const noexcept {
         return mStream;
     }
 
     [[nodiscard]]
-    const _<AAbstractThread>& thread() const noexcept {
+    const AArc<AAbstractThread>& thread() const noexcept {
         return mThread;
     }
 
@@ -51,9 +51,9 @@ private:
         return oboe::DataCallbackResult::Continue;
     }
 
-    _<oboe::AudioStream> mStream;
+    AArc<oboe::AudioStream> mStream;
     AAudioMixer mMixer;
-    _<AAbstractThread> mThread;
+    AArc<AAbstractThread> mThread;
 };
 
 void OboeAudioPlayer::playImpl() {

@@ -24,7 +24,7 @@ private:
     std::shared_ptr<bool> mPoolAlive = std::make_shared<bool>(true);
 
 
-    template <typename Ptr = _<T>>
+    template <typename Ptr = AArc<T>>
     Ptr getImpl() noexcept {
         _unique<T> t;
         if (mQueue.empty()) {
@@ -33,7 +33,7 @@ private:
             t = std::move(mQueue.front());
             mQueue.pop();
         }
-        if constexpr (std::is_same_v<Ptr, _<T>>) {
+        if constexpr (std::is_same_v<Ptr, AArc<T>>) {
             return aui::ptr::manage_shared(t.release(), APoolDeleter(this));
         } else {
             return std::unique_ptr<T, APoolDeleter>(t.release(), APoolDeleter(this));
@@ -62,7 +62,7 @@ public:
         *mPoolAlive = false;
     }
     auto get() noexcept {
-        return getImpl<_<T>>();
+        return getImpl<AArc<T>>();
     }
 
     using UniquePtr = std::unique_ptr<T, APoolDeleter>;

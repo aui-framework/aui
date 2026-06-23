@@ -16,5 +16,5 @@
 
 class JumpToCoordsWindow : public AWindow {
 public:
-    explicit JumpToCoordsWindow(_<FractalView> fractalView, AWindow* parent);
+    explicit JumpToCoordsWindow(AArc<FractalView> fractalView, AWindow* parent);
 };

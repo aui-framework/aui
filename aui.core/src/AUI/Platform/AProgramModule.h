@@ -56,7 +56,7 @@ public:
      * @brief Loads a dynamic load library (shared object).
      * @param path Path to a dynamic load library without extension (extension is added based on current platform)
      */
-    static _<AProgramModule> load(const AString& path);
+    static AArc<AProgramModule> load(const AString& path);
 
     /**
      * @brief Extension of a dynamic load library of current platform
@@ -64,5 +64,5 @@ public:
      */
     static AString getDllExtension();
 
-    static _<AProgramModule> self();
+    static AArc<AProgramModule> self();
 };

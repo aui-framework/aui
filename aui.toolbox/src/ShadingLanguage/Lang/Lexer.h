@@ -17,7 +17,7 @@ private:
     void reportError(const AString& text);
 
 public:
-    explicit Lexer(_<IInputStream> is): mTokenizer(std::move(is)) {}
+    explicit Lexer(AArc<IInputStream> is): mTokenizer(std::move(is)) {}
 
 
     AVector<AnyToken> performLexAnalysis();

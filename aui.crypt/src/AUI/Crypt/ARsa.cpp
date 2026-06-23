@@ -168,7 +168,7 @@ AByteBuffer ARsa::getPublicKeyPEM() const {
     return byteBuffer;
 }
 
-_<ARsa> ARsa::generate(int bits) {
+AArc<ARsa> ARsa::generate(int bits) {
     auto instance = aui::ptr::manage_shared(new ARsa());
 
     int ret = mbedtls_pk_setup(&instance->mPrivate->pk,
@@ -196,7 +196,7 @@ _<ARsa> ARsa::generate(int bits) {
     return instance;
 }
 
-_<ARsa> ARsa::fromPrivateKeyPEM(AByteBufferView buffer) {
+AArc<ARsa> ARsa::fromPrivateKeyPEM(AByteBufferView buffer) {
     auto instance = aui::ptr::manage_shared(new ARsa());
 
     AByteBuffer nullTerminated;
@@ -222,7 +222,7 @@ _<ARsa> ARsa::fromPrivateKeyPEM(AByteBufferView buffer) {
     return instance;
 }
 
-_<ARsa> ARsa::fromPublicKeyPEM(AByteBufferView buffer) {
+AArc<ARsa> ARsa::fromPublicKeyPEM(AByteBufferView buffer) {
     auto instance = aui::ptr::manage_shared(new ARsa());
 
     AByteBuffer nullTerminated;

@@ -12,8 +12,8 @@
 #include "Data.h"
 
 template<>
-_<ASqlDatabase>& Autumn::detail::threadLocalStorage()
+AArc<ASqlDatabase>& Autumn::detail::threadLocalStorage()
 {
-	static _<ASqlDatabase> s;
+	static AArc<ASqlDatabase> s;
 	return s;
 }

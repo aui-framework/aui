@@ -19,14 +19,14 @@ class FunctionDeclarationNode: public INode {
 private:
     AString mReturnType;
     AString mName;
-    AVector<_<VariableDeclarationNode>> mArgs;
-    AVector<_<INode>> mCode;
+    AVector<AArc<VariableDeclarationNode>> mArgs;
+    AVector<AArc<INode>> mCode;
 
 public:
     FunctionDeclarationNode(AString returnType,
                             AString name,
-                            AVector<_<VariableDeclarationNode>> args,
-                            AVector<_<INode>> code):
+                            AVector<AArc<VariableDeclarationNode>> args,
+                            AVector<AArc<INode>> code):
                             mReturnType(std::move(returnType)),
                             mName(std::move(name)),
                             mArgs(std::move(args)),
@@ -43,11 +43,11 @@ public:
         return mName;
     }
 
-    const AVector<_<VariableDeclarationNode>>& getArgs() const {
+    const AVector<AArc<VariableDeclarationNode>>& getArgs() const {
         return mArgs;
     }
 
-    const AVector<_<INode>>& getCode() const {
+    const AVector<AArc<INode>>& getCode() const {
         return mCode;
     }
 };

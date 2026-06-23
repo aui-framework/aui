@@ -51,15 +51,15 @@ AOptional<system_clock::time_point> parseDate(AStringView s) {
 // template<typename T>
 // requires requires { typename ass::prop::Property<T>; }
 // struct std::common_type<T, std::nullptr_t> {
-//     using type = _<ass::prop::IPropertyBase>;
+//     using type = AArc<ass::prop::IPropertyBase>;
 // };
 
 template<>
 struct std::common_type<ass::BackgroundSolid, std::nullptr_t> {
-    using type = _<ass::prop::IPropertyBase>;
+    using type = AArc<ass::prop::IPropertyBase>;
 };
 
-auto dateTextField(_<DateTextFieldState> state) {
+auto dateTextField(AArc<DateTextFieldState> state) {
     return _new<ATextField>() AUI_LET {
         AObject::connect(
             state->parsed, it, [&it = *it, &state = *state](const AOptional<system_clock::time_point>& value) {
@@ -104,7 +104,7 @@ struct State {
 
 AUI_ENTRY {
     // Create state instance
-    _<State> state = _new<State>();
+    AArc<State> state = _new<State>();
 
     // Create window
     auto window = _new<AWindow>("AUI - 7GUIs - Book Flight", 150_dp, 50_dp);

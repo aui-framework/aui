@@ -25,10 +25,10 @@ private:
 
 	struct GridCell
 	{
-		_<AView> view;
+		AArc<AView> view;
 		int x, y;
 
-        operator _<AView>() const {
+        operator AArc<AView>() const {
             return view;
         }
 	};
@@ -38,28 +38,28 @@ private:
 
     int& indexAt(int x, int y);
 
-	AVector<_<AView>> getRow(int row);
-	AVector<_<AView>> getColumn(int column);
+	AVector<AArc<AView>> getRow(int row);
+	AVector<AArc<AView>> getColumn(int column);
 public:
 	AGridLayout(int cellsX, int cellsY);
 	virtual ~AGridLayout() = default;
 
-	_<AView> getViewAt(size_t index) {
+	AArc<AView> getViewAt(size_t index) {
 	    return mCells.at(index).view;
 	}
 
-	void setViewAt(size_t index, _<AView> view) {
+	void setViewAt(size_t index, AArc<AView> view) {
 	    mCells.at(index).view = view;
 	}
 
 	void onResize(int x, int y, int width, int height) override;
-	void addView(const _<AView>& view, int x, int y);
-    void addView(const _<AView>& view, AOptional<size_t> index) override;
+	void addView(const AArc<AView>& view, int x, int y);
+    void addView(const AArc<AView>& view, AOptional<size_t> index) override;
     void removeView(aui::no_escape<AView> view, size_t index) override;
     int getMinimumWidth() override;
 	int getMinimumHeight() override;
-    AVector<_<AView>> getAllViews() override;
+    AVector<AArc<AView>> getAllViews() override;
 
-    int indexOf(_<AView> view);
+    int indexOf(AArc<AView> view);
 };
 

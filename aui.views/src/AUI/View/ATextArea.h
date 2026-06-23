@@ -82,7 +82,7 @@ protected:
     size_t typeableFind(AChar c, size_t startPos) override;
     size_t typeableReverseFind(AChar c, size_t startPos) override;
     size_t length() const override;
-    void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
+    void fillStringCanvas(const AArc<IRenderer::IMultiStringCanvas>& canvas) override;
 
 private:
     mutable AOptional<AString> mCompiledText;
@@ -116,11 +116,11 @@ private:
 template<>
 struct ADataBindingDefault<ATextArea, AString> {
 public:
-    static auto property(const _<ATextArea>& view) {
+    static auto property(const AArc<ATextArea>& view) {
         return view->text();
     }
 
-    static void setup(const _<ATextArea>& view) {}
+    static void setup(const AArc<ATextArea>& view) {}
 };
 
 

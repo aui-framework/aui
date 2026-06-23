@@ -29,12 +29,12 @@ struct Item {
 };
 
 struct State {
-    AProperty<AVector<_<Item>>> items;
+    AProperty<AVector<AArc<Item>>> items;
     AProperty<bool> needMore = false;
     AAsyncHolder asyncTasks;
 };
 
-_<AView> myLazyList(_<State> state) {
+AArc<AView> myLazyList(AArc<State> state) {
     // note that we observe for transition to true here, not the current state of property
     // see PropertyTest_Observing_changes for more info
     AObject::connect(state->needMore.changed, AObject::GENERIC_OBSERVER, [state](bool newState){
@@ -48,7 +48,7 @@ _<AView> myLazyList(_<State> state) {
             AThread::sleep(500ms); // imitate hard work here
 
             // aka "loaded" from backend storage of some kind
-            auto loadedItems = AVector<_<Item>>::generate(20, [&](size_t i) {
+            auto loadedItems = AVector<AArc<Item>>::generate(20, [&](size_t i) {
                 return aui::ptr::manage_shared(new Item { .value = "Item {}"_format(loadFrom + i) });
             });
 

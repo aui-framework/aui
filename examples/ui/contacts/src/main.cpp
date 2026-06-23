@@ -30,7 +30,7 @@ using namespace declarative;
 using namespace ass;
 using namespace std::chrono_literals;
 
-static constexpr auto CONTACTS_SORT = ranges::actions::sort(std::less {}, [](const _<Contact>& c) -> decltype(auto) { return *c->displayName; });
+static constexpr auto CONTACTS_SORT = ranges::actions::sort(std::less {}, [](const AArc<Contact>& c) -> decltype(auto) { return *c->displayName; });
 
 static AChar groupLetter(const AString& s) {
     return s.empty() ? AChar(U'_') : s.utf8().first();
@@ -72,11 +72,11 @@ public:
     }
 
 private:
-    AProperty<AVector<_<Contact>>> mContacts =
+    AProperty<AVector<AArc<Contact>>> mContacts =
             predefined::PERSONS | ranges::views::transform([](Contact& p) { return _new<Contact>(std::move(p)); }) |
             ranges::to_vector | CONTACTS_SORT;
     APropertyPrecomputed<std::size_t> mContactCount = [this] { return mContacts->size(); };
-    AProperty<_<Contact>> mSelectedContact = nullptr;
+    AProperty<AArc<Contact>> mSelectedContact = nullptr;
     AProperty<AString> mSearchQuery;
     APropertyPrecomputed<AString> mSearchQueryLowercased = [this] { return mSearchQuery->lowercase(); };
 
@@ -94,8 +94,8 @@ private:
         mSelectedContact = nullptr;
     }
 
-    _<AView> indexedList() {
-        return AUI_DECLARATIVE_FOR(group, *mContacts | ranges::views::chunk_by([](const _<Contact>& lhs, const _<Contact>& rhs) {
+    AArc<AView> indexedList() {
+        return AUI_DECLARATIVE_FOR(group, *mContacts | ranges::views::chunk_by([](const AArc<Contact>& lhs, const AArc<Contact>& rhs) {
                                 return groupLetter(lhs->displayName) == groupLetter(rhs->displayName);
                             }), AVerticalLayout) {
             auto firstContact = *ranges::begin(group);
@@ -117,8 +117,8 @@ private:
         };
     }
 
-    _<AView> searchQueryList() {
-        auto searchFilter = ranges::views::filter([&](const _<Contact>& c) {
+    AArc<AView> searchQueryList() {
+        auto searchFilter = ranges::views::filter([&](const AArc<Contact>& c) {
             for (const auto& field : { c->displayName, c->note }) {
                 if (field->lowercase().contains(*mSearchQueryLowercased)) {
                     return true;
@@ -131,7 +131,7 @@ private:
         };
     }
 
-    _<AView> contactPreview(const _<Contact>& contact) {
+    AArc<AView> contactPreview(const AArc<Contact>& contact) {
         return Vertical {
             Label { AUI_REACT(contact->displayName) } AUI_OVERRIDE_STYLE { Padding { 8_dp, 0 }, Margin { 0 }, ATextOverflow::ELLIPSIS },
             common_views::divider(),
@@ -140,7 +140,7 @@ private:
         };
     }
 
-    _<ContactDetailsView> contactDetails(const _<Contact>& contact) {
+    AArc<ContactDetailsView> contactDetails(const AArc<Contact>& contact) {
         if (!contact) {
             return nullptr;
         }

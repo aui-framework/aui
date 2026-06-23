@@ -25,10 +25,10 @@ bool SvgImageLoader::matches(AByteBufferView buffer)
 }
 
 
-_<IImageFactory> SvgImageLoader::getImageFactory(AByteBufferView buffer) {
+AArc<IImageFactory> SvgImageLoader::getImageFactory(AByteBufferView buffer) {
     return _new<SvgImageFactory>(buffer);
 }
 
-_<AImage> SvgImageLoader::getRasterImage(AByteBufferView buffer) {
+AArc<AImage> SvgImageLoader::getRasterImage(AByteBufferView buffer) {
     return nullptr;
 }

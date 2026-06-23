@@ -22,48 +22,48 @@ class Parser {
 public:
     Parser(const AVector<AnyToken>& tokens, APath fileDir) : mTokens(tokens), mFileDir(std::move(fileDir)) {}
 
-    _<AST> parseShader();
-    _<ExpressionNode> parseExpression();
+    AArc<AST> parseShader();
+    AArc<ExpressionNode> parseExpression();
 
     unsigned getCurrentLineNumber();
 
-    _<INode> parseEntry();
+    AArc<INode> parseEntry();
 
-    _<ExpressionNode> parseMemberAccess();
-    _<ExpressionNode> parseLambda();
-    _<ExpressionNode> parseIdentifier();
-    _<ExpressionNode> parseTernary(const _<ExpressionNode>& condition);
-    AVector<_<INode>> parseConstructorInitializerList();
-    _<INode> parseStructClassDefinition() ;
+    AArc<ExpressionNode> parseMemberAccess();
+    AArc<ExpressionNode> parseLambda();
+    AArc<ExpressionNode> parseIdentifier();
+    AArc<ExpressionNode> parseTernary(const AArc<ExpressionNode>& condition);
+    AVector<AArc<INode>> parseConstructorInitializerList();
+    AArc<INode> parseStructClassDefinition() ;
 
     /**
      * Parses modifiers typename variablename
      * where modifiers = none or const or static
      * @return
      */
-    _<VariableDeclarationNode> parseVariableDeclaration();
+    AArc<VariableDeclarationNode> parseVariableDeclaration();
 
     /**
      * Parses (expression1, expression2, ...)
      * @return
      */
-    AVector<_<ExpressionNode>> parseCallArgs();
+    AVector<AArc<ExpressionNode>> parseCallArgs();
 
-    AVector<_<ExpressionNode>> parseCurlyBracketsArgs();
+    AVector<AArc<ExpressionNode>> parseCurlyBracketsArgs();
 
     /**
      * Parses (typename1 variablename1, typename2 variablename2, ...)
      */
-    AVector<_<VariableDeclarationNode>> parseFunctionDeclarationArgs();
+    AVector<AArc<VariableDeclarationNode>> parseFunctionDeclarationArgs();
     /**
      * Parses (import identifier)
      */
-    _<INode> parseImportStatement();
+    AArc<INode> parseImportStatement();
 
     /**
      * Parses { command1; command2; ... }
      */
-    AVector<_<INode>> parseCodeBlock();
+    AVector<AArc<INode>> parseCodeBlock();
 
 private:
     unsigned mErrorCount = 0;
@@ -78,7 +78,7 @@ private:
     void reportUnexpectedEof();
     void reportError(const AString& message);
     AString getTokenName();
-    _<INode> handlePreprocessor();
+    AArc<INode> handlePreprocessor();
 
     template<typename T>
     T& expect() {

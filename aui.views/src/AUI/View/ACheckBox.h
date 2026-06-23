@@ -111,7 +111,7 @@
 class API_AUI_VIEWS ACheckBox : public AViewContainerBase {
 public:
     ACheckBox() : ACheckBox(nullptr) {}
-    ACheckBox(_<AView> content);
+    ACheckBox(AArc<AView> content);
 
     ~ACheckBox() override = default;
 
@@ -153,7 +153,7 @@ public:
     };
 
 private:
-    _<Box> mBox;
+    AArc<Box> mBox;
 };
 
 namespace declarative {
@@ -183,9 +183,9 @@ struct CheckBox {
      *
      * Clicking this view will toggle the check box.
      */
-    _<AView> content;
+    AArc<AView> content;
 
-    API_AUI_VIEWS _<AView> operator()();
+    API_AUI_VIEWS AArc<AView> operator()();
 };
 }   // namespace declarative
 
@@ -193,8 +193,8 @@ struct CheckBox {
 template <>
 struct ADataBindingDefault<ACheckBox, bool> {
 public:
-    static auto property(const _<ACheckBox>& view) { return view->checked(); }
-    static void setup(const _<ACheckBox>& view) {}
+    static auto property(const AArc<ACheckBox>& view) { return view->checked(); }
+    static void setup(const AArc<ACheckBox>& view) {}
 
     static auto getGetter() { return &ACheckBox::checked; }
 

@@ -68,10 +68,10 @@ private:
     struct Task {
         std::chrono::high_resolution_clock::time_point executionTime;
         std::function<void()> callback;
-        _weak<Timer> timer;
+        AWeakArc<Timer> timer;
     };
 public:
-    using TimerHandle = _weak<Timer>;
+    using TimerHandle = AWeakArc<Timer>;
 
     AScheduler();
 
@@ -140,13 +140,13 @@ private:
     bool mIsRunning = false;
 
     std::list<Task> mTasks;
-    std::list<_<Timer>> mTimers;
+    std::list<AArc<Timer>> mTimers;
 
     static std::chrono::high_resolution_clock::time_point currentTime() noexcept {
         return std::chrono::high_resolution_clock::now();
     }
 
-    void enqueueTimer(const _<Timer>& timer) {
+    void enqueueTimer(const AArc<Timer>& timer) {
         Task t = {
                 timer->nextExecution,
                 [this, timer]() {

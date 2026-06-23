@@ -172,7 +172,7 @@ private:
     /**
      * @brief AAbstractThread threadLocalStorage of current thread.
      */
-    static _<AAbstractThread>& threadStorage();
+    static AArc<AAbstractThread>& threadStorage();
 };
 
 /**
@@ -223,7 +223,7 @@ public:
      * @brief Returns main thread of the application.
      */
     [[nodiscard]]
-    static const _<AAbstractThread>& main() noexcept;
+    static const AArc<AAbstractThread>& main() noexcept;
 
     /**
      * @brief Start thread execution.
@@ -258,7 +258,7 @@ public:
      * @return current thread.
      */
     [[nodiscard]]
-    static const _<AAbstractThread>& current();
+    static const AArc<AAbstractThread>& current();
 
     /**
      * @brief Interruption point

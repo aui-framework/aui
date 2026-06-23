@@ -42,8 +42,8 @@ class Terminated {};
 template<typename type>
 constexpr size_t got = aui::variant::index_of<AnyToken, type>::value;
 
-_<AST> Parser::parseShader() {
-    AVector<_<INode>> nodes;
+AArc<AST> Parser::parseShader() {
+    AVector<AArc<INode>> nodes;
     try {
         for (; mIterator != mTokens.end(); [&] { if (mIterator != mTokens.end()) ++mIterator; }()) {
             try {
@@ -86,7 +86,7 @@ _<AST> Parser::parseShader() {
                                 nodes << parseEntry();
                                 break;
                             case KeywordToken::IMPORT:
-                                if (!std::all_of(nodes.begin(), nodes.end(), [](const _<INode>& node) {
+                                if (!std::all_of(nodes.begin(), nodes.end(), [](const AArc<INode>& node) {
                                     return _cast<ImportNode>(node) != nullptr;
                                 })) {
                                     reportUnexpectedErrorAndSkip("unexpected import: all imports must be in the beginning of the shader");
@@ -157,7 +157,7 @@ _<AST> Parser::parseShader() {
                                             // function definition
                                             nodes << _new<FunctionDeclarationNode>(name1, name2, std::move(args), parseCodeBlock());
                                         } else {
-                                            nodes << _new<FunctionDeclarationNode>(name1, name2, std::move(args), AVector<_<INode>>{});
+                                            nodes << _new<FunctionDeclarationNode>(name1, name2, std::move(args), AVector<AArc<INode>>{});
                                         }
                                         break;
                                     }
@@ -256,9 +256,9 @@ void Parser::nextTokenAndCheckEof() {
         reportError("unexpected <eof>");
     }
 }
-AVector<_<VariableDeclarationNode>> Parser::parseFunctionDeclarationArgs() {
+AVector<AArc<VariableDeclarationNode>> Parser::parseFunctionDeclarationArgs() {
     expect<LParToken>();
-    AVector<_<VariableDeclarationNode>> result;
+    AVector<AArc<VariableDeclarationNode>> result;
     ++mIterator;
     for (; mIterator != mTokens.end();) {
         switch (mIterator->index()) {
@@ -284,9 +284,9 @@ AVector<_<VariableDeclarationNode>> Parser::parseFunctionDeclarationArgs() {
     reportUnexpectedEof();
     throw AException{};
 }
-AVector<_<ExpressionNode>> Parser::parseCallArgs() {
+AVector<AArc<ExpressionNode>> Parser::parseCallArgs() {
     expect<LParToken>();
-    AVector<_<ExpressionNode>> result;
+    AVector<AArc<ExpressionNode>> result;
     ++mIterator;
     for (; mIterator != mTokens.end();) {
         switch (mIterator->index()) {
@@ -308,9 +308,9 @@ AVector<_<ExpressionNode>> Parser::parseCallArgs() {
     throw AException{};
 }
 
-AVector<_<ExpressionNode>> Parser::parseCurlyBracketsArgs() {
+AVector<AArc<ExpressionNode>> Parser::parseCurlyBracketsArgs() {
     expect<LCurlyBracketToken>();
-    AVector<_<ExpressionNode>> result;
+    AVector<AArc<ExpressionNode>> result;
     ++mIterator;
     for (; mIterator != mTokens.end();) {
         switch (mIterator->index()) {
@@ -332,8 +332,8 @@ AVector<_<ExpressionNode>> Parser::parseCurlyBracketsArgs() {
     throw AException{};
 }
 
-AVector<_<INode>> Parser::parseCodeBlock() {
-    AVector<_<INode>> result;
+AVector<AArc<INode>> Parser::parseCodeBlock() {
+    AVector<AArc<INode>> result;
     expect<LCurlyBracketToken>();
     ++mIterator;
     for (; mIterator != mTokens.end();) {
@@ -347,7 +347,7 @@ AVector<_<INode>> Parser::parseCodeBlock() {
                     auto name2 = std::get<IdentifierToken>(*mIterator).value();
 
                     nextTokenAndCheckEof();
-                    _<ExpressionNode> initializer;
+                    AArc<ExpressionNode> initializer;
                     if (mIterator->index() == got<EqualToken>) {
                         // with initializer
                         nextTokenAndCheckEof();
@@ -447,7 +447,7 @@ AVector<_<INode>> Parser::parseCodeBlock() {
     return result;
 }
 
-_<INode> Parser::handlePreprocessor() {
+AArc<INode> Parser::handlePreprocessor() {
     auto& token = expect<PreprocessorDirectiveToken>();
     auto args = token.args();
     auto spaceIndex = args.find(" ");
@@ -460,17 +460,17 @@ _<INode> Parser::handlePreprocessor() {
     return _new<FlagDirectiveNode>(std::move(name), std::move(content));
 }
 
-_<ExpressionNode> Parser::parseExpression() {
-    _<ExpressionNode> temporaryValue; // storage for temporary non-binary nodes such ast constants, function calls, etc
+AArc<ExpressionNode> Parser::parseExpression() {
+    AArc<ExpressionNode> temporaryValue; // storage for temporary non-binary nodes such ast constants, function calls, etc
 
     struct BinaryOperatorAndItsPriority {
-        _<BinaryOperatorNode> op;
+        AArc<BinaryOperatorNode> op;
         int priority = -1;
     };
 
     AVector<BinaryOperatorAndItsPriority> binaryOperators;
 
-    auto putValue = [&](_<ExpressionNode> node) {
+    auto putValue = [&](AArc<ExpressionNode> node) {
         if (temporaryValue) {
             reportUnexpectedErrorAndSkip("temporaryValue is already set");
             throw AException{};
@@ -767,7 +767,7 @@ _<ExpressionNode> Parser::parseExpression() {
     return temporaryValue;
 }
 
-_<ExpressionNode> Parser::parseTernary(const _<ExpressionNode>& condition) {
+AArc<ExpressionNode> Parser::parseTernary(const AArc<ExpressionNode>& condition) {
     expect<TernaryToken>();
     ++mIterator;
     auto onTrue = parseExpression();
@@ -778,12 +778,12 @@ _<ExpressionNode> Parser::parseTernary(const _<ExpressionNode>& condition) {
     return _new<TernaryOperatorNode>(condition, onTrue, onFalse);
 }
 
-AVector<_<INode>> Parser::parseConstructorInitializerList() {
+AVector<AArc<INode>> Parser::parseConstructorInitializerList() {
     if (!std::holds_alternative<ColonToken>(*mIterator)) {
         return {};
     }
     ++mIterator;
-    AVector<_<INode>> result;
+    AVector<AArc<INode>> result;
 
     for (; mIterator != mTokens.end();) {
         switch (mIterator->index()) {
@@ -807,7 +807,7 @@ AVector<_<INode>> Parser::parseConstructorInitializerList() {
     throw AException{};
 }
 
-_<VariableDeclarationNode> Parser::parseVariableDeclaration() {
+AArc<VariableDeclarationNode> Parser::parseVariableDeclaration() {
     bool isConst = false, isStatic = false, isReference = false;
     AString typeName, variableName;
     int pointer = 0;
@@ -967,7 +967,7 @@ void Parser::reportError(const AString& message) {
     }
 }
 
-_<ExpressionNode> Parser::parseMemberAccess() {
+AArc<ExpressionNode> Parser::parseMemberAccess() {
     switch (mIterator->index()) {
         case got<IdentifierToken>: {
             return parseIdentifier();
@@ -980,14 +980,14 @@ _<ExpressionNode> Parser::parseMemberAccess() {
     return nullptr;
 }
 
-_<ExpressionNode> Parser::parseLambda() {
+AArc<ExpressionNode> Parser::parseLambda() {
     expect<LSquareBracketToken>();
 
     // skip everything until ]
     for (; mIterator->index() != got<RSquareBracketToken>; ++mIterator);
     ++mIterator;
 
-    AVector<_<VariableDeclarationNode>> args;
+    AVector<AArc<VariableDeclarationNode>> args;
 
     switch (mIterator->index()) {
         case got<LParToken>: {// lambda argument list
@@ -1006,10 +1006,10 @@ _<ExpressionNode> Parser::parseLambda() {
     return _new<LambdaNode>(args, code);
 }
 
-_<ExpressionNode> Parser::parseIdentifier() {
+AArc<ExpressionNode> Parser::parseIdentifier() {
     auto name1 = std::get<IdentifierToken>(*mIterator).value();
     ++mIterator;
-    _<ExpressionNode> result;
+    AArc<ExpressionNode> result;
     switch (mIterator->index()) {
         case got<LCurlyBracketToken>: {
             // initializer list object initialization
@@ -1066,10 +1066,10 @@ unsigned Parser::getCurrentLineNumber() {
     return lineNumber;
 }
 
-_<INode> Parser::parseStructClassDefinition() {
+AArc<INode> Parser::parseStructClassDefinition() {
     expect<IdentifierToken>();
     auto className = std::get<IdentifierToken>(*mIterator).value();
-    AVector<_<INode>> items;
+    AVector<AArc<INode>> items;
     ++mIterator;
     switch (mIterator->index()) {
         case got<SemicolonToken>: {
@@ -1166,11 +1166,11 @@ AString Parser::parseTypename() {
     return r;
 }
 
-_<INode> Parser::parseEntry() {
+AArc<INode> Parser::parseEntry() {
     return aui::ptr::manage_shared(new FunctionDeclarationNode("void", "entry", {}, parseCodeBlock()));
 }
 
-_<INode> Parser::parseImportStatement() {
+AArc<INode> Parser::parseImportStatement() {
     ++mIterator;
     auto& name = expect<IdentifierToken>();
     auto filename = mFileDir / "{}.sl"_format(name.value());

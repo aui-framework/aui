@@ -23,7 +23,7 @@
 
 using namespace declarative;
 
-JumpToCoordsWindow::JumpToCoordsWindow(_<FractalView> fractalView, AWindow* parent)
+JumpToCoordsWindow::JumpToCoordsWindow(AArc<FractalView> fractalView, AWindow* parent)
   : AWindow("Jump to coords", 854_dp, 500_dp, parent, WindowStyle::NO_RESIZE) {
     auto re = _new<ATextField>();
     auto im = _new<ATextField>();

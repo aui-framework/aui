@@ -77,7 +77,7 @@
 
 using namespace declarative;
 
-void fillWindow(_<AViewContainer> t) {
+void fillWindow(AArc<AViewContainer> t) {
     t->setLayout(std::make_unique<AStackedLayout>());
     t->addView(_new<ALabel>("Window contents"));
 }
@@ -99,7 +99,7 @@ public:
 };
 
 /// [label_coloring]
-static _<AView> link(const AString& url) {
+static AArc<AView> link(const AString& url) {
     return Label { url } AUI_OVERRIDE_STYLE {
                TextColor { AColor::BLUE },
                BorderBottom { 1_px, AColor::BLUE },
@@ -108,7 +108,7 @@ static _<AView> link(const AString& url) {
 }
 /// [label_coloring]
 
-static _<AView> checkBoxesDemo() {
+static AArc<AView> checkBoxesDemo() {
     struct State {
         AProperty<bool> checked1 = false, checked2 = true;
     };
@@ -131,7 +131,7 @@ static _<AView> checkBoxesDemo() {
     };
 }
 
-static _<AView> radioButtonsDemo() {
+static AArc<AView> radioButtonsDemo() {
     auto selection = _new<AProperty<int>>(0);
     return Vertical {
         RadioButton {
@@ -200,7 +200,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
           },
     });
 
-    _<ATabView> tabView;
+    AArc<ATabView> tabView;
     auto progressBarState = _new<AProperty<aui::float_within_0_1>>(0);
 
     addView(tabView = _new<ATabView>() AUI_LET {
@@ -583,10 +583,10 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       .build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Expanding{} },
               _new<ALabel>("Grid splitter"),
               AGridSplitter::Builder()
-                      .withItems(AVector<AVector<_<AView>>>::generate(
+                      .withItems(AVector<AVector<AArc<AView>>>::generate(
                           5,
                           [](size_t y) {
-                              return AVector<_<AView>>::generate(5, [&](size_t x) {
+                              return AVector<AArc<AView>>::generate(5, [&](size_t x) {
                                   return _new<AButton>("{}x{}"_format(x, y));
                               });
                           }))
@@ -621,8 +621,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     } AUI_OVERRIDE_STYLE { MinSize { 200_dp } },
                   }).build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                   [] {
-                      _<AViewContainer> v1 = Vertical {};
-                      _<AViewContainer> v2 = Vertical {};
+                      AArc<AViewContainer> v1 = Vertical {};
+                      AArc<AViewContainer> v2 = Vertical {};
                       for (int i = 0; i <= 9; ++i) {
                           v1->addView(Horizontal {
                             _new<ALabel>("{} px"_format(i + 6)),
@@ -644,7 +644,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                         Border { 1_px, AColor::BLACK },
                       });
 
-                      _<AView> blackRect = Stacked {
+                      AArc<AView> blackRect = Stacked {
                           Stacked { _new<AButton>("Hi") } AUI_OVERRIDE_STYLE {
                             FixedSize { 200_dp, 100_dp },
                             BackgroundSolid { AColor::BLACK },
@@ -721,12 +721,12 @@ void ExampleWindow::onDragDrop(const ADragNDrop::DropEvent& event) {
     }
 
     auto surface = createOverlappingSurface({ 0, 0 }, { 100, 100 }, false);
-    _<AViewContainer> popup = Vertical {
+    AArc<AViewContainer> popup = Vertical {
         Label { "Drop event" } AUI_OVERRIDE_STYLE {
               FontSize { 18_pt },
               ATextAlign::CENTER,
             },
-        [&]() -> _<AView> {
+        [&]() -> AArc<AView> {
             if (auto u = event.data.urls()) {
                 auto url = u->first();
                 if (auto icon = ADesktop::iconOfFile(url.path())) {

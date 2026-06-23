@@ -33,7 +33,7 @@ glm::ivec2 ADesktop::getMousePosition() {
 void ADesktop::setMousePos(const glm::ivec2& pos) { SetCursorPos(pos.x, pos.y); }
 
 AFuture<APath> ADesktop::browseForDir(ASurface* parent, const APath& startingLocation) {
-    _<AAbstractThread> ui;
+    AArc<AAbstractThread> ui;
     if (auto* w = dynamic_cast<AWindow*>(parent))
         ui = w->getThread();
     else
@@ -95,7 +95,7 @@ AFuture<APath> ADesktop::browseForDir(ASurface* parent, const APath& startingLoc
 }
 
 AFuture<APath> ADesktop::browseForFile(ASurface* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
-    _<AAbstractThread> ui;
+    AArc<AAbstractThread> ui;
     if (auto* w = dynamic_cast<AWindow*>(parent))
         ui = w->getThread();
     else
@@ -178,7 +178,7 @@ AFuture<APath> ADesktop::browseForFile(ASurface* parent, const APath& startingLo
     return promise;
 }
 
-_<IDrawable> ADesktop::iconOfFile(const APath& file) {
+AArc<IDrawable> ADesktop::iconOfFile(const APath& file) {
     SHFILEINFO info;
     auto wfile = aui::win32::toWchar(file);
     if (SUCCEEDED(SHGetFileInfo(wfile.c_str(), FILE_ATTRIBUTE_NORMAL, &info, sizeof(info), SHGFI_ICON | SHGFI_USEFILEATTRIBUTES))) {

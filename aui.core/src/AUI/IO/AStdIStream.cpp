@@ -11,7 +11,7 @@
 
 #include "AStdIStream.h"
 
-AStdIStream::StreamBuf::StreamBuf(_<IInputStream> is) : mIs(std::move(is)) {
+AStdIStream::StreamBuf::StreamBuf(AArc<IInputStream> is) : mIs(std::move(is)) {
     setg(0, 0, 0);
     setp(mBuffer, mBuffer + std::size(mBuffer));
 }
@@ -27,6 +27,6 @@ int AStdIStream::StreamBuf::underflow() {
     return std::basic_ios<char>::traits_type::to_int_type(*gptr());
 }
 
-AStdIStream::AStdIStream(_<IInputStream> is) : std::istream(new StreamBuf(std::move(is))) {
+AStdIStream::AStdIStream(AArc<IInputStream> is) : std::istream(new StreamBuf(std::move(is))) {
 
 }

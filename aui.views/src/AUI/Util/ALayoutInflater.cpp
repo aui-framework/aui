@@ -17,7 +17,7 @@
 #include "ALayoutInflater.h"
 #include <AUI/Platform/ASurface.h>
 
-void ALayoutInflater::inflate(aui::no_escape<AViewContainer> root, const _<AView>& view) {
+void ALayoutInflater::inflate(aui::no_escape<AViewContainer> root, const AArc<AView>& view) {
     root->setLayout(std::make_unique<AStackedLayout>());
     if (view) {
         view->setExpanding();

@@ -223,7 +223,7 @@ void ELFObjectLoader::load(const APath& objectFile) {
     ALogger::info(LOG_TAG) << "Reloading: " << objectFile;
     struct MappedSection {
         Section section;
-        _<void> page;
+        AArc<void> page;
     };
 
     struct LocalSymbol {
@@ -267,7 +267,7 @@ void ELFObjectLoader::load(const APath& objectFile) {
         });
 
         return sections | ranges::view::transform([&](Section& section) {
-                   _<void> page;
+                   AArc<void> page;
                    if (section.header.sh_flags & SHF_ALLOC && (section.header.sh_type == SHT_PROGBITS || section.header.sh_type == SHT_NOBITS) &&
                        section.data.size() > 0) {
                        page = [&] {

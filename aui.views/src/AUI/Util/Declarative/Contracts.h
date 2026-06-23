@@ -47,7 +47,7 @@ private:
      * A [reactive] expression which are typically created by @ref AUI_REACT macro.
      */
     struct ReactiveExpression {
-        _<APropertyPrecomputed<T>> value;
+        AArc<APropertyPrecomputed<T>> value;
     };
 
 public:

@@ -26,7 +26,7 @@ class AWindowMenuProvider: public IMenuProvider {
 private:
     ASurface* mWindow;
 
-    _weak<AMenuContainer> mMenuContainer;
+    AWeakArc<AMenuContainer> mMenuContainer;
 
 public:
     void createMenu(const AVector<AMenuItem>& vector) override;

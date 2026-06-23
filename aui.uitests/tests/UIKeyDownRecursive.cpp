@@ -21,7 +21,7 @@ using namespace declarative;
 namespace {
     class InnerDialogBox : public AViewContainerBase {
     public:
-        InnerDialogBox(const _<AViewContainer>& contents) {
+        InnerDialogBox(const AArc<AViewContainer>& contents) {
             setContents(contents);
         }
 
@@ -30,8 +30,8 @@ namespace {
 
     class TestWindow : public AWindow {
     public:
-        _<ATextField> mTextField;
-        _<InnerDialogBox> mInnerDialogBox;
+        AArc<ATextField> mTextField;
+        AArc<InnerDialogBox> mInnerDialogBox;
 
         TestWindow() {
             setContents(Centered{
@@ -68,7 +68,7 @@ protected:
         UITest::TearDown();
     }
 
-    _<TestWindow> mTestWindow;
+    AArc<TestWindow> mTestWindow;
 
 };
 

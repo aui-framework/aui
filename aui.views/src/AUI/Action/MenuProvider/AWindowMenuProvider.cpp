@@ -27,12 +27,12 @@ using namespace std::chrono_literals;
 
 class AMenuContainer : public AViewContainerBase {
    private:
-    _<AMenuContainer> mSubWindow;
-    _weak<AOverlappingSurface> mSurface;
-    _<ATimer> mSublistOnHoverDisplayDelay;
+    AArc<AMenuContainer> mSubWindow;
+    AWeakArc<AOverlappingSurface> mSurface;
+    AArc<ATimer> mSublistOnHoverDisplayDelay;
     glm::ivec2 mOriginPosition;
 
-    void onShowSublistMenu(const _<AView>& view, const AVector<AMenuItem>& items) {
+    void onShowSublistMenu(const AArc<AView>& view, const AVector<AMenuItem>& items) {
         auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinimumSize().x, 0);
         mSubWindow = _new<AMenuContainer>(items, pos);
 
@@ -59,7 +59,7 @@ class AMenuContainer : public AViewContainerBase {
         setExpanding();
         setLayout(std::make_unique<AVerticalLayout>());
         for (auto& i : vector) {
-            _<AView> view;
+            AArc<AView> view;
 
             switch (i.type) {
                 case AMenu::SINGLE: {
@@ -129,7 +129,7 @@ class AMenuContainer : public AViewContainerBase {
         }
     }
 
-    void setSurface(const _<AOverlappingSurface>& surface) { mSurface = surface; }
+    void setSurface(const AArc<AOverlappingSurface>& surface) { mSurface = surface; }
 
     virtual ~AMenuContainer() { close(); }
 

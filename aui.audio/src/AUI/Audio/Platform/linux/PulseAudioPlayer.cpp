@@ -13,7 +13,7 @@ static AAudioMixer& loop() {
     return l;
 }
 
-static _<AAbstractThread> gPulseThread;
+static AArc<AAbstractThread> gPulseThread;
 
 static void stream_request_cb(pa_stream *s, size_t length, void *userdata) {
     if (gPulseThread == nullptr) {

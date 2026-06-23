@@ -25,7 +25,7 @@
 #include <AUI/Layout/AStackedLayout.h>
 #include <AUI/ASS/ASS.h>
 
-ADropdownList::ADropdownList(const _<IListModel<AString>>& model):
+ADropdownList::ADropdownList(const AArc<IListModel<AString>>& model):
         ADropdownList()
 {
     setModel(model);
@@ -35,7 +35,7 @@ ADropdownList::ADropdownList() {
 
 }
 
-void ADropdownList::setModel(const _<IListModel<AString>>& model) {
+void ADropdownList::setModel(const AArc<IListModel<AString>>& model) {
     mModel = model;
     mSelectionId = -1;
     setSelectionId(0);

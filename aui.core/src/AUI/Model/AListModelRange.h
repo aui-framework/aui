@@ -24,11 +24,11 @@ class AListModelRange {
 private:
     AListModelIndex mBegin;
     AListModelIndex mEnd;
-    _<IListModel<T>> mModel;
+    AArc<IListModel<T>> mModel;
 
 public:
     AListModelRange() = default;
-    AListModelRange(const AListModelIndex& begin, const AListModelIndex& end, _<IListModel<T>> model) : mBegin(begin),
+    AListModelRange(const AListModelIndex& begin, const AListModelIndex& end, AArc<IListModel<T>> model) : mBegin(begin),
                                                                                                 mEnd(end),
                                                                                                 mModel(std::move(model)) {}
 
@@ -39,11 +39,11 @@ public:
     class Iterator {
     private:
         AListModelIndex mIndex;
-        _<IListModel<T>> mModel;
+        AArc<IListModel<T>> mModel;
 
 
     public:
-        Iterator(const AListModelIndex& index, _<IListModel<T>> model):
+        Iterator(const AListModelIndex& index, AArc<IListModel<T>> model):
                 mIndex(index), mModel(std::move(model)) {}
 
         Iterator& operator*() {
@@ -92,7 +92,7 @@ public:
         return mEnd;
     }
 
-    const _<IListModel<T>>& getModel() const {
+    const AArc<IListModel<T>>& getModel() const {
         return mModel;
     }
 };

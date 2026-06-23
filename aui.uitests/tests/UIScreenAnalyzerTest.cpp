@@ -28,8 +28,8 @@ protected:
 
         class TestWindow: public AWindow {
         private:
-            _<ATextField> mTextField;
-            _<ALabel> mHelloLabel;
+            AArc<ATextField> mTextField;
+            AArc<ALabel> mHelloLabel;
 
         public:
             TestWindow() {

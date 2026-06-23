@@ -28,13 +28,13 @@ public:
 
     StubRenderer() = default;
     ~StubRenderer() override = default;
-    _<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override {
+    AArc<IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) override {
         class Stub : public IMultiStringCanvas {
         public:
             ~Stub() override = default;
             void addString(const glm::ivec2& position, AStringView text) noexcept override {}
             void addString(const glm::ivec2& position, std::u32string_view text) noexcept override {}
-            _<IRenderer::IPrerenderedString> finalize() noexcept override { return _new<StubPrerenderedString>(); }
+            AArc<IRenderer::IPrerenderedString> finalize() noexcept override { return _new<StubPrerenderedString>(); }
         };
     }
     void rectangle(const ABrush& brush, glm::vec2 position, glm::vec2 size) override {}
@@ -47,7 +47,7 @@ public:
         glm::vec2 position, glm::vec2 size, float blurRadius, float spreadRadius, float borderRadius,
         const AColor& color, glm::vec2 offset) override {}
     void string(glm::vec2 position, const AString& string, const AFontStyle& fs) override {}
-    _<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override {
+    AArc<IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) override {
         return _new<StubPrerenderedString>();
     }
     void lines(const ABrush& brush, AArrayView<glm::vec2> points, const ABorderStyle& style, AMetric width) override {}
@@ -103,7 +103,7 @@ static void UIStyleLegacy(benchmark::State& state) {
     });
 
     auto window = _new<AWindow>();
-    _<AView> button = declarative::Button {};
+    AArc<AView> button = declarative::Button {};
     window->setContents(declarative::Centered { button });
     window->pack();
     window->show();

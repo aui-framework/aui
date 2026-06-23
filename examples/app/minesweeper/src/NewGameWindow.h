@@ -21,10 +21,10 @@ public:
 
 private:
     MinesweeperWindow* mMinesweeper;
-    _<ANumberPicker> mWidth;
-    _<ANumberPicker> mHeight;
-    _<ANumberPicker> mMines;
-    _<ALabel> mDifficultyLabel;
+    AArc<ANumberPicker> mWidth;
+    AArc<ANumberPicker> mHeight;
+    AArc<ANumberPicker> mMines;
+    AArc<ALabel> mDifficultyLabel;
 
     void updateMinesMax();
     void updateDifficultyLabel();

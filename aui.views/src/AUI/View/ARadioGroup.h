@@ -27,8 +27,8 @@
  */
 class API_AUI_VIEWS [[deprecated("use declarative::RadioButton instead")]] ARadioGroup : public AViewContainer {
 private:
-    _<IListModel<AString>> mModel;
-    _<ARadioButton::Group> mGroup;
+    AArc<IListModel<AString>> mModel;
+    AArc<ARadioButton::Group> mGroup;
 
 public:
     template <typename... RadioButtons>
@@ -51,8 +51,8 @@ public:
         };
     }
 
-    void setViews(AVector<_<AView>> views) {
-        for (const _<AView>& v : views) {
+    void setViews(AVector<AArc<AView>> views) {
+        for (const AArc<AView>& v : views) {
             if (auto rb = _cast<ARadioButton>(v)) {
                 mGroup->addRadioButton(rb);
                 addView(v);
@@ -60,7 +60,7 @@ public:
         }
     }
 
-    void setModel(const _<IListModel<AString>>& model);
+    void setModel(const AArc<IListModel<AString>>& model);
 
     [[nodiscard]] bool isSelected() const { return mGroup->isSelected(); }
     [[nodiscard]] int getSelectedId() const { return mGroup->getSelectedId(); }

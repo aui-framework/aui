@@ -119,7 +119,7 @@ public:
             std::forward<Views>(views)...);
     }
 
-    _<Container> operator()() {
+    AArc<Container> operator()() {
         auto c = _new<Container>();
         if constexpr (!std::is_same_v<Layout, std::nullopt_t>) {
             c->setLayout(std::make_unique<Layout>());
@@ -139,7 +139,7 @@ public:
         template <typename... Views>
         Expanding(Views&&... views) : layouted_container_factory_impl<Layout, Container>(std::forward<Views>(views)...) {}
 
-        _<Container> operator()() {
+        AArc<Container> operator()() {
             return layouted_container_factory_impl<Layout, Container>::operator()() AUI_LET { it->setExpanding(); };
         }
     };
@@ -165,16 +165,16 @@ public:
     template <typename... Args>
     view(Args&&... args) : mView(_new<View>(std::forward<Args>(args)...)) {}
 
-    _<View>& operator()() { return mView; }
+    AArc<View>& operator()() { return mView; }
 
-    operator _<View>&() { return mView; }
+    operator AArc<View>&() { return mView; }
 
 private:
-    _<View> mView;
+    AArc<View> mView;
 };
 
 static_assert(std::is_convertible_v<view<AView>, View>,
-              "====================> AUI: declarative view wrapper (declarative::view) must be convertible to _<AView>");
+              "====================> AUI: declarative view wrapper (declarative::view) must be convertible to AArc<AView>");
 
 
 /**
@@ -208,7 +208,7 @@ struct Style {
 public:
     Style(std::initializer_list<Rule> rules) : mStylesheet(_new<AStylesheet>(AStylesheet(rules))) {}
 
-    Style& operator()(AVector<_<AView>> views) {
+    Style& operator()(AVector<AArc<AView>> views) {
         for (const auto& view : views) {
             AUI_ASSERTX(view->extraStylesheet() == nullptr, "extra stylesheet already specified");
             view->setExtraStylesheet(mStylesheet);
@@ -217,11 +217,11 @@ public:
         return *this;
     }
 
-    operator AVector<_<AView>>() noexcept { return std::move(mViews); }
+    operator AVector<AArc<AView>>() noexcept { return std::move(mViews); }
 
 private:
-    _<AStylesheet> mStylesheet;
-    AVector<_<AView>> mViews;
+    AArc<AStylesheet> mStylesheet;
+    AVector<AArc<AView>> mViews;
 };
 }   // namespace declarative
 
@@ -230,7 +230,7 @@ private:
     template <typename Rhs>                                                               \
     auto operator op(aui::ui_building::LayoutItemViewFactory auto&& factory, Rhs&& rhs) { \
         using Result = std::decay_t<decltype(*factory())>;\
-        return _<Result>(factory) op std::forward<Rhs>(rhs); \
+        return AArc<Result>(factory) op std::forward<Rhs>(rhs); \
     }
 
 AUI_DETAIL_BINARY_OP(&) // forwards AUI_OVERRIDE_STYLE
@@ -249,7 +249,7 @@ inline auto _container(aui::ui_building::ViewGroup views, Args&&... args) {
     return c;
 }
 
-inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AView>>>& views) {
+inline auto _form(const AVector<std::pair<std::variant<AString, AArc<AView>>, AArc<AView>>>& views) {
     auto c = _new<AViewContainer>();
     c->setLayout(std::make_unique<AAdvancedGridLayout>(2, int(views.size())));
     c->setExpanding({ 2, 0 });
@@ -257,7 +257,7 @@ inline auto _form(const AVector<std::pair<std::variant<AString, _<AView>>, _<AVi
         try {
             c->addView(_new<ALabel>(std::get<AString>(v.first)));
         } catch (const std::bad_variant_access&) {
-            c->addView(std::get<_<AView>>(v.first));
+            c->addView(std::get<AArc<AView>>(v.first));
         }
         v.second->setExpanding({ 2, 0 });
         c->addView(v.second);

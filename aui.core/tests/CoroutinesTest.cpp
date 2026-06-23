@@ -50,7 +50,7 @@ static AFuture<int> longTaskException() {
 TEST(Coroutines, CoAwaitCancellation) {
     auto testArgumentCapture = _new<int>(322);
     {
-        auto goesOutOfScope = [](_<int> testArgumentCapture) -> AFuture<> {
+        auto goesOutOfScope = [](AArc<int> testArgumentCapture) -> AFuture<> {
             co_await longTask();
             *testArgumentCapture = 0;
             ADD_FAILURE() << "should be dead already";
@@ -67,7 +67,7 @@ TEST(Coroutines, CoAwaitCancellation) {
 TEST(Coroutines, CoAwaitCancellationException) {
     auto testArgumentCapture = _new<int>(322);
     {
-        auto goesOutOfScope = [](_<int> testArgumentCapture) -> AFuture<> {
+        auto goesOutOfScope = [](AArc<int> testArgumentCapture) -> AFuture<> {
             co_await longTaskException();
             *testArgumentCapture = 0;
             ADD_FAILURE() << "should be dead already";
@@ -86,7 +86,7 @@ TEST(Coroutines, CoAwaitCorruptionTest) {
     IEventLoop::Handle h(&loop);
     AAsyncHolder async;
 
-    async << [](_<int> testArgumentCapture) -> AFuture<> {
+    async << [](AArc<int> testArgumentCapture) -> AFuture<> {
         co_await AThread::asyncSleep(500ms);
         EXPECT_EQ(*testArgumentCapture, 322) << "argument capture is corrupted";
     }(_new<int>(322));

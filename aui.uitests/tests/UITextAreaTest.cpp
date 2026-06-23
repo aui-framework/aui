@@ -26,7 +26,7 @@ namespace {
 
         SelectionMatchesAssert(unsigned s) : selection{s, s} {}
 
-        bool operator()(const _<AView>& view) const {
+        bool operator()(const AArc<AView>& view) const {
             if (auto t = _cast<ACursorSelectable>(view)) {
                 EXPECT_EQ(t->selection(), selection);
             }
@@ -55,7 +55,7 @@ protected:
         uitest::frame();
     }
 
-    _<ATextArea> mTextArea = _new<ATextArea>() AUI_OVERRIDE_STYLE { FixedSize { 300_dp, {} }, LineHeight { 1.f } } AUI_LET {
+    AArc<ATextArea> mTextArea = _new<ATextArea>() AUI_OVERRIDE_STYLE { FixedSize { 300_dp, {} }, LineHeight { 1.f } } AUI_LET {
         it->setText("hello world!\nsecond line");
     };
 

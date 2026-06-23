@@ -101,7 +101,7 @@ void CBasedFrontend::emitFunctionDeclArguments(const FunctionDeclarationNode& no
     }
 }
 
-void CBasedFrontend::visitCodeBlock(const AVector<_<INode>>& codeBlock) {
+void CBasedFrontend::visitCodeBlock(const AVector<AArc<INode>>& codeBlock) {
     for (const auto& v: codeBlock) {
         v->acceptVisitor(*this);
         mShaderOutput << ";";
@@ -158,7 +158,7 @@ void CBasedFrontend::visitNode(const OperatorCallNode& node) {
     mShaderOutput << ")";
 }
 
-void CBasedFrontend::emitFunctionCallArguments(const BuiltinOrDeclaredFunction& function, const AVector<_<ExpressionNode>>& args, bool first) {
+void CBasedFrontend::emitFunctionCallArguments(const BuiltinOrDeclaredFunction& function, const AVector<AArc<ExpressionNode>>& args, bool first) {
     for (const auto& arg : args) {
         if (first) {
             first = false;
@@ -319,7 +319,7 @@ void CBasedFrontend::visitNode(const FloatNode& node) {
     mShaderOutput << str;
 }
 
-void CBasedFrontend::parseShader(const _<AST>& ast) {
+void CBasedFrontend::parseShader(const AArc<AST>& ast) {
     ast->visit(*this);
 
     if (!mEntry) {

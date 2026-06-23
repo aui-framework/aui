@@ -21,7 +21,7 @@
 #include <AUI/Platform/AWindow.h>
 #include <variant>
 
-AImageDrawable::AImageDrawable(_<AImage> image): mSize(image->size()), mStorage(std::move(image)) {
+AImageDrawable::AImageDrawable(AArc<AImage> image): mSize(image->size()), mStorage(std::move(image)) {
 }
 
 AImageDrawable::~AImageDrawable() {
@@ -34,12 +34,12 @@ glm::ivec2 AImageDrawable::getSizeHint() {
 
 
 void AImageDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
-    if (auto asImage = std::get_if<_<AImage>>(&mStorage)) {
+    if (auto asImage = std::get_if<AArc<AImage>>(&mStorage)) {
         auto texture = render.getNewTexture();
         texture->setImage(**asImage);
         mStorage = std::move(texture);
     }
-    const auto& texture = std::get<_<ITexture>>(mStorage);
+    const auto& texture = std::get<AArc<ITexture>>(mStorage);
 
     render.rectangle(ATexturedBrush{
             .texture = texture,
@@ -51,7 +51,7 @@ void AImageDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
 }
 
 AImage AImageDrawable::rasterize(glm::ivec2 imageSize) {
-    if (auto asImage = std::get_if<_<AImage>>(&mStorage)) {
+    if (auto asImage = std::get_if<AArc<AImage>>(&mStorage)) {
         return (*asImage)->resizedLinearDownscale(imageSize);
     }
     throw AException("unimplemented");

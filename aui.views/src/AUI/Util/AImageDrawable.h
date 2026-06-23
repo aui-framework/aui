@@ -24,10 +24,10 @@
 class AImageDrawable: public IDrawable {
 private:
     glm::ivec2 mSize;
-    std::variant<_<ITexture>, _<AImage>> mStorage;
+    std::variant<AArc<ITexture>, AArc<AImage>> mStorage;
 
 public:
-    explicit AImageDrawable(_<AImage> image);
+    explicit AImageDrawable(AArc<AImage> image);
     virtual ~AImageDrawable();
 
     void draw(IRenderer& render, const IDrawable::Params& params) override;

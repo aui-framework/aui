@@ -21,11 +21,11 @@ private:
     AString mVariableName;
     unsigned mPointerCount;
     bool mIsReference;
-    _<ExpressionNode> mInitializer;
+    AArc<ExpressionNode> mInitializer;
 
 public:
     VariableDeclarationNode(bool isConst, bool isStatic, AString typeName, AString variableName,
-                            unsigned int pointerCount, bool isReference, _<ExpressionNode> initializer = nullptr) : mIsConst(isConst), mIsStatic(isStatic),
+                            unsigned int pointerCount, bool isReference, AArc<ExpressionNode> initializer = nullptr) : mIsConst(isConst), mIsStatic(isStatic),
                                                                            mTypeName(std::move(typeName)),
                                                                            mVariableName(std::move(variableName)),
                                                                            mPointerCount(pointerCount),
@@ -58,7 +58,7 @@ public:
         return mIsReference;
     }
 
-    const _<ExpressionNode>& initializer() const {
+    const AArc<ExpressionNode>& initializer() const {
         return mInitializer;
     }
 };

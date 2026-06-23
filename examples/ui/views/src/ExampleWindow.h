@@ -25,8 +25,8 @@ public:
     bool onDragEnter(const ADragNDrop::EnterEvent& event) override;
 
 private:
-    ADeque<_<AWindow>> mWindows;
+    ADeque<AArc<AWindow>> mWindows;
     AAsyncHolder mAsync;
-    _<IAudioPlayer> mWavAudio;
-    _<IAudioPlayer> mOggAudio;
+    AArc<IAudioPlayer> mWavAudio;
+    AArc<IAudioPlayer> mOggAudio;
 };

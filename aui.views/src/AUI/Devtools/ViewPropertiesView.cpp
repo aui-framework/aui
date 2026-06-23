@@ -40,7 +40,7 @@
 using namespace ass;
 using namespace declarative;
 
-ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
+ViewPropertiesView::ViewPropertiesView(const AArc<AView>& targetView) {
     setCustomStyle({
       Border {
         1_px,
@@ -54,7 +54,7 @@ ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
     setTargetView(targetView);
 }
 
-void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
+void ViewPropertiesView::setTargetView(const AArc<AView>& targetView) {
     if (!targetView) {
         return;
     }
@@ -68,7 +68,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     ADeque<ass::prop::IPropertyBase*> applicableDeclarations;
 
     auto addressStr = "{}"_format((void*) targetView.get());
-    _<AViewContainer> dst = Vertical {
+    AArc<AViewContainer> dst = Vertical {
         _new<ALabel>(Devtools::prettyViewName(targetView.get())) AUI_OVERRIDE_STYLE { FontSize { 14_pt } },
         Horizontal {
           Label { addressStr },
@@ -146,7 +146,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 }
 
 void ViewPropertiesView::displayApplicableRule(
-    const _<AViewContainer>& dst, ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
+    const AArc<AViewContainer>& dst, ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
     const ass::PropertyList* rule) {
     for (const auto& decl : rule->declarations()) {
         applicableDeclarations.push_front(decl.get());

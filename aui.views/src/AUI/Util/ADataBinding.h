@@ -30,7 +30,7 @@
  * template<>
  * struct ADataBindingDefault<ALabel, AString> {
  * public:
- *     static auto property(const _<ALabel>& view) { return view->text(); }
+ *     static auto property(const AArc<ALabel>& view) { return view->text(); }
  * };
  * ```
  */
@@ -41,13 +41,13 @@ public:
      * @brief Called then view linked with field.
      * @param view view to link with
      */
-    static void setup(const _<View>& view) {}
+    static void setup(const AArc<View>& view) {}
 
     /**
      * @brief Returns property definition for FieldType
      * @param view view to return property of
      */
-    static auto property(const _<View>& view) {}
+    static auto property(const AArc<View>& view) {}
 
     /**
      * @brief Returns getter for ADataBinding (deprecated)
@@ -67,12 +67,12 @@ public:
 };
 
 template<aui::derived_from<AViewContainer> Container>
-struct [[deprecated("test")]] ADataBindingDefault<Container, _<AView>> {
-    static void setup(const _<AViewContainer>& container) {}
-    static auto property(const _<AViewContainer>& container) {
+struct [[deprecated("test")]] ADataBindingDefault<Container, AArc<AView>> {
+    static void setup(const AArc<AViewContainer>& container) {}
+    static auto property(const AArc<AViewContainer>& container) {
         return ASlotDef {
             container.get(),
-            [&container = *container](const _<AView>& viewToInflate) {
+            [&container = *container](const AArc<AView>& viewToInflate) {
                 ALayoutInflater::inflate(container, viewToInflate);
             },
         };
@@ -400,7 +400,7 @@ signals:
 };
 
 template<typename Klass1, typename View, typename Model, typename ModelField, typename GetterRV, typename SetterArg>
-_<Klass1> operator&&(const _<Klass1>& modelBinding, const ADataBindingLinker<Model, View, ModelField, GetterRV, SetterArg>& linker) {
+AArc<Klass1> operator&&(const AArc<Klass1>& modelBinding, const ADataBindingLinker<Model, View, ModelField, GetterRV, SetterArg>& linker) {
     union converter {
         unsigned i;
         decltype(linker.getField()) p;
@@ -447,7 +447,7 @@ namespace aui::detail {
 }
 
 template<typename View, typename Model, typename Data, typename Projection>
-_<View> operator&&(const _<View>& object, const ADataBindingLinker2<Model, Data, Projection>& linker) {
+AArc<View> operator&&(const AArc<View>& object, const ADataBindingLinker2<Model, Data, Projection>& linker) {
     ADataBindingDefault<View, Data>::setup(object);
 
     constexpr bool is_default_projection = std::is_same_v<Projection, std::nullptr_t>;
@@ -497,7 +497,7 @@ public:
      * Called then view linked with field.
      * @param view
      */
-    static void setup(const _<View>& view) {}
+    static void setup(const AArc<View>& view) {}
 
     static auto getSetter() {
         return &AView::setVisibility;
@@ -505,7 +505,7 @@ public:
 };
 
 template <typename Object, APropertyReadable Connectable>
-inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding) {
+inline const AArc<Object>& operator&(const AArc<Object>& object, Connectable&& binding) {
     aui::tuple_visitor<
         typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
         using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
@@ -516,7 +516,7 @@ inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding
             "define proper ADataBindingDefault specialization or explicitly specify the destination property.");
         static_assert(
             requires { { Binding::setup(object) }; },
-            "ADataBindingDefault is required to have setup(const _<Object>&) function; either define proper "
+            "ADataBindingDefault is required to have setup(const AArc<Object>&) function; either define proper "
             "ADataBindingDefault specialization or explicitly specify the destination property.");
         Binding::setup(object);
         AObject::connect(binding, Binding::property(object));
@@ -525,7 +525,7 @@ inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding
 }
 
 template<typename Object, APropertyWritable Connectable>
-inline const _<Object>& operator&&(const _<Object>& object, Connectable&& binding) {
+inline const AArc<Object>& operator&&(const AArc<Object>& object, Connectable&& binding) {
     aui::tuple_visitor<typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
       using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
       static_assert(requires {
@@ -534,7 +534,7 @@ inline const _<Object>& operator&&(const _<Object>& object, Connectable&& bindin
          "ADataBindingDefault specialization or explicitly specify the destination property.");
       static_assert(
           requires { { Binding::setup(object) }; },
-          "ADataBindingDefault is required to have setup(const _<Object>&) function; either define proper "
+          "ADataBindingDefault is required to have setup(const AArc<Object>&) function; either define proper "
           "ADataBindingDefault specialization or explicitly specify the destination property.");
       Binding::setup(object);
       AObject::biConnect(binding, Binding::property(object));
@@ -557,7 +557,7 @@ inline decltype(auto) operator>(Property&& sourceProperty, Destination&& rhs) {
 }
 
 template <typename Object, APropertyReadable Property, typename Destination>
-inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding)
+inline const AArc<Object>& operator&(const AArc<Object>& object, Binding<Property, Destination>&& binding)
     requires requires {
         { binding.destinationPointerToMember } -> aui::invocable<Object&>;
         { std::invoke(binding.destinationPointerToMember, *object) } -> AAnyProperty;
@@ -568,7 +568,7 @@ inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Des
 }
 
 template <typename Object, APropertyWritable Property, typename Destination>
-inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding)
+inline const AArc<Object>& operator&&(const AArc<Object>& object, Binding<Property, Destination>&& binding)
     requires requires {
         { binding.destinationPointerToMember } -> aui::invocable<Object&>;
         { std::invoke(binding.destinationPointerToMember, *object) } -> AAnyProperty;
@@ -580,7 +580,7 @@ inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, De
 
 
 template <typename Object, APropertyReadable Property, typename Destination>
-inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Destination>&& binding)
+inline const AArc<Object>& operator&(const AArc<Object>& object, Binding<Property, Destination>&& binding)
     requires requires {
         { binding.destinationPointerToMember } -> aui::invocable<Object&, decltype(*binding.sourceProperty)>;
     }
@@ -593,7 +593,7 @@ inline const _<Object>& operator&(const _<Object>& object, Binding<Property, Des
 }
 
 template <typename Object, APropertyWritable Property, typename Destination>
-inline const _<Object>& operator&&(const _<Object>& object, Binding<Property, Destination>&& binding)
+inline const AArc<Object>& operator&&(const AArc<Object>& object, Binding<Property, Destination>&& binding)
     requires requires {
         { binding.destinationPointerToMember } -> aui::invocable<Object&, decltype(*binding.sourceProperty)>;
     }

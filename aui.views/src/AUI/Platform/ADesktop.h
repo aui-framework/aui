@@ -71,5 +71,5 @@ API_AUI_VIEWS AFuture<APath> browseForFile(
     ASurface* parent, const APath& startingLocation = {},
     const AVector<FileExtension>& extensions = { { "All", "*" } });
 
-API_AUI_VIEWS _<IDrawable> iconOfFile(const APath& file);
+API_AUI_VIEWS AArc<IDrawable> iconOfFile(const APath& file);
 }   // namespace ADesktop

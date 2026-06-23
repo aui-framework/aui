@@ -30,5 +30,5 @@ public:
      * Blocks the thread until next connection.
      * @return new connection
      */
-	_<ATcpSocket> accept();
+	AArc<ATcpSocket> accept();
 };

@@ -42,7 +42,7 @@ public:
     AScrollArea();
 
     void setSize(glm::ivec2 size) override;
-    void setContents(_<AView> content) {
+    void setContents(AArc<AView> content) {
         mInner->setContents(std::move(content));
     }
 
@@ -103,7 +103,7 @@ public:
      *        is already fully visible, then scrollTo does not take effect. If false, the scroll is performed up to the
      *        top border of the target view.
      */
-    void scrollTo(const _<AView>& target, bool nearestBorder = true) {
+    void scrollTo(const AArc<AView>& target, bool nearestBorder = true) {
         if (!target) {
             // nullptr target???
             return;
@@ -130,25 +130,25 @@ public:
     class Builder {
     friend class AScrollArea;
     private:
-        _<AScrollbar> mExternalVerticalScrollbar;
-        _<AScrollbar> mExternalHorizontalScrollbar;
-        _<AView> mContents;
+        AArc<AScrollbar> mExternalVerticalScrollbar;
+        AArc<AScrollbar> mExternalHorizontalScrollbar;
+        AArc<AView> mContents;
         bool mExpanding = false;
 
     public:
         Builder() = default;
 
-        Builder& withExternalVerticalScrollbar(_<AScrollbar> externalVerticalScrollbar) {
+        Builder& withExternalVerticalScrollbar(AArc<AScrollbar> externalVerticalScrollbar) {
             mExternalVerticalScrollbar = std::move(externalVerticalScrollbar);
             return *this;
         }
 
-        Builder& withExternalHorizontalScrollbar(_<AScrollbar> externalHorizontalScrollbar) {
+        Builder& withExternalHorizontalScrollbar(AArc<AScrollbar> externalHorizontalScrollbar) {
             mExternalHorizontalScrollbar = std::move(externalHorizontalScrollbar);
             return *this;
         }
 
-        Builder& withContents(_<AView> contents) {
+        Builder& withContents(AArc<AView> contents) {
             mContents = std::move(contents);
             return *this;
         }
@@ -158,30 +158,30 @@ public:
             return *this;
         }
 
-        _<AScrollArea> build() {
+        AArc<AScrollArea> build() {
             return aui::ptr::manage_shared(new AScrollArea(*this));
         }
 
-        operator _<AView>() {
+        operator AArc<AView>() {
             return build();
         }
-        operator _<AViewContainerBase>() {
+        operator AArc<AViewContainerBase>() {
             return build();
         }
     };
 
     [[nodiscard]]
-    const _<AView>& contents() const noexcept {
+    const AArc<AView>& contents() const noexcept {
         return mInner->contents();
     }
 
     [[nodiscard]]
-    const _<AScrollbar>& verticalScrollbar() const noexcept {
+    const AArc<AScrollbar>& verticalScrollbar() const noexcept {
         return mVerticalScrollbar;
     }
 
     [[nodiscard]]
-    const _<AScrollbar>& horizontalScrollbar() const noexcept {
+    const AArc<AScrollbar>& horizontalScrollbar() const noexcept {
         return mHorizontalScrollbar;
     }
     
@@ -193,9 +193,9 @@ protected:
     explicit AScrollArea(const Builder& builder);
 
 private:
-    _<AScrollAreaViewport> mInner;
-    _<AScrollbar> mVerticalScrollbar;
-    _<AScrollbar> mHorizontalScrollbar;
+    AArc<AScrollAreaViewport> mInner;
+    AArc<AScrollbar> mVerticalScrollbar;
+    AArc<AScrollbar> mHorizontalScrollbar;
 
     /**
      * @brief Determines whether AScrollArea can be scrolled with mouse wheel or can be scrolled with touch only.

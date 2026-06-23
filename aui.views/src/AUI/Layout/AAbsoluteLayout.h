@@ -15,11 +15,11 @@
 
 namespace aui::detail {
     struct AbsoluteLayoutCell {
-        aui::non_null<_<AView>> view;
+        aui::non_null<AArc<AView>> view;
         AOptional<AMetric> pivotX, pivotY;
         AOptional<AMetric> sizeX, sizeY;
 
-        operator _<AView>() const {
+        operator AArc<AView>() const {
             return view;
         }
     };
@@ -35,7 +35,7 @@ public:
 
     void add(aui::detail::AbsoluteLayoutCell cell);
 
-    void addView(const _<AView>& view, AOptional<size_t> index) override;
+    void addView(const AArc<AView>& view, AOptional<size_t> index) override;
 
     int getMinimumWidth() override;
     int getMinimumHeight() override;

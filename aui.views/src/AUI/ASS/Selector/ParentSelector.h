@@ -50,7 +50,7 @@ namespace ass {
             return false;
         }
 
-        void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+        void setupConnections(AView* view, const AArc<AAssHelper>& helper) override {
             if (r.isPossiblyApplicable(view)) {
                 for (AView* v = view->getParent(); v; v = v->getParent()) {
                     if (l.isPossiblyApplicable(v)) {

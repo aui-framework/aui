@@ -13,7 +13,7 @@
 #include <AUI/Common/ASmallVector.h>
 #include "AFormMultipart.h"
 
-_<IInputStream> AFormMultipart::makeInputStream() const {
+AArc<IInputStream> AFormMultipart::makeInputStream() const {
     mBoundary = "----auiboundary";
     {
         static std::default_random_engine re;
@@ -41,27 +41,27 @@ _<IInputStream> AFormMultipart::makeInputStream() const {
                       prefix += "\r\n";
 
                       auto content = std::visit(aui::lambda_overloaded {
-                          [](const AString& v) -> _<IInputStream> {
+                          [](const AString& v) -> AArc<IInputStream> {
                               return _new<AStringStream>(v);
                           },
-                          [](const AByteBuffer& v) -> _<IInputStream> {
+                          [](const AByteBuffer& v) -> AArc<IInputStream> {
                               return _new<AStrongByteBufferInputStream>(v);
                           },
-                          [&](const _<IInputStream>& is) -> _<IInputStream> {
+                          [&](const AArc<IInputStream>& is) -> AArc<IInputStream> {
                               return is;
                           },
                       }, kv.second.value);
 
                       return std::array{
-                          (_<IInputStream>)_new<AStringStream>(std::move(prefix)),
+                          (AArc<IInputStream>)_new<AStringStream>(std::move(prefix)),
                           content,
-                          (_<IInputStream>)_new<AStringStream>(fmt::format("\r\n")),
+                          (AArc<IInputStream>)_new<AStringStream>(fmt::format("\r\n")),
                       };
                     })
                   | ranges::actions::join
-                  | ranges::to<ADeque<_<IInputStream>>>()
-                  //| ranges::actions::push_front({(_<IInputStream>)_new<AStringStream>(fmt::format("\r\n", mBoundary))})
-                  | ranges::actions::push_back({(_<IInputStream>)_new<AStringStream>(fmt::format("--{}--\r\n", mBoundary))});
+                  | ranges::to<ADeque<AArc<IInputStream>>>()
+                  //| ranges::actions::push_front({(AArc<IInputStream>)_new<AStringStream>(fmt::format("\r\n", mBoundary))})
+                  | ranges::actions::push_back({(AArc<IInputStream>)_new<AStringStream>(fmt::format("--{}--\r\n", mBoundary))});
 
     return _new<AConcatInputStream>(std::move(result));
 }

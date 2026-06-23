@@ -47,14 +47,14 @@ struct InflateOpts {
     bool backward = true;
     bool forward = true;
 };
-using ViewsSharedCache = AMap<aui::for_each_ui::Key, _<AView>>;
+using ViewsSharedCache = AMap<aui::for_each_ui::Key, AArc<AView>>;
 }   // namespace detail
 }   // namespace aui::for_each_ui
 
 class API_AUI_VIEWS AForEachUIBase : public AViewContainerBase {
 public:
     struct Entry {
-        _<AView> view;
+        AArc<AView> view;
         aui::for_each_ui::Key id;
     };
 
@@ -94,19 +94,19 @@ protected:
     void putOurViewsToSharedCache();
 
 private:
-    _weak<AScrollAreaViewport> mViewport;
+    AWeakArc<AScrollAreaViewport> mViewport;
     List mViewsModel;
     aui::dyn_range_capabilities mViewsModelCapabilities;
     AOptional<glm::ivec2> mLastInflatedScroll {};
 
     void addView(List::iterator iterator, AOptional<std::size_t> index = std::nullopt);
-    void removeViews(aui::range<AVector<_<AView>>::const_iterator> iterators);
+    void removeViews(aui::range<AVector<AArc<AView>>::const_iterator> iterators);
 
     void inflate(aui::for_each_ui::detail::InflateOpts opts = {});
     glm::ivec2 calculateOffsetWithinViewportSlidingSurface();
     glm::ivec2 axisMask();
 
-    _<AScrollAreaViewport> findViewport();
+    AArc<AScrollAreaViewport> findViewport();
     void ensureViewport();
 
 };
@@ -253,7 +253,7 @@ public:
 
     using List = AForEachUIBase::List;
     using ListFactory = std::function<List()>;
-    using ViewFactory = std::function<_<AView>(const T& value)>;
+    using ViewFactory = std::function<AArc<AView>(const T& value)>;
     using KeyFunction = std::function<aui::for_each_ui::Key(const T&)>;
 
     AForEachUI() {}
@@ -428,7 +428,7 @@ auto makeForEach(RangeFactory&& rangeFactory, _unique<ALayout> layout)
 #define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)      \
     aui::detail::makeForEach([=]() -> decltype(auto) { \
         return (model);                                        \
-    }, std::make_unique<layout>()) - [__VA_ARGS__](const auto& value) -> _<AView>
+    }, std::make_unique<layout>()) - [__VA_ARGS__](const auto& value) -> AArc<AView>
 
 /**
  * @brief ranged-for-loop style wrapped for [AForEachUI].

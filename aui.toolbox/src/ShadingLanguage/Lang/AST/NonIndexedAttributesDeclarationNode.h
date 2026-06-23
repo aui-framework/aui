@@ -19,7 +19,7 @@
 
 class NonIndexedAttributesDeclarationNode: public INode {
 public:
-    using Fields = AVector<_<VariableDeclarationNode>>;
+    using Fields = AVector<AArc<VariableDeclarationNode>>;
     NonIndexedAttributesDeclarationNode(KeywordToken type, Fields fields) :
             mType(type),
             mFields(std::move(fields)) {}

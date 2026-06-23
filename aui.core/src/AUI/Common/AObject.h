@@ -192,7 +192,7 @@ public:
      *
      * !!! note
      *
-     *     `_<Object>` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed
+     *     `AArc<Object>` arg is accepted by value intentionally -- this way we ensure that it would not be destroyed
      *     during connection creation.
      *
      * @param connectable signal or property
@@ -203,7 +203,7 @@ public:
     template <
         aui::detail::ConnectionSource ConnectionSource, aui::derived_from<AObjectBase> Object,
         ACompatibleSlotFor<ConnectionSource> Function>
-    static decltype(auto) connect(const ConnectionSource& connectionSource, _<Object> object, Function&& function) {
+    static decltype(auto) connect(const ConnectionSource& connectionSource, AArc<Object> object, Function&& function) {
         return connect(connectionSource, object.get(), std::forward<Function>(function));
     }
 
@@ -257,7 +257,7 @@ public:
      * @param function slot. Can be lambda.
      */
     template <AAnyProperty Property, typename Object, ACompatibleSlotFor<Property> Function>
-    static void connect(const Property& property, _<Object> object, Function&& function)
+    static void connect(const Property& property, AArc<Object> object, Function&& function)
         requires(!aui::derived_from<Object, AObject>)
     {
         aui::react::DependencyObserverScope r(nullptr); // drop current dependency observer so it won't track source
@@ -279,13 +279,13 @@ public:
     }
 
     [[nodiscard]]
-    const _<AAbstractThread>& getThread() const noexcept {
+    const AArc<AAbstractThread>& getThread() const noexcept {
         return mAttachedThread;
     }
 
     bool isSlotsCallsOnlyOnMyThread() const noexcept { return mSlotsCallsOnlyOnMyThread; }
 
-    static void moveToThread(aui::no_escape<AObject> object, _<AAbstractThread> thread);
+    static void moveToThread(aui::no_escape<AObject> object, AArc<AAbstractThread> thread);
 
     void setSlotsCallsOnlyOnMyThread(bool slotsCallsOnlyOnMyThread) {
         mSlotsCallsOnlyOnMyThread = slotsCallsOnlyOnMyThread;
@@ -295,10 +295,10 @@ protected:
     /**
      * @brief Set thread of the object.
      */
-    void setThread(_<AAbstractThread> thread) { mAttachedThread = std::move(thread); }
+    void setThread(AArc<AAbstractThread> thread) { mAttachedThread = std::move(thread); }
 
 private:
-    _<AAbstractThread> mAttachedThread;
+    AArc<AAbstractThread> mAttachedThread;
     bool mSignalsEnabled = true;
 
     /**

@@ -289,7 +289,7 @@ protected:
         AViewContainerBase::invalidateAllStyles();
     }
 
-    virtual void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) = 0;
+    virtual void fillStringCanvas(const AArc<IRenderer::IMultiStringCanvas>& canvas) = 0;
 
     void prerenderString(ARenderContext ctx) {
         performLayout();
@@ -315,7 +315,7 @@ protected:
     WordWrappingEngine mEngine;
     VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
 
-    _<IRenderer::IPrerenderedString> mPrerenderedString;
+    AArc<IRenderer::IPrerenderedString> mPrerenderedString;
 
 
     void performLayout() {

@@ -52,7 +52,7 @@ void AAbsoluteLayout::add(aui::detail::AbsoluteLayoutCell cell) {
     mViews << std::move(cell);
 }
 
-void AAbsoluteLayout::addView(const _<AView>& view, AOptional<size_t> index) {
+void AAbsoluteLayout::addView(const AArc<AView>& view, AOptional<size_t> index) {
     addViewBasicImpl({
         .view = view
     }, index);

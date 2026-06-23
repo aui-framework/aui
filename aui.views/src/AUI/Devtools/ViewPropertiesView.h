@@ -16,15 +16,15 @@
 
 class ViewPropertiesView: public AScrollArea {
 private:
-    _weak<AView> mTargetView;
+    AWeakArc<AView> mTargetView;
 
     void requestTargetUpdate();
 public:
-    explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
+    explicit ViewPropertiesView(const AArc<AView>& targetView);
+    void displayApplicableRule(const AArc<AViewContainer>& dst,
                                ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
                                const ass::PropertyList* rule);
-    void setTargetView(const _<AView>& targetView);
+    void setTargetView(const AArc<AView>& targetView);
 };
 
 

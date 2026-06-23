@@ -55,7 +55,7 @@ public:
 };
 
 /// [notePreview]
-_<AView> notePreview(const _<Note>& note) {
+AArc<AView> notePreview(const AArc<Note>& note) {
     auto stringOneLinePreview = [](const AString& s) -> AString {
         if (s.empty()) {
             return "Empty";
@@ -82,7 +82,7 @@ _<AView> notePreview(const _<Note>& note) {
 /// [notePreview]
 
 /// [noteEditor]
-_<AView> noteEditor(const _<Note>& note) {
+AArc<AView> noteEditor(const AArc<Note>& note) {
     if (note == nullptr) {
         return Centered { Label { "No note selected" } };
     }
@@ -139,7 +139,7 @@ public:
                               observeChangesForDirty(note);
                               return notePreview(note) AUI_LET {
                                   connect(it->clicked, [this, note] { mCurrentNote = note; });
-                                  it& mCurrentNote > [note](AView& view, const _<Note>& currentNote) {
+                                  it& mCurrentNote > [note](AView& view, const AArc<Note>& currentNote) {
                                       ALOG_DEBUG(LOG_TAG) << "currentNote == note " << currentNote << " == " << note;
                                       view.setAssName(".plain_bg", currentNote == note);
                                   };
@@ -223,7 +223,7 @@ public:
 
     void markDirty() { mDirty = true; }
 
-    void observeChangesForDirty(const _<Note>& note) {
+    void observeChangesForDirty(const AArc<Note>& note) {
         aui::reflect::for_each_field_value(
             *note,
             aui::lambda_overloaded {
@@ -236,8 +236,8 @@ public:
     }
 
 private:
-    AProperty<AVector<_<Note>>> mNotes;
-    AProperty<_<Note>> mCurrentNote;
+    AProperty<AVector<AArc<Note>>> mNotes;
+    AProperty<AArc<Note>> mCurrentNote;
     AProperty<bool> mDirty = false;
 };
 

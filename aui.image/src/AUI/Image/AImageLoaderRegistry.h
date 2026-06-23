@@ -29,28 +29,28 @@ class API_AUI_IMAGE AImageLoaderRegistry {
     friend class AImage;
 
 private:
-    ADeque<_<IImageLoader>> mRasterLoaders;
-    ADeque<_<IImageLoader>> mVectorLoaders;
-    ADeque<_<IImageLoader>> mAnimatedLoaders;
+    ADeque<AArc<IImageLoader>> mRasterLoaders;
+    ADeque<AArc<IImageLoader>> mVectorLoaders;
+    ADeque<AArc<IImageLoader>> mAnimatedLoaders;
     ADeque<AString> mSupportedFormats;
 
-    _<IImageFactory> loadVector(AByteBufferView buffer);
-    _<IAnimatedImageFactory> loadAnimated(AByteBufferView buffer);
-    _<AImage> loadRaster(AByteBufferView buffer);
-    inline _<IImageFactory> loadVector(const AUrl& url) {
+    AArc<IImageFactory> loadVector(AByteBufferView buffer);
+    AArc<IAnimatedImageFactory> loadAnimated(AByteBufferView buffer);
+    AArc<AImage> loadRaster(AByteBufferView buffer);
+    inline AArc<IImageFactory> loadVector(const AUrl& url) {
         auto s = AByteBuffer::fromStream(url.open());
         return loadVector(s);
     }
-    _<AImage> loadImage(const AUrl& url);
+    AArc<AImage> loadImage(const AUrl& url);
 
-    void registerLoader(ADeque<_<IImageLoader>>& d, _<IImageLoader> loader, AString name);
+    void registerLoader(ADeque<AArc<IImageLoader>>& d, AArc<IImageLoader> loader, AString name);
 
 public:
     AImageLoaderRegistry() = default;
 
-    void registerRasterLoader(_<IImageLoader> imageLoader, AString name = "");
-    void registerVectorLoader(_<IImageLoader> imageLoader, AString name = "");
-    void registerAnimatedLoader(_<IImageLoader> imageLoader, AString name = "");
+    void registerRasterLoader(AArc<IImageLoader> imageLoader, AString name = "");
+    void registerVectorLoader(AArc<IImageLoader> imageLoader, AString name = "");
+    void registerAnimatedLoader(AArc<IImageLoader> imageLoader, AString name = "");
     [[nodiscard]]
     const ADeque<AString>& supportedFormats() const noexcept;
 

@@ -22,10 +22,10 @@
 class API_AUI_VIEWS APageSwitch: public ALabel {
 private:
     unsigned mPageNumber;
-    _<APageView> mPageView;
+    AArc<APageView> mPageView;
 
 public:
-    APageSwitch(const AString& text, unsigned pageNumber, const _<APageView>& pageView);
+    APageSwitch(const AString& text, unsigned pageNumber, const AArc<APageView>& pageView);
 
     int getContentMinimumWidth() override;
 };

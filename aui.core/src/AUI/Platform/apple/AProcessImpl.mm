@@ -36,6 +36,6 @@ class ASelfProcess : public AProcess {
     }
 };
 
-_<AProcess> AProcess::self() { return _new<ASelfProcess>(); }
+AArc<AProcess> AProcess::self() { return _new<ASelfProcess>(); }
 
-_<AProcess> AProcess::fromPid(uint32_t pid) { throw AException("unimplemented"); }
+AArc<AProcess> AProcess::fromPid(uint32_t pid) { throw AException("unimplemented"); }

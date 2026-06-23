@@ -32,7 +32,7 @@ protected:
         UITest::TearDown();
     }
 
-    _<AWindow> mWindow;
+    AArc<AWindow> mWindow;
 };
 }   // namespace
 
@@ -70,7 +70,7 @@ TEST_F(UIReactiveTest, MultipleWithStyle) {
     // container takes precedence over the outer container.
     using namespace ass;
 
-    auto makeContainer = [](_<AView> view) {
+    auto makeContainer = [](AArc<AView> view) {
         return Centered {
             std::move(view),
         } AUI_OVERRIDE_STYLE {

@@ -29,7 +29,7 @@ namespace {
             UITest::SetUp();
         }
 
-        void inflate(_<AView> view) {
+        void inflate(AArc<AView> view) {
             mWindow = _new<AWindow>();
             using namespace declarative;
             ALayoutInflater::inflate(mWindow, std::move(view));
@@ -42,8 +42,8 @@ namespace {
             UITest::TearDown();
         }
 
-        _<AWindow> mWindow;
-        _<AView> mView;
+        AArc<AWindow> mWindow;
+        AArc<AView> mView;
     };
 
     class ViewContainerMock: public AViewContainer {
@@ -206,7 +206,7 @@ TEST_F(UIRepaintTest, SurroundingRepaint1) {
     {
         testing::InSequence s;
         EXPECT_CALL(*labelRight, renderMock).Times(testing::Between(1, 3));
-        _<AViewContainer> c = Horizontal { labelLeft, labelRight };
+        AArc<AViewContainer> c = Horizontal { labelLeft, labelRight };
         inflate(Centered{c});
         AUI_REPEAT(10) { uitest::frame(); }
     }
@@ -226,7 +226,7 @@ TEST_F(UIRepaintTest, SurroundingRepaint2) {
     {
         testing::InSequence s;
         EXPECT_CALL(*labelRight, renderMock).Times(testing::Between(1, 3));
-        _<AViewContainer> c = Horizontal { labelRight };
+        AArc<AViewContainer> c = Horizontal { labelRight };
         inflate(Centered{c});
         AUI_REPEAT(10) { uitest::frame(); }
     }

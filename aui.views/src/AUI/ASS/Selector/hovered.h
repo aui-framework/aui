@@ -30,7 +30,7 @@ namespace ass {
             return Base::isStateApplicable(view) && *view->enabled() && view->isMouseHover();
         }
 
-        void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+        void setupConnections(AView* view, const AArc<AAssHelper>& helper) override {
             Base::setupConnections(view, helper);
             view->hoveredState.clearAllOutgoingConnectionsWith(helper.get());
             AObject::connect(view->hoveredState, AUI_SLOT(helper)::onInvalidateStateAss);

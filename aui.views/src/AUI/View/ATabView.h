@@ -37,14 +37,14 @@ public:
 
 class API_AUI_VIEWS ATabButtonRow: public AViewContainerBase {
 private:
-    _<AViewContainer> mContents;
+    AArc<AViewContainer> mContents;
 
 public:
     ATabButtonRow();
     void setCurrent(size_t i, bool current);
     void addTab(const AString& name);
 
-    const _<AViewContainer>& getContents() const {
+    const AArc<AViewContainer>& getContents() const {
         return mContents;
     }
 };
@@ -62,13 +62,13 @@ public:
  */
 class API_AUI_VIEWS ATabView: public AViewContainerBase {
 private:
-    _<APageView> mPageView;
-    _<ATabButtonRow> mRow;
+    AArc<APageView> mPageView;
+    AArc<ATabButtonRow> mRow;
 
 public:
     ATabView();
 
-    void addTab(const _<AView>& view, const AString& name = {});
+    void addTab(const AArc<AView>& view, const AString& name = {});
     void setTabId(unsigned tabId);
 
 };

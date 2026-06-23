@@ -28,21 +28,21 @@ template <typename T>
 class AListModelSelection {
 private:
     ASet<AListModelIndex> mIndices;
-    _<IListModel<T>> mModel;
+    AArc<IListModel<T>> mModel;
 
 public:
     AListModelSelection() = default;
-    AListModelSelection(const ASet<AListModelIndex>& indices, _<IListModel<T>> model) : mIndices(indices),
+    AListModelSelection(const ASet<AListModelIndex>& indices, AArc<IListModel<T>> model) : mIndices(indices),
                                                                                     mModel(std::move(model)) {}
 
     class Iterator {
     private:
         ASet<AListModelIndex>::iterator mIterator;
-        _<IListModel<T>> mModel;
+        AArc<IListModel<T>> mModel;
 
 
     public:
-        Iterator(const ASet<AListModelIndex>::iterator& iterator, _<IListModel<T>> model):
+        Iterator(const ASet<AListModelIndex>::iterator& iterator, AArc<IListModel<T>> model):
             mIterator(iterator), mModel(std::move(model)) {}
 
 
@@ -92,7 +92,7 @@ public:
         return mIndices.empty();
     }
 
-    const _<IListModel<T>>& getModel() const {
+    const AArc<IListModel<T>>& getModel() const {
         return mModel;
     }
 

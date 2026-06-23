@@ -26,7 +26,7 @@ UIMatcher By::text(const AString& text) {
 
         ~TextMatcher() override = default;
 
-        bool matches(const _<AView>& view) override {
+        bool matches(const AArc<AView>& view) override {
             auto s = IStringable::toString(view);
             return s == mText;
         }
@@ -43,24 +43,24 @@ UIMatcher By::name(const AString& text) {
 
         ~NameMatcher() override = default;
 
-        bool matches(const _<AView>& view) override {
+        bool matches(const AArc<AView>& view) override {
             return view->getAssNames().contains(mText);
         }
     };
     return { _new<NameMatcher>(text) };
 }
 
-UIMatcher By::value(const _<AView>& value) {
+UIMatcher By::value(const AArc<AView>& value) {
     class ValueMatcher: public IMatcher {
     public:
-        explicit ValueMatcher(const _<AView>& value) : mValue(value) {}
+        explicit ValueMatcher(const AArc<AView>& value) : mValue(value) {}
 
-        bool matches(const _<AView>& view) override {
+        bool matches(const AArc<AView>& view) override {
             return mValue == view;
         }
 
     private:
-        _<AView> mValue;
+        AArc<AView> mValue;
     };
 
     return { _new<ValueMatcher>(value) };

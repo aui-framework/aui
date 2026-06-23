@@ -36,7 +36,7 @@ class IDrawable {
         static Cache& inst();
 
     protected:
-        _<IDrawable> load(const AUrl& key) override;
+        AArc<IDrawable> load(const AUrl& key) override;
     };
 
 public:
@@ -85,5 +85,5 @@ public:
      * description of an error. The reason is we don't want to crash our application if we didn't loaded some graphics,
      * which is usually pretty optional stuff. The user can still do his job with the application without fancy images.
      */
-    API_AUI_VIEWS static _<IDrawable> fromUrl(const AUrl& url) noexcept;
+    API_AUI_VIEWS static AArc<IDrawable> fromUrl(const AUrl& url) noexcept;
 };

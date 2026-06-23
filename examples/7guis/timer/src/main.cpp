@@ -61,7 +61,7 @@ public:
     }
 
 private:
-    _<ATimer> mTimer = _new<ATimer>(100ms);
+    AArc<ATimer> mTimer = _new<ATimer>(100ms);
     high_resolution_clock::time_point mStartTime = high_resolution_clock::now();
     AProperty<high_resolution_clock::time_point> mCurrentTime;
     AProperty<high_resolution_clock::duration> mDuration = 30s;

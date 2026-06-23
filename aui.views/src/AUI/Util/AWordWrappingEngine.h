@@ -69,7 +69,7 @@ public:
     }
 };
 
-template<typename Container = AVector<_<AWordWrappingEngineBase::Entry>>>
+template<typename Container = AVector<AArc<AWordWrappingEngineBase::Entry>>>
 class AWordWrappingEngine: public AWordWrappingEngineBase {
 public:
     using Entries = Container;

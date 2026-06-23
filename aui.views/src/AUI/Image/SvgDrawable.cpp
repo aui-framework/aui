@@ -44,7 +44,7 @@ void AVectorDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
         return;
     }
     auto key = asKey(size);
-    auto doDraw = [&](const _<ITexture>& texture) {
+    auto doDraw = [&](const AArc<ITexture>& texture) {
         render.rectangle(ATexturedBrush{
                                      .texture = texture,
                                      .uv1 = params.cropUvTopLeft,

@@ -38,14 +38,14 @@ private:
 
 public:
     ATreeView();
-    ATreeView(const _<ITreeModel<AString>>& model);
-    void setModel(const _<ITreeModel<AString>>& model);
+    ATreeView(const AArc<ITreeModel<AString>>& model);
+    void setModel(const AArc<ITreeModel<AString>>& model);
     void onScroll(const AScrollEvent& event) override;
     void setSize(glm::ivec2 size) override;
     int getContentMinimumHeight() override;
     void handleMouseMove(ItemView* pView);
 
-    void setViewFactory(const std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeModelIndex&)>& viewFactory) {
+    void setViewFactory(const std::function<AArc<AView>(const AArc<ITreeModel<AString>>&, const ATreeModelIndex&)>& viewFactory) {
         mViewFactory = viewFactory;
     }
 
@@ -58,12 +58,12 @@ signals:
     emits<ATreeModelIndex> itemMouseHover;
 
 private:
-    _<ITreeModel<AString>> mModel;
-    _<ContainerView> mContent;
-    _<AScrollbar> mScrollbar;
-    _weak<ItemView> mPrevSelection;
+    AArc<ITreeModel<AString>> mModel;
+    AArc<ContainerView> mContent;
+    AArc<AScrollbar> mScrollbar;
+    AWeakArc<ItemView> mPrevSelection;
 
-    std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeModelIndex& index)> mViewFactory;
+    std::function<AArc<AView>(const AArc<ITreeModel<AString>>&, const ATreeModelIndex& index)> mViewFactory;
 
 
     void updateScrollbarDimensions();
@@ -71,9 +71,9 @@ private:
     void handleMouseDoubleClicked(ItemView* v);
     void handleSelected(ItemView* v);
 
-    void fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndexOrRoot& index);
-    void makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView);
-    _<ItemView> indexToView(const ATreeModelIndex& target);
+    void fillViewsRecursively(const AArc<AViewContainer>& content, const ATreeModelIndexOrRoot& index);
+    void makeElement(const AArc<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const AArc<ATreeView::ItemView>& itemView);
+    AArc<ItemView> indexToView(const ATreeModelIndex& target);
 };
 
 

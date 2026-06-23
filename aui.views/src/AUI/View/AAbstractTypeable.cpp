@@ -27,10 +27,10 @@
 #include <AUI/Util/kAUI.h>
 #include <AUI/i18n/AI18n.h>
 
-_<ATimer> AAbstractTypeable::blinkTimer()
+AArc<ATimer> AAbstractTypeable::blinkTimer()
 {
     using namespace std::chrono_literals;
-    static _weak<ATimer> t;
+    static AWeakArc<ATimer> t;
     if (auto l = t.lock()) {
         return l;
     }

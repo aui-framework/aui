@@ -45,7 +45,7 @@ namespace ass {
             return false;
         }
 
-        void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+        void setupConnections(AView* view, const AArc<AAssHelper>& helper) override {
             auto parent = view->getParent();
             AUI_ASSERT(parent);
 

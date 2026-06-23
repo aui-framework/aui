@@ -38,7 +38,7 @@ static std::string ios_get_path_in_bundle() {
     s = [docsDir UTF8String];
     return s;
 }
-static const _<AWindow>& auiWindow() {
+static const AArc<AWindow>& auiWindow() {
     return AWindow::getWindowManager().getWindows().front();
 }
 

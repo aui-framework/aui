@@ -23,11 +23,11 @@ class API_AUI_VIEWS AWindowManager: public IEventLoop {
     friend class AClipboard;
 private:
     AWatchdog mWatchdog;
-    _<ATimer> mHangTimer;
+    AArc<ATimer> mHangTimer;
 
 protected:
     IEventLoop::Handle mHandle;
-    ADeque<_<AWindow>> mWindows;
+    ADeque<AArc<AWindow>> mWindows;
     bool mLoopRunning = false;
 
 public:
@@ -49,7 +49,7 @@ public:
     void notifyProcessMessages() override;
     void loop() override;
 
-    const ADeque<_<AWindow>>& getWindows() const {
+    const ADeque<AArc<AWindow>>& getWindows() const {
         return mWindows;
     }
 
@@ -64,8 +64,8 @@ public:
     virtual void initNativeWindow(const IRenderingContext::Init& init);
 
     template<typename T>
-    [[nodiscard]] ADeque<_<T>> getWindowsOfType() const {
-        ADeque<_<T>> result;
+    [[nodiscard]] ADeque<AArc<T>> getWindowsOfType() const {
+        ADeque<AArc<T>> result;
         for (auto& w : mWindows) {
             if (auto c = _cast<T>(w)) {
                 result << c;

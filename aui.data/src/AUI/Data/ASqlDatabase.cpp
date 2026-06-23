@@ -17,15 +17,15 @@
 #include "AUI/Common/Plugin.h"
 
 
-AMap<AString, _<ISqlDriver>>& ASqlDatabase::getDrivers()
+AMap<AString, AArc<ISqlDriver>>& ASqlDatabase::getDrivers()
 {
-	static AMap<AString, _<ISqlDriver>> drivers;
+	static AMap<AString, AArc<ISqlDriver>> drivers;
 	return drivers;
 }
 
 ASqlDatabase::~ASqlDatabase() = default;
 
-_<ASqlQueryResult> ASqlDatabase::query(const AString& query, const AVector<AVariant>& params)
+AArc<ASqlQueryResult> ASqlDatabase::query(const AString& query, const AVector<AVariant>& params)
 {
 	return aui::ptr::manage_shared(new ASqlQueryResult(mDriverInterface->query(query, params)));
 }
@@ -35,7 +35,7 @@ int ASqlDatabase::execute(const AString& query, const AVector<AVariant>& params)
 	return mDriverInterface->execute(query, params);
 }
 
-_<ASqlDatabase> ASqlDatabase::connect(const AString& driverName, const AString& address, uint16_t port,
+AArc<ASqlDatabase> ASqlDatabase::connect(const AString& driverName, const AString& address, uint16_t port,
 	const AString& databaseName, const AString& username, const AString& password)
 {
 	for (int i = 0; i < 2; ++i) {
@@ -57,7 +57,7 @@ _<ASqlDatabase> ASqlDatabase::connect(const AString& driverName, const AString& 
 	throw AException("No such driver: " + driverName);
 }
 
-void ASqlDatabase::registerDriver(_<ISqlDriver> driver)
+void ASqlDatabase::registerDriver(AArc<ISqlDriver> driver)
 {
 	getDrivers()[driver->getDriverName()] = std::move(driver);
 }

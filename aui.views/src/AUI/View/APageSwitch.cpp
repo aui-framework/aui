@@ -15,7 +15,7 @@
 
 #include "APageSwitch.h"
 
-APageSwitch::APageSwitch(const AString& text, unsigned pageNumber, const _<APageView>& pageView):
+APageSwitch::APageSwitch(const AString& text, unsigned pageNumber, const AArc<APageView>& pageView):
     ALabel(text),
     mPageNumber(pageNumber),
     mPageView(pageView)

@@ -164,7 +164,7 @@ struct Button {
      * @details
      * Can be any view, i.e., `Label` to display text.
      */
-    _<AView> content;
+    AArc<AView> content;
 
     /**
      * @brief Handler for button click event.
@@ -180,7 +180,7 @@ struct Button {
      */
     bool isDefault = false;
 
-    _<AButton> operator()() {
+    AArc<AButton> operator()() {
         auto button = _new<AButton>();
         onClick.bindTo(button->clicked);
         if (isDefault) {
@@ -217,7 +217,7 @@ private:
             return false;
         }
 
-        void setupConnections(AView* view, const _<AAssHelper>& helper) override {
+        void setupConnections(AView* view, const AArc<AAssHelper>& helper) override {
             IAssSubSelector::setupConnections(view, helper);
             mWrapped->setupConnections(view, helper);
 

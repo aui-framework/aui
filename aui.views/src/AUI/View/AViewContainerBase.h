@@ -70,7 +70,7 @@ public:
 
     struct PointerEventsMapping {
         APointerIndex pointerIndex;
-        _weak<AView> targetView;
+        AWeakArc<AView> targetView;
         /**
          * @brief true if the view or any child (direct or indirect) of the view blocks clicks when pressed
          * @see mBlockClicksWhenPressed
@@ -127,7 +127,7 @@ public:
     /**
      * @brief Get all views of the container.
      */
-    const AVector<_<AView>>& getViews() const {
+    const AVector<AArc<AView>>& getViews() const {
         return mViews;
     }
 
@@ -149,7 +149,7 @@ public:
      * Some containers may implement getViewAt by it's own (i.e. AListView for performance reasons).
      */
     [[nodiscard]]
-    virtual _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
+    virtual AArc<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
 
     /**
      * @brief Acts as AViewContainerBase::getViewAt but recursively (may include non-direct child).
@@ -158,7 +158,7 @@ public:
      * @return found view or nullptr
      */
     [[nodiscard]]
-    _<AView> getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
+    AArc<AView> getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
 
     /**
      * @brief Acts as AViewContainerBase::getViewAtRecursive but calls a callback instead of returning value.
@@ -170,10 +170,10 @@ public:
      * The passed callback is a predicate. If predicate returns true, the execution of lookup is stopped and getViewAt
      * returns true. If predicate returns false, the lookup continues.
      */
-    template<aui::predicate<_<AView>> Callback>
+    template<aui::predicate<AArc<AView>> Callback>
     bool getViewAtRecursive(glm::ivec2 pos, const Callback& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
-        _<AView> possibleOutput; // for case if anyone does not consumesClick
-        auto process = [&](const _<AView>& view) {
+        AArc<AView> possibleOutput; // for case if anyone does not consumesClick
+        auto process = [&](const AArc<AView>& view) {
             if (callback(view))
                 return true;
             if (auto container = _cast<AViewContainerBase>(view)) {
@@ -223,7 +223,7 @@ public:
      * @param flags see AViewLookupFlags
      * @return true if there's at least one view for which callback returned true, false otherwise.
      */
-    template<aui::predicate<_<AView>> Callback>
+    template<aui::predicate<AArc<AView>> Callback>
     bool visitsViewRecursive(Callback&& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
         for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
             auto view = *it;
@@ -251,9 +251,9 @@ public:
      * @return found view or nullptr
      */
     template<typename T>
-    _<T> getViewAtRecursiveOfType(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
-        _<T> result;
-        getViewAtRecursive(pos, [&] (const _<AView>& v) { return bool(result = _cast<T>(v)); }, flags);
+    AArc<T> getViewAtRecursiveOfType(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
+        AArc<T> result;
+        getViewAtRecursive(pos, [&] (const AArc<AView>& v) { return bool(result = _cast<T>(v)); }, flags);
         return result;
     }
 
@@ -263,7 +263,7 @@ public:
      * @details
      * See mFocusChainTarget for further info.
      */
-    void setFocusChainTarget(_weak<AView> target) {
+    void setFocusChainTarget(AWeakArc<AView> target) {
         if (auto v = target.lock()) {
             AUI_ASSERT(v->mParent == this);
         }
@@ -274,7 +274,7 @@ public:
      * @details
      * See mFocusChainTarget for further info.
      */
-    _<AView> focusChainTarget() {
+    AArc<AView> focusChainTarget() {
         if (auto v = mFocusChainTarget.lock()) {
             if (v->mParent != this) {
                 mFocusChainTarget.reset();
@@ -319,7 +319,7 @@ protected:
     bool mWantsLayoutUpdate = true;
     glm::ivec2 mLastLayoutUpdateSize{0, 0};
 
-    void drawView(const _<AView>& view, ARenderContext contextOfTheContainer);
+    void drawView(const AArc<AView>& view, ARenderContext contextOfTheContainer);
 
     template<typename Iterator>
     void drawViews(Iterator begin, Iterator end, ARenderContext contextPassedToContainer) {
@@ -349,7 +349,7 @@ protected:
     /**
      * @brief Replace views.
      */
-    void setViews(AVector<_<AView>> views);
+    void setViews(AVector<AArc<AView>> views);
 
     /**
      * @brief Adds view to container without exposing it to the layout manager.
@@ -358,32 +358,32 @@ protected:
      *
      * View is not visible until it's layout is determined. @see AView::mSkipUntilLayoutUpdate
      */
-    void addViewCustomLayout(const _<AView>& view);
+    void addViewCustomLayout(const AArc<AView>& view);
 
     /**
      * @brief Add all views from vector.
      */
-    void addViews(AVector<_<AView>> views);
+    void addViews(AVector<AArc<AView>> views);
 
     /**
      * @brief Add view to the container.
      */
-    void addView(const _<AView>& view);
+    void addView(const AArc<AView>& view);
 
     /**
      * @brief Add view at specific index to the container.
      */
-    void addView(size_t index, const _<AView>& view);
+    void addView(size_t index, const AArc<AView>& view);
 
     /**
      * @brief Remove views from the container.
      */
-    void removeViews(aui::range<AVector<_<AView>>::const_iterator> views);
+    void removeViews(aui::range<AVector<AArc<AView>>::const_iterator> views);
 
     /**
      * @brief Remove view from the container.
      */
-    void removeView(const _<AView>& view);
+    void removeView(const AArc<AView>& view);
 
     /**
      * @brief Remove view from the container at specified index.
@@ -399,7 +399,7 @@ protected:
      * @brief Moves (like via std::move) all children and layout of the specified container to this container.
      * @param container container. Must be pure AViewContainer (cannot be a derivative from AViewContainer).
      */
-    void setContents(const _<AViewContainer>& container);
+    void setContents(const AArc<AViewContainer>& container);
 
     /**
      * @brief Set new layout manager for this AViewContainerBase. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
@@ -426,7 +426,7 @@ signals:
 private:
     _unique<ALayout> mLayout;
     ASpinlockMutex mViewsSafeIteration;
-    AVector<_<AView>> mViews;
+    AVector<AArc<AView>> mViews;
     bool mSizeSet = false;
 
 
@@ -454,7 +454,7 @@ private:
      * Focus chain target is a view belonging to this container which focus-aware (i.e. keyboard) events are passed to.
      * The focus chaining mechanism allows to catch such events and process them in the containers.
      */
-    _weak<AView> mFocusChainTarget;
+    AWeakArc<AView> mFocusChainTarget;
 
     /**
      * @brief Like focus chain target, but intended for pointer press -> move.. -> release event sequence on per-pointer
@@ -468,9 +468,9 @@ private:
     /**
      * @see mPointerEventsMapping
      */
-    _<AView> pointerEventsMapping(APointerIndex index);
+    AArc<AView> pointerEventsMapping(APointerIndex index);
 
-    void removeViewImpl(const _<AView>& view, std::unique_lock<ASpinlockMutex>& lock);
+    void removeViewImpl(const AArc<AView>& view, std::unique_lock<ASpinlockMutex>& lock);
     void setLayoutImpl(_unique<ALayout> layout, std::unique_lock<ASpinlockMutex>& lock);
     void removeAllViewsImpl(std::unique_lock<ASpinlockMutex>& lock);
 };

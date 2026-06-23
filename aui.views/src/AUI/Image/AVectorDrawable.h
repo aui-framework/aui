@@ -24,13 +24,13 @@ class API_AUI_VIEWS AVectorDrawable: public IDrawable
 private:
     struct Pair {
         uint64_t key;
-        _<ITexture> texture;
+        AArc<ITexture> texture;
     };
 
     ADeque<Pair> mRasterized;
-    _<IImageFactory> mFactory;
+    AArc<IImageFactory> mFactory;
 public:
-    explicit AVectorDrawable(_<IImageFactory> factory): mFactory(std::move(factory)) {}
+    explicit AVectorDrawable(AArc<IImageFactory> factory): mFactory(std::move(factory)) {}
     ~AVectorDrawable();
 
 	void draw(IRenderer& render, const IDrawable::Params& params) override;

@@ -17,7 +17,7 @@
 
 
 struct ViewAssertionEmpty {
-    bool operator()(const _<AView>&) {
+    bool operator()(const AArc<AView>&) {
         return false;
     }
 };

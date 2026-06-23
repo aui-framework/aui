@@ -31,7 +31,7 @@ private:
 
 protected:
     class EmbedWindow;
-    _<EmbedWindow> mContainer;
+    AArc<EmbedWindow> mContainer;
     glm::ivec2 mSize;
     AOptional<float> mCustomDpiRatio;
     void windowInit(_unique<IRenderingContext> context);
@@ -44,7 +44,7 @@ public:
 
     void clearFocus();
 
-    void setContainer(const _<AViewContainer>& container);
+    void setContainer(const AArc<AViewContainer>& container);
     virtual void setViewportSize(int width, int height);
 
     void setCustomDpiRatio(float r);

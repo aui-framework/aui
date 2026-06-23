@@ -18,7 +18,7 @@
 class FractalView : public AView {
 private:
     gl::Program mShader;
-    _<gl::Texture2D> mTexture;
+    AArc<gl::Texture2D> mTexture;
     glm::mat4 mTransform;
 
     float mAspectRatio;
@@ -43,7 +43,7 @@ public:
 
     gl::Program& getShader() { return mShader; }
 
-    const _<gl::Texture2D>& getTexture() const { return mTexture; }
+    const AArc<gl::Texture2D>& getTexture() const { return mTexture; }
 
     glm::dvec2 getPlotPosition() const;
     double getPlotScale() const;

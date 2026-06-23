@@ -23,7 +23,7 @@ namespace {
     class Inner: public AViewContainerBase {
     friend class AGroupBox;
     public:
-        Inner(_<AView> title, const _<AViewContainer>& contents) : mTitle(std::move(title)) {
+        Inner(AArc<AView> title, const AArc<AViewContainer>& contents) : mTitle(std::move(title)) {
             setContents(contents);
         }
 
@@ -40,11 +40,11 @@ namespace {
         }
 
     private:
-        _<AView> mTitle;
+        AArc<AView> mTitle;
     };
 }
 
-AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
+AGroupBox::AGroupBox(AArc<AView> titleView, AArc<AView> contentView):
     mTitle(std::move(titleView)),
     mContent(std::move(contentView)) {
 

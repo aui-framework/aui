@@ -25,7 +25,7 @@ namespace {
 
         SelectionMatchesAssert(unsigned s) : selection{s, s} {}
 
-        bool operator()(const _<AView>& view) const {
+        bool operator()(const AArc<AView>& view) const {
             if (auto t = _cast<ACursorSelectable>(view)) {
                 EXPECT_EQ(t->selection(), selection);
             }

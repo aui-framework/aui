@@ -44,10 +44,10 @@ class UIRenderOptimizationTest: public testing::UITest {
 
         class TestWindow: public AWindow {
         public:
-            _<ViewMock> mTop;
-            _<ViewMock> mCenter;
-            _<ViewMock> mBottom;
-            _<AScrollArea> mScroll;
+            AArc<ViewMock> mTop;
+            AArc<ViewMock> mCenter;
+            AArc<ViewMock> mBottom;
+            AArc<AScrollArea> mScroll;
             TestWindow() {
                 setContents(Centered {
                     mScroll = AScrollArea::Builder().withContents(Vertical {
@@ -74,7 +74,7 @@ class UIRenderOptimizationTest: public testing::UITest {
         UITest::TearDown();
     }
 
-    _<TestWindow> mTestWindow;
+    AArc<TestWindow> mTestWindow;
 };
 
 /**

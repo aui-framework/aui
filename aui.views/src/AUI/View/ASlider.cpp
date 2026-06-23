@@ -25,7 +25,7 @@ using namespace declarative;
 namespace {
 class SliderHandleWrapper: public AViewContainerBase {
 public:
-    SliderHandleWrapper(_<AView> handle): mHandle(Centered { std::move(handle) }) {
+    SliderHandleWrapper(AArc<AView> handle): mHandle(Centered { std::move(handle) }) {
         addView(mHandle);
     }
 
@@ -68,14 +68,14 @@ protected:
     }
 
 private:
-    _<AView> mHandle;
+    AArc<AView> mHandle;
     aui::float_within_0_1 mValue = 0;
 };
 
 }
 
 /// [defaultTrack]
-_<AView> Slider::defaultTrack(const contract::In<aui::float_within_0_1>& value) {
+AArc<AView> Slider::defaultTrack(const contract::In<aui::float_within_0_1>& value) {
     return ProgressBar { .progress = value } AUI_OVERRIDE_STYLE {
         FixedSize { {}, 4_dp },
         MinSize { 150_dp, {} },
@@ -84,7 +84,7 @@ _<AView> Slider::defaultTrack(const contract::In<aui::float_within_0_1>& value) 
 /// [defaultTrack]
 
 /// [defaultHandle]
-_<AView> Slider::defaultHandle() {
+AArc<AView> Slider::defaultHandle() {
     return _new<AView>() AUI_OVERRIDE_STYLE {
         BackgroundSolid { AStylesheet::getOsThemeColor() },
         FixedSize { 8_dp },
@@ -93,7 +93,7 @@ _<AView> Slider::defaultHandle() {
 }
 /// [defaultHandle]
 
-API_AUI_VIEWS _<AView> Slider::operator()() {
+API_AUI_VIEWS AArc<AView> Slider::operator()() {
     auto handleWrapper = _new<SliderHandleWrapper>(std::move(handle));
     value.bindToCopy(ASlotDef{AUI_SLOT(handleWrapper.get())::setValue});
     onValueChanged.bindTo(handleWrapper->valueChanged);

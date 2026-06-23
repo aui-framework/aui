@@ -51,7 +51,7 @@ public:
     struct State {
         ass::BackgroundImage backgroundUrl;
         ass::BackgroundCropping backgroundCropping;
-        AOptional<_<IDrawable>> backgroundImage;
+        AOptional<AArc<IDrawable>> backgroundImage;
         ImageRendering imageRendering = ImageRendering::PIXELATED;
     } state;
 signals:
