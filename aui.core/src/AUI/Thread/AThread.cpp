@@ -239,6 +239,10 @@ void AThread::join() {
 
 void AAbstractThread::enqueue(AMessageQueue<>::Message f) {
     mMessageQueue.enqueue(std::move(f));
+    notifyCurrentEventLoop();
+}
+
+void AAbstractThread::notifyCurrentEventLoop() noexcept {
     if (mCurrentEventLoop) {
         std::unique_lock lock(mEventLoopLock);
         if (mCurrentEventLoop) {

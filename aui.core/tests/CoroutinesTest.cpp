@@ -180,6 +180,8 @@ static auto switch_to_new_thread(std::thread &out) {
 
 TEST(Coroutines, CoAwait3rdPartyCoro) {
     AAsyncHolder async;
+    AEventLoop loop;
+    IEventLoop::Handle h(&loop);
     std::thread thread;
     auto future = [](std::thread &thread) -> AFuture<int> {
         auto original = AThread::current();
@@ -189,9 +191,6 @@ TEST(Coroutines, CoAwait3rdPartyCoro) {
     }(thread);
     async << future;
 
-
-    AEventLoop loop;
-    IEventLoop::Handle h(&loop);
     while (!async.empty()) {
         loop.iteration();
     }
