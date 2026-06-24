@@ -177,6 +177,12 @@ namespace aui::impl::future {
                 return bool(exception);
             }
 
+            void checkForSelfWait() {
+                if (!hasResult() && AThread::current() == thread) {
+                    throw AException("self wait?");
+                }
+            }
+
             bool setThread(_<AAbstractThread> thr) noexcept {
                 std::unique_lock lock(mutex);
                 if (cancelled) return true;
@@ -464,6 +470,10 @@ namespace aui::impl::future {
          */
         template<aui::invocable Callback>
         void onFinally(Callback&& callback) const {
+            if (hasResult()) { // cheap lookahead
+                std::invoke(callback);
+                return;
+            }
             std::unique_lock lock((*mInner)->mutex);
             (*mInner)->addOnSuccessCallback([callback](const auto&...) { callback(); });
             (*mInner)->addOnErrorCallback([callback = std::move(callback)](const auto&...) { callback(); });
@@ -566,9 +576,7 @@ namespace aui::impl::future {
 
     private:
         void checkForSelfWait() const {
-            if (!(*mInner)->hasResult() && AThread::current() == (*mInner)->thread) {
-                throw AException("self wait?");
-            }
+            (*mInner)->checkForSelfWait();
         }
     };
 
@@ -952,6 +960,7 @@ void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapp
         if (flags & AFutureWait::ALLOW_STACKFUL_COROUTINES) {
             if (auto threadPoolWorker = _cast<AThreadPool::Worker>(AThread::current())) {
                 if (hasResult()) return; // for sure
+                checkForSelfWait();
                 AUI_ASSERT(lock.owns_lock());
                 auto callback = [threadPoolWorker](auto&&...) {
                     threadPoolWorker->threadPool().wakeUpAll();
