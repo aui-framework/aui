@@ -1230,8 +1230,16 @@ function(auib_import AUI_MODULE_NAME URL)
                 message(STATUS "Building ${AUI_MODULE_NAME}")
 
                 set(_flags "")
-                if (NOT MSVC)
-                    LIST(APPEND _flags "--parallel") # --parallel breaks multithread build for MSVC
+                if (NOT MSVC) # --parallel breaks multithread build for MSVC
+                    # On Unix Makefiles, if passed --parallel without a limit specified, it spawns a lot more compiler
+                    # processes than CPU cores available. This causes people's PCs to crash. It's a no minder, 270 GCCs
+                    # running simultaneously is essentially a fork bomb attack.
+                    # https://github.com/aui-framework/aui/issues/713
+                    cmake_host_system_information(RESULT logical_cores QUERY NUMBER_OF_LOGICAL_CORES)
+                    if (NOT logical_cores)
+                        set(logical_cores 4) # default value
+                    endif ()
+                    LIST(APPEND _flags "--parallel ${logical_cores}")
                 endif()
 
                 execute_process(COMMAND
