@@ -1239,7 +1239,7 @@ function(auib_import AUI_MODULE_NAME URL)
                     if (NOT logical_cores)
                         set(logical_cores 4) # default value
                     endif ()
-                    LIST(APPEND _flags "--parallel ${logical_cores}")
+                    LIST(APPEND _flags "--parallel" "${logical_cores}")
                 endif()
 
                 execute_process(COMMAND
