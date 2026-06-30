@@ -113,7 +113,7 @@ public:
                     auto asView = View(item);
                     mViews << std::move(asView);
                 } else if constexpr (isInvokable) {
-                    mViews << _(std::forward<Item>(item));
+                    mViews << AArc<Item>(std::forward<Item>(item));
                 }
             },
             std::forward<Views>(views)...);

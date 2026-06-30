@@ -34,12 +34,20 @@ void AEventLoop::loop() {
 }
 
 void AEventLoop::iteration() {
-    AThread::processMessages();
     std::unique_lock lock(mMutex);
     if (mNotified) {
         mNotified = false;
-    } else if (AThread::current()->messageQueueEmpty()) {
-        mNotified = true;
-        mCV.wait(lock);
+        lock.unlock();
+        AThread::processMessages();
+        return;
     }
+    if (!AThread::current()->messageQueueEmpty()) {
+        lock.unlock();
+        AThread::processMessages();
+        return;
+    }
+    mNotified = true;
+    mCV.wait(lock);
+    lock.unlock();
+    AThread::processMessages();
 }

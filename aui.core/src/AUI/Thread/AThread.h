@@ -93,6 +93,14 @@ public:
     IEventLoop* getCurrentEventLoop() const { return mCurrentEventLoop; }
 
     /**
+     * @brief Notifies the current event loop of this thread (if any) that there are messages to process.
+     * @details
+     * Uses the same double-checked locking as enqueue() to avoid a race with IEventLoop::Handle
+     * destructor nulling out mCurrentEventLoop. Safe to call from any thread.
+     */
+    void notifyCurrentEventLoop() noexcept;
+
+    /**
      * @brief Enqueue message to make.
      * @tparam Callable callable
      * @param fun callable function
