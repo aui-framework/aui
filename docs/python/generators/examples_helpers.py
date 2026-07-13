@@ -154,6 +154,14 @@ def compute_hl_lines(snippet: str, tokens: List[str]) -> str | None:
     if not snippet or not tokens:
         return None
     lines = snippet.splitlines()
+    # Strip leading blank lines so hl_lines matches rendered HTML numbering
+    first_nonblank = 0
+    for l in lines:
+        if l.strip():
+            break
+        first_nonblank += 1
+    if first_nonblank > 0:
+        lines = lines[first_nonblank:]
     hits = []
     for idx, line in enumerate(lines, start=1):
         for t in tokens:
@@ -167,9 +175,19 @@ def compute_hl_lines(snippet: str, tokens: List[str]) -> str | None:
                         continue
                 # Always highlight the matched line itself
                 hits.append(str(idx))
-                # If line has '{', also extend to end of snippet
+                # If line has '{', extend to matching '}' using brace depth
                 if '{' in line:
-                    hits.append(f"{idx}-{len(lines)}")
+                    depth = 0
+                    end_idx = len(lines)
+                    for scan_idx in range(idx - 1, len(lines)):
+                        scan_line = lines[scan_idx]
+                        depth += scan_line.count('{') - scan_line.count('}')
+                        if depth <= 0:
+                            end_idx = scan_idx + 1
+                            break
+                    # Only add range if it spans more than one line
+                    if end_idx > idx:
+                        hits.append(f"{idx}-{end_idx}")
                 break
     if not hits:
         return None

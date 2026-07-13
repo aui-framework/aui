@@ -6,7 +6,7 @@ platforms = ["linux-64"]
 version = "0.1.0"
 
 [tasks]
-build-docs = "mkdocs build"
+build-docs = "mkdocs build --dirty"
 serve-docs = "fuser -k 8000/tcp 2>/dev/null; mkdocs serve --dirty"
 
 [dependencies]

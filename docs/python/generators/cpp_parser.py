@@ -15,6 +15,7 @@
 
 import logging
 import os
+import pickle
 import re
 from pathlib import Path
 
@@ -459,15 +460,22 @@ class _Parser:
 
 def _parse(input: str, location = None | Path):
     return _Parser(input=input, location=location).parse()
-
 def _scan():
     contents = []
+    cache = {}
+    cache_file = Path('.parser_cache.pkl')
+    if cache_file.exists():
+        try:
+            with open(cache_file, 'rb') as f:
+                cache = pickle.load(f)
+        except Exception:
+            cache = {}
 
+    cache_updated = False
     for root, dirs, files in os.walk('.'):
         root_path = Path(root)
 
         for file in files:
-            # Match if ANY folder in the path starts with "aui."
             if not any(part.startswith('aui.') for part in root_path.parts):
                 continue
             if any(part.lower() == 'test' for part in root_path.parts):
@@ -481,14 +489,30 @@ def _scan():
 
             full_path = root_path / file
             try:
-                contents += [
-                    i for i in _parse(
-                        full_path.read_text(encoding='utf-8', errors='ignore'),
-                        location=full_path
-                    )
-                ]
+                mtime = full_path.stat().st_mtime
+            except OSError:
+                continue
+            cache_key = str(full_path.resolve())
+            cached = cache.get(cache_key)
+            if cached is not None and cached[0] == mtime:
+                contents.extend(cached[1])
+                continue
+            try:
+                parsed = list(_parse(
+                    full_path.read_text(encoding='utf-8', errors='ignore'),
+                    location=full_path
+                ))
+                contents.extend(parsed)
+                cache[cache_key] = (mtime, parsed)
+                cache_updated = True
             except Exception as e:
                 log.exception(f'Source file "{full_path.absolute()}" could not be parsed')
+    if cache_updated:
+        try:
+            with open(cache_file, 'wb') as f:
+                pickle.dump(cache, f)
+        except Exception:
+            pass
     return contents
 
 index = _scan()
