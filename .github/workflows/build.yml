@@ -193,7 +193,7 @@ jobs:
             build_type: RelWithDebInfo
             shared_or_static: shared
             arch: x86_64
-            generator: "Visual Studio 17 2022"
+            generator: "Visual Studio 18 2026"
             additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
 
           - os: windows-latest
@@ -201,7 +201,7 @@ jobs:
             build_type: RelWithDebInfo
             shared_or_static: static
             arch: x86_64
-            generator: "Visual Studio 17 2022"
+            generator: "Visual Studio 18 2026"
             additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
 
           - os: windows-latest
@@ -330,7 +330,7 @@ jobs:
 
       - name: Upload
         uses: actions/upload-artifact@v4
-        if: matrix.generator != 'Visual Studio 17 2022'
+        if: matrix.generator != 'Visual Studio 18 2026'
         with:
           path: ${{github.workspace}}/build/*.tar.gz
           name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} ${{ matrix.compiler }}
