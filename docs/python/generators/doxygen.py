@@ -312,20 +312,26 @@ def gen_pages():
                             except Exception:
                                 text = ''
                             snippet = e.get('snippet','') or ''
-                            # strongest: macro invocation AUI_DECLARATIVE_FOR
-                            if re.search(r"\bAUI_DECLARATIVE_FOR\s*\(", snippet) or re.search(r"\bAUI_DECLARATIVE_FOR\s*\(", text):
-                                return 0
-                            # header include for AForEachUI
-                            if re.search(r"#include\s+[<\"]AUI/View/AForEachUI.h[>\"]", text):
-                                return 1
-                            # unquoted AForEachUI occurrence on nontrivial line
+                            # strongest: macro invocation of the documented name
+                            for n in names_to_search:
+                                if not n:
+                                    continue
+                                if re.search(r"\b" + re.escape(n) + r"\s*\(", snippet):
+                                    return 0
+                            # header include for the documented name's class
+                            for n in names_to_search:
+                                if not n:
+                                    continue
+                                if re.search(r"#include\s+[<\"]AUI/.+/" + re.escape(n) + r"\.h[>\"]", text):
+                                    return 1
+                            # unquoted occurrence of documented name on nontrivial line
                             try:
                                 from docs.python.generators.examples_helpers import _find_unquoted_word_on_nontrivial_line
                                 if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in names_to_search if n):
                                     return 2
                             except Exception:
                                 pass
-                            # prefer snippets that contain macro anchors
+                            # prefer snippets that contain any searched name as anchor
                             try:
                                 if any(re.search(re.escape(a), snippet) for a in (names_to_search or [])):
                                     return 3
