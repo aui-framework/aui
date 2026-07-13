@@ -175,7 +175,7 @@ def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=se
                     snippet = ex.get('snippet','') or ''
                     hl = _compute_hl_lines(snippet, tokens)
                     hl_attr = f' hl_lines="{hl}"' if hl else ''
-                    print(f"\n??? note `{src_rel}`", file=fos)
+                    print(f"\n??? note \"{src_rel}\"", file=fos)
                     print(file=fos)
                     print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
                     print(file=fos)
@@ -433,7 +433,7 @@ def gen_pages():
                     snippet = ex.get('snippet','') or ''
                     hl = _compute_hl_lines(snippet, tokens)
                     hl_attr = f' hl_lines="{hl}"' if hl else ''
-                    print(f"??? note `{src_rel}`", file=fos)
+                    print(f"??? note \"{src_rel}\"", file=fos)
                     print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
                     print(f"    ```{extension}{hl_attr}", file=fos)
                     for line in ex['snippet'].splitlines():
@@ -545,7 +545,7 @@ def gen_pages():
                             snippet = ex.get('snippet', '') or ''
                             hl = _compute_hl_lines(snippet, tokens)
                             hl_attr = f' hl_lines="{hl}"' if hl else ''
-                            print(f"\n??? note `{src_rel}`", file=fos)
+                            print(f"\n??? note \"{src_rel}\"", file=fos)
                             print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
                             # print code block only when snippet is available
                             if snippet:
@@ -561,7 +561,7 @@ def gen_pages():
             # and print them here. Do this even if page-level examples exist so
             # canonical macro-form examples found elsewhere are surfaced on the
             # symbol's page (e.g., AForEachUI / AUI_DECLARATIVE_FOR).
-            if not isinstance(parse_entry, CppClass) and class_examples:
+            if not isinstance(parse_entry, CppClass) and class_examples and not page_examples:
                 try:
                     # build names and anchors similar to class handling
                     anchors = []
@@ -665,7 +665,7 @@ def gen_pages():
                             snippet = ex.get('snippet', '') or ''
                             hl = _compute_hl_lines(snippet, tokens)
                             hl_attr = f' hl_lines="{hl}"' if hl else ''
-                            print(f"\n??? note `{src_rel}`", file=fos)
+                            print(f"\n??? note \"{src_rel}\"", file=fos)
                             print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
                             if snippet:
                                 print(f"    ```{extension}{hl_attr}", file=fos)
@@ -748,7 +748,7 @@ def gen_pages():
                                 snippet = ex.get('snippet','') or ''
                                 hl = _compute_hl_lines(snippet, tokens)
                                 hl_attr = f' hl_lines="{hl}"' if hl else ''
-                                print(f"\n??? note `{src_rel}`", file=fos)
+                                print(f"\n??? note \"{src_rel}\"", file=fos)
                                 print(file=fos)
                                 print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
                                 print(file=fos)
@@ -846,7 +846,7 @@ def gen_pages():
                                         snippet = ex.get('snippet','') or ''
                                         hl = _compute_hl_lines(snippet, tokens)
                                         hl_attr = f' hl_lines="{hl}"' if hl else ''
-                                        print(f"\n??? note `{src_rel}`", file=fos)
+                                        print(f"\n??? note \"{src_rel}\"", file=fos)
                                         print(file=fos)
                                         print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
                                         print(file=fos)
