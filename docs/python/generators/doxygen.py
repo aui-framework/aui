@@ -421,6 +421,8 @@ def gen_pages():
                     if exid in printed_example_ids:
                         continue
                     printed_example_ids.add(exid)
+                    if 'src' not in ex or not ex['src']:
+                        continue
                     try:
                         src_rel = ex['src'].relative_to(Path.cwd())
                     except Exception:
