@@ -525,3 +525,15 @@ th, td {
     color: #0039cb;
     text-decoration: underline;
 }
+
+/* Plain-text example links in documentation admonitions */
+.md-typeset details.note summary,
+.md-typeset details.note > p {
+    color: var(--md-default-fg-color);
+}
+.md-typeset details.note summary a,
+.md-typeset details.note > p a {
+    color: inherit !important;
+    text-decoration: none !important;
+    cursor: default !important;
+}

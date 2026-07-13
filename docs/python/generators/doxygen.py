@@ -175,9 +175,9 @@ def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=se
                     snippet = ex.get('snippet','') or ''
                     hl = _compute_hl_lines(snippet, tokens)
                     hl_attr = f' hl_lines="{hl}"' if hl else ''
-                    print(f"\n??? note \"{src_rel}\"", file=fos)
+                    print(f"\n??? note `{src_rel}`", file=fos)
                     print(file=fos)
-                    print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                    print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
                     print(file=fos)
                     print(f"    ```{extension}{hl_attr}", file=fos)
                     for line in ex['snippet'].splitlines():
@@ -433,8 +433,8 @@ def gen_pages():
                     snippet = ex.get('snippet','') or ''
                     hl = _compute_hl_lines(snippet, tokens)
                     hl_attr = f' hl_lines="{hl}"' if hl else ''
-                    print(f"??? note \"{src_rel}\"", file=fos)
-                    print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                    print(f"??? note `{src_rel}`", file=fos)
+                    print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
                     print(f"    ```{extension}{hl_attr}", file=fos)
                     for line in ex['snippet'].splitlines():
                         print(f"    {line}", file=fos)
@@ -545,8 +545,8 @@ def gen_pages():
                             snippet = ex.get('snippet', '') or ''
                             hl = _compute_hl_lines(snippet, tokens)
                             hl_attr = f' hl_lines="{hl}"' if hl else ''
-                            print(f"\n??? note \"{src_rel}\"", file=fos)
-                            print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                            print(f"\n??? note `{src_rel}`", file=fos)
+                            print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
                             # print code block only when snippet is available
                             if snippet:
                                 print(f"    ```{extension}{hl_attr}", file=fos)
@@ -665,8 +665,8 @@ def gen_pages():
                             snippet = ex.get('snippet', '') or ''
                             hl = _compute_hl_lines(snippet, tokens)
                             hl_attr = f' hl_lines="{hl}"' if hl else ''
-                            print(f"\n??? note \"{src_rel}\"", file=fos)
-                            print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                            print(f"\n??? note `{src_rel}`", file=fos)
+                            print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
                             if snippet:
                                 print(f"    ```{extension}{hl_attr}", file=fos)
                                 for line in snippet.splitlines():
@@ -748,9 +748,9 @@ def gen_pages():
                                 snippet = ex.get('snippet','') or ''
                                 hl = _compute_hl_lines(snippet, tokens)
                                 hl_attr = f' hl_lines="{hl}"' if hl else ''
-                                print(f"\n??? note \"{src_rel}\"", file=fos)
+                                print(f"\n??? note `{src_rel}`", file=fos)
                                 print(file=fos)
-                                print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                                print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
                                 print(file=fos)
                                 print(f"    ```{extension}{hl_attr}", file=fos)
                                 for line in ex['snippet'].splitlines():
@@ -846,9 +846,9 @@ def gen_pages():
                                         snippet = ex.get('snippet','') or ''
                                         hl = _compute_hl_lines(snippet, tokens)
                                         hl_attr = f' hl_lines="{hl}"' if hl else ''
-                                        print(f"\n??? note \"{src_rel}\"", file=fos)
+                                        print(f"\n??? note `{src_rel}`", file=fos)
                                         print(file=fos)
-                                        print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
+                                        print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
                                         print(file=fos)
                                         print(f"    ```{extension}{hl_attr}", file=fos)
                                         for line in ex['snippet'].splitlines():

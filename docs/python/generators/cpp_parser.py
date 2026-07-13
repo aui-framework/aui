@@ -40,9 +40,9 @@ def parse_comment_lines(iterator):
             continue
         if "*/" in line:
             break
-        line = CPP_COMMENT_LINE.match(line).group(1)
-
-        output.append(line)
+        m = CPP_COMMENT_LINE.match(line)
+        if m:
+            output.append(m.group(1))
     return "\n".join(output)
 
 
@@ -204,12 +204,14 @@ class _Parser:
         name = self.last_token[1]
         self.last_token = next(self.iterator)
         if self.last_token[1] == ':':
-            while self.last_token[1] != '{':
+            while self.last_token[1] not in ('{', ';'):
                 self.last_token = next(self.iterator)
-        elif self.last_token[1] == ';':
-            # just a enum definition, ignore.
+        if self.last_token[1] == ';':
+            # forward declaration e.g. enum class X;
             return None
-        assert self.last_token[1] == '{'
+        if self.last_token[1] != '{':
+            # unexpected token after enum — not a parseable form
+            return None
         out = CppEnum(name=name, doc=self._consume_doc())
         if generic_kind:
             out.generic_kind = generic_kind
@@ -267,6 +269,8 @@ class _Parser:
             if self.last_token[0] == cpp_tokenizer.Type.IDENTIFIER:
                 if self.last_token[1] == 'enum':
                     e = self._parse_enum()
+                    if e is None:
+                        continue
                     if visibility != 'private':
                         clazz.types.append(e)
                     continue
@@ -402,15 +406,14 @@ class _Parser:
                     if doc is not None:
                         yield CppMacro(name=m.group(1), doc=doc, definition=self.last_token[1], location=self.location)
                     continue
-
-
             if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'enum'):
                 e = self._parse_enum()
+                if e is None:
+                    continue
                 e.location = self.location
                 if e.doc:
                     yield e
                 continue
-
             if self.last_token == (cpp_tokenizer.Type.IDENTIFIER, 'template'):
                 self._parse_template()
                 continue
