@@ -564,40 +564,12 @@ def examples_for_symbol_with_snippets(names: List[str], anchors: List[str] | Non
                     except Exception:
                         continue
                     lines = text.splitlines()
-                    # Prefer strong-pattern matches (macro invocation, unquoted symbol, _new<...>)
                     found = None
                     non_quoted_found = False
+                    # Prefer direct match for the documented name
                     try:
-                        for p in strong_patterns:
-                            for m in re.finditer(p, text):
-                                if _is_in_double_quotes(text, m.start()):
-                                    continue
-                                pos = m.start()
-                                cum = 0
-                                line_idx = 0
-                                for i, l in enumerate(lines):
-                                    if pos <= cum + len(l):
-                                        line_idx = i
-                                        break
-                                    cum += len(l) + 1
-                                ln = lines[line_idx].strip()
-                                if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
-                                    continue
-                                if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
-                                    continue
-                                found = (m, line_idx)
-                                non_quoted_found = True
-                                break
-                            if non_quoted_found:
-                                break
-                    except Exception:
-                        found = None
-                        non_quoted_found = False
-                    # if no strong-pattern match, fall back to first non-quoted occurrence of the name
-                    if not non_quoted_found:
                         for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
                             if _is_in_double_quotes(text, m.start()):
-                                # skip quoted occurrence for now
                                 continue
                             pos = m.start()
                             cum = 0
@@ -615,6 +587,37 @@ def examples_for_symbol_with_snippets(names: List[str], anchors: List[str] | Non
                             found = (m, line_idx)
                             non_quoted_found = True
                             break
+                    except Exception:
+                        found = None
+                        non_quoted_found = False
+                    # if no direct name match, fall back to strong patterns (macro invocations, etc.)
+                    if not non_quoted_found:
+                        try:
+                            for p in strong_patterns:
+                                for m in re.finditer(p, text):
+                                    if _is_in_double_quotes(text, m.start()):
+                                        continue
+                                    pos = m.start()
+                                    cum = 0
+                                    line_idx = 0
+                                    for i, l in enumerate(lines):
+                                        if pos <= cum + len(l):
+                                            line_idx = i
+                                            break
+                                        cum += len(l) + 1
+                                    ln = lines[line_idx].strip()
+                                    if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
+                                        continue
+                                    if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
+                                        continue
+                                    found = (m, line_idx)
+                                    non_quoted_found = True
+                                    break
+                                if non_quoted_found:
+                                    break
+                        except Exception:
+                            found = None
+                            non_quoted_found = False
                     # if we didn't find a non-quoted occurrence, fall back to first quoted occurrence
                     if not non_quoted_found:
                         for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
