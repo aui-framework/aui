@@ -165,19 +165,11 @@ def compute_hl_lines(snippet: str, tokens: List[str]) -> str | None:
                 if re.search(r"\b(auto|[A-Za-z_][\w:<>\t\s\*&]+)\s+" + mem_esc + r"\b", line):
                     if not (re.search(r"\b" + mem_esc + r"\s*\(", line) or re.search(mem_esc + r"::", line) or re.search(r"\b" + mem_esc + r"\s*->", line) or re.search(r"\b" + mem_esc + r"\s*\.", line)):
                         continue
-                # If line contains '{', extend highlighting to the matching '}'
+                # Always highlight the matched line itself
+                hits.append(str(idx))
+                # If line has '{', also extend to end of snippet
                 if '{' in line:
-                    depth = 0
-                    end_idx = len(lines)
-                    for scan_idx in range(idx - 1, len(lines)):
-                        scan_line = lines[scan_idx]
-                        depth += scan_line.count('{') - scan_line.count('}')
-                        if depth <= 0:
-                            end_idx = scan_idx + 1
-                            break
-                    hits.append(f"{idx}-{end_idx}")
-                else:
-                    hits.append(str(idx))
+                    hits.append(f"{idx}-{len(lines)}")
                 break
     if not hits:
         return None
