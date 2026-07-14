@@ -300,6 +300,18 @@ def gen_pages():
             for type_entry in [i for i in doxygen if i[0] == '@brief']:
                 print(type_entry[1], file=fos)
 
+            # collect broad examples (used as fallback for non-class symbols and as reference for class pages)
+            class_examples = []
+            try:
+                top_names = []
+                if hasattr(parse_entry, 'namespaced_name'):
+                    top_names.append(parse_entry.namespaced_name())
+                if hasattr(parse_entry, 'name'):
+                    top_names.append(parse_entry.name)
+                class_examples = _examples_for_symbol(top_names, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)) or []
+            except Exception:
+                class_examples = []
+                pass
             # For non-class symbols (macros, free functions, enums), collect examples to print after Detailed Description
             if not isinstance(parse_entry, CppClass):
                 try:
@@ -470,18 +482,6 @@ def gen_pages():
                             print(f"    {line}", file=fos)
                         print(f"    ```", file=fos)
 
-            # collect class-level examples (don't print here; used as fallback per-method)
-            class_examples = []
-            try:
-                top_names = []
-                if hasattr(parse_entry, 'namespaced_name'):
-                    top_names.append(parse_entry.namespaced_name())
-                if hasattr(parse_entry, 'name'):
-                    top_names.append(parse_entry.name)
-                class_examples = _examples_for_symbol(top_names, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)) or []
-            except Exception:
-                class_examples = []
-                pass
 
             # For classes: print class-level examples once (used as fallback reference).
             if isinstance(parse_entry, CppClass) and class_examples:
