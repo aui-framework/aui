@@ -193,16 +193,17 @@ jobs:
             build_type: RelWithDebInfo
             shared_or_static: shared
             arch: x86_64
-            generator: "Visual Studio 17 2022"
-            additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
+            generator: "Visual Studio 16 2019"
+            additional_cmake_flags: '-A x64'
 
           - os: windows-latest
             compiler: "Default"
             build_type: RelWithDebInfo
             shared_or_static: static
             arch: x86_64
-            generator: "Visual Studio 17 2022"
-            additional_cmake_flags: '-A x64 -DCMAKE_GENERATOR_TOOLSET=v142'
+            generator: "Visual Studio 16 2019"
+            additional_cmake_flags: '-A x64'
+
 
           - os: windows-latest
             compiler: "MinGW"
@@ -295,7 +296,7 @@ jobs:
           echo "CXX=clang++" >> $env:GITHUB_ENV
 
       - name: Install Visual Studio 2019 Build Tools
-        if: runner.os == 'Windows' && matrix.generator == 'Visual Studio 17 2022'
+        if: runner.os == 'Windows' && matrix.generator == 'Visual Studio 16 2019'
         shell: powershell
         run: |
           if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
@@ -306,12 +307,18 @@ jobs:
           choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.Component.MSBuild --add Microsoft.VisualStudio.Component.VC.v142.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.19041 --includeRecommended --installPath C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools"
 
       - name: Setup MSVC (Windows)
-        if: matrix.compiler == 'Default' && runner.os == 'Windows' && matrix.generator == 'Visual Studio 17 2022'
+        if: matrix.compiler == 'Default' && runner.os == 'Windows' && matrix.generator == 'Visual Studio 16 2019'
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
           vsversion: 2019
           sdk: 10.0.19041.0
+
+      - name: Setup MSVC (Windows ARM64 Ninja)
+        if: matrix.compiler == 'Default' && runner.os == 'Windows' && matrix.arch == 'arm64'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: arm64
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
@@ -342,8 +349,7 @@ jobs:
         run: cpack . -C ${{ matrix.build_type }}
 
       - name: Upload
-        uses: actions/upload-artifact@v4
-        if: matrix.generator != 'Visual Studio 17 2022'
+        if: matrix.generator != 'Visual Studio 16 2019'
         with:
           path: ${{github.workspace}}/build/*.tar.gz
           name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} ${{ matrix.compiler }}
