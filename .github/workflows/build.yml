@@ -294,7 +294,7 @@ jobs:
           echo "CC=clang" >> $env:GITHUB_ENV
           echo "CXX=clang++" >> $env:GITHUB_ENV
 
-      - name: Install Visual Studio 2022 Build Tools
+      - name: Install Visual Studio 2019 Build Tools
         if: runner.os == 'Windows' && matrix.generator == 'Visual Studio 17 2022'
         shell: powershell
         run: |
@@ -303,13 +303,15 @@ jobs:
             [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
             iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
           }
-          choco install -y visualstudio2022buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.VisualStudio.Component.VC.Tools.x86.x64 --add Microsoft.VisualStudio.Component.VC.v142.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.19041 --includeRecommended"
+          choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.Component.MSBuild --add Microsoft.VisualStudio.Component.VC.v142.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.19041 --includeRecommended --installPath C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools"
 
       - name: Setup MSVC (Windows)
-        if: matrix.compiler == 'Default' && runner.os == 'Windows'
+        if: matrix.compiler == 'Default' && runner.os == 'Windows' && matrix.generator == 'Visual Studio 17 2022'
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: ${{ matrix.arch }}
+          vsversion: 2019
+          sdk: 10.0.19041.0
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.
