@@ -15,7 +15,9 @@
 
 import logging
 import os
+import inspect
 import pickle
+import hashlib
 import re
 from pathlib import Path
 
@@ -34,7 +36,6 @@ assert CPP_COMMENT_LINE.match('  *  Test').group(1) == " Test"
 
 log = logging.getLogger('mkdocs')
 
-# Increment when Parser/Entry data model changes to invalidate old caches automatically.
 CACHE_VERSION = 1
 
 def parse_comment_lines(iterator):
@@ -137,6 +138,13 @@ class CppMacro:
     def namespaced_name(self):
         return self.name
 
+# Fingerprint of parser data-model classes so cache self-invalidates on code changes.
+_CACHE_FINGERPRINT = hashlib.md5(
+    (inspect.getsource(CppVariable) + inspect.getsource(CppFunction) + 
+     inspect.getsource(CppEnum) + inspect.getsource(DoxygenEntry) +
+     inspect.getsource(CppClass) + inspect.getsource(CppMacro)).encode()
+).hexdigest()
+
 class _Parser:
     def __init__(self, input: str, location = None | Path):
         self.tokens = cpp_tokenizer.tokenize(input)
@@ -216,6 +224,7 @@ class _Parser:
             return None
         if self.last_token[1] != '{':
             # unexpected token after enum — not a parseable form
+            log.warning(f'Unexpected token after enum "{name}": {self.last_token}')
             self._consume_doc()
             return None
         out = CppEnum(name=name, doc=self._consume_doc())
@@ -476,11 +485,13 @@ def _scan():
         except Exception as e:
             log.warning(f'Could not load parser cache from "{cache_file}": {e}')
             cache = {}
-    # Invalidate cache if schema version doesn't match (parser data model changed)
-    if cache.get('_cache_version') != CACHE_VERSION:
+    # Invalidate cache if schema version or fingerprint doesn't match (parser data model changed)
+    if cache.get('_cache_version') != CACHE_VERSION or cache.get('_cache_fingerprint') != _CACHE_FINGERPRINT:
         if cache:
-            log.info('Parser cache schema version mismatch, rebuilding')
+            log.info('Parser cache schema/fingerprint mismatch, rebuilding')
         cache = {}
+    # Prune stale entries whose source files no longer exist
+    cache = {k: v for k, v in cache.items() if k.startswith('_') or Path(k).exists()}
 
     cache_updated = False
     for root, dirs, files in os.walk('.'):
@@ -519,9 +530,8 @@ def _scan():
             except Exception as e:
                 log.exception(f'Source file "{full_path.absolute()}" could not be parsed')
     if cache_updated:
-        # Remove entries whose source files have been deleted or renamed
-        cache = {k: v for k, v in cache.items() if k == '_cache_version' or Path(k).exists()}
         cache['_cache_version'] = CACHE_VERSION
+        cache['_cache_fingerprint'] = _CACHE_FINGERPRINT
         try:
             with open(cache_file, 'wb') as f:
                 pickle.dump(cache, f)

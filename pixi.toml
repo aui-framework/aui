@@ -2,12 +2,12 @@
 authors = ["Saikari <lin@sz.cn.eu.org>"]
 channels = ["conda-forge"]
 name = "aui"
-platforms = ["linux-64"]
+platforms = ["linux-64", "win-64", "osx-64", "osx-arm64"]
 version = "0.1.0"
 
 [tasks]
 build-docs = "mkdocs build --dirty"
-serve-docs = "fuser -k 8000/tcp 2>/dev/null; mkdocs serve --dirty"
+serve-docs = "mkdocs serve --dirty"
 
 [dependencies]
 python = "3.14.*"

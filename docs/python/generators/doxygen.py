@@ -473,7 +473,7 @@ def gen_pages():
                     hl = _compute_hl_lines(snippet, tokens)
                     hl_attr = f' hl_lines="{hl}"' if hl else ''
                     print(f"??? note \"{src_rel}\"", file=fos)
-                    print(f"    {ex['title']}{f' - {ex.get("description", "")}' if ex.get('description', '') else ''}", file=fos)
+                    print(f"    {_example_title(ex)}", file=fos)
                     if snippet:
                         # Strip leading blank lines so hl_lines numbering matches compute_hl_lines
                         lines = snippet.splitlines()
@@ -601,7 +601,7 @@ def gen_pages():
             # and print them here. Do this even if page-level examples exist so
             # canonical macro-form examples found elsewhere are surfaced on the
             # symbol's page (e.g., AForEachUI / AUI_DECLARATIVE_FOR).
-            if not isinstance(parse_entry, CppClass) and class_examples and not page_examples:
+            if not isinstance(parse_entry, CppClass) and class_examples:
                 try:
                     # build names and anchors similar to class handling
                     anchors = []
