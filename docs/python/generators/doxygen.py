@@ -106,6 +106,14 @@ def _has_unquoted_match(snippet: str, names: list[str]) -> bool:
     return False
 
 
+def _example_title(ex: dict) -> str:
+    """Format example title with conditional description."""
+    desc = ex.get('description', '') or ''
+    if desc:
+        return f"{ex['title']} - {desc}"
+    return ex['title']
+
+
 
 def _extract_example_names(parse_entry):
     t = [parse_entry.namespaced_name(), parse_entry.name]
@@ -177,12 +185,19 @@ def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=se
                     hl_attr = f' hl_lines="{hl}"' if hl else ''
                     print(f"\n??? note \"{src_rel}\"", file=fos)
                     print(file=fos)
-                    print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
+                    print(f"    {_example_title(ex)}", file=fos)
                     print(file=fos)
-                    print(f"    ```{extension}{hl_attr}", file=fos)
-                    for line in ex['snippet'].splitlines():
-                        print(f"    {line}", file=fos)
-                    print(f"    ```", file=fos)
+                    if snippet:
+                        render_lines = snippet.splitlines()
+                        first_nonblank = 0
+                        for l in render_lines:
+                            if l.strip():
+                                break
+                            first_nonblank += 1
+                        print(f"    ```{extension}{hl_attr}", file=fos)
+                        for line in render_lines[first_nonblank:]:
+                            print(f"    {line}", file=fos)
+                        print(f"    ```", file=fos)
 
     # enums - see APath::DefaultPath
     if hasattr(nested, 'enum_values'):
@@ -326,7 +341,6 @@ def gen_pages():
                                     return 1
                             # unquoted occurrence of documented name on nontrivial line
                             try:
-                                from docs.python.generators.examples_helpers import _find_unquoted_word_on_nontrivial_line
                                 if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in names_to_search if n):
                                     return 2
                             except Exception:
@@ -442,11 +456,19 @@ def gen_pages():
                     hl = _compute_hl_lines(snippet, tokens)
                     hl_attr = f' hl_lines="{hl}"' if hl else ''
                     print(f"??? note \"{src_rel}\"", file=fos)
-                    print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
-                    print(f"    ```{extension}{hl_attr}", file=fos)
-                    for line in ex['snippet'].splitlines():
-                        print(f"    {line}", file=fos)
-                    print(f"    ```", file=fos)
+                    print(f"    {ex['title']}{f' - {ex.get("description", "")}' if ex.get('description', '') else ''}", file=fos)
+                    if snippet:
+                        # Strip leading blank lines so hl_lines numbering matches compute_hl_lines
+                        lines = snippet.splitlines()
+                        first_nonblank = 0
+                        for l in lines:
+                            if l.strip():
+                                break
+                            first_nonblank += 1
+                        print(f"    ```{extension}{hl_attr}", file=fos)
+                        for line in lines[first_nonblank:]:
+                            print(f"    {line}", file=fos)
+                        print(f"    ```", file=fos)
 
             # collect class-level examples (don't print here; used as fallback per-method)
             class_examples = []
@@ -554,11 +576,16 @@ def gen_pages():
                             hl = _compute_hl_lines(snippet, tokens)
                             hl_attr = f' hl_lines="{hl}"' if hl else ''
                             print(f"\n??? note \"{src_rel}\"", file=fos)
-                            print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
-                            # print code block only when snippet is available
+                            print(f"    {_example_title(ex)}", file=fos)
                             if snippet:
+                                render_lines = snippet.splitlines()
+                                first_nonblank = 0
+                                for l in render_lines:
+                                    if l.strip():
+                                        break
+                                    first_nonblank += 1
                                 print(f"    ```{extension}{hl_attr}", file=fos)
-                                for line in snippet.splitlines():
+                                for line in render_lines[first_nonblank:]:
                                     print(f"    {line}", file=fos)
                                 print(f"    ```", file=fos)
                 except Exception:
@@ -674,10 +701,16 @@ def gen_pages():
                             hl = _compute_hl_lines(snippet, tokens)
                             hl_attr = f' hl_lines="{hl}"' if hl else ''
                             print(f"\n??? note \"{src_rel}\"", file=fos)
-                            print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
+                            print(f"    {_example_title(ex)}", file=fos)
                             if snippet:
+                                render_lines = snippet.splitlines()
+                                first_nonblank = 0
+                                for l in render_lines:
+                                    if l.strip():
+                                        break
+                                    first_nonblank += 1
                                 print(f"    ```{extension}{hl_attr}", file=fos)
-                                for line in snippet.splitlines():
+                                for line in render_lines[first_nonblank:]:
                                     print(f"    {line}", file=fos)
                                 print(f"    ```", file=fos)
                 except Exception:
@@ -758,12 +791,19 @@ def gen_pages():
                                 hl_attr = f' hl_lines="{hl}"' if hl else ''
                                 print(f"\n??? note \"{src_rel}\"", file=fos)
                                 print(file=fos)
-                                print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
+                                print(f"    {_example_title(ex)}", file=fos)
                                 print(file=fos)
-                                print(f"    ```{extension}{hl_attr}", file=fos)
-                                for line in ex['snippet'].splitlines():
-                                    print(f"    {line}", file=fos)
-                                print(f"    ```", file=fos)
+                                if snippet:
+                                    render_lines = snippet.splitlines()
+                                    first_nonblank = 0
+                                    for l in render_lines:
+                                        if l.strip():
+                                            break
+                                        first_nonblank += 1
+                                    print(f"    ```{extension}{hl_attr}", file=fos)
+                                    for line in render_lines[first_nonblank:]:
+                                        print(f"    {line}", file=fos)
+                                    print(f"    ```", file=fos)
 
             if hasattr(parse_entry, 'methods'):
                 methods = [i for i in parse_entry.methods if i.visibility != 'private' and i.doc is not None]
@@ -856,12 +896,19 @@ def gen_pages():
                                         hl_attr = f' hl_lines="{hl}"' if hl else ''
                                         print(f"\n??? note \"{src_rel}\"", file=fos)
                                         print(file=fos)
-                                        print(f"    {ex['title']} - {ex.get('description', '')}", file=fos)
+                                        print(f"    {_example_title(ex)}", file=fos)
                                         print(file=fos)
-                                        print(f"    ```{extension}{hl_attr}", file=fos)
-                                        for line in ex['snippet'].splitlines():
-                                            print(f"    {line}", file=fos)
-                                        print(f"    ```", file=fos)
+                                        if snippet:
+                                            render_lines = snippet.splitlines()
+                                            first_nonblank = 0
+                                            for l in render_lines:
+                                                if l.strip():
+                                                    break
+                                                first_nonblank += 1
+                                            print(f"    ```{extension}{hl_attr}", file=fos)
+                                            for line in render_lines[first_nonblank:]:
+                                                print(f"    {line}", file=fos)
+                                            print(f"    ```", file=fos)
                             except Exception:
                                 pass
 

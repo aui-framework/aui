@@ -34,6 +34,9 @@ assert CPP_COMMENT_LINE.match('  *  Test').group(1) == " Test"
 
 log = logging.getLogger('mkdocs')
 
+# Increment when Parser/Entry data model changes to invalidate old caches automatically.
+CACHE_VERSION = 1
+
 def parse_comment_lines(iterator):
     output = []
     for line in iterator:
@@ -209,9 +212,11 @@ class _Parser:
                 self.last_token = next(self.iterator)
         if self.last_token[1] == ';':
             # forward declaration e.g. enum class X;
+            self._consume_doc()
             return None
         if self.last_token[1] != '{':
             # unexpected token after enum — not a parseable form
+            self._consume_doc()
             return None
         out = CppEnum(name=name, doc=self._consume_doc())
         if generic_kind:
@@ -468,8 +473,14 @@ def _scan():
         try:
             with open(cache_file, 'rb') as f:
                 cache = pickle.load(f)
-        except Exception:
+        except Exception as e:
+            log.warning(f'Could not load parser cache from "{cache_file}": {e}')
             cache = {}
+    # Invalidate cache if schema version doesn't match (parser data model changed)
+    if cache.get('_cache_version') != CACHE_VERSION:
+        if cache:
+            log.info('Parser cache schema version mismatch, rebuilding')
+        cache = {}
 
     cache_updated = False
     for root, dirs, files in os.walk('.'):
@@ -508,11 +519,14 @@ def _scan():
             except Exception as e:
                 log.exception(f'Source file "{full_path.absolute()}" could not be parsed')
     if cache_updated:
+        # Remove entries whose source files have been deleted or renamed
+        cache = {k: v for k, v in cache.items() if k == '_cache_version' or Path(k).exists()}
+        cache['_cache_version'] = CACHE_VERSION
         try:
             with open(cache_file, 'wb') as f:
                 pickle.dump(cache, f)
-        except Exception:
-            pass
+        except Exception as e:
+            log.warning(f'Could not write parser cache to "{cache_file}": {e}')
     return contents
 
 index = _scan()
