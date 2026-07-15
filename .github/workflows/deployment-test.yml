@@ -41,6 +41,7 @@ jobs:
             additional_cmake_flags: '-A x64'
             debug_or_release: RelWithDebInfo
             shared_or_static: static
+            arch: x64
 
 
     steps:
@@ -90,6 +91,12 @@ jobs:
           arch: ${{ matrix.arch }}
           vsversion: 2019
           sdk: 10.0.19041.0
+
+      - name: Setup MSVC (Windows Ninja)
+        if: runner.os == 'Windows' && matrix.generator == 'Ninja'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: amd64
 
       - name: Configure CMake
         # Configure CMake in a 'build' subdirectory. `CMAKE_BUILD_TYPE` is only required if you are using a single-configuration generator such as make.

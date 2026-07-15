@@ -138,12 +138,9 @@ class CppMacro:
     def namespaced_name(self):
         return self.name
 
-# Fingerprint of parser data-model classes so cache self-invalidates on code changes.
-_CACHE_FINGERPRINT = hashlib.md5(
-    (inspect.getsource(CppVariable) + inspect.getsource(CppFunction) + 
-     inspect.getsource(CppEnum) + inspect.getsource(DoxygenEntry) +
-     inspect.getsource(CppClass) + inspect.getsource(CppMacro)).encode()
-).hexdigest()
+# Fingerprint of the entire parser module so cache self-invalidates on ANY code change
+# (parser logic, token handling, data model classes — not just the data model).
+_CACHE_FINGERPRINT = hashlib.md5(Path(__file__).read_bytes()).hexdigest()
 
 class _Parser:
     def __init__(self, input: str, location = None | Path):

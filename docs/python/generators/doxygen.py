@@ -107,11 +107,12 @@ def _has_unquoted_match(snippet: str, names: list[str]) -> bool:
 
 
 def _example_title(ex: dict) -> str:
-    """Format example title with conditional description."""
+    """Format example title with page link and conditional description."""
+    title_link = f"[{ex['title']}]({ex['id']}.md)"
     desc = ex.get('description', '') or ''
     if desc:
-        return f"{ex['title']} - {desc}"
-    return ex['title']
+        return f"{title_link} — {desc}"
+    return title_link
 
 
 
@@ -310,14 +311,22 @@ def gen_pages():
                     top_names.append(parse_entry.name)
                 class_examples = _examples_for_symbol(top_names, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)) or []
                 # Normalize: _examples_for_symbol returns entries with `srcs` (list) but
-                # rendering/filtering expects `src` (single Path). Pick the first source
-                # as the canonical `src` so the fallback paths produce visible output.
+                # rendering/filtering expects `src` (single Path). Resolve to the source
+                # file that actually contains the queried symbol, not just srcs[0].
                 for ce in class_examples:
                     if 'src' not in ce and ce.get('srcs'):
-                        ce['src'] = Path(ce['srcs'][0])
+                        ce['src'] = Path(ce['srcs'][0])  # fallback default
+                        for s in ce['srcs']:
+                            try:
+                                src_text = Path(s).read_text(encoding='utf-8', errors='ignore')
+                                for name in top_names:
+                                    if name and re.search(r'\b' + re.escape(name) + r'\b', src_text):
+                                        ce['src'] = Path(s)
+                                        break
+                            except Exception:
+                                continue
             except Exception:
                 class_examples = []
-                pass
             if not isinstance(parse_entry, CppClass):
                 try:
                     names_to_search = []

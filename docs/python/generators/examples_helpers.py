@@ -93,7 +93,12 @@ def _expand_names_with_index_aliases(names_in: List[str]) -> List[str]:
     mapping keys that point to the same page (aliases created by
     <!-- aui:index_alias ... -->). Aliases are matched by title only.
     """
-    out = set([n for n in (names_in or []) if n])
+    out = []
+    seen = set()
+    for n in (names_in or []):
+        if n and n not in seen:
+            seen.add(n)
+            out.append(n)
     try:
         from docs.python.generators import index as docs_index
         for n in list(out):
@@ -108,12 +113,14 @@ def _expand_names_with_index_aliases(names_in: List[str]) -> List[str]:
                     m_title = getattr(mapping_entry, 'title', None)
                     e_title = getattr(entry, 'title', None)
                     if m_title and e_title and (m_title == e_title or m_title.lower() == e_title.lower()):
-                        out.add(key)
+                        if key not in seen:
+                            seen.add(key)
+                            out.append(key)
                 except Exception:
                     pass
     except Exception:
         pass
-    return list(out)
+    return out
 
 
 def _find_first_match(text: str, names: List[str], strong_patterns: List[str]) -> tuple | None:
@@ -144,8 +151,14 @@ def _find_first_match(text: str, names: List[str], strong_patterns: List[str]) -
             if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
                 continue
             return (m, line_idx)
+    # Restrict AForEachUI/AUI_DECLARATIVE_FOR strong-pattern fallback: only match
+    # when the requested name is the canonical symbol or its macro alias.
+    _has_aforeach = any(n in ('AForEachUI', 'AUI_DECLARATIVE_FOR') for n in (names or []))
     # fallback to strong patterns
     for p in (strong_patterns or []):
+        # Skip AForEachUI/AUI_DECLARATIVE_FOR-specific patterns when unrelated names
+        if not _has_aforeach and any(x in p for x in ('AForEachUI', 'AUI_DECLARATIVE_FOR')):
+            continue
         for m in re.finditer(p, text):
             if _is_in_double_quotes(text, m.start()):
                 continue
