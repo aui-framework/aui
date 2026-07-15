@@ -67,7 +67,7 @@ void ALogger::setLogFileForGlobal(APath path) { globalImpl(std::move(path)); }
 void ALogger::log(Level level, AStringView prefix, AStringView message) {
     {
         std::unique_lock lock(mOnLogged);
-        if (mOnLogged.value()) {
+        if (mOnLogged.value() && isLevelEnabled(level)) {
             auto onLogged = mOnLogged.value();
             lock.unlock();
             onLogged(prefix, message, level);

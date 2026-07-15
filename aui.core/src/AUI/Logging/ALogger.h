@@ -65,6 +65,7 @@ public:
         ERR,
         DEBUG,
         TRACE,
+        DISABLED,
     };
 
     struct LogWriter {
@@ -72,6 +73,7 @@ public:
         ALogger& mLogger;
         Level mLevel;
         AStringView mPrefix;
+        bool mEnabled;
         struct Buffer {
         private:
             struct StackBuffer {
@@ -167,9 +169,10 @@ public:
 
     public:
         LogWriter(ALogger& logger, Level level, AStringView prefix)
-          : mLogger(logger), mLevel(level), mPrefix(std::move(prefix)) {}
+          : mLogger(logger), mLevel(level), mPrefix(std::move(prefix)), mEnabled(logger.isLevelEnabled(level)) {}
 
         ~LogWriter() {
+            if (!mEnabled) return;
             mBuffer.write(0);   // null terminator
             auto s = mBuffer.str();
             mLogger.log(mLevel, mPrefix, s);
@@ -177,6 +180,7 @@ public:
 
         template <typename T>
         LogWriter& operator<<(const T& t) noexcept {
+            if (!mEnabled) return *this;
             // avoid usage of std::ostream because it's expensive
             if constexpr (std::is_constructible_v<std::string_view, T>) {
                 std::string_view stringView(t);
@@ -217,6 +221,28 @@ public:
     bool isTrace() { return global().mTrace; }
 
     /**
+     * @brief Sets the minimum log level for this logger instance.
+     * @details Messages with a level lower than this will be filtered out.
+     * Default is TRACE (all messages pass through).
+     * Levels: INFO < WARN < ERR < DEBUG < TRACE < DISABLED
+     */
+    void setLevel(Level level) { mMinLevel = level; }
+
+    /**
+     * @brief Sets the minimum log level for the global logger.
+     * Levels: INFO < WARN < ERR < DEBUG < TRACE < DISABLED
+     */
+    static void setGlobalLevel(Level level) { global().setLevel(level); }
+
+    /**
+     * @brief Checks whether messages at the given level will be logged.
+     */
+    [[nodiscard]]
+    bool isLevelEnabled(Level level) {
+        return level >= mMinLevel;
+    }
+
+    /**
      * @brief Sets log file.
      * @param path path to the log file.
      * @details
@@ -240,7 +266,7 @@ public:
         return mLogFile.valueOrException().path();
     }
 
-    void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
+     void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
         std::unique_lock lock(mOnLogged);
         mOnLogged = std::move(callback);
     }
@@ -292,6 +318,8 @@ private:
     AOptional<AFileOutputStream> mLogFile;
     AMutex mLogSync;
     AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
+
+    Level mMinLevel = INFO;
 
     bool mDebug = AUI_DEBUG;
     bool mTrace = isTraceImpl();
