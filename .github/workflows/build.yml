@@ -296,6 +296,25 @@ jobs:
           echo "CC=/usr/bin/clang " >> $GITHUB_ENV
           echo "CXX=/usr/bin/clang++ " >> $GITHUB_ENV
 
+      - name: Install Visual Studio 2019 Build Tools
+        if: runner.os == 'Windows' && matrix.generator == 'Visual Studio 16 2019'
+        shell: powershell
+        run: |
+          if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
+            Set-ExecutionPolicy Bypass -Scope Process -Force
+            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
+            iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
+          }
+          choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.Component.MSBuild --add Microsoft.VisualStudio.Component.VC.v142.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.19041 --includeRecommended --installPath C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools"
+
+      - name: Setup MSVC (Windows)
+        if: matrix.compiler == 'Default' && runner.os == 'Windows' && matrix.generator == 'Visual Studio 16 2019'
+        uses: ilammy/msvc-dev-cmd@v1
+        with:
+          arch: ${{ matrix.arch }}
+          vsversion: 2019
+          sdk: 10.0.19041.0
+
       - name: Setup MSVC (Windows ARM64 Ninja)
         if: matrix.compiler == 'Default' && runner.os == 'Windows' && matrix.arch == 'arm64' && matrix.generator == 'Ninja'
         uses: ilammy/msvc-dev-cmd@v1
