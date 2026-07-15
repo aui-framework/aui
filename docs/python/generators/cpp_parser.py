@@ -15,8 +15,8 @@
 
 import logging
 import os
+import json
 import inspect
-import pickle
 import hashlib
 import re
 from pathlib import Path
@@ -474,23 +474,6 @@ def _parse(input: str, location = None | Path):
 def _scan():
     contents = []
     cache = {}
-    cache_file = Path('.parser_cache.pkl')
-    if cache_file.exists():
-        try:
-            with open(cache_file, 'rb') as f:
-                cache = pickle.load(f)
-        except Exception as e:
-            log.warning(f'Could not load parser cache from "{cache_file}": {e}')
-            cache = {}
-    # Invalidate cache if schema version or fingerprint doesn't match (parser data model changed)
-    if cache.get('_cache_version') != CACHE_VERSION or cache.get('_cache_fingerprint') != _CACHE_FINGERPRINT:
-        if cache:
-            log.info('Parser cache schema/fingerprint mismatch, rebuilding')
-        cache = {}
-    # Prune stale entries whose source files no longer exist
-    cache = {k: v for k, v in cache.items() if k.startswith('_') or Path(k).exists()}
-
-    cache_updated = False
     for root, dirs, files in os.walk('.'):
         root_path = Path(root)
 
@@ -508,32 +491,13 @@ def _scan():
 
             full_path = root_path / file
             try:
-                mtime = full_path.stat().st_mtime
-            except OSError:
-                continue
-            cache_key = str(full_path.resolve())
-            cached = cache.get(cache_key)
-            if cached is not None and cached[0] == mtime:
-                contents.extend(cached[1])
-                continue
-            try:
                 parsed = list(_parse(
                     full_path.read_text(encoding='utf-8', errors='ignore'),
                     location=full_path
                 ))
                 contents.extend(parsed)
-                cache[cache_key] = (mtime, parsed)
-                cache_updated = True
             except Exception as e:
                 log.exception(f'Source file "{full_path.absolute()}" could not be parsed')
-    if cache_updated:
-        cache['_cache_version'] = CACHE_VERSION
-        cache['_cache_fingerprint'] = _CACHE_FINGERPRINT
-        try:
-            with open(cache_file, 'wb') as f:
-                pickle.dump(cache, f)
-        except Exception as e:
-            log.warning(f'Could not write parser cache to "{cache_file}": {e}')
     return contents
 
 index = _scan()

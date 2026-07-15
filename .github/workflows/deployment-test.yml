@@ -29,19 +29,20 @@ jobs:
         arch: [x86_64]
         generator: [Ninja]
         include:
-          - os: windows-latest
+          - os: windows-2019
             generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A Win32'
             debug_or_release: Debug
             shared_or_static: shared
             arch: x86
 
-          - os: windows-latest
+          - os: windows-2019
             generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A x64'
             debug_or_release: RelWithDebInfo
             shared_or_static: static
             arch: x64
+
 
 
     steps:
@@ -73,24 +74,6 @@ jobs:
           echo "CC=clang" >> $env:GITHUB_ENV
           echo "CXX=clang++" >> $env:GITHUB_ENV
 
-      - name: Install Visual Studio 2019 Build Tools
-        if: runner.os == 'Windows' && matrix.generator == 'Visual Studio 16 2019'
-        shell: powershell
-        run: |
-          if (-not (Get-Command choco -ErrorAction SilentlyContinue)) {
-            Set-ExecutionPolicy Bypass -Scope Process -Force
-            [System.Net.ServicePointManager]::SecurityProtocol = [System.Net.ServicePointManager]::SecurityProtocol -bor 3072
-            iex ((New-Object System.Net.WebClient).DownloadString('https://community.chocolatey.org/install.ps1'))
-          }
-          choco install -y visualstudio2019buildtools --package-parameters "--add Microsoft.VisualStudio.Workload.VCTools --add Microsoft.VisualStudio.Workload.NativeDesktop --add Microsoft.Component.MSBuild --add Microsoft.VisualStudio.Component.VC.v142.x86.x64 --add Microsoft.VisualStudio.Component.Windows10SDK.19041 --includeRecommended --installPath C:/Program Files (x86)/Microsoft Visual Studio/2019/BuildTools"
-
-      - name: Setup MSVC (Windows)
-        if: runner.os == 'Windows' && matrix.generator == 'Visual Studio 16 2019'
-        uses: ilammy/msvc-dev-cmd@v1
-        with:
-          arch: ${{ matrix.arch }}
-          vsversion: 2019
-          sdk: 10.0.19041.0
 
       - name: Setup MSVC (Windows Ninja)
         if: runner.os == 'Windows' && matrix.generator == 'Ninja'

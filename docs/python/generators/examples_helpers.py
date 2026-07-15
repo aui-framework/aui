@@ -126,15 +126,17 @@ def _expand_names_with_index_aliases(names_in: List[str]) -> List[str]:
 def _find_first_match(text: str, names: List[str], strong_patterns: List[str]) -> tuple | None:
     """Find first nontrivial, unquoted occurrence of a name or strong pattern in text.
     
-    Returns (match_object, line_index) or None. Prefers direct name matches,
-    then strong patterns, then quoted name matches. Skips include/using/comment lines.
+    Returns (match_object, line_index) or None. Prefers canonically strong usage,
+    then direct name matches, then quoted matches. Skips include/using/comment lines.
     """
     lines = text.splitlines()
-    # direct name match (non-quoted preferred)
-    for name in (names or []):
-        if not name:
+    _has_aforeach = any(n in ('AForEachUI', 'AUI_DECLARATIVE_FOR') for n in (names or []))
+    # Canonical strong patterns first (e.g. macro invocations have priority over
+    # generic mentions of the same symbol).
+    for p in (strong_patterns or []):
+        if not _has_aforeach and any(x in p for x in ('AForEachUI', 'AUI_DECLARATIVE_FOR')):
             continue
-        for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
+        for m in re.finditer(p, text):
             if _is_in_double_quotes(text, m.start()):
                 continue
             pos = m.start()
@@ -151,15 +153,11 @@ def _find_first_match(text: str, names: List[str], strong_patterns: List[str]) -
             if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
                 continue
             return (m, line_idx)
-    # Restrict AForEachUI/AUI_DECLARATIVE_FOR strong-pattern fallback: only match
-    # when the requested name is the canonical symbol or its macro alias.
-    _has_aforeach = any(n in ('AForEachUI', 'AUI_DECLARATIVE_FOR') for n in (names or []))
-    # fallback to strong patterns
-    for p in (strong_patterns or []):
-        # Skip AForEachUI/AUI_DECLARATIVE_FOR-specific patterns when unrelated names
-        if not _has_aforeach and any(x in p for x in ('AForEachUI', 'AUI_DECLARATIVE_FOR')):
+    # Then fall back to direct unquoted name matches.
+    for name in (names or []):
+        if not name:
             continue
-        for m in re.finditer(p, text):
+        for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
             if _is_in_double_quotes(text, m.start()):
                 continue
             pos = m.start()

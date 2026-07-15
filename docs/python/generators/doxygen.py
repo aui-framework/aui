@@ -309,7 +309,9 @@ def gen_pages():
                     top_names.append(parse_entry.namespaced_name())
                 if hasattr(parse_entry, 'name'):
                     top_names.append(parse_entry.name)
-                class_examples = _examples_for_symbol(top_names, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)) or []
+                class_examples = [dict(ce) for ce in (
+                    _examples_for_symbol(top_names, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)) or [])
+                ]
                 # Normalize: _examples_for_symbol returns entries with `srcs` (list) but
                 # rendering/filtering expects `src` (single Path). Resolve to the source
                 # file that actually contains the queried symbol, not just srcs[0].
