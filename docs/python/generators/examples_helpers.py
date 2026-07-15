@@ -135,7 +135,7 @@ def _find_first_match(text: str, names: List[str], strong_patterns: List[str]) -
     then direct name matches, then quoted matches. Skips include/using/comment lines.
     """
     lines = text.splitlines()
-    _has_aforeach = any(n in ('AForEachUI', 'AUI_DECLARATIVE_FOR', 'PropertyListRecursive', 'ass::PropertyListRecursive', 'AUI_WITH_STYLE') for n in (names or []))
+    _has_aforeach = any(n in ('AForEachUI', 'AUI_DECLARATIVE_FOR') for n in (names or []))
     # Canonical strong patterns first (e.g. macro invocations have priority over
     # generic mentions of the same symbol).
     for p in (strong_patterns or []):
