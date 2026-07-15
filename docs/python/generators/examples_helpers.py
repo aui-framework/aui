@@ -57,30 +57,35 @@ def _find_unquoted_word(word: str, text: str) -> bool:
     return _find_unquoted(r"\b" + re.escape(word) + r"\b", text)
 
 
+def _line_idx_for_pos(text: str, pos: int, lines: list[str]) -> int:
+    """Return the 0-based line index containing character position pos in text."""
+    cum = 0
+    for idx, line in enumerate(lines):
+        if pos <= cum + len(line):
+            return idx
+        cum += len(line) + 1
+    return len(lines) - 1
+
+
+_TRIVIAL_LINE_PREFIXES = ('#include', 'using ', '//', '/*', '*', '#if', '#define')
+_TRIVIAL_LINE_EXACT = {'{', '}', '#endif', '#if 0'}
+
+def _is_trivial_line(ln: str) -> bool:
+    """Return True if ln is an include/using/comment/preprocessor line."""
+    return ln.startswith(_TRIVIAL_LINE_PREFIXES) or ln in _TRIVIAL_LINE_EXACT
+
+
 def _find_unquoted_word_on_nontrivial_line(word: str, text: str) -> bool:
     """Return True if word appears unquoted somewhere and the matched line is not a trivial/preprocessor/comment line."""
     try:
         pat = re.compile(r"\b" + re.escape(word) + r"\b")
         lines = text.splitlines()
-        cum = 0
         for m in pat.finditer(text):
             if _is_in_double_quotes(text, m.start()):
                 continue
-            # determine line index for match
-            pos = m.start()
-            line_idx = 0
-            cur = 0
-            for i, l in enumerate(lines):
-                if pos <= cur + len(l):
-                    line_idx = i
-                    break
-                cur += len(l) + 1
-            ln = lines[line_idx].strip()
-            if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
-                continue
-            if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
-                continue
-            return True
+            line_idx = _line_idx_for_pos(text, m.start(), lines)
+            if not _is_trivial_line(lines[line_idx].strip()):
+                return True
     except Exception:
         pass
     return False
@@ -108,7 +113,9 @@ def _expand_names_with_index_aliases(names_in: List[str]) -> List[str]:
                 entry = None
             if not entry:
                 continue
-            for key, mapping_entry in getattr(docs_index, '_mapping', {}).items():
+            # Known coupling: iterate private _mapping to discover title aliases.
+            # Fails loudly (AttributeError) if _mapping is renamed; no silent fallback.
+            for key, mapping_entry in docs_index._mapping.items():
                 try:
                     m_title = getattr(mapping_entry, 'title', None)
                     e_title = getattr(entry, 'title', None)
@@ -121,8 +128,6 @@ def _expand_names_with_index_aliases(names_in: List[str]) -> List[str]:
     except Exception:
         pass
     return out
-
-
 def _find_first_match(text: str, names: List[str], strong_patterns: List[str]) -> tuple | None:
     """Find first nontrivial, unquoted occurrence of a name or strong pattern in text.
     
@@ -130,7 +135,7 @@ def _find_first_match(text: str, names: List[str], strong_patterns: List[str]) -
     then direct name matches, then quoted matches. Skips include/using/comment lines.
     """
     lines = text.splitlines()
-    _has_aforeach = any(n in ('AForEachUI', 'AUI_DECLARATIVE_FOR') for n in (names or []))
+    _has_aforeach = any(n in ('AForEachUI', 'AUI_DECLARATIVE_FOR', 'PropertyListRecursive', 'ass::PropertyListRecursive', 'AUI_WITH_STYLE') for n in (names or []))
     # Canonical strong patterns first (e.g. macro invocations have priority over
     # generic mentions of the same symbol).
     for p in (strong_patterns or []):
@@ -139,20 +144,9 @@ def _find_first_match(text: str, names: List[str], strong_patterns: List[str]) -
         for m in re.finditer(p, text):
             if _is_in_double_quotes(text, m.start()):
                 continue
-            pos = m.start()
-            cum = 0
-            line_idx = 0
-            for i, l in enumerate(lines):
-                if pos <= cum + len(l):
-                    line_idx = i
-                    break
-                cum += len(l) + 1
-            ln = lines[line_idx].strip()
-            if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
-                continue
-            if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
-                continue
-            return (m, line_idx)
+            line_idx = _line_idx_for_pos(text, m.start(), lines)
+            if not _is_trivial_line(lines[line_idx].strip()):
+                return (m, line_idx)
     # Then fall back to direct unquoted name matches.
     for name in (names or []):
         if not name:
@@ -160,39 +154,17 @@ def _find_first_match(text: str, names: List[str], strong_patterns: List[str]) -
         for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
             if _is_in_double_quotes(text, m.start()):
                 continue
-            pos = m.start()
-            cum = 0
-            line_idx = 0
-            for i, l in enumerate(lines):
-                if pos <= cum + len(l):
-                    line_idx = i
-                    break
-                cum += len(l) + 1
-            ln = lines[line_idx].strip()
-            if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
-                continue
-            if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
-                continue
-            return (m, line_idx)
+            line_idx = _line_idx_for_pos(text, m.start(), lines)
+            if not _is_trivial_line(lines[line_idx].strip()):
+                return (m, line_idx)
     # fallback to first quoted name match
     for name in (names or []):
         if not name:
             continue
         for m in re.finditer(r"\b" + re.escape(name) + r"\b", text):
-            pos = m.start()
-            cum = 0
-            line_idx = 0
-            for i, l in enumerate(lines):
-                if pos <= cum + len(l):
-                    line_idx = i
-                    break
-                cum += len(l) + 1
-            ln = lines[line_idx].strip()
-            if ln.startswith('#include') or ln.startswith('using ') or ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
-                continue
-            if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
-                continue
-            return (m, line_idx)
+            line_idx = _line_idx_for_pos(text, m.start(), lines)
+            if not _is_trivial_line(lines[line_idx].strip()):
+                return (m, line_idx)
     return None
 
 

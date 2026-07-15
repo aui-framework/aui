@@ -297,13 +297,13 @@ jobs:
           echo "CXX=/usr/bin/clang++ " >> $GITHUB_ENV
 
       - name: Setup MSVC (Windows ARM64 Ninja)
-        if: matrix.compiler == 'Default' && runner.os == 'Windows' && matrix.arch == 'arm64'
+        if: matrix.compiler == 'Default' && runner.os == 'Windows' && matrix.arch == 'arm64' && matrix.generator == 'Ninja'
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: arm64
 
       - name: Setup MSVC (Windows Ninja)
-        if: runner.os == 'Windows' && matrix.generator == 'Ninja' && runner.arch != 'ARM64' && matrix.compiler != 'MinGW'
+        if: runner.os == 'Windows' && matrix.generator == 'Ninja' && matrix.arch != 'arm64' && matrix.compiler != 'MinGW'
         uses: ilammy/msvc-dev-cmd@v1
         with:
           arch: amd64
@@ -335,12 +335,11 @@ jobs:
       - name: Pack
         working-directory: ${{github.workspace}}/build
         run: cpack . -C ${{ matrix.build_type }}
-
       - name: Upload
-        if: matrix.generator != 'Visual Studio 16 2019'
+        uses: actions/upload-artifact@v4
         with:
           path: ${{github.workspace}}/build/*.tar.gz
-          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} ${{ matrix.compiler }}
+          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} ${{ matrix.compiler }} ${{ matrix.generator }}
 # [cpack]
 
       - name: Enable examples
@@ -392,8 +391,7 @@ jobs:
         uses: actions/download-artifact@v4
         with:
           path: ${{github.workspace}}/artifacts
-          merge-multiple: 'true'
-          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} Default
+          name: aui ${{ runner.os }} ${{ matrix.shared_or_static }} ${{ matrix.build_type }} ${{ matrix.arch }} Default Ninja
 
       - name: Configure test app
         run: |

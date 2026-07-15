@@ -380,22 +380,26 @@ def gen_pages():
                             except Exception:
                                 pass
                             return 10
+                        # Compute priority once per example to avoid redundant file I/O
+                        priorities = {}
+                        for e in exs:
+                            try:
+                                priorities[id(e)] = _example_priority(e)
+                            except Exception:
+                                priorities[id(e)] = 10
 
                         # sort examples by computed priority
-                        exs.sort(key=_example_priority)
+                        exs.sort(key=lambda e: priorities.get(id(e), 10))
                         # log per-example priority for debugging
                         try:
                             for e in exs:
-                                try:
-                                    p = _example_priority(e)
-                                except Exception:
-                                    p = None
+                                p = priorities.get(id(e))
                                 log.info(f"example candidate: id={e.get('id')} title={e.get('title')} priority={p}")
                         except Exception:
                             pass
                         # if any has strong signal (priority < 10), keep only those with strong signal
-                        if any(_example_priority(e) < 10 for e in exs):
-                            exs = [e for e in exs if _example_priority(e) < 10]
+                        if any(priorities.get(id(e), 10) < 10 for e in exs):
+                            exs = [e for e in exs if priorities.get(id(e), 10) < 10]
                         # if any example contains an unquoted match in its source file
                         # (and the match is on a non-trivial line), drop examples
                         # whose matches are exclusively inside quoted strings.
