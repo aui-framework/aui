@@ -17,6 +17,8 @@
 #else
 #include <ctime>
 #include <AUI/IO/AFileOutputStream.h>
+#include <fmt/color.h>
+#include <fmt/format.h>
 
 #endif
 
@@ -49,6 +51,29 @@ static const char* levelCStr(ALogger::Level level) {
 
     return "UNKNOWN";
 }
+
+#if !AUI_PLATFORM_ANDROID
+static std::string levelCStrColored(ALogger::Level level) {
+    switch (level) {
+        case ALogger::INFO:
+            return fmt::format(fmt::fg(fmt::color::green), "{}", "INFO");
+
+        case ALogger::WARN:
+            return fmt::format(fmt::fg(fmt::color::yellow), "{}", "WARN");
+
+        case ALogger::ERR:
+            return fmt::format(fmt::fg(fmt::color::red), "{}", "ERR");
+
+        case ALogger::DEBUG:
+            return fmt::format(fmt::fg(fmt::color::cyan), "{}", "DEBUG");
+
+        case ALogger::TRACE:
+            return fmt::format(fmt::fg(fmt::color::gray), "{}", "TRACE");
+    }
+
+    return "UNKNOWN";
+}
+#endif
 
 static ALogger& globalImpl(AOptional<APath> path = std::nullopt) {
 #if AUI_PLATFORM_EMSCRIPTEN
@@ -139,16 +164,17 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
     }
 
     const char* levelName = levelCStr(level);
+    auto coloredLevel = levelCStrColored(level);
 
     std::unique_lock lock(mLogSync);
     if (message.length() == 0) {
-        printf("[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
+        printf("[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), coloredLevel.c_str(), prefix.data());
         if (mLogFile) {
             fprintf(
                 mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
         }
     } else {
-        printf("[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
+        printf("[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), coloredLevel.c_str(), message.data());
         if (mLogFile) {
             fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(),
                     levelName, message.data());
