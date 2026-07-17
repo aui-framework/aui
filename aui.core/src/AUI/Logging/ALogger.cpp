@@ -168,16 +168,16 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
 
     std::unique_lock lock(mLogSync);
     if (message.length() == 0) {
-        printf("[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), coloredLevel.c_str(), prefix.data());
+        fmt::println("[{}][{}][{}]: {}", timebuf, threadName, coloredLevel, prefix);
         if (mLogFile) {
-            fprintf(
-                mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
+            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}]: {}",
+           timebuf, threadName, levelName, prefix);
         }
     } else {
-        printf("[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), coloredLevel.c_str(), message.data());
+        fmt::println("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, coloredLevel, message);
         if (mLogFile) {
-            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(),
-                    levelName, message.data());
+            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}][{}]: {}",
+           timebuf, threadName, prefix, levelName, message);
         }
     }
     fflush(stdout);
