@@ -261,6 +261,28 @@ public:
      */
     static void setLogFileForGlobal(APath path);
 
+    /**
+     * @brief Sets a custom log pattern using fmt named arguments.
+     * @details
+     * Available placeholders:
+     * - {time} - timestamp (HH:MM:SS)
+     * - {thread} - thread name
+     * - {level} - level name (colored on console, plain in file)
+     * - {prefix} - log prefix/tag
+     * - {msg} - message text (falls back to prefix when message is empty)
+     *
+     * Example: "[{time}][{thread}][{prefix}][{level}]: {msg}"
+     *
+     * Set empty string to restore default format.
+     */
+    void setPattern(std::string pattern);
+
+    /**
+     * @brief Sets log pattern for `ALogger::global()`.
+     * @see ALogger::setPattern
+     */
+    static void setGlobalPattern(std::string pattern);
+
     [[nodiscard]]
     APath logFile() {
         return mLogFile.valueOrException().path();
@@ -323,6 +345,7 @@ private:
 
     bool mDebug = AUI_DEBUG;
     bool mTrace = isTraceImpl();
+    std::string mPattern;
 
     static bool isTraceImpl();
 

@@ -165,19 +165,41 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
 
     const char* levelName = levelCStr(level);
     auto coloredLevel = levelCStrColored(level);
+    auto effectiveMsg = message.length() == 0 ? prefix : message;
 
     std::unique_lock lock(mLogSync);
-    if (message.length() == 0) {
-        fmt::println("[{}][{}][{}]: {}", timebuf, threadName, coloredLevel, prefix);
-        if (mLogFile) {
-            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}]: {}",
-           timebuf, threadName, levelName, prefix);
+    if (mPattern.empty()) {
+        if (message.length() == 0) {
+            fmt::println("[{}][{}][{}]: {}", timebuf, threadName, coloredLevel, prefix);
+            if (mLogFile) {
+                fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}]: {}",
+                             timebuf, threadName, levelName, prefix);
+            }
+        } else {
+            fmt::println("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, coloredLevel, message);
+            if (mLogFile) {
+                fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}][{}]: {}",
+                             timebuf, threadName, prefix, levelName, message);
+            }
         }
     } else {
-        fmt::println("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, coloredLevel, message);
+        auto fmtPattern = fmt::runtime(mPattern);
+        auto consoleMsg = fmt::format(fmtPattern,
+            fmt::arg("time", timebuf),
+            fmt::arg("thread", threadName),
+            fmt::arg("level", coloredLevel),
+            fmt::arg("prefix", prefix),
+            fmt::arg("msg", effectiveMsg));
+        fmt::println("{}", consoleMsg);
+
         if (mLogFile) {
-            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}][{}]: {}",
-           timebuf, threadName, prefix, levelName, message);
+            auto fileMsg = fmt::format(fmtPattern,
+                fmt::arg("time", timebuf),
+                fmt::arg("thread", threadName),
+                fmt::arg("level", levelName),
+                fmt::arg("prefix", prefix),
+                fmt::arg("msg", effectiveMsg));
+            fmt::println(mLogFile->nativeHandle(), "{}", fileMsg);
         }
     }
     fflush(stdout);
@@ -185,6 +207,14 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
         fflush(mLogFile->nativeHandle());
     }
 #endif
+}
+
+void ALogger::setPattern(std::string pattern) {
+    mPattern = std::move(pattern);
+}
+
+void ALogger::setGlobalPattern(std::string pattern) {
+    global().setPattern(std::move(pattern));
 }
 
 void ALogger::setLogFileImpl(AString path) {
