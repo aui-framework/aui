@@ -150,7 +150,7 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
     }
 
 #else
-    std::time_t t = std::time(nullptr);
+        std::time_t t = std::time(nullptr);
     std::tm* tm;
     tm = localtime(&t);
     char timebuf[64];
@@ -171,41 +171,38 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
 
     std::unique_lock lock(mLogSync);
     if (pattern.empty()) {
+        std::string consoleMsg;
+        std::string fileMsg;
         if (message.length() == 0) {
-            auto consoleMsg = fmt::format("[{}][{}][{}]: {}", timebuf, threadName, coloredLevel, prefix);
-            fputs(consoleMsg.c_str(), stdout);
-            fputc('\n', stdout);
-            if (mLogFile) {
-                fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}]: {}",
-                             timebuf, threadName, levelName, prefix);
-            }
+            consoleMsg = fmt::format("[{}][{}][{}]: {}",     timebuf, threadName, coloredLevel, prefix);
+            fileMsg    = fmt::format("[{}][{}][{}]: {}",     timebuf, threadName, levelName,    prefix);
         } else {
-            auto consoleMsg = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, coloredLevel, message);
-            fputs(consoleMsg.c_str(), stdout);
-            fputc('\n', stdout);
-            if (mLogFile) {
-                fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}][{}]: {}",
-                             timebuf, threadName, prefix, levelName, message);
-            }
+            consoleMsg = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, coloredLevel, message);
+            fileMsg    = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, levelName,    message);
+        }
+        fputs(consoleMsg.c_str(), stdout);
+        fputc('\n', stdout);
+        if (mLogFile) {
+            fmt::println(mLogFile->nativeHandle(), "{}", fileMsg);
         }
     } else {
         auto fmtPattern = fmt::runtime(pattern);
         auto consoleMsg = fmt::format(fmtPattern,
-            fmt::arg("time", timebuf),
+            fmt::arg("time",   timebuf),
             fmt::arg("thread", threadName),
-            fmt::arg("level", coloredLevel),
+            fmt::arg("level",  coloredLevel),
             fmt::arg("prefix", prefix),
-            fmt::arg("msg", effectiveMsg));
+            fmt::arg("msg",    effectiveMsg));
         fputs(consoleMsg.c_str(), stdout);
         fputc('\n', stdout);
 
         if (mLogFile) {
             auto fileMsg = fmt::format(fmtPattern,
-                fmt::arg("time", timebuf),
+                fmt::arg("time",   timebuf),
                 fmt::arg("thread", threadName),
-                fmt::arg("level", levelName),
+                fmt::arg("level",  levelName),
                 fmt::arg("prefix", prefix),
-                fmt::arg("msg", effectiveMsg));
+                fmt::arg("msg",    effectiveMsg));
             fmt::println(mLogFile->nativeHandle(), "{}", fileMsg);
         }
     }
