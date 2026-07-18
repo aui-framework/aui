@@ -164,7 +164,7 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
     }
 
     const char* levelName = levelCStr(level);
-    auto coloredLevel = levelCStrColored(level);
+    auto consoleLevel = mColorsEnabled ? levelCStrColored(level) : std::string(levelName);
     auto effectiveMsg = message.length() == 0 ? prefix : message;
 
     auto& pattern = (message.length() == 0 && !mNoprefixPattern.empty()) ? mNoprefixPattern : mPattern;
@@ -174,10 +174,10 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
         std::string consoleMsg;
         std::string fileMsg;
         if (message.length() == 0) {
-            consoleMsg = fmt::format("[{}][{}][{}]: {}",     timebuf, threadName, coloredLevel, prefix);
+            consoleMsg = fmt::format("[{}][{}][{}]: {}",     timebuf, threadName, consoleLevel, prefix);
             fileMsg    = fmt::format("[{}][{}][{}]: {}",     timebuf, threadName, levelName,    prefix);
         } else {
-            consoleMsg = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, coloredLevel, message);
+            consoleMsg = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, consoleLevel, message);
             fileMsg    = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, levelName,    message);
         }
         fputs(consoleMsg.c_str(), stdout);
@@ -190,7 +190,7 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
         auto consoleMsg = fmt::format(fmtPattern,
             fmt::arg("time",   timebuf),
             fmt::arg("thread", threadName),
-            fmt::arg("level",  coloredLevel),
+            fmt::arg("level",  consoleLevel),
             fmt::arg("prefix", prefix),
             fmt::arg("msg",    effectiveMsg));
         fputs(consoleMsg.c_str(), stdout);

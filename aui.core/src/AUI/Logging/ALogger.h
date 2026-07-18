@@ -297,6 +297,13 @@ public:
      */
     static void setGlobalNoprefixPattern(std::string pattern);
 
+    /**
+     * @brief Enables or disables colored output for the global logger.
+     * @details Default is enabled. When disabled, plain level names (INFO, WARN, etc.)
+     * are used instead of ANSI-colored ones.
+     */
+    static void enableColors(bool enabled) { global().mColorsEnabled = enabled; }
+
     [[nodiscard]]
     APath logFile() {
         return mLogFile.valueOrException().path();
@@ -359,6 +366,7 @@ private:
 
     bool mDebug = AUI_DEBUG;
     bool mTrace = isTraceImpl();
+    bool mColorsEnabled = true;
     std::string mPattern;
     std::string mNoprefixPattern;
 
