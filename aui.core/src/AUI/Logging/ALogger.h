@@ -278,10 +278,24 @@ public:
     void setPattern(std::string pattern);
 
     /**
+     * @brief Sets a custom log pattern for noprefix logs (when only a tag is provided, no message).
+     * @details
+     * Same placeholders as setPattern. Falls back to the main pattern if not set.
+     * Set empty string to fall back to the main pattern.
+     */
+    void setNoprefixPattern(std::string pattern);
+
+    /**
      * @brief Sets log pattern for `ALogger::global()`.
      * @see ALogger::setPattern
      */
     static void setGlobalPattern(std::string pattern);
+
+    /**
+     * @brief Sets noprefix log pattern for `ALogger::global()`.
+     * @see ALogger::setNoprefixPattern
+     */
+    static void setGlobalNoprefixPattern(std::string pattern);
 
     [[nodiscard]]
     APath logFile() {
@@ -346,6 +360,7 @@ private:
     bool mDebug = AUI_DEBUG;
     bool mTrace = isTraceImpl();
     std::string mPattern;
+    std::string mNoprefixPattern;
 
     static bool isTraceImpl();
 

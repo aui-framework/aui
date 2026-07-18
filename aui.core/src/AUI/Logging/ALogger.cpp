@@ -167,8 +167,10 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
     auto coloredLevel = levelCStrColored(level);
     auto effectiveMsg = message.length() == 0 ? prefix : message;
 
+    auto& pattern = (message.length() == 0 && !mNoprefixPattern.empty()) ? mNoprefixPattern : mPattern;
+
     std::unique_lock lock(mLogSync);
-    if (mPattern.empty()) {
+    if (pattern.empty()) {
         if (message.length() == 0) {
             auto consoleMsg = fmt::format("[{}][{}][{}]: {}", timebuf, threadName, coloredLevel, prefix);
             fputs(consoleMsg.c_str(), stdout);
@@ -187,7 +189,7 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
             }
         }
     } else {
-        auto fmtPattern = fmt::runtime(mPattern);
+        auto fmtPattern = fmt::runtime(pattern);
         auto consoleMsg = fmt::format(fmtPattern,
             fmt::arg("time", timebuf),
             fmt::arg("thread", threadName),
@@ -218,8 +220,16 @@ void ALogger::setPattern(std::string pattern) {
     mPattern = std::move(pattern);
 }
 
+void ALogger::setNoprefixPattern(std::string pattern) {
+    mNoprefixPattern = std::move(pattern);
+}
+
 void ALogger::setGlobalPattern(std::string pattern) {
     global().setPattern(std::move(pattern));
+}
+
+void ALogger::setGlobalNoprefixPattern(std::string pattern) {
+    global().setNoprefixPattern(std::move(pattern));
 }
 
 void ALogger::setLogFileImpl(AString path) {
