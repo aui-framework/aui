@@ -223,7 +223,7 @@ public:
     /**
      * @brief Sets the minimum log level for this logger instance.
      * @details Messages with a level lower than this will be filtered out.
-     * Default is TRACE (all messages pass through).
+     * Default is INFO (all messages pass through).
      * Levels: INFO < WARN < ERR < DEBUG < TRACE < DISABLED
      */
     void setLevel(Level level) { mMinLevel = level; }

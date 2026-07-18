@@ -186,24 +186,44 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
             fmt::println(mLogFile->nativeHandle(), "{}", fileMsg);
         }
     } else {
-        auto fmtPattern = fmt::runtime(pattern);
-        auto consoleMsg = fmt::format(fmtPattern,
-            fmt::arg("time",   timebuf),
-            fmt::arg("thread", threadName),
-            fmt::arg("level",  consoleLevel),
-            fmt::arg("prefix", prefix),
-            fmt::arg("msg",    effectiveMsg));
-        fputs(consoleMsg.c_str(), stdout);
-        fputc('\n', stdout);
-
-        if (mLogFile) {
-            auto fileMsg = fmt::format(fmtPattern,
+        try {
+            auto fmtPattern = fmt::runtime(pattern);
+            auto consoleMsg = fmt::format(fmtPattern,
                 fmt::arg("time",   timebuf),
                 fmt::arg("thread", threadName),
-                fmt::arg("level",  levelName),
+                fmt::arg("level",  consoleLevel),
                 fmt::arg("prefix", prefix),
                 fmt::arg("msg",    effectiveMsg));
-            fmt::println(mLogFile->nativeHandle(), "{}", fileMsg);
+            fputs(consoleMsg.c_str(), stdout);
+            fputc('\n', stdout);
+
+            if (mLogFile) {
+                auto fileMsg = fmt::format(fmtPattern,
+                    fmt::arg("time",   timebuf),
+                    fmt::arg("thread", threadName),
+                    fmt::arg("level",  levelName),
+                    fmt::arg("prefix", prefix),
+                    fmt::arg("msg",    effectiveMsg));
+                fmt::println(mLogFile->nativeHandle(), "{}", fileMsg);
+            }
+        } catch (const fmt::format_error&) {
+            if (message.length() == 0) {
+                auto consoleMsg = fmt::format("[{}][{}][{}]: {}",     timebuf, threadName, consoleLevel, prefix);
+                fputs(consoleMsg.c_str(), stdout);
+                fputc('\n', stdout);
+                if (mLogFile) {
+                    fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}]: {}",
+                                 timebuf, threadName, levelName, prefix);
+                }
+            } else {
+                auto consoleMsg = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, consoleLevel, message);
+                fputs(consoleMsg.c_str(), stdout);
+                fputc('\n', stdout);
+                if (mLogFile) {
+                    fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}][{}]: {}",
+                                 timebuf, threadName, prefix, levelName, message);
+                }
+            }
         }
     }
     fflush(stdout);
