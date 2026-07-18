@@ -265,13 +265,16 @@ public:
      * @brief Sets a custom log pattern using fmt named arguments.
      * @details
      * Available placeholders:
-     * - {time} - timestamp (HH:MM:SS)
-     * - {thread} - thread name
-     * - {level} - level name (colored on console, plain in file)
-     * - {prefix} - log prefix/tag
-     * - {msg} - message text (falls back to prefix when message is empty)
+     * @code
+     * {time}   - timestamp (HH:MM:SS)
+     * {thread} - thread name
+     * {level}  - level name (colored on console, plain in file)
+     * {prefix} - log prefix/tag
+     * {msg}    - message text (falls back to prefix when message is empty)
      *
-     * Example: "[{time}][{thread}][{prefix}][{level}]: {msg}"
+     * Example:
+     * "[{time}][{thread}][{prefix}][{level}]: {msg}"
+     * @endcode
      *
      * Set empty string to restore default format.
      */
