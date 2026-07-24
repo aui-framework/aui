@@ -28,7 +28,7 @@ from docs.python.generators.examples_helpers import (
     filter_examples_by_relevance as _filter_examples_by_relevance,
     dedupe_examples_list as _dedupe_examples_list,
 )
-from docs.python.generators.examples_helpers import _find_unquoted_word_on_nontrivial_line
+from docs.python.generators.examples_helpers import _find_unquoted_word_on_nontrivial_line, _strip_leading_blank_lines
 
 log = logging.getLogger('mkdocs')
 
@@ -142,14 +142,9 @@ def _print_example(ex, fos, tokens, *, printed_example_pairs=None):
     print(f"    {_example_title(ex)}", file=fos)
     print(file=fos)
     if snippet:
-        render_lines = snippet.splitlines()
-        first_nonblank = 0
-        for l in render_lines:
-            if l.strip():
-                break
-            first_nonblank += 1
+        render_lines = _strip_leading_blank_lines(snippet)
         print(f"    ```{extension}{hl_attr}", file=fos)
-        for line in render_lines[first_nonblank:]:
+        for line in render_lines:
             print(f"    {line}", file=fos)
         print(f"    ```", file=fos)
     return True
@@ -333,7 +328,7 @@ def gen_pages():
                                 src_text = Path(s).read_text(encoding='utf-8', errors='ignore')
                                 candidate_names = _add_relevant_macro_aliases(top_names, src_text)
                                 if any(
-                                    name and re.search(r'\b' + re.escape(name) + r'\b', src_text)
+                                    name and _find_unquoted_word_on_nontrivial_line(name, src_text)
                                     for name in candidate_names
                                 ):
                                     ce['src'] = Path(s)
@@ -409,7 +404,7 @@ def gen_pages():
                         try:
                             for e in exs:
                                 p = priorities.get(id(e))
-                                log.info(f"example candidate: id={e.get('id')} title={e.get('title')} priority={p}")
+                                log.debug(f"example candidate: id={e.get('id')} title={e.get('title')} priority={p}")
                         except Exception:
                             pass
                         # if any has strong signal (priority < 10), keep only those with strong signal

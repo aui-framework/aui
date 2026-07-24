@@ -140,7 +140,7 @@ class CppMacro:
 
 # Fingerprint of the entire parser module so cache self-invalidates on ANY code change
 # (parser logic, token handling, data model classes — not just the data model).
-_CACHE_FINGERPRINT = hashlib.md5(Path(__file__).read_bytes()).hexdigest()
+_CACHE_FINGERPRINT = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 
 class _Parser:
     def __init__(self, input: str, location = None | Path):
@@ -210,17 +210,26 @@ class _Parser:
         if self.last_token[1] in ['class', 'struct']:
             generic_kind = f"enum {self.last_token[1]}"
             self.last_token = next(self.iterator)
+        # Anonymous enum: enum { ... }
+        if self.last_token[1] == '{':
+            depth = 1
+            while depth > 0:
+                self.last_token = next(self.iterator)
+                if self.last_token[1] == '{':
+                    depth += 1
+                elif self.last_token[1] == '}':
+                    depth -= 1
+            self._consume_doc()
+            return None
         name = self.last_token[1]
         self.last_token = next(self.iterator)
         if self.last_token[1] == ':':
             while self.last_token[1] not in ('{', ';'):
                 self.last_token = next(self.iterator)
         if self.last_token[1] == ';':
-            # forward declaration e.g. enum class X;
             self._consume_doc()
             return None
         if self.last_token[1] != '{':
-            # unexpected token after enum — not a parseable form
             log.warning(f'Unexpected token after enum "{name}": {self.last_token}')
             self._consume_doc()
             return None
@@ -233,7 +242,6 @@ class _Parser:
             self.last_token = next(self.iterator)
             if self.last_token[1] == '}':
                 break
-
             if self._parse_comment():
                 continue
             if self.last_token[0] == cpp_tokenizer.Type.PREPROCESSOR:
@@ -473,7 +481,6 @@ def _parse(input: str, location = None | Path):
     return _Parser(input=input, location=location).parse()
 def _scan():
     contents = []
-    cache = {}
     for root, dirs, files in os.walk('.'):
         root_path = Path(root)
 

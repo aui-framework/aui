@@ -183,23 +183,9 @@ def build_examples_index(examples_lists: Dict[str, List[Dict[str, Any]]]) -> Dic
                     text = Path(src).read_text(encoding='utf-8', errors='ignore')
                 except Exception:
                     continue
-
                 # Skip trivial files that only contain includes/using/guards/comments
                 non_blank_lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
-                is_trivial = True
-                for ln in non_blank_lines:
-                    if ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
-                        continue
-                    if ln.startswith('#include'):
-                        continue
-                    if ln.startswith('using '):
-                        continue
-                    if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
-                        continue
-                    is_trivial = False
-                    break
-
-                if is_trivial:
+                if all(_is_trivial_line(ln) for ln in non_blank_lines):
                     continue
 
                 for line in text.splitlines():
@@ -227,6 +213,18 @@ def dedupe_examples_list(exs: List[Dict[str, Any]]) -> List[Dict[str, Any]]:
         out.append(ex)
     return out
 
+def _strip_leading_blank_lines(text: str) -> list[str]:
+    """Split text and strip leading blank lines, returning remaining lines."""
+    lines = text.splitlines()
+    first_nonblank = 0
+    for l in lines:
+        if l.strip():
+            break
+        first_nonblank += 1
+    if first_nonblank > 0:
+        lines = lines[first_nonblank:]
+    return lines
+
 
 def compute_hl_lines(snippet: str, tokens: List[str]) -> str | None:
     """Return mkdocs hl_lines string from snippet and tokens, or None.
@@ -238,13 +236,7 @@ def compute_hl_lines(snippet: str, tokens: List[str]) -> str | None:
         return None
     lines = snippet.splitlines()
     # Strip leading blank lines so hl_lines matches rendered HTML numbering
-    first_nonblank = 0
-    for l in lines:
-        if l.strip():
-            break
-        first_nonblank += 1
-    if first_nonblank > 0:
-        lines = lines[first_nonblank:]
+    lines = _strip_leading_blank_lines(snippet)
     hits = []
     for idx, line in enumerate(lines, start=1):
         for t in tokens:

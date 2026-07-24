@@ -205,15 +205,6 @@ jobs:
             additional_cmake_flags: '-A x64'
 
           - os: windows-latest
-            compiler: "Default"
-            build_type: RelWithDebInfo
-            shared_or_static: static
-            arch: x86_64
-            generator: "Visual Studio 16 2019"
-            additional_cmake_flags: '-A x64'
-
-
-          - os: windows-latest
             compiler: "MinGW"
             build_type: RelWithDebInfo
             shared_or_static: static
