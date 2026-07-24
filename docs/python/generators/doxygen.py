@@ -114,6 +114,46 @@ def _example_title(ex: dict) -> str:
         return f"{title_link} — {desc}"
     return title_link
 
+def _print_example(ex, fos, tokens, *, printed_example_pairs=None):
+    """Print a formatted example block with consistent reference spacing.
+    
+    Returns True if the example was printed, False if skipped.
+    """
+    if not ex or 'src' not in ex:
+        return False
+    try:
+        src_rel = ex['src'].relative_to(Path.cwd())
+    except Exception:
+        src_rel = ex['src']
+    
+    if printed_example_pairs is not None:
+        pair = (ex.get('id'), str(src_rel))
+        if pair in printed_example_pairs:
+            return False
+        printed_example_pairs.add(pair)
+    
+    extension = common.determine_extension(ex['src'])
+    snippet = ex.get('snippet', '') or ''
+    hl = _compute_hl_lines(snippet, tokens)
+    hl_attr = f' hl_lines="{hl}"' if hl else ''
+    
+    print(f"\n??? note \"{src_rel}\"", file=fos)
+    print(file=fos)
+    print(f"    {_example_title(ex)}", file=fos)
+    print(file=fos)
+    if snippet:
+        render_lines = snippet.splitlines()
+        first_nonblank = 0
+        for l in render_lines:
+            if l.strip():
+                break
+            first_nonblank += 1
+        print(f"    ```{extension}{hl_attr}", file=fos)
+        for line in render_lines[first_nonblank:]:
+            print(f"    {line}", file=fos)
+        print(f"    ```", file=fos)
+    return True
+
 
 
 def _extract_example_names(parse_entry):
@@ -168,37 +208,7 @@ def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=se
             if exs:
                 print('\n**Examples:**\n', file=fos)
                 for ex in exs:
-                    if not ex or 'src' not in ex or not ex.get('snippet'):
-                        continue
-                    try:
-                        src_rel = ex['src'].relative_to(Path.cwd())
-                    except Exception:
-                        src_rel = ex['src']
-                    pair = (ex.get('id'), str(src_rel))
-                    if pair in printed_example_pairs:
-                        continue
-                    printed_example_pairs.add(pair)
-                    extension = common.determine_extension(ex['src'])
-                    # compute hl_lines using nested type tokens
-                    tokens = [i for i in names_to_search_examples]
-                    snippet = ex.get('snippet','') or ''
-                    hl = _compute_hl_lines(snippet, tokens)
-                    hl_attr = f' hl_lines="{hl}"' if hl else ''
-                    print(f"\n??? note \"{src_rel}\"", file=fos)
-                    print(file=fos)
-                    print(f"    {_example_title(ex)}", file=fos)
-                    print(file=fos)
-                    if snippet:
-                        render_lines = snippet.splitlines()
-                        first_nonblank = 0
-                        for l in render_lines:
-                            if l.strip():
-                                break
-                            first_nonblank += 1
-                        print(f"    ```{extension}{hl_attr}", file=fos)
-                        for line in render_lines[first_nonblank:]:
-                            print(f"    {line}", file=fos)
-                        print(f"    ```", file=fos)
+                    _print_example(ex, fos, [i for i in names_to_search_examples], printed_example_pairs=printed_example_pairs)
 
     # enums - see APath::DefaultPath
     if hasattr(nested, 'enum_values'):
@@ -472,40 +482,12 @@ def gen_pages():
                     if exid in printed_example_ids:
                         continue
                     printed_example_ids.add(exid)
-                    if 'src' not in ex or not ex['src']:
-                        continue
-                    try:
-                        src_rel = ex['src'].relative_to(Path.cwd())
-                    except Exception:
-                        src_rel = ex['src']
-                    pair = (ex.get('id'), str(src_rel))
-                    if pair in printed_example_pairs:
-                        continue
-                    printed_example_pairs.add(pair)
-                    extension = common.determine_extension(ex['src'])
-                    # compute hl_lines for this snippet using name tokens
                     tokens = []
                     if hasattr(parse_entry, 'namespaced_name'):
                         tokens.append(parse_entry.namespaced_name())
                     if hasattr(parse_entry, 'name'):
                         tokens.append(parse_entry.name)
-                    snippet = ex.get('snippet','') or ''
-                    hl = _compute_hl_lines(snippet, tokens)
-                    hl_attr = f' hl_lines="{hl}"' if hl else ''
-                    print(f"??? note \"{src_rel}\"", file=fos)
-                    print(f"    {_example_title(ex)}", file=fos)
-                    if snippet:
-                        # Strip leading blank lines so hl_lines numbering matches compute_hl_lines
-                        lines = snippet.splitlines()
-                        first_nonblank = 0
-                        for l in lines:
-                            if l.strip():
-                                break
-                            first_nonblank += 1
-                        print(f"    ```{extension}{hl_attr}", file=fos)
-                        for line in lines[first_nonblank:]:
-                            print(f"    {line}", file=fos)
-                        print(f"    ```", file=fos)
+                    _print_example(ex, fos, tokens, printed_example_pairs=printed_example_pairs)
 
 
             # For classes: print class-level examples once (used as fallback reference).
@@ -582,37 +564,7 @@ def gen_pages():
                     if exs:
                         print('\n## Examples', file=fos)
                         for ex in exs:
-                            if not ex or 'src' not in ex or not ex.get('id'):
-                                # skip malformed example entries
-                                continue
-                            try:
-                                src_rel = ex['src'].relative_to(Path.cwd())
-                            except Exception:
-                                src_rel = ex['src']
-                            pair = (ex.get('id'), str(src_rel))
-                            if pair in printed_example_pairs:
-                                continue
-                            printed_example_pairs.add(pair)
-                            extension = common.determine_extension(ex['src'])
-                            # emit admonition header with no blank line after it
-                            # compute hl_lines using class tokens
-                            tokens = _extract_example_names(parse_entry)
-                            snippet = ex.get('snippet', '') or ''
-                            hl = _compute_hl_lines(snippet, tokens)
-                            hl_attr = f' hl_lines="{hl}"' if hl else ''
-                            print(f"\n??? note \"{src_rel}\"", file=fos)
-                            print(f"    {_example_title(ex)}", file=fos)
-                            if snippet:
-                                render_lines = snippet.splitlines()
-                                first_nonblank = 0
-                                for l in render_lines:
-                                    if l.strip():
-                                        break
-                                    first_nonblank += 1
-                                print(f"    ```{extension}{hl_attr}", file=fos)
-                                for line in render_lines[first_nonblank:]:
-                                    print(f"    {line}", file=fos)
-                                print(f"    ```", file=fos)
+                            _print_example(ex, fos, _extract_example_names(parse_entry), printed_example_pairs=printed_example_pairs)
                 except Exception:
                     pass
 
@@ -706,38 +658,12 @@ def gen_pages():
                     if exs:
                         print('\n## Examples', file=fos)
                         for ex in exs:
-                            if not ex or 'src' not in ex or not ex.get('id'):
-                                continue
-                            try:
-                                src_rel = ex['src'].relative_to(Path.cwd())
-                            except Exception:
-                                src_rel = ex['src']
-                            pair = (ex.get('id'), str(src_rel))
-                            if pair in printed_example_pairs:
-                                continue
-                            printed_example_pairs.add(pair)
-                            extension = common.determine_extension(ex['src'])
                             tokens = []
                             if hasattr(parse_entry, 'namespaced_name'):
                                 tokens.append(parse_entry.namespaced_name())
                             if hasattr(parse_entry, 'name'):
                                 tokens.append(parse_entry.name)
-                            snippet = ex.get('snippet', '') or ''
-                            hl = _compute_hl_lines(snippet, tokens)
-                            hl_attr = f' hl_lines="{hl}"' if hl else ''
-                            print(f"\n??? note \"{src_rel}\"", file=fos)
-                            print(f"    {_example_title(ex)}", file=fos)
-                            if snippet:
-                                render_lines = snippet.splitlines()
-                                first_nonblank = 0
-                                for l in render_lines:
-                                    if l.strip():
-                                        break
-                                    first_nonblank += 1
-                                print(f"    ```{extension}{hl_attr}", file=fos)
-                                for line in render_lines[first_nonblank:]:
-                                    print(f"    {line}", file=fos)
-                                print(f"    ```", file=fos)
+                            _print_example(ex, fos, tokens, printed_example_pairs=printed_example_pairs)
                 except Exception:
                     pass
 
@@ -799,36 +725,7 @@ def gen_pages():
                         if exs:
                             print('## Examples', file=fos)
                             for ex in exs:
-                                if not ex or 'src' not in ex or not ex.get('snippet'):
-                                    continue
-                                try:
-                                    src_rel = ex['src'].relative_to(Path.cwd())
-                                except Exception:
-                                    src_rel = ex['src']
-                                pair = (ex.get('id'), str(src_rel))
-                                if pair in printed_example_pairs:
-                                    continue
-                                printed_example_pairs.add(pair)
-                                extension = common.determine_extension(ex['src'])
-                                tokens = [field.name]
-                                snippet = ex.get('snippet','') or ''
-                                hl = _compute_hl_lines(snippet, tokens)
-                                hl_attr = f' hl_lines="{hl}"' if hl else ''
-                                print(f"\n??? note \"{src_rel}\"", file=fos)
-                                print(file=fos)
-                                print(f"    {_example_title(ex)}", file=fos)
-                                print(file=fos)
-                                if snippet:
-                                    render_lines = snippet.splitlines()
-                                    first_nonblank = 0
-                                    for l in render_lines:
-                                        if l.strip():
-                                            break
-                                        first_nonblank += 1
-                                    print(f"    ```{extension}{hl_attr}", file=fos)
-                                    for line in render_lines[first_nonblank:]:
-                                        print(f"    {line}", file=fos)
-                                    print(f"    ```", file=fos)
+                                _print_example(ex, fos, [field.name], printed_example_pairs=printed_example_pairs)
 
             if hasattr(parse_entry, 'methods'):
                 methods = [i for i in parse_entry.methods if i.visibility != 'private' and i.doc is not None]
@@ -908,32 +805,7 @@ def gen_pages():
                                 if method_exs:
                                     print('\n**Examples:**\n', file=fos)
                                     for ex in method_exs:
-                                        if not ex or 'src' not in ex or not ex.get('snippet'):
-                                            continue
-                                        try:
-                                            src_rel = ex['src'].relative_to(Path.cwd())
-                                        except Exception:
-                                            src_rel = ex['src']
-                                        extension = common.determine_extension(ex['src'])
-                                        tokens = [method_full, overload.name]
-                                        snippet = ex.get('snippet','') or ''
-                                        hl = _compute_hl_lines(snippet, tokens)
-                                        hl_attr = f' hl_lines="{hl}"' if hl else ''
-                                        print(f"\n??? note \"{src_rel}\"", file=fos)
-                                        print(file=fos)
-                                        print(f"    {_example_title(ex)}", file=fos)
-                                        print(file=fos)
-                                        if snippet:
-                                            render_lines = snippet.splitlines()
-                                            first_nonblank = 0
-                                            for l in render_lines:
-                                                if l.strip():
-                                                    break
-                                                first_nonblank += 1
-                                            print(f"    ```{extension}{hl_attr}", file=fos)
-                                            for line in render_lines[first_nonblank:]:
-                                                print(f"    {line}", file=fos)
-                                            print(f"    ```", file=fos)
+                                        _print_example(ex, fos, [method_full, overload.name], printed_example_pairs=printed_example_pairs)
                             except Exception:
                                 pass
 

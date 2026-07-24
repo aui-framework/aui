@@ -115,7 +115,8 @@ def _expand_names_with_index_aliases(names_in: List[str]) -> List[str]:
                 continue
             # Known coupling: iterate private _mapping to discover title aliases.
             # Fails loudly (AttributeError) if _mapping is renamed; no silent fallback.
-            for key, mapping_entry in docs_index._mapping.items():
+            mapping_items = docs_index._mapping.items()  # intentionally outside inner try/except
+            for key, mapping_entry in mapping_items:
                 try:
                     m_title = getattr(mapping_entry, 'title', None)
                     e_title = getattr(entry, 'title', None)
@@ -125,7 +126,7 @@ def _expand_names_with_index_aliases(names_in: List[str]) -> List[str]:
                             out.append(key)
                 except Exception:
                     pass
-    except Exception:
+    except ImportError:
         pass
     return out
 def _find_first_match(text: str, names: List[str], strong_patterns: List[str]) -> tuple | None:
