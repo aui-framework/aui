@@ -188,7 +188,7 @@ jobs:
             arch: x86_64
             generator: "Ninja"
 
-          - os: windows-2019
+          - os: windows-latest
             compiler: "Default"
             build_type: RelWithDebInfo
             shared_or_static: shared
@@ -196,7 +196,7 @@ jobs:
             generator: "Visual Studio 16 2019"
             additional_cmake_flags: '-A x64'
 
-          - os: windows-2019
+          - os: windows-latest
             compiler: "Default"
             build_type: RelWithDebInfo
             shared_or_static: static

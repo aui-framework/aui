@@ -261,8 +261,11 @@ def compute_hl_lines(snippet: str, tokens: List[str]) -> str | None:
                 if '{' in line:
                     depth = 0
                     end_idx = len(lines)
+                    opening_col = line.find('{')
                     for scan_idx in range(idx - 1, len(lines)):
                         scan_line = lines[scan_idx]
+                        if scan_idx == idx - 1:
+                            scan_line = scan_line[opening_col:]
                         depth += scan_line.count('{') - scan_line.count('}')
                         if depth <= 0:
                             end_idx = scan_idx + 1

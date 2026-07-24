@@ -321,10 +321,13 @@ def gen_pages():
                         for s in ce['srcs']:
                             try:
                                 src_text = Path(s).read_text(encoding='utf-8', errors='ignore')
-                                for name in top_names:
-                                    if name and re.search(r'\b' + re.escape(name) + r'\b', src_text):
-                                        ce['src'] = Path(s)
-                                        break
+                                candidate_names = _add_relevant_macro_aliases(top_names, src_text)
+                                if any(
+                                    name and re.search(r'\b' + re.escape(name) + r'\b', src_text)
+                                    for name in candidate_names
+                                ):
+                                    ce['src'] = Path(s)
+                                    break
                             except Exception:
                                 continue
             except Exception:
@@ -369,13 +372,15 @@ def gen_pages():
                                     return 1
                             # unquoted occurrence of documented name on nontrivial line
                             try:
-                                if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in names_to_search if n):
+                                priority_names = _add_relevant_macro_aliases(names_to_search, f"{snippet}\n{text}")
+                                if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in priority_names if n):
                                     return 2
                             except Exception:
                                 pass
                             # prefer snippets that contain any searched name as anchor
                             try:
-                                if any(re.search(re.escape(a), snippet) for a in (names_to_search or [])):
+                                priority_names = _add_relevant_macro_aliases(names_to_search, snippet)
+                                if any(re.search(re.escape(a), snippet) for a in (priority_names if priority_names else names_to_search or [])):
                                     return 3
                             except Exception:
                                 pass
