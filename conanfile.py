@@ -69,7 +69,6 @@ class AUIRecipe(ConanFile):
             self.requires("libbacktrace/cci.20240730")
         # Crypt
         self.requires("mbedtls/3.6.4")
-        self.requires("openssl/3.5.7")
         # CURL
         self.requires("libcurl/8.15.0")
         # Image
