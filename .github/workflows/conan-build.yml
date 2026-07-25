@@ -100,23 +100,6 @@ jobs:
           conan --version
           conan profile detect
 
-      - name: Get Conan home
-        id: get-conan-home
-        shell: bash
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            echo "conan-home=$USERPROFILE/.conan2" >> $GITHUB_OUTPUT
-          else
-            echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Cache Conan packages
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.get-conan-home.outputs.conan-home }}/p
-          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
-          restore-keys: |
-            conan-${{ runner.os }}-
 
       - name: Install dependencies
         if: matrix.toolset == 142
@@ -202,23 +185,6 @@ jobs:
           conan --version
           conan profile detect
 
-      - name: Get Conan home
-        id: get-conan-home
-        shell: bash
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            echo "conan-home=$USERPROFILE/.conan2" >> $GITHUB_OUTPUT
-          else
-            echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Cache Conan packages
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.get-conan-home.outputs.conan-home }}/p
-          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
-          restore-keys: |
-            conan-${{ runner.os }}-
 
       - name: Install dependencies
         run: >
@@ -286,23 +252,6 @@ jobs:
           conan --version
           conan profile detect
 
-      - name: Get Conan home
-        id: get-conan-home
-        shell: bash
-        run: |
-          if [ "$RUNNER_OS" == "Windows" ]; then
-            echo "conan-home=$USERPROFILE/.conan2" >> $GITHUB_OUTPUT
-          else
-            echo "conan-home=$HOME/.conan2" >> $GITHUB_OUTPUT
-          fi
-
-      - name: Cache Conan packages
-        uses: actions/cache@v4
-        with:
-          path: ${{ steps.get-conan-home.outputs.conan-home }}/p
-          key: conan-${{ runner.os }}-${{ hashFiles('conanfile.*', 'conan.lock') }}
-          restore-keys: |
-            conan-${{ runner.os }}-
 
       - name: Install dependencies
         run: >
