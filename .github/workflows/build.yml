@@ -245,7 +245,7 @@ jobs:
         id: cache-aui-boot
         uses: actions/cache@v3
         env:
-          cache-name: aui-boot-${{ matrix.shared_or_static }}-${{ matrix.build_type }}-${{ matrix.arch }}
+          cache-name: aui-boot-${{ matrix.compiler }}-${{ matrix.shared_or_static }}-${{ matrix.build_type }}-${{ matrix.arch }}
         with:
           path: |
             ~/.aui
