@@ -15,9 +15,6 @@
 
 import logging
 import os
-import json
-import inspect
-import hashlib
 import re
 from pathlib import Path
 
@@ -35,8 +32,6 @@ assert CPP_COMMENT_LINE.match('  * Test').group(1) == "Test"
 assert CPP_COMMENT_LINE.match('  *  Test').group(1) == " Test"
 
 log = logging.getLogger('mkdocs')
-
-CACHE_VERSION = 1
 
 def parse_comment_lines(iterator):
     output = []
@@ -138,9 +133,6 @@ class CppMacro:
     def namespaced_name(self):
         return self.name
 
-# Fingerprint of the entire parser module so cache self-invalidates on ANY code change
-# (parser logic, token handling, data model classes — not just the data model).
-_CACHE_FINGERPRINT = hashlib.sha256(Path(__file__).read_bytes()).hexdigest()
 
 class _Parser:
     def __init__(self, input: str, location = None | Path):
@@ -212,6 +204,19 @@ class _Parser:
             self.last_token = next(self.iterator)
         # Anonymous enum: enum { ... }
         if self.last_token[1] == '{':
+            depth = 1
+            while depth > 0:
+                self.last_token = next(self.iterator)
+                if self.last_token[1] == '{':
+                    depth += 1
+                elif self.last_token[1] == '}':
+                    depth -= 1
+            self._consume_doc()
+            return None
+        # Anonymous enum with underlying type: enum : uint8_t { ... }
+        if self.last_token[1] == ':':
+            while self.last_token[1] != '{':
+                self.last_token = next(self.iterator)
             depth = 1
             while depth > 0:
                 self.last_token = next(self.iterator)
