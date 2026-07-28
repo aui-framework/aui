@@ -32,11 +32,12 @@ namespace {
 
             RenderHints::PushMatrix transform(ctx.render);
             auto d = mTitle->getPositionInWindow() - getPositionInWindow();
-            AUI_REPEAT(2) { // render twice to definitely avoid stencil issues
-                ctx.render.rectangle(ASolidBrush{},
-                                     d,
-                                     mTitle->getSize());
-            }
+            
+            ctx.render.popMaskBefore(); // switches stencil op to decrement
+            ctx.render.rectangle(ASolidBrush{},
+                                 d,
+                                 mTitle->getSize());
+            ctx.render.pushMaskBefore(); // switches stencil op back to increment
         }
 
     private:
@@ -53,7 +54,7 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
 
     using namespace declarative;
     setContents(Vertical {
-        Horizontal { mTitle } << ".agroupbox-title",
+        Horizontal { mTitle }  << ".agroupbox-title",
         mFrame = _new<Inner>(mTitle,
                             /*
                              * Using two nested container because view's masking does not affect it's background (style), but does for
