@@ -165,7 +165,7 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
     }
 
     const char* levelName = levelCStr(level);
-    auto coloredLevel = levelCStrColored(level);
+    auto coloredLevel = mColorsEnabled ? levelCStrColored(level) : levelName;
 
     std::unique_lock lock(mLogSync);
     if (message.length() == 0) {

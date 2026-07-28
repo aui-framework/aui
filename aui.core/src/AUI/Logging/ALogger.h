@@ -229,12 +229,6 @@ public:
     void setLevel(Level level) { mMinLevel = level; }
 
     /**
-     * @brief Sets the minimum log level for the global logger.
-     * Levels: INFO < WARN < ERR < DEBUG < TRACE < DISABLED
-     */
-    static void setGlobalLevel(Level level) { global().setLevel(level); }
-
-    /**
      * @brief Checks whether messages at the given level will be logged.
      */
     [[nodiscard]]
@@ -266,7 +260,7 @@ public:
      * @details Default is enabled. When disabled, plain level names (INFO, WARN, etc.)
      * are used instead of ANSI-colored ones.
      */
-    static void enableColors(bool enabled) { global().mColorsEnabled = enabled; }
+    void enableColors(bool enabled) { global().mColorsEnabled = enabled; }
 
     [[nodiscard]]
     APath logFile() {
