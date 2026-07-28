@@ -24,7 +24,7 @@ class AMenuContainer;
 
 class AWindowMenuProvider: public IMenuProvider {
 private:
-    AWindowBase* mWindow;
+    ASurface* mWindow;
 
     _weak<AMenuContainer> mMenuContainer;
 

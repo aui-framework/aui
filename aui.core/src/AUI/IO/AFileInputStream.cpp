@@ -12,11 +12,13 @@
 #include <AUI/Platform/ErrorToException.h>
 #include "AFileInputStream.h"
 
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Common/AString.h"
 
 AFileInputStream::AFileInputStream(const AString& path) {
 #if AUI_PLATFORM_WIN
-    _wfopen_s(&mFile, aui::win32::toWchar(path), L"rb");
+    auto wPath = aui::win32::toWchar(path);
+    _wfopen_s(&mFile, wPath.c_str(), L"rb");
 #else
     mFile = fopen(path.toStdString().c_str(), "rb");
 #endif
@@ -32,8 +34,8 @@ size_t AFileInputStream::read(char* dst, size_t size) {
     return r;
 }
 
-void AFileInputStream::seek(std::streamoff offset, ASeekDir dir) noexcept {
-    fseek(mFile, offset, [&] {
+void AFileInputStream::seek(std::streamoff offset, ASeekDir dir) {
+    auto whence = [&] {
         switch (dir) {
             case ASeekDir::BEGIN:
                 return SEEK_SET;
@@ -43,7 +45,14 @@ void AFileInputStream::seek(std::streamoff offset, ASeekDir dir) noexcept {
                 return SEEK_END;
         }
         return 0;
-    }());
+    }();
+#if AUI_PLATFORM_WIN
+    if (_fseeki64(mFile, offset, whence) != 0) {
+#else
+    if (fseeko(mFile, offset, whence) != 0) {
+#endif
+        aui::impl::unix_based::lastErrorToException("AFileInputStream: fseek failed");
+    }
 }
 
 std::streampos AFileInputStream::tell() noexcept { return ftell(mFile); }

@@ -41,3 +41,9 @@ void ACircleProgressBar::render(ARenderContext context) {
     AViewContainerBase::renderChildren(context);
 }
 
+
+_<AView> declarative::CircleProgressBar::operator()() {
+    auto view = _new<ACircleProgressBar>();
+    progress.bindTo(view->value().assignment());
+    return view;
+}

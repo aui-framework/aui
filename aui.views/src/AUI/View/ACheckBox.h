@@ -15,165 +15,189 @@
 #include "AViewContainer.h"
 #include <AUI/ASS/Selector/Selected.h>
 
-
 /**
- * @brief A check box (without label).
+ * ---
+ * title: Check box
+ * icon: material/checkbox-outline
+ * ---
+ *
+ * @brief Checkboxes let users select one or more items from a list, or turn an item on or off.
+ *
+ * ![](imgs/views/ACheckBoxWrapper.png)
+ *
+ * @ingroup views_input
+ * @details
+ * A check box is an input control that allows the user to select or deselect an option. Unlike ARadioButton
+ * buttons—which are mutually exclusive within a group, multiple check boxes may be checked independently.
  *
  * ![](imgs/views/ACheckBox.png)
  *
- * @ingroup views_input
- * @details
- * Checkbox is a checkable button that is typically used to enable/disable some action.
+ * Use check boxes to enable or disable features, options, or actions in your UI.
  *
- * For a checkbox with label, see [ACheckBoxWrapper].
+ * ## Create a basic check box
  *
- * Whenever the checkbox is checked or unchecked, it emits checked() signal.
+ * The following code snippet shows a minimal check box implementation:
+ *
+ * <!-- aui:snippet examples/ui/checkbox1/src/main.cpp ACheckBox_example -->
+ *
+ * ### Key points about this code
+ *
+ * - `struct State` holds a reactive property `checked` representing the check box's state. When `checked` changes, the
+ *    UI updates reactively.
+ * - The `CheckBox` view binds `.checked` to the state's property, so the check mark is kept in sync with the data.
+ * - `.onCheckedChange` toggles the state when the check box is clicked.
+ * - Content (label or any view) can be provided using `.content`.
+ * - The UI updates automatically based on the state because of AUI's reactive system.
+ *
+ * ### Result
+ *
+ * This example produces the following component when unchecked:
+ *
+ * ![](imgs/Screenshot_20250929_094428.png)
+ *
+ * And this is how the same checkbox appears when checked:
+ *
+ * ![](imgs/Screenshot_20250929_094529.png)
+ *
+ * ## Advanced example
+ *
+ * The following is a more complex example of how you can implement checkboxes in your app. In this snippet, there is a
+ * parent checkbox and a series of child checkboxes. When the user activates the parent checkbox, the app checks all
+ * child checkboxes.
+ *
+ * <!-- aui:snippet examples/ui/checkbox2/src/main.cpp ACheckBox_example -->
+ *
+ * ### Key points about this code
+ *
+ * - **State Management**:
+ *     - A `State` structure keeps three Boolean properties (`option1`, `option2`, `option3`), each wrapped with
+ *       `AProperty` for reactive (observable) updates.
+ *     - The utility method `isAllOptionsSelected()` quickly checks if all options are selected.
+ * - **"Select All" Parent Checkbox**:
+ *     - The first `CheckBox` (labeled "Select all") is linked to `isAllOptionsSelected()` using a reactive binding
+ *       (`AUI_REACT`).
+ *     - When toggled, it sets all three state options to the new value, effectively selecting or deselecting all
+ *       options at once.
+ * - **Individual Option Checkboxes**:
+ *     - Each subsequent `CheckBox` is bound to its individual option (`option1`, `option2`, `option3`) via `AUI_REACT`.
+ *     - Changing any option updates its respective state property.
+ * - **Synchronized Selection**:
+ *     - If all individual checkboxes are checked, the "Select all" parent checkbox is also checked automatically (and
+ *       vice versa).
+ * - **Dynamic Status Label**:
+ *     - A `Label` below the checkbox group reflects the selection status in real-time (shows "All options selected" or
+ *       "Please select all options") using a reactive binding.
+ *
+ * ### Result
+ *
+ * This example produces the following component when all checkboxes are unchecked.
+ *
+ * ![](imgs/Screenshot_20250929_095124.png)
+ *
+ * Likewise, this is how the component appears when all options are checked, as when the user taps select all:
+ *
+ * ![](imgs/Screenshot_20250929_095204.png)
+ *
+ * When only one option is checked the parent checkbox appears unchecked:
+ *
+ * ![](imgs/Screenshot_20250929_095243.png)
+ *
+ * ## Styling
+ *
+ * Both `ACheckBox` and `ACheckBox::Box` are exposed only for styling purposes.
+ *
+ * <!-- aui:snippet aui.views/src/AUI/ASS/AStylesheet.cpp ACheckBox -->
  */
-class API_AUI_VIEWS ACheckBox : public AView, public ass::ISelectable {
+class API_AUI_VIEWS ACheckBox : public AViewContainerBase {
 public:
-    ACheckBox();
+    ACheckBox() : ACheckBox(nullptr) {}
+    ACheckBox(_<AView> content);
+
+    ~ACheckBox() override = default;
+
+    [[nodiscard]] [[deprecated("use checked() instead.")]]
+    bool isChecked() const {
+        return mBox->checked;
+    }
+
+    [[deprecated("use checked() = true instead.")]]
+    void setChecked(bool checked) {
+        mBox->checked = checked;
+    }
 
     [[nodiscard]]
-    auto checked() const {
-        return APropertyDef {
-            this,
-            &ACheckBox::mChecked,
-            &ACheckBox::setChecked,
-            mCheckedChanged,
-        };
+    auto& checked() const {
+        return mBox->checked;
     }
 
-    void toggle() {
-        setChecked(!checked());
+    [[nodiscard]]
+    const auto& box() const {
+        return mBox;
     }
 
-    void check() {
-        setChecked(true);
-    }
-
-    void uncheck() {
-        setChecked(false);
-    }
-
-    void setChecked(bool checked = true) {
-        mChecked = checked;
-        emit customCssPropertyChanged();
-        emit ACheckBox::mCheckedChanged(checked);
-    }
-
-    void setUnchecked(bool unchecked = true) {
-        setChecked(!unchecked);
-    }
-
-    bool consumesClick(const glm::ivec2& pos) override;
-
-protected:
-    bool selectableIsSelectedImpl() override;
-
-private:
-    bool mChecked = false;
-    emits<bool> mCheckedChanged;
-};
-
-
-/**
- * @brief View container with a checkbox.
- *
- * ![](imgs/views/ACheckBoxWrapper.png)
- * @ingroup views_input
- * @details
- * For a checkbox itself, see [ACheckBox].
- */
-class API_AUI_VIEWS ACheckBoxWrapper: public AViewContainerBase {
-public:
     /**
-     * @brief Construct ACheckBoxWrapper with a view.
-     * @param viewToWrap view to wrap.
+     * @brief Represents the box/drawing part of the checkbox itself; without labels or other decorations.
+     *
+     * Exposed for styling purposes.
      */
-    explicit ACheckBoxWrapper(const _<AView>& viewToWrap);
+    class Box : public AView, public ass::ISelectable {
+    public:
+        AProperty<bool> checked;
+        emits<bool> userCheckedChange;
 
-    [[nodiscard]]
-    auto checked() const {
-        return mCheckBox->checked();
-    }
+        Box();
+        virtual ~Box() = default;
 
-    void toggle() {
-        setChecked(!checked());
-    }
-
-    void check() {
-        setChecked(true);
-    }
-
-    void uncheck() {
-        setChecked(false);
-    }
-
-    void setChecked(bool checked = true) {
-        mCheckBox->setChecked(checked);
-    }
-
-    void setUnchecked(bool unchecked = true) {
-        setChecked(!unchecked);
-    }
+    protected:
+        bool selectableIsSelectedImpl() override { return checked; }
+    };
 
 private:
-    _<ACheckBox> mCheckBox;
-
-};
-
-
-template<>
-struct ADataBindingDefault<ACheckBox, bool> {
-public:
-    static auto property(const _<ACheckBox>& view) {
-        return view->checked();
-    }
-    static void setup(const _<ACheckBox>& view) {}
-
-    static auto getGetter() {
-        return &ACheckBox::checked;
-    }
-
-    static auto getSetter() {
-        return &ACheckBox::setChecked;
-    }
-};
-
-
-template<>
-struct ADataBindingDefault<ACheckBoxWrapper, bool> {
-public:
-    static auto property(const _<ACheckBoxWrapper>& view) {
-        return view->checked();
-    }
-    static void setup(const _<ACheckBoxWrapper>& view) {}
-
-    static auto getGetter() {
-        return &ACheckBoxWrapper::checked;
-    }
-
-    static auto getSetter() {
-        return &ACheckBoxWrapper::setChecked;
-    }
+    _<Box> mBox;
 };
 
 namespace declarative {
+/**
+ * <!-- aui:no_dedicated_page -->
+ */
+struct CheckBox {
     /**
-     * @declarativeformof{ACheckBox}
+     * @brief Whether or not the check box is checked.
      */
-    struct CheckBox: aui::ui_building::view<ACheckBox> {
-        CheckBox() = default;
-    };
+    contract::In<bool> checked;
 
     /**
-     * @declarativeformof{ACheckBoxWrapper}
+     * @brief Handler for check box click event.
+     * @param checked New state of the check box.
+     * @details
+     * Called when user checks/unchecks the check box.
      */
-    struct CheckBoxWrapper: aui::ui_building::view<ACheckBoxWrapper> {
-        /**
-         * @brief Construct ACheckBoxWrapper with a view.
-         * @param viewToWrap view to wrap.
-         */
-        explicit CheckBoxWrapper(const _<AView>& viewToWrap): aui::ui_building::view<ACheckBoxWrapper>(viewToWrap) {}
-    };
-}
+    contract::Slot<bool /* checked */> onCheckedChange;
+
+    /**
+     * @brief View associated with the check box.
+     * @details
+     * Can be any view, i.e., `Label` to display text.
+     *
+     * `content` view will be wrapped with ACheckBox.
+     *
+     * Clicking this view will toggle the check box.
+     */
+    _<AView> content;
+
+    API_AUI_VIEWS _<AView> operator()();
+};
+}   // namespace declarative
+
+/* legacy */
+template <>
+struct ADataBindingDefault<ACheckBox, bool> {
+public:
+    static auto property(const _<ACheckBox>& view) { return view->checked(); }
+    static void setup(const _<ACheckBox>& view) {}
+
+    static auto getGetter() { return &ACheckBox::checked; }
+
+    static auto getSetter() { return &ACheckBox::setChecked; }
+};
+

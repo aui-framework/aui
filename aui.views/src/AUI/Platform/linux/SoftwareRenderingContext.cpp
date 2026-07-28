@@ -24,18 +24,18 @@ SoftwareRenderingContext::~SoftwareRenderingContext() {
     }
 }
 
-void SoftwareRenderingContext::beginPaint(AWindowBase &window) {
+void SoftwareRenderingContext::beginPaint(ASurface &window) {
     std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
 }
 
-void SoftwareRenderingContext::endPaint(AWindowBase &window) { CommonRenderingContext::endPaint(window); }
+void SoftwareRenderingContext::endPaint(ASurface &window) { CommonRenderingContext::endPaint(window); }
 
-void SoftwareRenderingContext::beginResize(AWindowBase &window) {}
+void SoftwareRenderingContext::beginResize(ASurface &window) {}
 
 
-void SoftwareRenderingContext::endResize(AWindowBase &window) { reallocate(window); }
+void SoftwareRenderingContext::endResize(ASurface &window) { reallocate(window); }
 
-void SoftwareRenderingContext::reallocate(const AWindowBase &window) {
+void SoftwareRenderingContext::reallocate(const ASurface &window) {
     mBitmapSize = window.getSize();
     reallocate();
 }

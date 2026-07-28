@@ -12,7 +12,7 @@
 #include "Cell.h"
 
 AString Cell::columnName(unsigned int index) {
-    return 'A' + index;
+    return AString(U'A') + index;
 }
 AString Cell::rowName(unsigned int index) {
     return AString::number(index);

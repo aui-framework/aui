@@ -112,6 +112,10 @@ chosen.
 
 {{% cmake_list_all_vars_affected_by('cmake/aui.build.cmake', '(APP_ICON|_ico)', 'APP_ICON') %}}
 
+@specificto{linux}
+`ICON` are put to [aui-assets] as `:__aui/icon_512x512.png`. This is required for AUI to be able to propagate your icon
+to X11 or Wayland in runtime.
+
 ### VENDOR
 
 Specify application author's name or company.

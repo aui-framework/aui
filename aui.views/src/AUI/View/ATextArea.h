@@ -61,12 +61,13 @@ public:
     bool capturesFocus() override;
 
     AString toString() const override;
-    const AString& getText() const override;
+    AString getText() const override;
+    std::u32string getDisplayText() override;
     unsigned int cursorIndexByPos(glm::ivec2 pos) override;
     glm::ivec2 getPosByIndex(size_t index) override;
     void setText(const AString& t) override;
     void render(ARenderContext context) override;
-    void onCharEntered(char16_t c) override;
+    void onCharEntered(AChar c) override;
     glm::ivec2 getCursorPosition() override;
     void setSize(glm::ivec2 size) override;
 
@@ -77,9 +78,9 @@ public:
 protected:
     void typeableErase(size_t begin, size_t end) override;
     bool typeableInsert(size_t at, const AString& toInsert) override;
-    bool typeableInsert(size_t at, char16_t toInsert) override;
-    size_t typeableFind(char16_t c, size_t startPos) override;
-    size_t typeableReverseFind(char16_t c, size_t startPos) override;
+    bool typeableInsert(size_t at, AChar toInsert) override;
+    size_t typeableFind(AChar c, size_t startPos) override;
+    size_t typeableReverseFind(AChar c, size_t startPos) override;
     size_t length() const override;
     void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
 

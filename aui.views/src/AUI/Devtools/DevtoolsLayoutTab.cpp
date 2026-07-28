@@ -112,22 +112,22 @@ public:
     }
 };
 
-DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(targetWindow) {
+DevtoolsLayoutTab::DevtoolsLayoutTab(ASurface* targetWindow) : mTargetWindow(targetWindow) {
     using namespace declarative;
 
     setContents(Vertical {
       Horizontal {
-        Button { "Force layout update" }.clicked(me::forceLayoutUpdate),
+        Button { Label { "Force layout update" },  {me::forceLayoutUpdate} },
         SpacerExpanding {},
         Label { "Use CTRL to hit test views" },
       },
       ASplitter::Horizontal()
           .withItems({
-            mViewHierarchyTree = _new<ATreeView>() AUI_WITH_STYLE { MinSize { 300_dp }, Expanding {} },
+            mViewHierarchyTree = _new<ATreeView>() AUI_OVERRIDE_STYLE { MinSize { 300_dp }, Expanding {} },
             Centered { mViewPropertiesView = _new<ViewPropertiesView>(nullptr) },
           })
-          .withExpanding(),
-    });
+          .withExpanding().build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
 
     auto model = _new<ViewHierarchyTreeModel>(aui::ptr::fake_shared(targetWindow));
     mViewHierarchyTree->setModel(model);
@@ -161,6 +161,16 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(AWindowBase* targetWindow) : mTargetWindow(
             mViewHierarchyTree->select(*indexToSelect);
         }
     });
+}
+
+DevtoolsLayoutTab::~DevtoolsLayoutTab() {
+    if (mViewPropertiesView) {
+        mViewPropertiesView->setTargetView(nullptr);
+    }
+    if (mTargetWindow) {
+        AUI_NULLSAFE(mTargetWindow->profiling())->highlightView = _weak<AView>();
+        mTargetWindow->redraw();
+    }
 }
 
 void DevtoolsLayoutTab::forceLayoutUpdate() { mTargetWindow->forceUpdateLayoutRecursively(); }

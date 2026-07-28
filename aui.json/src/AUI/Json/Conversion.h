@@ -11,13 +11,17 @@
 
 #pragma once
 
+#include <valarray>
+
 #include <range/v3/range/concepts.hpp>
+
 #include <AUI/Json/AJson.h>
 #include <AUI/IO/APath.h>
-#include "AUI/Traits/parameter_pack.h"
-#include "AUI/Traits/members.h"
+#include <AUI/Traits/parameter_pack.h>
+#include <AUI/Traits/members.h>
 #include <AUI/Reflect/AEnumerate.h>
 #include <AUI/Traits/strings.h>
+#include <AUI/Common/AColor.h>
 
 /**
  * <p>Json conversion trait.</p>
@@ -244,6 +248,16 @@ struct AJsonConv<int> {
     }
 };
 
+template<>
+struct AJsonConv<AColor> {
+    static AJson toJson(AColor c) {
+        return c.toString();
+    }
+    static void fromJson(const AJson& json, AColor& dst) {
+        dst = AColor(json.asString());
+    }
+};
+
 template<typename T>
 struct AJsonConv<std::shared_ptr<T>> {
     static AJson toJson(const std::shared_ptr<T>& v) {
@@ -381,6 +395,24 @@ struct AJsonConv<aui::ranged_number<T, min, max>> {
     }
 };
 
+
+template<typename T1>
+struct AJsonConv<AOptional<T1>> {
+    static AJson toJson(const AOptional<T1>& v) {
+        if (!v.hasValue())
+            return nullptr;
+        return aui::to_json(*v);
+    }
+
+    static void fromJson(const AJson& json, AOptional<T1>& dst) {
+        if (json.isNull()) {
+            dst.reset();
+        } else {
+            dst = aui::from_json<T1>(json);
+        }
+    }
+};
+
 template<ranges::range T>
 struct AJsonConv<T> {
     static AJson toJson(const T& v) {
@@ -402,6 +434,47 @@ struct AJsonConv<T> {
         }
         for (const auto& elem : array) {
             dst << aui::from_json<std::decay_t<decltype(*dst.begin())>>(elem);
+        }
+    }
+};
+
+template<typename T>
+struct AJsonConv<std::valarray<T>> {
+    static AJson toJson(const std::valarray<T>& v) {
+        AJson::Array array;
+        if constexpr (ranges::sized_range<T>) {
+            array.reserve(v.size());
+        }
+        for (const auto& elem : v) {
+            array << aui::to_json(elem);
+        }
+        return std::move(array);
+    }
+    static void fromJson(const AJson& json, std::valarray<T>& dst) {
+        auto& array = json.asArray();
+        dst.resize(array.size());
+        size_t i = 0;
+        for (const auto& elem : array) {
+            dst[i++] = aui::from_json<T>(elem);
+        }
+    }
+};
+
+template<typename T>
+struct AJsonConv<AMap<AString, T>> {
+    static AJson toJson(const AMap<AString, T>& map) {
+        AJson::Object object;
+        for (const auto&[k, v] : map) {
+            object[k] = aui::to_json(v);
+        }
+        return std::move(object);
+    }
+    static void fromJson(const AJson& json, AMap<AString, T>& dst) {
+        auto& object = json.asObject();
+        dst.clear();
+
+        for (const auto&[k, v]: object) {
+            dst.emplace(k, aui::from_json<T>(v));
         }
     }
 };

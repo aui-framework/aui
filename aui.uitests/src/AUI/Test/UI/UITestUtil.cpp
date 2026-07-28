@@ -14,8 +14,15 @@
 //
 
 #include "UITestUtil.h"
+
+#include "AUI/UITestState.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/AStubWindowManager.h"
+
+void uitest::setup() {
+    UITestState::beginUITest();
+    AWindow::setWindowManager<AStubWindowManager>();
+}
 
 void uitest::frame() {
     AStubWindowManager::drawFrame();

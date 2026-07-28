@@ -16,16 +16,7 @@
 
 #include <Windows.h>
 
-float APlatform::getDpiRatio()
-{
-    typedef UINT(WINAPI *GetDpiForSystem_t)();
-    static auto GetDpiForSystem = (GetDpiForSystem_t)GetProcAddress(GetModuleHandleA("User32.dll"), "GetDpiForSystem");
-    if (GetDpiForSystem) {
-        return GetDpiForSystem() / 96.f;
-    }
-    return 1.f;
-}
-
 void APlatform::openUrl(const AUrl& url) {
-    ShellExecute(nullptr, L"open", aui::win32::toWchar(url.full()), nullptr, nullptr, SW_NORMAL);
+    auto wurl = aui::win32::toWchar(url.full());
+    ShellExecute(nullptr, L"open", wurl.c_str(), nullptr, nullptr, SW_NORMAL);
 }

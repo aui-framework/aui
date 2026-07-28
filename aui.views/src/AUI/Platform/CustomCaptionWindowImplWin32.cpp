@@ -52,10 +52,10 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
     if (stacked) {
         to->setLayout(std::make_unique<AStackedLayout>());
         to->addView(mContentContainer = _new<AViewContainer>());
-        to->addView(_container<AVerticalLayout>({
+        to->addView(declarative::Vertical {
                                                     caption,
                                                     _new<ASpacerExpanding>(),
-                                            }) AUI_LET { it->setExpanding({1, 1}); });
+                                            } AUI_LET { it->setExpanding({1, 1}); });
     } else {
         to->setLayout(std::make_unique<AVerticalLayout>());
         to->addView(caption);

@@ -15,7 +15,18 @@
 
 #include "TextColor.h"
 #include "AUI/Font/IFontView.h"
+#include "AUI/View/AViewContainer.h"
 
 void ass::prop::Property<ass::TextColor>::applyFor(AView* view) {
-    AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->setTextColor(mInfo.color);
+    view->setTextColor(std::visit(
+        aui::lambda_overloaded {
+          [](AColor c) { return c; },
+          [&](ass::inherit_t) {
+              if (auto parent = view->getParent()) {
+                  return parent->textColor();
+              }
+              return AColor();
+          },
+        },
+        mInfo.color));
 }

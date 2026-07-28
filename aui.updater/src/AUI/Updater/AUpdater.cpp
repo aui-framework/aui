@@ -54,17 +54,17 @@ void AUpdater::handleStartup(const AStringVector& applicationArguments) {
 
         if (arg.startsWith(ARG_AUI_UPDATER_WAIT_FOR_PROCESS)) {
             handleWaitForProcess(
-                arg.substr(std::string_view(ARG_AUI_UPDATER_WAIT_FOR_PROCESS).length()).toLongIntOrException());
+                arg.substr(std::string_view(ARG_AUI_UPDATER_WAIT_FOR_PROCESS).length()).toLongOrException());
             continue;
         }
 
         if (arg.startsWith(ARG_AUI_UPDATER_ORIGIN)) {
-            updaterOrigin = arg.substr(std::string_view(ARG_AUI_UPDATER_ORIGIN).length());
+            updaterOrigin = APath(arg.substr(std::string_view(ARG_AUI_UPDATER_ORIGIN).length()));
             continue;
         }
 
         if (arg.startsWith(ARG_AUI_UPDATER_DIR)) {
-            updaterDir = arg.substr(std::string_view(ARG_AUI_UPDATER_DIR).length());
+            updaterDir = APath(arg.substr(std::string_view(ARG_AUI_UPDATER_DIR).length()));
             continue;
         }
 
@@ -242,6 +242,7 @@ AOptional<AUpdater::InstallCmdline> AUpdater::loadInstallCmdline() const {
             AUI_DEFER { path.removeFile(); };
             auto result = aui::from_json<AUpdater::InstallCmdline>(AJson::fromStream(AFileInputStream(path)));
             ALogger::info(LOG_TAG) << "Successfully loaded update installation cmd line from prev session: " << path;
+            return result;
         }
     } catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Can't restore InstallCmdline: " << e;
@@ -327,7 +328,7 @@ APath AUpdater::getInstallationDirectory(const AUpdater::GetInstallationDirector
     }
 
     auto out = context.originExe.substr(0, context.originExe.length() - relativePath.length() - 1);
-    return out;
+    return APath(out);
 }
 
 void AUpdater::cleanupUnpackedUpdateDirBeforeDownloading() {

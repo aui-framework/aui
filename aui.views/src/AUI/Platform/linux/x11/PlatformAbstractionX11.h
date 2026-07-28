@@ -7,7 +7,7 @@
 #include <X11/Xutil.h>
 #include <X11/keysymdef.h>
 #include <GL/gl.h>
-#include <GL/glx.h>
+//#include <GL/glx.h>
 #include <X11/Xatom.h>
 #include <X11/extensions/sync.h>
 
@@ -44,6 +44,8 @@ public:
         Atom targets;
         Atom netWmSyncRequest;
         Atom netWmSyncRequestCounter;
+        Atom netWmIcon;
+        Atom cardinal;
     } ourAtoms;
 
     ~PlatformAbstractionX11() override = default;
@@ -53,8 +55,8 @@ public:
     _<ACursor::Custom> createCustomCursor(AImageView image) override;
 
     // CLIPBOARD
-    void copyToClipboard(const AString& text) override;
-    AString pasteFromClipboard() override;
+    void setClipboardText(const AString& text) override;
+    AString getClipboardText() override;
 
     // INPUT
     AInput::Key inputFromNative(int k) override;
@@ -64,7 +66,6 @@ public:
     // PLATFORM/DESKTOP
     glm::ivec2 desktopGetMousePosition() override;
     void desktopSetMousePosition(glm::ivec2 pos) override;
-    float platformGetDpiRatio() override;
 
 
     // WINDOW
@@ -92,6 +93,7 @@ public:
     void windowQuit(AWindow& window) override;
     void windowAnnounceMinMaxSize(AWindow& window) override;
     void windowManagerInitNativeWindow(const IRenderingContext::Init& init) override;
+    float windowGetDpiRatio(AWindow& window) override;
     AMessageBox::ResultButton messageBoxShow(
         AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon,
         AMessageBox::Button b) override;

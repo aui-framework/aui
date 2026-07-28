@@ -440,7 +440,7 @@ read_image_data(gd_GIF *gif, int interlace)
             if (interlace)
                 y = interlaced_line_index((int) gif->fh, y);
             gif->frame[(gif->fy + y) * gif->width + gif->fx + x] = entry.suffix;
-            if (entry.prefix == 0xFFF)
+            if (entry.prefix == 0xFFF || entry.prefix >= table->nentries)
                 break;
             else
                 entry = table->entries[entry.prefix];

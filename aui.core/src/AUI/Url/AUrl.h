@@ -75,5 +75,5 @@ private:
 
 
 inline AUrl operator""_url(const char* input, size_t s) {
-    return AUrl(std::string{input, input + s});
+    return AUrl(AString(input, s));
 }

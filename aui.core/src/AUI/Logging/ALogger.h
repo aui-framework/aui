@@ -57,151 +57,147 @@ class AString;
  * }
  * ```
  */
-class API_AUI_CORE ALogger final
-{
+class API_AUI_CORE ALogger final {
 public:
-	enum Level
-	{
-		INFO,
-		WARN,
-		ERR,
+    enum Level {
+        INFO,
+        WARN,
+        ERR,
         DEBUG,
-	};
+        TRACE,
+    };
 
     struct LogWriter {
+    private:
+        ALogger& mLogger;
+        Level mLevel;
+        AStringView mPrefix;
+        struct Buffer {
         private:
-            ALogger& mLogger;
-            Level mLevel;
-            AString mPrefix;
-            struct Buffer {
-            private:
-                struct StackBuffer {
-                    char buffer[2048];
-                    char* currentIterator;
-                };
-                using HeapBuffer = AVector<char>;
-                std::variant<StackBuffer, HeapBuffer> mBuffer;
-
-                void switchToHeap() {
-                    HeapBuffer h;
-                    h.reserve(16384);
-                    auto& stack = std::get<StackBuffer>(mBuffer);
-                    h.insert(h.end(), stack.buffer, stack.currentIterator);
-                    mBuffer = std::move(h);
-                }
-            public:
-                using value_type = char;
-
-                Buffer() noexcept: mBuffer({}) {
-                    auto& sb = std::get<StackBuffer>(mBuffer);
-                    sb.currentIterator = sb.buffer;
-                }
-                size_t write(const char* t, size_t s) {
-                    if (std::holds_alternative<StackBuffer>(mBuffer)) {
-                        auto& stack = std::get<StackBuffer>(mBuffer);
-                        if (stack.currentIterator + s <= stack.buffer + sizeof(stack.buffer)) {
-                            std::memcpy(stack.currentIterator, t, s);
-                            stack.currentIterator += s;
-                            return s;
-                        }
-                        switchToHeap();
-                    }
-                    auto& h = std::get<HeapBuffer>(mBuffer);
-                    h.insert(h.end(), t, t + s);
-                    return s;
-                }
-                void write(char c) {
-                    if (std::holds_alternative<StackBuffer>(mBuffer)) {
-                        auto& stack = std::get<StackBuffer>(mBuffer);
-                        if (stack.currentIterator + sizeof(c) <= stack.buffer + sizeof(stack.buffer)) {
-                            *stack.currentIterator = c;
-                            stack.currentIterator += 1;
-                            return;
-                        }
-                        switchToHeap();
-                    }
-                    std::get<HeapBuffer>(mBuffer).push_back(c);
-                }
-
-                void push_back(char c) { // for std::back_inserter
-                    write(c);
-                }
-
-                [[nodiscard]]
-                std::string_view str() const {
-                    // assuming there's a null terminator
-                    if (std::holds_alternative<StackBuffer>(mBuffer)) {
-                        auto& stack = std::get<StackBuffer>(mBuffer);
-                        return {stack.buffer, static_cast<std::string_view::size_type>(stack.currentIterator - stack.buffer) - 1};
-                    }
-                    auto& h = std::get<HeapBuffer>(mBuffer);
-                    return {h.data(), h.size()};
-                }
+            struct StackBuffer {
+                char buffer[2048];
+                char* currentIterator;
             };
+            using HeapBuffer = AVector<char>;
+            std::variant<StackBuffer, HeapBuffer> mBuffer;
 
-            struct LazyStreamBuf final: std::streambuf {
-            private:
-                Buffer& stackBuffer;
-            public:
-                std::ostream stream;
-                LazyStreamBuf(Buffer& stackBuffer) : stackBuffer(stackBuffer), stream(this) {}
-
-            protected:
-                std::streamsize xsputn(const char_type* s, std::streamsize n) override {
-                    return stackBuffer.write(s, n);
-                }
-
-                int overflow(int_type __c) override {
-                    stackBuffer.write(__c);
-                    return 1;
-                }
-            };
-            AOptional<LazyStreamBuf> mStreamBuf;
-
-            Buffer mBuffer;
-
-            void writeTimestamp(const char* fmt, std::chrono::system_clock::time_point t) noexcept {
-                fmt::format_to(std::back_inserter(mBuffer), "{}", t);
+            void switchToHeap() {
+                HeapBuffer h;
+                h.reserve(16384);
+                auto& stack = std::get<StackBuffer>(mBuffer);
+                h.insert(h.end(), stack.buffer, stack.currentIterator);
+                mBuffer = std::move(h);
             }
 
         public:
-            LogWriter(ALogger& logger, Level level, AString prefix) :
-                mLogger(logger),
-                mLevel(level),
-                mPrefix(std::move(prefix)) {
+            using value_type = char;
 
+            Buffer() noexcept : mBuffer({}) {
+                auto& sb = std::get<StackBuffer>(mBuffer);
+                sb.currentIterator = sb.buffer;
             }
-
-            ~LogWriter() {
-                mBuffer.write(0); // null terminator
-                auto s = mBuffer.str();
-                mLogger.log(mLevel, mPrefix.toStdString().c_str(), s);
-            }
-
-            template<typename T>
-            LogWriter& operator<<(const T& t) noexcept {
-                // avoid usage of std::ostream because it's expensive
-                if constexpr(std::is_constructible_v<std::string_view, T>) {
-                    std::string_view stringView(t);
-                    mBuffer.write(stringView.data(), stringView.size());
-                } else if constexpr(std::is_base_of_v<AString, T>) {
-                    *this << t.toStdString();
-                } else if constexpr(std::is_base_of_v<std::exception, T> && !std::is_base_of_v<AException, T>) {
-                    *this << "(" << AReflect::name(&t) << ") " << t.what();
-                } else if constexpr(std::is_same_v<std::chrono::seconds, T>) {
-                    writeTimestamp("%D %T", std::chrono::system_clock::time_point(t));
-                } else if constexpr(std::is_same_v<std::chrono::minutes, T> || std::is_same_v<std::chrono::hours, T>) {
-                    writeTimestamp("%D %R", std::chrono::system_clock::time_point(t));
-                } else {
-                    if (!mStreamBuf) {
-                        mStreamBuf.emplace(mBuffer);
+            size_t write(const char* t, size_t s) {
+                if (std::holds_alternative<StackBuffer>(mBuffer)) {
+                    auto& stack = std::get<StackBuffer>(mBuffer);
+                    if (stack.currentIterator + s <= stack.buffer + sizeof(stack.buffer)) {
+                        std::memcpy(stack.currentIterator, t, s);
+                        stack.currentIterator += s;
+                        return s;
                     }
-                    mStreamBuf->stream << t;
+                    switchToHeap();
                 }
-                return *this;
+                auto& h = std::get<HeapBuffer>(mBuffer);
+                h.insert(h.end(), t, t + s);
+                return s;
             }
-    };
+            void write(char c) {
+                if (std::holds_alternative<StackBuffer>(mBuffer)) {
+                    auto& stack = std::get<StackBuffer>(mBuffer);
+                    if (stack.currentIterator + sizeof(c) <= stack.buffer + sizeof(stack.buffer)) {
+                        *stack.currentIterator = c;
+                        stack.currentIterator += 1;
+                        return;
+                    }
+                    switchToHeap();
+                }
+                std::get<HeapBuffer>(mBuffer).push_back(c);
+            }
 
+            void push_back(char c) {   // for std::back_inserter
+                write(c);
+            }
+
+            [[nodiscard]]
+            std::string_view str() const {
+                // assuming there's a null terminator
+                if (std::holds_alternative<StackBuffer>(mBuffer)) {
+                    auto& stack = std::get<StackBuffer>(mBuffer);
+                    return {
+                        stack.buffer, static_cast<std::string_view::size_type>(stack.currentIterator - stack.buffer) - 1
+                    };
+                }
+                auto& h = std::get<HeapBuffer>(mBuffer);
+                return { h.data(), h.size() };
+            }
+        };
+
+        struct LazyStreamBuf final : std::streambuf {
+        private:
+            Buffer& stackBuffer;
+
+        public:
+            std::ostream stream;
+            LazyStreamBuf(Buffer& stackBuffer) : stackBuffer(stackBuffer), stream(this) {}
+
+        protected:
+            std::streamsize xsputn(const char_type* s, std::streamsize n) override { return stackBuffer.write(s, n); }
+
+            int overflow(int_type __c) override {
+                stackBuffer.write(__c);
+                return 1;
+            }
+        };
+        AOptional<LazyStreamBuf> mStreamBuf;
+
+        Buffer mBuffer;
+
+        void writeTimestamp(const char* fmt, std::chrono::system_clock::time_point t) noexcept {
+            fmt::format_to(std::back_inserter(mBuffer), "{}", t);
+        }
+
+    public:
+        LogWriter(ALogger& logger, Level level, AStringView prefix)
+          : mLogger(logger), mLevel(level), mPrefix(std::move(prefix)) {}
+
+        ~LogWriter() {
+            mBuffer.write(0);   // null terminator
+            auto s = mBuffer.str();
+            mLogger.log(mLevel, mPrefix, s);
+        }
+
+        template <typename T>
+        LogWriter& operator<<(const T& t) noexcept {
+            // avoid usage of std::ostream because it's expensive
+            if constexpr (std::is_constructible_v<std::string_view, T>) {
+                std::string_view stringView(t);
+                mBuffer.write(stringView.data(), stringView.size());
+            } else if constexpr (std::is_base_of_v<AString, T>) {
+                *this << t.toStdString();
+            } else if constexpr (std::is_base_of_v<std::exception, T> && !std::is_base_of_v<AException, T>) {
+                *this << "(" << AReflect::name(&t) << ") " << t.what();
+            } else if constexpr (std::is_same_v<std::chrono::seconds, T>) {
+                writeTimestamp("%D %T", std::chrono::system_clock::time_point(t));
+            } else if constexpr (std::is_same_v<std::chrono::minutes, T> || std::is_same_v<std::chrono::hours, T>) {
+                writeTimestamp("%D %R", std::chrono::system_clock::time_point(t));
+            } else {
+                if (!mStreamBuf) {
+                    mStreamBuf.emplace(mBuffer);
+                }
+                mStreamBuf->stream << t;
+            }
+            return *this;
+        }
+    };
 
     /**
      * @brief Constructor for an extra log file.
@@ -209,20 +205,16 @@ public:
      * @details
      * For the global logger, use ALogger::info, ALogger::warn, etc...
      */
-    ALogger(AString filename) {
-        setLogFileImpl(std::move(filename));
-    }
+    ALogger(AString filename) { setLogFileImpl(std::move(filename)); }
     ALogger();
     ~ALogger();
 
     static ALogger& global();
 
-    void setDebugMode(bool debug) {
-        global().mDebug = debug;
-    }
-    bool isDebug() {
-        return global().mDebug;
-    }
+    void setDebugMode(bool debug) { global().mDebug = debug; }
+    bool isDebug() { return global().mDebug; }
+
+    bool isTrace() { return global().mTrace; }
 
     /**
      * @brief Sets log file.
@@ -234,9 +226,7 @@ public:
      * `ALogger::global().setLogFile(...)` expression would cause the default log file location to open and to close
      * immediately, when opening a log file in the specified location, causing empty file and two `Log file:` entries.
      */
-    void setLogFile(APath path) {
-        setLogFileImpl(std::move(path));
-    }
+    void setLogFile(APath path) { setLogFileImpl(std::move(path)); }
 
     /**
      * @brief Sets log file for `ALogger::global()`.
@@ -265,14 +255,15 @@ public:
     void doLogFileAccessSafe(Callable action) {
         std::unique_lock lock(mLogSync);
         ARaiiHelper opener = [&] {
-            if (!mLogFile) return;
+            if (!mLogFile)
+                return;
             try {
                 mLogFile->open(true);
             } catch (const AException& e) {
                 auto path = mLogFile->path();
                 mLogFile.reset();
                 lock.unlock();
-                log(WARN, "Logger", fmt::format("Unable to reopen file {}: {}", path, e.getMessage()));
+                log(WARN, "Logger", AStringView(fmt::format("Unable to reopen file {}: {}", path, e.getMessage())));
             }
         };
         if (!mLogFile || !mLogFile->nativeHandle()) {
@@ -284,44 +275,30 @@ public:
         action();
     }
 
-    static LogWriter info(const AString& str)
-    {
-        return {global(), INFO, str};
-    }
-    static LogWriter warn(const AString& str)
-    {
-        return {global(), WARN, str};
-    }
-    static LogWriter err(const AString& str)
-    {
-        return {global(), ERR, str};
-    }
-    static LogWriter debug(const AString& str)
-    {
-        return {global(), DEBUG, str};
-    }
+    static LogWriter info(AStringView str) { return { global(), INFO, str }; }
+    static LogWriter warn(AStringView str) { return { global(), WARN, str }; }
+    static LogWriter err(AStringView str) { return { global(), ERR, str }; }
+    static LogWriter debug(AStringView str) { return { global(), DEBUG, str }; }
+    static LogWriter trace(AStringView str) { return { global(), TRACE, str }; }
 
     /**
      * @brief Writer a log entry with LogWriter helper.
      * @param level level
      * @param prefix prefix
      */
-    LogWriter log(Level level, const AString& prefix)
-    {
-        return {*this, level, prefix};
-    }
-
+    LogWriter log(Level level, AStringView prefix) { return { *this, level, prefix }; }
 
 private:
-
     AOptional<AFileOutputStream> mLogFile;
     AMutex mLogSync;
     AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 
     bool mDebug = AUI_DEBUG;
+    bool mTrace = isTraceImpl();
+
+    static bool isTraceImpl();
 
     void setLogFileImpl(AString path);
-
 
     /**
      * @brief Writes a log entry.
@@ -329,27 +306,27 @@ private:
      * @param prefix prefix
      * @param message log message. If empty, prefix used as a message
      */
-    void log(Level level, std::string_view prefix, std::string_view message);
-
+    void log(Level level, AStringView prefix, AStringView message);
 };
 namespace glm {
-    template<glm::length_t L, typename T, glm::qualifier Q>
-    inline std::ostream& operator<<(std::ostream& o, vec<L, T, Q> vec) {
-        o << "{ ";
-        for (std::size_t i = 0; i < L; ++i) {
-            if (i != 0) o << ", ";
-            o << vec[i];
-        }
-        o << " }";
-
-        return o;
+template <glm::length_t L, typename T, glm::qualifier Q>
+inline std::ostream& operator<<(std::ostream& o, vec<L, T, Q> vec) {
+    o << "{ ";
+    for (std::size_t i = 0; i < L; ++i) {
+        if (i != 0)
+            o << ", ";
+        o << vec[i];
     }
+    o << " }";
 
+    return o;
 }
 
-template<glm::length_t L, typename T, glm::qualifier Q>
+}   // namespace glm
+
+template <glm::length_t L, typename T, glm::qualifier Q>
 struct fmt::formatter<glm::vec<L, T, Q>> {
-    constexpr auto parse (format_parse_context& ctx) { return ctx.begin(); }
+    constexpr auto parse(format_parse_context& ctx) { return ctx.begin(); }
 
     template <typename Context>
     constexpr auto format(glm::vec<L, T, Q> vec, Context& ctx) const {
@@ -369,6 +346,11 @@ struct fmt::formatter<glm::vec<L, T, Q>> {
 private:
 };
 
-#define ALOG_DEBUG(str) if (ALogger::global().isDebug()) ALogger::debug(str)
+#define ALOG_DEBUG(str)              \
+    if (ALogger::global().isDebug()) \
+    ALogger::debug(str)
+#define ALOG_TRACE(str)              \
+    if (ALogger::global().isTrace()) \
+    ALogger::trace(str)
 
 #include <AUI/Traits/strings.h>

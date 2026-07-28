@@ -78,7 +78,12 @@ public:
         char buf[0x800];
         char path[0x100];
         *fmt::format_to_n(std::begin(path), sizeof(path), "/proc/{}/exe", mHandle).out = '\0';
-        return APath(buf, readlink(path, buf, sizeof(buf)));
+        APath p(buf, readlink(path, buf, sizeof(buf)));
+        static constexpr std::string_view ENDS_WITH = " (deleted)";
+        if (p.endsWith(ENDS_WITH)) {
+            p.resize(p.size() - ENDS_WITH.size());
+        }
+        return p;
     }
 
     uint32_t getPid() const noexcept override { return mHandle; }
@@ -99,7 +104,7 @@ AVector<_<AProcess>> AProcess::all() {
 #if !AUI_PLATFORM_APPLE
 _<AProcess> AProcess::self() {
     char buf[0x100];
-    return _new<AOtherProcess>(*AString::fromUtf8(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
+    return _new<AOtherProcess>(*AString(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
 }
 
 _<AProcess> AProcess::fromPid(uint32_t pid) { return _new<AOtherProcess>(pid_t(pid)); }
@@ -123,10 +128,10 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         aui::lambda_overloaded {
           [](const ArgSingleString& singleString) {
               auto split = singleString.arg.split(' ');
-              return split | ranges::views::transform(&AString::toStdString) | ranges::to_vector;
+              return split | ranges::views::transform([](const AString& s){ return s.toStdString(); }) | ranges::to_vector;
           },
           [](const ArgStringList& singleString) {
-              return singleString.list | ranges::views::transform(&AString::toStdString) | ranges::to_vector;
+              return singleString.list | ranges::views::transform([](const AString& s){ return s.toStdString(); }) | ranges::to_vector;
           },
         },
         mInfo.args);

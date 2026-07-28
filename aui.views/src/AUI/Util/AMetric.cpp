@@ -48,10 +48,11 @@ AMetric::AMetric(const AString& text)
 float AMetric::getValuePx() const
 {
     float dpi;
-    if (AWindow::current())
+    if (AWindow::current()) {
         dpi = AWindow::current()->getDpiRatio();
-    else
-        dpi = APlatform::getDpiRatio();
+    } else {
+        dpi = 1.0f;
+    }
 
     switch (mUnit)
     {
@@ -69,10 +70,11 @@ float AMetric::getValuePx() const
 
 float AMetric::fromPxToMetric(float value, AMetric::Unit unit) {
     float dpi;
-    if (AWindow::current())
+    if (AWindow::current()) {
         dpi = AWindow::current()->getDpiRatio();
-    else
-        dpi = APlatform::getDpiRatio();
+    } else {
+        dpi = 1.0f;
+    }
 
     switch (unit)
     {
@@ -90,10 +92,11 @@ float AMetric::fromPxToMetric(float value, AMetric::Unit unit) {
 
 float AMetric::getValueDp() const {
     float dpi;
-    if (AWindow::current())
+    if (AWindow::current()) {
         dpi = AWindow::current()->getDpiRatio();
-    else
-        dpi = APlatform::getDpiRatio();
+    } else {
+        dpi = 1.0f;
+    }
 
     switch (mUnit)
     {

@@ -17,9 +17,9 @@
 #include "AUI/Platform/ADesktop.h"
 #include <AUI/Util/kAUI.h>
 
-bool ADoubleNumberPicker::ADoubleNumberPickerField::isValidText(const AString& text)
+bool ADoubleNumberPicker::ADoubleNumberPickerField::isValidText(std::u32string_view text)
 {
-    return text.toDouble().hasValue() || text.empty();
+    return AString(text).toDouble().hasValue() || text.empty();
 }
 
 void ADoubleNumberPicker::ADoubleNumberPickerField::onKeyRepeat(AInput::Key key) {

@@ -33,7 +33,9 @@ struct API_AUI_VIEWS AFontStyle {
     float lineSpacing = 0.5f;
 
 
-    size_t getWidth(const AString& text) const;
+    size_t getWidth(AStringView text) const;
+
+    size_t getWidth(std::u32string_view text) const;
 
     template<class Iterator>
     size_t getWidth(Iterator begin, Iterator end) const {
@@ -42,6 +44,13 @@ struct API_AUI_VIEWS AFontStyle {
 
     AFont::Character& getCharacter(char32_t c) {
         return font->getCharacter(getFontEntry(), c);
+    }
+
+    auto getAscenderHeight() const {
+        return font->getAscenderHeight(size);
+    }
+    auto getDescenderHeight() const {
+        return font->getDescenderHeight(size);
     }
 
     [[nodiscard]]

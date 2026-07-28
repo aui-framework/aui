@@ -108,6 +108,14 @@ void AAbstractTypeable::handleKey(AInput::Key key)
             moveCursorRight();
             return;
 
+        case AInput::UP:
+            moveCursorUp();
+            return;
+
+        case AInput::DOWN:
+            moveCursorDown();
+            return;
+
         case AInput::HOME:
             fastenSelection();
             mCursorIndex = 0;
@@ -222,7 +230,7 @@ void AAbstractTypeable::copyToClipboard() const {
     AClipboard::copyToClipboard(selectedText());
 }
 
-void AAbstractTypeable::enterChar(char16_t c)
+void AAbstractTypeable::enterChar(AChar c)
 {
     if (AInput::isKeyDown(AInput::LBUTTON) ||
         AInput::isKeyDown(AInput::LCONTROL) ||
@@ -296,10 +304,6 @@ void AAbstractTypeable::updateSelectionOnTextSet(const AString& t) {
     mCursorSelection = 0;
 }
 
-AString AAbstractTypeable::getDisplayText() {
-    return getText();
-}
-
 void AAbstractTypeable::drawCursorImpl(IRenderer& renderer, glm::ivec2 position, unsigned int lineHeight) {
     if (!isCursorBlinkVisible()) {
         return;
@@ -340,6 +344,29 @@ void AAbstractTypeable::moveCursorRight() {
         } else {
             mCursorIndex += 1;
         }
+    }
+    onCursorIndexChanged();
+    updateCursorBlinking();
+    cursorSelectableRedraw();
+}
+
+void AAbstractTypeable::moveCursorUp() {
+    fastenSelection();
+    if (mCursorIndex) {
+        auto pos = getPosByIndex(mCursorIndex);
+
+        mCursorIndex = cursorIndexByPos({pos.x, pos.y - dynamic_cast<IFontView*>(this)->getFontStyle().size});
+    }
+    onCursorIndexChanged();
+    updateCursorBlinking();
+    cursorSelectableRedraw();
+}
+
+void AAbstractTypeable::moveCursorDown() {
+    fastenSelection();
+    if (mCursorIndex) {
+        auto pos = getPosByIndex(mCursorIndex);
+        mCursorIndex = cursorIndexByPos({pos.x, pos.y + dynamic_cast<IFontView*>(this)->getFontStyle().size});
     }
     onCursorIndexChanged();
     updateCursorBlinking();

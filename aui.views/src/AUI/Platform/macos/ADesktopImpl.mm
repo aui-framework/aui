@@ -45,7 +45,7 @@ void ADesktop::setMousePos(const glm::ivec2& pos) {
     CGWarpMouseCursorPosition(cgPosition);
 }
 
-AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& startingLocation) {
+AFuture<APath> ADesktop::browseForDir(ASurface* parent, const APath& startingLocation) {
     AUI_NULLSAFE(parent)->blockUserInput();
     AUI_DEFER { AUI_NULLSAFE(parent)->blockUserInput(false); };
 
@@ -57,7 +57,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
         [panel setCanCreateDirectories:YES];
 
         if (startingLocation.exists()) {
-            NSString* path = [NSString stringWithUTF8String:startingLocation.toUtf8().data()];
+            NSString* path = [NSString stringWithUTF8String:startingLocation.c_str()];
             [panel setDirectoryURL:[NSURL fileURLWithPath:path]];
         }
 
@@ -90,7 +90,7 @@ AFuture<APath> ADesktop::browseForDir(AWindowBase* parent, const APath& starting
 }
 
 AFuture<APath>
-ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
+ADesktop::browseForFile(ASurface* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
     AUI_NULLSAFE(parent)->blockUserInput();
     AUI_DEFER { AUI_NULLSAFE(parent)->blockUserInput(false); };
 
@@ -102,7 +102,7 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
         [panel setCanCreateDirectories:NO];
 
         if (startingLocation.exists()) {
-            NSString* path = [NSString stringWithUTF8String:startingLocation.toUtf8().data()];
+            NSString* path = [NSString stringWithUTF8String:startingLocation.c_str()];
             [panel setDirectoryURL:[NSURL fileURLWithPath:path]];
         }
 
@@ -116,7 +116,7 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
                 }
 
                 UTType* type =
-                    [UTType typeWithFilenameExtension:[NSString stringWithUTF8String:ext.extension.toUtf8().data()]];
+                    [UTType typeWithFilenameExtension:[NSString stringWithUTF8String:ext.extension.c_str()]];
 
                 [allowedTypes addObject:type];
             }
@@ -130,7 +130,7 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
                     break;
                 }
 
-                [allowedExtensions addObject:[NSString stringWithUTF8String:ext.extension.toUtf8().data()]];
+                [allowedExtensions addObject:[NSString stringWithUTF8String:ext.extension.c_str()]];
             }
 
             [panel setAllowedFileTypes:allowedExtensions];
@@ -166,7 +166,7 @@ ADesktop::browseForFile(AWindowBase* parent, const APath& startingLocation, cons
 }
 
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {
-    NSString* filePath = [NSString stringWithUTF8String:file.toUtf8().data()];
+    NSString* filePath = [NSString stringWithUTF8String:file.c_str()];
 
     NSWorkspace* workspace = [NSWorkspace sharedWorkspace];
     NSImage* icon = [workspace iconForFile:filePath];

@@ -13,7 +13,7 @@
 
 
 #include "AViewContainer.h"
-#include "AUI/Util/Declarative.h"
+#include <AUI/Util/Declarative/Containers.h>
 
 /**
  * @brief A titled frame
@@ -44,8 +44,6 @@ private:
     _<AView> mTitle;
     _<AView> mContent;
     _<AView> mFrame;
-
-    int getFrameForcedPosition() const noexcept;
 
     void updateCheckboxState(bool checked);
 };

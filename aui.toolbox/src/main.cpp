@@ -103,7 +103,7 @@ AUI_ENTRY {
             command->printHelp();
             return -1;
         } catch (const AException& e) {
-            std::cerr << std::endl << e.getMessage() << std::endl;
+            std::cerr << std::endl << e << std::endl;
             return -1;
         } catch (...) {
             return -1;

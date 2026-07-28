@@ -44,7 +44,7 @@ void CommonRenderingContext::init(const Init& init) {
             [nsWindow setDelegate:delegate];
             [nsWindow setAcceptsMouseMovedEvents:YES];
             [nsWindow setRestorable:NO];
-            [nsWindow setTitle: [NSString stringWithUTF8String:(init.name.toStdString().c_str())]];
+            [nsWindow setTitle: [NSString stringWithUTF8String:(init.name.c_str())]];
         } @catch (NSException* e) {
             throw AException([[e reason] UTF8String]);
         }
@@ -84,7 +84,7 @@ void CommonRenderingContext::init(const Init& init) {
     }
 }
 
-void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
+void CommonRenderingContext::destroyNativeWindow(ASurface& window) {
     AUI_ASSERT(mDisplayLink != nullptr);
     CVDisplayLinkStop(static_cast<CVDisplayLinkRef>(mDisplayLink));
     CVDisplayLinkRelease(static_cast<CVDisplayLinkRef>(mDisplayLink));
@@ -92,8 +92,8 @@ void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
     [static_cast<NSWindow*>(mWindow->nativeHandle()) close];
 }
 
-void CommonRenderingContext::beginPaint(AWindowBase& window) {
+void CommonRenderingContext::beginPaint(ASurface& window) {
 }
 
-void CommonRenderingContext::endPaint(AWindowBase& window) {
+void CommonRenderingContext::endPaint(ASurface& window) {
 }

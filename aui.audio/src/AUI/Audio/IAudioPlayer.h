@@ -55,8 +55,8 @@ public:
      * @brief Get resampled stream for playback.
      */
     [[nodiscard]]
-    AAudioResampler& resamplerStream() {
-        return *mResamplerStream;
+    AOptional<AAudioResampler>& resamplerStream() {
+        return mResamplerStream;
     }
 
     /**
@@ -95,8 +95,8 @@ public:
      */
     void onFinished();
 
-    const AUrl& url() const noexcept {
-        return *mUrl;
+    const AOptional<AUrl>& url() const {
+        return mUrl;
     }
 
     void rewind();

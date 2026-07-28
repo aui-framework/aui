@@ -299,7 +299,7 @@ public:
 
     void onKeyUp(AInput::Key key) override;
 
-    void onCharEntered(char16_t c) override;
+    void onCharEntered(AChar c) override;
 
     bool capturesFocus() override;
 
@@ -384,11 +384,6 @@ protected:
      * @brief Remove view from the container.
      */
     void removeView(const _<AView>& view);
-
-    /**
-     * @brief Remove view from the container.
-     */
-    void removeView(AView* view);
 
     /**
      * @brief Remove view from the container at specified index.

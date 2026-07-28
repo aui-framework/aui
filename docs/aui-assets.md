@@ -46,7 +46,7 @@ From now, you can use the file from C++.
 ```
 
 ```cpp
-_new<AView>() AUI_WITH_STYLE {
+_new<AView>() AUI_OVERRIDE_STYLE {
   BackgroundImage { ":background.png" },
 },
 ```

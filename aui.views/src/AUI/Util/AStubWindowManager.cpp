@@ -16,32 +16,44 @@
 #include <AUI/Platform/SoftwareRenderingContext.h>
 #include "AStubWindowManager.h"
 
-namespace {
-    class StubRenderingContext: public SoftwareRenderingContext {
-    public:
-        void init(const Init& init) override {
-            IRenderingContext::init(init);
-            reallocate(init.window);
-        }
+static aui::lazy<AStubWindowManager::Config> gStubWindowManagerConfig = [] {
+    return AStubWindowManager::Config{};
+};
 
-        ~StubRenderingContext() override = default;
+class StubRenderingContext: public SoftwareRenderingContext {
+public:
+    StubRenderingContext(AStubWindowManager& parent): mParent(parent) {}
 
-        void destroyNativeWindow(AWindowBase& window) override {
+    void init(const Init& init)
+#if !AUI_PLATFORM_LINUX
+      override
+#endif
+    {
+        reallocate(init.window);
+    }
 
-        }
+    ~StubRenderingContext() override = default;
 
-        void beginPaint(AWindowBase& window) override {
-            std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
-        }
+    void destroyNativeWindow(ASurface& window) override {
 
-        void endPaint(AWindowBase& window) override {
+    }
 
-        }
-    };
-}
+    void beginPaint(ASurface& window) override {
+        std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
+    }
+
+    void endPaint(ASurface& window) override {}
+
+    IRenderer& renderer() override {
+        return *gStubWindowManagerConfig->renderer;
+    }
+
+private:
+    AStubWindowManager& mParent;
+};
 
 void AStubWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
-    auto context = std::make_unique<StubRenderingContext>();
+    auto context = std::make_unique<StubRenderingContext>(*this);
     context->init(init);
     init.setRenderingContext(std::move(context));
 }
@@ -53,6 +65,10 @@ void AStubWindowManager::drawFrame() {
         w->getRenderingContext()->endResize(*w);
         w->redraw();
     }
+}
+
+void AStubWindowManager::setConfig(Config config) {
+    gStubWindowManagerConfig = std::move(config);
 }
 
 AImage AStubWindowManager::makeScreenshot(aui::no_escape<AWindow> window) {

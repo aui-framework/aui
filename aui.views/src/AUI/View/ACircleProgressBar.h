@@ -13,6 +13,8 @@
 
 #include <AUI/View/AViewContainer.h>
 #include <AUI/Traits/values.h>
+#include <AUI/Util/ADataBinding.h>
+#include "AUI/Util/Declarative/Contracts.h"
 
 /**
  * @brief A circle-shaped progress bar.
@@ -46,8 +48,13 @@ public:
     }
 
     [[nodiscard]]
-    aui::float_within_0_1 value() const noexcept {
-        return mValue;
+    auto value() const noexcept {
+        return APropertyDef {
+            this,
+            &ACircleProgressBar::mValue,
+            &ACircleProgressBar::setValue,
+            valueChanged,
+        };
     }
 
     [[nodiscard]]
@@ -68,5 +75,23 @@ private:
 signals:
     emits<aui::float_within_0_1> valueChanged;
 };
+
+namespace declarative {
+/**
+ * <!-- aui:no_dedicated_page -->
+ */
+struct CircleProgressBar {
+    /**
+     * @brief Current progress value.
+     * @details
+     * Where `0.0f` = 0%, `1.0f` = 100%
+     */
+    contract::In<aui::float_within_0_1> progress;
+
+    API_AUI_VIEWS _<AView> operator()();
+};
+}
+
+
 
 

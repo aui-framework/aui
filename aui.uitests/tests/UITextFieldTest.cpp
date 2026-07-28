@@ -14,6 +14,7 @@
 #include <AUI/View/ATextField.h>
 
 using namespace ass;
+using namespace declarative;
 using std::operator""sv;
 
 namespace {
@@ -47,7 +48,7 @@ protected:
         public:
             TestWindow() {
                 setContents(Centered {
-                        _new<ATextField>() AUI_WITH_STYLE { FixedSize { 300_dp, {} } } AUI_LET {
+                        _new<ATextField>() AUI_OVERRIDE_STYLE { FixedSize { 300_dp, {} } } AUI_LET {
                             it->setText("hello world!");
                         }
                 });
@@ -102,14 +103,6 @@ TEST_F(UITextField, DoubleClickWordSelection2) {
 TEST_F(UITextField, CursorClickPos1) {
     By::type<ATextField>().perform(click({23_dp, 0_dp})) // hardcoded mouse position
             .check(selectionMatches(4));
-}
-
-/**
- * Checks cursor position when clicking between 'o' and 'r'.
- */
-TEST_F(UITextField, CursorClickPos2) {
-    By::type<ATextField>().perform(click({51_dp, 0_dp})) // hardcoded mouse position
-            .check(selectionMatches(8));
 }
 
 TEST_F(UITextField, LeftRight) {

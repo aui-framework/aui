@@ -14,9 +14,9 @@
 //
 
 #include "AOverlappingSurface.h"
-#include "AWindowBase.h"
+#include "ASurface.h"
 
 
 void AOverlappingSurface::close() {
-    mParentWindow->closeOverlappingSurface(this);
+    mParentWindow->closeOverlappingSurface(std::static_pointer_cast<AOverlappingSurface>(shared_from_this()));
 }

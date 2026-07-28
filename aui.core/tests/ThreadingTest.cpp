@@ -255,7 +255,7 @@ TEST(Threading, FutureInterruptionCascade) {
                 auto items = AVector<int>::generate(10000, [](std::size_t i) { return i; });
                 auto tasks = AUI_PARALLEL_MP(items) {
                     for (auto it = begin; it != end; ++it) {
-                        EXPECT_FALSE(interrupted);
+                        EXPECT_FALSE(interrupted) << "i: " << *it;
                         AThread::sleep(100ms);
                     }
                 };
@@ -431,4 +431,21 @@ TEST(Threading, AsyncHolder) {
         EXPECT_EQ(holder.size(), 1);
     }
     holderDestroyed = true;
+}
+
+TEST(Threading, FutureSetWaitForAll) {
+    // this test verifies that a thrown exception does not interfere with the execution or waiting for other task.
+    AUI_REPEAT(100) {
+        AThreadPool localThreadPool(1);
+        AFutureSet<void> futures;
+        bool firstTaskCompleted = false;
+        futures << localThreadPool * [&] {
+            firstTaskCompleted = true;
+        };
+        futures << localThreadPool * [] {
+            throw AException("oops!");
+        };
+        futures.waitForAll();
+        ASSERT_TRUE(firstTaskCompleted);
+    }
 }

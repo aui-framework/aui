@@ -14,6 +14,23 @@
 
 #include <AUI/Common/detail/property.h>
 
+namespace aui::detail {
+template<typename T>
+struct OwningContainer {
+    T object;
+    T* operator->() {
+        return &object;
+    }
+    T* operator->() const {
+        return &object;
+    }
+    T& operator*() {
+        return object;
+    }
+    T& operator*() const {}
+};
+}
+
 /**
  * @brief Property implementation to use with custom getter/setter.
  * @ingroup property-system
@@ -83,68 +100,50 @@ struct APropertyDef {
     //     };
     // }
     //
-    // deduction in designated initializers is relatively recent feature.
+    // deduction in designated initializers is a relatively recent feature.
     APropertyDef(const M* base, Getter get, Setter set, const emits<SignalArg>& changed)
         : base(base), get(std::move(get)), set(std::move(set)), changed(changed) {}
 
     template <aui::convertible_to<Underlying> U>
-    APropertyDef& operator=(U&& u) {
+    const APropertyDef& operator=(U&& u) const { // NOLINT(*-unconventional-assign-operator)
         std::invoke(set, *const_cast<Model*>(base), std::forward<U>(u));
         return *this;
     }
 
     [[nodiscard]]
     GetterReturnT value() const noexcept {
+        aui::react::DependencyObserverScope::addDependency(changed);
         return std::invoke(get, base);
     }
 
     [[nodiscard]]
     GetterReturnT operator*() const noexcept {
+        aui::react::DependencyObserverScope::addDependency(changed);
         return std::invoke(get, base);
     }
 
     [[nodiscard]]
-    const Underlying* operator->() const noexcept {
-        return &std::invoke(get, base);
+    auto operator->() const noexcept {
+        aui::react::DependencyObserverScope::addDependency(changed);
+        if constexpr (std::is_reference_v<GetterReturnT>) {
+            return &std::invoke(get, base);
+        } else {
+            // the only reason we do that is because compiler would say "bruh u can't take address of a temporary
+            // object". so, we'll return a wrap that wraps -> instead, to extend lifetime of the object outside of scope
+            // of this exact function.
+            return aui::detail::OwningContainer<GetterReturnT>{ std::invoke(get, base) };
+        }
     }
 
-    [[nodiscard]] operator GetterReturnT() const noexcept { return std::invoke(get, base); }
+    [[nodiscard]] operator GetterReturnT() const noexcept {
+        aui::react::DependencyObserverScope::addDependency(changed);
+        return std::invoke(get, base);
+    }
 
     [[nodiscard]]
     M* boundObject() const {
         return const_cast<M*>(base);
     }
-
-    /**
-     * @brief Makes a readonly [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
-     */
-    template <aui::invocable<const Underlying&> Projection>
-    [[nodiscard]]
-    auto readProjected(Projection&& projection) noexcept {
-        return aui::detail::property::makeReadonlyProjection(std::move(*this), std::forward<Projection>(projection));
-    }
-
-    /**
-     * @brief Makes a bidirectional [projection](property-system.md#UIDataBindingTest_Label_via_declarative_projection) of this property.
-     */
-    template <
-        aui::invocable<const Underlying&> ProjectionRead,
-        aui::invocable<const std::invoke_result_t<ProjectionRead, Underlying>&> ProjectionWrite>
-    [[nodiscard]]
-    auto biProjected(ProjectionRead&& projectionRead, ProjectionWrite&& projectionWrite) noexcept {
-        return aui::detail::property::makeBidirectionalProjection(
-            std::move(*this), std::forward<ProjectionRead>(projectionRead),
-            std::forward<ProjectionWrite>(projectionWrite));
-    }
-
-    /**
-     * @brief Makes a bidirectional projection of this property (by a single aui::lambda_overloaded).
-     */
-    template <aui::detail::property::ProjectionBidirectional<Underlying> Projection>
-    [[nodiscard]]
-    auto biProjected(Projection&& projectionBidirectional) noexcept {
-        return aui::detail::property::makeBidirectionalProjection(std::move(*this), projectionBidirectional);
-    };
 
     /**
      * @return @copybrief aui::PropertyModifier See aui::PropertyModifier.
@@ -162,20 +161,21 @@ struct APropertyDef {
         }
     }
 
-private:
-    friend class AObject;
     /**
-     * @brief Makes a callable that assigns value to this property.
+     * @brief Makes ASlotDef that assigns value to this property.
      */
     [[nodiscard]]
     auto assignment() noexcept {
         return aui::detail::property::makeAssignment(std::move(*this));
     }
+
+private:
+    friend class AObject;
 };
 
 // implementation of property modifier for APropertyDef (in comparison to AProperty) has to call getter, store a copy
 // within PropertyModifier and call setter upon destruction.
-// this behaviour described here - https://aui-framework.github.io/develop/structAPropertyDef.html#declaration
+// this behaviour described here - https://aui-framework.github.io/master/structAPropertyDef.html#declaration
 template <
     typename M, aui::invocable<M&> Getter, aui::invocable<M&, std::invoke_result_t<Getter, M&>> Setter,
     typename SignalArg>

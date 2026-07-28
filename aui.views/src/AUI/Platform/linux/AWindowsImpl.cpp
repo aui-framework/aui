@@ -141,11 +141,11 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::showTouchscreenKeyboardImpl() {
-    AWindowBase::showTouchscreenKeyboardImpl();
+    ASurface::showTouchscreenKeyboardImpl();
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {
-    AWindowBase::hideTouchscreenKeyboardImpl();
+    ASurface::hideTouchscreenKeyboardImpl();
 }
 
 void AWindow::moveToCenter() {
@@ -156,5 +156,5 @@ void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
 
 }
 void AWindow::applyGeometryToChildren() {
-    AWindowBase::applyGeometryToChildren();
+    ASurface::applyGeometryToChildren();
 }

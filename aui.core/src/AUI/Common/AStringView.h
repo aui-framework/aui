@@ -1,0 +1,405 @@
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+//
+// Created by nelonn on 9/4/25.
+//
+
+#pragma once
+
+#include <AUI/Common/detail/util.hpp>
+#include <AUI/Common/AUtf8.hpp>
+#include <AUI/Traits/values.h>
+#include <fmt/format.h>
+
+class API_AUI_CORE AByteBuffer;
+class API_AUI_CORE AStringVector;
+
+
+/**
+ * @brief Non-owning view into a UTF-8 string - a lightweight `const` reference to character data you don't own.
+ * @ingroup core
+ * @details
+ * `AStringView` is the read-only counterpart to @ref AString. It inherits from `std::string_view` and holds
+ * only a pointer and a length - **no heap allocation, no copy**. This makes it the correct type to use
+ * for any function parameter that only needs to *read* a string, regardless of whether the caller holds
+ * an `AString`, a `std::string`, a `const char*`, or a string literal.
+ *
+ * ## Why `AStringView` exists
+ * Before non-owning views, a function that accepted a string had two bad options:
+ * - Take `const AString&` - forces the caller to own an `AString`; a raw `const char*` or `std::string`
+ *   triggers a silent heap allocation just to call the function.
+ * - Take `const char*` - loses the length, breaks on embedded nulls, and can't accept `std::string`
+ *   without `.c_str()`.
+ *
+ * `AStringView` eliminates both problems. It constructs implicitly from `const char*`, `std::string_view`,
+ * `AString`, and `char8_t*` with zero overhead, so callers pass whatever they already have:
+ * @code{.cpp}
+ * void log(AStringView message); // one signature, every string type accepted
+ *
+ * log("literal");            // const char*  - no allocation
+ * log(some_astring);         // AString      - no copy
+ * log(some_std_string_view); // string_view  - no copy
+ * @endcode
+ *
+ * ## Lifetime responsibility
+ * `AStringView` does **not** own its data. It is only valid as long as the underlying string is alive.
+ * Never store an `AStringView` that outlives its source, and never return one that points into a local:
+ * @code{.cpp}
+ * AStringView bad() {
+ *     AString local = "hello";
+ *     return local.trim();    // dangling - local is destroyed on return
+ * }
+ * @endcode
+ * When ownership is needed, convert to @ref AString explicitly:
+ * @code{.cpp}
+ * AString owned = AString(view);
+ * @endcode
+ *
+ * ## Typical usage
+ * @code{.cpp}
+ * AStringView s = "  Hello, World!  ";
+ *
+ * s = s.trim()                     // "Hello, World!"  (returns a new view, no allocation)
+ * s.startsWith("Hello")            // true
+ * s.contains("World")              // true
+ * AString upper = s.uppercase();   // "  HELLO, WORLD!  "  (allocates only here)
+ *
+ * auto parts = s.trim().split(", "); // AStringVector{"Hello", "World!"}
+ * @endcode
+ *
+ * ## Numeric parsing
+ * @code{.cpp}
+ * AStringView("42").toInt()        // AOptional<int32_t>{42}
+ * AStringView("0xFF").toInt()      // AOptional<int32_t>{255}  (hex prefix auto-detected)
+ * AStringView("bad").toInt()       // AOptional<int32_t>{nullopt}
+ * @endcode
+ *
+ * @note Methods that must produce a new string - `uppercase()`, `lowercase()`, `replacedAll()`,
+ * `split()`, `encode()` - return an @ref AString or @ref AStringVector and allocate only at that point.
+ * Pure view operations (`trim`, `substr`, `startsWith`, `contains`) return `AStringView` and never allocate.
+ *
+ * @see AString, AUtf8View, AByteBuffer, AStringVector
+ */
+class API_AUI_CORE AStringView: public std::string_view {
+private:
+    using super = std::string_view;
+
+public:
+    using bytes_type = super;
+
+    auto constexpr static NPOS = super::npos;
+
+    static constexpr auto TO_NUMBER_BASE_BIN = 2;
+    static constexpr auto TO_NUMBER_BASE_OCT = 8;
+    static constexpr auto TO_NUMBER_BASE_DEC = 10;
+    static constexpr auto TO_NUMBER_BASE_HEX = 16;
+
+    using super::super;
+
+    constexpr AStringView(const char8_t* utf8_str, size_t length) noexcept : super(aui::detail::pointer_cast<char>(utf8_str), length) {}
+
+    constexpr AStringView(const char8_t* utf8_str) noexcept : super(aui::detail::pointer_cast<char>(utf8_str)) {}
+
+    constexpr AStringView(std::string_view str) noexcept : super(str) {}
+
+    explicit AStringView(const std::string& str) noexcept : super(str) {}
+
+    constexpr bool startsWith(AStringView prefix) const noexcept {
+        if (prefix.size() > size()) return false;
+        return bytes().substr(0, prefix.size()) == prefix.bytes(); // NOLINT(*-use-starts-ends-with)
+    }
+
+    constexpr bool startsWith(char prefix) const noexcept {
+        if (empty()) return false;
+        return at(0) == prefix;
+    }
+
+    constexpr bool endsWith(AStringView suffix) const noexcept {
+        if (suffix.size() > size()) return false;
+        return bytes().substr(size() - suffix.size()) == suffix.bytes();
+    }
+
+    constexpr bool endsWith(char prefix) const noexcept {
+        if (empty()) return false;
+        return at(size() - 1) == prefix;
+    }
+
+    [[nodiscard]]
+    constexpr bool empty() const noexcept {
+        return super::empty();
+    }
+
+    bool contains(AStringView str) const noexcept;
+
+    bool contains(char c) const noexcept;
+
+    constexpr bool operator==(AStringView other) const noexcept {
+        return bytes() == other.bytes();
+    }
+
+    constexpr bool operator!=(AStringView other) const noexcept {
+        return bytes() != other.bytes();
+    }
+
+    /**
+     * @brief Raw `const char*` pointer to the string.
+     * @return A pointer to the first character of the string.
+     * @details
+     * The returned pointer is not guaranteed to be valid C-style string, because we can't insert a null character at
+     * the end.
+     */
+    [[nodiscard]]
+    constexpr const char* data() const noexcept {
+        return super::data();
+    }
+
+    /**
+     * @brief Returns a substring `[pos, pos + count)`.
+     * @param pos The starting position of the substring.
+     * @param count The number of characters to include in the substring.
+     * If the requested substring extends past the end of the string, i.e. the count is greater than `size() - pos`
+     * (e.g. if `count == npos`), the returned substring is `[pos, size())`.
+     *
+     * Since AString encapsulates a UTF-8 encoded string, the returned substring is always valid UTF-8, hence, it
+     * operates on top of UTF-8 code points. `pos` and `count` are interpreted as code points positions, not as byte.
+     */
+    [[nodiscard]]
+    constexpr AStringView substr(size_type pos = 0, size_type count = npos) const noexcept {
+        return AStringView(super::substr(pos, count));
+    }
+
+    /**
+     * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
+     * @sa bytes, toUtf16, toUtf32
+     */
+    AByteBuffer encode(AStringEncoding encoding) const;
+
+    /**
+     * @brief Encodes the UTF-8 string into a UTF-16 string
+     * @sa bytes, encode
+     */
+    std::u16string toUtf16() const;
+
+    /**
+     * @brief Encodes the UTF-8 string into a UTF-32 string
+     * @sa bytes, encode
+     */
+    std::u32string toUtf32() const;
+
+    constexpr std::string_view bytes() const noexcept {
+        return *this;
+    }
+
+    constexpr AStringView trimLeft(AChar symbol = ' ') const {
+        for (auto i = begin(); i != end(); ++i) {
+            if (*i != symbol) {
+                return AStringView(&*i, static_cast<size_t>(end() - i));
+            }
+        }
+        return {};
+    }
+
+    constexpr AStringView trimRight(AChar symbol = ' ') const {
+        for (auto i = rbegin(); i != rend(); ++i) {
+            if (*i != symbol) {
+                return AStringView(data(), static_cast<size_t>(i.base() - begin()));
+            }
+        }
+        return {};
+    }
+
+    constexpr AStringView trim(AChar symbol = ' ') const {
+        return trimLeft(symbol).trimRight(symbol);
+    }
+
+    AString uppercase() const;
+
+    AString lowercase() const;
+
+    AString replacedAll(AStringView from, AStringView to) const;
+
+    AString replacedAll(AChar from, AChar to) const;
+
+    AString removedAll(AStringView seq) const;
+
+    AString removedAll(AChar c) const;
+
+    AStringVector split(AStringView separator) const;
+
+    AStringVector split(AChar separator) const;
+
+    constexpr AChar first() const {
+        if (empty()) {
+            return AChar();
+        }
+        return *begin();
+    }
+
+    constexpr AChar last() const {
+        if (empty()) {
+            return AChar();
+        }
+        auto it = end();
+        --it;
+        return *it;
+    }
+
+
+    /**
+     * @brief Converts the string to boolean value.
+     * @return If the string equals to "true", true returned, false otherwise.
+     */
+    bool toBool() const;
+
+    /**
+     * @brief Converts the string to int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
+    AOptional<int32_t> toInt() const noexcept;
+
+    /**
+     * @brief Converts the string to long value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to long is not possible, nullopt is returned.
+     */
+    AOptional<int64_t> toLong() const noexcept;
+
+    /**
+     * @brief Converts the string to unsigned int value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to unsigned int is not possible, exception is thrown.
+     */
+    AOptional<uint32_t> toUInt() const noexcept;
+
+    /**
+     * @brief Converts the string to unsigned long value.
+     * @return The string converted to an integer value using base 10. If the string starts with 0x or 0X, the base 16
+     * used.
+     *
+     * If conversion to unsigned long is not possible, exception is thrown.
+     */
+    AOptional<uint64_t> toULong() const noexcept;
+
+    /**
+     * @brief Converts the string to a float number.
+     * @return The string converted to a float number.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
+    AOptional<float> toFloat() const noexcept;
+
+    /**
+     * @brief Converts the string to a double number.
+     * @return The string converted to a double number.
+     *
+     * If conversion to int is not possible, nullopt is returned.
+     */
+    AOptional<double> toDouble() const noexcept;
+
+    /**
+     * @brief Returns the string converted to an int using base. Returns std::nullopt if the conversion fails.
+     * @sa toNumberOrException
+     */
+    AOptional<int> toNumber(aui::ranged_number<int, 2, 36> base) const noexcept;
+
+    int32_t toIntOrException() const {
+        return toInt().valueOrException(fmt::format("bad to number conversion: {}", bytes()).c_str());
+    }
+
+    int64_t toLongOrException() const {
+        return toLong().valueOrException(fmt::format("bad to number conversion: {}", bytes()).c_str());
+    }
+
+    uint32_t toUIntOrException() const {
+        return toUInt().valueOrException(fmt::format("bad to number conversion: {}", bytes()).c_str());
+    }
+
+    uint64_t toULongOrException() const {
+        return toULong().valueOrException(fmt::format("bad to number conversion: {}", bytes()).c_str());
+    }
+
+    float toFloatOrException() const noexcept {
+        return toDouble().valueOrException(fmt::format("bad float: {}", bytes()).c_str());
+    }
+
+    double toDoubleOrException() const noexcept {
+        return toDouble().valueOrException(fmt::format("bad double: {}", bytes()).c_str());
+    }
+
+    int toNumberOrException(aui::ranged_number<int, 2, 36> base = TO_NUMBER_BASE_DEC) const {
+        return toNumber(base).valueOrException(fmt::format("bad to number conversion: {}", bytes()).c_str());
+    }
+
+    std::string toStdString() const {
+        return std::string(bytes());
+    }
+
+    AUtf8View utf8() const noexcept {
+        return AUtf8View(bytes());
+    }
+
+};
+
+template<>
+struct std::hash<AStringView>
+{
+    size_t operator()(const AStringView& t) const noexcept
+    {
+        return std::hash<std::string_view>()(t.bytes());
+    }
+};
+
+// gtest printer for AString
+inline void PrintTo(AStringView s, std::ostream* stream) {
+    *stream << s.bytes();
+}
+
+inline std::ostream& operator<<(std::ostream& o, const AStringView& s)
+{
+    o << s.bytes();
+    return o;
+}
+
+
+#if defined(FMT_VERSION) && (FMT_VERSION < 100000)
+template <> struct fmt::detail::is_string<AStringView>: std::false_type {};
+#endif
+
+template <> struct fmt::formatter<AStringView>: fmt::formatter<std::string_view> {
+    auto format(const AStringView& s, fmt::format_context& ctx) const {
+        return fmt::formatter<std::string_view>::format(s.bytes(), ctx);
+    }
+};
+
+#if AUI_PLATFORM_WIN
+namespace aui::win32 {
+/*
+ * On Windows, char16_t == wchar_t. WinAPI interfaces use wchar_t widely, so we have some handy functions to
+ * convert AString(View) to wchar_t* and back.
+ */
+
+/**
+ * @brief AString to const wchar_t*.
+ * @ingroup core
+ * @details
+ * @exclusivefor{windows}
+ */
+API_AUI_CORE std::wstring toWchar(AStringView str);
+}
+#endif

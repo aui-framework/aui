@@ -132,6 +132,9 @@ static PulseAudioInstance& pulse() {
 
 void PulseAudioPlayer::playImpl() {
     pulse();
+    if (gPulseThread == nullptr) {
+        return;
+    }
     gPulseThread->enqueue([self = aui::ptr::shared_from_this(this)]() mutable {
         self->initializeIfNeeded();
       ::loop().addSoundSource(std::move(self));
@@ -140,12 +143,18 @@ void PulseAudioPlayer::playImpl() {
 }
 
 void PulseAudioPlayer::pauseImpl() {
+    if (gPulseThread == nullptr) {
+        return;
+    }
     gPulseThread->enqueue([self = aui::ptr::shared_from_this(this)] {
       ::loop().removeSoundSource(self);
     });
 }
 
 void PulseAudioPlayer::stopImpl() {
+    if (gPulseThread == nullptr) {
+        return;
+    }
     gPulseThread->enqueue([self = aui::ptr::shared_from_this(this)] {
       ::loop().removeSoundSource(self);
       self->reset();

@@ -13,10 +13,11 @@
 // Created by Alex2772 on 12/9/2021.
 //
 
-#include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
-#include "AUI/Platform/ARenderingContextOptions.h"
+#include <AUI/Platform/win32/Theme.h>
+#include <AUI/Platform/CommonRenderingContext.h>
+#include <AUI/Platform/ARenderingContextOptions.h>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto window = reinterpret_cast<AWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
@@ -44,7 +45,8 @@ void CommonRenderingContext::init(const Init& init) {
     ARandom r;
     for (;;) {
         mWindowClass = "AUI-" + AString::number(r.nextInt());
-        winClass.lpszClassName = aui::win32::toWchar(mWindowClass);
+        auto u16windowClass = aui::win32::toWchar(mWindowClass);
+        winClass.lpszClassName = u16windowClass.c_str();
         winClass.cbSize = sizeof(WNDCLASSEX);
         winClass.style = CS_HREDRAW | CS_VREDRAW;
         winClass.lpfnWndProc = WindowProc;
@@ -56,7 +58,7 @@ void CommonRenderingContext::init(const Init& init) {
         winClass.hIconSm = icon;
         winClass.hbrBackground = nullptr;
         winClass.hCursor = LoadCursor(nullptr, IDC_ARROW);
-        winClass.lpszMenuName = aui::win32::toWchar(mWindowClass);
+        winClass.lpszMenuName = u16windowClass.c_str();
         winClass.cbClsExtra = 0;
         winClass.cbWndExtra = 0;
         if (RegisterClassEx(&winClass)) {
@@ -66,10 +68,14 @@ void CommonRenderingContext::init(const Init& init) {
 
     DWORD style = WS_OVERLAPPEDWINDOW;
 
-    window.mHandle = CreateWindowEx(WS_EX_DLGMODALFRAME, aui::win32::toWchar(mWindowClass), aui::win32::toWchar(init.name), style,
+    auto u16windowClass = aui::win32::toWchar(mWindowClass);
+    auto u16windowName = aui::win32::toWchar(init.name);
+    window.mHandle = CreateWindowEx(WS_EX_DLGMODALFRAME, u16windowClass.c_str(), u16windowName.c_str(), style,
                              GetSystemMetrics(SM_CXSCREEN) / 2 - init.width / 2,
                              GetSystemMetrics(SM_CYSCREEN) / 2 - init.height / 2, init.width, init.height,
                              init.parent != nullptr ? init.parent->mHandle : nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
+
+    aui::UpdateDarkModeForHWND(window.mHandle);
 
     mWindowDC = GetDC(window.mHandle);
 
@@ -85,20 +91,19 @@ void CommonRenderingContext::init(const Init& init) {
     RECT clientRect;
     GetClientRect(init.window.mHandle, &clientRect);
     init.window.mSize = {clientRect.right - clientRect.left, clientRect.bottom - clientRect.top};
-
-    IRenderingContext::init(init);
 }
 
-void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
+void CommonRenderingContext::destroyNativeWindow(ASurface& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         ReleaseDC(w->mHandle, mWindowDC);
 
         DestroyWindow(w->mHandle);
     }
-    UnregisterClass(aui::win32::toWchar(mWindowClass), GetModuleHandle(nullptr));
+    auto u16windowClass = aui::win32::toWchar(mWindowClass);
+    UnregisterClass(u16windowClass.c_str(), GetModuleHandle(nullptr));
 }
 
-void CommonRenderingContext::beginPaint(AWindowBase& window) {
+void CommonRenderingContext::beginPaint(ASurface& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         if (mSmoothResize) {
             AUI_ASSERT(mPainterDC == nullptr);
@@ -107,7 +112,7 @@ void CommonRenderingContext::beginPaint(AWindowBase& window) {
     }
 }
 
-void CommonRenderingContext::endPaint(AWindowBase& window) {
+void CommonRenderingContext::endPaint(ASurface& window) {
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         if (mSmoothResize) {
             EndPaint(w->mHandle, &mPaintstruct);

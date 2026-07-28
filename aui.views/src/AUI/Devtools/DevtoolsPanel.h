@@ -11,10 +11,10 @@
 
 #pragma once
 
-#include "AUI/Platform/AWindowBase.h"
+#include "AUI/Platform/ASurface.h"
 
 class DevtoolsPanel: public AViewContainerBase {
 public:
-    DevtoolsPanel(AWindowBase* targetWindow);
+    DevtoolsPanel(ASurface* targetWindow);
 
 };

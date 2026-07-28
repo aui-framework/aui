@@ -59,9 +59,43 @@ class API_AUI_IMAGE AImageView {
 public:
     using Color = AColor;
 
-    AImageView() : mSize(0, 0) {}
+    AImageView() : mSize(0, 0), mStride(0) {}
+
+    /**
+     * @brief Constructs an image view with an explicit row stride.
+     *
+     * This constructor creates a non-owning view over image data using the
+     * provided byte buffer and metadata. The stride (bytes per row)
+     * is explicitly specified, which allows the view to work with padded or
+     * externally aligned image memory.
+     *
+     * @param data   Non-owning byte buffer that contains the image pixels.
+     * @param stride Number of bytes between the start of consecutive rows.
+     * @param size   Image dimensions in pixels (width, height).
+     * @param format Pixel format describing how to interpret each pixel.
+     */
+    AImageView(AByteBufferView data, size_t stride, glm::uvec2 size, APixelFormat format)
+        : mData(data), mStride(stride), mSize(size), mFormat(format) {}
+
+    /**
+     * @brief Constructs an image view with tightly packed rows.
+     *
+     * This constructor assumes the image rows are tightly packed in memory
+     * (no padding between rows). The stride is automatically computed as:
+     *
+     *     stride = bytesPerPixel() * width()
+     *
+     * Use this overload only when the source image buffer has no row padding.
+     *
+     * @param data   Non-owning byte buffer that contains the image pixels.
+     * @param size   Image dimensions in pixels (width, height).
+     * @param format Pixel format describing how to interpret each pixel.
+     */
     AImageView(AByteBufferView data, glm::uvec2 size, APixelFormat format)
-      : mData(data), mSize(size), mFormat(format) {}
+        : mData(data), mSize(size), mFormat(format) {
+        mStride = bytesPerPixel() * width();
+    }
+
     AImageView(const AImage& v);
 
     /**
@@ -150,9 +184,12 @@ public:
     const char& rawDataAt(glm::uvec2 position) const noexcept {
         AUI_ASSERT(width() != 0);
         AUI_ASSERT(height() != 0);
+        AUI_ASSERT(mStride != 0);
         AUI_ASSERT(position.x < width());
         AUI_ASSERT(position.y < height());
-        return mData.at<char>((position.y * width() + position.x) * bytesPerPixel());
+        size_t index = (position.y * mStride) + (position.x * bytesPerPixel());
+        AUI_ASSERT(index < mData.size());
+        return mData.at<char>(index);
     }
 
     [[nodiscard]]
@@ -161,8 +198,60 @@ public:
     [[nodiscard]]
     AImage resizedLinearDownscale(glm::uvec2 newSize) const;
 
+    /**
+     * @brief Converts (if needed) the image to the format `desiredFormat` known at compile time. The image is then
+     * passed to `consumer`.
+     * @tparam desiredFormat the image format to convert to
+     * @param consumer the consumer function that will accept the image view of format `desiredFormat`
+     * @details
+     * Guarantees that the image passed into consumer is in the pixel format `desiredFormat`.
+     *
+     * ## Two possible paths
+     * ### 1) The image is already in desiredFormat
+     *
+     * Then the function avoids any work and passes the existing image view directly to consumer.
+     *
+     * - No conversion
+     * - No allocation
+     * - Minimal overhead
+     * - This is the fast path.
+     *
+     * ### 2) The image is in a different format
+     *
+     * Then the function:
+     *
+     * - creates an owning image object,
+     * - converts the pixels into `desiredFormat`,
+     * - passes the converted image view to `consumer`.
+     *
+     * So the callback always receives the format it asked for.
+     *
+     * ## Why it exists
+     *
+     * This is useful when you want code that only works with one pixel format, but the input may come in several
+     * formats. For example, you can write an image saver that expects RGBA and let convert handle the conversion if
+     * needed.
+     *
+     * The function is a template on the target format, so the desired pixel format is known at compile time. That lets
+     * the API be type-safe and efficient.
+     *
+     * ## In short
+     * “Give me an image in format X, and I’ll call your callback with an image view in format X, converting only if
+     * necessary.”
+     */
+    template<auto /* APixelFormat::Value */ desiredFormat>
+    void convert(aui::invocable<AFormattedImageView<desiredFormat>> auto && consumer) const;
+
+    /**
+     * @brief Converts the image to the format `desiredFormat` known at runtime.
+     * @param desiredFormat the image format to convert to
+     * @return Owning, type-erased representation of an image in `desiredFormat`
+     * @details
+     * In contrast to the template version of `convert`, this overload is easier to use at the cost of runtime overhead.
+     */
     [[nodiscard]]
-    AImage convert(APixelFormat format) const;
+    AImage convert(APixelFormat desiredFormat) const;
+
 
     /**
      * @brief Shortcut to buffer().data().
@@ -174,6 +263,7 @@ public:
 
 protected:
     AByteBufferView mData;
+    size_t mStride;
     glm::uvec2 mSize;
     APixelFormat mFormat = APixelFormat::UNKNOWN;
 };
@@ -182,7 +272,7 @@ protected:
  * @brief Same as AImageView but all universal AColor methods replaced with concrete specific AFormattedColor type thus
  * can be used by performance critical code.
  */
-template <auto f>
+template <auto /* APixelFormat::Value */ f>
 class AFormattedImageView : public AImageView {
 public:
     using Color = AFormattedColor<f>;

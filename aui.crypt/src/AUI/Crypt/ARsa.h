@@ -10,9 +10,11 @@
  */
 
 #pragma once
-#include "AUI/Rsa.h"
-#include "AUI/Common/SharedPtrTypes.h"
-#include "AUI/Common/AByteBuffer.h"
+
+#include <AUI/Common/SharedPtrTypes.h>
+#include <AUI/Common/AByteBuffer.h>
+#include <AUI/Util/APimpl.h>
+#include <AUI/api.h>
 
 /**
  * @brief Stores public and/or private RSA key.
@@ -20,10 +22,10 @@
  */
 class API_AUI_CRYPT ARsa : public aui::noncopyable {
 private:
-    void* mRsa = nullptr;
-    void* mBne = nullptr;
+    class ARsaPrivate;
+    aui::fast_pimpl<ARsaPrivate, 1192> mPrivate;
 
-    explicit ARsa(void* rsa, void* bne);
+    ARsa();
 
 public:
     ~ARsa();

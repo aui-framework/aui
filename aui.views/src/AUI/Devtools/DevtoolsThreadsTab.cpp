@@ -84,16 +84,16 @@ DevtoolsThreadsTab::DevtoolsThreadsTab(AThreadPool& targetThreadPool) {
 
     auto views = _form({
       {
-        Label { "Thread" } AUI_WITH_STYLE {
+        Label { "Thread" } AUI_OVERRIDE_STYLE {
           FontSize { 10_pt },
           Expanding {},
         },
-        Label { "Task Count" } AUI_WITH_STYLE {
+        Label { "Task Count" } AUI_OVERRIDE_STYLE {
           FontSize { 10_pt },
           FixedSize { 100_dp, {} },
         },
       },
-    }) AUI_WITH_STYLE {
+    }) AUI_OVERRIDE_STYLE {
         LayoutSpacing { 1_px },
     };
 

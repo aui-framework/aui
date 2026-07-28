@@ -9,35 +9,20 @@ information.
 2. Anyone may become an AUI contributor: there are no restrictions.
 3. Tasks and todos are listed on the [GitHub Issues page](https://github.com/aui-framework/aui/issues). Issues marked
    as `good first issue` are relatively simple and can be done without deep dive into AUI.
-4. AUI follows git flow-like branching model. `master` branch is a release candidate branch. `develop` branch is current
-   develop branch. Each feature of the framework is created in a separate branch from `develop` in the `feat/` folder.
-   pulling changes from your branch to `develop` is possible only if the merge with your branch does not generate merge
-   conflicts and does not break the build and tests.
+4. AUI follows git flow-like branching model. `master` branch is a release candidate branch. Each feature of the
+   framework is created in a separate branch from `master` in the `feat/` folder. Pulling changes from your branch to
+   `master` is possible only if the merge with your branch does not generate merge conflicts and does not break the
+   build and tests.
 
    That is, if you want to implement a feature, you should fork AUI's repository (if you don't have direct access to
-   it's repository), checkout the `develop` branch and create a new branch called `feat/feature-name`, where you work
+   it's repository), checkout the `master` branch and create a new branch called `feat/feature-name`, where you work
    under your feature.
 
    When you have finished your work, you should open a pull request from the `feat/feature-name` branch of your
-   repository to the `develop` branch of the AUI's original repository.
+   repository to the `master` branch of the AUI's original repository.
 5. Contributing to AUI, you agree that your code will be released under
    [AUI's license](https://github.com/aui-framework/aui/blob/master/LICENSE).
 
-## Workflow
-
-`master` branch contains code of the release candidate. Code of this branch must compile without errors and should pass
-all tests on all supported platforms.
-Each feature of the framework is created in a separate branch in the `feat/` folder. Pulling changes from your branch to
-`master` is possible only if the merge with your branch does not generate merge conflicts and does not break the build
-and tests.
-
-Merges from `feat/` branch are allowed only to `develop` branch. `develop` is the branch were our actual development
-work happens. When we consider `develop` branch stable enough, we merge `develop` and `master` and create a release.
-
-If you are an external developer (i.e., have no write access to AUI's repository), you will need to create a fork of AUI
-and commit to it. Whilst you can commit to `master` and `develop` branches of your own repository, we still recommend to
-follow feature branch workflow. After you finished your work in your feature branch, open pull request from your feature
-branch to AUI's `develop` branch.
 
 ## AI
 
@@ -52,13 +37,59 @@ manually review and adjust AI-generated code/documentation. We won't merge chang
 
 Please treat AI as a tool, not as a complete replacement of a software engineer.
 
-## Understanding Story Point Values
+## Contributing from your project
+
+Want to help make AUI better? You can work on AUI right from your own project!
+
+- **Open your project**. If you don't have one, clone https://github.com/aui-framework/example_app.
+
+- **Expose AUI's source code**: Open the file called `CMakeLists.txt` and add `ADD_SUBDIRECTORY`:
+
+   ```
+   # import AUI
+   auib_import(aui https://github.com/aui-framework/aui
+           COMPONENTS core views curl json crypt updater
+           ADD_SUBDIRECTORY # <------- here
+           VERSION ${AUI_VERSION})
+   ```
+
+   > **Note**: This disables use of precompiled packages, AUI will be built locally.
+
+- **See AUI in your editor**: Now, when you open the project in :simple-clion: **CLion**, AUI will show up as a folder.
+
+- **Make changes**: You can now change things in the AUI folder. Fix bugs or add cool stuff.
+
+- **Make your own copy of AUI**: Go to GitHub and make a "fork" of [AUI](https://github.com/aui-framework/aui), if
+   you don't have one already.
+
+- **Open a terminal in AUI**: Right-click on the AUI folder in :simple-clion: **CLion**. Choose "Open In" and
+   then "Terminal".
+
+- **Send your changes**: In the terminal window, type these commands (change "ololo" to your GitHub name):
+
+   ```
+   git checkout master
+   git checkout -b feat/your-feature-name
+   git remote set-url origin git@github.com:ololo/aui
+   git add -A
+   git commit -m "your commit message here"
+   git push -u fork feat/your-feature-name
+   ```
+
+   This saves your changes to your feature branch on your fork.
+
+   > **Note**: If you already added a fork remote in a previous session, skip the `git remote set-url` line.
+
+- **Share your work**: Go to your fork on GitHub. It will ask if you want to make a "pull request". Just do it! Make
+   sure the pull request targets the `master` branch of the original AUI repository.
+
+## Story points
 
 Story points are designed as relative measurements of work complexity, deliberately decoupled from time-based metrics (
 hours/days/weeks). They provide a general indication of effort required for task completion. It's important to note that
 story point comparisons across different teams, departments, or organizations are inherently invalid.
 
-![](imgs/Screenshot_20250722_041541.png)
+![](imgs/Screenshot_20250722_041541.png "Story point scale reference chart")
 
 For example, Team A's 100-point sprint delivery might represent more actual work than Team B's 200 points, as each team
 develops their own story point scale. While this guide isn't meant to standardize story points globally, it offers
@@ -165,7 +196,7 @@ To generate documentation, run the following command from the root of AUI reposi
 ```bash
 git clone https://github.com/aui-framework/aui
 cd aui
-git checkout develop # we do development on develop branch only
+git checkout master 
 
 # if you want to use venv
 python3 -m venv .venv

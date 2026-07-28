@@ -15,55 +15,53 @@
 #include <AUI/View/AButton.h>
 
 namespace {
-class MessageBox: public AWindow {
+class MessageBox : public AWindow {
 public:
-    MessageBox(AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,
-               AMessageBox::Button b): AWindow(title, 300_dp, 200_dp, parent, WindowStyle::MODAL | WindowStyle::NO_MINIMIZE_MAXIMIZE | WindowStyle::NO_RESIZE) {
+    MessageBox(
+        AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b)
+      : AWindow(title, 300_dp, 200_dp, parent,
+                WindowStyle::MODAL | WindowStyle::NO_MINIMIZE_MAXIMIZE | WindowStyle::NO_RESIZE) {
         using namespace declarative;
         setContents(Vertical {
-            AText::fromString(message),
-            Centered {
-                [&]() -> _<AView> {
-                  switch (b) {
-                      case AMessageBox::Button::OK: return Button { "OK"_i18n } AUI_LET { AObject::connect(it->clicked, me::onOk); };
-                      case AMessageBox::Button::OK_CANCEL: return Horizontal {
-                              Button { "OK"_i18n } AUI_LET { AObject::connect(it->clicked, me::onOk); },
-                              Button { "Cancel"_i18n } AUI_LET { AObject::connect(it->clicked, me::onCancel); },
-                          };
-                      case AMessageBox::Button::YES_NO: return Horizontal {
-                              Button { "Yes"_i18n } AUI_LET { AObject::connect(it->clicked, me::onYes); },
-                              Button { "No"_i18n }AUI_LET { AObject::connect(it->clicked, me::onNo); },
-                          };
-                      case AMessageBox::Button::YES_NO_CANCEL: return Horizontal {
-                              Button { "Yes"_i18n } AUI_LET { AObject::connect(it->clicked, me::onYes); },
-                              Button { "No"_i18n }AUI_LET { AObject::connect(it->clicked, me::onNo); },
-                              Button { "Cancel"_i18n } AUI_LET { AObject::connect(it->clicked, me::onCancel); },
-                          };
-                      default: throw AException("invalid AMessageBox::Button");
-                  }
-                },
-            }
-        });
+          AText::fromString(message),
+          Centered {
+            [&]() -> _<AView> {
+                switch (b) {
+                    case AMessageBox::Button::OK:
+                        return Button { .content = Label { "OK"_i18n }, .onClick = { me::onOk } };
+                    case AMessageBox::Button::OK_CANCEL:
+                        return Horizontal {
+                            Button { .content = Label { "OK"_i18n }, .onClick = { me::onOk } },
+                            Button { .content = Label { "Cancel"_i18n }, .onClick = { me::onCancel } },
+                        };
+                    case AMessageBox::Button::YES_NO:
+                        return Horizontal {
+                            Button { .content = Label { "Yes"_i18n }, .onClick = { me::onYes } },
+                            Button { .content = Label { "No"_i18n }, .onClick = { me::onNo } },
+                        };
+                    case AMessageBox::Button::YES_NO_CANCEL:
+                        return Horizontal {
+                            Button { .content = Label { "Yes"_i18n }, .onClick = { me::onYes } },
+                            Button { .content = Label { "No"_i18n }, .onClick = { me::onNo } },
+                            Button { .content = Label { "Cancel"_i18n }, .onClick = { me::onCancel } },
+                        };
+                    default:
+                        throw AException("invalid AMessageBox::Button");
+                }
+            },
+          } });
     }
 signals:
     emits<AMessageBox::ResultButton /* result */> status;
 
 private:
-    void onOk() {
-        emit status(AMessageBox::ResultButton::OK);
-    }
-    void onCancel() {
-        emit status(AMessageBox::ResultButton::CANCEL);
-    }
-    void onYes() {
-        emit status(AMessageBox::ResultButton::YES);
-    }
-    void onNo() {
-        emit status(AMessageBox::ResultButton::NO);
-    }
+    void onOk() { emit status(AMessageBox::ResultButton::OK); }
+    void onCancel() { emit status(AMessageBox::ResultButton::CANCEL); }
+    void onYes() { emit status(AMessageBox::ResultButton::YES); }
+    void onNo() { emit status(AMessageBox::ResultButton::NO); }
 };
 
-}
+}   // namespace
 
 AMessageBox::ResultButton PlatformAbstractionX11::messageBoxShow(
     AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b) {
@@ -71,9 +69,9 @@ AMessageBox::ResultButton PlatformAbstractionX11::messageBoxShow(
     auto& loop = AWindow::getWindowManager();
     AMessageBox::ResultButton result = AMessageBox::ResultButton::INVALID;
     AObject::connect(a->status, a, [&](AMessageBox::ResultButton r) {
-      a->close();
-      loop.stop();
-      result = r;
+        a->close();
+        loop.stop();
+        result = r;
     });
     a->show();
 
@@ -82,4 +80,3 @@ AMessageBox::ResultButton PlatformAbstractionX11::messageBoxShow(
 
     return result;
 }
-

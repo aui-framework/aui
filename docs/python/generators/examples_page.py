@@ -14,9 +14,11 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import io
 import os
+import re
 from pathlib import Path
 
 from docs.python.generators import regexes, common
+from docs.python.generators.examples_helpers import build_examples_index
 
 
 def examine():
@@ -43,6 +45,40 @@ def examine():
                             yield Path(root) / f
 
             srcs = list(collect_srcs(root))
+            # deduplicate source file list while preserving order
+            seen_srcs = set()
+            deduped_srcs = []
+            for p in srcs:
+                if p in seen_srcs:
+                    continue
+                seen_srcs.add(p)
+                deduped_srcs.append(p)
+            srcs = deduped_srcs
+
+            # Filter out trivial source files (only includes/using/guards).
+            def _is_trivial_source(p: Path) -> bool:
+                try:
+                    text = p.read_text(encoding='utf-8', errors='ignore')
+                except Exception:
+                    return True
+                non_blank_lines = [ln.strip() for ln in text.splitlines() if ln.strip()]
+                if not non_blank_lines:
+                    return True
+                for ln in non_blank_lines:
+                    if ln.startswith('//') or ln.startswith('/*') or ln.startswith('*'):
+                        continue
+                    if ln.startswith('#include'):
+                        continue
+                    if ln.startswith('using '):
+                        continue
+                    if ln in ('{', '}', '#endif', '#if 0') or ln.startswith('#if') or ln.startswith('#define'):
+                        continue
+                    # found a non-trivial line
+                    return False
+                return True
+
+            srcs = [p for p in srcs if not _is_trivial_source(p)]
+
 
             input_file = Path(root) / file
             with open(input_file, 'r', encoding='utf-8') as fis:
@@ -93,6 +129,8 @@ def examine():
 examples_lists = examine()
 if not examples_lists:
     raise RuntimeError("no examples provided")
+
+examples_index = build_examples_index(examples_lists)
 
 def define_env(env):
     @env.macro

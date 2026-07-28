@@ -57,12 +57,12 @@ AString AFontManager::getPathToFont(const AString& font) {
                 throw std::exception{};
             }
 
-            AString valueName;
+            std::wstring valueName;
             valueName.resize(maxValueNameSize);
-            AString valueData;
+            std::wstring valueData;
             valueData.resize(maxValueDataSize);
 
-            for (DWORD index = 0; RegEnumValue(fontsKey, index, aui::win32::toWchar(valueName), &valueNameSize, 0, &valueType,
+            for (DWORD index = 0; RegEnumValue(fontsKey, index, valueName.data(), &valueNameSize, 0, &valueType,
                                                reinterpret_cast<LPBYTE>(valueData.data()), &valueDataSize) !=
                                   ERROR_NO_MORE_ITEMS; ++index) {
                 valueDataSize = maxValueDataSize;
@@ -76,8 +76,9 @@ AString AFontManager::getPathToFont(const AString& font) {
                 }
 
                 // Found a match
-                if (valueName.startsWith(font + " (")) {
-                    APath path = valueName;
+                AString u8valueName(reinterpret_cast<const char16_t*>(valueName.data()), valueName.size());
+                if (u8valueName.startsWith(font + " (")) {
+                    APath path = u8valueName;
                     if (path.empty()) continue;
                     if (!path.isRegularFileExists()) continue;
 

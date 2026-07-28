@@ -11,43 +11,107 @@
 
 #pragma once
 
+#include <cstddef>
+#include <string>
+#include <AUI/Core.h>
+
+template <typename StoredType, std::size_t MaxSize>
+class AStaticVector;
 
 /**
  * @brief Represents a single 32-bit char.
  * @ingroup core
  */
-class AChar {
+class API_AUI_CORE AChar {
 private:
     char32_t mValue;
 
+    static constexpr bool isValidUnicode(char32_t codePoint) {
+        return codePoint <= 0x10FFFF &&
+               (codePoint < 0xD800 || codePoint > 0xDFFF);
+    }
+
 public:
-    AChar(char c): mValue(c) {}
+    constexpr static char32_t INVALID_CHAR = 0xFFFD;
+
+    constexpr AChar() : mValue(0) {}
+
+    constexpr AChar(char c) : mValue(static_cast<char32_t>(static_cast<unsigned char>(c))) {}
+
+    constexpr AChar(char8_t c): mValue(static_cast<char32_t>(c)) {}
+
+    constexpr AChar(wchar_t c): mValue(static_cast<char32_t>(c)) {
+        if constexpr (sizeof(wchar_t) == 2) {
+            if (c >= 0xD800 && c <= 0xDFFF) {
+                mValue = INVALID_CHAR;
+            }
+        } else {
+            if (!isValidUnicode(mValue)) {
+                mValue = INVALID_CHAR;
+            }
+        }
+    }
+
+    constexpr AChar(char16_t c): mValue(static_cast<char32_t>(c)) {
+        if (c >= 0xD800 && c <= 0xDFFF) {
+            mValue = INVALID_CHAR;
+        }
+    }
+
+    constexpr AChar(char32_t c): mValue(isValidUnicode(c) ? c : INVALID_CHAR) {}
 
     [[nodiscard]]
-    bool digit() const {
+    constexpr bool digit() const {
         return mValue >= '0' && mValue <= '9';
     }
 
     [[nodiscard]]
-    bool alpha() const {
+    constexpr bool alpha() const {
         return (mValue >= 'a' && mValue <= 'z') || (mValue >= 'A' && mValue <= 'Z');
     }
 
     [[nodiscard]]
-    bool alnum() const {
+    constexpr bool alnum() const {
         return alpha() || digit();
     }
 
     [[nodiscard]]
-    char asAscii() const {
-        return char(mValue);
+    constexpr bool isAscii() const {
+        return mValue <= 0x7F;
     }
 
-    operator char32_t() const {
+    [[nodiscard]]
+    constexpr char asAscii() const {
+        return isAscii() ? static_cast<char>(mValue) : ' ';
+    }
+
+    AStaticVector<char, 4> toUtf8() const noexcept;
+    std::string toString() const;
+
+    constexpr char32_t codepoint() const noexcept {
+        return mValue;
+    }
+
+    constexpr operator char32_t() const noexcept {
         return mValue;
     }
 };
 
+constexpr inline bool operator==(AChar lhs, AChar rhs) noexcept {
+    return lhs.codepoint() == rhs.codepoint();
+}
+
+constexpr inline bool operator==(AChar lhs, char rhs) noexcept {
+    return lhs == AChar(rhs);
+}
+constexpr inline bool operator==(AChar lhs, char32_t rhs) noexcept {
+    return lhs == AChar(rhs);
+}
+constexpr inline bool operator==(char lhs, AChar rhs) noexcept {
+    return AChar(lhs) == rhs;
+}
+constexpr inline bool operator==(char32_t lhs, AChar rhs) noexcept {
+    return AChar(lhs) == rhs;
+}
+
 static_assert(sizeof(AChar) == 4, "AChar should be exact 4 bytes");
-
-

@@ -14,7 +14,6 @@
 //
 
 #include <gtest/gtest.h>
-#include <AUI/Crypt/ARsa.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Crypt/AHash.h>

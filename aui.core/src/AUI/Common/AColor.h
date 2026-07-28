@@ -22,6 +22,12 @@ class AString;
 /**
  * @brief Represents a 4-component floating point color (RGBA).
  * @ingroup core
+ * @details
+ * <!-- aui:index_alias _rgb -->
+ * <!-- aui:index_alias _argb -->
+ * <!-- aui:index_alias _rgba -->
+ * `AColor` is a color class that inherits from `glm::vec4`, representing colors in RGBA format where each component
+ * (Red, Green, Blue, Alpha) is a floating-point value between 0.0 and 1.0.
  */
 class AColor : public glm::vec4 {
 public:
@@ -186,7 +192,13 @@ struct API_AUI_CORE AColorHSV {
 
 template<>
 struct std::hash<AColor> {
-    auto operator()(const AColor& c) {
-        return std::hash<std::string_view>{}({ reinterpret_cast<const char*>(&c), sizeof(c) });
+    size_t operator()(const AColor& c) const noexcept {
+        constexpr size_t prime = 31;
+        size_t result = 17;
+        result = result * prime + std::hash<float>{}(c.r);
+        result = result * prime + std::hash<float>{}(c.g);
+        result = result * prime + std::hash<float>{}(c.b);
+        result = result * prime + std::hash<float>{}(c.a);
+        return result;
     }
 };

@@ -17,22 +17,25 @@ SoftwareRenderingContext::SoftwareRenderingContext() {
 }
 
 SoftwareRenderingContext::~SoftwareRenderingContext() {
-
+    if (mBitmapBlob) {
+        free(mBitmapBlob);
+        mBitmapBlob = nullptr;
+    }
 }
 
-void SoftwareRenderingContext::destroyNativeWindow(AWindowBase &window) {
+void SoftwareRenderingContext::destroyNativeWindow(ASurface &window) {
     CommonRenderingContext::destroyNativeWindow(window);
 }
 
-void SoftwareRenderingContext::beginPaint(AWindowBase &window) {
+void SoftwareRenderingContext::beginPaint(ASurface &window) {
     CommonRenderingContext::beginPaint(window);
 }
 
-void SoftwareRenderingContext::endPaint(AWindowBase &window) {
+void SoftwareRenderingContext::endPaint(ASurface &window) {
     CommonRenderingContext::endPaint(window);
 }
 
-void SoftwareRenderingContext::beginResize(AWindowBase &window) {
+void SoftwareRenderingContext::beginResize(ASurface &window) {
 
 }
 
@@ -40,19 +43,25 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
     CommonRenderingContext::init(init);
 }
 
-void SoftwareRenderingContext::endResize(AWindowBase &window) {
+void SoftwareRenderingContext::endResize(ASurface &window) {
 
 }
 AImage SoftwareRenderingContext::makeScreenshot() {
     return AImage{};
 }
 
-void SoftwareRenderingContext::reallocate(const AWindowBase& window) {
+void SoftwareRenderingContext::reallocate(const ASurface& window) {
     mBitmapSize = window.getSize();
+    reallocate();
 }
 
 void SoftwareRenderingContext::reallocate() {
+    if (mBitmapBlob) {
+        free(mBitmapBlob);
+    }
+    mBitmapBlob = static_cast<uint8_t *>(malloc(mBitmapSize.x * mBitmapSize.y * 4));
 
+    mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
 }
 
 IRenderer& SoftwareRenderingContext::renderer() {

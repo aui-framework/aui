@@ -61,7 +61,7 @@ void CellView::render(ARenderContext context) {
             }
 
             context.render.setColor(color);
-            context.render.string({getWidth() / 3, (getHeight() - fs.size) / 2}, AString::number(count), fs);
+            context.render.string({getWidth() / 3, (getHeight() - fs.size) / 2 + fs.getAscenderHeight()}, AString::number(count), fs);
         }
     }
 }

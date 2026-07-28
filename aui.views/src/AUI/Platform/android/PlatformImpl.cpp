@@ -9,18 +9,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "AUI/Platform/APlatform.h"
-#include "AUI/Common/AString.h"
-#include "AUI/IO/APath.h"
+#include <AUI/Platform/APlatform.h>
+#include <AUI/Common/AString.h>
+#include <AUI/IO/APath.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Platform/android/OSAndroid.h>
-
-
-
-float APlatform::getDpiRatio()
-{
-    return com::github::aui::android::Platform::getDpiRatio();
-}
 
 void APlatform::openUrl(const AUrl &url) {
     com::github::aui::android::Platform::openUrl(url.full());

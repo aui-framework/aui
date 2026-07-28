@@ -13,7 +13,7 @@
 
 #include <AUI/View/AView.h>
 #include <AUI/Util/AMetric.h>
-#include <AUI/Util/Declarative.h>
+#include <AUI/Util/Declarative/Containers.h>
 
 /**
  * @brief Fixed-size view which is useful in UI building.

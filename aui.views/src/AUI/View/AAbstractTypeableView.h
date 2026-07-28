@@ -135,7 +135,7 @@ public:
         if (!this->hasFocus()) {
             return;
         }
-        drawCursorImpl(renderer, position, this->getFontStyle().size);
+        drawCursorImpl(renderer, position, this->getFontStyle().size + this->getFontStyle().getDescenderHeight());
     }
 
 protected:
@@ -148,9 +148,6 @@ protected:
         this->commitStyleFont();
     }
 
-    int getVerticalAlignmentOffset() noexcept {
-        return (glm::max)(0, int(glm::ceil((Super::getContentHeight() - this->getFontStyle().size) / 2.0)));
-    }
 
     void cursorSelectableRedraw() override {
         this->redraw();

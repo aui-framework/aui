@@ -32,12 +32,12 @@ namespace aui::enumerate::basic {
         static AString name() {
 #if AUI_COMPILER_MSVC
             AString s = __FUNCSIG__;
-        AString::iterator end = s.begin() + s.rfind('>');
-        AString::iterator begin = (std::find_if(std::make_reverse_iterator(end), s.rend(), [](wchar_t c) {
-            return c == ':' || c == '<';
-        })).base();
+            auto end = s.bytes().begin() + s.bytes().rfind('>');
+            auto begin = (std::find_if(std::make_reverse_iterator(end), s.bytes().rend(), [](char c) {
+                return c == ':' || c == '<';
+            })).base();
 
-        AString result(begin, end);
+            AString result(begin, end);
 #else
         #if defined(__PRETTY_FUNCTION__) || defined(__GNUC__) || defined(__clang__)
             AString s = __PRETTY_FUNCTION__;
@@ -57,7 +57,7 @@ namespace aui::enumerate::basic {
             } else {
                 begin += 8;
             }
-            AString result = {s.begin() + begin, s.begin() + end};
+            AString result = {s.bytes().begin() + begin, s.bytes().begin() + end};
 
 
             for (size_t p; (p = result.find("::")) != AString::NPOS;) {
@@ -222,7 +222,12 @@ template <typename T> struct fmt::formatter<T, char, std::enable_if_t<aui::is_co
     // parse is inherited from formatter<string_view>.
     template <typename FormatContext>
     auto format(T c, FormatContext& ctx) const {
-        return formatter<string_view>::format(AEnumerate<T>::valueToNameMap()[c].toStdString(), ctx);
+        if (auto str = AEnumerate<T>::valueToNameMap().contains(c)) {
+            return formatter<string_view>::format(str->second, ctx);
+        }
+
+        // hopefully this won't trigger
+        return formatter<string_view>::format(fmt::format("(unknown enum {})", int(c)), ctx);
     }
 };
 

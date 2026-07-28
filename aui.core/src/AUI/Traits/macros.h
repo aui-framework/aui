@@ -49,4 +49,5 @@
  */
 #define AUI_MARK_AS_USED(variable) { (void)variable; }
 
+
 //NOLINTEND(modernize-*,cppcoreguidelines-macro-usage,bugprone-macro-parentheses)

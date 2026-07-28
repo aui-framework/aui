@@ -12,6 +12,7 @@
 #pragma once
 
 #include <AUI/Traits/concepts.h>
+#include <AUI/Common/AException.h>
 #include <AUI/Util/AStringLiteral.h>
 #include "GlobalRef.h"
 #include <string_view>
@@ -46,6 +47,37 @@ namespace aui::jni {
     template<typename CppType>
     using java_t_from_cpp_t = decltype(aui::jni::toJni(std::declval<CppType>()));
 
+
+    template <>
+    struct Converter<std::string_view> {
+        static constexpr auto signature = "Ljava/lang/String;"_asl;
+
+        static std::string_view fromJni(jstring s) {
+            throw AException("can't use string views to extract java string; please use owning string container such as std::string or AString");
+        }
+
+        static jstring toJni(std::string_view value) {
+            auto bytes = env()->NewByteArray(value.size());
+            if (!bytes) {
+                return nullptr;
+            }
+
+            env()->SetByteArrayRegion(bytes, 0, value.size(), reinterpret_cast<const jbyte*>(value.data()));
+
+            static jmethodID stringConstructor = env()->GetMethodID(stringClass(), "<init>", "([BLjava/lang/String;)V");
+            static GlobalRef utf8Charset(env()->NewStringUTF("UTF-8"));
+            auto str = env()->NewObject(stringClass(), stringConstructor, bytes, utf8Charset.asObject());
+            env()->DeleteLocalRef(bytes);
+            return static_cast<jstring>(str);
+        }
+
+    private:
+        static jclass stringClass() {
+            static GlobalRef ref = jni::env()->FindClass("java/lang/String");
+            return ref.asClass();
+        }
+    };
+
     template <>
     struct Converter<std::string> {
         static constexpr auto signature = "Ljava/lang/String;"_asl;
@@ -66,17 +98,7 @@ namespace aui::jni {
         }
 
         static jstring toJni(std::string_view value) {
-            auto bytes = env()->NewByteArray(value.length());
-            if (!bytes) {
-                return nullptr;
-            }
-
-            env()->SetByteArrayRegion(bytes, 0, value.length(), reinterpret_cast<const jbyte*>(value.data()));
-
-            static jmethodID stringConstructor = env()->GetMethodID(stringClass(), "<init>", "([BLjava/lang/String;)V");
-            auto str = env()->NewObject(stringClass(), stringConstructor, bytes, env()->NewStringUTF("UTF-8"));
-            env()->DeleteLocalRef(bytes);
-            return static_cast<jstring>(str);
+            return Converter<std::string_view>::toJni(value);
         }
 
     private:
@@ -92,6 +114,15 @@ namespace aui::jni {
 
         static jstring toJni(const AString& value) {
             return Converter<std::string>::toJni(value.toStdString());
+        }
+    };
+
+    template <>
+    struct Converter<AStringView>: public Converter<std::string_view> {
+        static constexpr auto signature = "Ljava/lang/String;"_asl;
+
+        static jstring toJni(const AStringView& value) {
+            return Converter<std::string_view>::toJni(value.bytes());
         }
     };
 

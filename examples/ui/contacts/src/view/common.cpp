@@ -16,5 +16,5 @@ using namespace ass;
 using namespace declarative;
 
 _<AView> common_views::divider() {
-    return _new<AView>() AUI_WITH_STYLE { FixedSize { {}, 1_px }, BackgroundSolid { AColor::GRAY } };
+    return _new<AView>() AUI_OVERRIDE_STYLE { FixedSize { {}, 1_px }, BackgroundSolid { AColor::GRAY } };
 }

@@ -68,6 +68,14 @@ public:
                     return f.inner().get() == impl;
                 });
             });
+
+            future.onError([this, impl](const AException& e) {
+                std::unique_lock lock(mSync);
+                mOnException(e);
+                mFutureSet.removeIf([&](const AFuture<>& f) {
+                    return f.inner().get() == impl;
+                });
+            });
         } else {
             auto uniquePtr = std::make_unique<Future<T>>(future);
             auto it = mCustomTypeFutures.insert(mCustomTypeFutures.end(), std::move(uniquePtr));
@@ -77,6 +85,14 @@ public:
             future.onSuccess([this, it](const T& result) {
                 AUI_ASSERTX(!mDead, "you have concurrency issues");
                 std::unique_lock lock(mSync);
+                AUI_ASSERT(!mCustomTypeFutures.empty());
+                mCustomTypeFutures.erase(it);
+            });
+
+            future.onError([this, it](const AException& result) {
+                AUI_ASSERTX(!mDead, "you have concurrency issues");
+                std::unique_lock lock(mSync);
+                mOnException(result);
                 AUI_ASSERT(!mCustomTypeFutures.empty());
                 mCustomTypeFutures.erase(it);
             });
@@ -109,6 +125,13 @@ public:
         while (!mCustomTypeFutures.empty()) {
             mCustomTypeFutures.front()->wait(lock);
         }
+    }
+
+    [[nodiscard]] std::function<void(const AException&)> getOnException() const { return mOnException; }
+
+    void setOnException(std::function<void(const AException&)> callback) {
+        std::unique_lock lock(mSync);
+        mOnException = std::move(callback);
     }
 
 private:
@@ -150,4 +173,7 @@ private:
     mutable AMutex mSync;
     AFutureSet<> mFutureSet;
     std::list<_unique<IFuture>> mCustomTypeFutures;
+    std::function<void(const AException&)> mOnException = [](const AException& e) {
+        ALogger::err("AAsyncHolder") << "Unhandled exception in AFuture: " << e;
+    };
 };

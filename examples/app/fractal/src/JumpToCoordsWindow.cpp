@@ -39,16 +39,16 @@ JumpToCoordsWindow::JumpToCoordsWindow(_<FractalView> fractalView, AWindow* pare
         { "Re="_as, re },
         { "Im="_as, im },
         { "Scale="_as, scale },
-      }),
+      }) AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
       Horizontal {
         SpacerExpanding {},
         _new<AButton>("Jump").connect(
             &AButton::clicked, this,
             [&, fractalView, re, im, scale]() {
                 try {
-                    auto dRe = std::stod(re->text()->toStdString());
-                    auto dIm = -std::stod(im->text()->toStdString());
-                    auto dScale = std::stod(scale->text()->toStdString());
+                    auto dRe = std::stod((*re->text()).toStdString());
+                    auto dIm = -std::stod((*re->text()).toStdString());
+                    auto dScale = std::stod((*re->text()).toStdString());
                     fractalView->setPlotPositionAndScale(glm::dvec2 { dRe, dIm }, dScale);
                     close();
                 } catch (...) {
@@ -56,8 +56,8 @@ JumpToCoordsWindow::JumpToCoordsWindow(_<FractalView> fractalView, AWindow* pare
                 }
             }) AUI_LET { it->setDefault(); },
         _new<AButton>("Cancel").connect(&AButton::clicked, me::close),
-      },
-    });
+      } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
 
     pack();
 }

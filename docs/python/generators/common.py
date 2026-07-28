@@ -68,3 +68,5 @@ def parse_doxygen(comment):
 
     return output
 
+# hack: try to find a class in the namespace whose are commonly used with "using namespace".
+OMIT_NAMESPACES = ["ass", "declarative"]

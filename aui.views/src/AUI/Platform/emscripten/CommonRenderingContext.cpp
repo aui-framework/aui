@@ -23,23 +23,21 @@
 static constexpr auto LOG_TAG = "Emscripten";
 
 namespace aui::emscripten {
-    void applySize(AWindowBase* window, glm::dvec2 size);
+    void applySize(ASurface* window, glm::dvec2 size);
 }
 
 void CommonRenderingContext::init(const Init& init) {
-    IRenderingContext::init(init);
-
     glm::dvec2 s;
     emscripten_get_element_css_size("#canvas", &s.x, &s.y);
     aui::emscripten::applySize(&init.window, s);
 }
 
-void CommonRenderingContext::destroyNativeWindow(AWindowBase& window) {
+void CommonRenderingContext::destroyNativeWindow(ASurface& window) {
 
 }
 
-void CommonRenderingContext::beginPaint(AWindowBase& window) {
+void CommonRenderingContext::beginPaint(ASurface& window) {
 }
 
-void CommonRenderingContext::endPaint(AWindowBase& window) {
+void CommonRenderingContext::endPaint(ASurface& window) {
 }

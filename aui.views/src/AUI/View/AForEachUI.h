@@ -21,6 +21,7 @@
 #include <AUI/Util/ADataBinding.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Traits/any_view.h>
+#include <AUI/Hash.h>
 
 namespace aui::for_each_ui {
 
@@ -31,27 +32,14 @@ namespace aui::for_each_ui {
  */
 using Key = std::size_t;
 
-template <typename T>
-    requires requires(T& t) { std::hash<T> {}(t); }
-constexpr aui::for_each_ui::Key defaultKey(const T& value, long primaryCandidate) {   // std::hash specialization
-    return std::hash<T> {}(value);
+template<typename T>
+constexpr aui::for_each_ui::Key defaultKey(const T& value) {
+    return std::hash<AByteBufferView>{}(AByteBufferView::fromRaw(value));
 }
 
-template <typename T>
-constexpr aui::for_each_ui::Key
-defaultKey(const _<T>& value, int secondaryCandidate) {   // specialization for shared pointers
-    return reinterpret_cast<std::uintptr_t>(value.get());
-}
-
-template <ranges::input_range T>
-constexpr aui::for_each_ui::Key defaultKey(const T& value, int secondaryCandidate) {   // specialization for subranges
-    auto key = std::hash<AByteBufferView>{}(AByteBufferView::fromRaw(value));
-    for (const auto& i : value) {
-        // sub produces order sensitive hash.
-        // lshift distinguishes equal hashes.
-        key = (key << 1) - defaultKey(i, 0L);
-    }
-    return key;
+template<>
+inline aui::for_each_ui::Key defaultKey(const AString& value) {
+    return std::hash<AString>{}(value);
 }
 
 namespace detail {
@@ -74,6 +62,7 @@ public:
     AForEachUIBase() {}
     ~AForEachUIBase() override = default;
     void setPosition(glm::ivec2 position) override;
+    void setSize(glm::ivec2 size) override;
 
 protected:
     struct Cache {
@@ -102,6 +91,8 @@ protected:
      */
     virtual aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() = 0;
 
+    void putOurViewsToSharedCache();
+
 private:
     _weak<AScrollAreaViewport> mViewport;
     List mViewsModel;
@@ -114,7 +105,9 @@ private:
     void inflate(aui::for_each_ui::detail::InflateOpts opts = {});
     glm::ivec2 calculateOffsetWithinViewportSlidingSurface();
     glm::ivec2 axisMask();
-    void putOurViewsToSharedCache();
+
+    _<AScrollAreaViewport> findViewport();
+    void ensureViewport();
 
 };
 
@@ -128,19 +121,29 @@ concept RangeFactory = requires(Factory&& factory) {
 
 
 /**
+ * ---
+ * title: Lists
+ * icon: material/view-list
+ * ---
+ *
  * @brief Customizable lists display.
  *
  * ![](imgs/views/AForEachUI.png)
  *
  * @ingroup views_containment
+ * @ingroup reactive
  * @details
- * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.
+ * Many apps need to display collections of items. This document explains how you can efficiently do this in AUI.
  *
  * <!-- aui:experimental -->
  * <!-- aui:index_alias AUI_DECLARATIVE_FOR -->
  *
+ * Used to lazily present possibly large or infinite linear non-hierarchical sequences of data.
+ *
  * If you are familiar with RecyclerView/LazyColumn/LazyRow/LazyVStack/LazyHStack, AForEachUI follows the same set
  * of principles; with an exception: AForEachUI does not provide a scrollable area on its own.
+ *
+ * ## API surface
  *
  * AForEachUI is created by using [AUI_DECLARATIVE_FOR] macro.
  *
@@ -160,13 +163,13 @@ concept RangeFactory = requires(Factory&& factory) {
  *     AUI_DECLARATIVE_FOR(user, users, AVerticalLayout) {
  *       return Label { fmt::format("{}", user) };
  *     }
- *   ).build() AUI_WITH_STYLE { FixedSize { 150_dp, 200_dp } },
+ *   ).build() AUI_OVERRIDE_STYLE { FixedSize { 150_dp, 200_dp } },
  * });
  * ```
  *
  * ![](imgs/UIDeclarativeForTest.Example_.png)
  *
- * [AUI_DECLARATIVE_FOR] consists of single entry variable name, a potentially [reactive](aui::react) expression
+ * [AUI_DECLARATIVE_FOR] consists of single entry variable name, a potentially reactive expression
  * evaluating to *range*, layout name (acceptable are `AVerticalLayout` and `AHorizontalLayout`) and a lambda that
  * creates a new view based on data entry. In terms of C++ syntax, the lambda is partially defined by
  * [AUI_DECLARATIVE_FOR] macro; the lambda's body (including curly braces) is left up to developer. The final
@@ -248,17 +251,15 @@ class AForEachUI : public AForEachUIBase, public aui::react::DependencyObserver 
 public:
     friend class UIDeclarativeForTest;
 
-    static_assert(
-        requires(T& t) { aui::for_each_ui::defaultKey(t, 0L); },
-        "// ====================> AForEachUI: aui::for_each_ui::defaultKey overload or std::hash specialization is "
-        "required for your type.");
-
     using List = AForEachUIBase::List;
     using ListFactory = std::function<List()>;
     using ViewFactory = std::function<_<AView>(const T& value)>;
+    using KeyFunction = std::function<aui::for_each_ui::Key(const T&)>;
 
     AForEachUI() {}
-    ~AForEachUI() override = default;
+    ~AForEachUI() override {
+        putOurViewsToSharedCache();
+    }
 
     template <aui::detail::RangeFactory<T> RangeFactory>
     AForEachUI(RangeFactory&& rangeFactory) {
@@ -268,27 +269,37 @@ public:
     template <aui::detail::RangeFactory<T> RangeFactory>
     void setModel(RangeFactory&& rangeFactory) {
         mListFactory = [this, rangeFactory = std::forward<RangeFactory>(rangeFactory)] {
-//            ALOG_DEBUG("AForEachUIBase") << this << "(" << AReflect::name(this) << ") range expression evaluation";
-            aui::react::DependencyObserverRegistrar r(*this);
+            ALOG_TRACE("AForEachUIBase") << this << "(" << AReflect::name(this) << ") range expression evaluation";
+            aui::react::DependencyObserverScope r(this);
             decltype(auto) rng = rangeFactory();
             if (auto it = ranges::begin(rng); it != ranges::end(rng)) {
                 [[maybe_unused]] auto discoverReferencedProperties = *it;
             }
             return rng | ranges::views::transform([this](const T& t) {
-                       auto key = aui::for_each_ui::defaultKey(t, 0L);
-                       _<AView> view;
+                       if (!mKeyFunction) {
+                           return AForEachUIBase::Entry { .view = mFactory(t), .id = 0 };
+                       }
+                       auto key = mKeyFunction(t);
+                       // in addition to user-provided hash, strengthen it with byte-level hash.
+                       // we need to enforce uniqueness of ranges::view::chunk which stores iterator pair to
+                       // generic container. Iterators MUST BE invalidated if we have changed the container.
+                       //
+                       // see UIDeclarativeForTest.IntGroupingDynamic1 test for more info and reproducer.
+                       aui::hash_combine(key, aui::for_each_ui::defaultKey(t));
+                       ALOG_TRACE("AForEachUIBase") << this << "(" << AReflect::name(this) << ") (?) Querying cache: " << key;
                        if (mViewsSharedCache) {
                            if (auto c = mViewsSharedCache->contains(key)) {
-//                               ALOG_DEBUG("AForEachUIBase")
-//                                   << this << "(" << AReflect::name(this) << ") Trying to view from cache: " << key;
-                               view = std::move(c->second);
-                               mViewsSharedCache->erase(c);
+                               auto view = std::exchange(c->second, nullptr);
+                               if (view != nullptr) {
+                                   ALOG_TRACE("AForEachUIBase")
+                                       << this << "(" << AReflect::name(this) << ") (HIT) Taken view from cache: " << key;
+                                   mViewsSharedCache->erase(c);
+                                   return AForEachUIBase::Entry { .view = std::move(view), .id = key };
+                               }
                            }
                        }
-                       if (!view) {
-                           view = mFactory(t);
-                       }
-                       return AForEachUIBase::Entry { .view = std::move(view), .id = key };
+                       ALOG_TRACE("AForEachUIBase") << this << "(" << AReflect::name(this) << ") (MISS) Instantiating new view: " << key;
+                       return AForEachUIBase::Entry { .view = mFactory(t), .id = key };
                    });
         };
     }
@@ -310,15 +321,28 @@ public:
      * You do not need to call this manually, AUI_DECLARATIVE_FOR makes all essential connection automatically.
      */
     void invalidate() override {
-//        ALOG_DEBUG("AForEachUIBase") << this << "(" << AReflect::name(this) << ") invalidate";
+        ALOG_TRACE("AForEachUIBase") << this << "(" << AReflect::name(this) << ") invalidate";
         updateUnderlyingModel();
     }
 
     using AViewContainerBase::setLayout;
 
+    /**
+     * @brief Sets key function, enabling [view caching](#AFOREACHUI_CACHING).
+     * @param keyFunction key function: `function(T) -> std::size_t`.
+     */
+    void setKeyFunction(KeyFunction keyFunction) noexcept {
+        mKeyFunction = std::move(keyFunction);
+    }
+
 protected:
 
-    aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() override { return mViewsSharedCache; }
+    aui::for_each_ui::detail::ViewsSharedCache* getViewsCache() override {
+        if (!mKeyFunction) {
+            return nullptr;
+        }
+        return mViewsSharedCache;
+    }
 
 private:
     template <typename FactoryTypeTag>
@@ -327,6 +351,9 @@ private:
     aui::for_each_ui::detail::ViewsSharedCache* mViewsSharedCache = nullptr;
     ListFactory mListFactory;
     ViewFactory mFactory;
+    // No implicit key function – caching is disabled unless user sets one explicitly.
+    KeyFunction mKeyFunction = nullptr;
+
 
     void updateUnderlyingModel() {
         if (!mFactory) {
@@ -343,8 +370,8 @@ aui::for_each_ui::detail::ViewsSharedCache AForEachUI<T>::VIEWS_SHARED_CACHE {};
 
 namespace aui::detail {
 
-template <typename Layout, aui::invocable RangeFactory>
-auto makeForEach(RangeFactory&& rangeFactory)
+template < aui::invocable RangeFactory>
+auto makeForEach(RangeFactory&& rangeFactory, _unique<ALayout> layout)
     requires requires {
         { rangeFactory() } -> ranges::range;
     }
@@ -388,20 +415,20 @@ auto makeForEach(RangeFactory&& rangeFactory)
                   "====================> (2) define your container as const field and manually make sure its lifetime exceeds "
                   "AUI_DECLARATIVE_FOR's, or\n"
                   "====================> (3) wrap your container as AProperty.\n"
-                  "====================> Please consult with https://aui-framework.github.io/develop/aforeachui/#AFOREACHUI_UPDATE for more info.");
+                  "====================> Please consult with https://aui-framework.github.io/master/aforeachui/#AFOREACHUI_UPDATE for more info.");
 
     using T = std::decay_t<ImmediateValueType>;
 
     auto result = _new<AForEachUI<T>>(std::forward<RangeFactory>(rangeFactory));
-    result->setLayout(std::make_unique<Layout>());
+    result->setLayout(std::move(layout));
     return result;
 }
 }   // namespace aui::detail
 
 #define AUI_DECLARATIVE_FOR_EX(value, model, layout, ...)      \
-    aui::detail::makeForEach<layout>([=]() -> decltype(auto) { \
+    aui::detail::makeForEach([=]() -> decltype(auto) { \
         return (model);                                        \
-    }) - [__VA_ARGS__](const auto& value) -> _<AView>
+    }, std::make_unique<layout>()) - [__VA_ARGS__](const auto& value) -> _<AView>
 
 /**
  * @brief ranged-for-loop style wrapped for [AForEachUI].

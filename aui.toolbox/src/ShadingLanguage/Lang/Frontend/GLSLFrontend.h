@@ -49,5 +49,4 @@ private:
     bool mPrecisionInsterted = false; 
     ASet<AString> mDefinedUniforms;
     AVector<std::tuple<int, _<VariableDeclarationNode>>> mInputs;
-    void ensurePrecisionInserted();
 };

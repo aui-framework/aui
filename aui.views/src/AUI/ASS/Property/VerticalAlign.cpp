@@ -16,9 +16,22 @@
 
 #include <AUI/View/AAbstractLabel.h>
 #include "VerticalAlign.h"
+#include "AUI/View/AText.h"
+#include "AUI/View/ATextArea.h"
 
 void ass::prop::Property<VerticalAlign>::applyFor(AView* view) {
-    if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
-        label->setVerticalAlign(mInfo);
+    if (auto v = dynamic_cast<AAbstractLabel*>(view)) {
+        v->setVerticalAlign(mInfo);
+        return;
+    }
+
+    if (auto v = dynamic_cast<AText*>(view)) {
+        v->setVerticalAlign(mInfo);
+        return;
+    }
+
+    if (auto v = dynamic_cast<ATextArea*>(view)) {
+        v->setVerticalAlign(mInfo);
+        return;
     }
 }

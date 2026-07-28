@@ -184,8 +184,8 @@ When it comes to `clang-format` there's one an unobvious feature when using AUI'
     
     ```cpp
     setContents(Vertical {
-      Button { "Up" },
-      Button { "Down" },
+      Label { "Up" },
+      Label { "Down" },
     });
     ```
     
@@ -193,8 +193,8 @@ When it comes to `clang-format` there's one an unobvious feature when using AUI'
     
     ```cpp
     setContents(Vertical {
-      Button { "Up" },
-      Button { "Down" }
+      Label { "Up" },
+      Label { "Down" }
     });
     ```
 
@@ -206,8 +206,8 @@ See the difference? The second example lacks one comma. If we try to trigger `cl
      
     ```cpp
     setContents(Vertical {
-      Button { "Up" },
-      Button { "Down" },
+      Label { "Up" },
+      Label { "Down" },
     });
     ```
 
@@ -215,7 +215,7 @@ See the difference? The second example lacks one comma. If we try to trigger `cl
     
     ```cpp
     setContents(Vertical {
-      Button { "Up" }, Button { "Down" } });
+      Label { "Up" }, Label { "Down" } });
     ```
 
 The first example left as is (correct), the second example formatted confusingly.

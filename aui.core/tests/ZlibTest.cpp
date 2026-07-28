@@ -12,6 +12,8 @@
 #include <gtest/gtest.h>
 #include <range/v3/all.hpp>
 #include "AUI/Common/AByteBuffer.h"
+#include "AUI/IO/AFileInputStream.h"
+#include "AUI/IO/AFileOutputStream.h"
 #include "AUI/Util/LZ.h"
 #include "AUI/Util/Archive.h"
 
@@ -74,8 +76,27 @@ TEST(Zlib, DecompressZip) {
         EXPECT_FALSE(called);
         called = true;
         EXPECT_EQ(e.name, "test.txt");
-        EXPECT_EQ(AString::fromLatin1(AByteBuffer::fromStream(e.open())), "1234\n");
+        EXPECT_EQ(AString(AByteBuffer::fromStream(e.open()), AStringEncoding::LATIN1), "1234\n");
     });
     EXPECT_TRUE(called);
 }
+
+TEST(Zlib, CompressZip) {
+    {
+        aui::archive::zip::Writer writer(std::make_unique<AFileOutputStream>("test.zip"));
+        writer.openFileInZip(APath("test") / "test.txt", [](IOutputStream& os) {
+            os << std::string_view("1234\n");
+        });
+    }
+
+    bool called = false;
+    aui::archive::zip::read(AFileInputStream("test.zip"), [&](const aui::archive::FileEntry& e) {
+        EXPECT_FALSE(called);
+        called = true;
+        EXPECT_EQ(e.name, "test/test.txt");
+        EXPECT_EQ(AString(AByteBuffer::fromStream(e.open()), AStringEncoding::LATIN1), "1234\n");
+    });
+    EXPECT_TRUE(called);
+}
+
 

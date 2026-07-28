@@ -80,18 +80,7 @@ TEST(PropertyCommonTest, PropertyConnectionWithProjection1) {
     auto u = aui::ptr::manage_shared(new User { .name = "Hello" });
 
     EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
-    AObject::connect(u->name.readProjected(&AString::length), AUI_SLOT(receiver)::receiveInt);
-
-    EXPECT_CALL(*receiver, receiveInt(6)).Times(1);
-    u->name = "World!";
-}
-
-TEST(PropertyCommonTest, PropertyConnectionWithProjection2) {
-    auto receiver = _new<Receiver>();
-    auto u = aui::ptr::manage_shared(new User { .name = "Hello" });
-
-    EXPECT_CALL(*receiver, receiveInt(5)).Times(1);
-    AObject::connect(u->name.readProjected([](const AString& s) { return s.length(); }), AUI_SLOT(receiver)::receiveInt);
+    AObject::connect(AUI_REACT(u->name->length()), AUI_SLOT(receiver)::receiveInt);
 
     EXPECT_CALL(*receiver, receiveInt(6)).Times(1);
     u->name = "World!";

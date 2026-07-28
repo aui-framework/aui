@@ -75,7 +75,7 @@ void RenderingContextX11::xInitNativeWindow(
     init.window.updateDpi();
 }
 
-void RenderingContextX11::xDestroyNativeWindow(AWindowBase& window) {
+void RenderingContextX11::xDestroyNativeWindow(ASurface& window) {
     XDestroyIC(mIC);
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         XDestroyWindow(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(*w));

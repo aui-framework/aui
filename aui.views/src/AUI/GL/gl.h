@@ -10,25 +10,5 @@
  */
 
 #pragma once
-#ifndef __cplusplus
-extern "C" {
-#endif
-#if AUI_PLATFORM_ANDROID
-#include <GLES3/gl3.h>
-#include <GLES3/gl31.h>
-#include <GLES3/gl32.h>
-#include <GLES3/gl3ext.h>
-#include <EGL/egl.h>
-#elif AUI_PLATFORM_MACOS
-#include <GL/glew.h>
-#include <OpenGL/OpenGL.h>
-#elif AUI_PLATFORM_IOS
-#include <OpenGLES/ES3/gl.h>
-#include <OpenGLES/ES3/glext.h>
-#else
-#include <GL/glew.h>
-#include <GL/gl.h>
-#endif
-#ifndef __cplusplus
-}
-#endif
+
+#include <glad/glad.h>

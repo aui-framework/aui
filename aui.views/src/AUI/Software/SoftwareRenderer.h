@@ -13,7 +13,7 @@
 
 
 #include <AUI/Render/IRenderer.h>
-#include <AUI/Platform/AWindowBase.h>
+#include <AUI/Platform/ASurface.h>
 #include <AUI/Platform/SoftwareRenderingContext.h>
 
 class API_AUI_VIEWS SoftwareRenderer: public IRenderer {
@@ -148,7 +148,7 @@ public:
 
     void setBlending(Blending blending) override;
 
-    void setWindow(AWindowBase* window) override;
+    void setWindow(ASurface* window) override;
 
     glm::mat4 getProjectionMatrix() const override;
 

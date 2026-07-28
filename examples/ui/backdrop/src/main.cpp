@@ -27,7 +27,7 @@ using namespace ass;
 
 static auto headerWithContents(_<AView> content) {
     auto result = Stacked {
-        AScrollArea::Builder().withContents(content).build() AUI_WITH_STYLE {
+        AScrollArea::Builder().withContents(content).build() AUI_OVERRIDE_STYLE {
               Expanding(),
               Padding { 80_dp, 0, 0 },
             } AUI_LET { it->setExtraStylesheet(
@@ -41,7 +41,7 @@ static auto headerWithContents(_<AView> content) {
         Vertical::Expanding {
           Centered {
             Horizontal {
-                  Label { "boll" } AUI_WITH_STYLE {
+                  Label { "boll" } AUI_OVERRIDE_STYLE {
                       FixedSize { 60_dp },
                       BorderRadius { 60_dp / 2.f },
                       Padding { 0 },
@@ -52,7 +52,7 @@ static auto headerWithContents(_<AView> content) {
 //                      Border { 1_dp, AColor::GRAY.transparentize(0.7f) },
                       BoxShadow { 0, 32_dp, 32_dp, AColor::BLACK.transparentize(0.8f) },
                   },
-                  Label { "boll" } AUI_WITH_STYLE {
+                  Label { "boll" } AUI_OVERRIDE_STYLE {
                       FixedSize { 60_dp },
                       BorderRadius { 60_dp / 2.f },
                       Padding { 0 },
@@ -68,7 +68,7 @@ static auto headerWithContents(_<AView> content) {
                       BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
                   },
               }
-          } AUI_WITH_STYLE { Padding { 50_dp } },
+          } AUI_OVERRIDE_STYLE { Padding { 50_dp } },
         },
     };
     return result;
@@ -81,8 +81,8 @@ AUI_ENTRY {
         Centered {
           Vertical::Expanding {
             Centered {
-              Icon { ":logo.svg" } AUI_WITH_STYLE { FixedSize { 128_dp } },
-            } AUI_WITH_STYLE { FixedSize { 500_dp, {} } },
+              Icon { ":logo.svg" } AUI_OVERRIDE_STYLE { FixedSize { 128_dp } },
+            } AUI_OVERRIDE_STYLE { FixedSize { 500_dp, {} } },
             AText::fromString(
                 "    — Eh bien, mon prince. Gênes et Lucques ne sont plus que des apanages, des "
                 "поместья, de la famille Buonaparte. Non, je vous préviens que si vous ne me dites pas "
@@ -110,7 +110,7 @@ AUI_ENTRY {
                 "думали наши деды, и с теми, тихими, покровительственными интонациями, которые "
                 "свойственны состаревшемуся в свете и при дворе значительному человеку. Он подошел к "
                 "Анне Павловне, поцеловал ее руку, подставив ей свою надушенную и сияющую лысину, и "
-                "покойно уселся на диване.") } AUI_WITH_STYLE { MaxSize { 550_dp, {} }, Padding { 16_dp } },
+                "покойно уселся на диване.") } AUI_OVERRIDE_STYLE { MaxSize { 550_dp, {} }, Padding { 16_dp } },
         }));
 
     window->show();

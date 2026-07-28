@@ -38,7 +38,7 @@ class API_AUI_VIEWS ADoubleNumberPicker : public AViewContainerBase {
         void onKeyRepeat(AInput::Key key) override;
 
        protected:
-        bool isValidText(const AString& text) override;
+        bool isValidText(std::u32string_view text) override;
     };
 
     _<ADoubleNumberPickerField> mTextField;
@@ -62,7 +62,7 @@ public:
 
     void setSuffix(const AString& suffix);
 
-    [[nodiscard]] const AString& text() const noexcept { return mTextField->text(); }
+    [[nodiscard]] AString text() const noexcept { return mTextField->text(); }
 
     [[nodiscard]] double getValue() const { return mTextField->getText().toDouble().valueOr(0.0); }
 

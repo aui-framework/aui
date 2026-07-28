@@ -13,7 +13,7 @@
 
 #include <AUI/Common/AObject.h>
 
-#include <WIndows.h>
+#include <Windows.h>
 
 /**
  * @brief Encapsulates calls to CreateEvent/

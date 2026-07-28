@@ -57,11 +57,11 @@ def _generate_regular_group_page(doxygen, fos, group_id):
         brief = "\n".join([i[1] for i in common.parse_doxygen(group_item.doc) if f"@brief" in i[0]])
         print(f"""
 -   __{group_item.namespaced_name()}__
-
----
-
-{brief}
-
+    
+    ---
+    
+    {brief}
+    
 """, file=fos)
 
     print('</div>', file=fos)
@@ -154,13 +154,14 @@ def define_env(env):
                     img_path = '../imgs/logo_black.svg'
                     brief_text = brief
                 url_base = group_item.page_url[:-3] if getattr(group_item, 'page_url', None) else ''
+                name = hasattr(group_item, 'overview_page_title') and group_item.overview_page_title or group_item.name
                 print(f'''<div class="views-card-outer">
             <a href="../{url_base}">
                 <div class="views-card">
-                    <img src="{img_path}" alt="{group_item.name} screenshot" onerror="this.src='../imgs/logo_black.svg'">
+                    <img src="{img_path}" alt="{name} screenshot" onerror="this.src='../imgs/logo_black.svg'">
                 </div>
             </a>
-            <div class="views-card-title">{group_item.name}</div>
+            <div class="views-card-title"><a href="../{url_base}">{name}</a></div>
             <div class="views-card-desc">{brief_text}</div>
             <a class="views-card-link" href="../{url_base}">Learn more</a>
         </div>''', file=fos)

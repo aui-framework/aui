@@ -45,6 +45,16 @@
 }
 
 {
+   fontconfig
+   Memcheck:Leak
+   match-leak-kinds: definite
+   fun:calloc
+   ...
+   fun:XML_ParseBuffer
+   ...
+}
+
+{
    dlopen
    Memcheck:Leak
    match-leak-kinds: possible

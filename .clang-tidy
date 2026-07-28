@@ -4,6 +4,7 @@ Checks: >
   clang-analyzer-*,
   cppcoreguidelines-*,
   modernize-*,
+  cppcoreguidelines-avoid-capturing-lambda-coroutines,
   -modernize-use-trailing-return-type,
   -clang-analyzer-optin.core.EnumCastOutOfRange,
   -bugprone-assignment-in-if-condition,

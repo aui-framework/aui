@@ -13,29 +13,27 @@
 
 #include <AUI/Core.h>
 
-class API_AUI_CORE IEventLoop
-{
+class API_AUI_CORE IEventLoop {
 public:
-	IEventLoop() {}
-	virtual ~IEventLoop() {}
+    IEventLoop() {}
+    virtual ~IEventLoop() {}
 
-	/**
-	 * @brief Notifies this IEventLoop that its thread got a new message to process.
-	 */
-	virtual void notifyProcessMessages() = 0;
+    /**
+     * @brief Notifies this IEventLoop that its thread got a new message to process.
+     */
+    virtual void notifyProcessMessages() = 0;
 
-	/**
-	 * @brief Do message processing loop.
-	 */
-	virtual void loop() = 0;
-
+    /**
+     * @brief Do message processing loop.
+     */
+    virtual void loop() = 0;
 
     class API_AUI_CORE Handle {
-	private:
+    private:
         IEventLoop* mPrevEventLoop;
-	    IEventLoop* mCurrentEventLoop;
+        IEventLoop* mCurrentEventLoop;
 
-	public:
+    public:
         explicit Handle(IEventLoop* loop);
         ~Handle();
     };

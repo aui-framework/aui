@@ -11,14 +11,13 @@
 
 #pragma once
 
-
-#include "AEmbedAuiWrap.h"
-#include "SoftwareRenderingContext.h"
+#include <AUI/Platform/AEmbedContext.h>
+#include <AUI/Platform/SoftwareRenderingContext.h>
 
 /**
  * @brief Embed AUI into OpenGL context
  */
-class API_AUI_VIEWS ASoftwareEmbedAuiWrap: public AEmbedAuiWrap {
+class API_AUI_VIEWS ASoftwareEmbedAuiWrap: public AEmbedContext {
 private:
     SoftwareRenderingContext* mContext;
 

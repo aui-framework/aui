@@ -11,17 +11,19 @@
 
 #pragma once
 
-#include <AUI/Core.h>
 #include <cassert>
 #include <atomic>
+#include <utility>
+#include <condition_variable>
+#include <glm/glm.hpp>
 
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/AQueue.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Thread/AThread.h>
-#include <glm/glm.hpp>
-#include <utility>
-#include "AUI/Traits/concepts.h"
+#include <AUI/Thread/AFutureWait.h>
+#include <AUI/Traits/concepts.h>
+#include <AUI/Core.h>
 
 template <typename T>
 class AFuture;
@@ -169,8 +171,6 @@ public:
     class TryLaterException {};
 };
 
-#include <AUI/Thread/AFuture.h>
-
 /**
  * @brief Manages multiple futures.
  * @ingroup core
@@ -193,10 +193,10 @@ public:
      * @brief Wait for the result of every AFuture.
      * @deprecated use onAllComplete instead.
      */
-    void waitForAll() {
+    void waitForAll(AFutureWait flags = AFutureWait::DEFAULT) {
         // wait from the end to avoid idling (see AFuture::wait for details)
         for (const AFuture<T>& v : aui::reverse_iterator_wrap(*this)) {
-            v.operator*();
+            v.wait(flags);
         }
     }
 
@@ -279,5 +279,3 @@ auto AThreadPool::parallel(Iterator begin, Iterator end, Functor&& functor) {
 
     return futureSet;
 }
-
-#include <AUI/Reflect/AReflect.h>

@@ -12,26 +12,25 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
     if(AUIB_DISABLE)
         find_package(freetype REQUIRED CONFIG)
     else()
-        auib_import(Freetype https://github.com/freetype/freetype/archive/refs/tags/VER-2-13-3.zip ARCHIVE
+        # Freetype 2.14.1 fails to build with recent CMake versions due to policy issues.
+        # Setting CMAKE_POLICY_VERSION_MINIMUM to 3.5 is a workaround.
+        # See also: https://github.com/aui-framework/aui/pull/687
+        auib_import(Freetype https://github.com/freetype/freetype
+                    VERSION VER-2-14-1
                     CONFIG_ONLY
-                    CMAKE_ARGS -DFT_DISABLE_BZIP2=ON -DFT_DISABLE_PNG=ON -DFT_DISABLE_HARFBUZZ=ON -DFT_DISABLE_BROTLI=ON
+                    CMAKE_ARGS
+                      -DFT_DISABLE_BZIP2=ON
+                      -DFT_DISABLE_PNG=ON
+                      -DFT_DISABLE_HARFBUZZ=ON
+                      -DFT_DISABLE_BROTLI=ON
+                      -DCMAKE_POLICY_VERSION_MINIMUM=3.5
         )
     endif()
 
-    if (NOT TARGET Freetype::Freetype)
+    if (NOT TARGET freetype)
         message(FATAL_ERROR "Freetype not imported")
     endif ()
 
-
-    if (AUI_PLATFORM_WIN OR AUI_PLATFORM_LINUX OR AUI_PLATFORM_MACOS)
-        if(AUIB_DISABLE)
-            find_package(GLEW REQUIRED)
-        else()
-            auib_import(GLEW https://github.com/aui-framework/glew-cmake
-                    CMAKE_WORKING_DIR "build/cmake"
-                    VERSION 602a62803452a0d95fb41f4099fc5804dc5746ee) # 2.2.0
-        endif()
-    endif ()
 
     aui_module(aui.views EXPORT aui)
     aui_enable_tests(aui.views)
@@ -105,34 +104,32 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
     aui_link(aui.views PRIVATE aui::xml)
 
     if(${CMAKE_VERSION} VERSION_GREATER_EQUAL "3.19.0")
-        set_target_properties(Freetype::Freetype PROPERTIES INSTALL_NAME_DIR "@rpath" BUILD_WITH_INSTALL_RPATH 1)
+        set_target_properties(freetype PROPERTIES INSTALL_NAME_DIR "@rpath" BUILD_WITH_INSTALL_RPATH 1)
     endif ()
     if (AUI_PLATFORM_ANDROID)
         aui_link(aui.views PRIVATE EGL GLESv2 GLESv3)
-        aui_link(aui.views PRIVATE Freetype::Freetype)
+        aui_link(aui.views PRIVATE freetype)
     elseif (AUI_PLATFORM_IOS)
         auib_use_system_libs_begin()
         find_library(OPENGL OpenGLES REQUIRED)
         auib_use_system_libs_end()
         aui_link(aui.views PRIVATE ${OPENGL})
-        aui_link(aui.views PUBLIC Freetype::Freetype)
+        aui_link(aui.views PUBLIC freetype)
     elseif (AUI_PLATFORM_EMSCRIPTEN)
-        aui_link(aui.views PUBLIC Freetype::Freetype)
+        aui_link(aui.views PUBLIC freetype)
     else ()
-        aui_link(aui.views PRIVATE Freetype::Freetype)
+        aui_link(aui.views PRIVATE freetype)
         aui_link(aui.views PRIVATE OpenGL::GL)
 
         if (AUI_PLATFORM_LINUX)
-            # glew defines unwanted dependencies to OpenGL which may vary from distro to distro; silence them
-            set_target_properties(GLEW::GLEW PROPERTIES INTERFACE_LINK_LIBRARIES "")
-
             auib_use_system_libs_begin()
             find_package(X11 REQUIRED)
             find_package(Fontconfig REQUIRED)
+            find_package(PkgConfig REQUIRED)
+            pkg_check_modules(epoxy REQUIRED IMPORTED_TARGET epoxy)
             auib_use_system_libs_end()
-
+            aui_link(aui.views PRIVATE PkgConfig::epoxy)
         endif ()
-        aui_link(aui.views PUBLIC GLEW::GLEW)
 
         if (WIN32)
             aui_link(aui.views PRIVATE dwmapi)

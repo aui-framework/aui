@@ -130,10 +130,9 @@ AByteBuffer::~AByteBuffer() {
     mBuffer = nullptr;
 }
 
-AByteBuffer AByteBuffer::fromString(const AString& string) {
+AByteBuffer AByteBuffer::fromString(AStringView string) {
     AByteBuffer b;
-    auto s = string.toStdString();
-    b.write(s.data(), s.length());
+    b.write(string.data(), string.length());
     return b;
 }
 
@@ -148,7 +147,7 @@ uint8_t hexCharToNumber(char c) {
     return -1;
 }
 
-AByteBuffer AByteBuffer::fromHexString(const AString& string) {
+AByteBuffer AByteBuffer::fromHexString(AStringView string) {
     if (string.length() % 2 != 0) {
         throw AException("invalid string length");
     }

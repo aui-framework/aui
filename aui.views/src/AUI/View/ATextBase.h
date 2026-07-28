@@ -18,13 +18,14 @@
 #include <initializer_list>
 #include <variant>
 #include <AUI/Enum/WordBreak.h>
+#include <AUI/Enum/VerticalAlign.h>
 
 namespace aui::detail {
     class TextBaseEntry: public AWordWrappingEngineBase::Entry {
     public:
         virtual size_t getCharacterCount() = 0;
         virtual glm::ivec2 getPosByIndex(size_t characterIndex) = 0;
-        virtual void appendTo(AString& dst) = 0;
+        virtual void appendTo(std::u32string& dst) = 0;
         virtual void erase(size_t begin, AOptional<size_t> end) {}
 
         struct StopLineScanningHint{};
@@ -45,7 +46,7 @@ namespace aui::detail {
                 : mText(text), mChar(ch) {}
 
         glm::ivec2 getSize() override {
-            return { mText->getFontStyle().getCharacter(mChar).advanceX, mText->getFontStyle().size };
+            return { mText->getFontStyle().getCharacter(mChar).horizontal.advance, mText->getFontStyle().size };
         }
 
         void setPosition(glm::ivec2 position) override {
@@ -65,32 +66,37 @@ namespace aui::detail {
         }
 
         glm::ivec2 getPosByIndex(size_t characterIndex) override {
-            return mPosition + glm::ivec2{characterIndex * mText->getFontStyle().getCharacter(mChar).advanceX, 0};
+            return mPosition + glm::ivec2{characterIndex * mText->getFontStyle().getCharacter(mChar).horizontal.advance, 0};
         }
 
-        void appendTo(AString& dst) override {
+        void appendTo(std::u32string& dst) override {
             dst += mChar;
         }
     };
     class WordEntry: public TextBaseEntry {
     protected:
         IFontView* mText;
-        AString mWord;
+        std::u32string mWord;
         glm::ivec2 mPosition{};
 
     public:
+        WordEntry(IFontView* text, std::u32string word)
+                : mText(text), mWord(std::move(word)) {}
+
         WordEntry(IFontView* text, AString word)
-                : mText(text), mWord(std::move(word)){}
+                : mText(text), mWord() {
+            mWord = word.toUtf32();
+        }
 
         glm::ivec2 getSize() override {
             return { mText->getFontStyle().getWidth(mWord), mText->getFontStyle().size };
         }
 
-        const AString& getWord() const {
+        const std::u32string& getWord() const {
             return mWord;
         }
 
-        AString& getWord() {
+        std::u32string& getWord() {
             return mWord;
         }
 
@@ -109,15 +115,15 @@ namespace aui::detail {
         }
 
         glm::ivec2 getPosByIndex(size_t characterIndex) override {
-            return mPosition + glm::ivec2{mText->getFontStyle().getWidth(mWord.begin(), mWord.begin() + long(characterIndex)), 0};
+            return mPosition + glm::ivec2{mText->getFontStyle().getWidth(mWord.begin(), mWord.begin() + characterIndex), 0};
         }
 
-        void appendTo(AString& dst) override {
+        void appendTo(std::u32string& dst) override {
             dst += mWord;
         }
 
         void erase(size_t begin, AOptional<size_t> end) override {
-            mWord.erase(mWord.begin() + long(begin), mWord.begin() + long(end.valueOr(mWord.length())));
+            mWord.erase(mWord.begin() + begin, mWord.begin() + end.valueOr(mWord.length()));
         }
     };
 
@@ -146,8 +152,8 @@ namespace aui::detail {
             throw AException("unimplemented");
         }
 
-        void appendTo(AString& dst) override {
-            dst += ' ';
+        void appendTo(std::u32string& dst) override {
+            dst += U' ';
         }
     };
 
@@ -176,8 +182,8 @@ namespace aui::detail {
             throw AException("unimplemented");
         }
 
-        void appendTo(AString& dst) override {
-            dst += '\n';
+        void appendTo(std::u32string& dst) override {
+            dst += U'\n';
         }
     };
 }
@@ -198,13 +204,21 @@ public:
         doDrawString(context);
     }
 
+    void setVerticalAlign(VerticalAlign verticalAlign) {
+        if (mVerticalAlign == verticalAlign) {
+            return;
+        }
+        mVerticalAlign = verticalAlign;
+        invalidateFont();
+    }
+
     void doDrawString(ARenderContext& context) {
         if (!mPrerenderedString) {
             prerenderString(context);
         }
         if (mPrerenderedString) {
             RenderHints::PushColor c(context.render);
-            context.render.setColor(getTextColor());
+            context.render.setColor(textColor());
             mPrerenderedString->draw();
         }
     }
@@ -253,7 +267,7 @@ public:
         }
 
         if (auto engineHeight = mEngine.height()) {
-            return *engineHeight;
+            return *engineHeight + getFontStyle().getDescenderHeight();
         }
 
         return 0;
@@ -289,13 +303,17 @@ protected:
     }
 
     virtual void clearContent() {
-        removeAllViews();
         mPrerenderedString = nullptr;
     }
 
+    void markMinContentSizeInvalid() override {
+        AViewContainerBase::markMinContentSizeInvalid();
+        mPrerenderedString = nullptr;
+    }
 
 protected:
     WordWrappingEngine mEngine;
+    VerticalAlign mVerticalAlign = VerticalAlign::DEFAULT;
 
     _<IRenderer::IPrerenderedString> mPrerenderedString;
 

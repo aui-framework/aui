@@ -507,7 +507,7 @@ public:
 
     [[nodiscard]]
     AString getErrorString() const noexcept {
-        return AString::fromLatin1(mErrorBuffer);
+        return AString({reinterpret_cast<const std::byte*>(mErrorBuffer), strlen(mErrorBuffer)}, AStringEncoding::LATIN1);
     }
 
 private:

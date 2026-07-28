@@ -19,9 +19,14 @@
 #include "AViewContainer.h"
 #include "AUI/ASS/Selector/AAssSelector.h"
 #include "AUI/Layout/AStackedLayout.h"
-#include "AUI/Util/UIBuildingHelpers.h"
+#include <AUI/Util/Declarative/Containers.h>
 
 /**
+ * ---
+ * title: Button
+ * icon: material/button-pointer
+ * ---
+ *
  * @brief Button with text, which can be pushed to make some action.
  *
  * ![](imgs/views/AButton.png)
@@ -39,18 +44,92 @@
  * disappears, making an illusion of pressing.
  *
  * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the
- * user presses `Enter`, the button is pushed automatically.
+ * user presses ++enter++, the button is pushed automatically.
  *
  * Button usually contains text only, but in practice any view can be put in it.
  *
- * <!-- aui:include examples/ui/button/src/main.cpp -->
+ * Starting from AUI 8.0.0, AButton itself does not render text; instead, it's a styled container, which is populated
+ * with any views by the user, i.e., ALabel. AButton used to have
+ * Qt-like methods for customization like `setIcon`, but now a modern approach takes place, which allows extensive
+ * options of customization.
  *
+ * AButton supports both [retained and immediate modes](retained_immediate_ui.md).
+ *
+ * ## API surface
+ *
+ * <!-- aui:steal_documentation declarative::Button -->
+ *
+ * ## Button with a lambda handler
+ *
+ * This button executes the lambda upon click.
+ *
+ * <!-- aui:snippet examples/ui/button1/src/main.cpp AButton_example -->
+ *
+ * ![](imgs/Screenshot_20250715_091801.png)
+ *
+ * ## Button with a signal-slot handler
+ *
+ * This button executes the member function upon click.
+ *
+ * <!-- aui:snippet examples/ui/button2/src/main.cpp AButton_example -->
+ *
+ * ![](imgs/Screenshot_20250715_091801.png)
+ *
+ * ## Default button
+ *
+ * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the
+ * user presses ++enter++, the button is pushed automatically.
+ *
+ * <!-- aui:snippet examples/ui/button_default/src/main.cpp AButton_example -->
+ *
+ * ![](imgs/Screenshot_20250719_130434.png).
+ *
+ * ## Button with icon
+ *
+ * While buttons typically display text, they are actually flexible containers that can hold any view component. This
+ * means you can place various UI elements inside a button, such as images, icons, custom layouts, or combinations of
+ * different views.
+ *
+ * See [aui-assets] for more information on how to put icons in your application.
+ *
+ * <!-- aui:snippet examples/ui/button_icon/src/main.cpp AButton_example -->
+ *
+ * ![](imgs/Screenshot_20250719_130034.png)
+ *
+ * ## Styling a button
+ *
+ * AButton is styled as follows:
+ *
+ * <!-- aui:snippet aui.views/src/AUI/ASS/AStylesheet.cpp AButton -->
  */
-class API_AUI_VIEWS AButton : public AAbstractLabel {
+class API_AUI_VIEWS AButton : public AViewContainer {
 public:
     AButton();
 
-    explicit AButton(AString text) noexcept: AAbstractLabel(std::move(text)) {}
+    /**
+     * @brief Inflates a label with a text.
+     * @details
+     * !!! failure "Deprecated"
+     *
+     *     Left for compatibility.
+     *
+     * This setter would override any of existing content within button.
+     */
+    explicit AButton(AString text) {
+        setText(std::move(text));
+    }
+
+    /**
+     * @brief Inflates a label with a text.
+     * @details
+     *
+     * !!! failure "Deprecated"
+     *
+     *     Left for compatibility.
+     *
+     * This setter would override any of existing content within button.
+     */
+    void setText(AString text);
 
     virtual ~AButton() = default;
 
@@ -72,61 +151,46 @@ private:
     AFieldSignalEmitter<bool> mDefault = AFieldSignalEmitter<bool>(defaultState, becameDefault, noLongerDefault);
 };
 
-/**
- * @brief Unlike AButton, AButtonEx is a container which looks like a button.
- */
-class AButtonEx : public AViewContainer {
-public:
-    AButtonEx() {
-        addAssName(".btn");
-    }
-
-    ~AButtonEx() override = default;
-};
-
 namespace declarative {
+
+/// [declarative_example]
+
 /**
- * @declarativeformof{AButton}
+ * <!-- aui:no_dedicated_page -->
  */
-struct Button : aui::ui_building::view_container_layout<AStackedLayout, AButtonEx> {
+struct Button {
     /**
-     * @brief Basic label initializer.
+     * @brief Content of the button.
      * @details
-     * ```cpp
-     * Button { "Action label" }.connect(&AView::clicked, this, [] {
-     *   // action
-     * }),
-     * ```
+     * Can be any view, i.e., `Label` to display text.
      */
-    Button(AString text) : layouted_container_factory<AStackedLayout, AButtonEx>({ Label { std::move(text) } }) {}
+    _<AView> content;
 
     /**
-     * @brief Basic label initializer.
+     * @brief Handler for button click event.
      * @details
-     * ```cpp
-     * Button { "Action label" }.connect(&AView::clicked, this, [] {
-     *   // action
-     * }),
-     * ```
+     * Called when user activates the button.
      */
-    Button(const char* text) : layouted_container_factory<AStackedLayout, AButtonEx>({ Label { text } }) {}
+    contract::Slot<> onClick;
 
     /**
-     * @brief An explicit form of AButton where you can put any views in it, i.e., icons.
+     * @brief Determines if the button is default.
      * @details
-     * ```cpp
-     * Button {
-     *   Icon { ":img/cart.svg" },
-     *   Label { "Cart" },
-     * }.connect(&AView::clicked, this, [] {
-     *   // action
-     * }),
-     * ```
+     * Default buttons are colored with user's accent color and respond to ++enter++ key.
      */
-    template <typename... Views>
-    Button(Views&&... views)
-        : layouted_container_factory<AStackedLayout, AButtonEx>(Horizontal { std::forward<Views>(views)... } ) {}
+    bool isDefault = false;
+
+    _<AButton> operator()() {
+        auto button = _new<AButton>();
+        onClick.bindTo(button->clicked);
+        if (isDefault) {
+            button->setDefault();
+        }
+        button->setContents(Centered { std::move(content) });
+        return button;
+    }
 };
+/// [declarative_example]
 }   // namespace declarative
 
 namespace ass::button {

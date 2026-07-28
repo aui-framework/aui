@@ -27,7 +27,7 @@
 
 
 AUdpSocket::AUdpSocket(uint16_t source_port) :
-	mSelf({ 0, 0, 0, 0 }, source_port) {
+	mSelf(AInet4Address::fromArray({ 0, 0, 0, 0 }, source_port)) {
 
     auto addr = mSelf.addr();
 	if (::bind(getHandle(), (sockaddr*)&addr, sizeof(sockaddr_in)) < 0) {

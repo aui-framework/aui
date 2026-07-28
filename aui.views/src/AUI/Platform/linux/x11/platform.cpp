@@ -32,7 +32,7 @@ void PlatformAbstractionX11::desktopSetMousePosition(glm::ivec2 pos) {
     XFlush(PlatformAbstractionX11::ourDisplay);
 }
 
-float PlatformAbstractionX11::platformGetDpiRatio() {
+float PlatformAbstractionX11::windowFetchDpiFromSystem(AWindow& window) {
     ensureXLibInitialized();
     if (ourDisplay == nullptr) return 1.f;
 

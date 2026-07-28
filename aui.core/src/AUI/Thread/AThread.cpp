@@ -15,11 +15,14 @@
 #include <AUI/Common/AException.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AMap.h>
+#include <AUI/Common/AByteBuffer.h>
 #include <AUI/Logging/ALogger.h>
 #include "AUI/Platform/AStacktrace.h"
 #include "AUI/Thread/AFuture.h"
 #include "AUI/Thread/AMutexWrapper.h"
 #include "IEventLoop.h"
+#include "AUI/Common/ATimer.h"
+
 #include <AUI/Thread/AConditionVariable.h>
 #include <cstdint>
 #include <functional>
@@ -51,7 +54,8 @@ void setThreadNameImpl(HANDLE handle, const AString& name) {
         HRESULT operator()(HANDLE thread, PCWSTR name) { return mPtr(thread, name); }
     } s;
     if (s) {
-        s(handle, aui::win32::toWchar(name));
+        auto wName = aui::win32::toWchar(name);
+        s(handle, wName.c_str());
     }
 }
 #else
@@ -286,4 +290,12 @@ bool AAbstractThread::messageQueueEmpty() noexcept { return mMessageQueue.messag
 const _<AAbstractThread>& AThread::main() noexcept {
     static auto main = current(); // initialized by AUI_ENTRY.
     return main;
+}
+
+AFuture<> AThread::asyncSleep(std::chrono::milliseconds duration) {
+    AFuture<> future;
+    ATimer::scheduler().enqueue(duration, [future] {
+        future.supplyValue();
+    });
+    return future;
 }
