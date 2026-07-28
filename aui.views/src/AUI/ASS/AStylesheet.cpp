@@ -644,18 +644,11 @@ AStylesheet::AStylesheet() {
         },
         {
             c(".agroupbox-title"),
-            Padding { {}, 4_dp },
-            // Clip overflowing text inside the title instead of hiding the title entirely.
-            ATextOverflow::CLIP,
-            // keep overflow visible for container itself; children that try to render under the title
-            // will be clipped by the following rule when appropriate.
-            AOverflow::VISIBLE,
+            Margin { {}, 4_dp },
         },
         {
-            // Ensure that any child view under the title (i.e., when the title contains a view that
-            // could render outside its bounds) is clipped from the title's area.
-            c(".agroupbox-title") >> t<AView>(),
-            AOverflow::HIDDEN_FROM_THIS,
+            c(".agroupbox-title") > t<AView>(),
+            Padding { {}, 4_dp },
         },
         {
             c(".agroupbox-inner"),
