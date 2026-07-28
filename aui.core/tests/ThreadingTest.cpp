@@ -27,6 +27,8 @@
 #include "AUI/Thread/AAsyncHolder.h"
 #include "AUI/Util/ARaiiHelper.h"
 
+#include <gmock/gmock-matchers.h>
+
 using namespace std::chrono_literals;
 
 TEST(Threading, Async) {
@@ -449,4 +451,50 @@ TEST(Threading, FutureSetWaitForAll) {
         futures.waitForAll();
         ASSERT_TRUE(firstTaskCompleted);
     }
+}
+
+TEST(Threading, AfterFutureResolvedOnSuccessIsCalled) {
+    AFuture<int> future;
+    future.supplyValue(228);
+    bool called = false;
+    future.onSuccess([&](int v) {
+        EXPECT_EQ(v, 228);
+        EXPECT_FALSE(called);
+        called = true;
+    });
+    EXPECT_TRUE(called);
+}
+
+TEST(Threading, AfterFutureResolvedOnErrorIsCalled) {
+    AFuture<int> future;
+    future.supplyException(std::make_exception_ptr(AException("ololo")));
+    bool called = false;
+    future.onError([&](const AException& e) {
+        EXPECT_THAT(e.getMessage(), testing::HasSubstr("ololo"));
+        EXPECT_FALSE(called);
+        called = true;
+    });
+    EXPECT_TRUE(called);
+}
+
+TEST(Threading, AfterFutureResolvedOnFinallyIsCalled1) {
+    AFuture<int> future;
+    future.supplyValue(228);
+    bool called = false;
+    future.onFinally([&] {
+        EXPECT_FALSE(called);
+        called = true;
+    });
+    EXPECT_TRUE(called);
+}
+
+TEST(Threading, AfterFutureResolvedOnFinallyIsCalled2) {
+    AFuture<int> future;
+    future.supplyException(std::make_exception_ptr(AException("ololo")));
+    bool called = false;
+    future.onFinally([&] {
+        EXPECT_FALSE(called);
+        called = true;
+    });
+    EXPECT_TRUE(called);
 }
