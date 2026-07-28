@@ -22,6 +22,8 @@
 
 #if AUI_PLATFORM_LINUX
 #include <fontconfig/fontconfig.h>
+#elif AUI_PLATFORM_WIN
+#include <windows.h>
 #endif
 
 
@@ -49,9 +51,6 @@ AFont::AFont(AFontManager* fm, const AUrl& url) :
 }
 
 AFont::~AFont() {
-    if (mFallbackFace) {
-        FT_Done_Face(mFallbackFace);
-    }
     if (mFace) {
         FT_Done_Face(mFace);
     }
@@ -75,7 +74,7 @@ bool AFont::hasGlyph(char32_t codepoint) const {
     return FT_Get_Char_Index(mFace, codepoint) != 0;
 }
 
-void AFont::ensureFallbackFace() {
+void AFontManager::ensureFallbackFace() {
     if (mFallbackFace) {
         return; // already loaded
     }
@@ -112,7 +111,7 @@ void AFont::ensureFallbackFace() {
 
                 // Try to load the fallback font face.
                 // TTC collections may need face_index > 0; try index 0 first (usually Regular).
-                if (FT_New_Face(ft->getFt(), mFallbackFontPath.toStdString().c_str(), 0, &mFallbackFace)) {
+                if (FT_New_Face(mFreeType->getFt(), mFallbackFontPath.toStdString().c_str(), 0, &mFallbackFace)) {
                     ALogger::warn("Font") << "Failed to load fallback font: " << mFallbackFontPath;
                     mFallbackFace = nullptr;
                     mFallbackFontPath.clear();
@@ -137,17 +136,17 @@ void AFont::ensureFallbackFace() {
         "meiryo.ttc",     // Meiryo (Japanese)
     };
     static const AString fontsDir = [] {
-        char buf[MAX_PATH];
-        UINT len = GetWindowsDirectoryA(buf, MAX_PATH);
+        wchar_t buf[MAX_PATH];
+        UINT len = GetWindowsDirectoryW(buf, MAX_PATH);
         if (len > 0 && len < MAX_PATH) {
-            return AString(buf) + "\\Fonts\\";
+            return AString(reinterpret_cast<char16_t*>(buf)) + "\\Fonts\\";
         }
-        ALogger::warn("Font") << "GetWindowsDirectoryA() failed, falling back to C:\\Windows\\Fonts\\";
+        ALogger::warn("Font") << "GetWindowsDirectoryW() failed, falling back to C:\\Windows\\Fonts\\";
         return AString("C:\\Windows\\Fonts\\");
     }();
     for (auto& f : cjkFonts) {
         AString fontPath = fontsDir + f;
-        if (FT_New_Face(ft->getFt(), fontPath.toStdString().c_str(), 0, &mFallbackFace) == 0) {
+        if (FT_New_Face(mFreeType->getFt(), fontPath.toStdString().c_str(), 0, &mFallbackFace) == 0) {
             mFallbackFontPath = fontPath;
             ALogger::info("Font") << "Loaded CJK fallback font: " << mFallbackFontPath;
             break;
@@ -166,7 +165,7 @@ void AFont::ensureFallbackFace() {
     };
     for (auto& f : cjkFontsMac) {
         AString fontPath(f);
-        if (FT_New_Face(ft->getFt(), fontPath.toStdString().c_str(), 0, &mFallbackFace) == 0) {
+        if (FT_New_Face(mFreeType->getFt(), fontPath.toStdString().c_str(), 0, &mFallbackFace) == 0) {
             mFallbackFontPath = fontPath;
             ALogger::info("Font") << "Loaded CJK fallback font: " << mFallbackFontPath;
             break;
@@ -185,7 +184,7 @@ void AFont::ensureFallbackFace() {
     };
     for (auto& f : cjkFontsAndroid) {
         AString fontPath(f);
-        if (FT_New_Face(ft->getFt(), fontPath.toStdString().c_str(), 0, &mFallbackFace) == 0) {
+        if (FT_New_Face(mFreeType->getFt(), fontPath.toStdString().c_str(), 0, &mFallbackFace) == 0) {
             mFallbackFontPath = fontPath;
             ALogger::info("Font") << "Loaded CJK fallback font: " << mFallbackFontPath;
             break;
@@ -205,7 +204,7 @@ void AFont::ensureFallbackFace() {
         bool loaded = false;
         for (auto& f : cjkFontsIos) {
             AString fontPath(f);
-            if (FT_New_Face(ft->getFt(), fontPath.toStdString().c_str(), 0, &mFallbackFace) == 0) {
+            if (FT_New_Face(mFreeType->getFt(), fontPath.toStdString().c_str(), 0, &mFallbackFace) == 0) {
                 mFallbackFontPath = fontPath;
                 ALogger::info("Font") << "Loaded CJK fallback font: " << mFallbackFontPath;
                 loaded = true;
@@ -216,7 +215,7 @@ void AFont::ensureFallbackFace() {
             // Try bundled resource
             try {
                 mFallbackFontDataBuffer = AByteBuffer::fromStream(AUrl(":uni/font/NotoSansCJK-Fallback.ttf").open());
-                if (FT_New_Memory_Face(ft->getFt(),
+                if (FT_New_Memory_Face(mFreeType->getFt(),
                         (const FT_Byte*) mFallbackFontDataBuffer.data(),
                         mFallbackFontDataBuffer.getSize(), 0, &mFallbackFace) == 0) {
                     mFallbackFontPath = AString(":uni/font/NotoSansCJK-Fallback.ttf");
@@ -253,9 +252,9 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     if (hasGlyph(glyph.codepoint())) {
         face = mFace;
     } else {
-        ensureFallbackFace();
-        if (mFallbackFace) {
-            face = mFallbackFace;
+        FT_Face fallbackFace = AFontManager::inst().getFallbackFace();
+        if (fallbackFace) {
+            face = fallbackFace;
         }
     }
     if (!face) {

@@ -52,6 +52,19 @@ private:
     _<AFontFamily> mDefaultFamily;
     _<AFont> mDefaultFont;
 
+    AByteBuffer mFallbackFontDataBuffer;
+    FT_FaceRec_* mFallbackFace = nullptr;
+    AString mFallbackFontPath;
+    bool mFallbackAttempted = false;
+
+    void ensureFallbackFace();
+
+public:
+    FT_FaceRec_* getFallbackFace() {
+        if (!mFallbackAttempted) ensureFallbackFace();
+        return mFallbackFace;
+    }
+
 	AString getPathToFont(const AString& family);
 
     _<AFont> loadFont(const AUrl& url);

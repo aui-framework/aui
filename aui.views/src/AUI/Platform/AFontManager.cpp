@@ -14,9 +14,11 @@
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Font/FreeType.h"
 
-
-
-AFontManager::~AFontManager() = default;
+AFontManager::~AFontManager() {
+    if (mFallbackFace) {
+        FT_Done_Face(mFallbackFace);
+    }
+}
 
 
 _<AFont> AFontManager::loadFont(const AUrl& url) {
