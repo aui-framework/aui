@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -14,10 +14,15 @@
 #include <freetype/ftsnames.h>
 #include "AUI/Font/FreeType.h"
 #include "AUI/Platform/AFontManager.h"
+#include "AUI/Logging/ALogger.h"
 #include <fstream>
 #include <string>
 #include "AUI/Common/AStringVector.h"
 #include "AFont.h"
+
+#if AUI_PLATFORM_LINUX
+#include <fontconfig/fontconfig.h>
+#endif
 
 
 AFont::AFont(AFontManager* fm, const AString& path) :
@@ -43,6 +48,15 @@ AFont::AFont(AFontManager* fm, const AUrl& url) :
     }
 }
 
+AFont::~AFont() {
+    if (mFallbackFace) {
+        FT_Done_Face(mFallbackFace);
+    }
+    if (mFace) {
+        FT_Done_Face(mFace);
+    }
+}
+
 AString AFont::getFontFamilyName() const {
     FT_SfntName name;
     FT_Get_Sfnt_Name(mFace, 0, &name);
@@ -57,6 +71,171 @@ bool AFont::isItalic() const {
     return mFace->style_flags & FT_STYLE_FLAG_ITALIC;
 }
 
+bool AFont::hasGlyph(char32_t codepoint) const {
+    return FT_Get_Char_Index(mFace, codepoint) != 0;
+}
+
+void AFont::ensureFallbackFace() {
+    if (mFallbackFace) {
+        return; // already loaded
+    }
+    if (mFallbackAttempted) {
+        // Already tried and failed; don't retry every glyph
+        return;
+    }
+    mFallbackAttempted = true;
+
+#if AUI_PLATFORM_LINUX
+    // Use fontconfig to find a CJK-capable sans-serif font.
+    // Ensure fontconfig is initialized before using default config (nullptr).
+    if (!FcInit()) {
+        ALogger::warn("Font") << "FcInit() failed; CJK fallback unavailable";
+        return;
+    }
+    // Use a charset-based query with a common CJK character to ensure the font actually has CJK glyphs.
+    FcPattern* pattern = FcPatternCreate();
+    FcCharSet* charset = FcCharSetCreate();
+    FcCharSetAddChar(charset, 0x4E2D); // U+4E2D = '中' (common CJK character)
+    FcPatternAddCharSet(pattern, FC_CHARSET, charset);
+    FcPatternAddString(pattern, FC_FAMILY, reinterpret_cast<const FcChar8*>("sans"));
+    FcConfigSubstitute(nullptr, pattern, FcMatchPattern);
+    FcDefaultSubstitute(pattern);
+    FcCharSetDestroy(charset);
+
+    FcResult result;
+    FcPattern* match = FcFontMatch(nullptr, pattern, &result);
+    if (match) {
+        if (result == FcResultMatch) {
+            FcChar8* path = nullptr;
+            if (FcPatternGetString(match, FC_FILE, 0, &path) == FcResultMatch) {
+                mFallbackFontPath = reinterpret_cast<const char*>(path);
+
+                // Try to load the fallback font face.
+                // TTC collections may need face_index > 0; try index 0 first (usually Regular).
+                if (FT_New_Face(ft->getFt(), mFallbackFontPath.toStdString().c_str(), 0, &mFallbackFace)) {
+                    ALogger::warn("Font") << "Failed to load fallback font: " << mFallbackFontPath;
+                    mFallbackFace = nullptr;
+                    mFallbackFontPath.clear();
+                } else {
+                    ALogger::info("Font") << "Loaded CJK fallback font: " << mFallbackFontPath;
+                }
+            }
+        }
+        FcPatternDestroy(match);
+    }
+    FcPatternDestroy(pattern);
+#elif AUI_PLATFORM_WIN
+    // Try known CJK font files from the Windows Fonts directory.
+    // Order: most-comprehensive first (Microsoft YaHei covers CJK + Kana,
+    // Malgun Gothic covers CJK + Hangul, then region-specific fallbacks).
+    const char* cjkFonts[] = {
+        "msyh.ttc",       // Microsoft YaHei (Simplified Chinese, includes CJK + Kana)
+        "malgun.ttf",     // Malgun Gothic (Korean, includes Hangul + CJK)
+        "simsun.ttc",     // SimSun (Chinese Traditional)
+        "msgothic.ttc",   // MS Gothic (Japanese)
+        "yugothic.ttf",   // Yu Gothic (Japanese)
+        "meiryo.ttc",     // Meiryo (Japanese)
+    };
+    static const AString fontsDir = [] {
+        char buf[MAX_PATH];
+        UINT len = GetWindowsDirectoryA(buf, MAX_PATH);
+        if (len > 0 && len < MAX_PATH) {
+            return AString(buf) + "\\Fonts\\";
+        }
+        ALogger::warn("Font") << "GetWindowsDirectoryA() failed, falling back to C:\\Windows\\Fonts\\";
+        return AString("C:\\Windows\\Fonts\\");
+    }();
+    for (auto& f : cjkFonts) {
+        AString fontPath = fontsDir + f;
+        if (FT_New_Face(ft->getFt(), fontPath.toStdString().c_str(), 0, &mFallbackFace) == 0) {
+            mFallbackFontPath = fontPath;
+            ALogger::info("Font") << "Loaded CJK fallback font: " << mFallbackFontPath;
+            break;
+        }
+    }
+    if (!mFallbackFace) {
+        ALogger::warn("Font") << "No CJK fallback font found on Windows";
+    }
+#elif AUI_PLATFORM_MACOS
+    // macOS system CJK fonts (stable paths since OS X 10.11).
+    const char* cjkFontsMac[] = {
+        "/System/Library/Fonts/PingFang.ttc",
+        "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+        "/System/Library/Fonts/Hiragino Sans.ttc",
+        "/System/Library/Fonts/Supplemental/AppleSDGothicNeo.ttc",
+    };
+    for (auto& f : cjkFontsMac) {
+        AString fontPath(f);
+        if (FT_New_Face(ft->getFt(), fontPath.toStdString().c_str(), 0, &mFallbackFace) == 0) {
+            mFallbackFontPath = fontPath;
+            ALogger::info("Font") << "Loaded CJK fallback font: " << mFallbackFontPath;
+            break;
+        }
+    }
+    if (!mFallbackFace) {
+        ALogger::warn("Font") << "No CJK fallback font found on macOS";
+    }
+#elif AUI_PLATFORM_ANDROID
+    // Android system CJK fonts (varies by API level).
+    const char* cjkFontsAndroid[] = {
+        "/system/fonts/NotoSansCJK-Regular.ttc",  // Android 5-9
+        "/system/fonts/NotoSansSC-Regular.otf",    // Android 10+ (Chinese)
+        "/system/fonts/NotoSansKR-Regular.otf",    // Android 10+ (Korean)
+        "/system/fonts/NotoSansJP-Regular.otf",    // Android 10+ (Japanese)
+    };
+    for (auto& f : cjkFontsAndroid) {
+        AString fontPath(f);
+        if (FT_New_Face(ft->getFt(), fontPath.toStdString().c_str(), 0, &mFallbackFace) == 0) {
+            mFallbackFontPath = fontPath;
+            ALogger::info("Font") << "Loaded CJK fallback font: " << mFallbackFontPath;
+            break;
+        }
+    }
+    if (!mFallbackFace) {
+        ALogger::warn("Font") << "No CJK fallback font found on Android";
+    }
+#elif AUI_PLATFORM_IOS
+    // iOS: try system font paths first (some iOS versions allow reading them),
+    // then fall back to a bundled resource if available.
+    const char* cjkFontsIos[] = {
+        "/System/Library/Fonts/PingFang.ttc",
+        "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+    };
+    {
+        bool loaded = false;
+        for (auto& f : cjkFontsIos) {
+            AString fontPath(f);
+            if (FT_New_Face(ft->getFt(), fontPath.toStdString().c_str(), 0, &mFallbackFace) == 0) {
+                mFallbackFontPath = fontPath;
+                ALogger::info("Font") << "Loaded CJK fallback font: " << mFallbackFontPath;
+                loaded = true;
+                break;
+            }
+        }
+        if (!loaded) {
+            // Try bundled resource
+            try {
+                mFallbackFontDataBuffer = AByteBuffer::fromStream(AUrl(":uni/font/NotoSansCJK-Fallback.ttf").open());
+                if (FT_New_Memory_Face(ft->getFt(),
+                        (const FT_Byte*) mFallbackFontDataBuffer.data(),
+                        mFallbackFontDataBuffer.getSize(), 0, &mFallbackFace) == 0) {
+                    mFallbackFontPath = AString(":uni/font/NotoSansCJK-Fallback.ttf");
+                    ALogger::info("Font") << "Loaded CJK fallback font from bundle";
+                    loaded = true;
+                }
+            } catch (...) {
+                // bundled font not present
+            }
+        }
+        if (!loaded) {
+            ALogger::warn("Font") << "No CJK fallback font found on iOS";
+        }
+    }
+#else
+    // Unknown platform; mark fallback as unavailable.
+    ALogger::warn("Font") << "CJK font fallback not available on this platform";
+#endif
+}
 
 glm::vec2 AFont::getKerning(wchar_t left, wchar_t right) {
     FT_Vector vec2;
@@ -69,7 +248,22 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     int size = fs.first.size;
     FontRendering fr = fs.first.fr;
 
-    FT_Set_Pixel_Sizes(mFace, 0, size);
+    // Determine which face to use: try primary, fall back to CJK font if glyph missing.
+    FT_Face face = nullptr;
+    if (hasGlyph(glyph.codepoint())) {
+        face = mFace;
+    } else {
+        ensureFallbackFace();
+        if (mFallbackFace) {
+            face = mFallbackFace;
+        }
+    }
+    if (!face) {
+        // No font has this glyph; return empty character.
+        return Character{};
+    }
+
+    FT_Set_Pixel_Sizes(face, 0, size);
 
     FT_Int32 flags = FT_LOAD_RENDER;
 
@@ -78,11 +272,14 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     if (fr == FontRendering::NEAREST)
         flags |= FT_LOAD_TARGET_MONO;
 
-    FT_Error e = FT_Load_Char(mFace, glyph.codepoint(), flags);
+    FT_Error e = FT_Load_Char(face, glyph.codepoint(), flags);
     if (e) {
-        throw std::runtime_error(("Cannot load char: error code" + AString::number(e)).toStdString());
+        // Neither face can render this glyph.
+        ALogger::debug("Font") << "FT_Load_Char failed for U+"
+                               << std::hex << std::uint32_t(glyph.codepoint()) << " (error " << std::dec << e << ")";
+        return Character{};
     }
-    FT_GlyphSlot g = mFace->glyph;
+    FT_GlyphSlot g = face->glyph;
     if (g->bitmap.width && g->bitmap.rows) {
         const float div = 1.f / 64.f;
         int width = g->bitmap.width;

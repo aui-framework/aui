@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -115,11 +115,29 @@ private:
     AByteBuffer mFontDataBuffer;
     FT_FaceRec_* mFace;
 
+    // Fallback font for glyphs not present in the primary font (e.g. CJK)
+    AByteBuffer mFallbackFontDataBuffer;
+    FT_FaceRec_* mFallbackFace = nullptr;
+    AString mFallbackFontPath;
+    bool mFallbackAttempted = false;
+
     AMap<FontKey, FontData> mCharData;
 
     FontData& getFontEntry(unsigned size, FontRendering fr) {
         return mCharData[FontKey{size, fr}];
     }
+
+    /**
+     * @brief Checks if the primary font contains the given glyph.
+     * @return true if the glyph is available in the font.
+     */
+    bool hasGlyph(char32_t codepoint) const;
+
+    /**
+     * @brief Ensures a fallback CJK font face is loaded for glyphs not in the primary font.
+     * Uses fontconfig to find a system CJK font.
+     */
+    void ensureFallbackFace();
 
     Character renderGlyph(const FontEntry& fs, AChar glyph);
 
@@ -133,6 +151,8 @@ public:
     }
 
     glm::vec2 getKerning(wchar_t left, wchar_t right);
+
+    ~AFont();
 
     AFont(const AFont&) = delete;
 

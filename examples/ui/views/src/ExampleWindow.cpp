@@ -208,6 +208,15 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
             AScrollArea::Builder().withContents(std::conditional_t<
                                                 aui::platform::current::is_mobile(), Vertical, Horizontal> {
               Vertical {
+                // CJK font test
+                GroupBox {
+                  Label { "CJK Font Test" },
+                  Vertical {
+                    Label { "Chinese: 中文测试" },
+                    Label { "Japanese: 日本語テスト" },
+                    Label { "Korean: 한국어 테스트" },
+                  } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                },
                 // buttons
                 GroupBox {
                   Label { "Buttons" },
