@@ -262,45 +262,6 @@ public:
     static void setLogFileForGlobal(APath path);
 
     /**
-     * @brief Sets a custom log pattern using fmt named arguments.
-     * @details
-     * Available placeholders:
-     * @code
-     * {time}   - timestamp (HH:MM:SS)
-     * {thread} - thread name
-     * {level}  - level name (colored on console, plain in file)
-     * {prefix} - log prefix/tag
-     * {msg}    - message text (falls back to prefix when message is empty)
-     *
-     * Example:
-     * "[{time}][{thread}][{prefix}][{level}]: {msg}"
-     * @endcode
-     *
-     * Set empty string to restore default format.
-     */
-    void setPattern(std::string pattern);
-
-    /**
-     * @brief Sets a custom log pattern for noprefix logs (when only a tag is provided, no message).
-     * @details
-     * Same placeholders as setPattern. Falls back to the main pattern if not set.
-     * Set empty string to fall back to the main pattern.
-     */
-    void setNoprefixPattern(std::string pattern);
-
-    /**
-     * @brief Sets log pattern for `ALogger::global()`.
-     * @see ALogger::setPattern
-     */
-    static void setGlobalPattern(std::string pattern);
-
-    /**
-     * @brief Sets noprefix log pattern for `ALogger::global()`.
-     * @see ALogger::setNoprefixPattern
-     */
-    static void setGlobalNoprefixPattern(std::string pattern);
-
-    /**
      * @brief Enables or disables colored output for the global logger.
      * @details Default is enabled. When disabled, plain level names (INFO, WARN, etc.)
      * are used instead of ANSI-colored ones.
@@ -370,8 +331,6 @@ private:
     bool mDebug = AUI_DEBUG;
     bool mTrace = isTraceImpl();
     bool mColorsEnabled = true;
-    std::string mPattern;
-    std::string mNoprefixPattern;
 
     static bool isTraceImpl();
 

@@ -11,14 +11,14 @@
 
 #include "ALogger.h"
 #include "AUI/Platform/AProcess.h"
+#include <fmt/color.h>
+#include <fmt/format.h>
 
 #if AUI_PLATFORM_ANDROID
 #include <android/log.h>
 #else
 #include <ctime>
 #include <AUI/IO/AFileOutputStream.h>
-#include <fmt/color.h>
-#include <fmt/format.h>
 
 #endif
 
@@ -89,10 +89,11 @@ ALogger& ALogger::global() { return globalImpl(); }
 
 void ALogger::setLogFileForGlobal(APath path) { globalImpl(std::move(path)); }
 
+
 void ALogger::log(Level level, AStringView prefix, AStringView message) {
     {
         std::unique_lock lock(mOnLogged);
-        if (mOnLogged.value()) {
+        if (mOnLogged.value() && isLevelEnabled(level)) {
             auto onLogged = mOnLogged.value();
             lock.unlock();
             onLogged(prefix, message, level);
@@ -150,7 +151,7 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
     }
 
 #else
-        std::time_t t = std::time(nullptr);
+    std::time_t t = std::time(nullptr);
     std::tm* tm;
     tm = localtime(&t);
     char timebuf[64];
@@ -164,66 +165,24 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
     }
 
     const char* levelName = levelCStr(level);
-    auto consoleLevel = mColorsEnabled ? levelCStrColored(level) : std::string(levelName);
-    auto effectiveMsg = message.length() == 0 ? prefix : message;
-
-    auto& pattern = (message.length() == 0 && !mNoprefixPattern.empty()) ? mNoprefixPattern : mPattern;
+    auto coloredLevel = levelCStrColored(level);
 
     std::unique_lock lock(mLogSync);
-    if (pattern.empty()) {
-        std::string consoleMsg;
-        std::string fileMsg;
-        if (message.length() == 0) {
-            consoleMsg = fmt::format("[{}][{}][{}]: {}",     timebuf, threadName, consoleLevel, prefix);
-            fileMsg    = fmt::format("[{}][{}][{}]: {}",     timebuf, threadName, levelName,    prefix);
-        } else {
-            consoleMsg = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, consoleLevel, message);
-            fileMsg    = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, levelName,    message);
-        }
+    if (message.length() == 0) {
+        auto consoleMsg = fmt::format("[{}][{}][{}]: {}", timebuf, threadName, coloredLevel, prefix);
         fputs(consoleMsg.c_str(), stdout);
         fputc('\n', stdout);
         if (mLogFile) {
-            fmt::println(mLogFile->nativeHandle(), "{}", fileMsg);
+            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}]: {}",
+           timebuf, threadName, levelName, prefix);
         }
     } else {
-        try {
-            auto fmtPattern = fmt::runtime(pattern);
-            auto consoleMsg = fmt::format(fmtPattern,
-                fmt::arg("time",   timebuf),
-                fmt::arg("thread", threadName),
-                fmt::arg("level",  consoleLevel),
-                fmt::arg("prefix", prefix),
-                fmt::arg("msg",    effectiveMsg));
-            fputs(consoleMsg.c_str(), stdout);
-            fputc('\n', stdout);
-
-            if (mLogFile) {
-                auto fileMsg = fmt::format(fmtPattern,
-                    fmt::arg("time",   timebuf),
-                    fmt::arg("thread", threadName),
-                    fmt::arg("level",  levelName),
-                    fmt::arg("prefix", prefix),
-                    fmt::arg("msg",    effectiveMsg));
-                fmt::println(mLogFile->nativeHandle(), "{}", fileMsg);
-            }
-        } catch (const fmt::format_error&) {
-            if (message.length() == 0) {
-                auto consoleMsg = fmt::format("[{}][{}][{}]: {}",     timebuf, threadName, consoleLevel, prefix);
-                fputs(consoleMsg.c_str(), stdout);
-                fputc('\n', stdout);
-                if (mLogFile) {
-                    fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}]: {}",
-                                 timebuf, threadName, levelName, prefix);
-                }
-            } else {
-                auto consoleMsg = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, consoleLevel, message);
-                fputs(consoleMsg.c_str(), stdout);
-                fputc('\n', stdout);
-                if (mLogFile) {
-                    fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}][{}]: {}",
-                                 timebuf, threadName, prefix, levelName, message);
-                }
-            }
+        auto consoleMsg = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, coloredLevel, message);
+        fputs(consoleMsg.c_str(), stdout);
+        fputc('\n', stdout);
+        if (mLogFile) {
+            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}][{}]: {}",
+           timebuf, threadName, prefix, levelName, message);
         }
     }
     fflush(stdout);
@@ -231,22 +190,6 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
         fflush(mLogFile->nativeHandle());
     }
 #endif
-}
-
-void ALogger::setPattern(std::string pattern) {
-    mPattern = std::move(pattern);
-}
-
-void ALogger::setNoprefixPattern(std::string pattern) {
-    mNoprefixPattern = std::move(pattern);
-}
-
-void ALogger::setGlobalPattern(std::string pattern) {
-    global().setPattern(std::move(pattern));
-}
-
-void ALogger::setGlobalNoprefixPattern(std::string pattern) {
-    global().setNoprefixPattern(std::move(pattern));
 }
 
 void ALogger::setLogFileImpl(AString path) {
