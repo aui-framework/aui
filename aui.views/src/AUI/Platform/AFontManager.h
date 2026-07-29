@@ -60,15 +60,29 @@ private:
     bool mFallbackAttempted = false;
 
     void ensureFallbackFace();
+    bool tryLoadFallback(std::initializer_list<AString> candidates);
 
 public:
-    FT_FaceRec_* getFallbackFace() {
-        return mFallbackFace;
-    }
+    /**
+     * Bundles the fallback mutex lock with the face pointer so the face can only
+     * be accessed while the lock is held.
+     */
+    struct FallbackFaceLock {
+        std::unique_lock<std::mutex> lock;
+        FT_FaceRec_* face = nullptr;
 
+        explicit operator bool() const noexcept { return face != nullptr; }
+    };
+
+    /**
+     * Ensures the fallback face is loaded (once) and acquires the fallback mutex.
+     * The returned face is valid only while the returned lock is held.
+     */
     [[nodiscard]]
-    std::unique_lock<std::mutex> lockFallback() {
-        return std::unique_lock(mFallbackMutex);
+    FallbackFaceLock lockFallbackFace() {
+        ensureFallbackFace();
+        std::unique_lock lk(mFallbackMutex);
+        return { std::move(lk), mFallbackFace };
     }
 
 	AString getPathToFont(const AString& family);
