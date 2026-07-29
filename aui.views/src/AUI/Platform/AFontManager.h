@@ -63,7 +63,6 @@ private:
 
 public:
     FT_FaceRec_* getFallbackFace() {
-        ensureFallbackFace();
         return mFallbackFace;
     }
 

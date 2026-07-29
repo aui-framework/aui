@@ -83,25 +83,28 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     // Determine which face to use: try primary, fall back to CJK font if glyph missing.
     FT_Face face = nullptr;
     bool usingFallback = false;
+    std::unique_lock<std::mutex> fallbackLock;
     auto& fmgr = AFontManager::inst();
     if (hasGlyph(glyph.codepoint())) {
         face = mFace;
     } else {
+        // Ensure fallback face is initialized (locks internally).
+        fmgr.ensureFallbackFace();
+
+        // Acquire fallback lock before touching the shared face.
+        fallbackLock = fmgr.lockFallback();
         FT_Face fallbackFace = fmgr.getFallbackFace();
         if (fallbackFace && FT_Get_Char_Index(fallbackFace, glyph.codepoint()) != 0) {
             face = fallbackFace;
             usingFallback = true;
         }
+        if (!usingFallback) {
+            fallbackLock.unlock();
+        }
     }
     if (!face) {
         // No font has this glyph; return empty character.
         return Character{};
-    }
-
-    // Hold the fallback lock while mutating the shared fallback FT_Face.
-    std::unique_lock<std::mutex> fallbackLock;
-    if (usingFallback) {
-        fallbackLock = fmgr.lockFallback();
     }
 
     FT_Set_Pixel_Sizes(face, 0, size);
