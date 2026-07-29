@@ -209,7 +209,7 @@ public:
      * @details
      * For the global logger, use ALogger::info, ALogger::warn, etc...
      */
-    ALogger(AString filename) { setLogFileImpl(std::move(filename)); }
+    ALogger(AString filename);
     ALogger();
     ~ALogger();
 

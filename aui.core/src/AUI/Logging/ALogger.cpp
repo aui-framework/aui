@@ -11,6 +11,8 @@
 
 #include "ALogger.h"
 #include "AUI/Platform/AProcess.h"
+#include "AUI/Platform/Entry.h"
+#include "AUI/Util/ACommandLineArgs.h"
 #include <fmt/color.h>
 #include <fmt/format.h>
 
@@ -23,12 +25,23 @@
 #endif
 
 ALogger::ALogger() {
+    const auto logColor = aui::args().value("aui-log-color");
+    if (logColor == "off")
+        mColorsEnabled = false;
+
 #ifdef AUI_SHARED_PTR_FIND_INSTANCES
     log(WARN, "Performance",
         "AUI_SHARED_PTR_FIND_INSTANCES is enabled which dramatically drops performance"
         " since it creates stacktrace on every shared_ptr (_<T>) construction. Use it if"
         " and only if it's actually needed.");
 #endif
+}
+
+ALogger::ALogger(AString filename) {
+    const auto logColor = aui::args().value("aui-log-color");
+    if (logColor == "off")
+        mColorsEnabled = false;
+    setLogFileImpl(std::move(filename));
 }
 
 static const char* levelCStr(ALogger::Level level) {
