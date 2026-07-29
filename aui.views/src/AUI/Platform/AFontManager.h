@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -14,6 +14,7 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Util/Manager.h"
 #include "AUI/Font/AFontFamily.h"
+#include <mutex>
 #include "AUI/Font/AFont.h"
 
 class API_AUI_VIEWS AFontManager {
@@ -52,6 +53,7 @@ private:
     _<AFontFamily> mDefaultFamily;
     _<AFont> mDefaultFont;
 
+    std::mutex mFallbackMutex;
     AByteBuffer mFallbackFontDataBuffer;
     FT_FaceRec_* mFallbackFace = nullptr;
     AString mFallbackFontPath;
@@ -61,7 +63,7 @@ private:
 
 public:
     FT_FaceRec_* getFallbackFace() {
-        if (!mFallbackAttempted) ensureFallbackFace();
+        ensureFallbackFace();
         return mFallbackFace;
     }
 

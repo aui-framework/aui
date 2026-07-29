@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -22,12 +22,16 @@
 #endif
 
 AFontManager::~AFontManager() {
+    std::scoped_lock lock(mFallbackMutex);
     if (mFallbackFace) {
         FT_Done_Face(mFallbackFace);
+        mFallbackFace = nullptr;
     }
+    mFallbackFontPath.clear();
 }
 
 void AFontManager::ensureFallbackFace() {
+    std::scoped_lock lock(mFallbackMutex);
     if (mFallbackFace) {
         return; // already loaded
     }
