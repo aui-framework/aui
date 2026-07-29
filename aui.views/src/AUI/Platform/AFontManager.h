@@ -59,7 +59,7 @@ private:
     AString mFallbackFontPath;
     bool mFallbackAttempted = false;
 
-    void ensureFallbackFace();
+    void ensureFallbackFaceLocked();
     bool tryLoadFallback(std::initializer_list<AString> candidates);
 
 public:
@@ -80,8 +80,8 @@ public:
      */
     [[nodiscard]]
     FallbackFaceLock lockFallbackFace() {
-        ensureFallbackFace();
         std::unique_lock lk(mFallbackMutex);
+        ensureFallbackFaceLocked();
         return { std::move(lk), mFallbackFace };
     }
 

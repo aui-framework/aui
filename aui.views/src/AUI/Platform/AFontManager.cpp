@@ -30,8 +30,7 @@ AFontManager::~AFontManager() {
     mFallbackFontPath.clear();
 }
 
-void AFontManager::ensureFallbackFace() {
-    std::scoped_lock lock(mFallbackMutex);
+void AFontManager::ensureFallbackFaceLocked() {
     if (mFallbackFace) {
         return; // already loaded
     }
@@ -75,16 +74,8 @@ void AFontManager::ensureFallbackFace() {
             }
             FcChar8* path = nullptr;
             if (FcPatternGetString(match, FC_FILE, 0, &path) == FcResultMatch) {
-                mFallbackFontPath = reinterpret_cast<const char*>(path);
-
-                // Try to load the fallback font face.
-                // TTC collections may need face_index > 0; try index 0 first (usually Regular).
-                if (FT_New_Face(mFreeType->getFt(), mFallbackFontPath.toStdString().c_str(), 0, &mFallbackFace)) {
-                    ALogger::warn("Font") << "Failed to load fallback font: " << mFallbackFontPath;
-                    mFallbackFace = nullptr;
+                if (!tryLoadFallback({ AString(reinterpret_cast<const char*>(path)) })) {
                     mFallbackFontPath.clear();
-                } else {
-                    ALogger::info("Font") << "Loaded CJK fallback font: " << mFallbackFontPath;
                 }
             } else {
                 ALogger::warn("Font") << "Fontconfig matched font has no FC_FILE path";

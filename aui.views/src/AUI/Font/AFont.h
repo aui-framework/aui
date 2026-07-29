@@ -145,6 +145,7 @@ public:
     ~AFont();
 
     AFont(const AFont&) = delete;
+    AFont& operator=(const AFont&) = delete;
 
     Character& getCharacter(const FontEntry& charset, AChar glyph);
 

@@ -97,8 +97,8 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
         }
     }
     if (!face) {
-        // No font has this glyph; return empty character.
-        return Character{};
+        // No font has this glyph; let the primary face render .notdef (tofu).
+        face = mFace;
     }
 
     FT_Set_Pixel_Sizes(face, 0, size);
