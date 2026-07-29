@@ -67,6 +67,11 @@ public:
         return mFallbackFace;
     }
 
+    [[nodiscard]]
+    std::unique_lock<std::mutex> lockFallback() {
+        return std::unique_lock(mFallbackMutex);
+    }
+
 	AString getPathToFont(const AString& family);
 
     _<AFont> loadFont(const AUrl& url);

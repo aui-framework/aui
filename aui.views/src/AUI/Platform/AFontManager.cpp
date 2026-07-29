@@ -62,6 +62,17 @@ void AFontManager::ensureFallbackFace() {
     FcPattern* match = FcFontMatch(nullptr, pattern, &result);
     if (match) {
         if (result == FcResultMatch) {
+            // FcFontMatch may return a best-effort match that doesn't satisfy the
+            // requested charset. Verify the matched font actually contains U+4E2D.
+            FcCharSet* resultCharset = nullptr;
+            if (FcPatternGetCharSet(match, FC_CHARSET, 0, &resultCharset) == FcResultMatch) {
+                if (!FcCharSetHasChar(resultCharset, 0x4E2D)) {
+                    ALogger::warn("Font") << "Fontconfig fallback font lacks U+4E2D, skipping";
+                    FcPatternDestroy(match);
+                    FcPatternDestroy(pattern);
+                    return;
+                }
+            }
             FcChar8* path = nullptr;
             if (FcPatternGetString(match, FC_FILE, 0, &path) == FcResultMatch) {
                 mFallbackFontPath = reinterpret_cast<const char*>(path);
