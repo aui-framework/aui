@@ -11,6 +11,10 @@
 
 #include "ALogger.h"
 #include "AUI/Platform/AProcess.h"
+#include "AUI/Platform/Entry.h"
+#include "AUI/Util/ACommandLineArgs.h"
+#include <fmt/color.h>
+#include <fmt/format.h>
 
 #if AUI_PLATFORM_ANDROID
 #include <android/log.h>
@@ -21,12 +25,23 @@
 #endif
 
 ALogger::ALogger() {
+    const auto logColor = aui::args().value("aui-log-color");
+    if (logColor == "off")
+        mColorsEnabled = false;
+
 #ifdef AUI_SHARED_PTR_FIND_INSTANCES
     log(WARN, "Performance",
         "AUI_SHARED_PTR_FIND_INSTANCES is enabled which dramatically drops performance"
         " since it creates stacktrace on every shared_ptr (_<T>) construction. Use it if"
         " and only if it's actually needed.");
 #endif
+}
+
+ALogger::ALogger(AString filename) {
+    const auto logColor = aui::args().value("aui-log-color");
+    if (logColor == "off")
+        mColorsEnabled = false;
+    setLogFileImpl(std::move(filename));
 }
 
 static const char* levelCStr(ALogger::Level level) {
@@ -50,6 +65,29 @@ static const char* levelCStr(ALogger::Level level) {
     return "UNKNOWN";
 }
 
+#if !AUI_PLATFORM_ANDROID
+static std::string levelCStrColored(ALogger::Level level) {
+    switch (level) {
+        case ALogger::INFO:
+            return fmt::format(fmt::fg(fmt::color::green), "{}", "INFO");
+
+        case ALogger::WARN:
+            return fmt::format(fmt::fg(fmt::color::yellow), "{}", "WARN");
+
+        case ALogger::ERR:
+            return fmt::format(fmt::fg(fmt::color::red), "{}", "ERR");
+
+        case ALogger::DEBUG:
+            return fmt::format(fmt::fg(fmt::color::cyan), "{}", "DEBUG");
+
+        case ALogger::TRACE:
+            return fmt::format(fmt::fg(fmt::color::gray), "{}", "TRACE");
+    }
+
+    return "UNKNOWN";
+}
+#endif
+
 static ALogger& globalImpl(AOptional<APath> path = std::nullopt) {
 #if AUI_PLATFORM_EMSCRIPTEN
     static ALogger l;
@@ -64,10 +102,11 @@ ALogger& ALogger::global() { return globalImpl(); }
 
 void ALogger::setLogFileForGlobal(APath path) { globalImpl(std::move(path)); }
 
+
 void ALogger::log(Level level, AStringView prefix, AStringView message) {
     {
         std::unique_lock lock(mOnLogged);
-        if (mOnLogged.value()) {
+        if (mOnLogged.value() && isLevelEnabled(level)) {
             auto onLogged = mOnLogged.value();
             lock.unlock();
             onLogged(prefix, message, level);
@@ -115,11 +154,11 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
 
         std::unique_lock lock(mLogSync);
         if (message.length() == 0) {
-            fprintf(
-                mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
+            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}]: {}",
+                         timebuf, threadName, levelName, prefix);
         } else {
-            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(),
-                    levelName, message.data());
+            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}][{}]: {}",
+                         timebuf, threadName, prefix, levelName, message);
         }
         fflush(mLogFile->nativeHandle());
     }
@@ -139,19 +178,24 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
     }
 
     const char* levelName = levelCStr(level);
+    auto coloredLevel = mColorsEnabled ? levelCStrColored(level) : levelName;
 
     std::unique_lock lock(mLogSync);
     if (message.length() == 0) {
-        printf("[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
+        auto consoleMsg = fmt::format("[{}][{}][{}]: {}", timebuf, threadName, coloredLevel, prefix);
+        fputs(consoleMsg.c_str(), stdout);
+        fputc('\n', stdout);
         if (mLogFile) {
-            fprintf(
-                mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
+            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}]: {}",
+           timebuf, threadName, levelName, prefix);
         }
     } else {
-        printf("[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
+        auto consoleMsg = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, coloredLevel, message);
+        fputs(consoleMsg.c_str(), stdout);
+        fputc('\n', stdout);
         if (mLogFile) {
-            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(),
-                    levelName, message.data());
+            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}][{}]: {}",
+           timebuf, threadName, prefix, levelName, message);
         }
     }
     fflush(stdout);

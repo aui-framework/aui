@@ -65,6 +65,7 @@ public:
         ERR,
         DEBUG,
         TRACE,
+        DISABLED,
     };
 
     struct LogWriter {
@@ -72,6 +73,7 @@ public:
         ALogger& mLogger;
         Level mLevel;
         AStringView mPrefix;
+        bool mEnabled;
         struct Buffer {
         private:
             struct StackBuffer {
@@ -167,9 +169,10 @@ public:
 
     public:
         LogWriter(ALogger& logger, Level level, AStringView prefix)
-          : mLogger(logger), mLevel(level), mPrefix(std::move(prefix)) {}
+          : mLogger(logger), mLevel(level), mPrefix(std::move(prefix)), mEnabled(logger.isLevelEnabled(level)) {}
 
         ~LogWriter() {
+            if (!mEnabled) return;
             mBuffer.write(0);   // null terminator
             auto s = mBuffer.str();
             mLogger.log(mLevel, mPrefix, s);
@@ -177,6 +180,7 @@ public:
 
         template <typename T>
         LogWriter& operator<<(const T& t) noexcept {
+            if (!mEnabled) return *this;
             // avoid usage of std::ostream because it's expensive
             if constexpr (std::is_constructible_v<std::string_view, T>) {
                 std::string_view stringView(t);
@@ -205,7 +209,7 @@ public:
      * @details
      * For the global logger, use ALogger::info, ALogger::warn, etc...
      */
-    ALogger(AString filename) { setLogFileImpl(std::move(filename)); }
+    ALogger(AString filename);
     ALogger();
     ~ALogger();
 
@@ -215,6 +219,22 @@ public:
     bool isDebug() { return global().mDebug; }
 
     bool isTrace() { return global().mTrace; }
+
+    /**
+     * @brief Sets the minimum log level for this logger instance.
+     * @details Messages with a level lower than this will be filtered out.
+     * Default is INFO (all messages pass through).
+     * Levels: INFO < WARN < ERR < DEBUG < TRACE < DISABLED
+     */
+    void setLevel(Level level) { mMinLevel = level; }
+
+    /**
+     * @brief Checks whether messages at the given level will be logged.
+     */
+    [[nodiscard]]
+    bool isLevelEnabled(Level level) {
+        return level >= mMinLevel;
+    }
 
     /**
      * @brief Sets log file.
@@ -235,12 +255,19 @@ public:
      */
     static void setLogFileForGlobal(APath path);
 
+    /**
+     * @brief Enables or disables colored output for the global logger.
+     * @details Default is enabled. When disabled, plain level names (INFO, WARN, etc.)
+     * are used instead of ANSI-colored ones.
+     */
+    void enableColors(bool enabled) { global().mColorsEnabled = enabled; }
+
     [[nodiscard]]
     APath logFile() {
         return mLogFile.valueOrException().path();
     }
 
-    void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
+     void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
         std::unique_lock lock(mOnLogged);
         mOnLogged = std::move(callback);
     }
@@ -293,8 +320,11 @@ private:
     AMutex mLogSync;
     AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 
+    Level mMinLevel = INFO;
+
     bool mDebug = AUI_DEBUG;
     bool mTrace = isTraceImpl();
+    bool mColorsEnabled = true;
 
     static bool isTraceImpl();
 
