@@ -88,9 +88,10 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     if (hasGlyph(glyph.codepoint())) {
         face = mFace;
     } else {
-        // lockFallbackFace ensures initialization AND acquires the fallback mutex.
-        auto fb = mFontManager->lockFallbackFace();
-        if (fb && FT_Get_Char_Index(fb.face, glyph.codepoint()) != 0) {
+        // lockFallbackFace ensures initialization, acquires the fallback mutex,
+        // and returns the first loaded face that contains this codepoint.
+        auto fb = mFontManager->lockFallbackFace(glyph.codepoint());
+        if (fb) {
             face = fb.face;
             fallbackGuard = std::move(fb);
         }
@@ -100,7 +101,14 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
         face = mFace;
     }
 
-    FT_Set_Pixel_Sizes(face, 0, size);
+    if (FT_Set_Pixel_Sizes(face, 0, size) != 0) {
+        // Fallback face may be bitmap-only/fixed-size; retry with primary face.
+        if (face != mFace) {
+            face = mFace;
+            FT_Set_Pixel_Sizes(face, 0, size);
+        }
+        // If both fail, FT_Load_Char will also fail and Character{} is cached.
+    }
 
     FT_Int32 flags = FT_LOAD_RENDER;
 

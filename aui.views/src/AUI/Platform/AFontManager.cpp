@@ -23,15 +23,15 @@
 
 AFontManager::~AFontManager() {
     std::scoped_lock lock(mFallbackMutex);
-    if (mFallbackFace) {
-        FT_Done_Face(mFallbackFace);
-        mFallbackFace = nullptr;
+    for (auto face : mFallbackFaces) {
+        FT_Done_Face(face);
     }
+    mFallbackFaces.clear();
     mFallbackFontPath.clear();
 }
 
 void AFontManager::ensureFallbackFaceLocked() {
-    if (mFallbackFace) {
+    if (!mFallbackFaces.empty()) {
         return; // already loaded
     }
     if (mFallbackAttempted) {
@@ -86,7 +86,7 @@ void AFontManager::ensureFallbackFaceLocked() {
         FcPatternDestroy(match);
     }
     FcPatternDestroy(pattern);
-    if (!mFallbackFace) {
+    if (mFallbackFaces.empty()) {
         ALogger::warn("Font") << "No CJK fallback font found via fontconfig";
     }
 #elif AUI_PLATFORM_WIN
@@ -144,9 +144,11 @@ void AFontManager::ensureFallbackFaceLocked() {
             // Try bundled resource
             try {
                 mFallbackFontDataBuffer = AByteBuffer::fromStream(AUrl(":uni/font/NotoSansCJK-Fallback.ttf").open());
+                FT_Face face = nullptr;
                 if (FT_New_Memory_Face(mFreeType->getFt(),
                         (const FT_Byte*) mFallbackFontDataBuffer.data(),
-                        mFallbackFontDataBuffer.getSize(), 0, &mFallbackFace) == 0) {
+                        mFallbackFontDataBuffer.getSize(), 0, &face) == 0) {
+                    mFallbackFaces.push_back(face);
                     mFallbackFontPath = AString(":uni/font/NotoSansCJK-Fallback.ttf");
                     ALogger::info("Font") << "Loaded CJK fallback font from bundle";
                     loaded = true;
@@ -166,16 +168,28 @@ void AFontManager::ensureFallbackFaceLocked() {
 }
 
 bool AFontManager::tryLoadFallback(std::initializer_list<FallbackCandidate> candidates) {
+    bool anyLoaded = false;
     for (const auto& c : candidates) {
         FT_Face face = nullptr;
         if (FT_New_Face(mFreeType->getFt(), c.path.toStdString().c_str(), c.faceIndex, &face) == 0) {
-            mFallbackFace = face;
+            mFallbackFaces.push_back(face);
             mFallbackFontPath = c.path;
             ALogger::info("Font") << "Loaded CJK fallback font: " << c.path;
-            return true;
+            anyLoaded = true;
         }
     }
-    return false;
+    return anyLoaded;
+}
+
+AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint) {
+    std::unique_lock lk(mFallbackMutex);
+    ensureFallbackFaceLocked();
+    for (auto face : mFallbackFaces) {
+        if (FT_Get_Char_Index(face, codepoint) != 0) {
+            return { std::move(lk), face };
+        }
+    }
+    return { std::move(lk), nullptr };
 }
 
 _<AFont> AFontManager::loadFont(const AUrl& url) {

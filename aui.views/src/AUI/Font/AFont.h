@@ -113,7 +113,7 @@ public:
 private:
     _<FreeType> ft;
     AByteBuffer mFontDataBuffer;
-    FT_FaceRec_* mFace;
+    FT_FaceRec_* mFace = nullptr;
     AFontManager* mFontManager = nullptr;
 
     AMap<FontKey, FontData> mCharData;

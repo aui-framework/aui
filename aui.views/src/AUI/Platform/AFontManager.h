@@ -14,6 +14,7 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Util/Manager.h"
 #include "AUI/Font/AFontFamily.h"
+#include <AUI/Common/AVector.h>
 #include <mutex>
 #include "AUI/Font/AFont.h"
 
@@ -64,7 +65,7 @@ private:
 
     std::mutex mFallbackMutex;
     AByteBuffer mFallbackFontDataBuffer;
-    FT_FaceRec_* mFallbackFace = nullptr;
+    AVector<FT_FaceRec_*> mFallbackFaces;
     AString mFallbackFontPath;
     bool mFallbackAttempted = false;
 
@@ -87,19 +88,17 @@ private:
     };
 
     /**
-     * Ensures the fallback face is loaded (once) and acquires the fallback mutex.
-     * The returned face is valid only while the returned lock is held.
+     * Ensures fallback faces are loaded (once) and acquires the fallback mutex.
+     * Iterates loaded faces and returns the first one that contains the given
+     * codepoint, or nullptr if none does. The returned face is valid only while
+     * the returned lock is held.
      *
-     * @note The first call may block while the fallback font is discovered via
+     * @note The first call may block while fallback fonts are discovered via
      *       fontconfig or filesystem probing under the mutex. Subsequent calls
      *       return immediately.
      */
     [[nodiscard]]
-    FallbackFaceLock lockFallbackFace() {
-        std::unique_lock lk(mFallbackMutex);
-        ensureFallbackFaceLocked();
-        return { std::move(lk), mFallbackFace };
-    }
+    FallbackFaceLock lockFallbackFace(char32_t codepoint);
 
 	AString getPathToFont(const AString& family);
 
