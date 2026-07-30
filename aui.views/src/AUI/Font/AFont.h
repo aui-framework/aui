@@ -82,7 +82,7 @@ public:
 
         [[nodiscard]]
         bool empty() const {
-            return image == nullptr && horizontal.advance == 0 && vertical.advance == 0;
+            return image == nullptr;
         }
 
         void* rendererData = nullptr;
@@ -168,6 +168,8 @@ public:
             } else {
                 Character& ch = getCharacter(charset, *i);
                 if (!ch.empty()) {
+                    advance += ch.horizontal.advance;
+                } else if (ch.horizontal.advance > 0) {
                     advance += ch.horizontal.advance;
                 } else
                     advance += getSpaceWidth(size);

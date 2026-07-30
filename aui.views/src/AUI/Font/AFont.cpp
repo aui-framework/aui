@@ -166,7 +166,10 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     vAdvance = div * g->metrics.vertAdvance;
 
     // Release fallback lock; all glyph data is now copied to locals.
-    fallbackGuard = AFontManager::FallbackFaceLock{};
+    if (fallbackGuard.lock.owns_lock()) {
+        fallbackGuard.lock.unlock();
+    }
+    fallbackGuard.face = nullptr;
 
     if (data.empty()) {
         return Character{
