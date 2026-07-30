@@ -117,21 +117,29 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
                                << std::hex << std::uint32_t(glyph.codepoint()) << " (error " << std::dec << e << ")";
         return Character{};
     }
-    FT_GlyphSlot g = face->glyph;
-    if (g->bitmap.width && g->bitmap.rows) {
-        const float div = 1.f / 64.f;
-        int width = g->bitmap.width;
 
+    // Capture glyph bitmap and metrics while the fallback lock is held.
+    FT_GlyphSlot g = face->glyph;
+    const float div = 1.f / 64.f;
+
+    AByteBuffer data;
+    glm::vec2 charSize{};
+    glm::vec2 hBearing{};
+    float hAdvance = 0;
+    glm::vec2 vBearing{};
+    float vAdvance = 0;
+    int width = 0;
+    int height = 0;
+
+    if (g->bitmap.width && g->bitmap.rows) {
+        width = g->bitmap.width;
         if (fr == FontRendering::SUBPIXEL)
             width /= 3;
-
-        int height = g->bitmap.rows;
-
-        AByteBuffer data;
+        height = g->bitmap.rows;
 
         if (fr == FontRendering::NEAREST) {
-            // when nearest, freetype renders glyphs into the 1bit-depth image but OpenGL required at least8bit-depth,
-            // so we will convert it here
+            // when nearest, freetype renders glyphs into the 1bit-depth image
+            // but OpenGL requires at least 8bit-depth, so convert here
             data.resize(g->bitmap.rows * g->bitmap.width);
 
             for (unsigned r = 0; r < g->bitmap.rows; ++r) {
@@ -150,26 +158,42 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
             }
         }
 
-        int imageFormat = APixelFormat::BYTE;
-        if (fr == FontRendering::SUBPIXEL)
-            imageFormat |= APixelFormat::RGB;
-        else
-            imageFormat |= APixelFormat::R;
-
-        return Character{
-            .image = _new<AImage>(data, glm::uvec2(width, height), imageFormat),
-            .size = { div * g->metrics.width, div * g->metrics.height },
-            .horizontal = {
-              .bearing = { g->bitmap_left, g->bitmap_top },
-              .advance = div * g->metrics.horiAdvance,
-            },
-            .vertical = {
-              .bearing = { div * g->metrics.vertBearingX, div * g->metrics.vertBearingY },
-              .advance = div * g->metrics.vertAdvance,
-            },
-        };
+        // Capture metrics from glyph slot while the face is still locked.
+        charSize = { div * g->metrics.width, div * g->metrics.height };
+        hBearing = { static_cast<float>(g->bitmap_left), static_cast<float>(g->bitmap_top) };
+        hAdvance = div * g->metrics.horiAdvance;
+        vBearing = { div * g->metrics.vertBearingX, div * g->metrics.vertBearingY };
+        vAdvance = div * g->metrics.vertAdvance;
     }
-    return Character{};
+
+    // Release fallback lock; all glyph data is now copied to locals.
+    if (usingFallback) {
+        usingFallback = false;
+        fallbackGuard = AFontManager::FallbackFaceLock{};
+    }
+
+    if (data.empty()) {
+        return Character{};
+    }
+
+    int imageFormat = APixelFormat::BYTE;
+    if (fr == FontRendering::SUBPIXEL)
+        imageFormat |= APixelFormat::RGB;
+    else
+        imageFormat |= APixelFormat::R;
+
+    return Character{
+        .image = _new<AImage>(data, glm::uvec2(width, height), imageFormat),
+        .size = charSize,
+        .horizontal = {
+          .bearing = hBearing,
+          .advance = hAdvance,
+        },
+        .vertical = {
+          .bearing = vBearing,
+          .advance = vAdvance,
+        },
+    };
 }
 
 AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
