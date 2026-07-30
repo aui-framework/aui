@@ -64,9 +64,7 @@ private:
     _<AFont> mDefaultFont;
 
     std::mutex mFallbackMutex;
-    AByteBuffer mFallbackFontDataBuffer;
     AVector<FT_FaceRec_*> mFallbackFaces;
-    AString mFallbackFontPath;
     bool mFallbackAttempted = false;
 
     void ensureFallbackFaceLocked();

@@ -16,8 +16,6 @@ AFontManager::AFontManager():
     mFreeType(_new<FreeType>()),
     mDefaultFont(loadFont(":uni/font/Roboto.ttf"))
 {
-    // Pre-warm fallback face to avoid UI-thread stall on first missing-glyph render.
-    initFallback();
 }
 
 AString AFontManager::getPathToFont(const AString &font) {

@@ -27,7 +27,6 @@ AFontManager::~AFontManager() {
         FT_Done_Face(face);
     }
     mFallbackFaces.clear();
-    mFallbackFontPath.clear();
 }
 
 void AFontManager::ensureFallbackFaceLocked() {
@@ -76,9 +75,7 @@ void AFontManager::ensureFallbackFaceLocked() {
             int faceIndex = 0;
             if (FcPatternGetString(match, FC_FILE, 0, &path) == FcResultMatch) {
                 FcPatternGetInteger(match, FC_INDEX, 0, &faceIndex);
-                if (!tryLoadFallback({ { AString(reinterpret_cast<const char*>(path)), faceIndex } })) {
-                    mFallbackFontPath.clear();
-                }
+                tryLoadFallback({ { AString(reinterpret_cast<const char*>(path)), faceIndex } });
             } else {
                 ALogger::warn("Font") << "Fontconfig matched font has no FC_FILE path";
             }
@@ -133,33 +130,12 @@ void AFontManager::ensureFallbackFaceLocked() {
         ALogger::warn("Font") << "No CJK fallback font found on Android";
     }
 #elif AUI_PLATFORM_IOS
-    // iOS: try system font paths first (some iOS versions allow reading them),
-    // then fall back to a bundled resource if available.
-    {
-        bool loaded = tryLoadFallback({
+    // iOS system CJK fonts.
+    if (!tryLoadFallback({
             { "/System/Library/Fonts/PingFang.ttc" },
             { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
-        });
-        if (!loaded) {
-            // Try bundled resource
-            try {
-                mFallbackFontDataBuffer = AByteBuffer::fromStream(AUrl(":uni/font/NotoSansCJK-Fallback.ttf").open());
-                FT_Face face = nullptr;
-                if (FT_New_Memory_Face(mFreeType->getFt(),
-                        (const FT_Byte*) mFallbackFontDataBuffer.data(),
-                        mFallbackFontDataBuffer.getSize(), 0, &face) == 0) {
-                    mFallbackFaces.push_back(face);
-                    mFallbackFontPath = AString(":uni/font/NotoSansCJK-Fallback.ttf");
-                    ALogger::info("Font") << "Loaded CJK fallback font from bundle";
-                    loaded = true;
-                }
-            } catch (const AException& e) {
-                ALogger::debug("Font") << "Bundled fallback font not loaded: " << e;
-            }
-        }
-        if (!loaded) {
-            ALogger::warn("Font") << "No CJK fallback font found on iOS";
-        }
+        })) {
+        ALogger::warn("Font") << "No CJK fallback font found on iOS";
     }
 #else
     // Unknown platform; mark fallback as unavailable.
@@ -173,7 +149,6 @@ bool AFontManager::tryLoadFallback(std::initializer_list<FallbackCandidate> cand
         FT_Face face = nullptr;
         if (FT_New_Face(mFreeType->getFt(), c.path.toStdString().c_str(), c.faceIndex, &face) == 0) {
             mFallbackFaces.push_back(face);
-            mFallbackFontPath = c.path;
             ALogger::info("Font") << "Loaded CJK fallback font: " << c.path;
             anyLoaded = true;
         }
