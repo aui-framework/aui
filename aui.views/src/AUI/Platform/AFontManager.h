@@ -65,10 +65,15 @@ private:
 
     std::mutex mFallbackMutex;
     AVector<FT_FaceRec_*> mFallbackFaces;
+    AVector<FallbackCandidate> mDeferredCandidates;
     bool mFallbackAttempted = false;
 
+    /**
+     * @brief Loads a single fallback face from the given candidate.
+     * @return true if the face was loaded successfully.
+     */
+    bool loadOneFallback(const FallbackCandidate& candidate);
     void ensureFallbackFaceLocked();
-    bool tryLoadFallback(std::initializer_list<FallbackCandidate> candidates);
     void initFallback() {
         std::unique_lock lock(mFallbackMutex);
         ensureFallbackFaceLocked();

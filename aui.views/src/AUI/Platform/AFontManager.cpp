@@ -32,6 +32,19 @@ AFontManager::~AFontManager() {
     mFallbackFaces.clear();
 }
 
+bool AFontManager::loadOneFallback(const FallbackCandidate& candidate) {
+    FT_Face face = nullptr;
+    {
+        std::lock_guard lock(FreeType::sFaceMutex);
+        if (FT_New_Face(mFreeType->getFt(), candidate.path.toStdString().c_str(), candidate.faceIndex, &face) == 0) {
+            mFallbackFaces.push_back(face);
+            ALogger::info("Font") << "Loaded CJK fallback font: " << candidate.path;
+            return true;
+        }
+    }
+    return false;
+}
+
 void AFontManager::ensureFallbackFaceLocked() {
     if (!mFallbackFaces.empty()) {
         return; // already loaded
@@ -40,6 +53,11 @@ void AFontManager::ensureFallbackFaceLocked() {
         // Already tried and failed; don't retry every glyph
         return;
     }
+
+    // Build the full candidate list per platform, then load only the first
+    // candidate eagerly and defer the rest for lazy loading in lockFallbackFace.
+    AVector<FallbackCandidate> allCandidates;
+
 #if AUI_PLATFORM_LINUX
     // Use fontconfig to find a CJK-capable sans-serif font.
     // Ensure fontconfig is initialized before using default config (nullptr).
@@ -78,7 +96,7 @@ void AFontManager::ensureFallbackFaceLocked() {
             int faceIndex = 0;
             if (FcPatternGetString(match, FC_FILE, 0, &path) == FcResultMatch) {
                 FcPatternGetInteger(match, FC_INDEX, 0, &faceIndex);
-                tryLoadFallback({ { AString(reinterpret_cast<const char*>(path)), faceIndex } });
+                allCandidates = { { AString(reinterpret_cast<const char*>(path)), faceIndex } };
             } else {
                 ALogger::warn("Font") << "Fontconfig matched font has no FC_FILE path";
             }
@@ -86,9 +104,10 @@ void AFontManager::ensureFallbackFaceLocked() {
         FcPatternDestroy(match);
     }
     FcPatternDestroy(pattern);
-    if (mFallbackFaces.empty()) {
+    if (allCandidates.empty()) {
         ALogger::warn("Font") << "No CJK fallback font found via fontconfig";
         mFallbackAttempted = true;
+        return;
     }
 #elif AUI_PLATFORM_WIN
     // Try known CJK font files from the Windows Fonts directory.
@@ -104,83 +123,99 @@ void AFontManager::ensureFallbackFaceLocked() {
         ALogger::warn("Font") << "GetWindowsDirectoryW() failed, falling back to C:\\Windows\\Fonts\\";
         return AString("C:\\Windows\\Fonts\\");
     }();
-    if (!tryLoadFallback({
-            { fontsDir + "msyh.ttc" },       // Microsoft YaHei (Simplified Chinese, includes CJK + Kana)
-            { fontsDir + "malgun.ttf" },     // Malgun Gothic (Korean, includes Hangul + CJK)
-            { fontsDir + "simsun.ttc" },     // SimSun (Simplified Chinese)
-            { fontsDir + "msgothic.ttc" },   // MS Gothic (Japanese)
-            { fontsDir + "yugothr.ttc" },    // Yu Gothic (Japanese)
-            { fontsDir + "meiryo.ttc" },     // Meiryo (Japanese)
-        })) {
+    allCandidates = {
+        { fontsDir + "msyh.ttc" },       // Microsoft YaHei (Simplified Chinese, includes CJK + Kana)
+        { fontsDir + "malgun.ttf" },     // Malgun Gothic (Korean, includes Hangul + CJK)
+        { fontsDir + "simsun.ttc" },     // SimSun (Simplified Chinese)
+        { fontsDir + "msgothic.ttc" },   // MS Gothic (Japanese)
+        { fontsDir + "yugothr.ttc" },    // Yu Gothic (Japanese)
+        { fontsDir + "meiryo.ttc" },     // Meiryo (Japanese)
+    };
+    if (allCandidates.empty()) {
         ALogger::warn("Font") << "No CJK fallback font found on Windows";
         mFallbackAttempted = true;
+        return;
     }
 #elif AUI_PLATFORM_MACOS
     // macOS system CJK fonts (stable paths since OS X 10.11).
-    if (!tryLoadFallback({
-            { "/System/Library/Fonts/PingFang.ttc" },
-            { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
-            { "/System/Library/Fonts/Hiragino Sans.ttc" },
-            { "/System/Library/Fonts/Supplemental/AppleSDGothicNeo.ttc" },
-        })) {
+    allCandidates = {
+        { "/System/Library/Fonts/PingFang.ttc" },
+        { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
+        { "/System/Library/Fonts/Hiragino Sans.ttc" },
+        { "/System/Library/Fonts/Supplemental/AppleSDGothicNeo.ttc" },
+    };
+    if (allCandidates.empty()) {
         ALogger::warn("Font") << "No CJK fallback font found on macOS";
         mFallbackAttempted = true;
+        return;
     }
 #elif AUI_PLATFORM_ANDROID
     // Android system CJK fonts (varies by API level).
-    if (!tryLoadFallback({
-            { "/system/fonts/NotoSansCJK-Regular.ttc" },  // Android 5-9, pan-CJK
-            { "/system/fonts/NotoSansSC-Regular.otf" },    // Android 10+ (Chinese)
-            { "/system/fonts/NotoSansKR-Regular.otf" },    // Android 10+ (Korean)
-            { "/system/fonts/NotoSansJP-Regular.otf" },    // Android 10+ (Japanese)
-        })) {
+    allCandidates = {
+        { "/system/fonts/NotoSansCJK-Regular.ttc" },  // Android 5-9, pan-CJK
+        { "/system/fonts/NotoSansSC-Regular.otf" },    // Android 10+ (Chinese)
+        { "/system/fonts/NotoSansKR-Regular.otf" },    // Android 10+ (Korean)
+        { "/system/fonts/NotoSansJP-Regular.otf" },    // Android 10+ (Japanese)
+    };
+    if (allCandidates.empty()) {
         ALogger::warn("Font") << "No CJK fallback font found on Android";
         mFallbackAttempted = true;
+        return;
     }
 #elif AUI_PLATFORM_IOS
     // iOS system CJK fonts.
-    if (!tryLoadFallback({
-            { "/System/Library/Fonts/PingFang.ttc" },
-            { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
-        })) {
+    allCandidates = {
+        { "/System/Library/Fonts/PingFang.ttc" },
+        { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
+    };
+    if (allCandidates.empty()) {
         ALogger::warn("Font") << "No CJK fallback font found on iOS";
         mFallbackAttempted = true;
+        return;
     }
 #else
     // Unknown platform; mark fallback as unavailable.
     ALogger::warn("Font") << "CJK font fallback not available on this platform";
     mFallbackAttempted = true;
+    return;
 #endif
-}
 
-bool AFontManager::tryLoadFallback(std::initializer_list<FallbackCandidate> candidates) {
-    // Accumulate every candidate that loads — no single file covers every CJK script.
-    // On Windows, msyh.ttc lacks Hangul; on Android 10+, per-script OTFs don't overlap.
-    // lockFallbackFace iterates mFallbackFaces and returns the first face containing
-    // the requested codepoint, providing per-script coverage from the full set.
-    bool anyLoaded = false;
-    for (const auto& c : candidates) {
-        FT_Face face = nullptr;
-        {
-            std::lock_guard lock(FreeType::sFaceMutex);
-            if (FT_New_Face(mFreeType->getFt(), c.path.toStdString().c_str(), c.faceIndex, &face) == 0) {
-                mFallbackFaces.push_back(face);
-                ALogger::info("Font") << "Loaded CJK fallback font: " << c.path;
-                anyLoaded = true;
-            }
-        }
+    // Load the first candidate eagerly (pre-warm).
+    loadOneFallback(allCandidates.first());
+
+    // Defer remaining candidates for lazy loading in lockFallbackFace.
+    for (size_t i = 1; i < allCandidates.size(); ++i) {
+        mDeferredCandidates.push_back(allCandidates[i]);
     }
-    return anyLoaded;
+
+    if (mFallbackFaces.empty() && mDeferredCandidates.empty()) {
+        mFallbackAttempted = true;
+    }
 }
 
 AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint) {
     std::unique_lock lk(mFallbackMutex);
     ensureFallbackFaceLocked();
+
+    // Check all already-loaded faces first.
     for (auto face : mFallbackFaces) {
         if (FT_Get_Char_Index(face, codepoint) != 0) {
             return { std::move(lk), face };
         }
     }
+
+    // No loaded face has this codepoint; try deferred candidates lazily.
+    while (!mDeferredCandidates.empty()) {
+        auto c = mDeferredCandidates.first();
+        mDeferredCandidates.erase(mDeferredCandidates.begin());
+        if (loadOneFallback(c)) {
+            // Check if the newly loaded face covers this codepoint.
+            if (FT_Get_Char_Index(mFallbackFaces.last(), codepoint) != 0) {
+                return { std::move(lk), mFallbackFaces.last() };
+            }
+        }
+    }
+
     return { std::move(lk), nullptr };
 }
 

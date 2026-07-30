@@ -83,8 +83,17 @@ bool AFont::hasGlyph(char32_t codepoint) const {
 
 glm::vec2 AFont::getKerning(wchar_t left, wchar_t right, unsigned size) {
     FT_Set_Pixel_Sizes(mFace, 0, size);
+
+    FT_UInt leftIndex = FT_Get_Char_Index(mFace, left);
+    FT_UInt rightIndex = FT_Get_Char_Index(mFace, right);
+    if (leftIndex == 0 || rightIndex == 0) {
+        // One or both glyphs are not in the primary face;
+        // kerning is undefined across fonts so return zero.
+        return {0.f, 0.f};
+    }
+
     FT_Vector vec2;
-    FT_Get_Kerning(mFace, left, right, FT_KERNING_DEFAULT, &vec2);
+    FT_Get_Kerning(mFace, leftIndex, rightIndex, FT_KERNING_DEFAULT, &vec2);
 
     return {vec2.x >> 6, vec2.y >> 6};
 }
@@ -104,26 +113,27 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     int height = 0;
 
     {
-        // Determine which face to use: try primary, fall back to CJK font if glyph missing.
+        // Step 1: determine which face to use.
+        // The fallback lock is released immediately after face selection;
+        // the face pointer remains valid because fallback faces survive
+        // until AFontManager destruction.
         FT_Face face = nullptr;
-        AFontManager::FallbackFaceLock fallbackGuard;
 
         if (hasGlyph(glyph.codepoint())) {
             face = mFace;
-        } else {
-            // lockFallbackFace ensures initialization, acquires the fallback mutex,
-            // and returns the first loaded face that contains this codepoint.
+        } else if (mFontManager) {
             auto fb = mFontManager->lockFallbackFace(glyph.codepoint());
             if (fb) {
                 face = fb.face;
-                fallbackGuard = std::move(fb);
             }
+            // Fallback lock released; face pointer remains valid.
         }
         if (!face) {
             // No font has this glyph; let the primary face render .notdef (tofu).
             face = mFace;
         }
 
+        // Step 2: set pixel sizes.
         if (FT_Set_Pixel_Sizes(face, 0, size) != 0) {
             // Fallback face may be bitmap-only/fixed-size; retry with primary face.
             if (face != mFace) {
@@ -140,56 +150,63 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
         if (fr == FontRendering::NEAREST)
             flags |= FT_LOAD_TARGET_MONO;
 
-        FT_Error e = FT_Load_Char(face, glyph.codepoint(), flags);
-        if (e) {
-            // Neither face can render this glyph.
-            ALogger::debug("Font") << "FT_Load_Char failed for U+"
-                                   << std::hex << std::uint32_t(glyph.codepoint()) << " (error " << std::dec << e << ")";
-            return Character{
-                .glyphFailed = true,
-            };
-        }
+        // Step 3: render glyph and capture metrics.
+        // FT_Load_Char on mFace mutates the shared glyph slot and must be
+        // serialized; fallback faces have their own slot and need no guard.
+        FT_Error e;
+        {
+            std::unique_lock ftLock(FreeType::sFaceMutex, std::defer_lock);
+            if (face == mFace) ftLock.lock();
 
-        // Capture glyph bitmap and metrics while the fallback lock is held.
-        FT_GlyphSlot g = face->glyph;
-        const float div = 1.f / 64.f;
+            e = FT_Load_Char(face, glyph.codepoint(), flags);
+            if (e) {
+                // Neither face can render this glyph.
+                ALogger::debug("Font") << "FT_Load_Char failed for U+"
+                                       << std::hex << std::uint32_t(glyph.codepoint()) << " (error " << std::dec << e << ")";
+                return Character{
+                    .glyphFailed = true,
+                };
+            }
 
-        if (g->bitmap.width && g->bitmap.rows) {
-            width = g->bitmap.width;
-            if (fr == FontRendering::SUBPIXEL)
-                width /= 3;
-            height = g->bitmap.rows;
+            // Capture glyph bitmap and metrics while the render lock is held.
+            FT_GlyphSlot g = face->glyph;
+            const float div = 1.f / 64.f;
 
-            if (fr == FontRendering::NEAREST) {
-                // when nearest, freetype renders glyphs into the 1bit-depth image
-                // but OpenGL requires at least 8bit-depth, so convert here
-                data.resize(g->bitmap.rows * g->bitmap.width);
+            if (g->bitmap.width && g->bitmap.rows) {
+                width = g->bitmap.width;
+                if (fr == FontRendering::SUBPIXEL)
+                    width /= 3;
+                height = g->bitmap.rows;
 
-                for (unsigned r = 0; r < g->bitmap.rows; ++r) {
-                    unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
-                    for (unsigned c = 0; c < g->bitmap.width; ++c) {
-                        data.at<std::uint8_t>(c + r * g->bitmap.width) = (bufPtr[c / 8] & (0b10000000 >> (c % 8))) ? 255
-                                                                                                                   : 0;
+                if (fr == FontRendering::NEAREST) {
+                    // when nearest, freetype renders glyphs into the 1bit-depth image
+                    // but OpenGL requires at least 8bit-depth, so convert here
+                    data.resize(g->bitmap.rows * g->bitmap.width);
+
+                    for (unsigned r = 0; r < g->bitmap.rows; ++r) {
+                        unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
+                        for (unsigned c = 0; c < g->bitmap.width; ++c) {
+                            data.at<std::uint8_t>(c + r * g->bitmap.width) = (bufPtr[c / 8] & (0b10000000 >> (c % 8))) ? 255
+                                                                                                                       : 0;
+                        }
+                    }
+                } else {
+                    data.reserve(g->bitmap.rows * g->bitmap.pitch);
+
+                    for (unsigned r = 0; r < g->bitmap.rows; ++r) {
+                        unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
+                        data.write(reinterpret_cast<const char*>(bufPtr), g->bitmap.width);
                     }
                 }
-            } else {
-                data.reserve(g->bitmap.rows * g->bitmap.pitch);
-
-                for (unsigned r = 0; r < g->bitmap.rows; ++r) {
-                    unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
-                    data.write(reinterpret_cast<const char*>(bufPtr), g->bitmap.width);
-                }
             }
-        }
 
-        // Capture metrics unconditionally (even for empty-bitmap glyphs like spaces).
-        charSize = { div * g->metrics.width, div * g->metrics.height };
-        hBearing = { static_cast<float>(g->bitmap_left), static_cast<float>(g->bitmap_top) };
-        hAdvance = div * g->metrics.horiAdvance;
-        vBearing = { div * g->metrics.vertBearingX, div * g->metrics.vertBearingY };
-        vAdvance = div * g->metrics.vertAdvance;
-
-        // fallbackGuard released here by destructor.
+            // Capture metrics unconditionally (even for empty-bitmap glyphs like spaces).
+            charSize = { div * g->metrics.width, div * g->metrics.height };
+            hBearing = { static_cast<float>(g->bitmap_left), static_cast<float>(g->bitmap_top) };
+            hAdvance = div * g->metrics.horiAdvance;
+            vBearing = { div * g->metrics.vertBearingX, div * g->metrics.vertBearingY };
+            vAdvance = div * g->metrics.vertAdvance;
+        }   // render lock released here (if acquired).
     }
 
     if (data.empty()) {
