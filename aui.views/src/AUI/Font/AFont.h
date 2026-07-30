@@ -80,6 +80,13 @@ public:
          */
         Metrics vertical{};
 
+        /**
+         * @brief True when FT_Load_Char failed for this glyph (the font does not
+         *        contain a usable glyph, not even .notdef). Such glyphs should get
+         *        a space-width advance fallback rather than their (zero) advance.
+         */
+        bool glyphFailed = false;
+
         [[nodiscard]]
         bool empty() const {
             return image == nullptr;
@@ -87,12 +94,14 @@ public:
 
         /**
          * @return The effective horizontal advance for an empty (no-bitmap) glyph:
-         *         the glyph's computed advance if positive, otherwise the space width.
-         *         Ensures measurement (AFont::length) and rendering (OpenGLRenderer,
-         *         SoftwareRenderer) agree on the advance for zero-bitmap glyphs.
+         *         the glyph's computed advance if positive, or zero for legitimately
+         *         zero-advance glyphs (combining marks, ZWJ/ZWNJ, variation selectors).
+         *         The space-width fallback is only applied when the glyph genuinely
+         *         failed to load (glyphFailed == true).
          */
-        static float emptyAdvance(float glyphAdvance, float spaceWidth) {
-            return glyphAdvance > 0.f ? glyphAdvance : spaceWidth;
+        static float emptyAdvance(const Character& ch, float spaceWidth) {
+            if (ch.glyphFailed) return spaceWidth;
+            return ch.horizontal.advance > 0.f ? ch.horizontal.advance : 0.f;
         }
 
         void* rendererData = nullptr;
@@ -180,7 +189,7 @@ public:
                 if (!ch.empty()) {
                     advance += ch.horizontal.advance;
                 } else {
-                    advance += Character::emptyAdvance(ch.horizontal.advance, getSpaceWidth(size));
+                    advance += Character::emptyAdvance(ch, getSpaceWidth(size));
                 }
             }
         }

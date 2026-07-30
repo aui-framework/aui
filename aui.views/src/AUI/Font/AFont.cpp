@@ -25,8 +25,11 @@
 AFont::AFont(AFontManager* fm, const AString& path) :
         ft(fm->mFreeType),
         mFontManager(fm) {
-    if (FT_New_Face(fm->mFreeType->getFt(), path.toStdString().c_str(), 0, &mFace)) {
-        throw AException("Could not load font: " + path);
+    {
+        std::lock_guard lock(FreeType::sFaceMutex);
+        if (FT_New_Face(fm->mFreeType->getFt(), path.toStdString().c_str(), 0, &mFace)) {
+            throw AException("Could not load font: " + path);
+        }
     }
 }
 
@@ -34,21 +37,28 @@ AFont::AFont(AFontManager* fm, const AUrl& url) :
         ft(fm->mFreeType),
         mFontManager(fm) {
     if (url.schema() == "file") {
-        if (FT_New_Face(fm->mFreeType->getFt(), url.path().toStdString().c_str(), 0, &mFace)) {
-            throw AException("Could not load font: " + url.full());
+        {
+            std::lock_guard lock(FreeType::sFaceMutex);
+            if (FT_New_Face(fm->mFreeType->getFt(), url.path().toStdString().c_str(), 0, &mFace)) {
+                throw AException("Could not load font: " + url.full());
+            }
         }
         return;
     }
     mFontDataBuffer = AByteBuffer::fromStream(url.open());
 
-    if (FT_New_Memory_Face(fm->mFreeType->getFt(), (const FT_Byte*) mFontDataBuffer.data(), mFontDataBuffer.getSize(),
-                           0, &mFace)) {
-        throw AException("Could not load font: " + url.full());
+    {
+        std::lock_guard lock(FreeType::sFaceMutex);
+        if (FT_New_Memory_Face(fm->mFreeType->getFt(), (const FT_Byte*) mFontDataBuffer.data(), mFontDataBuffer.getSize(),
+                               0, &mFace)) {
+            throw AException("Could not load font: " + url.full());
+        }
     }
 }
 
 AFont::~AFont() {
     if (mFace) {
+        std::lock_guard lock(FreeType::sFaceMutex);
         FT_Done_Face(mFace);
     }
 }
@@ -135,7 +145,9 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
             // Neither face can render this glyph.
             ALogger::debug("Font") << "FT_Load_Char failed for U+"
                                    << std::hex << std::uint32_t(glyph.codepoint()) << " (error " << std::dec << e << ")";
-            return Character{};
+            return Character{
+                .glyphFailed = true,
+            };
         }
 
         // Capture glyph bitmap and metrics while the fallback lock is held.

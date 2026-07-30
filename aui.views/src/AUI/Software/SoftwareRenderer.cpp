@@ -483,7 +483,7 @@ public:
                             advance += kerning.x;
                         }
                     }
-                    advance += AFont::Character::emptyAdvance(ch.horizontal.advance, mFontStyle.getSpaceWidth());
+                    advance += AFont::Character::emptyAdvance(ch, mFontStyle.getSpaceWidth());
                     continue;
                 }
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {

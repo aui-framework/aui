@@ -24,7 +24,10 @@
 AFontManager::~AFontManager() {
     std::scoped_lock lock(mFallbackMutex);
     for (auto face : mFallbackFaces) {
-        FT_Done_Face(face);
+        {
+            std::lock_guard ftLock(FreeType::sFaceMutex);
+            FT_Done_Face(face);
+        }
     }
     mFallbackFaces.clear();
 }
@@ -158,10 +161,13 @@ bool AFontManager::tryLoadFallback(std::initializer_list<FallbackCandidate> cand
     bool anyLoaded = false;
     for (const auto& c : candidates) {
         FT_Face face = nullptr;
-        if (FT_New_Face(mFreeType->getFt(), c.path.toStdString().c_str(), c.faceIndex, &face) == 0) {
-            mFallbackFaces.push_back(face);
-            ALogger::info("Font") << "Loaded CJK fallback font: " << c.path;
-            anyLoaded = true;
+        {
+            std::lock_guard lock(FreeType::sFaceMutex);
+            if (FT_New_Face(mFreeType->getFt(), c.path.toStdString().c_str(), c.faceIndex, &face) == 0) {
+                mFallbackFaces.push_back(face);
+                ALogger::info("Font") << "Loaded CJK fallback font: " << c.path;
+                anyLoaded = true;
+            }
         }
     }
     return anyLoaded;

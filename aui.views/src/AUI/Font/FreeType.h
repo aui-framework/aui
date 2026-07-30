@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -13,7 +13,18 @@
 
 #include <ft2build.h>
 #include <freetype/freetype.h>
+#include <mutex>
+
 class FreeType {
+public:
+    /**
+     * @brief Mutex serializing FT_New_Face, FT_New_Memory_Face, and FT_Done_Face
+     *        calls on the shared FT_Library. FreeType requires library-wide
+     *        serialization for face creation/destruction when the same library
+     *        is used from multiple threads.
+     */
+    static std::mutex sFaceMutex;
+
 private:
 	FT_Library ft;
 public:
