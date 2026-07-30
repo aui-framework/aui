@@ -475,7 +475,20 @@ public:
             else {
                 AFont::Character& ch = font->getCharacter(fe, c);
                 if (ch.empty()) {
-                    advance += mFontStyle.getSpaceWidth();
+                    if (ch.horizontal.advance > 0) {
+                        notifySymbolAdded({glm::ivec2{advance, advanceY}});
+                        if (hasKerning) {
+                            auto next = std::next(i);
+                            if (next != text.end()) {
+                                auto kerning = font->getKerning(c, *next);
+                                advance += kerning.x;
+                            }
+                        }
+                        advance += ch.horizontal.advance;
+                        advance = glm::floor(advance);
+                    } else {
+                        advance += mFontStyle.getSpaceWidth();
+                    }
                     continue;
                 }
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {

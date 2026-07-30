@@ -37,13 +37,12 @@ void AFontManager::ensureFallbackFaceLocked() {
         // Already tried and failed; don't retry every glyph
         return;
     }
-    mFallbackAttempted = true;
-
 #if AUI_PLATFORM_LINUX
     // Use fontconfig to find a CJK-capable sans-serif font.
     // Ensure fontconfig is initialized before using default config (nullptr).
     if (!FcInit()) {
         ALogger::warn("Font") << "FcInit() failed; CJK fallback unavailable";
+        mFallbackAttempted = true;   // FcInit is a one-shot init; failure is definitive.
         return;
     }
     // Use a charset-based query with a common CJK character to ensure the font actually has CJK glyphs.
@@ -68,6 +67,7 @@ void AFontManager::ensureFallbackFaceLocked() {
                     ALogger::warn("Font") << "Fontconfig fallback font lacks U+4E2D, skipping";
                     FcPatternDestroy(match);
                     FcPatternDestroy(pattern);
+                    mFallbackAttempted = true;   // Fontconfig is working but no CJK font is available.
                     return;
                 }
             }
@@ -85,6 +85,7 @@ void AFontManager::ensureFallbackFaceLocked() {
     FcPatternDestroy(pattern);
     if (mFallbackFaces.empty()) {
         ALogger::warn("Font") << "No CJK fallback font found via fontconfig";
+        mFallbackAttempted = true;
     }
 #elif AUI_PLATFORM_WIN
     // Try known CJK font files from the Windows Fonts directory.
@@ -108,6 +109,7 @@ void AFontManager::ensureFallbackFaceLocked() {
             { fontsDir + "meiryo.ttc" },     // Meiryo (Japanese)
         })) {
         ALogger::warn("Font") << "No CJK fallback font found on Windows";
+        mFallbackAttempted = true;
     }
 #elif AUI_PLATFORM_MACOS
     // macOS system CJK fonts (stable paths since OS X 10.11).
@@ -118,6 +120,7 @@ void AFontManager::ensureFallbackFaceLocked() {
             { "/System/Library/Fonts/Supplemental/AppleSDGothicNeo.ttc" },
         })) {
         ALogger::warn("Font") << "No CJK fallback font found on macOS";
+        mFallbackAttempted = true;
     }
 #elif AUI_PLATFORM_ANDROID
     // Android system CJK fonts (varies by API level).
@@ -128,6 +131,7 @@ void AFontManager::ensureFallbackFaceLocked() {
             { "/system/fonts/NotoSansJP-Regular.otf" },    // Android 10+ (Japanese)
         })) {
         ALogger::warn("Font") << "No CJK fallback font found on Android";
+        mFallbackAttempted = true;
     }
 #elif AUI_PLATFORM_IOS
     // iOS system CJK fonts.
@@ -136,23 +140,26 @@ void AFontManager::ensureFallbackFaceLocked() {
             { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
         })) {
         ALogger::warn("Font") << "No CJK fallback font found on iOS";
+        mFallbackAttempted = true;
     }
 #else
     // Unknown platform; mark fallback as unavailable.
     ALogger::warn("Font") << "CJK font fallback not available on this platform";
+    mFallbackAttempted = true;
 #endif
 }
 
 bool AFontManager::tryLoadFallback(std::initializer_list<FallbackCandidate> candidates) {
+    bool anyLoaded = false;
     for (const auto& c : candidates) {
         FT_Face face = nullptr;
         if (FT_New_Face(mFreeType->getFt(), c.path.toStdString().c_str(), c.faceIndex, &face) == 0) {
             mFallbackFaces.push_back(face);
             ALogger::info("Font") << "Loaded CJK fallback font: " << c.path;
-            return true;
+            anyLoaded = true;
         }
     }
-    return false;
+    return anyLoaded;
 }
 
 AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint) {
