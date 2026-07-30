@@ -60,7 +60,7 @@ private:
     bool mFallbackAttempted = false;
 
     void ensureFallbackFaceLocked();
-    bool tryLoadFallback(std::initializer_list<AString> candidates);
+    bool tryLoadFallback(std::initializer_list<AString> candidates, int faceIndex = 0);
 
 public:
     /**

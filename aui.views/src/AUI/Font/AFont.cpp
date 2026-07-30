@@ -155,20 +155,31 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
                 data.write(reinterpret_cast<const char*>(bufPtr), g->bitmap.width);
             }
         }
-
-        // Capture metrics from glyph slot while the face is still locked.
-        charSize = { div * g->metrics.width, div * g->metrics.height };
-        hBearing = { static_cast<float>(g->bitmap_left), static_cast<float>(g->bitmap_top) };
-        hAdvance = div * g->metrics.horiAdvance;
-        vBearing = { div * g->metrics.vertBearingX, div * g->metrics.vertBearingY };
-        vAdvance = div * g->metrics.vertAdvance;
     }
+
+    // Capture metrics unconditionally (even for empty-bitmap glyphs like spaces).
+    charSize = { div * g->metrics.width, div * g->metrics.height };
+    hBearing = { static_cast<float>(g->bitmap_left), static_cast<float>(g->bitmap_top) };
+    hAdvance = div * g->metrics.horiAdvance;
+    vBearing = { div * g->metrics.vertBearingX, div * g->metrics.vertBearingY };
+    vAdvance = div * g->metrics.vertAdvance;
 
     // Release fallback lock; all glyph data is now copied to locals.
     fallbackGuard = AFontManager::FallbackFaceLock{};
 
     if (data.empty()) {
-        return Character{};
+        return Character{
+            .image = nullptr,
+            .size = charSize,
+            .horizontal = {
+              .bearing = hBearing,
+              .advance = hAdvance,
+            },
+            .vertical = {
+              .bearing = vBearing,
+              .advance = vAdvance,
+            },
+        };
     }
 
     int imageFormat = APixelFormat::BYTE;

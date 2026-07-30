@@ -86,6 +86,12 @@ AFontManager::AFontManager() :
         mDefaultFont = loadFont(":uni/font/Roboto.ttf");
         ALogger::info(LOG_TAG) << "Using fallback internal font";
     }
+
+    // Pre-warm fallback face to avoid UI-thread stall on first missing-glyph render.
+    {
+        std::unique_lock lock(mFallbackMutex);
+        ensureFallbackFaceLocked();
+    }
 }
 
 namespace {

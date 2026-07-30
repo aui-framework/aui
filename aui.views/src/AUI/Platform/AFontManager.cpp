@@ -73,8 +73,10 @@ void AFontManager::ensureFallbackFaceLocked() {
                 }
             }
             FcChar8* path = nullptr;
+            int faceIndex = 0;
             if (FcPatternGetString(match, FC_FILE, 0, &path) == FcResultMatch) {
-                if (!tryLoadFallback({ AString(reinterpret_cast<const char*>(path)) })) {
+                FcPatternGetInteger(match, FC_INDEX, 0, &faceIndex);
+                if (!tryLoadFallback({ AString(reinterpret_cast<const char*>(path)) }, faceIndex)) {
                     mFallbackFontPath.clear();
                 }
             } else {
@@ -103,9 +105,9 @@ void AFontManager::ensureFallbackFaceLocked() {
     if (!tryLoadFallback({
             fontsDir + "msyh.ttc",       // Microsoft YaHei (Simplified Chinese, includes CJK + Kana)
             fontsDir + "malgun.ttf",     // Malgun Gothic (Korean, includes Hangul + CJK)
-            fontsDir + "simsun.ttc",     // SimSun (Chinese Traditional)
+            fontsDir + "simsun.ttc",     // SimSun (Simplified Chinese)
             fontsDir + "msgothic.ttc",   // MS Gothic (Japanese)
-            fontsDir + "yugothic.ttf",   // Yu Gothic (Japanese)
+            fontsDir + "yugothr.ttc",    // Yu Gothic (Japanese)
             fontsDir + "meiryo.ttc",     // Meiryo (Japanese)
         })) {
         ALogger::warn("Font") << "No CJK fallback font found on Windows";
@@ -149,8 +151,8 @@ void AFontManager::ensureFallbackFaceLocked() {
                     ALogger::info("Font") << "Loaded CJK fallback font from bundle";
                     loaded = true;
                 }
-            } catch (...) {
-                // bundled font not present
+            } catch (const AException& e) {
+                ALogger::debug("Font") << "Bundled fallback font not loaded: " << e;
             }
         }
         if (!loaded) {
@@ -163,10 +165,10 @@ void AFontManager::ensureFallbackFaceLocked() {
 #endif
 }
 
-bool AFontManager::tryLoadFallback(std::initializer_list<AString> candidates) {
+bool AFontManager::tryLoadFallback(std::initializer_list<AString> candidates, int faceIndex) {
     for (const auto& path : candidates) {
         FT_Face face = nullptr;
-        if (FT_New_Face(mFreeType->getFt(), path.toStdString().c_str(), 0, &face) == 0) {
+        if (FT_New_Face(mFreeType->getFt(), path.toStdString().c_str(), faceIndex, &face) == 0) {
             mFallbackFace = face;
             mFallbackFontPath = path;
             ALogger::info("Font") << "Loaded CJK fallback font: " << path;
