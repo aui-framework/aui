@@ -85,6 +85,16 @@ public:
             return image == nullptr;
         }
 
+        /**
+         * @return The effective horizontal advance for an empty (no-bitmap) glyph:
+         *         the glyph's computed advance if positive, otherwise the space width.
+         *         Ensures measurement (AFont::length) and rendering (OpenGLRenderer,
+         *         SoftwareRenderer) agree on the advance for zero-bitmap glyphs.
+         */
+        static float emptyAdvance(float glyphAdvance, float spaceWidth) {
+            return glyphAdvance > 0.f ? glyphAdvance : spaceWidth;
+        }
+
         void* rendererData = nullptr;
     };
 
@@ -169,10 +179,9 @@ public:
                 Character& ch = getCharacter(charset, *i);
                 if (!ch.empty()) {
                     advance += ch.horizontal.advance;
-                } else if (ch.horizontal.advance > 0) {
-                    advance += ch.horizontal.advance;
-                } else
-                    advance += getSpaceWidth(size);
+                } else {
+                    advance += Character::emptyAdvance(ch.horizontal.advance, getSpaceWidth(size));
+                }
             }
         }
         return int(glm::ceil(glm::max(prevLineAdvance, advance)));

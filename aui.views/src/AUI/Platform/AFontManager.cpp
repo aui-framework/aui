@@ -95,7 +95,8 @@ void AFontManager::ensureFallbackFaceLocked() {
         wchar_t buf[MAX_PATH];
         UINT len = GetWindowsDirectoryW(buf, MAX_PATH);
         if (len > 0 && len < MAX_PATH) {
-            return AString(reinterpret_cast<char16_t*>(buf)) + "\\Fonts\\";
+            // Construct from exactly len characters (not relying on null termination).
+            return AString(reinterpret_cast<const char16_t*>(buf), len) + "\\Fonts\\";
         }
         ALogger::warn("Font") << "GetWindowsDirectoryW() failed, falling back to C:\\Windows\\Fonts\\";
         return AString("C:\\Windows\\Fonts\\");
@@ -150,6 +151,10 @@ void AFontManager::ensureFallbackFaceLocked() {
 }
 
 bool AFontManager::tryLoadFallback(std::initializer_list<FallbackCandidate> candidates) {
+    // Accumulate every candidate that loads — no single file covers every CJK script.
+    // On Windows, msyh.ttc lacks Hangul; on Android 10+, per-script OTFs don't overlap.
+    // lockFallbackFace iterates mFallbackFaces and returns the first face containing
+    // the requested codepoint, providing per-script coverage from the full set.
     bool anyLoaded = false;
     for (const auto& c : candidates) {
         FT_Face face = nullptr;
