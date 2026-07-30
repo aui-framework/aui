@@ -115,7 +115,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     int height = 0;
 
     FT_Face face = nullptr;
-    std::unique_lock<std::mutex> fallbackLock;  // holds mFallbackMutex for fallback face render ops
+    std::unique_lock<std::mutex> fallbackLock;  // holds per-face mutex for fallback face FT ops
 
     // Step 1: determine which face to use.
     // hasGlyph has internal sFaceMutex locking.
@@ -125,8 +125,9 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
         auto fb = mFontManager->lockFallbackFace(glyph.codepoint());
         if (fb) {
             face = fb.face;
-            // Transfer lock ownership to extend lifetime through render ops.
-            fallbackLock = std::move(fb.lock);
+            // Transfer per-face lock; manager lock (fb.lock) destructs at end of
+            // this if-block, releasing mFallbackMutex immediately.
+            fallbackLock = std::move(fb.faceLock);
         }
     }
     if (!face) {
@@ -136,7 +137,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
 
     // Step 2 & 3: set pixel sizes, render glyph, and capture metrics.
     // FT_Face operations on mFace must be serialized with sFaceMutex;
-    // fallback face operations are serialized via mFallbackMutex (fallbackLock).
+    // fallback face operations are serialized via the per-face mutex (fallbackLock).
     {
         std::unique_lock ftLock(FreeType::sFaceMutex, std::defer_lock);
         if (face == mFace) ftLock.lock();
@@ -145,6 +146,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
         if (FT_Set_Pixel_Sizes(face, 0, size) != 0) {
             // Fallback face may be bitmap-only/fixed-size; retry with primary face.
             if (face != mFace) {
+                fallbackLock = {};  // release per-face mutex before locking sFaceMutex
                 face = mFace;
                 if (!ftLock.owns_lock()) ftLock.lock();  // acquire lock for mFace
                 FT_Set_Pixel_Sizes(face, 0, size);
@@ -208,7 +210,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
         hAdvance = div * g->metrics.horiAdvance;
         vBearing = { div * g->metrics.vertBearingX, div * g->metrics.vertBearingY };
         vAdvance = div * g->metrics.vertAdvance;
-    }   // sFaceMutex (if held) and mFallbackMutex (if held via fallbackLock) released here.
+    }   // sFaceMutex (if held) and per-face mutex (if held via fallbackLock) released here.
 
     if (data.empty()) {
         return Character{

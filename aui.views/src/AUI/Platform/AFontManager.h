@@ -15,6 +15,7 @@
 #include "AUI/Util/Manager.h"
 #include "AUI/Font/AFontFamily.h"
 #include <AUI/Common/AVector.h>
+#include <memory>
 #include <mutex>
 #include "AUI/Font/AFont.h"
 
@@ -63,8 +64,16 @@ private:
     _<AFontFamily> mDefaultFamily;
     _<AFont> mDefaultFont;
 
+    /**
+     * A loaded fallback face with a per-face mutex to serialize FT operations.
+     */
+    struct FallbackFace {
+        FT_FaceRec_* face = nullptr;
+        std::unique_ptr<std::mutex> mtx = std::make_unique<std::mutex>();
+    };
+
     std::mutex mFallbackMutex;
-    AVector<FT_FaceRec_*> mFallbackFaces;
+    AVector<FallbackFace> mFallbackFaces;
     AVector<FallbackCandidate> mDeferredCandidates;
     bool mFallbackAttempted = false;
 
@@ -80,25 +89,26 @@ private:
     }
 
     /**
-     * Bundles the fallback mutex lock with the face pointer so the face can only
-     * be accessed while the lock is held.
+     * Bundles the manager mutex, face pointer, and per-face mutex lock.
+     * The manager lock is released after face selection; the per-face lock
+     * is held through FT operations on the returned face.
      */
     struct FallbackFaceLock {
-        std::unique_lock<std::mutex> lock;
+        std::unique_lock<std::mutex> lock;      // mFallbackMutex (released early)
         FT_FaceRec_* face = nullptr;
+        std::unique_lock<std::mutex> faceLock;  // per-face mutex (held through FT ops)
 
         explicit operator bool() const noexcept { return face != nullptr; }
     };
 
     /**
-     * Ensures fallback faces are loaded (once) and acquires the fallback mutex.
-     * Iterates loaded faces and returns the first one that contains the given
-     * codepoint, or nullptr if none does. The returned face is valid only while
-     * the returned lock is held.
+     * Ensures fallback faces are loaded (once) and returns the first face
+     * that contains the given codepoint. The returned FallbackFaceLock holds
+     * the manager mutex (released soon after return) and a per-face mutex
+     * (held through FT operations on the returned face).
      *
      * @note The first call may block while fallback fonts are discovered via
-     *       fontconfig or filesystem probing under the mutex. Subsequent calls
-     *       return immediately.
+     *       fontconfig or filesystem probing under mFallbackMutex.
      */
     [[nodiscard]]
     FallbackFaceLock lockFallbackFace(char32_t codepoint);

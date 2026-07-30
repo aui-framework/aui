@@ -23,10 +23,10 @@
 
 AFontManager::~AFontManager() {
     std::scoped_lock lock(mFallbackMutex);
-    for (auto face : mFallbackFaces) {
+    for (auto& fb : mFallbackFaces) {
         {
             std::lock_guard ftLock(FreeType::sFaceMutex);
-            FT_Done_Face(face);
+            FT_Done_Face(fb.face);
         }
     }
     mFallbackFaces.clear();
@@ -37,7 +37,7 @@ bool AFontManager::loadOneFallback(const FallbackCandidate& candidate) {
     {
         std::lock_guard lock(FreeType::sFaceMutex);
         if (FT_New_Face(mFreeType->getFt(), candidate.path.toStdString().c_str(), candidate.faceIndex, &face) == 0) {
-            mFallbackFaces.push_back(face);
+            mFallbackFaces.push_back({face});
             ALogger::info("Font") << "Loaded CJK fallback font: " << candidate.path;
             return true;
         }
@@ -168,20 +168,25 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
     ensureFallbackFaceLocked();
 
     // Check all already-loaded faces first.
-    for (auto face : mFallbackFaces) {
-        if (FT_Get_Char_Index(face, codepoint) != 0) {
-            return { std::move(lk), face };
+    for (auto& fb : mFallbackFaces) {
+        if (FT_Get_Char_Index(fb.face, codepoint) != 0) {
+            return { std::move(lk), fb.face, std::unique_lock(*fb.mtx) };
         }
     }
 
     // No loaded face has this codepoint; try deferred candidates lazily.
-    while (!mDeferredCandidates.empty()) {
+    // Bound to a few per call to avoid draining the entire queue on the UI thread
+    // for a codepoint that no candidate covers (e.g. emoji, rare symbols).
+    constexpr int kMaxDeferredLoadsPerCall = 2;
+    int loaded = 0;
+    while (!mDeferredCandidates.empty() && loaded < kMaxDeferredLoadsPerCall) {
         auto c = mDeferredCandidates.first();
         mDeferredCandidates.erase(mDeferredCandidates.begin());
         if (loadOneFallback(c)) {
-            // Check if the newly loaded face covers this codepoint.
-            if (FT_Get_Char_Index(mFallbackFaces.last(), codepoint) != 0) {
-                return { std::move(lk), mFallbackFaces.last() };
+            ++loaded;
+            auto& fb = mFallbackFaces.last();
+            if (FT_Get_Char_Index(fb.face, codepoint) != 0) {
+                return { std::move(lk), fb.face, std::unique_lock(*fb.mtx) };
             }
         }
     }

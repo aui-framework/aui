@@ -99,9 +99,10 @@ public:
          *         The space-width fallback is only applied when the glyph genuinely
          *         failed to load (glyphFailed == true).
          */
-        static float emptyAdvance(const Character& ch, float spaceWidth) {
-            if (ch.glyphFailed) return spaceWidth;
-            return ch.horizontal.advance > 0.f ? ch.horizontal.advance : 0.f;
+        [[nodiscard]]
+        float emptyAdvance(float spaceWidth) const {
+            if (glyphFailed) return spaceWidth;
+            return horizontal.advance > 0.f ? horizontal.advance : 0.f;
         }
 
         void* rendererData = nullptr;
@@ -189,7 +190,7 @@ public:
                 if (!ch.empty()) {
                     advance += ch.horizontal.advance;
                 } else {
-                    advance += Character::emptyAdvance(ch, getSpaceWidth(size));
+                    advance += ch.emptyAdvance(getSpaceWidth(size));
                 }
             }
         }
