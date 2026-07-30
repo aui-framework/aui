@@ -82,7 +82,6 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
 
     // Determine which face to use: try primary, fall back to CJK font if glyph missing.
     FT_Face face = nullptr;
-    bool usingFallback = false;
     AFontManager::FallbackFaceLock fallbackGuard;
     auto& fmgr = AFontManager::inst();
     if (hasGlyph(glyph.codepoint())) {
@@ -92,7 +91,6 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
         auto fb = fmgr.lockFallbackFace();
         if (fb && FT_Get_Char_Index(fb.face, glyph.codepoint()) != 0) {
             face = fb.face;
-            usingFallback = true;
             fallbackGuard = std::move(fb);
         }
     }
@@ -167,10 +165,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     }
 
     // Release fallback lock; all glyph data is now copied to locals.
-    if (usingFallback) {
-        usingFallback = false;
-        fallbackGuard = AFontManager::FallbackFaceLock{};
-    }
+    fallbackGuard = AFontManager::FallbackFaceLock{};
 
     if (data.empty()) {
         return Character{};

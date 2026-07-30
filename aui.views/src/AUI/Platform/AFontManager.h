@@ -77,6 +77,10 @@ public:
     /**
      * Ensures the fallback face is loaded (once) and acquires the fallback mutex.
      * The returned face is valid only while the returned lock is held.
+     *
+     * @note The first call may block while the fallback font is discovered via
+     *       fontconfig or filesystem probing under the mutex. Subsequent calls
+     *       return immediately.
      */
     [[nodiscard]]
     FallbackFaceLock lockFallbackFace() {

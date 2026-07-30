@@ -84,6 +84,9 @@ void AFontManager::ensureFallbackFaceLocked() {
         FcPatternDestroy(match);
     }
     FcPatternDestroy(pattern);
+    if (!mFallbackFace) {
+        ALogger::warn("Font") << "No CJK fallback font found via fontconfig";
+    }
 #elif AUI_PLATFORM_WIN
     // Try known CJK font files from the Windows Fonts directory.
     // Order: most-comprehensive first (Microsoft YaHei covers CJK + Kana,
@@ -162,12 +165,13 @@ void AFontManager::ensureFallbackFaceLocked() {
 
 bool AFontManager::tryLoadFallback(std::initializer_list<AString> candidates) {
     for (const auto& path : candidates) {
-        if (FT_New_Face(mFreeType->getFt(), path.toStdString().c_str(), 0, &mFallbackFace) == 0) {
+        FT_Face face = nullptr;
+        if (FT_New_Face(mFreeType->getFt(), path.toStdString().c_str(), 0, &face) == 0) {
+            mFallbackFace = face;
             mFallbackFontPath = path;
             ALogger::info("Font") << "Loaded CJK fallback font: " << path;
             return true;
         }
-        mFallbackFace = nullptr;
     }
     return false;
 }
