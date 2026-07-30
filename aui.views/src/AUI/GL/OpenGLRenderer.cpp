@@ -711,14 +711,12 @@ public:
             } else {
                 AFont::Character& ch = font->getCharacter(fe, c);
                 if (ch.empty()) {
-                    if (ch.horizontal.advance > 0) {
-                        notifySymbolAdded({glm::ivec2{advance, advanceY}});
-                        if (hasKerning) {
-                            auto next = std::next(i);
-                            if (next != text.end()) {
-                                auto kerning = font->getKerning(c, *next);
-                                advance += kerning.x;
-                            }
+                    notifySymbolAdded({glm::ivec2{advance, advanceY}});
+                    if (hasKerning) {
+                        auto next = std::next(i);
+                        if (next != text.end()) {
+                            auto kerning = font->getKerning(c, *next, fe.first.size);
+                            advance += kerning.x;
                         }
                     }
                     advance += AFont::Character::emptyAdvance(ch.horizontal.advance, mFontStyle.getSpaceWidth());
@@ -763,7 +761,7 @@ public:
                 if (hasKerning) {
                     auto next = std::next(i);
                     if (next != text.end()) {
-                        auto kerning = font->getKerning(c, *next);
+                        auto kerning = font->getKerning(c, *next, fe.first.size);
                         advance += kerning.x;
                     }
                 }

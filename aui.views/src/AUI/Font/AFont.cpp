@@ -71,7 +71,8 @@ bool AFont::hasGlyph(char32_t codepoint) const {
     return FT_Get_Char_Index(mFace, codepoint) != 0;
 }
 
-glm::vec2 AFont::getKerning(wchar_t left, wchar_t right) {
+glm::vec2 AFont::getKerning(wchar_t left, wchar_t right, unsigned size) {
+    FT_Set_Pixel_Sizes(mFace, 0, size);
     FT_Vector vec2;
     FT_Get_Kerning(mFace, left, right, FT_KERNING_DEFAULT, &vec2);
 
