@@ -46,6 +46,15 @@ public:
         }
         return mLoadedFont[url] = loadFont(url);
     }
+public:
+    /**
+     * A candidate font path with an optional face index (for TTC collections).
+     */
+    struct FallbackCandidate {
+        AString path;
+        int faceIndex = 0;
+    };
+
 private:
     AMap<AUrl, _<AFont>> mLoadedFont;
     AMap<AString, _<AFontFamily>> mFamilies;
@@ -60,9 +69,12 @@ private:
     bool mFallbackAttempted = false;
 
     void ensureFallbackFaceLocked();
-    bool tryLoadFallback(std::initializer_list<AString> candidates, int faceIndex = 0);
+    bool tryLoadFallback(std::initializer_list<FallbackCandidate> candidates);
+    void initFallback() {
+        std::unique_lock lock(mFallbackMutex);
+        ensureFallbackFaceLocked();
+    }
 
-public:
     /**
      * Bundles the fallback mutex lock with the face pointer so the face can only
      * be accessed while the lock is held.

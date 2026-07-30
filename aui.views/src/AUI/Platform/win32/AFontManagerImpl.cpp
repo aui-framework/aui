@@ -33,6 +33,9 @@ AFontManager::AFontManager()
     }();
 
     mDefaultFont = loadFont(AUrl::file(fontPath));
+
+    // Pre-warm fallback face to avoid UI-thread stall on first missing-glyph render.
+    initFallback();
 }
 
 

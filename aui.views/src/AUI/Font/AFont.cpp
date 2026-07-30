@@ -23,14 +23,16 @@
 
 
 AFont::AFont(AFontManager* fm, const AString& path) :
-        ft(fm->mFreeType) {
+        ft(fm->mFreeType),
+        mFontManager(fm) {
     if (FT_New_Face(fm->mFreeType->getFt(), path.toStdString().c_str(), 0, &mFace)) {
         throw AException("Could not load font: " + path);
     }
 }
 
 AFont::AFont(AFontManager* fm, const AUrl& url) :
-        ft(fm->mFreeType) {
+        ft(fm->mFreeType),
+        mFontManager(fm) {
     if (url.schema() == "file") {
         if (FT_New_Face(fm->mFreeType->getFt(), url.path().toStdString().c_str(), 0, &mFace)) {
             throw AException("Could not load font: " + url.full());
@@ -83,12 +85,11 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     // Determine which face to use: try primary, fall back to CJK font if glyph missing.
     FT_Face face = nullptr;
     AFontManager::FallbackFaceLock fallbackGuard;
-    auto& fmgr = AFontManager::inst();
     if (hasGlyph(glyph.codepoint())) {
         face = mFace;
     } else {
         // lockFallbackFace ensures initialization AND acquires the fallback mutex.
-        auto fb = fmgr.lockFallbackFace();
+        auto fb = mFontManager->lockFallbackFace();
         if (fb && FT_Get_Char_Index(fb.face, glyph.codepoint()) != 0) {
             face = fb.face;
             fallbackGuard = std::move(fb);

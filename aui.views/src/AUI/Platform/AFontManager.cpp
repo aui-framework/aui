@@ -76,7 +76,7 @@ void AFontManager::ensureFallbackFaceLocked() {
             int faceIndex = 0;
             if (FcPatternGetString(match, FC_FILE, 0, &path) == FcResultMatch) {
                 FcPatternGetInteger(match, FC_INDEX, 0, &faceIndex);
-                if (!tryLoadFallback({ AString(reinterpret_cast<const char*>(path)) }, faceIndex)) {
+                if (!tryLoadFallback({ { AString(reinterpret_cast<const char*>(path)), faceIndex } })) {
                     mFallbackFontPath.clear();
                 }
             } else {
@@ -103,32 +103,32 @@ void AFontManager::ensureFallbackFaceLocked() {
         return AString("C:\\Windows\\Fonts\\");
     }();
     if (!tryLoadFallback({
-            fontsDir + "msyh.ttc",       // Microsoft YaHei (Simplified Chinese, includes CJK + Kana)
-            fontsDir + "malgun.ttf",     // Malgun Gothic (Korean, includes Hangul + CJK)
-            fontsDir + "simsun.ttc",     // SimSun (Simplified Chinese)
-            fontsDir + "msgothic.ttc",   // MS Gothic (Japanese)
-            fontsDir + "yugothr.ttc",    // Yu Gothic (Japanese)
-            fontsDir + "meiryo.ttc",     // Meiryo (Japanese)
+            { fontsDir + "msyh.ttc" },       // Microsoft YaHei (Simplified Chinese, includes CJK + Kana)
+            { fontsDir + "malgun.ttf" },     // Malgun Gothic (Korean, includes Hangul + CJK)
+            { fontsDir + "simsun.ttc" },     // SimSun (Simplified Chinese)
+            { fontsDir + "msgothic.ttc" },   // MS Gothic (Japanese)
+            { fontsDir + "yugothr.ttc" },    // Yu Gothic (Japanese)
+            { fontsDir + "meiryo.ttc" },     // Meiryo (Japanese)
         })) {
         ALogger::warn("Font") << "No CJK fallback font found on Windows";
     }
 #elif AUI_PLATFORM_MACOS
     // macOS system CJK fonts (stable paths since OS X 10.11).
     if (!tryLoadFallback({
-            "/System/Library/Fonts/PingFang.ttc",
-            "/System/Library/Fonts/AppleSDGothicNeo.ttc",
-            "/System/Library/Fonts/Hiragino Sans.ttc",
-            "/System/Library/Fonts/Supplemental/AppleSDGothicNeo.ttc",
+            { "/System/Library/Fonts/PingFang.ttc" },
+            { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
+            { "/System/Library/Fonts/Hiragino Sans.ttc" },
+            { "/System/Library/Fonts/Supplemental/AppleSDGothicNeo.ttc" },
         })) {
         ALogger::warn("Font") << "No CJK fallback font found on macOS";
     }
 #elif AUI_PLATFORM_ANDROID
     // Android system CJK fonts (varies by API level).
     if (!tryLoadFallback({
-            "/system/fonts/NotoSansCJK-Regular.ttc",  // Android 5-9, pan-CJK
-            "/system/fonts/NotoSansSC-Regular.otf",    // Android 10+ (Chinese)
-            "/system/fonts/NotoSansKR-Regular.otf",    // Android 10+ (Korean)
-            "/system/fonts/NotoSansJP-Regular.otf",    // Android 10+ (Japanese)
+            { "/system/fonts/NotoSansCJK-Regular.ttc" },  // Android 5-9, pan-CJK
+            { "/system/fonts/NotoSansSC-Regular.otf" },    // Android 10+ (Chinese)
+            { "/system/fonts/NotoSansKR-Regular.otf" },    // Android 10+ (Korean)
+            { "/system/fonts/NotoSansJP-Regular.otf" },    // Android 10+ (Japanese)
         })) {
         ALogger::warn("Font") << "No CJK fallback font found on Android";
     }
@@ -137,8 +137,8 @@ void AFontManager::ensureFallbackFaceLocked() {
     // then fall back to a bundled resource if available.
     {
         bool loaded = tryLoadFallback({
-            "/System/Library/Fonts/PingFang.ttc",
-            "/System/Library/Fonts/AppleSDGothicNeo.ttc",
+            { "/System/Library/Fonts/PingFang.ttc" },
+            { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
         });
         if (!loaded) {
             // Try bundled resource
@@ -165,13 +165,13 @@ void AFontManager::ensureFallbackFaceLocked() {
 #endif
 }
 
-bool AFontManager::tryLoadFallback(std::initializer_list<AString> candidates, int faceIndex) {
-    for (const auto& path : candidates) {
+bool AFontManager::tryLoadFallback(std::initializer_list<FallbackCandidate> candidates) {
+    for (const auto& c : candidates) {
         FT_Face face = nullptr;
-        if (FT_New_Face(mFreeType->getFt(), path.toStdString().c_str(), faceIndex, &face) == 0) {
+        if (FT_New_Face(mFreeType->getFt(), c.path.toStdString().c_str(), c.faceIndex, &face) == 0) {
             mFallbackFace = face;
-            mFallbackFontPath = path;
-            ALogger::info("Font") << "Loaded CJK fallback font: " << path;
+            mFallbackFontPath = c.path;
+            ALogger::info("Font") << "Loaded CJK fallback font: " << c.path;
             return true;
         }
     }

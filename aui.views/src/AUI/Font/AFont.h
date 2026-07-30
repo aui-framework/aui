@@ -82,7 +82,7 @@ public:
 
         [[nodiscard]]
         bool empty() const {
-            return image == nullptr;
+            return image == nullptr && horizontal.advance == 0 && vertical.advance == 0;
         }
 
         void* rendererData = nullptr;
@@ -114,7 +114,7 @@ private:
     _<FreeType> ft;
     AByteBuffer mFontDataBuffer;
     FT_FaceRec_* mFace;
-
+    AFontManager* mFontManager = nullptr;
 
     AMap<FontKey, FontData> mCharData;
 

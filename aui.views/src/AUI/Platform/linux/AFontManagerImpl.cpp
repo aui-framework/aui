@@ -88,10 +88,7 @@ AFontManager::AFontManager() :
     }
 
     // Pre-warm fallback face to avoid UI-thread stall on first missing-glyph render.
-    {
-        std::unique_lock lock(mFallbackMutex);
-        ensureFallbackFaceLocked();
-    }
+    initFallback();
 }
 
 namespace {
