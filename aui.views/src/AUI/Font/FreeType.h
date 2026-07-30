@@ -18,10 +18,11 @@
 class FreeType {
 public:
     /**
-     * @brief Mutex serializing FT_New_Face, FT_New_Memory_Face, and FT_Done_Face
-     *        calls on the shared FT_Library. FreeType requires library-wide
-     *        serialization for face creation/destruction when the same library
-     *        is used from multiple threads.
+     * @brief Mutex serializing all FT_Face operations on the shared primary face,
+     *        including FT_New_Face, FT_New_Memory_Face, FT_Done_Face,
+     *        FT_Set_Pixel_Sizes, FT_Load_Char, FT_Get_Char_Index, and
+     *        FT_Get_Kerning. FreeType does not guarantee thread safety for
+     *        concurrent use of the same FT_Face from multiple threads.
      */
     static std::mutex sFaceMutex;
 
