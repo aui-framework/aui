@@ -144,16 +144,15 @@ void AFontManager::ensureFallbackFaceLocked() {
 }
 
 bool AFontManager::tryLoadFallback(std::initializer_list<FallbackCandidate> candidates) {
-    bool anyLoaded = false;
     for (const auto& c : candidates) {
         FT_Face face = nullptr;
         if (FT_New_Face(mFreeType->getFt(), c.path.toStdString().c_str(), c.faceIndex, &face) == 0) {
             mFallbackFaces.push_back(face);
             ALogger::info("Font") << "Loaded CJK fallback font: " << c.path;
-            anyLoaded = true;
+            return true;
         }
     }
-    return anyLoaded;
+    return false;
 }
 
 AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint) {
