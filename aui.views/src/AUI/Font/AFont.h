@@ -12,6 +12,7 @@
 #pragma once
 
 #include <string>
+#include <iterator>
 #include <glm/glm.hpp>
 #include <AUI/Url/AUrl.h>
 
@@ -134,6 +135,14 @@ private:
     _<FreeType> ft;
     AByteBuffer mFontDataBuffer;
     FT_FaceRec_* mFace = nullptr;
+    /**
+     * @brief Non-owning back-pointer to the font manager, used by renderGlyph
+     *        for lazy CJK fallback face lookup. AFontManager is a
+     *        process-lifetime singleton and every AFont is created by it, so
+     *        the manager outlives all AFont instances; AFont handles must not
+     *        be kept beyond the manager's lifetime (rendering a glyph after
+     *        the manager is destroyed would dereference this pointer).
+     */
     AFontManager* mFontManager = nullptr;
 
     AMap<FontKey, FontData> mCharData;
@@ -178,6 +187,7 @@ public:
         int size = charset.first.size;
         float prevLineAdvance = 0;
         float advance = 0;
+        const bool hasKerning = isHasKerning();
 
         for (Iterator i = begin; i != end; ++i) {
             if (*i == U' ') {
@@ -190,6 +200,16 @@ public:
                 if (!ch.empty()) {
                     advance += ch.horizontal.advance;
                 } else {
+                    // Match the renderers (OpenGLRenderer/SoftwareRenderer):
+                    // the kerning of an empty glyph with the following
+                    // character is applied before the (possibly fallback)
+                    // advance, so measured width equals the drawn width.
+                    if (hasKerning) {
+                        auto next = std::next(i);
+                        if (next != end) {
+                            advance += getKerning(*i, *next, size).x;
+                        }
+                    }
                     advance += ch.emptyAdvance(getSpaceWidth(size));
                 }
             }

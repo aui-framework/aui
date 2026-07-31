@@ -262,7 +262,18 @@ AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
         if (chars.size() <= glyph) {
             chars.resize(glyph + 1, std::nullopt);
         }
-        chars[glyph.codepoint()] = std::move(renderGlyph(charset, glyph));
+        Character ch = renderGlyph(charset, glyph);
+        if (ch.glyphFailed) {
+            // Do not cache failed glyphs: fallback faces are discovered lazily,
+            // so a later render attempt may succeed once more faces become
+            // available. The returned reference is deliberately not stored in
+            // the font entry; callers must not retain it across getCharacter
+            // calls.
+            static thread_local Character failed;
+            failed.glyphFailed = true;
+            return failed;
+        }
+        chars[glyph.codepoint()] = std::move(ch);
 
         return *chars[glyph.codepoint()];
     }
