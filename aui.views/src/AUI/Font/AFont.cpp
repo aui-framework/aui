@@ -82,7 +82,7 @@ bool AFont::hasGlyph(char32_t codepoint) const {
     return FT_Get_Char_Index(mFace, codepoint) != 0;
 }
 
-glm::vec2 AFont::getKerning(wchar_t left, wchar_t right, unsigned size) {
+glm::vec2 AFont::getKerning(char32_t left, char32_t right, unsigned size) {
     std::lock_guard lock(FreeType::sFaceMutex);
     FT_Set_Pixel_Sizes(mFace, 0, size);
 

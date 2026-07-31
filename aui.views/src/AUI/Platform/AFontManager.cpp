@@ -19,30 +19,115 @@
 #include <fontconfig/fontconfig.h>
 #elif AUI_PLATFORM_WIN
 #include <windows.h>
+#include <cstdio>
+#include <cwchar>
+#include <string>
+
+namespace {
+// FT_New_Face opens pathnames with the narrow CRT fopen(), which uses the
+// ANSI code page and cannot address non-ASCII font paths (e.g. a Windows
+// directory that contains non-ASCII characters). Open the font file by its
+// UTF-16 path instead and hand FreeType a custom stream over it.
+struct WideFontStream {
+    FT_StreamRec stream{};
+    FILE* file = nullptr;
+};
+
+unsigned long wideFontStreamRead(FT_Stream stream, unsigned long offset, unsigned char* buffer, unsigned long count) {
+    auto* self = reinterpret_cast<WideFontStream*>(stream->descriptor.pointer);
+    if (!count && offset > stream->size) {
+        return 1;
+    }
+    if (stream->pos != offset) {
+        if (fseek(self->file, static_cast<long>(offset), SEEK_SET) != 0) {
+            return 0;
+        }
+        stream->pos = offset;
+    }
+    if (count > 0) {
+        count = static_cast<unsigned long>(fread(buffer, 1, count, self->file));
+        if (!count) {
+            return 1;
+        }
+    }
+    stream->pos += count;
+    return count;
+}
+
+void wideFontStreamClose(FT_Stream stream) {
+    auto* self = reinterpret_cast<WideFontStream*>(stream->descriptor.pointer);
+    fclose(self->file);
+    delete self;
+}
+
+FT_Face loadFallbackFaceWide(FT_Library ft, const AString& path, int faceIndex) {
+    const std::u16string utf16 = path.toUtf16();
+    std::wstring wpath(utf16.begin(), utf16.end());
+
+    auto* wide = new WideFontStream;
+    wide->file = _wfopen(wpath.c_str(), L"rb");
+    if (!wide->file) {
+        delete wide;
+        return nullptr;
+    }
+    if (fseek(wide->file, 0, SEEK_END) != 0) {
+        fclose(wide->file);
+        delete wide;
+        return nullptr;
+    }
+    wide->stream.size = static_cast<unsigned long>(ftell(wide->file));
+    if (fseek(wide->file, 0, SEEK_SET) != 0) {
+        fclose(wide->file);
+        delete wide;
+        return nullptr;
+    }
+    wide->stream.descriptor.pointer = wide;
+    wide->stream.read = wideFontStreamRead;
+    wide->stream.close = wideFontStreamClose;
+
+    FT_OpenArgs args{};
+    args.flags = FT_OPEN_STREAM;
+    args.stream = &wide->stream;
+
+    // From here on the stream is owned by FreeType: it is closed (via
+    // wideFontStreamClose) both when the face is destroyed and when face
+    // creation fails.
+    FT_Face face = nullptr;
+    if (FT_Open_Face(ft, &args, faceIndex, &face) != 0) {
+        return nullptr;
+    }
+    return face;
+}
+}
 #endif
 
 AFontManager::~AFontManager() {
     std::scoped_lock lock(mFallbackMutex);
     for (auto& fb : mFallbackFaces) {
-        {
-            std::lock_guard ftLock(FreeType::sFaceMutex);
-            FT_Done_Face(fb.face);
-        }
+        // Hold both the library lock and this face's per-face lock so that
+        // FT_Done_Face cannot overlap an in-flight glyph load on the same face.
+        std::scoped_lock ftLock(FreeType::sFaceMutex, *fb.mtx);
+        FT_Done_Face(fb.face);
     }
     mFallbackFaces.clear();
 }
 
 bool AFontManager::loadOneFallback(const FallbackCandidate& candidate) {
+    std::lock_guard lock(FreeType::sFaceMutex);
     FT_Face face = nullptr;
-    {
-        std::lock_guard lock(FreeType::sFaceMutex);
-        if (FT_New_Face(mFreeType->getFt(), candidate.path.toStdString().c_str(), candidate.faceIndex, &face) == 0) {
-            mFallbackFaces.push_back({face});
-            ALogger::info("Font") << "Loaded CJK fallback font: " << candidate.path;
-            return true;
-        }
+#if AUI_PLATFORM_WIN
+    face = loadFallbackFaceWide(mFreeType->getFt(), candidate.path, candidate.faceIndex);
+#else
+    if (FT_New_Face(mFreeType->getFt(), candidate.path.toStdString().c_str(), candidate.faceIndex, &face) != 0) {
+        return false;
     }
-    return false;
+#endif
+    if (!face) {
+        return false;
+    }
+    mFallbackFaces.push_back({face});
+    ALogger::info("Font") << "Loaded CJK fallback font: " << candidate.path;
+    return true;
 }
 
 void AFontManager::ensureFallbackFaceLocked() {
@@ -76,10 +161,14 @@ void AFontManager::ensureFallbackFaceLocked() {
     // Use FcFontSort to obtain an ordered set of CJK-capable candidates.
     // FcFontMatch would only return a single best match, which cannot populate
     // the deferred-candidate pool for lazy loading on codepoint miss.
+    // The list is capped: loaded fallback faces are never released, so an
+    // unbounded candidate pool would keep opening font files for the whole
+    // process lifetime on codepoint misses (e.g. emoji, rare symbols).
+    constexpr int kMaxFallbackCandidates = 8;
     FcResult result;
     FcFontSet* fontSet = FcFontSort(nullptr, pattern, FcTrue, nullptr, &result);
     if (fontSet) {
-        for (int i = 0; i < fontSet->nfont; ++i) {
+        for (int i = 0; i < fontSet->nfont && allCandidates.size() < kMaxFallbackCandidates; ++i) {
             FcPattern* font = fontSet->fonts[i];
             // Verify the font actually has CJK support.
             FcCharSet* fontCharset = nullptr;
@@ -167,10 +256,14 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
     std::unique_lock lk(mFallbackMutex);
     ensureFallbackFaceLocked();
 
-    // Check all already-loaded faces first.
+    // Check all already-loaded faces first. The per-face mutex must be held
+    // for the FT_Get_Char_Index probe: other threads may be rendering on this
+    // face right now (holding fb.mtx), and an FT_Face supports one thread at
+    // a time. The same lock is transferred into the returned FallbackFaceLock.
     for (auto& fb : mFallbackFaces) {
+        std::unique_lock faceLock(*fb.mtx);
         if (FT_Get_Char_Index(fb.face, codepoint) != 0) {
-            return { std::move(lk), fb.face, std::unique_lock(*fb.mtx) };
+            return { std::move(lk), fb.face, std::move(faceLock) };
         }
     }
 
@@ -185,8 +278,9 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
         if (loadOneFallback(c)) {
             ++loaded;
             auto& fb = mFallbackFaces.last();
+            std::unique_lock faceLock(*fb.mtx);
             if (FT_Get_Char_Index(fb.face, codepoint) != 0) {
-                return { std::move(lk), fb.face, std::unique_lock(*fb.mtx) };
+                return { std::move(lk), fb.face, std::move(faceLock) };
             }
         }
     }

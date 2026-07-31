@@ -160,7 +160,7 @@ public:
         return {key, mCharData[key]};
     }
 
-    glm::vec2 getKerning(wchar_t left, wchar_t right, unsigned size);
+    glm::vec2 getKerning(char32_t left, char32_t right, unsigned size);
 
     ~AFont();
 
