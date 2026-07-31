@@ -140,8 +140,10 @@ public:
          * (a single CJK codepoint would otherwise size a vector past 40k slots).
          * Stored by pointer in a node-based map so that insertions never
          * invalidate Character references handed out by getCharacter; an absent
-         * key means "not cached yet". All access is serialized by
-         * AFont::mCharDataMutex.
+         * key means "not cached yet". Re-renders (provisional/failed glyphs)
+         * mutate the existing Character in place, so handed-out references stay
+         * valid across both insertions and re-renders. All access is serialized
+         * by AFont::mCharDataMutex.
          */
         AMap<char32_t, _unique<Character>> characters;
         void* rendererData = nullptr;
@@ -227,19 +229,19 @@ public:
                 prevLineAdvance = glm::max(prevLineAdvance, advance);
             } else {
                 Character& ch = getCharacter(charset, *i);
+                // Match the renderers (OpenGLRenderer/SoftwareRenderer): pair
+                // kerning with the following character is applied before the
+                // glyph's advance for both empty and regular glyphs, so the
+                // measured width equals the drawn width.
+                if (hasKerning) {
+                    auto next = std::next(i);
+                    if (next != end) {
+                        advance += getKerning(*i, *next, size).x;
+                    }
+                }
                 if (!ch.empty()) {
                     advance += ch.horizontal.advance;
                 } else {
-                    // Match the renderers (OpenGLRenderer/SoftwareRenderer):
-                    // the kerning of an empty glyph with the following
-                    // character is applied before the (possibly fallback)
-                    // advance, so measured width equals the drawn width.
-                    if (hasKerning) {
-                        auto next = std::next(i);
-                        if (next != end) {
-                            advance += getKerning(*i, *next, size).x;
-                        }
-                    }
                     advance += ch.emptyAdvance(getSpaceWidth(size));
                 }
             }

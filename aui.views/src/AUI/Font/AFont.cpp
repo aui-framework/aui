@@ -301,34 +301,41 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
 }
 
 AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
-    // The cache is guarded so that concurrent lookups and insertions cannot
-    // race. Characters are stored by pointer in a node-based map, so
-    // insertions never invalidate a reference already handed out here.
-    // Re-rendering a provisional/failed glyph REPLACES the cached Character
-    // (freeing its image), so callers that draw later (prerendered strings)
-    // must hold shared references to the image, never raw pointers
-    // (SoftwareRenderer's CharEntry does this).
-    std::lock_guard lock(mCharDataMutex);
-    auto& chars = charset.second.characters;
-    if (auto it = chars.find(glyph.codepoint()); it != chars.end()) {
-        auto& slot = it->second;
-        if (slot) {
-            // Failed and provisional glyphs are cached, but re-rendered while
-            // lazy fallback discovery is still in progress: a later render may
-            // succeed once more faces become available. Once no deferred
-            // candidates remain they stay cached, so unsupported codepoints do
-            // not re-run the locked failure path on every layout.
+    // Phase 1: cache probe under the lock. A cached glyph is returned as-is
+    // unless it is failed/provisional and lazy fallback discovery may still
+    // improve it (a later render can succeed once more faces load).
+    {
+        std::lock_guard lock(mCharDataMutex);
+        auto& chars = charset.second.characters;
+        if (auto it = chars.find(glyph.codepoint()); it != chars.end() && it->second) {
+            auto& slot = it->second;
             const bool mayImprove = mFontManager && mFontManager->hasDeferredCandidates();
             if (!mayImprove || (!slot->glyphFailed && !slot->provisional)) {
                 return *slot;
             }
-            slot = nullptr;
         }
     }
 
+    // Phase 2: render outside the cache lock. renderGlyph runs fallback-face
+    // lookup and FreeType rendering (sFaceMutex), which must not stall
+    // lookups of other glyphs of this font.
     Character ch = renderGlyph(charset, glyph);
-    auto& slot = chars[glyph.codepoint()] = std::make_unique<Character>(std::move(ch));
 
+    // Phase 3: install under the lock. The cached Character object is mutated
+    // in place (never freed), so references handed out earlier stay valid
+    // across re-renders; a concurrently cached final result is preferred over
+    // a worse (failed/provisional) one. Callers that draw later (prerendered
+    // strings) must hold shared references to the image, never raw pointers,
+    // because the image itself is replaced on re-render (SoftwareRenderer's
+    // CharEntry does this).
+    std::lock_guard lock(mCharDataMutex);
+    auto& chars = charset.second.characters;
+    auto& slot = chars[glyph.codepoint()];
+    if (!slot) {
+        slot = std::make_unique<Character>(std::move(ch));
+    } else if (slot->glyphFailed || slot->provisional) {
+        *slot = std::move(ch);
+    }
     return *slot;
 }
 

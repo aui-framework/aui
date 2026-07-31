@@ -70,7 +70,15 @@ FT_Face loadFallbackFaceWide(FT_Library ft, const AString& path, int faceIndex) 
         delete wide;
         return nullptr;
     }
-    wide->stream.size = static_cast<unsigned long>(ftell(wide->file));
+    const long size = ftell(wide->file);
+    if (size <= 0) {
+        // ftell() failed (returns -1) or the file is empty: an invalid stream
+        // size would only surface as an obscure FT_Open_Face failure later.
+        fclose(wide->file);
+        delete wide;
+        return nullptr;
+    }
+    wide->stream.size = static_cast<unsigned long>(size);
     if (fseek(wide->file, 0, SEEK_SET) != 0) {
         fclose(wide->file);
         delete wide;
@@ -280,7 +288,14 @@ void AFontManager::ensureFallbackFaceLocked() {
 #endif
 
     // Load the first candidate eagerly (pre-warm).
-    loadOneFallback(allCandidates.first());
+    if (!loadOneFallback(allCandidates.first())) {
+        // The eager candidate is deliberately not added to mDeferredCandidates
+        // (it was already attempted), so a failure here is silent unless logged:
+        // missing files (e.g. msyh.ttc on a Windows edition without Simplified
+        // Chinese fonts) would otherwise be undiagnosable until a CJK codepoint
+        // renders tofu.
+        ALogger::warn("Font") << "Could not load fallback font: " << allCandidates.first().path;
+    }
 
     // Defer remaining candidates for lazy loading in lockFallbackFace.
     for (size_t i = 1; i < allCandidates.size(); ++i) {
