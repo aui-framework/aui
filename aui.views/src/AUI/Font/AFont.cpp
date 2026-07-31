@@ -304,6 +304,10 @@ AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
     // The cache is guarded so that concurrent lookups and insertions cannot
     // race. Characters are stored by pointer in a node-based map, so
     // insertions never invalidate a reference already handed out here.
+    // Re-rendering a provisional/failed glyph REPLACES the cached Character
+    // (freeing its image), so callers that draw later (prerendered strings)
+    // must hold shared references to the image, never raw pointers
+    // (SoftwareRenderer's CharEntry does this).
     std::lock_guard lock(mCharDataMutex);
     auto& chars = charset.second.characters;
     if (auto it = chars.find(glyph.codepoint()); it != chars.end()) {

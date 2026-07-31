@@ -368,7 +368,13 @@ void SoftwareRenderer::popMaskAfter() {
 
 struct CharEntry {
     glm::ivec2 position;
-    AImage* image;
+    /**
+     * Shared reference: AFont may re-render (replace) a cached provisional
+     * glyph at any later getCharacter call, which would free a raw pointer.
+     * The prerendered string is drawn after the lookups, so the image must
+     * be retained by reference count.
+     */
+    _<AImage> image;
 };
 
 class SoftwarePrerenderedString: public IRenderer::IPrerenderedString {
@@ -493,7 +499,7 @@ public:
                     notifySymbolAdded({pos});
                     mCharEntries.push_back(CharEntry{
                             pos,
-                            ch.image.get()
+                            ch.image
                     });
                 }
 

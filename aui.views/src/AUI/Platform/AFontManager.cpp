@@ -116,13 +116,23 @@ void AFontManager::initFallback() {
         return;   // already running (only joined at destruction)
     }
     mFallbackPending.store(true, std::memory_order_release);
-    mFallbackThread = std::thread(&AFontManager::fallbackDiscoveryWorker, this);
+    try {
+        mFallbackThread = std::thread(&AFontManager::fallbackDiscoveryWorker, this);
+    } catch (const std::system_error& e) {
+        // Fallback discovery is best-effort; never fail font manager construction.
+        mFallbackPending.store(false, std::memory_order_release);
+        ALogger::warn("Font") << "Could not start fallback discovery thread: " << e.what();
+    }
 }
 
 void AFontManager::fallbackDiscoveryWorker() {
-    {
+    try {
         std::unique_lock lock(mFallbackMutex);
         ensureFallbackFaceLocked();
+    } catch (const std::exception& e) {
+        // Best-effort: an exception leaving a thread function would call
+        // std::terminate, so discovery failures must not escape.
+        ALogger::warn("Font") << "Fallback discovery failed: " << e.what();
     }
     // Release-store: the mutex-protected discovery result (loaded faces,
     // deferred candidates) is visible to any thread that observes the clear.
@@ -164,10 +174,15 @@ void AFontManager::ensureFallbackFaceLocked() {
         ALogger::warn("Font") << "FcInit() failed; CJK fallback unavailable";
         return;
     }
-    // Use a charset-based query with a common CJK character to ensure the font actually has CJK glyphs.
+    // Use a charset-based query with representative codepoints from each CJK
+    // script (Han, Hiragana, Hangul) so that Kana-only and Hangul-only fonts
+    // can enter the candidate list, not just Han-capable ones.
+    static constexpr FcChar32 kProbeCodepoints[] = { 0x4E2D /*中*/, 0x3042 /*あ*/, 0xAC00 /*가*/ };
     FcPattern* pattern = FcPatternCreate();
     FcCharSet* charset = FcCharSetCreate();
-    FcCharSetAddChar(charset, 0x4E2D); // U+4E2D = '中' (common CJK character)
+    for (auto probe : kProbeCodepoints) {
+        FcCharSetAddChar(charset, probe);
+    }
     FcPatternAddCharSet(pattern, FC_CHARSET, charset);
     FcPatternAddString(pattern, FC_FAMILY, reinterpret_cast<const FcChar8*>("sans"));
     FcConfigSubstitute(nullptr, pattern, FcMatchPattern);
@@ -186,11 +201,18 @@ void AFontManager::ensureFallbackFaceLocked() {
     if (fontSet) {
         for (int i = 0; i < fontSet->nfont && allCandidates.size() < kMaxFallbackCandidates; ++i) {
             FcPattern* font = fontSet->fonts[i];
-            // Verify the font actually has CJK support.
+            // Verify the font covers at least one of the CJK scripts.
             FcCharSet* fontCharset = nullptr;
             if (FcPatternGetCharSet(font, FC_CHARSET, 0, &fontCharset) == FcResultMatch) {
-                if (!FcCharSetHasChar(fontCharset, 0x4E2D)) {
-                    continue;   // Skip fonts that don't cover this CJK character.
+                bool coversAny = false;
+                for (auto probe : kProbeCodepoints) {
+                    if (FcCharSetHasChar(fontCharset, probe)) {
+                        coversAny = true;
+                        break;
+                    }
+                }
+                if (!coversAny) {
+                    continue;   // Skip fonts that cover none of the CJK scripts.
                 }
             }
             FcChar8* path = nullptr;
