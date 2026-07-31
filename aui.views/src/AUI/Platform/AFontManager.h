@@ -15,8 +15,10 @@
 #include "AUI/Util/Manager.h"
 #include "AUI/Font/AFontFamily.h"
 #include <AUI/Common/AVector.h>
+#include <atomic>
 #include <memory>
 #include <mutex>
+#include <thread>
 #include "AUI/Font/AFont.h"
 
 class API_AUI_VIEWS AFontManager {
@@ -78,15 +80,27 @@ private:
     bool mFallbackAttempted = false;
 
     /**
+     * True while fallback discovery runs on mFallbackThread. While set,
+     * lockFallbackFace returns no face immediately (rather than blocking the
+     * caller), and hasDeferredCandidates reports true so that AFont keeps
+     * re-rendering provisional/failed glyphs until discovery completes.
+     */
+    std::atomic<bool> mFallbackPending = false;
+    std::thread mFallbackThread;
+
+    /**
      * @brief Loads a single fallback face from the given candidate.
      * @return true if the face was loaded successfully.
      */
     bool loadOneFallback(const FallbackCandidate& candidate);
     void ensureFallbackFaceLocked();
-    void initFallback() {
-        std::unique_lock lock(mFallbackMutex);
-        ensureFallbackFaceLocked();
-    }
+    void fallbackDiscoveryWorker();
+    /**
+     * @brief Starts fallback discovery on a worker thread (once), so the
+     *        fontconfig/filesystem probe and the eager first-face load never
+     *        stall the calling (UI) thread.
+     */
+    void initFallback();
 
     /**
      * Bundles a fallback face with the library and per-face mutex locks held
@@ -109,17 +123,23 @@ private:
      * FreeType library lock (sFaceMutex) and a per-face mutex, the latter two
      * held through the FT operations on the returned face.
      *
-     * @note The first call may block while fallback fonts are discovered via
-     *       fontconfig or filesystem probing under mFallbackMutex.
+     * @note Discovery runs on a worker thread (initFallback). Calls made
+     *       before discovery completes return no face immediately; once it
+     *       completes, calls serialize on mFallbackMutex and may lazily load
+     *       deferred candidates (bounded per call). The returned
+     *       FallbackFaceLock must be released before calling
+     *       hasDeferredCandidates again: the latter locks mFallbackMutex,
+     *       while the former may still hold FreeType::sFaceMutex.
      */
     [[nodiscard]]
     FallbackFaceLock lockFallbackFace(char32_t codepoint);
 
     /**
-     * @return true while deferred fallback candidates remain to be loaded
-     *         lazily. Used by AFont to decide whether a cached failed glyph
-     *         should be re-rendered: as long as discovery is still in
-     *         progress, a later render may succeed once more faces load.
+     * @return true while fallback discovery is still running or deferred
+     *         fallback candidates remain to be loaded lazily. Used by AFont to
+     *         decide whether a cached failed/provisional glyph should be
+     *         re-rendered: as long as this returns true, a later render may
+     *         succeed once more faces load.
      */
     bool hasDeferredCandidates();
 

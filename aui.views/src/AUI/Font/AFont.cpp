@@ -87,7 +87,16 @@ bool AFont::hasGlyph(char32_t codepoint) const {
 
 glm::vec2 AFont::getKerning(char32_t left, char32_t right, unsigned size) {
     std::lock_guard lock(FreeType::sFaceMutex);
-    FT_Set_Pixel_Sizes(mFace, 0, size);
+    if (size != mFacePixelSize) {
+        // FT_Set_Pixel_Sizes recomputes the face's size metrics, so avoid
+        // re-programming the size on every adjacent character pair. If the
+        // face cannot be sized (e.g. a fixed-size bitmap face), kerning is
+        // undefined: return zero rather than using a stale size.
+        if (FT_Set_Pixel_Sizes(mFace, 0, size) != 0) {
+            return {0.f, 0.f};
+        }
+        mFacePixelSize = size;
+    }
 
     FT_UInt leftIndex = FT_Get_Char_Index(mFace, left);
     FT_UInt rightIndex = FT_Get_Char_Index(mFace, right);
@@ -118,6 +127,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     int height = 0;
 
     FT_Face face = nullptr;
+    bool provisional = false;   // rendered from the primary face after a failed fallback lookup
     // Holds the library (sFaceMutex) and per-face mutexes for fallback face FT ops.
     AFontManager::FallbackFaceLock fallbackLock;
 
@@ -133,6 +143,10 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
             // already released inside lockFallbackFace after face selection.
             fallbackLock.ftLock = std::move(fb.ftLock);
             fallbackLock.faceLock = std::move(fb.faceLock);
+        } else {
+            // No fallback face covers this codepoint (yet): mark the render
+            // provisional so it is retried while deferred candidates remain.
+            provisional = true;
         }
     }
     if (!face) {
@@ -151,6 +165,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
         if (face == mFace) ftLock.lock();
 
         // Step 2: set pixel sizes.
+        bool pixelSizeSet = false;
         if (FT_Set_Pixel_Sizes(face, 0, size) != 0) {
             // FT_Set_Pixel_Sizes fails for fixed-size bitmap faces unless the
             // requested pixel size is exactly one of the available strikes.
@@ -161,7 +176,10 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
                 long bestStrike = 0;
                 long bestDelta = std::numeric_limits<long>::max();
                 for (FT_Int i = 0; i < face->num_fixed_sizes; ++i) {
-                    const long delta = std::abs(long(face->available_sizes[i].y_ppem) - long(size));
+                    // available_sizes[].y_ppem is in FreeType 26.6 fixed-point
+                    // (64 units per pixel); convert before comparing to size.
+                    const long strikePx = face->available_sizes[i].y_ppem >> 6;
+                    const long delta = std::abs(strikePx - long(size));
                     if (delta < bestDelta) {
                         bestDelta = delta;
                         bestStrike = i;
@@ -173,10 +191,16 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
                 // Fallback face has no usable strike; retry with the primary face.
                 fallbackLock = {};  // release library + per-face mutexes before locking sFaceMutex
                 face = mFace;
+                provisional = true;
                 if (!ftLock.owns_lock()) ftLock.lock();  // acquire lock for mFace
-                FT_Set_Pixel_Sizes(face, 0, size);
+                pixelSizeSet = FT_Set_Pixel_Sizes(face, 0, size) == 0;
             }
             // If both fail, FT_Load_Char will also fail and glyphFailed is set.
+        } else {
+            pixelSizeSet = true;
+        }
+        if (face == mFace && pixelSizeSet) {
+            mFacePixelSize = size;   // keep getKerning's programmed-size cache in sync
         }
 
         FT_Int32 flags = FT_LOAD_RENDER;
@@ -251,6 +275,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
               .bearing = vBearing,
               .advance = vAdvance,
             },
+            .provisional = provisional,
         };
     }
 
@@ -271,36 +296,36 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
           .bearing = vBearing,
           .advance = vAdvance,
         },
+        .provisional = provisional,
     };
 }
 
 AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
-    // The cache is guarded so that concurrent lookups, resizes and insertions
-    // cannot race. Character objects are stored by pointer, so resizing the
-    // vector never reallocates (invalidates) an already returned reference.
+    // The cache is guarded so that concurrent lookups and insertions cannot
+    // race. Characters are stored by pointer in a node-based map, so
+    // insertions never invalidate a reference already handed out here.
     std::lock_guard lock(mCharDataMutex);
     auto& chars = charset.second.characters;
-    if (chars.size() > glyph) {
-        auto& slot = chars[glyph.codepoint()];
+    if (auto it = chars.find(glyph.codepoint()); it != chars.end()) {
+        auto& slot = it->second;
         if (slot) {
-            // Failed glyphs are cached, but re-rendered while lazy fallback
-            // discovery is still in progress: a later render may succeed once
-            // more faces become available. Once no deferred candidates remain
-            // they stay cached, so unsupported codepoints do not re-run the
-            // locked failure path on every layout.
-            if (!slot->glyphFailed || !mFontManager || !mFontManager->hasDeferredCandidates()) {
+            // Failed and provisional glyphs are cached, but re-rendered while
+            // lazy fallback discovery is still in progress: a later render may
+            // succeed once more faces become available. Once no deferred
+            // candidates remain they stay cached, so unsupported codepoints do
+            // not re-run the locked failure path on every layout.
+            const bool mayImprove = mFontManager && mFontManager->hasDeferredCandidates();
+            if (!mayImprove || (!slot->glyphFailed && !slot->provisional)) {
                 return *slot;
             }
             slot = nullptr;
         }
-    } else {
-        chars.resize(glyph + 1);
     }
 
     Character ch = renderGlyph(charset, glyph);
-    chars[glyph.codepoint()] = std::make_unique<Character>(std::move(ch));
+    auto& slot = chars[glyph.codepoint()] = std::make_unique<Character>(std::move(ch));
 
-    return *chars[glyph.codepoint()];
+    return *slot;
 }
 
 int AFont::length(const FontEntry& charset, AStringView text) {

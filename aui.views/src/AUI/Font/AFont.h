@@ -90,6 +90,15 @@ public:
          */
         bool glyphFailed = false;
 
+        /**
+         * @brief True when the glyph was rendered from the primary face because a
+         *        fallback-face lookup came up empty (fallback discovery is lazy and
+         *        deferred). Such glyphs are re-rendered on later lookups while
+         *        deferred fallback candidates remain, so a subsequent render may
+         *        succeed once more faces are loaded.
+         */
+        bool provisional = false;
+
         [[nodiscard]]
         bool empty() const {
             return image == nullptr;
@@ -126,12 +135,15 @@ public:
 
     struct FontData {
         /**
-         * Cached glyphs, indexed by codepoint. Stored by pointer so that
-         * vector growth never invalidates Character references handed out by
-         * getCharacter; nullptr means "not cached yet". All access is
-         * serialized by AFont::mCharDataMutex.
+         * Cached glyphs, keyed by codepoint. Sparse storage: memory scales with
+         * the number of cached glyphs rather than the highest codepoint rendered
+         * (a single CJK codepoint would otherwise size a vector past 40k slots).
+         * Stored by pointer in a node-based map so that insertions never
+         * invalidate Character references handed out by getCharacter; an absent
+         * key means "not cached yet". All access is serialized by
+         * AFont::mCharDataMutex.
          */
-        AVector<_unique<Character>> characters;
+        AMap<char32_t, _unique<Character>> characters;
         void* rendererData = nullptr;
     };
 
@@ -159,6 +171,14 @@ private:
      * @brief Serializes access to mCharData (see getCharacter).
      */
     std::mutex mCharDataMutex;
+
+    /**
+     * @brief Last pixel size successfully programmed on mFace. Guarded by
+     *        FreeType::sFaceMutex; lets getKerning skip the (metric-recomputing)
+     *        FT_Set_Pixel_Sizes call on every adjacent character pair. 0 means
+     *        "no size programmed yet" (FT_Set_Pixel_Sizes never succeeds with 0).
+     */
+    unsigned mFacePixelSize = 0;
 
     /**
      * @brief Checks if the primary font contains the given glyph.

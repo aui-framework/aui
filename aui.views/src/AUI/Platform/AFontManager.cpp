@@ -97,6 +97,10 @@ FT_Face loadFallbackFaceWide(FT_Library ft, const AString& path, int faceIndex) 
 #endif
 
 AFontManager::~AFontManager() {
+    if (mFallbackThread.joinable()) {
+        // Never destroy faces while discovery may still touch them.
+        mFallbackThread.join();
+    }
     std::scoped_lock lock(mFallbackMutex);
     for (auto& fb : mFallbackFaces) {
         // Hold both the library lock and this face's per-face lock so that
@@ -105,6 +109,24 @@ AFontManager::~AFontManager() {
         FT_Done_Face(fb.face);
     }
     mFallbackFaces.clear();
+}
+
+void AFontManager::initFallback() {
+    if (mFallbackThread.joinable()) {
+        return;   // already running (only joined at destruction)
+    }
+    mFallbackPending.store(true, std::memory_order_release);
+    mFallbackThread = std::thread(&AFontManager::fallbackDiscoveryWorker, this);
+}
+
+void AFontManager::fallbackDiscoveryWorker() {
+    {
+        std::unique_lock lock(mFallbackMutex);
+        ensureFallbackFaceLocked();
+    }
+    // Release-store: the mutex-protected discovery result (loaded faces,
+    // deferred candidates) is visible to any thread that observes the clear.
+    mFallbackPending.store(false, std::memory_order_release);
 }
 
 bool AFontManager::loadOneFallback(const FallbackCandidate& candidate) {
@@ -246,6 +268,14 @@ void AFontManager::ensureFallbackFaceLocked() {
 }
 
 AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint) {
+    // Discovery is still running on the worker thread: no face is ready yet,
+    // so report a miss immediately rather than blocking the caller. AFont
+    // re-renders provisional/failed glyphs while hasDeferredCandidates()
+    // returns true, so these codepoints are retried once discovery completes.
+    if (mFallbackPending.load(std::memory_order_acquire)) {
+        return { nullptr };
+    }
+
     std::unique_lock lk(mFallbackMutex);
     ensureFallbackFaceLocked();
 
@@ -265,15 +295,18 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
     }
 
     // No loaded face has this codepoint; try deferred candidates lazily.
-    // Bound to a few per call to avoid draining the entire queue on the UI thread
-    // for a codepoint that no candidate covers (e.g. emoji, rare symbols).
-    constexpr int kMaxDeferredLoadsPerCall = 2;
-    int loaded = 0;
-    while (!mDeferredCandidates.empty() && loaded < kMaxDeferredLoadsPerCall) {
+    // Bound to a few attempts per call to avoid draining the entire queue on
+    // the UI thread for a codepoint that no candidate covers (e.g. emoji,
+    // rare symbols). The counter counts attempts, not successes: failing
+    // candidates (e.g. font files absent on this OS version) must not drain
+    // the whole queue in one call either.
+    constexpr int kMaxDeferredLoadAttemptsPerCall = 2;
+    int attempts = 0;
+    while (!mDeferredCandidates.empty() && attempts < kMaxDeferredLoadAttemptsPerCall) {
         auto c = mDeferredCandidates.first();
         mDeferredCandidates.erase(mDeferredCandidates.begin());
+        ++attempts;
         if (loadOneFallback(c)) {
-            ++loaded;
             auto& fb = mFallbackFaces.last();
             std::unique_lock ftLock(FreeType::sFaceMutex);
             std::unique_lock faceLock(*fb.mtx);
@@ -287,6 +320,12 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
 }
 
 bool AFontManager::hasDeferredCandidates() {
+    // While discovery is pending, report true so that AFont keeps retrying
+    // provisional/failed glyphs: a retry may succeed once the worker loads
+    // the first face. (Lock-free fast path; mFallbackPending is an atomic.)
+    if (mFallbackPending.load(std::memory_order_acquire)) {
+        return true;
+    }
     std::lock_guard lock(mFallbackMutex);
     return !mDeferredCandidates.empty();
 }
