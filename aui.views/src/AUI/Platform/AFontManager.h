@@ -89,13 +89,15 @@ private:
     }
 
     /**
-     * Bundles the manager mutex, face pointer, and per-face mutex lock.
-     * The manager lock is released after face selection; the per-face lock
-     * is held through FT operations on the returned face.
+     * Bundles the manager mutex, face pointer, and the library and per-face
+     * mutex locks. The manager lock is released after face selection; the
+     * shared FreeType library lock (sFaceMutex) and the per-face lock are
+     * held through the FT operations on the returned face.
      */
     struct FallbackFaceLock {
         std::unique_lock<std::mutex> lock;      // mFallbackMutex (released early)
         FT_FaceRec_* face = nullptr;
+        std::unique_lock<std::mutex> ftLock;    // FreeType::sFaceMutex (held through FT ops)
         std::unique_lock<std::mutex> faceLock;  // per-face mutex (held through FT ops)
 
         explicit operator bool() const noexcept { return face != nullptr; }
@@ -104,8 +106,9 @@ private:
     /**
      * Ensures fallback faces are loaded (once) and returns the first face
      * that contains the given codepoint. The returned FallbackFaceLock holds
-     * the manager mutex (released soon after return) and a per-face mutex
-     * (held through FT operations on the returned face).
+     * the manager mutex (released soon after return), the shared FreeType
+     * library lock (sFaceMutex) and a per-face mutex, the latter two held
+     * through the FT operations on the returned face.
      *
      * @note The first call may block while fallback fonts are discovered via
      *       fontconfig or filesystem probing under mFallbackMutex.

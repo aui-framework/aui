@@ -85,7 +85,7 @@ FT_Face loadFallbackFaceWide(FT_Library ft, const AString& path, int faceIndex) 
     wide->stream.read = wideFontStreamRead;
     wide->stream.close = wideFontStreamClose;
 
-    FT_OpenArgs args{};
+    FT_Open_Args args{};
     args.flags = FT_OPEN_STREAM;
     args.stream = &wide->stream;
 
@@ -256,14 +256,18 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
     std::unique_lock lk(mFallbackMutex);
     ensureFallbackFaceLocked();
 
-    // Check all already-loaded faces first. The per-face mutex must be held
-    // for the FT_Get_Char_Index probe: other threads may be rendering on this
-    // face right now (holding fb.mtx), and an FT_Face supports one thread at
-    // a time. The same lock is transferred into the returned FallbackFaceLock.
+    // Check all already-loaded faces first. Every FreeType call on any face
+    // of the shared FT_Library must hold the library lock (sFaceMutex): the
+    // library's internal state (e.g. the raster pool) is not thread-safe, so
+    // the FT_Get_Char_Index probe must not run concurrently with rendering
+    // on the primary face or another fallback face. The per-face mutex is
+    // additionally held so a concurrent FT_Done_Face cannot destroy the face
+    // mid-probe. Both locks are transferred into the returned FallbackFaceLock.
     for (auto& fb : mFallbackFaces) {
+        std::unique_lock ftLock(FreeType::sFaceMutex);
         std::unique_lock faceLock(*fb.mtx);
         if (FT_Get_Char_Index(fb.face, codepoint) != 0) {
-            return { std::move(lk), fb.face, std::move(faceLock) };
+            return { std::move(lk), fb.face, std::move(ftLock), std::move(faceLock) };
         }
     }
 
@@ -278,9 +282,10 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
         if (loadOneFallback(c)) {
             ++loaded;
             auto& fb = mFallbackFaces.last();
+            std::unique_lock ftLock(FreeType::sFaceMutex);
             std::unique_lock faceLock(*fb.mtx);
             if (FT_Get_Char_Index(fb.face, codepoint) != 0) {
-                return { std::move(lk), fb.face, std::move(faceLock) };
+                return { std::move(lk), fb.face, std::move(ftLock), std::move(faceLock) };
             }
         }
     }

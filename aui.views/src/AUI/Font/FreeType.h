@@ -18,11 +18,15 @@
 class FreeType {
 public:
     /**
-     * @brief Mutex serializing FreeType library-level operations (FT_New_Face,
-     *        FT_New_Memory_Face, FT_Done_Face) and all FT_Face operations on
-     *        the primary shared face (mFace). Each fallback face uses its own
-     *        per-face mutex so concurrent rendering on different faces is not
-     *        serialized by this lock.
+     * @brief Mutex serializing every FreeType call on the shared FT_Library:
+     *        library-level operations (FT_New_Face, FT_New_Memory_Face,
+     *        FT_Done_Face) and all FT_Face operations on both the primary
+     *        shared face (mFace) and the fallback faces. FreeType library
+     *        state (e.g. the shared raster pool) is not thread-safe, so calls
+     *        on faces of the same library must not run concurrently.
+     *        Fallback faces additionally use a per-face mutex so that
+     *        FT_Done_Face cannot overlap an in-flight glyph load on the same
+     *        face.
      */
     static std::mutex sFaceMutex;
 
