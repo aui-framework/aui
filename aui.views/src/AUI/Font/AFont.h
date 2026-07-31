@@ -13,6 +13,8 @@
 
 #include <string>
 #include <iterator>
+#include <memory>
+#include <mutex>
 #include <glm/glm.hpp>
 #include <AUI/Url/AUrl.h>
 
@@ -123,7 +125,13 @@ public:
     };
 
     struct FontData {
-        AVector<AOptional<Character>> characters;
+        /**
+         * Cached glyphs, indexed by codepoint. Stored by pointer so that
+         * vector growth never invalidates Character references handed out by
+         * getCharacter; nullptr means "not cached yet". All access is
+         * serialized by AFont::mCharDataMutex.
+         */
+        AVector<_unique<Character>> characters;
         void* rendererData = nullptr;
     };
 
@@ -147,9 +155,10 @@ private:
 
     AMap<FontKey, FontData> mCharData;
 
-    FontData& getFontEntry(unsigned size, FontRendering fr) {
-        return mCharData[FontKey{size, fr}];
-    }
+    /**
+     * @brief Serializes access to mCharData (see getCharacter).
+     */
+    std::mutex mCharDataMutex;
 
     /**
      * @brief Checks if the primary font contains the given glyph.
@@ -166,6 +175,7 @@ public:
     AFont(AFontManager* fm, const AUrl& url);
 
     FontEntry getFontEntry(const FontKey& key) {
+        std::lock_guard lock(mCharDataMutex);
         return {key, mCharData[key]};
     }
 

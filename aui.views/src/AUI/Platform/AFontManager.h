@@ -89,13 +89,12 @@ private:
     }
 
     /**
-     * Bundles the manager mutex, face pointer, and the library and per-face
-     * mutex locks. The manager lock is released after face selection; the
-     * shared FreeType library lock (sFaceMutex) and the per-face lock are
-     * held through the FT operations on the returned face.
+     * Bundles a fallback face with the library and per-face mutex locks held
+     * through the caller's FT operations on the returned face. The manager
+     * mutex is NOT part of this lock: lockFallbackFace releases it before
+     * returning, once face selection has finished.
      */
     struct FallbackFaceLock {
-        std::unique_lock<std::mutex> lock;      // mFallbackMutex (released early)
         FT_FaceRec_* face = nullptr;
         std::unique_lock<std::mutex> ftLock;    // FreeType::sFaceMutex (held through FT ops)
         std::unique_lock<std::mutex> faceLock;  // per-face mutex (held through FT ops)
@@ -105,16 +104,24 @@ private:
 
     /**
      * Ensures fallback faces are loaded (once) and returns the first face
-     * that contains the given codepoint. The returned FallbackFaceLock holds
-     * the manager mutex (released soon after return), the shared FreeType
-     * library lock (sFaceMutex) and a per-face mutex, the latter two held
-     * through the FT operations on the returned face.
+     * that contains the given codepoint. The manager mutex is released before
+     * the function returns; the returned FallbackFaceLock carries the shared
+     * FreeType library lock (sFaceMutex) and a per-face mutex, the latter two
+     * held through the FT operations on the returned face.
      *
      * @note The first call may block while fallback fonts are discovered via
      *       fontconfig or filesystem probing under mFallbackMutex.
      */
     [[nodiscard]]
     FallbackFaceLock lockFallbackFace(char32_t codepoint);
+
+    /**
+     * @return true while deferred fallback candidates remain to be loaded
+     *         lazily. Used by AFont to decide whether a cached failed glyph
+     *         should be re-rendered: as long as discovery is still in
+     *         progress, a later render may succeed once more faces load.
+     */
+    bool hasDeferredCandidates();
 
 	AString getPathToFont(const AString& family);
 

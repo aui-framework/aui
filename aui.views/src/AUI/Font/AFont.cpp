@@ -15,7 +15,10 @@
 #include "AUI/Font/FreeType.h"
 #include "AUI/Platform/AFontManager.h"
 #include "AUI/Logging/ALogger.h"
+#include <cstdlib>
 #include <fstream>
+#include <limits>
+#include <memory>
 #include <mutex>
 #include <string>
 #include "AUI/Common/AStringVector.h"
@@ -126,8 +129,8 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
         auto fb = mFontManager->lockFallbackFace(glyph.codepoint());
         if (fb) {
             face = fb.face;
-            // Transfer the library and per-face locks; the manager lock (fb.lock)
-            // destructs at end of this if-block, releasing mFallbackMutex immediately.
+            // Transfer the library and per-face locks; the manager mutex was
+            // already released inside lockFallbackFace after face selection.
             fallbackLock.ftLock = std::move(fb.ftLock);
             fallbackLock.faceLock = std::move(fb.faceLock);
         }
@@ -149,8 +152,25 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
 
         // Step 2: set pixel sizes.
         if (FT_Set_Pixel_Sizes(face, 0, size) != 0) {
-            // Fallback face may be bitmap-only/fixed-size; retry with primary face.
-            if (face != mFace) {
+            // FT_Set_Pixel_Sizes fails for fixed-size bitmap faces unless the
+            // requested pixel size is exactly one of the available strikes.
+            // For a fallback face, select the strike closest to the requested
+            // size before giving up and retrying the primary face.
+            bool strikeSelected = false;
+            if (face != mFace && !(face->face_flags & FT_FACE_FLAG_SCALABLE) && face->num_fixed_sizes > 0) {
+                long bestStrike = 0;
+                long bestDelta = std::numeric_limits<long>::max();
+                for (FT_Int i = 0; i < face->num_fixed_sizes; ++i) {
+                    const long delta = std::abs(long(face->available_sizes[i].y_ppem) - long(size));
+                    if (delta < bestDelta) {
+                        bestDelta = delta;
+                        bestStrike = i;
+                    }
+                }
+                strikeSelected = FT_Select_Size(face, bestStrike) == 0;
+            }
+            if (!strikeSelected && face != mFace) {
+                // Fallback face has no usable strike; retry with the primary face.
                 fallbackLock = {};  // release library + per-face mutexes before locking sFaceMutex
                 face = mFace;
                 if (!ftLock.owns_lock()) ftLock.lock();  // acquire lock for mFace
@@ -255,28 +275,32 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
 }
 
 AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
+    // The cache is guarded so that concurrent lookups, resizes and insertions
+    // cannot race. Character objects are stored by pointer, so resizing the
+    // vector never reallocates (invalidates) an already returned reference.
+    std::lock_guard lock(mCharDataMutex);
     auto& chars = charset.second.characters;
-    if (chars.size() > glyph && chars[glyph.codepoint()]) {
-        return *chars[glyph.codepoint()];
+    if (chars.size() > glyph) {
+        auto& slot = chars[glyph.codepoint()];
+        if (slot) {
+            // Failed glyphs are cached, but re-rendered while lazy fallback
+            // discovery is still in progress: a later render may succeed once
+            // more faces become available. Once no deferred candidates remain
+            // they stay cached, so unsupported codepoints do not re-run the
+            // locked failure path on every layout.
+            if (!slot->glyphFailed || !mFontManager || !mFontManager->hasDeferredCandidates()) {
+                return *slot;
+            }
+            slot = nullptr;
+        }
     } else {
-        if (chars.size() <= glyph) {
-            chars.resize(glyph + 1, std::nullopt);
-        }
-        Character ch = renderGlyph(charset, glyph);
-        if (ch.glyphFailed) {
-            // Do not cache failed glyphs: fallback faces are discovered lazily,
-            // so a later render attempt may succeed once more faces become
-            // available. The returned reference is deliberately not stored in
-            // the font entry; callers must not retain it across getCharacter
-            // calls.
-            static thread_local Character failed;
-            failed.glyphFailed = true;
-            return failed;
-        }
-        chars[glyph.codepoint()] = std::move(ch);
-
-        return *chars[glyph.codepoint()];
+        chars.resize(glyph + 1);
     }
+
+    Character ch = renderGlyph(charset, glyph);
+    chars[glyph.codepoint()] = std::make_unique<Character>(std::move(ch));
+
+    return *chars[glyph.codepoint()];
 }
 
 int AFont::length(const FontEntry& charset, AStringView text) {

@@ -35,23 +35,18 @@ struct WideFontStream {
 
 unsigned long wideFontStreamRead(FT_Stream stream, unsigned long offset, unsigned char* buffer, unsigned long count) {
     auto* self = reinterpret_cast<WideFontStream*>(stream->descriptor.pointer);
-    if (!count && offset > stream->size) {
-        return 1;
+    if (count == 0) {
+        // Zero-count reads are seek-status probes (see FT_Stream_IoFunc):
+        // non-zero indicates the seek failed (offset past the end of the stream).
+        return offset > stream->size ? 1 : 0;
     }
-    if (stream->pos != offset) {
-        if (fseek(self->file, static_cast<long>(offset), SEEK_SET) != 0) {
-            return 0;
-        }
-        stream->pos = offset;
+    if (fseek(self->file, static_cast<long>(offset), SEEK_SET) != 0) {
+        return 0;
     }
-    if (count > 0) {
-        count = static_cast<unsigned long>(fread(buffer, 1, count, self->file));
-        if (!count) {
-            return 1;
-        }
-    }
-    stream->pos += count;
-    return count;
+    // Report the actual number of bytes read. In particular, a zero result
+    // (read past EOF) must be reported as zero, not synthesized as a success:
+    // FreeType would otherwise treat an unread buffer as valid data.
+    return static_cast<unsigned long>(fread(buffer, 1, count, self->file));
 }
 
 void wideFontStreamClose(FT_Stream stream) {
@@ -145,7 +140,6 @@ void AFontManager::ensureFallbackFaceLocked() {
     // Ensure fontconfig is initialized before using default config (nullptr).
     if (!FcInit()) {
         ALogger::warn("Font") << "FcInit() failed; CJK fallback unavailable";
-        mFallbackAttempted = true;   // FcInit is a one-shot init; failure is definitive.
         return;
     }
     // Use a charset-based query with a common CJK character to ensure the font actually has CJK glyphs.
@@ -238,7 +232,6 @@ void AFontManager::ensureFallbackFaceLocked() {
 #else
     // Unknown platform; mark fallback as unavailable.
     ALogger::warn("Font") << "CJK font fallback not available on this platform";
-    mFallbackAttempted = true;
     return;
 #endif
 
@@ -267,7 +260,7 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
         std::unique_lock ftLock(FreeType::sFaceMutex);
         std::unique_lock faceLock(*fb.mtx);
         if (FT_Get_Char_Index(fb.face, codepoint) != 0) {
-            return { std::move(lk), fb.face, std::move(ftLock), std::move(faceLock) };
+            return { fb.face, std::move(ftLock), std::move(faceLock) };
         }
     }
 
@@ -285,12 +278,17 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
             std::unique_lock ftLock(FreeType::sFaceMutex);
             std::unique_lock faceLock(*fb.mtx);
             if (FT_Get_Char_Index(fb.face, codepoint) != 0) {
-                return { std::move(lk), fb.face, std::move(ftLock), std::move(faceLock) };
+                return { fb.face, std::move(ftLock), std::move(faceLock) };
             }
         }
     }
 
-    return { std::move(lk), nullptr };
+    return { nullptr };
+}
+
+bool AFontManager::hasDeferredCandidates() {
+    std::lock_guard lock(mFallbackMutex);
+    return !mDeferredCandidates.empty();
 }
 
 _<AFont> AFontManager::loadFont(const AUrl& url) {
