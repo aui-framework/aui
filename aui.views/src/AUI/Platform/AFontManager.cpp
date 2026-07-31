@@ -141,6 +141,8 @@ void AFontManager::fallbackDiscoveryWorker() {
         // Best-effort: an exception leaving a thread function would call
         // std::terminate, so discovery failures must not escape.
         ALogger::warn("Font") << "Fallback discovery failed: " << e.what();
+    } catch (...) {
+        ALogger::warn("Font") << "Fallback discovery failed with an unknown exception";
     }
     // Release-store: the mutex-protected discovery result (loaded faces,
     // deferred candidates) is visible to any thread that observes the clear.
@@ -188,6 +190,15 @@ void AFontManager::ensureFallbackFaceLocked() {
     static constexpr FcChar32 kProbeCodepoints[] = { 0x4E2D /*中*/, 0x3042 /*あ*/, 0xAC00 /*가*/ };
     FcPattern* pattern = FcPatternCreate();
     FcCharSet* charset = FcCharSetCreate();
+    if (!pattern || !charset) {
+        // Allocation failure (memory exhaustion): never call fontconfig APIs
+        // with null handles (FcPatternAddCharSet would crash). Discovery is
+        // best-effort; log and leave the fallback pool empty.
+        if (pattern) FcPatternDestroy(pattern);
+        if (charset) FcCharSetDestroy(charset);
+        ALogger::warn("Font") << "fontconfig allocation failed; CJK fallback unavailable";
+        return;
+    }
     for (auto probe : kProbeCodepoints) {
         FcCharSetAddChar(charset, probe);
     }

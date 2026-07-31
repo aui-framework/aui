@@ -195,7 +195,11 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
                 if (!ftLock.owns_lock()) ftLock.lock();  // acquire lock for mFace
                 pixelSizeSet = FT_Set_Pixel_Sizes(face, 0, size) == 0;
             }
-            // If both fail, FT_Load_Char will also fail and glyphFailed is set.
+            if (!pixelSizeSet && face == mFace) {
+                return Character{
+                    .glyphFailed = true,
+                };
+            }
         } else {
             pixelSizeSet = true;
         }
