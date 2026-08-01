@@ -26,6 +26,7 @@
 #include "AUI/Common/AStringVector.h"
 #include "AFontFamily.h"
 #include <AUI/Common/AByteBuffer.h>
+#include <AUI/Common/SharedPtrTypes.h>   // _unique (used by FontData::characters)
 
 class AString;
 

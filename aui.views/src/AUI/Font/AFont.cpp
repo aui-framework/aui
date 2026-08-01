@@ -166,7 +166,14 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
 
         // Step 2: set pixel sizes.
         bool pixelSizeSet = false;
-        if (FT_Set_Pixel_Sizes(face, 0, size) != 0) {
+        // Skip re-programming when the primary face is already at this size:
+        // FT_Set_Pixel_Sizes recomputes the face's size metrics (getKerning
+        // skips it for the same reason). Fallback faces are always sized —
+        // mFacePixelSize tracks the primary face only.
+        const bool sizeAlreadyProgrammed = (face == mFace && mFacePixelSize == unsigned(size));
+        if (sizeAlreadyProgrammed) {
+            pixelSizeSet = true;
+        } else if (FT_Set_Pixel_Sizes(face, 0, size) != 0) {
             // FT_Set_Pixel_Sizes fails for fixed-size bitmap faces unless the
             // requested pixel size is exactly one of the available strikes.
             // For a fallback face, select the strike closest to the requested
@@ -187,6 +194,8 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
                 }
                 strikeSelected = FT_Select_Size(face, bestStrike) == 0;
             }
+            // A selected strike IS a programmed size: keep the flag truthful.
+            pixelSizeSet = strikeSelected;
             if (!strikeSelected && face != mFace) {
                 // Fallback face has no usable strike; retry with the primary face.
                 fallbackLock = {};  // release library + per-face mutexes before locking sFaceMutex
