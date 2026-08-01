@@ -163,6 +163,9 @@ bool AFontManager::loadOneFallback(const FallbackCandidate& candidate) {
         return false;
     }
     mFallbackFaces.push_back({face});
+    // Publish the new face: bump the generation (release) so cached
+    // failed/provisional glyphs re-render at most once per face load.
+    mFallbackGeneration.fetch_add(1, std::memory_order_release);
     ALogger::info("Font") << "Loaded CJK fallback font: " << candidate.path;
     return true;
 }

@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
 #include <iterator>
 #include <memory>
@@ -98,6 +99,18 @@ public:
          *        succeed once more faces are loaded.
          */
         bool provisional = false;
+
+        /**
+         * @brief AFontManager::fallbackGeneration() as of the start of this
+         *        glyph's most recent render attempt. getCharacter re-renders a
+         *        failed/provisional glyph only when the manager's generation has
+         *        advanced past this value, i.e. a new fallback face became
+         *        available since the last attempt. This bounds re-renders to at
+         *        most one per face load instead of one per lookup while fallback
+         *        discovery runs. Final glyphs are unaffected (they are returned
+         *        from the cache unconditionally).
+         */
+        uint64_t fallbackGeneration = 0;
 
         [[nodiscard]]
         bool empty() const {

@@ -307,13 +307,18 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
 AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
     // Phase 1: cache probe under the lock. A cached glyph is returned as-is
     // unless it is failed/provisional and lazy fallback discovery may still
-    // improve it (a later render can succeed once more faces load).
+    // improve it (a later render can succeed once more faces load). The
+    // retry is gated on the fallback-discovery generation, not merely on
+    // hasDeferredCandidates(): while discovery runs, a generation check
+    // keeps every lookup of a provisional glyph from re-rendering it.
     {
         std::lock_guard lock(mCharDataMutex);
         auto& chars = charset.second.characters;
         if (auto it = chars.find(glyph.codepoint()); it != chars.end() && it->second) {
             auto& slot = it->second;
-            const bool mayImprove = mFontManager && mFontManager->hasDeferredCandidates();
+            const bool mayImprove = mFontManager
+                                 && mFontManager->hasDeferredCandidates()
+                                 && slot->fallbackGeneration != mFontManager->fallbackGeneration();
             if (!mayImprove || (!slot->glyphFailed && !slot->provisional)) {
                 return *slot;
             }
@@ -323,7 +328,16 @@ AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
     // Phase 2: render outside the cache lock. renderGlyph runs fallback-face
     // lookup and FreeType rendering (sFaceMutex), which must not stall
     // lookups of other glyphs of this font.
+    //
+    // Record the generation as of *before* the render attempt: if a face
+    // loads while this attempt is in flight (lockFallbackFace's lazy
+    // loading), the recorded value is stale, which only causes one extra
+    // re-render later — the safe direction. Recording it afterwards could
+    // instead miss a face loaded concurrently and cache a suboptimal glyph
+    // without any further retry.
+    const uint64_t renderGeneration = mFontManager ? mFontManager->fallbackGeneration() : 0;
     Character ch = renderGlyph(charset, glyph);
+    ch.fallbackGeneration = renderGeneration;
 
     // Phase 3: install under the lock. The cached Character object is mutated
     // in place (never freed), so references handed out earlier stay valid

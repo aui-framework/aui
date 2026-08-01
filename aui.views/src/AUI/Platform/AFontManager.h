@@ -16,6 +16,7 @@
 #include "AUI/Font/AFontFamily.h"
 #include <AUI/Common/AVector.h>
 #include <atomic>
+#include <cstdint>
 #include <memory>
 #include <mutex>
 #include <thread>
@@ -89,6 +90,15 @@ private:
     std::thread mFallbackThread;
 
     /**
+     * Incremented (release) whenever a new fallback face is loaded into
+     * mFallbackFaces (see loadOneFallback). AFont records this value on each
+     * cached glyph and re-renders a failed/provisional glyph only when the
+     * counter has advanced, so a single face load triggers at most one
+     * re-render per glyph instead of a re-render on every lookup.
+     */
+    std::atomic<uint64_t> mFallbackGeneration{0};
+
+    /**
      * @brief Loads a single fallback face from the given candidate.
      * @return true if the face was loaded successfully.
      */
@@ -142,6 +152,18 @@ private:
      *         succeed once more faces load.
      */
     bool hasDeferredCandidates();
+
+    /**
+     * @return The fallback-discovery generation: incremented whenever a new
+     *         fallback face becomes available. AFont re-renders a cached
+     *         failed/provisional glyph only when this value differs from the
+     *         generation recorded on the glyph (see AFont::Character::
+     *         fallbackGeneration), so re-renders happen at most once per face
+     *         load rather than on every lookup.
+     */
+    uint64_t fallbackGeneration() const {
+        return mFallbackGeneration.load(std::memory_order_acquire);
+    }
 
 	AString getPathToFont(const AString& family);
 
