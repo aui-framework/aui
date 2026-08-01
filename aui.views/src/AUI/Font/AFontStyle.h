@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -42,7 +42,7 @@ struct API_AUI_VIEWS AFontStyle {
         return font->length(*this, std::move(begin), std::move(end));
     }
 
-    AFont::Character& getCharacter(char32_t c) {
+    AFont::Character getCharacter(char32_t c) {
         return font->getCharacter(getFontEntry(), c);
     }
 

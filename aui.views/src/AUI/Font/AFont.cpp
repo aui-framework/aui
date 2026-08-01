@@ -353,7 +353,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     };
 }
 
-AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
+AFont::Character AFont::getCharacter(const FontEntry& charset, AChar glyph) {
     // Phase 1: cache probe under the lock. A cached glyph is returned as-is
     // unless it is failed/provisional and lazy fallback discovery may still
     // improve it (a later render can succeed once more faces load). The
@@ -388,20 +388,20 @@ AFont::Character& AFont::getCharacter(const FontEntry& charset, AChar glyph) {
     Character ch = renderGlyph(charset, glyph);
     ch.fallbackGeneration = renderGeneration;
 
-    // Phase 3: install under the lock. The cached Character object is mutated
-    // in place (never freed), so references handed out earlier stay valid
-    // across re-renders; a concurrently cached final result is preferred over
-    // a worse (failed/provisional) one. Callers that draw later (prerendered
-    // strings) must hold shared references to the image, never raw pointers,
-    // because the image itself is replaced on re-render (SoftwareRenderer's
-    // CharEntry does this).
+    // Phase 3: install under the lock. Install a NEW slot instead of mutating
+    // the cached Character: cached glyphs are immutable once published and
+    // getCharacter returns snapshots by value, so a concurrent re-render must
+    // never race with a reader's snapshot copy (including the _<AImage>
+    // shared-pointer copy). A concurrently cached final result is preferred
+    // over a worse (failed/provisional) one. Callers that draw later
+    // (prerendered strings) must hold shared references to the image, never
+    // raw pointers, because the image is replaced on re-render
+    // (SoftwareRenderer's CharEntry does this).
     std::lock_guard lock(mCharDataMutex);
     auto& chars = charset.second.characters;
     auto& slot = chars[glyph.codepoint()];
-    if (!slot) {
+    if (!slot || slot->glyphFailed || slot->provisional) {
         slot = std::make_unique<Character>(std::move(ch));
-    } else if (slot->glyphFailed || slot->provisional) {
-        *slot = std::move(ch);
     }
     return *slot;
 }

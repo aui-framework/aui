@@ -85,10 +85,11 @@ private:
     bool mFallbackAttempted = false;
 
     /**
-     * True while fallback discovery runs on mFallbackThread. While set,
-     * lockFallbackFace returns no face immediately (rather than blocking the
-     * caller), and hasDeferredCandidates reports true so that AFont keeps
-     * re-rendering provisional/failed glyphs until discovery completes.
+     * True while a fallback worker run (discovery or a deferred candidate
+     * load) is in flight on mFallbackThread. While set, lockFallbackFace
+     * returns no face immediately (rather than blocking the caller), and
+     * hasDeferredCandidates reports true so that AFont keeps re-rendering
+     * provisional/failed glyphs until the run completes.
      */
     std::atomic<bool> mFallbackPending = false;
     std::thread mFallbackThread;
@@ -96,7 +97,7 @@ private:
     /**
      * Number of entries in mDeferredCandidates. Written under mFallbackMutex
      * (stored on population in ensureFallbackFaceLocked, decremented per
-     * removal in lockFallbackFace), read without a lock by
+     * removal in fallbackDiscoveryWorker), read without a lock by
      * hasDeferredCandidates.
      */
     std::atomic<size_t> mDeferredCount{0};
@@ -124,11 +125,18 @@ private:
      *        Implemented per platform in
      *        AUI/Platform/<platform>/AFontManagerImpl.cpp. May log the
      *        reason and return an empty list when no candidates are available.
+     *        Does not access instance state; callable from any thread.
      */
-    AVector<FallbackCandidate> fallbackCandidates();
+    static AVector<FallbackCandidate> fallbackCandidates();
 
     void ensureFallbackFaceLocked();
     void fallbackDiscoveryWorker();
+    /**
+     * @brief Starts one fallback worker run (discovery on first call, then
+     *        one deferred candidate load per subsequent call). The caller
+     *        must hold mFallbackMutex. No-op while a run is in flight.
+     */
+    void startFallbackWorker();
     /**
      * @brief Starts fallback discovery on a worker thread (once), so the
      *        fontconfig/filesystem probe and the eager first-face load never
@@ -159,8 +167,9 @@ private:
      *
      * @note Discovery runs on a worker thread (initFallback). Calls made
      *       before discovery completes return no face immediately; once it
-     *       completes, calls serialize on mFallbackMutex and may lazily load
-     *       deferred candidates (bounded per call).
+     *       completes, calls serialize on mFallbackMutex and may kick the
+     *       worker to load a deferred candidate in the background (never on
+     *       the calling thread).
      */
     [[nodiscard]]
     FallbackFaceLock lockFallbackFace(char32_t codepoint);

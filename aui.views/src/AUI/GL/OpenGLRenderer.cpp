@@ -709,14 +709,10 @@ public:
                 advanceY += mFontStyle.getLineHeight();
                 nextLine();
             } else {
-                // cached is the live cache slot (rendererData must be
-                // written there); ch is a snapshot because fallback discovery
-                // replaces provisional glyphs in place after releasing the
-                // cache lock, so the returned reference may be swapped at any
-                // point during this loop iteration. All image/metrics reads
-                // come from the snapshot.
-                AFont::Character& cached = font->getCharacter(fe, c);
-                const AFont::Character ch = cached;
+                // getCharacter returns an immutable snapshot: the cache may
+                // re-render (replace) this glyph on another thread at any
+                // time, so all image/metrics reads come from the copy.
+                const AFont::Character ch = font->getCharacter(fe, c);
                 if (ch.empty()) {
                     notifySymbolAdded({glm::ivec2{advance, advanceY}});
                     if (hasKerning) {
@@ -738,20 +734,25 @@ public:
 
                     glm::vec4 uv;
 
-                    if (cached.rendererData == nullptr) {
-                        uv = texturePacker.insert(*ch.image);
+                    // The renderer cache handle is stored on the cached glyph;
+                    // read and write it through the synchronized accessor so
+                    // check-then-insert is atomic across render threads.
+                    font->withCharacterRendererData(fe, c, [&](void*& rendererData) {
+                        if (rendererData == nullptr) {
+                            uv = texturePacker.insert(*ch.image);
 
-                        const float BIAS = 0.1f;
-                        uv.x += BIAS;
-                        uv.y += BIAS;
-                        uv.z -= BIAS;
-                        uv.w -= BIAS;
-                        mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv});
-                        cached.rendererData = &mRenderer->mCharData.last();
-                        mEntryData->isTextureInvalid = true;
-                    } else {
-                        uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(cached.rendererData)->uv;
-                    }
+                            const float BIAS = 0.1f;
+                            uv.x += BIAS;
+                            uv.y += BIAS;
+                            uv.z -= BIAS;
+                            uv.w -= BIAS;
+                            mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv});
+                            rendererData = &mRenderer->mCharData.last();
+                            mEntryData->isTextureInvalid = true;
+                        } else {
+                            uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(rendererData)->uv;
+                        }
+                    });
 
                     notifySymbolAdded({glm::ivec2{posX, posY}});
                     mVertices.push_back({glm::vec2(posX, posY + height),
@@ -836,13 +837,18 @@ _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 posit
 
 OpenGLRenderer::FontEntryData* OpenGLRenderer::getFontEntryData(const AFontStyle& fontStyle) {
     auto fe = fontStyle.getFontEntry();
-    FontEntryData* entryData;
-    if (fe.second.rendererData == nullptr) {
-        mFontEntryData.emplace_back();
-        fe.second.rendererData = entryData = &mFontEntryData.last();
-    } else {
-        entryData = reinterpret_cast<FontEntryData*>(fe.second.rendererData);
-    }
+    FontEntryData* entryData = nullptr;
+    // FontData::rendererData is shared renderer cache state; read and write
+    // it through the synchronized accessor so check-then-create is atomic
+    // when several render threads use the same font size.
+    fontStyle.font->withFontEntryRendererData(fe, [&](void*& rendererData) {
+        if (rendererData == nullptr) {
+            mFontEntryData.emplace_back();
+            rendererData = entryData = &mFontEntryData.last();
+        } else {
+            entryData = reinterpret_cast<FontEntryData*>(rendererData);
+        }
+    });
     return entryData;
 }
 

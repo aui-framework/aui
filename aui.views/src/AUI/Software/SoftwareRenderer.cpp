@@ -482,10 +482,9 @@ public:
                 nextLine();
             }
             else {
-                // Snapshot: fallback discovery replaces provisional glyphs in
-                // the cache in place after releasing the cache lock, so the
-                // returned reference may be swapped at any point during this
-                // loop iteration.
+                // getCharacter returns an immutable snapshot: the cache may
+                // re-render (replace) this glyph on another thread at any
+                // time, so all image/metrics reads come from the copy.
                 const AFont::Character ch = font->getCharacter(fe, c);
                 if (ch.empty()) {
                     notifySymbolAdded({glm::ivec2{advance, advanceY}});

@@ -43,8 +43,21 @@ AFontManager::~AFontManager() {
 }
 
 void AFontManager::initFallback() {
+    std::lock_guard lock(mFallbackMutex);
+    startFallbackWorker();
+}
+
+void AFontManager::startFallbackWorker() {
+    // mFallbackMutex must be held by the caller.
+    if (mFallbackPending.load(std::memory_order_acquire)) {
+        return;   // a worker run is already in flight
+    }
     if (mFallbackThread.joinable()) {
-        return;   // already running (only joined at destruction)
+        // The previous run has finished (pending was false) but its thread
+        // object was not joined yet. Joining under the mutex cannot block on
+        // a live worker: pending==false implies the worker executed its last
+        // statement (the pending store) already.
+        mFallbackThread.join();
     }
     mFallbackPending.store(true, std::memory_order_release);
     try {
@@ -60,6 +73,27 @@ void AFontManager::fallbackDiscoveryWorker() {
     try {
         std::unique_lock lock(mFallbackMutex);
         ensureFallbackFaceLocked();
+
+        // Load one deferred candidate per run: font-file IO and face parsing
+        // must never happen on the calling (UI) thread, which is what the
+        // former in-lookup lazy loading did. A miss in lockFallbackFace
+        // re-kicks this worker, and the generation bump below (or inside
+        // loadOneFallbackLocked on success) makes AFont re-render the
+        // provisional glyph once per completed load, so the queue drains one
+        // candidate per re-render cycle until a face covers the glyph or the
+        // queue is empty.
+        if (!mDeferredCandidates.empty()) {
+            auto c = mDeferredCandidates.first();
+            mDeferredCandidates.erase(mDeferredCandidates.begin());
+            mDeferredCount.fetch_sub(1, std::memory_order_release);
+            if (!loadOneFallbackLocked(c)) {
+                // The candidate pool changed even though no face was added.
+                // Publish the change so cached failed/provisional glyphs
+                // retry against the remaining candidates instead of being
+                // pinned to this generation forever.
+                mFallbackGeneration.fetch_add(1, std::memory_order_release);
+            }
+        }
     } catch (const std::exception& e) {
         // Best-effort: an exception leaving a thread function would call
         // std::terminate, so discovery failures must not escape.
@@ -87,8 +121,8 @@ bool AFontManager::loadOneFallbackLocked(const FallbackCandidate& candidate) {
         if (fseek(file, 0, SEEK_END) == 0) {
             const long size = ftell(file);
             if (size > 0 && fseek(file, 0, SEEK_SET) == 0) {
-                fontData.resize(size);
-                if (fread(fontData.data(), 1, size, file) != size) {
+                fontData.resize(static_cast<size_t>(size));
+                if (fread(fontData.data(), 1, static_cast<size_t>(size), file) != static_cast<size_t>(size)) {
                     fontData = {};   // truncated read: treat as a load failure
                 }
             }
@@ -183,33 +217,16 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
         }
     }
 
-    // No loaded face has this codepoint; try deferred candidates lazily.
-    // Bound to a few attempts per call to avoid draining the entire queue on
-    // the UI thread for a codepoint that no candidate covers (e.g. emoji,
-    // rare symbols). The counter counts attempts, not successes: failing
-    // candidates (e.g. font files absent on this OS version) must not drain
-    // the whole queue in one call either.
-    constexpr int kMaxDeferredLoadAttemptsPerCall = 2;
-    int attempts = 0;
-    while (!mDeferredCandidates.empty() && attempts < kMaxDeferredLoadAttemptsPerCall) {
-        auto c = mDeferredCandidates.first();
-        mDeferredCandidates.erase(mDeferredCandidates.begin());
-        mDeferredCount.fetch_sub(1, std::memory_order_release);
-        ++attempts;
-        if (!loadOneFallbackLocked(c)) {
-            // The candidate pool changed even though no face was added.
-            // Publish the change so cached failed/provisional glyphs retry
-            // against the remaining candidates instead of being pinned to
-            // this generation forever (a later candidate may cover them).
-            mFallbackGeneration.fetch_add(1, std::memory_order_release);
-            continue;
-        }
-        auto& fb = mFallbackFaces.last();
-        std::unique_lock ftLock(FreeType::sFaceMutex);
-        std::unique_lock faceLock(*fb.mtx);
-        if (FT_Get_Char_Index(fb.face, codepoint) != 0) {
-            return { fb.face, std::move(ftLock), std::move(faceLock) };
-        }
+    // No loaded face has this codepoint. Hand the next deferred candidate to
+    // the discovery worker instead of loading it here: font-file IO and face
+    // parsing must not run on the calling (UI) thread during text layout. The
+    // worker bumps mFallbackGeneration when the load finishes, and the
+    // generation gate in AFont::getCharacter re-renders the provisional glyph
+    // once per bump, so the queue drains one candidate per re-render cycle
+    // until a face covers this codepoint or the queue empties (retries then
+    // stop: hasDeferredCandidates goes false).
+    if (!mDeferredCandidates.empty() && !mFallbackPending.load(std::memory_order_acquire)) {
+        startFallbackWorker();
     }
 
     return { nullptr };

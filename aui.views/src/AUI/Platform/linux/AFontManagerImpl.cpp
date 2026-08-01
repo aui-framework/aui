@@ -128,26 +128,30 @@ AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
     // The list is capped: loaded fallback faces are never released, so an
     // unbounded candidate pool would keep opening font files for the whole
     // process lifetime on codepoint misses (e.g. emoji, rare symbols).
-    constexpr int kMaxFallbackCandidates = 8;
+    constexpr size_t kMaxFallbackCandidates = 8;
     AVector<AFontManager::FallbackCandidate> candidates;
     FcResult result;
     FcFontSet* fontSet = FcFontSort(nullptr, pattern, FcTrue, nullptr, &result);
     if (fontSet) {
         for (int i = 0; i < fontSet->nfont && candidates.size() < kMaxFallbackCandidates; ++i) {
             FcPattern* font = fontSet->fonts[i];
-            // Verify the font covers at least one of the CJK scripts.
+            // Verify the font covers at least one of the CJK scripts; reject
+            // fonts whose charset cannot be read too — they would consume a
+            // candidate slot and a lazy load attempt without any proof of
+            // coverage.
             FcCharSet* fontCharset = nullptr;
-            if (FcPatternGetCharSet(font, FC_CHARSET, 0, &fontCharset) == FcResultMatch) {
-                bool coversAny = false;
-                for (auto probe : kProbeCodepoints) {
-                    if (FcCharSetHasChar(fontCharset, probe)) {
-                        coversAny = true;
-                        break;
-                    }
+            if (FcPatternGetCharSet(font, FC_CHARSET, 0, &fontCharset) != FcResultMatch) {
+                continue;
+            }
+            bool coversAny = false;
+            for (auto probe : kProbeCodepoints) {
+                if (FcCharSetHasChar(fontCharset, probe)) {
+                    coversAny = true;
+                    break;
                 }
-                if (!coversAny) {
-                    continue;   // Skip fonts that cover none of the CJK scripts.
-                }
+            }
+            if (!coversAny) {
+                continue;   // Skip fonts that cover none of the CJK scripts.
             }
             FcChar8* path = nullptr;
             int faceIndex = 0;

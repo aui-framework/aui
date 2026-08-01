@@ -131,6 +131,13 @@ public:
             return horizontal.advance > 0.f ? horizontal.advance : 0.f;
         }
 
+        /**
+         * @brief Renderer-owned per-glyph cache handle (e.g. the texture
+         *        packer entry in OpenGLRenderer). Read and written only
+         *        through AFont::withCharacterRendererData, which holds the
+         *        glyph-cache lock, so it is never touched concurrently with a
+         *        re-render.
+         */
         void* rendererData = nullptr;
     };
 
@@ -153,13 +160,19 @@ public:
          * the number of cached glyphs rather than the highest codepoint rendered
          * (a single CJK codepoint would otherwise size a vector past 40k slots).
          * Stored by pointer in a node-based map so that insertions never
-         * invalidate Character references handed out by getCharacter; an absent
-         * key means "not cached yet". Re-renders (provisional/failed glyphs)
-         * mutate the existing Character in place, so handed-out references stay
-         * valid across both insertions and re-renders. All access is serialized
-         * by AFont::mCharDataMutex.
+         * invalidate the map; an absent key means "not cached yet". Re-renders
+         * (provisional/failed glyphs) replace the slot with a NEW Character, so
+         * cached glyphs are immutable once published: getCharacter returns
+         * snapshots by value and no caller holds a reference into the cache. All
+         * access is serialized by AFont::mCharDataMutex.
          */
         AMap<char32_t, _unique<Character>> characters;
+        /**
+         * @brief Renderer-owned per-font-size cache handle (e.g. the
+         *        OpenGLRenderer font-entry data). Read and written only
+         *        through AFont::withFontEntryRendererData, which holds the
+         *        glyph-cache lock.
+         */
         void* rendererData = nullptr;
     };
 
@@ -210,6 +223,13 @@ public:
 
     AFont(AFontManager* fm, const AUrl& url);
 
+    /**
+     * @brief Returns the font entry for the given key, creating the per-size
+     *        FontData on first use. The returned FontData reference stays
+     *        valid (map nodes never move); its characters map and rendererData
+     *        handle are accessed only through getCharacter /
+     *        withFontEntryRendererData, which take the cache lock.
+     */
     FontEntry getFontEntry(const FontKey& key) {
         std::lock_guard lock(mCharDataMutex);
         return {key, mCharData[key]};
@@ -222,7 +242,42 @@ public:
     AFont(const AFont&) = delete;
     AFont& operator=(const AFont&) = delete;
 
-    Character& getCharacter(const FontEntry& charset, AChar glyph);
+    /**
+     * @brief Returns a snapshot of the cached glyph for the given codepoint,
+     *        re-rendering it first when it is failed/provisional and fallback
+     *        discovery may still improve it.
+     * @details The returned value is a copy taken under the glyph-cache lock:
+     *          the cache may re-render (replace) the glyph on another thread at
+     *          any time, so callers must never hold references into it. The
+     *          _<AImage> inside the snapshot keeps the bitmap alive.
+     */
+    Character getCharacter(const FontEntry& charset, AChar glyph);
+
+    /**
+     * @brief Runs f with a reference to the cached glyph's renderer cache
+     *        handle while holding the glyph-cache lock, so a check-then-set
+     *        (e.g. texture-packer insert + handle store) is atomic across
+     *        threads. Does nothing if the glyph is not cached yet.
+     */
+    template <typename F>
+    void withCharacterRendererData(const FontEntry& charset, AChar glyph, F&& f) {
+        std::lock_guard lock(mCharDataMutex);
+        auto& chars = charset.second.characters;
+        if (auto it = chars.find(glyph.codepoint()); it != chars.end() && it->second) {
+            f(it->second->rendererData);
+        }
+    }
+
+    /**
+     * @brief Runs f with a reference to the font-size entry's renderer cache
+     *        handle (FontData::rendererData) while holding the glyph-cache
+     *        lock, so a check-then-set is atomic across threads.
+     */
+    template <typename F>
+    void withFontEntryRendererData(const FontEntry& entry, F&& f) {
+        std::lock_guard lock(mCharDataMutex);
+        f(entry.second.rendererData);
+    }
 
     int length(const FontEntry& charset, AStringView text);
 
@@ -243,7 +298,7 @@ public:
                 advance = 0;
                 prevLineAdvance = glm::max(prevLineAdvance, advance);
             } else {
-                Character& ch = getCharacter(charset, *i);
+                Character ch = getCharacter(charset, *i);
                 // Match the renderers (OpenGLRenderer/SoftwareRenderer): pair
                 // kerning with the following character is applied before the
                 // glyph's advance for both empty and regular glyphs, so the
