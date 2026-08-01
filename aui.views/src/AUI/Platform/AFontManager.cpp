@@ -28,9 +28,15 @@
 #endif
 
 AFontManager::~AFontManager() {
-    if (mFallbackThread.joinable()) {
-        // Never destroy faces while discovery may still touch them.
-        mFallbackThread.join();
+    {
+        std::thread worker;
+        {
+            std::scoped_lock lock(mFallbackMutex);
+            worker = std::move(mFallbackThread);
+        }
+        if (worker.joinable()) {
+            worker.join();
+        }
     }
     std::scoped_lock lock(mFallbackMutex);
     for (auto& fb : mFallbackFaces) {
@@ -130,7 +136,12 @@ bool AFontManager::loadOneFallbackLocked(const FallbackCandidate& candidate) {
         fclose(file);
     }
 #else
-    fontData = AByteBuffer::fromStream(std::make_unique<AFileInputStream>(candidate.path));
+    try {
+        fontData = AByteBuffer::fromStream(std::make_unique<AFileInputStream>(candidate.path));
+    } catch (const AException& e) {
+        ALogger::warn("Font") << "Could not read fallback font " << candidate.path << ": " << e.getMessage();
+        return false;
+    }
 #endif
     if (fontData.empty()) {
         return false;
