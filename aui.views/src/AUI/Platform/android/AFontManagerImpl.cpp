@@ -20,6 +20,16 @@ AFontManager::AFontManager():
     initFallback();
 }
 
+AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
+    // Android system CJK fonts (varies by API level).
+    return {
+        { "/system/fonts/NotoSansCJK-Regular.ttc" },  // Android 5-9, pan-CJK
+        { "/system/fonts/NotoSansSC-Regular.otf" },    // Android 10+ (Chinese)
+        { "/system/fonts/NotoSansKR-Regular.otf" },    // Android 10+ (Korean)
+        { "/system/fonts/NotoSansJP-Regular.otf" },    // Android 10+ (Japanese)
+    };
+}
+
 AString AFontManager::getPathToFont(const AString &font) {
     return font;
 }

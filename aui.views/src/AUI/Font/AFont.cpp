@@ -24,6 +24,90 @@
 #include "AUI/Common/AStringVector.h"
 #include "AFont.h"
 
+namespace {
+/**
+ * @brief Programs the pixel size on the currently selected face.
+ *
+ * The primary face's size is cached (primaryPixelSize) so the metric-
+ * recomputing FT_Set_Pixel_Sizes call is skipped when the size is already
+ * programmed (getKerning uses the same guard). Fallback bitmap faces get
+ * the strike closest to the requested size; when a fallback face cannot be
+ * sized at all, the function releases the fallback library/per-face locks
+ * and retries with the primary face (marking the render provisional).
+ *
+ * @param face in/out: the face to size; replaced with the primary face on
+ *        the fallback retry path.
+ * @param primaryFace the font's primary face, never freed here.
+ * @param primaryPixelSize in/out: cached programmed size of the primary
+ *        face (AFont::mFacePixelSize).
+ * @param ftLock in/out: the primary-face library lock; acquired on the
+ *        retry path, when it is not already held.
+ * @param fallbackLock in/out: the fallback face's library/per-face locks
+ *        (AFontManager::FallbackFaceLock, a private type: deduced here and
+ *        only reset, never inspected); released on the retry path before
+ *        locking the primary face.
+ * @param provisional in/out: set to true when the render falls back to the
+ *        primary face.
+ * @return false only when the primary face could not be sized: the caller
+ *         must then produce a glyphFailed result.
+ */
+template <typename FallbackLock>
+bool programPixelSize(FT_Face& face,
+                      FT_Face primaryFace,
+                      unsigned& primaryPixelSize,
+                      int size,
+                      std::unique_lock<std::mutex>& ftLock,
+                      FallbackLock& fallbackLock,
+                      bool& provisional) {
+    bool pixelSizeSet = false;
+    // Skip re-programming when the primary face is already at this size:
+    // FT_Set_Pixel_Sizes recomputes the face's size metrics (getKerning
+    // skips it for the same reason). Fallback faces are always sized —
+    // primaryPixelSize tracks the primary face only.
+    const bool sizeAlreadyProgrammed = (face == primaryFace && primaryPixelSize == unsigned(size));
+    if (sizeAlreadyProgrammed) {
+        pixelSizeSet = true;
+    } else if (FT_Set_Pixel_Sizes(face, 0, size) != 0) {
+        // FT_Set_Pixel_Sizes fails for fixed-size bitmap faces unless the
+        // requested pixel size is exactly one of the available strikes.
+        // For a fallback face, select the strike closest to the requested
+        // size before giving up and retrying the primary face.
+        bool strikeSelected = false;
+        if (face != primaryFace && !(face->face_flags & FT_FACE_FLAG_SCALABLE) && face->num_fixed_sizes > 0) {
+            long bestStrike = 0;
+            long bestDelta = std::numeric_limits<long>::max();
+            for (FT_Int i = 0; i < face->num_fixed_sizes; ++i) {
+                // available_sizes[].y_ppem is in FreeType 26.6 fixed-point
+                // (64 units per pixel); convert before comparing to size.
+                const long strikePx = face->available_sizes[i].y_ppem >> 6;
+                const long delta = std::abs(strikePx - long(size));
+                if (delta < bestDelta) {
+                    bestDelta = delta;
+                    bestStrike = i;
+                }
+            }
+            strikeSelected = FT_Select_Size(face, bestStrike) == 0;
+        }
+        // A selected strike IS a programmed size: keep the flag truthful.
+        pixelSizeSet = strikeSelected;
+        if (!strikeSelected && face != primaryFace) {
+            // Fallback face has no usable strike; retry with the primary face.
+            fallbackLock = {};  // release library + per-face mutexes before locking sFaceMutex
+            face = primaryFace;
+            provisional = true;
+            if (!ftLock.owns_lock()) ftLock.lock();  // acquire lock for the primary face
+            pixelSizeSet = FT_Set_Pixel_Sizes(face, 0, size) == 0;
+        }
+    } else {
+        pixelSizeSet = true;
+    }
+    if (face == primaryFace && pixelSizeSet) {
+        primaryPixelSize = size;   // keep getKerning's programmed-size cache in sync
+    }
+    return pixelSizeSet;
+}
+}
+
 
 AFont::AFont(AFontManager* fm, const AString& path) :
         ft(fm->mFreeType),
@@ -164,56 +248,12 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
         std::unique_lock ftLock(FreeType::sFaceMutex, std::defer_lock);
         if (face == mFace) ftLock.lock();
 
-        // Step 2: set pixel sizes.
-        bool pixelSizeSet = false;
-        // Skip re-programming when the primary face is already at this size:
-        // FT_Set_Pixel_Sizes recomputes the face's size metrics (getKerning
-        // skips it for the same reason). Fallback faces are always sized —
-        // mFacePixelSize tracks the primary face only.
-        const bool sizeAlreadyProgrammed = (face == mFace && mFacePixelSize == unsigned(size));
-        if (sizeAlreadyProgrammed) {
-            pixelSizeSet = true;
-        } else if (FT_Set_Pixel_Sizes(face, 0, size) != 0) {
-            // FT_Set_Pixel_Sizes fails for fixed-size bitmap faces unless the
-            // requested pixel size is exactly one of the available strikes.
-            // For a fallback face, select the strike closest to the requested
-            // size before giving up and retrying the primary face.
-            bool strikeSelected = false;
-            if (face != mFace && !(face->face_flags & FT_FACE_FLAG_SCALABLE) && face->num_fixed_sizes > 0) {
-                long bestStrike = 0;
-                long bestDelta = std::numeric_limits<long>::max();
-                for (FT_Int i = 0; i < face->num_fixed_sizes; ++i) {
-                    // available_sizes[].y_ppem is in FreeType 26.6 fixed-point
-                    // (64 units per pixel); convert before comparing to size.
-                    const long strikePx = face->available_sizes[i].y_ppem >> 6;
-                    const long delta = std::abs(strikePx - long(size));
-                    if (delta < bestDelta) {
-                        bestDelta = delta;
-                        bestStrike = i;
-                    }
-                }
-                strikeSelected = FT_Select_Size(face, bestStrike) == 0;
-            }
-            // A selected strike IS a programmed size: keep the flag truthful.
-            pixelSizeSet = strikeSelected;
-            if (!strikeSelected && face != mFace) {
-                // Fallback face has no usable strike; retry with the primary face.
-                fallbackLock = {};  // release library + per-face mutexes before locking sFaceMutex
-                face = mFace;
-                provisional = true;
-                if (!ftLock.owns_lock()) ftLock.lock();  // acquire lock for mFace
-                pixelSizeSet = FT_Set_Pixel_Sizes(face, 0, size) == 0;
-            }
-            if (!pixelSizeSet && face == mFace) {
-                return Character{
-                    .glyphFailed = true,
-                };
-            }
-        } else {
-            pixelSizeSet = true;
-        }
-        if (face == mFace && pixelSizeSet) {
-            mFacePixelSize = size;   // keep getKerning's programmed-size cache in sync
+        // Step 2: set pixel sizes (may release the fallback locks and switch
+        // to the primary face if the fallback face cannot be sized).
+        if (!programPixelSize(face, mFace, mFacePixelSize, size, ftLock, fallbackLock, provisional)) {
+            return Character{
+                .glyphFailed = true,
+            };
         }
 
         FT_Int32 flags = FT_LOAD_RENDER;

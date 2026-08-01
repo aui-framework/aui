@@ -464,7 +464,10 @@ public:
         int advanceX = position.x;
         int advanceY = position.y;
         size_t counter = 0;
-        int advance = advanceX;
+        // Float accumulator: glyph advances are fractional (AFont::length
+        // accumulates in float too), and rounding per glyph would drift from
+        // the measured text width. Positions stay integral (glm::ivec2).
+        float advance = advanceX;
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
             AChar c = *i;
             if (c == ' ') {
@@ -473,13 +476,17 @@ public:
             }
             else if (c == '\n') {
                 notifySymbolAdded({glm::ivec2{advance, advanceY}});
-                advanceX = (glm::max)(advanceX, advance);
+                advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
                 advance = position.x;
                 advanceY += mFontStyle.getLineHeight();
                 nextLine();
             }
             else {
-                AFont::Character& ch = font->getCharacter(fe, c);
+                // Snapshot: fallback discovery replaces provisional glyphs in
+                // the cache in place after releasing the cache lock, so the
+                // returned reference may be swapped at any point during this
+                // loop iteration.
+                const AFont::Character ch = font->getCharacter(fe, c);
                 if (ch.empty()) {
                     notifySymbolAdded({glm::ivec2{advance, advanceY}});
                     if (hasKerning) {
@@ -513,13 +520,12 @@ public:
                 }
 
                 advance += ch.horizontal.advance;
-                advance = glm::floor(advance);
             }
         }
 
         notifySymbolAdded({glm::ivec2{advance, advanceY}});
 
-        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
+        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
     }
 

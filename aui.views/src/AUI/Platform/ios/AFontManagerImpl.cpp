@@ -20,6 +20,14 @@ AFontManager::AFontManager():
     initFallback();
 }
 
+AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
+    // iOS system CJK fonts.
+    return {
+        { "/System/Library/Fonts/PingFang.ttc" },
+        { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
+    };
+}
+
 AString AFontManager::getPathToFont(const AString &font) {
     return font;
 }

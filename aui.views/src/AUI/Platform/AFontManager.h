@@ -16,6 +16,7 @@
 #include "AUI/Font/AFontFamily.h"
 #include <AUI/Common/AVector.h>
 #include <atomic>
+#include <cstddef>
 #include <cstdint>
 #include <memory>
 #include <mutex>
@@ -69,9 +70,12 @@ private:
 
     /**
      * A loaded fallback face with a per-face mutex to serialize FT operations.
+     * data keeps the font file bytes alive: FT_New_Memory_Face does not copy
+     * the buffer, so it must outlive the face.
      */
     struct FallbackFace {
         FT_FaceRec_* face = nullptr;
+        AByteBuffer data;
         std::unique_ptr<std::mutex> mtx = std::make_unique<std::mutex>();
     };
 
@@ -90,19 +94,39 @@ private:
     std::thread mFallbackThread;
 
     /**
+     * Number of entries in mDeferredCandidates. Written under mFallbackMutex
+     * (stored on population in ensureFallbackFaceLocked, decremented per
+     * removal in lockFallbackFace), read without a lock by
+     * hasDeferredCandidates.
+     */
+    std::atomic<size_t> mDeferredCount{0};
+
+    /**
      * Incremented (release) whenever a new fallback face is loaded into
-     * mFallbackFaces (see loadOneFallback). AFont records this value on each
-     * cached glyph and re-renders a failed/provisional glyph only when the
-     * counter has advanced, so a single face load triggers at most one
+     * mFallbackFaces or the deferred candidate pool changes (see
+     * loadOneFallbackLocked and lockFallbackFace). AFont records this value
+     * on each cached glyph and re-renders a failed/provisional glyph only
+     * when the counter has advanced, so a pool change triggers at most one
      * re-render per glyph instead of a re-render on every lookup.
      */
     std::atomic<uint64_t> mFallbackGeneration{0};
 
     /**
      * @brief Loads a single fallback face from the given candidate.
+     * @note The caller must hold mFallbackMutex: this function mutates
+     *       mFallbackFaces and bumps mFallbackGeneration on success.
      * @return true if the face was loaded successfully.
      */
-    bool loadOneFallback(const FallbackCandidate& candidate);
+    bool loadOneFallbackLocked(const FallbackCandidate& candidate);
+
+    /**
+     * @brief Returns the platform's CJK fallback candidates, best first.
+     *        Implemented per platform in
+     *        AUI/Platform/<platform>/AFontManagerImpl.cpp. May log the
+     *        reason and return an empty list when no candidates are available.
+     */
+    AVector<FallbackCandidate> fallbackCandidates();
+
     void ensureFallbackFaceLocked();
     void fallbackDiscoveryWorker();
     /**
@@ -136,22 +160,25 @@ private:
      * @note Discovery runs on a worker thread (initFallback). Calls made
      *       before discovery completes return no face immediately; once it
      *       completes, calls serialize on mFallbackMutex and may lazily load
-     *       deferred candidates (bounded per call). The returned
-     *       FallbackFaceLock must be released before calling
-     *       hasDeferredCandidates again: the latter locks mFallbackMutex,
-     *       while the former may still hold FreeType::sFaceMutex.
+     *       deferred candidates (bounded per call).
      */
     [[nodiscard]]
     FallbackFaceLock lockFallbackFace(char32_t codepoint);
 
     /**
      * @return true while fallback discovery is still running or deferred
-     *         fallback candidates remain to be loaded lazily. Used by AFont to
-     *         decide whether a cached failed/provisional glyph should be
-     *         re-rendered: as long as this returns true, a later render may
-     *         succeed once more faces load.
+     *         fallback candidates remain to be loaded lazily. Lock-free:
+     *         reads atomics written under mFallbackMutex, so it may be called
+     *         while holding any other lock (including FallbackFaceLock). Used
+     *         by AFont to decide whether a cached failed/provisional glyph
+     *         should be re-rendered: as long as this returns true, a later
+     *         render may succeed once more faces load.
      */
-    bool hasDeferredCandidates();
+    [[nodiscard]]
+    bool hasDeferredCandidates() const noexcept {
+        return mFallbackPending.load(std::memory_order_acquire)
+            || mDeferredCount.load(std::memory_order_acquire) != 0;
+    }
 
     /**
      * @return The fallback-discovery generation: incremented whenever a new

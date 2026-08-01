@@ -234,6 +234,7 @@ public:
         float prevLineAdvance = 0;
         float advance = 0;
         const bool hasKerning = isHasKerning();
+        const float spaceWidth = getSpaceWidth(size);
 
         for (Iterator i = begin; i != end; ++i) {
             if (*i == U' ') {
@@ -256,7 +257,7 @@ public:
                 if (!ch.empty()) {
                     advance += ch.horizontal.advance;
                 } else {
-                    advance += ch.emptyAdvance(getSpaceWidth(size));
+                    advance += ch.emptyAdvance(spaceWidth);
                 }
             }
         }

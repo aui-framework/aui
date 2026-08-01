@@ -709,7 +709,14 @@ public:
                 advanceY += mFontStyle.getLineHeight();
                 nextLine();
             } else {
-                AFont::Character& ch = font->getCharacter(fe, c);
+                // cached is the live cache slot (rendererData must be
+                // written there); ch is a snapshot because fallback discovery
+                // replaces provisional glyphs in place after releasing the
+                // cache lock, so the returned reference may be swapped at any
+                // point during this loop iteration. All image/metrics reads
+                // come from the snapshot.
+                AFont::Character& cached = font->getCharacter(fe, c);
+                const AFont::Character ch = cached;
                 if (ch.empty()) {
                     notifySymbolAdded({glm::ivec2{advance, advanceY}});
                     if (hasKerning) {
@@ -731,7 +738,7 @@ public:
 
                     glm::vec4 uv;
 
-                    if (ch.rendererData == nullptr) {
+                    if (cached.rendererData == nullptr) {
                         uv = texturePacker.insert(*ch.image);
 
                         const float BIAS = 0.1f;
@@ -740,10 +747,10 @@ public:
                         uv.z -= BIAS;
                         uv.w -= BIAS;
                         mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv});
-                        ch.rendererData = &mRenderer->mCharData.last();
+                        cached.rendererData = &mRenderer->mCharData.last();
                         mEntryData->isTextureInvalid = true;
                     } else {
-                        uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(ch.rendererData)->uv;
+                        uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(cached.rendererData)->uv;
                     }
 
                     notifySymbolAdded({glm::ivec2{posX, posY}});

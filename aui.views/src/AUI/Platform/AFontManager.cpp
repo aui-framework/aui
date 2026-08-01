@@ -14,94 +14,17 @@
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Font/FreeType.h"
 #include "AUI/Logging/ALogger.h"
+#include <AUI/Common/AByteBuffer.h>
+#include <AUI/IO/AFileInputStream.h>
 
-#if AUI_PLATFORM_LINUX
-#include <fontconfig/fontconfig.h>
-#elif AUI_PLATFORM_WIN
+#if AUI_PLATFORM_WIN
+// Reading a font file by its UTF-16 path (see loadOneFallbackLocked): the
+// narrow CRT fopen() cannot address non-ASCII font paths (e.g. a Windows
+// directory that contains non-ASCII characters).
 #include <windows.h>
 #include <cstdio>
 #include <cwchar>
 #include <string>
-
-namespace {
-// FT_New_Face opens pathnames with the narrow CRT fopen(), which uses the
-// ANSI code page and cannot address non-ASCII font paths (e.g. a Windows
-// directory that contains non-ASCII characters). Open the font file by its
-// UTF-16 path instead and hand FreeType a custom stream over it.
-struct WideFontStream {
-    FT_StreamRec stream{};
-    FILE* file = nullptr;
-};
-
-unsigned long wideFontStreamRead(FT_Stream stream, unsigned long offset, unsigned char* buffer, unsigned long count) {
-    auto* self = reinterpret_cast<WideFontStream*>(stream->descriptor.pointer);
-    if (count == 0) {
-        // Zero-count reads are seek-status probes (see FT_Stream_IoFunc):
-        // non-zero indicates the seek failed (offset past the end of the stream).
-        return offset > stream->size ? 1 : 0;
-    }
-    if (fseek(self->file, static_cast<long>(offset), SEEK_SET) != 0) {
-        return 0;
-    }
-    // Report the actual number of bytes read. In particular, a zero result
-    // (read past EOF) must be reported as zero, not synthesized as a success:
-    // FreeType would otherwise treat an unread buffer as valid data.
-    return static_cast<unsigned long>(fread(buffer, 1, count, self->file));
-}
-
-void wideFontStreamClose(FT_Stream stream) {
-    auto* self = reinterpret_cast<WideFontStream*>(stream->descriptor.pointer);
-    fclose(self->file);
-    delete self;
-}
-
-FT_Face loadFallbackFaceWide(FT_Library ft, const AString& path, int faceIndex) {
-    const std::u16string utf16 = path.toUtf16();
-    std::wstring wpath(utf16.begin(), utf16.end());
-
-    auto* wide = new WideFontStream;
-    wide->file = _wfopen(wpath.c_str(), L"rb");
-    if (!wide->file) {
-        delete wide;
-        return nullptr;
-    }
-    if (fseek(wide->file, 0, SEEK_END) != 0) {
-        fclose(wide->file);
-        delete wide;
-        return nullptr;
-    }
-    const long size = ftell(wide->file);
-    if (size <= 0) {
-        // ftell() failed (returns -1) or the file is empty: an invalid stream
-        // size would only surface as an obscure FT_Open_Face failure later.
-        fclose(wide->file);
-        delete wide;
-        return nullptr;
-    }
-    wide->stream.size = static_cast<unsigned long>(size);
-    if (fseek(wide->file, 0, SEEK_SET) != 0) {
-        fclose(wide->file);
-        delete wide;
-        return nullptr;
-    }
-    wide->stream.descriptor.pointer = wide;
-    wide->stream.read = wideFontStreamRead;
-    wide->stream.close = wideFontStreamClose;
-
-    FT_Open_Args args{};
-    args.flags = FT_OPEN_STREAM;
-    args.stream = &wide->stream;
-
-    // From here on the stream is owned by FreeType: it is closed (via
-    // wideFontStreamClose) both when the face is destroyed and when face
-    // creation fails.
-    FT_Face face = nullptr;
-    if (FT_Open_Face(ft, &args, faceIndex, &face) != 0) {
-        return nullptr;
-    }
-    return face;
-}
-}
 #endif
 
 AFontManager::~AFontManager() {
@@ -149,20 +72,45 @@ void AFontManager::fallbackDiscoveryWorker() {
     mFallbackPending.store(false, std::memory_order_release);
 }
 
-bool AFontManager::loadOneFallback(const FallbackCandidate& candidate) {
+bool AFontManager::loadOneFallbackLocked(const FallbackCandidate& candidate) {
+    // Read the font file into memory BEFORE taking FreeType::sFaceMutex:
+    // FT_New_Face parses the file from disk while holding the lock, and that
+    // lock serializes every glyph render, kerning query and hasGlyph call.
+    // Disk IO must not run inside the critical section. (On Windows the file
+    // is opened by its UTF-16 path: the narrow CRT fopen() cannot address
+    // non-ASCII font paths.)
+    AByteBuffer fontData;
+#if AUI_PLATFORM_WIN
+    const std::u16string utf16 = candidate.path.toUtf16();
+    std::wstring wpath(utf16.begin(), utf16.end());
+    if (FILE* file = _wfopen(wpath.c_str(), L"rb")) {
+        if (fseek(file, 0, SEEK_END) == 0) {
+            const long size = ftell(file);
+            if (size > 0 && fseek(file, 0, SEEK_SET) == 0) {
+                fontData.resize(size);
+                if (fread(fontData.data(), 1, size, file) != size) {
+                    fontData = {};   // truncated read: treat as a load failure
+                }
+            }
+        }
+        fclose(file);
+    }
+#else
+    fontData = AByteBuffer::fromStream(std::make_unique<AFileInputStream>(candidate.path));
+#endif
+    if (fontData.empty()) {
+        return false;
+    }
+
     std::lock_guard lock(FreeType::sFaceMutex);
     FT_Face face = nullptr;
-#if AUI_PLATFORM_WIN
-    face = loadFallbackFaceWide(mFreeType->getFt(), candidate.path, candidate.faceIndex);
-#else
-    if (FT_New_Face(mFreeType->getFt(), candidate.path.toStdString().c_str(), candidate.faceIndex, &face) != 0) {
+    // FT_New_Memory_Face does not copy the buffer: the FallbackFace entry
+    // keeps it alive for the lifetime of the face.
+    if (FT_New_Memory_Face(mFreeType->getFt(), (const FT_Byte*) fontData.data(), fontData.getSize(),
+                           candidate.faceIndex, &face) != 0) {
         return false;
     }
-#endif
-    if (!face) {
-        return false;
-    }
-    mFallbackFaces.push_back({face});
+    mFallbackFaces.push_back({face, std::move(fontData)});
     // Publish the new face: bump the generation (release) so cached
     // failed/provisional glyphs re-render at most once per face load.
     mFallbackGeneration.fetch_add(1, std::memory_order_release);
@@ -178,131 +126,15 @@ void AFontManager::ensureFallbackFaceLocked() {
 
     // Build the full candidate list per platform, then load only the first
     // candidate eagerly and defer the rest for lazy loading in lockFallbackFace.
-    AVector<FallbackCandidate> allCandidates;
-
-#if AUI_PLATFORM_LINUX
-    // Use fontconfig to find a CJK-capable sans-serif font.
-    // Ensure fontconfig is initialized before using default config (nullptr).
-    if (!FcInit()) {
-        ALogger::warn("Font") << "FcInit() failed; CJK fallback unavailable";
-        return;
-    }
-    // Use a charset-based query with representative codepoints from each CJK
-    // script (Han, Hiragana, Hangul) so that Kana-only and Hangul-only fonts
-    // can enter the candidate list, not just Han-capable ones.
-    static constexpr FcChar32 kProbeCodepoints[] = { 0x4E2D /*中*/, 0x3042 /*あ*/, 0xAC00 /*가*/ };
-    FcPattern* pattern = FcPatternCreate();
-    FcCharSet* charset = FcCharSetCreate();
-    if (!pattern || !charset) {
-        // Allocation failure (memory exhaustion): never call fontconfig APIs
-        // with null handles (FcPatternAddCharSet would crash). Discovery is
-        // best-effort; log and leave the fallback pool empty.
-        if (pattern) FcPatternDestroy(pattern);
-        if (charset) FcCharSetDestroy(charset);
-        ALogger::warn("Font") << "fontconfig allocation failed; CJK fallback unavailable";
-        return;
-    }
-    for (auto probe : kProbeCodepoints) {
-        FcCharSetAddChar(charset, probe);
-    }
-    FcPatternAddCharSet(pattern, FC_CHARSET, charset);
-    FcPatternAddString(pattern, FC_FAMILY, reinterpret_cast<const FcChar8*>("sans"));
-    FcConfigSubstitute(nullptr, pattern, FcMatchPattern);
-    FcDefaultSubstitute(pattern);
-    FcCharSetDestroy(charset);
-
-    // Use FcFontSort to obtain an ordered set of CJK-capable candidates.
-    // FcFontMatch would only return a single best match, which cannot populate
-    // the deferred-candidate pool for lazy loading on codepoint miss.
-    // The list is capped: loaded fallback faces are never released, so an
-    // unbounded candidate pool would keep opening font files for the whole
-    // process lifetime on codepoint misses (e.g. emoji, rare symbols).
-    constexpr int kMaxFallbackCandidates = 8;
-    FcResult result;
-    FcFontSet* fontSet = FcFontSort(nullptr, pattern, FcTrue, nullptr, &result);
-    if (fontSet) {
-        for (int i = 0; i < fontSet->nfont && allCandidates.size() < kMaxFallbackCandidates; ++i) {
-            FcPattern* font = fontSet->fonts[i];
-            // Verify the font covers at least one of the CJK scripts.
-            FcCharSet* fontCharset = nullptr;
-            if (FcPatternGetCharSet(font, FC_CHARSET, 0, &fontCharset) == FcResultMatch) {
-                bool coversAny = false;
-                for (auto probe : kProbeCodepoints) {
-                    if (FcCharSetHasChar(fontCharset, probe)) {
-                        coversAny = true;
-                        break;
-                    }
-                }
-                if (!coversAny) {
-                    continue;   // Skip fonts that cover none of the CJK scripts.
-                }
-            }
-            FcChar8* path = nullptr;
-            int faceIndex = 0;
-            if (FcPatternGetString(font, FC_FILE, 0, &path) == FcResultMatch) {
-                FcPatternGetInteger(font, FC_INDEX, 0, &faceIndex);
-                allCandidates.push_back({ AString(reinterpret_cast<const char*>(path)), faceIndex });
-            }
-        }
-        FcFontSetDestroy(fontSet);
-    }
-    FcPatternDestroy(pattern);
+    AVector<FallbackCandidate> allCandidates = fallbackCandidates();
     if (allCandidates.empty()) {
-        ALogger::warn("Font") << "No CJK fallback font found via fontconfig";
+        // The platform hook has already logged the reason (no CJK-capable
+        // font found, or fallback discovery unavailable on this platform).
         return;
     }
-#elif AUI_PLATFORM_WIN
-    // Try known CJK font files from the Windows Fonts directory.
-    // Order: most-comprehensive first (Microsoft YaHei covers CJK + Kana,
-    // Malgun Gothic covers CJK + Hangul, then region-specific fallbacks).
-    const AString fontsDir = [] {
-        wchar_t buf[MAX_PATH];
-        UINT len = GetWindowsDirectoryW(buf, MAX_PATH);
-        if (len > 0 && len < MAX_PATH) {
-            // Construct from exactly len characters (not relying on null termination).
-            return AString(reinterpret_cast<const char16_t*>(buf), len) + "\\Fonts\\";
-        }
-        ALogger::warn("Font") << "GetWindowsDirectoryW() failed, falling back to C:\\Windows\\Fonts\\";
-        return AString("C:\\Windows\\Fonts\\");
-    }();
-    allCandidates = {
-        { fontsDir + "msyh.ttc" },       // Microsoft YaHei (Simplified Chinese, includes CJK + Kana)
-        { fontsDir + "malgun.ttf" },     // Malgun Gothic (Korean, includes Hangul + CJK)
-        { fontsDir + "simsun.ttc" },     // SimSun (Simplified Chinese)
-        { fontsDir + "msgothic.ttc" },   // MS Gothic (Japanese)
-        { fontsDir + "yugothr.ttc" },    // Yu Gothic (Japanese)
-        { fontsDir + "meiryo.ttc" },     // Meiryo (Japanese)
-    };
-#elif AUI_PLATFORM_MACOS
-    // macOS system CJK fonts (stable paths since OS X 10.11).
-    allCandidates = {
-        { "/System/Library/Fonts/PingFang.ttc" },
-        { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
-        { "/System/Library/Fonts/Hiragino Sans.ttc" },
-        { "/System/Library/Fonts/Supplemental/AppleSDGothicNeo.ttc" },
-    };
-#elif AUI_PLATFORM_ANDROID
-    // Android system CJK fonts (varies by API level).
-    allCandidates = {
-        { "/system/fonts/NotoSansCJK-Regular.ttc" },  // Android 5-9, pan-CJK
-        { "/system/fonts/NotoSansSC-Regular.otf" },    // Android 10+ (Chinese)
-        { "/system/fonts/NotoSansKR-Regular.otf" },    // Android 10+ (Korean)
-        { "/system/fonts/NotoSansJP-Regular.otf" },    // Android 10+ (Japanese)
-    };
-#elif AUI_PLATFORM_IOS
-    // iOS system CJK fonts.
-    allCandidates = {
-        { "/System/Library/Fonts/PingFang.ttc" },
-        { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
-    };
-#else
-    // Unknown platform; mark fallback as unavailable.
-    ALogger::warn("Font") << "CJK font fallback not available on this platform";
-    return;
-#endif
 
     // Load the first candidate eagerly (pre-warm).
-    if (!loadOneFallback(allCandidates.first())) {
+    if (!loadOneFallbackLocked(allCandidates.first())) {
         // The eager candidate is deliberately not added to mDeferredCandidates
         // (it was already attempted), so a failure here is silent unless logged:
         // missing files (e.g. msyh.ttc on a Windows edition without Simplified
@@ -315,7 +147,13 @@ void AFontManager::ensureFallbackFaceLocked() {
     for (size_t i = 1; i < allCandidates.size(); ++i) {
         mDeferredCandidates.push_back(allCandidates[i]);
     }
-
+    if (!mDeferredCandidates.empty()) {
+        // The candidate pool changed even if no face was loaded: publish the
+        // change so cached failed/provisional glyphs retry against the
+        // deferred candidates (a retry may consume them lazily).
+        mFallbackGeneration.fetch_add(1, std::memory_order_release);
+    }
+    mDeferredCount.store(mDeferredCandidates.size(), std::memory_order_release);
 }
 
 AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint) {
@@ -356,29 +194,25 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
     while (!mDeferredCandidates.empty() && attempts < kMaxDeferredLoadAttemptsPerCall) {
         auto c = mDeferredCandidates.first();
         mDeferredCandidates.erase(mDeferredCandidates.begin());
+        mDeferredCount.fetch_sub(1, std::memory_order_release);
         ++attempts;
-        if (loadOneFallback(c)) {
-            auto& fb = mFallbackFaces.last();
-            std::unique_lock ftLock(FreeType::sFaceMutex);
-            std::unique_lock faceLock(*fb.mtx);
-            if (FT_Get_Char_Index(fb.face, codepoint) != 0) {
-                return { fb.face, std::move(ftLock), std::move(faceLock) };
-            }
+        if (!loadOneFallbackLocked(c)) {
+            // The candidate pool changed even though no face was added.
+            // Publish the change so cached failed/provisional glyphs retry
+            // against the remaining candidates instead of being pinned to
+            // this generation forever (a later candidate may cover them).
+            mFallbackGeneration.fetch_add(1, std::memory_order_release);
+            continue;
+        }
+        auto& fb = mFallbackFaces.last();
+        std::unique_lock ftLock(FreeType::sFaceMutex);
+        std::unique_lock faceLock(*fb.mtx);
+        if (FT_Get_Char_Index(fb.face, codepoint) != 0) {
+            return { fb.face, std::move(ftLock), std::move(faceLock) };
         }
     }
 
     return { nullptr };
-}
-
-bool AFontManager::hasDeferredCandidates() {
-    // While discovery is pending, report true so that AFont keeps retrying
-    // provisional/failed glyphs: a retry may succeed once the worker loads
-    // the first face. (Lock-free fast path; mFallbackPending is an atomic.)
-    if (mFallbackPending.load(std::memory_order_acquire)) {
-        return true;
-    }
-    std::lock_guard lock(mFallbackMutex);
-    return !mDeferredCandidates.empty();
 }
 
 _<AFont> AFontManager::loadFont(const AUrl& url) {

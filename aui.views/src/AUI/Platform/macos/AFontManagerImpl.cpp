@@ -20,6 +20,16 @@ AFontManager::AFontManager():
     initFallback();
 }
 
+AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
+    // macOS system CJK fonts (stable paths since OS X 10.11).
+    return {
+        { "/System/Library/Fonts/PingFang.ttc" },
+        { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
+        { "/System/Library/Fonts/Hiragino Sans.ttc" },
+        { "/System/Library/Fonts/Supplemental/AppleSDGothicNeo.ttc" },
+    };
+}
+
 AString AFontManager::getPathToFont(const AString &font) {
     return font;
 }
