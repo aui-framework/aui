@@ -18,6 +18,7 @@
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/IRenderer.h"
 #include "AUI/GL/RenderTarget/TextureRenderTarget.h"
+#include <mutex>
 
 class API_AUI_VIEWS OpenGLRenderer final: public IRenderer {
     friend class OpenGLPrerenderedString;
@@ -72,6 +73,15 @@ private:
 
     ADeque<CharacterData> mCharData;
     ADeque<FontEntryData> mFontEntryData;
+    /**
+     * @brief Serializes appends to mCharData and mFontEntryData. Element
+     *        addresses are stable (ADeque never reallocates) and elements are
+     *        immutable after insertion, so only the mutation itself needs
+     *        guarding: the AFont glyph-cache lock held by the with*RendererData
+     *        callbacks is per-font, while these deques are shared by every
+     *        font rendered by this renderer.
+     */
+    std::mutex mFontCacheMutex;
     IRenderViewToTexture* mRenderToTextureTarget = nullptr;
 
     struct FramebufferWithTextureRT {

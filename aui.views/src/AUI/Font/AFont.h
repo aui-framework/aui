@@ -129,8 +129,7 @@ public:
          */
         [[nodiscard]]
         float emptyAdvance(float spaceWidth) const {
-            if (glyphFailed) return spaceWidth;
-            return horizontal.advance > 0.f ? horizontal.advance : 0.f;
+            return emptyAdvanceFor(horizontal.advance, glyphFailed, spaceWidth);
         }
 
         /**
@@ -179,8 +178,7 @@ public:
         [[nodiscard]]
         float effectiveAdvance(float spaceWidth) const {
             if (hasImage) return advance;
-            if (glyphFailed) return spaceWidth;
-            return advance > 0.f ? advance : 0.f;
+            return emptyAdvanceFor(advance, glyphFailed, spaceWidth);
         }
     };
 
@@ -258,6 +256,20 @@ private:
      */
     bool hasGlyph(char32_t codepoint) const;
 
+    /**
+     * @brief Shared empty-glyph advance fallback rule, used by both
+     *        Character::emptyAdvance and GlyphMetrics::effectiveAdvance so
+     *        the measurement path and the render path cannot diverge: the
+     *        space-width fallback when the glyph failed to load, otherwise
+     *        the glyph's own advance if positive, or zero for legitimately
+     *        zero-advance glyphs (combining marks, ZWJ/ZWNJ, variation
+     *        selectors).
+     */
+    static float emptyAdvanceFor(float advance, bool glyphFailed, float spaceWidth) {
+        if (glyphFailed) return spaceWidth;
+        return advance > 0.f ? advance : 0.f;
+    }
+
 
     Character renderGlyph(const FontEntry& fs, AChar glyph);
 
@@ -320,6 +332,11 @@ public:
      *        handle while holding the glyph-cache lock, so a check-then-set
      *        (e.g. texture-packer insert + handle store) is atomic across
      *        threads. Does nothing if the glyph is not cached yet.
+     * @note f runs under the non-recursive glyph-cache mutex. It must not
+     *       call back into any AFont method (getCharacter,
+     *       getCharacterMetrics, getFontEntry, withCharacterRendererData,
+     *       withFontEntryRendererData), and it should return quickly: all
+     *       glyph lookups on this font block until it does.
      */
     template <typename F>
     void withCharacterRendererData(const FontEntry& charset, AChar glyph, F&& f) {
@@ -334,6 +351,11 @@ public:
      * @brief Runs f with a reference to the font-size entry's renderer cache
      *        handle (FontData::rendererData) while holding the glyph-cache
      *        lock, so a check-then-set is atomic across threads.
+     * @note f runs under the non-recursive glyph-cache mutex. It must not
+     *       call back into any AFont method (getCharacter,
+     *       getCharacterMetrics, getFontEntry, withCharacterRendererData,
+     *       withFontEntryRendererData), and it should return quickly: all
+     *       glyph lookups on this font block until it does.
      */
     template <typename F>
     void withFontEntryRendererData(const FontEntry& entry, F&& f) {

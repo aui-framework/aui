@@ -746,6 +746,10 @@ public:
                             uv.y += BIAS;
                             uv.z -= BIAS;
                             uv.w -= BIAS;
+                            // The font lock held here is per-font; mCharData is
+                            // shared by every font of this renderer, so appends
+                            // need the renderer-wide cache mutex.
+                            std::lock_guard lock(mRenderer->mFontCacheMutex);
                             mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv});
                             rendererData = &mRenderer->mCharData.last();
                             mEntryData->isTextureInvalid = true;
@@ -843,6 +847,10 @@ OpenGLRenderer::FontEntryData* OpenGLRenderer::getFontEntryData(const AFontStyle
     // when several render threads use the same font size.
     fontStyle.font->withFontEntryRendererData(fe, [&](void*& rendererData) {
         if (rendererData == nullptr) {
+            // The font lock held here is per-font; mFontEntryData is shared
+            // by every font of this renderer, so appends need the
+            // renderer-wide cache mutex.
+            std::lock_guard lock(mFontCacheMutex);
             mFontEntryData.emplace_back();
             rendererData = entryData = &mFontEntryData.last();
         } else {

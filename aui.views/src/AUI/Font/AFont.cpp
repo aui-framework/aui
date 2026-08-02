@@ -373,6 +373,7 @@ AFont::Character& AFont::getCharacterLocked(const FontEntry& charset, AChar glyp
             }
         }
     }
+    lock.unlock();   // render outside the cache lock
 
     // Phase 2: render outside the cache lock. renderGlyph runs fallback-face
     // lookup and FreeType rendering (sFaceMutex), which must not stall
