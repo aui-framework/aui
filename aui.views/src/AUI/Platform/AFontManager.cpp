@@ -63,11 +63,10 @@ void AFontManager::startFallbackWorker() {
         return;   // a worker run is already in flight
     }
     if (mFallbackThread.joinable()) {
-        // The previous run has finished (pending was false) but its thread
-        // object was not joined yet. Joining under the mutex cannot block on
-        // a live worker: pending==false implies the worker executed its last
-        // statement (the pending store) already.
-        mFallbackThread.join();
+        // The previous run has finished (pending was false). Detach its thread
+        // object so the calling (UI) thread doesn't block waiting for the OS
+        // to teardown the thread while holding the mutex.
+        mFallbackThread.detach();
     }
     mFallbackPending.store(true, std::memory_order_release);
     try {

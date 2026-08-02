@@ -11,7 +11,8 @@
 
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/Font/FreeType.h>
-
+#include <CoreText/CoreText.h>
+#include <CoreFoundation/CoreFoundation.h>
 AFontManager::AFontManager():
         mFreeType(_new<FreeType>()),
         mDefaultFont(loadFont(":uni/font/Roboto.ttf"))
@@ -21,11 +22,26 @@ AFontManager::AFontManager():
 }
 
 AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
-    // iOS system CJK fonts.
-    return {
-        { "/System/Library/Fonts/PingFang.ttc" },
-        { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
+    AVector<AFontManager::FallbackCandidate> candidates;
+
+    CFStringRef fontNames[] = {
+        CFSTR("PingFangSC-Regular"),
+        CFSTR("AppleSDGothicNeo-Regular")
     };
+
+    for (CFStringRef name : fontNames) {
+        if (CTFontRef font = CTFontCreateWithName(name, 0.0, NULL)) {
+            if (CFURLRef url = (CFURLRef)CTFontCopyAttribute(font, kCTFontURLAttribute)) {
+                UInt8 buffer[PATH_MAX];
+                if (CFURLGetFileSystemRepresentation(url, true, buffer, sizeof(buffer))) {
+                    candidates.push_back({ AString((const char*)buffer) });
+                }
+                CFRelease(url);
+            }
+            CFRelease(font);
+        }
+    }
+    return candidates;
 }
 
 AString AFontManager::getPathToFont(const AString &font) {

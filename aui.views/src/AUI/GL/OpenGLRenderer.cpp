@@ -693,6 +693,10 @@ public:
 
         const bool hasKerning = font->isHasKerning();
 
+        // Positions are floored, not truncated: advance can be negative when
+        // text is scrolled/clipped off the left edge. Matches SoftwareRenderer.
+        const auto toPixel = [](float v) { return int(glm::floor(v)); };
+
         int advanceX = position.x;
         int advanceY = position.y;
         size_t counter = 0;
@@ -700,7 +704,7 @@ public:
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
             AChar c = *i;
             if (c == '\n') {
-                notifySymbolAdded({glm::ivec2{advance, advanceY}});
+                notifySymbolAdded({glm::ivec2{toPixel(advance), advanceY}});
                 advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
                 advance = position.x;
                 advanceY += mFontStyle.getLineHeight();
@@ -711,7 +715,7 @@ public:
                 // time, so all image/metrics reads come from the copy.
                 const AFont::Character ch = font->getCharacter(fe, c);
                 if (ch.empty()) {
-                    notifySymbolAdded({glm::ivec2{advance, advanceY}});
+                    notifySymbolAdded({glm::ivec2{toPixel(advance), advanceY}});
                     if (hasKerning) {
                         auto next = std::next(i);
                         if (next != text.end()) {
@@ -724,7 +728,7 @@ public:
                 }
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
 
-                    int posX = advance + ch.horizontal.bearing.x;
+                    int posX = toPixel(advance) + ch.horizontal.bearing.x;
                     int posY = advanceY - ch.horizontal.bearing.y;
                     int width = ch.image->width();
                     int height = ch.image->height();
@@ -779,7 +783,7 @@ public:
             }
         }
 
-        notifySymbolAdded({glm::ivec2{advance, advanceY}});
+        notifySymbolAdded({glm::ivec2{toPixel(advance), advanceY}});
 
         mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();
