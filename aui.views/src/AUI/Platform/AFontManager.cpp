@@ -71,6 +71,9 @@ void AFontManager::startFallbackWorker() {
     } catch (const std::system_error& e) {
         // Fallback discovery is best-effort; never fail font manager construction.
         mFallbackPending.store(false, std::memory_order_release);
+        // No worker can ever run discovery now; lockFallbackFace must report
+        // a miss instead of running it inline on the calling thread.
+        mFallbackWorkerUnavailable = true;
         ALogger::warn("Font") << "Could not start fallback discovery thread: " << e.what();
     }
 }
@@ -144,6 +147,10 @@ bool AFontManager::loadOneFallbackLocked(const FallbackCandidate& candidate) {
     }
 #endif
     if (fontData.empty()) {
+        // Covers every Windows failure path (open, seek, truncated read) as
+        // well as empty files on any platform: the POSIX branch above only
+        // logs when the stream throws.
+        ALogger::warn("Font") << "Could not read fallback font " << candidate.path;
         return false;
     }
 
@@ -211,6 +218,13 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
     }
 
     std::unique_lock lk(mFallbackMutex);
+    if (mFallbackWorkerUnavailable) {
+        // Discovery can never run off-thread (worker thread creation failed)
+        // and must not run on the calling (UI) thread: report a miss.
+        // hasDeferredCandidates() stays false, so AFont stops re-rendering
+        // provisional glyphs instead of retrying forever.
+        return { nullptr };
+    }
     ensureFallbackFaceLocked();
 
     // Check all already-loaded faces first. Every FreeType call on any face

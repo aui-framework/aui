@@ -400,7 +400,13 @@ AFont::Character AFont::getCharacter(const FontEntry& charset, AChar glyph) {
     std::lock_guard lock(mCharDataMutex);
     auto& chars = charset.second.characters;
     auto& slot = chars[glyph.codepoint()];
-    if (!slot || slot->glyphFailed || slot->provisional) {
+    // Never downgrade a drawable glyph to a failed one: a failed re-render
+    // (e.g. FT_Load_Char failing on a newly loaded fallback face) must not
+    // evict the previous drawable bitmap, which would turn the glyph into an
+    // empty space-width advance. The kept glyph retains its old generation,
+    // so later fallback loads still trigger its re-render.
+    const bool newIsWorse = slot && ch.glyphFailed && !slot->glyphFailed;
+    if (!slot || (!newIsWorse && (slot->glyphFailed || slot->provisional))) {
         slot = std::make_unique<Character>(std::move(ch));
     }
     return *slot;

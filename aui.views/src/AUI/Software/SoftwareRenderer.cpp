@@ -471,11 +471,11 @@ public:
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
             AChar c = *i;
             if (c == ' ') {
-                notifySymbolAdded({glm::ivec2{advance, advanceY}});
+                notifySymbolAdded({glm::ivec2{int(advance), advanceY}});
                 advance += mFontStyle.getSpaceWidth();
             }
             else if (c == '\n') {
-                notifySymbolAdded({glm::ivec2{advance, advanceY}});
+                notifySymbolAdded({glm::ivec2{int(advance), advanceY}});
                 advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
                 advance = position.x;
                 advanceY += mFontStyle.getLineHeight();
@@ -487,7 +487,7 @@ public:
                 // time, so all image/metrics reads come from the copy.
                 const AFont::Character ch = font->getCharacter(fe, c);
                 if (ch.empty()) {
-                    notifySymbolAdded({glm::ivec2{advance, advanceY}});
+                    notifySymbolAdded({glm::ivec2{int(advance), advanceY}});
                     if (hasKerning) {
                         auto next = std::next(i);
                         if (next != text.end()) {
@@ -499,7 +499,7 @@ public:
                     continue;
                 }
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
-                    glm::ivec2 pos{ advance,  advanceY };
+                    glm::ivec2 pos{ int(advance), advanceY };
                     pos.x += ch.horizontal.bearing.x;
                     pos.y -= ch.horizontal.bearing.y;
                     notifySymbolAdded({pos});
@@ -522,7 +522,7 @@ public:
             }
         }
 
-        notifySymbolAdded({glm::ivec2{advance, advanceY}});
+        notifySymbolAdded({glm::ivec2{int(advance), advanceY}});
 
         mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
         mAdvanceY = advanceY + mFontStyle.getLineHeight();

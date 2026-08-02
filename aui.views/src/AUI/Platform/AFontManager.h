@@ -85,6 +85,15 @@ private:
     bool mFallbackAttempted = false;
 
     /**
+     * True once std::thread creation for the fallback worker failed: no
+     * worker can ever run discovery, and discovery must not run on the
+     * calling (UI) thread, so lockFallbackFace reports a miss instead.
+     * Written under mFallbackMutex (startFallbackWorker) and read under
+     * mFallbackMutex (lockFallbackFace).
+     */
+    bool mFallbackWorkerUnavailable = false;
+
+    /**
      * True while a fallback worker run (discovery or a deferred candidate
      * load) is in flight on mFallbackThread. While set, lockFallbackFace
      * returns no face immediately (rather than blocking the caller), and
@@ -169,7 +178,8 @@ private:
      *       before discovery completes return no face immediately; once it
      *       completes, calls serialize on mFallbackMutex and may kick the
      *       worker to load a deferred candidate in the background (never on
-     *       the calling thread).
+     *       the calling thread). If no worker could be started at all
+     *       (thread creation failed), every call returns no face.
      */
     [[nodiscard]]
     FallbackFaceLock lockFallbackFace(char32_t codepoint);

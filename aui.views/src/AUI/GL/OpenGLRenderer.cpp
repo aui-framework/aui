@@ -732,7 +732,7 @@ public:
                     int width = ch.image->width();
                     int height = ch.image->height();
 
-                    glm::vec4 uv;
+                    glm::vec4 uv{0.f};
 
                     // The renderer cache handle is stored on the cached glyph;
                     // read and write it through the synchronized accessor so
