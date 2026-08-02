@@ -332,11 +332,13 @@ public:
      *        handle while holding the glyph-cache lock, so a check-then-set
      *        (e.g. texture-packer insert + handle store) is atomic across
      *        threads. Does nothing if the glyph is not cached yet.
-     * @note f runs under the non-recursive glyph-cache mutex. It must not
-     *       call back into any AFont method (getCharacter,
-     *       getCharacterMetrics, getFontEntry, withCharacterRendererData,
-     *       withFontEntryRendererData), and it should return quickly: all
-     *       glyph lookups on this font block until it does.
+     * @note f runs under the non-recursive glyph-cache mutex (mCharDataMutex).
+     *       To prevent deadlocks, callers must not acquire mFontCacheMutex
+     *       before calling this function. f must not call back into any AFont
+     *       method (getCharacter, getCharacterMetrics, getFontEntry,
+     *       withCharacterRendererData, withFontEntryRendererData), and it
+     *       should return quickly: all glyph lookups on this font block until
+     *       it does.
      */
     template <typename F>
     void withCharacterRendererData(const FontEntry& charset, AChar glyph, F&& f) {
@@ -351,11 +353,13 @@ public:
      * @brief Runs f with a reference to the font-size entry's renderer cache
      *        handle (FontData::rendererData) while holding the glyph-cache
      *        lock, so a check-then-set is atomic across threads.
-     * @note f runs under the non-recursive glyph-cache mutex. It must not
-     *       call back into any AFont method (getCharacter,
-     *       getCharacterMetrics, getFontEntry, withCharacterRendererData,
-     *       withFontEntryRendererData), and it should return quickly: all
-     *       glyph lookups on this font block until it does.
+     * @note f runs under the non-recursive glyph-cache mutex (mCharDataMutex).
+     *       To prevent deadlocks, callers must not acquire mFontCacheMutex
+     *       before calling this function. f must not call back into any AFont
+     *       method (getCharacter, getCharacterMetrics, getFontEntry,
+     *       withCharacterRendererData, withFontEntryRendererData), and it
+     *       should return quickly: all glyph lookups on this font block until
+     *       it does.
      */
     template <typename F>
     void withFontEntryRendererData(const FontEntry& entry, F&& f) {

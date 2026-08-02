@@ -13,6 +13,7 @@
 #include <AUI/Font/FreeType.h>
 #include <CoreText/CoreText.h>
 #include <CoreFoundation/CoreFoundation.h>
+#include <limits.h>
 AFontManager::AFontManager():
         mFreeType(_new<FreeType>()),
         mDefaultFont(loadFont(":uni/font/Roboto.ttf"))
@@ -31,12 +32,18 @@ AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
 
     for (CFStringRef name : fontNames) {
         if (CTFontRef font = CTFontCreateWithName(name, 0.0, NULL)) {
-            if (CFURLRef url = (CFURLRef)CTFontCopyAttribute(font, kCTFontURLAttribute)) {
-                UInt8 buffer[PATH_MAX];
-                if (CFURLGetFileSystemRepresentation(url, true, buffer, sizeof(buffer))) {
-                    candidates.push_back({ AString((const char*)buffer) });
+            CFStringRef postScriptName = CTFontCopyPostScriptName(font);
+            if (postScriptName && CFStringCompare(postScriptName, name, 0) == kCFCompareEqualTo) {
+                if (CFURLRef url = (CFURLRef)CTFontCopyAttribute(font, kCTFontURLAttribute)) {
+                    UInt8 buffer[PATH_MAX];
+                    if (CFURLGetFileSystemRepresentation(url, true, buffer, sizeof(buffer))) {
+                        candidates.push_back({ AString((const char*)buffer) });
+                    }
+                    CFRelease(url);
                 }
-                CFRelease(url);
+            }
+            if (postScriptName) {
+                CFRelease(postScriptName);
             }
             CFRelease(font);
         }

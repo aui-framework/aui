@@ -86,7 +86,10 @@ bool programPixelSize(FT_Face& face,
                     bestStrike = i;
                 }
             }
-            strikeSelected = FT_Select_Size(face, bestStrike) == 0;
+            constexpr long MAX_STRIKE_DELTA = 2; // Accept slightly larger/smaller bitmap strikes
+            if (bestDelta <= MAX_STRIKE_DELTA) {
+                strikeSelected = FT_Select_Size(face, bestStrike) == 0;
+            }
         }
         // A selected strike IS a programmed size: keep the flag truthful.
         pixelSizeSet = strikeSelected;
@@ -408,6 +411,7 @@ AFont::Character& AFont::getCharacterLocked(const FontEntry& charset, AChar glyp
     // so later fallback loads still trigger its re-render.
     const bool newIsWorse = slot && ch.glyphFailed && !slot->glyphFailed;
     if (!slot || (!newIsWorse && (slot->glyphFailed || slot->provisional))) {
+        ch.rendererData = slot ? slot->rendererData : nullptr;
         slot = std::make_unique<Character>(std::move(ch));
     } else if (newIsWorse && slot->fallbackGeneration != renderGeneration) {
         // Keep the drawable glyph, but record the attempted generation so the

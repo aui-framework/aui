@@ -69,6 +69,7 @@ private:
 
     struct CharacterData {
         glm::vec4 uv;
+        const AImage* image = nullptr;
     };
 
     ADeque<CharacterData> mCharData;

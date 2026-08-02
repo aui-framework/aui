@@ -739,7 +739,8 @@ public:
                     // read and write it through the synchronized accessor so
                     // check-then-insert is atomic across render threads.
                     font->withCharacterRendererData(fe, c, [&](void*& rendererData) {
-                        if (rendererData == nullptr) {
+                        auto* cached = reinterpret_cast<OpenGLRenderer::CharacterData*>(rendererData);
+                        if (cached == nullptr || cached->image != ch.image.get()) {
                             uv = texturePacker.insert(*ch.image);
 
                             const float BIAS = 0.1f;
@@ -751,11 +752,11 @@ public:
                             // shared by every font of this renderer, so appends
                             // need the renderer-wide cache mutex.
                             std::lock_guard lock(mRenderer->mFontCacheMutex);
-                            mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv});
+                            mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv, ch.image.get()});
                             rendererData = &mRenderer->mCharData.last();
                             mEntryData->isTextureInvalid = true;
                         } else {
-                            uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(rendererData)->uv;
+                            uv = cached->uv;
                         }
                     });
 

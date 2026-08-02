@@ -16,6 +16,7 @@
 #include "AUI/Logging/ALogger.h"
 #include <AUI/Common/AByteBuffer.h>
 #include <AUI/IO/AFileInputStream.h>
+#include <AUI/Util/kAUI.h>
 
 #if AUI_PLATFORM_WIN
 // Reading a font file by its UTF-16 path (see loadOneFallbackLocked): the
@@ -164,7 +165,11 @@ bool AFontManager::loadOneFallbackLocked(const FallbackCandidate& candidate) {
                            candidate.faceIndex, &face) != 0) {
         return false;
     }
+    FT_Face faceToFree = face;
+    AUI_DEFER { if (faceToFree) FT_Done_Face(faceToFree); };
+
     mFallbackFaces.push_back({face, std::move(fontData)});
+    faceToFree = nullptr; // Success: cancel the cleanup
     // Publish the new face: bump the generation (release) so cached
     // failed/provisional glyphs re-render at most once per face load.
     mFallbackGeneration.fetch_add(1, std::memory_order_release);
