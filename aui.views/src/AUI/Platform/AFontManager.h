@@ -94,6 +94,12 @@ private:
     bool mFallbackWorkerUnavailable = false;
 
     /**
+     * Set under mFallbackMutex by ~AFontManager. Blocks any further worker
+     * start so no thread can outlive the manager.
+     */
+    bool mFallbackShuttingDown = false;
+
+    /**
      * True while a fallback worker run (discovery or a deferred candidate
      * load) is in flight on mFallbackThread. While set, lockFallbackFace
      * returns no face immediately (rather than blocking the caller).

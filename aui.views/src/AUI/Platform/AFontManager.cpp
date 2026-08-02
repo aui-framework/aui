@@ -32,6 +32,7 @@ AFontManager::~AFontManager() {
         std::thread worker;
         {
             std::scoped_lock lock(mFallbackMutex);
+            mFallbackShuttingDown = true;
             worker = std::move(mFallbackThread);
         }
         if (worker.joinable()) {
@@ -55,6 +56,9 @@ void AFontManager::initFallback() {
 
 void AFontManager::startFallbackWorker() {
     // mFallbackMutex must be held by the caller.
+    if (mFallbackShuttingDown) {
+        return;
+    }
     if (mFallbackPending.load(std::memory_order_acquire)) {
         return;   // a worker run is already in flight
     }
@@ -223,7 +227,6 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
         // glyphs instead of retrying forever.
         return { nullptr };
     }
-    ensureFallbackFaceLocked();
 
     // Check all already-loaded faces first. Every FreeType call on any face
     // of the shared FT_Library must hold the library lock (sFaceMutex): the

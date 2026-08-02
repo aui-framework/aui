@@ -409,6 +409,12 @@ AFont::Character& AFont::getCharacterLocked(const FontEntry& charset, AChar glyp
     const bool newIsWorse = slot && ch.glyphFailed && !slot->glyphFailed;
     if (!slot || (!newIsWorse && (slot->glyphFailed || slot->provisional))) {
         slot = std::make_unique<Character>(std::move(ch));
+    } else if (newIsWorse && slot->fallbackGeneration != renderGeneration) {
+        // Keep the drawable glyph, but record the attempted generation so the
+        // failed re-render is not repeated on every lookup.
+        auto kept = std::make_unique<Character>(*slot);
+        kept->fallbackGeneration = renderGeneration;
+        slot = std::move(kept);
     }
     return *slot;
 }

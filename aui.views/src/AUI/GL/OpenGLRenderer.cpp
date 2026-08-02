@@ -699,10 +699,7 @@ public:
         float advance = advanceX;
         for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
             AChar c = *i;
-            if (c == ' ') {
-                notifySymbolAdded({glm::ivec2{advance, advanceY}});
-                advance += mFontStyle.getSpaceWidth();
-            } else if (c == '\n') {
+            if (c == '\n') {
                 notifySymbolAdded({glm::ivec2{advance, advanceY}});
                 advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
                 advance = position.x;
