@@ -94,7 +94,6 @@ void AFontManager::fallbackDiscoveryWorker() {
         if (!mDeferredCandidates.empty()) {
             auto c = mDeferredCandidates.first();
             mDeferredCandidates.erase(mDeferredCandidates.begin());
-            mDeferredCount.fetch_sub(1, std::memory_order_release);
             if (!loadOneFallbackLocked(c)) {
                 // The candidate pool changed even though no face was added.
                 // Publish the change so cached failed/provisional glyphs
@@ -205,14 +204,13 @@ void AFontManager::ensureFallbackFaceLocked() {
         // deferred candidates (a retry may consume them lazily).
         mFallbackGeneration.fetch_add(1, std::memory_order_release);
     }
-    mDeferredCount.store(mDeferredCandidates.size(), std::memory_order_release);
 }
 
 AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint) {
     // Discovery is still running on the worker thread: no face is ready yet,
     // so report a miss immediately rather than blocking the caller. AFont
-    // re-renders provisional/failed glyphs while hasDeferredCandidates()
-    // returns true, so these codepoints are retried once discovery completes.
+    // re-renders provisional/failed glyphs once the fallback generation
+    // advances, so these codepoints are retried when discovery completes.
     if (mFallbackPending.load(std::memory_order_acquire)) {
         return { nullptr };
     }
@@ -220,9 +218,9 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
     std::unique_lock lk(mFallbackMutex);
     if (mFallbackWorkerUnavailable) {
         // Discovery can never run off-thread (worker thread creation failed)
-        // and must not run on the calling (UI) thread: report a miss.
-        // hasDeferredCandidates() stays false, so AFont stops re-rendering
-        // provisional glyphs instead of retrying forever.
+        // and must not run on the calling (UI) thread: report a miss. The
+        // generation never advances, so AFont stops re-rendering provisional
+        // glyphs instead of retrying forever.
         return { nullptr };
     }
     ensureFallbackFaceLocked();
@@ -249,7 +247,7 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
     // generation gate in AFont::getCharacter re-renders the provisional glyph
     // once per bump, so the queue drains one candidate per re-render cycle
     // until a face covers this codepoint or the queue empties (retries then
-    // stop: hasDeferredCandidates goes false).
+    // stop: the generation stops advancing).
     if (!mDeferredCandidates.empty() && !mFallbackPending.load(std::memory_order_acquire)) {
         startFallbackWorker();
     }

@@ -96,20 +96,10 @@ private:
     /**
      * True while a fallback worker run (discovery or a deferred candidate
      * load) is in flight on mFallbackThread. While set, lockFallbackFace
-     * returns no face immediately (rather than blocking the caller), and
-     * hasDeferredCandidates reports true so that AFont keeps re-rendering
-     * provisional/failed glyphs until the run completes.
+     * returns no face immediately (rather than blocking the caller).
      */
     std::atomic<bool> mFallbackPending = false;
     std::thread mFallbackThread;
-
-    /**
-     * Number of entries in mDeferredCandidates. Written under mFallbackMutex
-     * (stored on population in ensureFallbackFaceLocked, decremented per
-     * removal in fallbackDiscoveryWorker), read without a lock by
-     * hasDeferredCandidates.
-     */
-    std::atomic<size_t> mDeferredCount{0};
 
     /**
      * Incremented (release) whenever a new fallback face is loaded into
@@ -183,21 +173,6 @@ private:
      */
     [[nodiscard]]
     FallbackFaceLock lockFallbackFace(char32_t codepoint);
-
-    /**
-     * @return true while fallback discovery is still running or deferred
-     *         fallback candidates remain to be loaded lazily. Lock-free:
-     *         reads atomics written under mFallbackMutex, so it may be called
-     *         while holding any other lock (including FallbackFaceLock). Used
-     *         by AFont to decide whether a cached failed/provisional glyph
-     *         should be re-rendered: as long as this returns true, a later
-     *         render may succeed once more faces load.
-     */
-    [[nodiscard]]
-    bool hasDeferredCandidates() const noexcept {
-        return mFallbackPending.load(std::memory_order_acquire)
-            || mDeferredCount.load(std::memory_order_acquire) != 0;
-    }
 
     /**
      * @return The fallback-discovery generation: incremented whenever a new

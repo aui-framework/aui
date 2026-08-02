@@ -353,20 +353,20 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     };
 }
 
-AFont::Character AFont::getCharacter(const FontEntry& charset, AChar glyph) {
+AFont::Character& AFont::getCharacterLocked(const FontEntry& charset, AChar glyph, std::unique_lock<std::mutex>& lock) {
     // Phase 1: cache probe under the lock. A cached glyph is returned as-is
-    // unless it is failed/provisional and lazy fallback discovery may still
-    // improve it (a later render can succeed once more faces load). The
-    // retry is gated on the fallback-discovery generation, not merely on
-    // hasDeferredCandidates(): while discovery runs, a generation check
-    // keeps every lookup of a provisional glyph from re-rendering it.
+    // unless it is failed/provisional and the fallback generation has
+    // advanced (a later render can succeed once more faces load). Gating on
+    // the generation alone — not on whether deferred candidates remain — is
+    // what lets the FINAL fallback face reach already-cached glyphs: the
+    // worker clears the deferred queue in the same step it publishes the last
+    // face, so a count-based gate would suppress that final retry.
+    lock = std::unique_lock(mCharDataMutex);
     {
-        std::lock_guard lock(mCharDataMutex);
         auto& chars = charset.second.characters;
         if (auto it = chars.find(glyph.codepoint()); it != chars.end() && it->second) {
             auto& slot = it->second;
             const bool mayImprove = mFontManager
-                                 && mFontManager->hasDeferredCandidates()
                                  && slot->fallbackGeneration != mFontManager->fallbackGeneration();
             if (!mayImprove || (!slot->glyphFailed && !slot->provisional)) {
                 return *slot;
@@ -397,7 +397,7 @@ AFont::Character AFont::getCharacter(const FontEntry& charset, AChar glyph) {
     // (prerendered strings) must hold shared references to the image, never
     // raw pointers, because the image is replaced on re-render
     // (SoftwareRenderer's CharEntry does this).
-    std::lock_guard lock(mCharDataMutex);
+    lock.lock();
     auto& chars = charset.second.characters;
     auto& slot = chars[glyph.codepoint()];
     // Never downgrade a drawable glyph to a failed one: a failed re-render
@@ -410,6 +410,17 @@ AFont::Character AFont::getCharacter(const FontEntry& charset, AChar glyph) {
         slot = std::make_unique<Character>(std::move(ch));
     }
     return *slot;
+}
+
+AFont::Character AFont::getCharacter(const FontEntry& charset, AChar glyph) {
+    std::unique_lock<std::mutex> lock;
+    return getCharacterLocked(charset, glyph, lock);
+}
+
+AFont::GlyphMetrics AFont::getCharacterMetrics(const FontEntry& charset, AChar glyph) {
+    std::unique_lock<std::mutex> lock;
+    const Character& ch = getCharacterLocked(charset, glyph, lock);
+    return { ch.horizontal.advance, ch.glyphFailed, ch.image != nullptr };
 }
 
 int AFont::length(const FontEntry& charset, AStringView text) {

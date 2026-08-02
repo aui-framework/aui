@@ -95,9 +95,10 @@ public:
         /**
          * @brief True when the glyph was rendered from the primary face because a
          *        fallback-face lookup came up empty (fallback discovery is lazy and
-         *        deferred). Such glyphs are re-rendered on later lookups while
-         *        deferred fallback candidates remain, so a subsequent render may
-         *        succeed once more faces are loaded.
+         *        deferred). Such glyphs are re-rendered whenever the fallback
+         *        generation advances (a face load or a deferred-candidate
+         *        consumption), so a subsequent render may succeed once more faces
+         *        are loaded.
          */
         bool provisional = false;
 
@@ -105,11 +106,12 @@ public:
          * @brief AFontManager::fallbackGeneration() as of the start of this
          *        glyph's most recent render attempt. getCharacter re-renders a
          *        failed/provisional glyph only when the manager's generation has
-         *        advanced past this value, i.e. a new fallback face became
-         *        available since the last attempt. This bounds re-renders to at
-         *        most one per face load instead of one per lookup while fallback
-         *        discovery runs. Final glyphs are unaffected (they are returned
-         *        from the cache unconditionally).
+         *        advanced past this value, i.e. the fallback pool changed (a
+         *        face load or a deferred-candidate consumption) since the last
+         *        attempt. This bounds re-renders to at most one per pool change
+         *        instead of one per lookup while fallback discovery runs. Final
+         *        glyphs are unaffected (they are returned from the cache
+         *        unconditionally).
          */
         uint64_t fallbackGeneration = 0;
 
@@ -139,6 +141,47 @@ public:
          *        re-render.
          */
         void* rendererData = nullptr;
+    };
+
+    /**
+     * @brief Lightweight per-glyph measurement data for text layout, without
+     *        the bitmap (no _<AImage> shared-pointer traffic). Returned by
+     *        getCharacterMetrics for measurement-only paths.
+     */
+    struct GlyphMetrics {
+        /**
+         * @brief Horizontal advance in pixels (Character::horizontal.advance).
+         */
+        float advance = 0.f;
+
+        /**
+         * @brief True when FT_Load_Char failed for this glyph (see
+         *        Character::glyphFailed): the advance is not usable and the
+         *        space width should be used instead.
+         */
+        bool glyphFailed = false;
+
+        /**
+         * @brief True when the glyph has a bitmap (Character::empty() ==
+         *        !hasImage); empty-bitmap glyphs (spaces, combining marks)
+         *        still carry a usable advance.
+         */
+        bool hasImage = false;
+
+        /**
+         * @return The effective advance for layout: the glyph's own advance
+         *         when it has a bitmap, otherwise the space-width fallback
+         *         for failed glyphs, the glyph's advance for empty-bitmap
+         *         glyphs with a positive advance, or zero for legitimately
+         *         zero-advance glyphs (combining marks, ZWJ/ZWNJ, variation
+         *         selectors).
+         */
+        [[nodiscard]]
+        float effectiveAdvance(float spaceWidth) const {
+            if (hasImage) return advance;
+            if (glyphFailed) return spaceWidth;
+            return advance > 0.f ? advance : 0.f;
+        }
     };
 
     struct FontKey {
@@ -218,6 +261,15 @@ private:
 
     Character renderGlyph(const FontEntry& fs, AChar glyph);
 
+    /**
+     * @brief Ensures a usable cached glyph exists for the given codepoint
+     *        (re-rendering when it is failed/provisional and the fallback
+     *        generation has advanced) and returns a reference to it.
+     * @param lock out: takes mCharDataMutex; the returned reference is only
+     *        valid while this lock is held.
+     */
+    Character& getCharacterLocked(const FontEntry& charset, AChar glyph, std::unique_lock<std::mutex>& lock);
+
 public:
     AFont(AFontManager* fm, const AString& path);
 
@@ -252,6 +304,16 @@ public:
      *          _<AImage> inside the snapshot keeps the bitmap alive.
      */
     Character getCharacter(const FontEntry& charset, AChar glyph);
+
+    /**
+     * @brief Returns the layout metrics of the cached glyph for the given
+     *        codepoint without copying the bitmap: no _<AImage> shared-pointer
+     *        traffic, which matters for measurement-heavy paths (length,
+     *        trimStringToWidth). Re-renders a failed/provisional glyph under
+     *        the same conditions as getCharacter, so measured widths stay in
+     *        sync with drawn glyphs.
+     */
+    GlyphMetrics getCharacterMetrics(const FontEntry& charset, AChar glyph);
 
     /**
      * @brief Runs f with a reference to the cached glyph's renderer cache
@@ -298,7 +360,9 @@ public:
                 advance = 0;
                 prevLineAdvance = glm::max(prevLineAdvance, advance);
             } else {
-                Character ch = getCharacter(charset, *i);
+                // Metrics-only lookup: length measures but never draws, so
+                // skip the Character snapshot (no _<AImage> refcount churn).
+                const GlyphMetrics m = getCharacterMetrics(charset, *i);
                 // Match the renderers (OpenGLRenderer/SoftwareRenderer): pair
                 // kerning with the following character is applied before the
                 // glyph's advance for both empty and regular glyphs, so the
@@ -309,11 +373,7 @@ public:
                         advance += getKerning(*i, *next, size).x;
                     }
                 }
-                if (!ch.empty()) {
-                    advance += ch.horizontal.advance;
-                } else {
-                    advance += ch.emptyAdvance(spaceWidth);
-                }
+                advance += m.effectiveAdvance(spaceWidth);
             }
         }
         return int(glm::ceil(glm::max(prevLineAdvance, advance)));
