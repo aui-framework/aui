@@ -44,8 +44,8 @@ namespace {
  *        retry path, when it is not already held.
  * @param fallbackLock in/out: the fallback face's library/per-face locks
  *        (AFontManager::FallbackFaceLock, a private type: deduced here and
- *        only reset, never inspected); released on the retry path before
- *        locking the primary face.
+ *        released member-by-member on the retry path before locking the
+ *        primary face).
  * @param provisional in/out: set to true when the render falls back to the
  *        primary face.
  * @return false only when the primary face could not be sized: the caller
@@ -96,7 +96,13 @@ bool programPixelSize(FT_Face& face,
         pixelSizeSet = strikeSelected;
         if (!strikeSelected && face != primaryFace) {
             // Fallback face has no usable strike; retry with the primary face.
-            fallbackLock = {};  // release library + per-face mutexes before locking sFaceMutex
+            // Release the fallback locks in reverse acquisition order:
+            // lockFallbackFace acquires FreeType::sFaceMutex before the
+            // per-face mutex, so release the per-face mutex first, then
+            // sFaceMutex. (Default-reassigning the whole lock object would
+            // release them in declaration order — sFaceMutex first.)
+            fallbackLock.faceLock = {};
+            fallbackLock.ftLock = {};
             face = primaryFace;
             provisional = true;
             if (!ftLock.owns_lock()) ftLock.lock();  // acquire lock for the primary face
@@ -318,7 +324,10 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
         vAdvance = div * g->metrics.vertAdvance;
     }   // ftLock released here.
 
-    fallbackLock = {};  // release library + per-face locks before the image allocation below
+    // Release the fallback locks in reverse acquisition order (per-face
+    // mutex before sFaceMutex) before the image allocation below.
+    fallbackLock.faceLock = {};
+    fallbackLock.ftLock = {};
 
     if (data.empty()) {
         return Character{

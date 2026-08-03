@@ -696,11 +696,18 @@ public:
                 int width = ch.image->width();
                 int height = ch.image->height();
                 glm::vec4 uv{0.f};
+                bool uvProduced = false;
 
                 // The renderer cache handle is stored on the cached glyph;
                 // read and write it through the synchronized accessor so
-                // check-then-insert is atomic across render threads.
+                // check-then-insert is atomic across render threads. The
+                // accessor skips its callback only when the glyph is not
+                // cached; walkString caches every glyph via getCharacter
+                // before invoking onGlyph, so the callback always runs here
+                // — the flag below is defensive so a degenerate UV
+                // rectangle is never emitted if that ever changes.
                 self->mFontStyle.font->withCharacterRendererData(fe, c, [&](void*& rendererData) {
+                    uvProduced = true;
                     auto* cached = reinterpret_cast<OpenGLRenderer::CharacterData*>(rendererData);
                     if (cached == nullptr || cached->image.get() != ch.image.get()) {
                         uv = self->mEntryData->texturePacker.insert(*ch.image);
@@ -721,6 +728,9 @@ public:
                         uv = cached->uv;
                     }
                 });
+                if (!uvProduced) {
+                    return;   // no atlas UV: skip vertex emission
+                }
 
                 self->mVertices.push_back({glm::vec2(pos.x, pos.y + height), glm::vec2(uv.x, uv.w)});
                 self->mVertices.push_back({glm::vec2(pos.x + width, pos.y + height), glm::vec2(uv.z, uv.w)});
@@ -801,6 +811,9 @@ OpenGLRenderer::FontEntryData* OpenGLRenderer::getFontEntryData(const AFontStyle
             entryData = reinterpret_cast<FontEntryData*>(rendererData);
         }
     });
+    // withFontEntryRendererData always invokes its callback (no skip path),
+    // so entryData is guaranteed to be assigned here.
+    AUI_ASSERT(entryData != nullptr);
     return entryData;
 }
 

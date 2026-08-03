@@ -40,7 +40,12 @@ AFontManager::~AFontManager() {
             worker.join();
         }
     }
-    std::scoped_lock lock(mFallbackMutex);
+    std::unique_lock lock(mFallbackMutex);
+    // No worker may still be running when the members below are destroyed.
+    // Joining the stored thread reaps the in-flight run; waiting for the
+    // outstanding-run counter to reach zero additionally covers a run whose
+    // final bookkeeping (pending clear, notify) is still in flight.
+    mFallbackCv.wait(lock, [&] { return mFallbackRunsInFlight == 0; });
     for (auto& fb : mFallbackFaces) {
         // Hold both the library lock and this face's per-face lock so that
         // FT_Done_Face cannot overlap an in-flight glyph load on the same face.
@@ -64,16 +69,21 @@ void AFontManager::startFallbackWorker() {
         return;   // a worker run is already in flight
     }
     if (mFallbackThread.joinable()) {
-        // The previous run has finished (pending was false). Detach its thread
-        // object so the calling (UI) thread doesn't block waiting for the OS
-        // to teardown the thread while holding the mutex.
-        mFallbackThread.detach();
+        // The previous run has finished its work (pending was false). Reap
+        // it: joining a finished thread does not block on discovery work,
+        // and it keeps every worker joinable so the destructor can
+        // guarantee no worker outlives the manager. (A run that already
+        // cleared pending never re-locks mFallbackMutex, so joining while
+        // holding it cannot deadlock.)
+        mFallbackThread.join();
     }
     mFallbackPending.store(true, std::memory_order_release);
+    ++mFallbackRunsInFlight;
     try {
         mFallbackThread = std::thread(&AFontManager::fallbackDiscoveryWorker, this);
     } catch (const std::system_error& e) {
         // Fallback discovery is best-effort; never fail font manager construction.
+        --mFallbackRunsInFlight;
         mFallbackPending.store(false, std::memory_order_release);
         mFallbackCv.notify_all();
         // No worker can ever run discovery now; lockFallbackFace must report
@@ -97,9 +107,9 @@ void AFontManager::fallbackDiscoveryWorker() {
         // candidate per re-render cycle until a face covers the glyph or the
         // queue is empty.
         if (!mDeferredCandidates.empty()) {
-            auto c = mDeferredCandidates.first();
+            auto c = std::move(mDeferredCandidates.first());
             mDeferredCandidates.erase(mDeferredCandidates.begin());
-            if (!loadOneFallbackLocked(c)) {
+            if (!loadOneFallbackLocked(std::move(c))) {
                 // The candidate pool changed even though no face was added.
                 // Publish the change so cached failed/provisional glyphs
                 // retry against the remaining candidates instead of being
@@ -114,15 +124,22 @@ void AFontManager::fallbackDiscoveryWorker() {
     } catch (...) {
         ALogger::warn("Font") << "Fallback discovery failed with an unknown exception";
     }
-    // Release-store: the mutex-protected discovery result (loaded faces,
-    // deferred candidates) is visible to any thread that observes the clear.
-    mFallbackPending.store(false, std::memory_order_release);
-    // Wake lockFallbackFace waiters: the run is over, loaded faces can be
-    // probed and the missed glyph rendered instead of staying tofu.
+    // Final actions of the run: publish the completion under the manager
+    // mutex (the mutex-protected discovery result — loaded faces, deferred
+    // candidates — is visible to any thread that observes the clear) and
+    // decrement the outstanding-run counter so the destructor can wait for
+    // every worker to finish. notify_all() then wakes lockFallbackFace
+    // waiters: the run is over, loaded faces can be probed and the missed
+    // glyph rendered instead of staying tofu.
+    {
+        std::lock_guard lock(mFallbackMutex);
+        mFallbackPending.store(false, std::memory_order_release);
+        --mFallbackRunsInFlight;
+    }
     mFallbackCv.notify_all();
 }
 
-bool AFontManager::loadOneFallbackLocked(const FallbackCandidate& candidate) {
+bool AFontManager::loadOneFallbackLocked(FallbackCandidate candidate) {
     // Read the font file into memory BEFORE taking FreeType::sFaceMutex:
     // FT_New_Face parses the file from disk while holding the lock, and that
     // lock serializes every glyph render, kerning query and hasGlyph call.
@@ -131,7 +148,9 @@ bool AFontManager::loadOneFallbackLocked(const FallbackCandidate& candidate) {
     // non-ASCII font paths.)
     AByteBuffer fontData;
     if (!candidate.data.empty()) {
-        fontData = candidate.data;
+        // The candidate is an owning copy; transfer the embedded buffer
+        // instead of copying it.
+        fontData = std::move(candidate.data);
     } else {
 
 #if AUI_PLATFORM_WIN
@@ -201,14 +220,17 @@ void AFontManager::ensureFallbackFaceLocked() {
         return;
     }
 
-    // Load the first candidate eagerly (pre-warm).
-    if (!loadOneFallbackLocked(allCandidates.first())) {
+    // Load the first candidate eagerly (pre-warm); its embedded buffer (if
+    // any) is moved into the face rather than copied, so record the path
+    // for the failure log before the candidate is moved-from.
+    const AString firstCandidatePath = allCandidates.first().path;
+    if (!loadOneFallbackLocked(std::move(allCandidates.first()))) {
         // The eager candidate is deliberately not added to mDeferredCandidates
         // (it was already attempted), so a failure here is silent unless logged:
         // missing files (e.g. msyh.ttc on a Windows edition without Simplified
         // Chinese fonts) would otherwise be undiagnosable until a CJK codepoint
         // renders tofu.
-        ALogger::warn("Font") << "Could not load fallback font: " << allCandidates.first().path;
+        ALogger::warn("Font") << "Could not load fallback font: " << firstCandidatePath;
     }
 
     // Defer remaining candidates for lazy loading in lockFallbackFace.

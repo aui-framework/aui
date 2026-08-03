@@ -109,6 +109,17 @@ private:
      * faces are probed instead of rendering a provisional tofu glyph.
      */
     std::atomic<bool> mFallbackPending = false;
+
+    /**
+     * Number of worker runs that have started but not yet finished their
+     * final bookkeeping (clearing mFallbackPending, notifying waiters).
+     * Guarded by mFallbackMutex: incremented in startFallbackWorker before
+     * launching the thread, decremented by the worker as its last action.
+     * ~AFontManager waits until this reaches zero so no worker can touch
+     * manager members after they are destroyed.
+     */
+    unsigned mFallbackRunsInFlight = 0;
+
     std::thread mFallbackThread;
     /**
      * Notified when a worker run finishes (pending clears): wakes
@@ -129,10 +140,12 @@ private:
     /**
      * @brief Loads a single fallback face from the given candidate.
      * @note The caller must hold mFallbackMutex: this function mutates
-     *       mFallbackFaces and bumps mFallbackGeneration on success.
+     *       mFallbackFaces and bumps mFallbackGeneration on success. The
+     *       candidate is taken by value so the embedded font buffer (if
+     *       any) can be moved into the face instead of copied.
      * @return true if the face was loaded successfully.
      */
-    bool loadOneFallbackLocked(const FallbackCandidate& candidate);
+    bool loadOneFallbackLocked(FallbackCandidate candidate);
 
     /**
      * @brief Returns the platform's CJK fallback candidates, best first.

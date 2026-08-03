@@ -15,6 +15,8 @@
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <climits>
+#include <cstring>
+#include <string>
 AFontManager::AFontManager():
         mFreeType(_new<FreeType>()),
         mDefaultFont(loadFont(":uni/font/Roboto.ttf"))
@@ -35,15 +37,18 @@ AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
         if (CTFontRef font = CTFontCreateWithName(name, 0.0, NULL)) {
             CFStringRef postScriptName = CTFontCopyPostScriptName(font);
             if (postScriptName && CFStringCompare(postScriptName, name, 0) == kCFCompareEqualTo) {
-                CGFontRef cgFont = CTFontCopyGraphicsFont(font, NULL);
-                if (cgFont) {
-                    if (CGDataProviderRef provider = CGFontGetDataProvider(cgFont)) {
-                        if (CFDataRef data = CGDataProviderCopyData(provider)) {
-                            candidates.push_back({ AString(), 0, AByteBuffer(CFDataGetBytePtr(data), CFDataGetLength(data)) });
-                            CFRelease(data);
+                if (CFURLRef url = static_cast<CFURLRef>(CTFontCopyAttribute(font, kCTFontURLAttribute))) {
+                    if (CFStringRef path = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle)) {
+                        const CFIndex maxLen =
+                            CFStringGetMaximumSizeForEncoding(CFStringGetLength(path), kCFStringEncodingUTF8) + 1;
+                        std::string cpath(static_cast<size_t>(maxLen), '\0');
+                        if (CFStringGetCString(path, cpath.data(), maxLen, kCFStringEncodingUTF8)) {
+                            cpath.resize(std::strlen(cpath.data()));
+                            candidates.push_back({ AString(std::move(cpath)), 0, {} });
                         }
+                        CFRelease(path);
                     }
-                    CFRelease(cgFont);
+                    CFRelease(url);
                 }
             }
             if (postScriptName) {
