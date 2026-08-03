@@ -702,7 +702,7 @@ public:
                 // check-then-insert is atomic across render threads.
                 self->mFontStyle.font->withCharacterRendererData(fe, c, [&](void*& rendererData) {
                     auto* cached = reinterpret_cast<OpenGLRenderer::CharacterData*>(rendererData);
-                    if (cached == nullptr || cached->image != ch.image.get()) {
+                    if (cached == nullptr || cached->image.get() != ch.image.get()) {
                         uv = self->mEntryData->texturePacker.insert(*ch.image);
 
                         const float BIAS = 0.1f;
@@ -714,7 +714,7 @@ public:
                         // shared by every font of this renderer, so appends
                         // need the renderer-wide cache mutex.
                         std::lock_guard lock(self->mRenderer->mFontCacheMutex);
-                        self->mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv, ch.image.get()});
+                        self->mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv, ch.image});
                         rendererData = &self->mRenderer->mCharData.last();
                         self->mEntryData->isTextureInvalid = true;
                     } else {

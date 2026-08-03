@@ -126,6 +126,10 @@ bool AFontManager::loadOneFallbackLocked(const FallbackCandidate& candidate) {
     // is opened by its UTF-16 path: the narrow CRT fopen() cannot address
     // non-ASCII font paths.)
     AByteBuffer fontData;
+    if (!candidate.data.empty()) {
+        fontData = candidate.data;
+    } else {
+
 #if AUI_PLATFORM_WIN
     const std::u16string utf16 = candidate.path.toUtf16();
     std::wstring wpath(utf16.begin(), utf16.end());
@@ -149,6 +153,7 @@ bool AFontManager::loadOneFallbackLocked(const FallbackCandidate& candidate) {
         return false;
     }
 #endif
+    }
     if (fontData.empty()) {
         // Covers every Windows failure path (open, seek, truncated read) as
         // well as empty files on any platform: the POSIX branch above only
@@ -223,7 +228,12 @@ AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint
         return { nullptr };
     }
 
-    std::unique_lock lk(mFallbackMutex);
+    std::unique_lock lk(mFallbackMutex, std::try_to_lock);
+    if (!lk.owns_lock()) {
+        // A worker run holds the mutex and may be doing file IO. Report a
+        // miss; the generation bump retries this glyph once the run ends.
+        return { nullptr };
+    }
     if (mFallbackWorkerUnavailable) {
         // Discovery can never run off-thread (worker thread creation failed)
         // and must not run on the calling (UI) thread: report a miss. The

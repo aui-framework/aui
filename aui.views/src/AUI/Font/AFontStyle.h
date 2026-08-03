@@ -50,6 +50,13 @@ struct API_AUI_VIEWS AFontStyle {
         // text is scrolled/clipped off the left edge. Matches SoftwareRenderer.
         const auto toPixel = [](float v) { return int(glm::floor(v)); };
 
+        const auto kerningFor = [&](auto i, AChar c) -> float {
+            if (!hasKerning) return 0.f;
+            auto next = std::next(i);
+            if (next == text.end()) return 0.f;
+            return font->getKerning(c, *next, size).x;
+        };
+
         int advanceX = position.x;
         int advanceY = position.y;
         float advance = advanceX;
@@ -68,13 +75,7 @@ struct API_AUI_VIEWS AFontStyle {
                 const AFont::Character ch = font->getCharacter(fe, c);
                 if (ch.empty()) {
                     callback.onSymbolAdded({toPixel(advance), advanceY});
-                    if (hasKerning) {
-                        auto next = std::next(i);
-                        if (next != text.end()) {
-                            auto kerning = font->getKerning(c, *next, size);
-                            advance += kerning.x;
-                        }
-                    }
+                    advance += kerningFor(i, c);
                     advance += ch.emptyAdvance(getSpaceWidth());
                     continue;
                 }
@@ -86,13 +87,7 @@ struct API_AUI_VIEWS AFontStyle {
                     callback.onGlyph(pos, ch, fe, c);
                 }
 
-                if (hasKerning) {
-                    auto next = std::next(i);
-                    if (next != text.end()) {
-                        auto kerning = font->getKerning(c, *next, size);
-                        advance += kerning.x;
-                    }
-                }
+                advance += kerningFor(i, c);
 
                 advance += ch.horizontal.advance;
             }

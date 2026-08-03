@@ -12,8 +12,9 @@
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/Font/FreeType.h>
 #include <CoreText/CoreText.h>
+#include <CoreGraphics/CoreGraphics.h>
 #include <CoreFoundation/CoreFoundation.h>
-#include <limits.h>
+#include <climits>
 AFontManager::AFontManager():
         mFreeType(_new<FreeType>()),
         mDefaultFont(loadFont(":uni/font/Roboto.ttf"))
@@ -34,12 +35,15 @@ AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
         if (CTFontRef font = CTFontCreateWithName(name, 0.0, NULL)) {
             CFStringRef postScriptName = CTFontCopyPostScriptName(font);
             if (postScriptName && CFStringCompare(postScriptName, name, 0) == kCFCompareEqualTo) {
-                if (CFURLRef url = (CFURLRef)CTFontCopyAttribute(font, kCTFontURLAttribute)) {
-                    UInt8 buffer[PATH_MAX];
-                    if (CFURLGetFileSystemRepresentation(url, true, buffer, sizeof(buffer))) {
-                        candidates.push_back({ AString((const char*)buffer) });
+                CGFontRef cgFont = CTFontCopyGraphicsFont(font, NULL);
+                if (cgFont) {
+                    if (CGDataProviderRef provider = CGFontGetDataProvider(cgFont)) {
+                        if (CFDataRef data = CGDataProviderCopyData(provider)) {
+                            candidates.push_back({ AString(), AByteBuffer(CFDataGetBytePtr(data), CFDataGetLength(data)) });
+                            CFRelease(data);
+                        }
                     }
-                    CFRelease(url);
+                    CFRelease(cgFont);
                 }
             }
             if (postScriptName) {

@@ -15,6 +15,7 @@
 #include "AUI/Util/Manager.h"
 #include "AUI/Font/AFontFamily.h"
 #include <AUI/Common/AVector.h>
+#include <AUI/Common/AByteBuffer.h>
 #include <atomic>
 #include <cstddef>
 #include <cstdint>
@@ -58,6 +59,7 @@ public:
      */
     struct FallbackCandidate {
         AString path;
+        AByteBuffer data;
         int faceIndex = 0;
     };
 

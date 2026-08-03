@@ -15,6 +15,8 @@
 
 
 #include <Windows.h>
+#include <initguid.h>
+#include <KnownFolders.h>
 #include <shlobj.h>
 #include <AUI/Platform/AFontManager.h>
 #include "AUI/Font/FreeType.h"
