@@ -235,7 +235,7 @@ void AFontManager::ensureFallbackFaceLocked() {
 
     // Defer remaining candidates for lazy loading in lockFallbackFace.
     for (size_t i = 1; i < allCandidates.size(); ++i) {
-        mDeferredCandidates.push_back(allCandidates[i]);
+        mDeferredCandidates.push_back(std::move(allCandidates[i]));
     }
     if (!mDeferredCandidates.empty()) {
         // The candidate pool changed even if no face was loaded: publish the

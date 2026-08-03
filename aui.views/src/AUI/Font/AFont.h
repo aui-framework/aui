@@ -408,11 +408,16 @@ public:
     AString
     trimStringToWidth(const FontEntry& charset, AString::iterator begin, AString::iterator end, float maxWidth) {
         float width = 0;
+        const bool hasKerning = isHasKerning();
         for (auto i = begin; i != end; i++) {
             if (*i == '\n') {
                 return AString(begin, i);
             }
-            float charWidth = length(charset, i, std::next(i));
+            auto next = std::next(i);
+            float charWidth = length(charset, i, next);
+            if (next != end && *i != U' ' && hasKerning) {
+                charWidth += getKerning(*i, *next, charset.first.size).x;
+            }
             if (width + charWidth > maxWidth) {
                 return AString(begin, i);
             }
