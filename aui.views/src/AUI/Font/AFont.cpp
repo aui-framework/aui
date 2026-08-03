@@ -86,8 +86,9 @@ bool programPixelSize(FT_Face& face,
                     bestStrike = i;
                 }
             }
-            constexpr long MAX_STRIKE_DELTA = 2; // Accept slightly larger/smaller bitmap strikes
-            if (bestDelta <= MAX_STRIKE_DELTA) {
+            // Without bitmap rescaling, any delta > 0 risks breaking UI layout bounds.
+            // Accept only exact matches until rescaling logic is implemented.
+            if (bestDelta == 0) {
                 strikeSelected = FT_Select_Size(face, bestStrike) == 0;
             }
         }
