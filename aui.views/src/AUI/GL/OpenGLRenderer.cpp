@@ -687,107 +687,49 @@ public:
     template<class UnicodeString>
     void addStringT(const glm::ivec2& position, UnicodeString text) noexcept {
         mVertices.reserve(mVertices.capacity() + text.length() * 4);
-        auto& font = mFontStyle.font;
-        auto& texturePacker = mEntryData->texturePacker;
-        auto fe = mFontStyle.getFontEntry();
 
-        const bool hasKerning = font->isHasKerning();
+        struct Cb {
+            OpenGLMultiStringCanvas* self;
+            void onSymbolAdded(glm::ivec2 p) { self->notifySymbolAdded({p}); }
+            void onNextLine() { self->nextLine(); }
+            void onGlyph(glm::ivec2 pos, const AFont::Character& ch, const AFont::FontEntry& fe, AChar c) {
+                int width = ch.image->width();
+                int height = ch.image->height();
+                glm::vec4 uv{0.f};
 
-        // Positions are floored, not truncated: advance can be negative when
-        // text is scrolled/clipped off the left edge. Matches SoftwareRenderer.
-        const auto toPixel = [](float v) { return int(glm::floor(v)); };
+                // The renderer cache handle is stored on the cached glyph;
+                // read and write it through the synchronized accessor so
+                // check-then-insert is atomic across render threads.
+                self->mFontStyle.font->withCharacterRendererData(fe, c, [&](void*& rendererData) {
+                    auto* cached = reinterpret_cast<OpenGLRenderer::CharacterData*>(rendererData);
+                    if (cached == nullptr || cached->image != ch.image.get()) {
+                        uv = self->mEntryData->texturePacker.insert(*ch.image);
 
-        int advanceX = position.x;
-        int advanceY = position.y;
-        size_t counter = 0;
-        float advance = advanceX;
-        for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
-            AChar c = *i;
-            if (c == '\n') {
-                notifySymbolAdded({glm::ivec2{toPixel(advance), advanceY}});
-                advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
-                advance = position.x;
-                advanceY += mFontStyle.getLineHeight();
-                nextLine();
-            } else {
-                // getCharacter returns an immutable snapshot: the cache may
-                // re-render (replace) this glyph on another thread at any
-                // time, so all image/metrics reads come from the copy.
-                const AFont::Character ch = font->getCharacter(fe, c);
-                if (ch.empty()) {
-                    notifySymbolAdded({glm::ivec2{toPixel(advance), advanceY}});
-                    if (hasKerning) {
-                        auto next = std::next(i);
-                        if (next != text.end()) {
-                            auto kerning = font->getKerning(c, *next, fe.first.size);
-                            advance += kerning.x;
-                        }
+                        const float BIAS = 0.1f;
+                        uv.x += BIAS;
+                        uv.y += BIAS;
+                        uv.z -= BIAS;
+                        uv.w -= BIAS;
+                        // The font lock held here is per-font; mCharData is
+                        // shared by every font of this renderer, so appends
+                        // need the renderer-wide cache mutex.
+                        std::lock_guard lock(self->mRenderer->mFontCacheMutex);
+                        self->mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv, ch.image.get()});
+                        rendererData = &self->mRenderer->mCharData.last();
+                        self->mEntryData->isTextureInvalid = true;
+                    } else {
+                        uv = cached->uv;
                     }
-                    advance += ch.emptyAdvance(mFontStyle.getSpaceWidth());
-                    continue;
-                }
-                if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
+                });
 
-                    int posX = toPixel(advance) + ch.horizontal.bearing.x;
-                    int posY = advanceY - ch.horizontal.bearing.y;
-                    int width = ch.image->width();
-                    int height = ch.image->height();
-
-                    glm::vec4 uv{0.f};
-
-                    // The renderer cache handle is stored on the cached glyph;
-                    // read and write it through the synchronized accessor so
-                    // check-then-insert is atomic across render threads.
-                    font->withCharacterRendererData(fe, c, [&](void*& rendererData) {
-                        auto* cached = reinterpret_cast<OpenGLRenderer::CharacterData*>(rendererData);
-                        if (cached == nullptr || cached->image != ch.image.get()) {
-                            uv = texturePacker.insert(*ch.image);
-
-                            const float BIAS = 0.1f;
-                            uv.x += BIAS;
-                            uv.y += BIAS;
-                            uv.z -= BIAS;
-                            uv.w -= BIAS;
-                            // The font lock held here is per-font; mCharData is
-                            // shared by every font of this renderer, so appends
-                            // need the renderer-wide cache mutex.
-                            std::lock_guard lock(mRenderer->mFontCacheMutex);
-                            mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv, ch.image.get()});
-                            rendererData = &mRenderer->mCharData.last();
-                            mEntryData->isTextureInvalid = true;
-                        } else {
-                            uv = cached->uv;
-                        }
-                    });
-
-                    notifySymbolAdded({glm::ivec2{posX, posY}});
-                    mVertices.push_back({glm::vec2(posX, posY + height),
-                                         glm::vec2(uv.x, uv.w)});
-                    mVertices.push_back({glm::vec2(posX + width, posY + height),
-                                         glm::vec2(uv.z, uv.w)});
-                    mVertices.push_back({glm::vec2(posX, posY),
-                                         glm::vec2(uv.x, uv.y)});
-                    mVertices.push_back({glm::vec2(posX + width, posY),
-                                         glm::vec2(uv.z, uv.y)});
-
-                }
-
-                if (hasKerning) {
-                    auto next = std::next(i);
-                    if (next != text.end()) {
-                        auto kerning = font->getKerning(c, *next, fe.first.size);
-                        advance += kerning.x;
-                    }
-                }
-
-                advance += ch.horizontal.advance;
+                self->mVertices.push_back({glm::vec2(pos.x, pos.y + height), glm::vec2(uv.x, uv.w)});
+                self->mVertices.push_back({glm::vec2(pos.x + width, pos.y + height), glm::vec2(uv.z, uv.w)});
+                self->mVertices.push_back({glm::vec2(pos.x, pos.y), glm::vec2(uv.x, uv.y)});
+                self->mVertices.push_back({glm::vec2(pos.x + width, pos.y), glm::vec2(uv.z, uv.y)});
             }
-        }
+        } cb { this };
 
-        notifySymbolAdded({glm::ivec2{toPixel(advance), advanceY}});
-
-        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
-        mAdvanceY = advanceY + mFontStyle.getLineHeight();
+        mFontStyle.walkString(position, text, mAdvanceX, mAdvanceY, cb);
     }
 
     void addString(const glm::ivec2& position, AStringView text) noexcept override {

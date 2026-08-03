@@ -15,6 +15,7 @@
 
 
 #include <Windows.h>
+#include <shlobj.h>
 #include <AUI/Platform/AFontManager.h>
 #include "AUI/Font/FreeType.h"
 #include <AUI/IO/APath.h>
@@ -48,13 +49,22 @@ AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
     // CJK + Kana, Malgun Gothic covers CJK + Hangul, then region-specific
     // fallbacks).
     const AString fontsDir = [] {
+        PWSTR path = nullptr;
+        if (SUCCEEDED(SHGetKnownFolderPath(FOLDERID_Fonts, 0, nullptr, &path))) {
+            AString result(reinterpret_cast<const char16_t*>(path));
+            result += "\\";
+            CoTaskMemFree(path);
+            return result;
+        }
+        ALogger::warn("Font") << "SHGetKnownFolderPath() failed, falling back to GetWindowsDirectoryW()";
+
         wchar_t buf[MAX_PATH];
         UINT len = GetWindowsDirectoryW(buf, MAX_PATH);
         if (len > 0 && len < MAX_PATH) {
-            // Construct from exactly len characters (not relying on null termination).
             return AString(reinterpret_cast<const char16_t*>(buf), len) + "\\Fonts\\";
         }
         ALogger::warn("Font") << "GetWindowsDirectoryW() failed, falling back to C:\\Windows\\Fonts\\";
+
         return AString("C:\\Windows\\Fonts\\");
     }();
     return {

@@ -454,81 +454,18 @@ public:
     template<class UnicodeString>
     void addStringT(const glm::ivec2& position, UnicodeString text) noexcept {
         mCharEntries.reserve(mCharEntries.capacity() + text.length());
-        auto& font = mFontStyle.font;
-        auto fe = mFontStyle.getFontEntry();
 
-        const bool hasKerning = font->isHasKerning();
-
-        int prevWidth = -1;
-
-        int advanceX = position.x;
-        int advanceY = position.y;
-        size_t counter = 0;
-        // Float accumulator: glyph advances are fractional (AFont::length
-        // accumulates in float too), and rounding per glyph would drift from
-        // the measured text width. Positions stay integral (glm::ivec2).
-        float advance = advanceX;
-        // Positions are floored, not truncated: advance can be negative when
-        // text is scrolled/clipped off the left edge, and int(-3.7) == -3
-        // while the pixel position should be -4 (floor). The width totals
-        // below use glm::ceil instead, which is consistent with AFont::length.
-        const auto toPixel = [](float v) { return int(glm::floor(v)); };
-        for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
-            AChar c = *i;
-            if (c == '\n') {
-                notifySymbolAdded({glm::ivec2{toPixel(advance), advanceY}});
-                advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
-                advance = position.x;
-                advanceY += mFontStyle.getLineHeight();
-                nextLine();
+        struct Cb {
+            SoftwareMultiStringCanvas* self;
+            void onSymbolAdded(glm::ivec2 p) { self->notifySymbolAdded({p}); }
+            void onNextLine() { self->nextLine(); }
+            void onGlyph(glm::ivec2 pos, const AFont::Character& ch, const AFont::FontEntry&, AChar) {
+                self->mCharEntries.push_back(CharEntry{pos, ch.image});
             }
-            else {
-                // getCharacter returns an immutable snapshot: the cache may
-                // re-render (replace) this glyph on another thread at any
-                // time, so all image/metrics reads come from the copy.
-                const AFont::Character ch = font->getCharacter(fe, c);
-                if (ch.empty()) {
-                    notifySymbolAdded({glm::ivec2{toPixel(advance), advanceY}});
-                    if (hasKerning) {
-                        auto next = std::next(i);
-                        if (next != text.end()) {
-                            auto kerning = font->getKerning(c, *next, fe.first.size);
-                            advance += kerning.x;
-                        }
-                    }
-                    advance += ch.emptyAdvance(mFontStyle.getSpaceWidth());
-                    continue;
-                }
-                if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
-                    glm::ivec2 pos{ toPixel(advance), advanceY };
-                    pos.x += ch.horizontal.bearing.x;
-                    pos.y -= ch.horizontal.bearing.y;
-                    notifySymbolAdded({pos});
-                    mCharEntries.push_back(CharEntry{
-                            pos,
-                            ch.image
-                    });
-                }
+        } cb { this };
 
-                if (hasKerning) {
-                    auto next = std::next(i);
-                    if (next != text.end())
-                    {
-                        auto kerning = font->getKerning(c, *next, fe.first.size);
-                        advance += kerning.x;
-                    }
-                }
-
-                advance += ch.horizontal.advance;
-            }
-        }
-
-        notifySymbolAdded({glm::ivec2{toPixel(advance), advanceY}});
-
-        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
-        mAdvanceY = advanceY + mFontStyle.getLineHeight();
+        mFontStyle.walkString(position, text, mAdvanceX, mAdvanceY, cb);
     }
-
     void addString(const glm::ivec2& position, AStringView text) noexcept override {
         addStringT(position, text.utf8());
     }
