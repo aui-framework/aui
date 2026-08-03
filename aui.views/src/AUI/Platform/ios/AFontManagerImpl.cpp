@@ -39,7 +39,7 @@ AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
                 if (cgFont) {
                     if (CGDataProviderRef provider = CGFontGetDataProvider(cgFont)) {
                         if (CFDataRef data = CGDataProviderCopyData(provider)) {
-                            candidates.push_back({ AString(), AByteBuffer(CFDataGetBytePtr(data), CFDataGetLength(data)) });
+                            candidates.push_back({ AString(), 0, AByteBuffer(CFDataGetBytePtr(data), CFDataGetLength(data)) });
                             CFRelease(data);
                         }
                     }

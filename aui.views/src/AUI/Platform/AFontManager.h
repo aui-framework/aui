@@ -59,8 +59,8 @@ public:
      */
     struct FallbackCandidate {
         AString path;
-        AByteBuffer data;
         int faceIndex = 0;
+        AByteBuffer data;
     };
 
 private:
