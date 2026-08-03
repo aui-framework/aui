@@ -67,9 +67,19 @@ private:
     gl::Texture2D mGradientTexture;
 
 
+    /**
+     * Per-glyph atlas entry. The glyph's fallbackGeneration is kept instead
+     * of the _<AImage>: the pixels are already copied into the atlas image
+     * (SimpleTexturePacker::onInsert), so the retained bitmap would only
+     * serve as an identity token, keeping stale bitmaps resident after
+     * re-renders. The generation differs exactly when a re-render replaced
+     * the cached glyph (getCharacterLocked re-renders only after the
+     * generation advances), so it is a safe, non-reusable identity. A raw
+     * pointer would not be: the address could be reused by a later glyph.
+     */
     struct CharacterData {
         glm::vec4 uv;
-        _<AImage> image;
+        uint64_t fallbackGeneration;
     };
 
     ADeque<CharacterData> mCharData;

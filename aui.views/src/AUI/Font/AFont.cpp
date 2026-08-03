@@ -201,7 +201,9 @@ glm::vec2 AFont::getKerning(char32_t left, char32_t right, unsigned size) {
     }
 
     FT_Vector vec2;
-    FT_Get_Kerning(mFace, leftIndex, rightIndex, FT_KERNING_DEFAULT, &vec2);
+    if (FT_Get_Kerning(mFace, leftIndex, rightIndex, FT_KERNING_DEFAULT, &vec2) != 0) {
+        return {0.f, 0.f};
+    }
 
     return {vec2.x >> 6, vec2.y >> 6};
 }

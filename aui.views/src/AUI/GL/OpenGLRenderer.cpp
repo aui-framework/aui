@@ -709,7 +709,7 @@ public:
                 self->mFontStyle.font->withCharacterRendererData(fe, c, [&](void*& rendererData) {
                     uvProduced = true;
                     auto* cached = reinterpret_cast<OpenGLRenderer::CharacterData*>(rendererData);
-                    if (cached == nullptr || cached->image.get() != ch.image.get()) {
+                    if (cached == nullptr || cached->fallbackGeneration != ch.fallbackGeneration) {
                         uv = self->mEntryData->texturePacker.insert(*ch.image);
 
                         const float BIAS = 0.1f;
@@ -721,7 +721,7 @@ public:
                         // shared by every font of this renderer, so appends
                         // need the renderer-wide cache mutex.
                         std::lock_guard lock(self->mRenderer->mFontCacheMutex);
-                        self->mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv, ch.image});
+                        self->mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv, ch.fallbackGeneration});
                         rendererData = &self->mRenderer->mCharData.last();
                         self->mEntryData->isTextureInvalid = true;
                     } else {

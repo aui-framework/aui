@@ -45,6 +45,8 @@ struct API_AUI_VIEWS AFontStyle {
     void walkString(const glm::ivec2& position, const UnicodeString& text, int& outAdvanceX, int& outAdvanceY, Callback& callback) const {
         auto fe = getFontEntry();
         const bool hasKerning = font->isHasKerning();
+        const float spaceWidth = float(getSpaceWidth());
+        const int lineHeight = int(getLineHeight());
 
         // Positions are floored, not truncated: advance can be negative when
         // text is scrolled/clipped off the left edge. Matches SoftwareRenderer.
@@ -66,7 +68,7 @@ struct API_AUI_VIEWS AFontStyle {
                 callback.onSymbolAdded({toPixel(advance), advanceY});
                 advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
                 advance = position.x;
-                advanceY += getLineHeight();
+                advanceY += lineHeight;
                 callback.onNextLine();
             } else {
                 // getCharacter returns an immutable snapshot: the cache may
@@ -76,14 +78,14 @@ struct API_AUI_VIEWS AFontStyle {
                 if (ch.empty()) {
                     callback.onSymbolAdded({toPixel(advance), advanceY});
                     advance += kerningFor(i, c);
-                    advance += ch.emptyAdvance(getSpaceWidth());
+                    advance += ch.emptyAdvance(spaceWidth);
                     continue;
                 }
+                glm::ivec2 pos{ toPixel(advance), advanceY };
+                pos.x += ch.horizontal.bearing.x;
+                pos.y -= ch.horizontal.bearing.y;
+                callback.onSymbolAdded({pos});
                 if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
-                    glm::ivec2 pos{ toPixel(advance), advanceY };
-                    pos.x += ch.horizontal.bearing.x;
-                    pos.y -= ch.horizontal.bearing.y;
-                    callback.onSymbolAdded({pos});
                     callback.onGlyph(pos, ch, fe, c);
                 }
 
@@ -96,7 +98,7 @@ struct API_AUI_VIEWS AFontStyle {
         callback.onSymbolAdded({toPixel(advance), advanceY});
 
         outAdvanceX = (glm::max)(outAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
-        outAdvanceY = advanceY + getLineHeight();
+        outAdvanceY = advanceY + lineHeight;
     }
 
     AFont::Character getCharacter(char32_t c) {
