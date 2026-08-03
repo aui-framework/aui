@@ -98,7 +98,7 @@ struct API_AUI_VIEWS AFontStyle {
         callback.onSymbolAdded({toPixel(advance), advanceY});
 
         outAdvanceX = (glm::max)(outAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
-        outAdvanceY = advanceY + lineHeight;
+        outAdvanceY = (glm::max)(outAdvanceY, advanceY + lineHeight);
     }
 
     AFont::Character getCharacter(char32_t c) {

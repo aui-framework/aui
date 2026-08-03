@@ -58,7 +58,7 @@ int faceIndexForPostScriptName(const std::string& path, CFStringRef postScriptNa
     FT_Face probe = nullptr;
     // face_index -1: parse the collection without selecting a face, so
     // num_faces is populated for the loop bound.
-    if (FT_New_Memory_Face(probeLibrary.getFt(), static_cast<const FT_Byte*>(data.data()), data.getSize(), -1,
+    if (FT_New_Memory_Face(probeLibrary.getFt(), reinterpret_cast<const FT_Byte*>(data.data()), data.getSize(), -1,
                            &probe) != 0) {
         return 0;
     }
@@ -66,7 +66,7 @@ int faceIndexForPostScriptName(const std::string& path, CFStringRef postScriptNa
     FT_Done_Face(probe);
     for (int i = 0; i < numFaces; ++i) {
         FT_Face face = nullptr;
-        if (FT_New_Memory_Face(probeLibrary.getFt(), static_cast<const FT_Byte*>(data.data()), data.getSize(), i,
+        if (FT_New_Memory_Face(probeLibrary.getFt(), reinterpret_cast<const FT_Byte*>(data.data()), data.getSize(), i,
                                &face) != 0) {
             return 0;
         }

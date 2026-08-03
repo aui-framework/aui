@@ -415,7 +415,7 @@ public:
             }
             auto next = std::next(i);
             float charWidth = length(charset, i, next);
-            if (next != end && *i != U' ' && hasKerning) {
+            if (next != end && hasKerning) {
                 charWidth += getKerning(*i, *next, charset.first.size).x;
             }
             if (width + charWidth > maxWidth) {
