@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -14,6 +14,8 @@
 #include <freetype/ftdriver.h>
 #include <freetype/ftmodapi.h>
 
+
+std::mutex FreeType::sFaceMutex;
 
 FreeType::FreeType() {
 	FT_Init_FreeType(&ft);

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -14,6 +14,15 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Util/Manager.h"
 #include "AUI/Font/AFontFamily.h"
+#include <AUI/Common/AVector.h>
+#include <AUI/Common/AByteBuffer.h>
+#include <atomic>
+#include <condition_variable>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
+#include <mutex>
+#include <thread>
 #include "AUI/Font/AFont.h"
 
 class API_AUI_VIEWS AFontManager {
@@ -45,12 +54,165 @@ public:
         }
         return mLoadedFont[url] = loadFont(url);
     }
+public:
+    /**
+     * A candidate font path with an optional face index (for TTC collections).
+     */
+    struct FallbackCandidate {
+        AString path;
+        int faceIndex = 0;
+        AByteBuffer data;
+    };
+
 private:
     AMap<AUrl, _<AFont>> mLoadedFont;
     AMap<AString, _<AFontFamily>> mFamilies;
     _<FreeType> mFreeType;
     _<AFontFamily> mDefaultFamily;
     _<AFont> mDefaultFont;
+
+    /**
+     * A loaded fallback face with a per-face mutex to serialize FT operations.
+     * data keeps the font file bytes alive: FT_New_Memory_Face does not copy
+     * the buffer, so it must outlive the face.
+     */
+    struct FallbackFace {
+        FT_FaceRec_* face = nullptr;
+        AByteBuffer data;
+        std::unique_ptr<std::mutex> mtx = std::make_unique<std::mutex>();
+    };
+
+    std::mutex mFallbackMutex;
+    AVector<FallbackFace> mFallbackFaces;
+    AVector<FallbackCandidate> mDeferredCandidates;
+    bool mFallbackAttempted = false;
+
+    /**
+     * True once std::thread creation for the fallback worker failed: no
+     * worker can ever run discovery, and discovery must not run on the
+     * calling (UI) thread, so lockFallbackFace reports a miss instead.
+     * Written under mFallbackMutex (startFallbackWorker) and read under
+     * mFallbackMutex (lockFallbackFace).
+     */
+    bool mFallbackWorkerUnavailable = false;
+
+    /**
+     * Set under mFallbackMutex by ~AFontManager. Blocks any further worker
+     * start so no thread can outlive the manager.
+     */
+    bool mFallbackShuttingDown = false;
+
+    /**
+     * True while a fallback worker run (discovery or a deferred candidate
+     * load) is in flight on mFallbackThread. While set, lockFallbackFace
+     * waits on mFallbackCv until the run completes, so the freshly loaded
+     * faces are probed instead of rendering a provisional tofu glyph.
+     */
+    std::atomic<bool> mFallbackPending = false;
+
+    /**
+     * Number of worker runs that have started but not yet finished their
+     * final bookkeeping (clearing mFallbackPending, notifying waiters).
+     * Guarded by mFallbackMutex: incremented in startFallbackWorker before
+     * launching the thread, decremented by the worker as its last action.
+     * ~AFontManager waits until this reaches zero so no worker can touch
+     * manager members after they are destroyed.
+     */
+    unsigned mFallbackRunsInFlight = 0;
+
+    std::thread mFallbackThread;
+    /**
+     * Notified when a worker run finishes (pending clears): wakes
+     * lockFallbackFace callers blocked on an in-flight discovery.
+     */
+    std::condition_variable mFallbackCv;
+
+    /**
+     * Incremented (release) whenever a new fallback face is loaded into
+     * mFallbackFaces or the deferred candidate pool changes (see
+     * loadOneFallbackLocked and lockFallbackFace). AFont records this value
+     * on each cached glyph and re-renders a failed/provisional glyph only
+     * when the counter has advanced, so a pool change triggers at most one
+     * re-render per glyph instead of a re-render on every lookup.
+     */
+    std::atomic<uint64_t> mFallbackGeneration{0};
+
+    /**
+     * @brief Loads a single fallback face from the given candidate.
+     * @note The caller must hold mFallbackMutex: this function mutates
+     *       mFallbackFaces and bumps mFallbackGeneration on success. The
+     *       candidate is taken by value so the embedded font buffer (if
+     *       any) can be moved into the face instead of copied.
+     * @return true if the face was loaded successfully.
+     */
+    bool loadOneFallbackLocked(FallbackCandidate candidate);
+
+    /**
+     * @brief Returns the platform's CJK fallback candidates, best first.
+     *        Implemented per platform in
+     *        AUI/Platform/<platform>/AFontManagerImpl.cpp. May log the
+     *        reason and return an empty list when no candidates are available.
+     *        Does not access instance state; callable from any thread.
+     */
+    static AVector<FallbackCandidate> fallbackCandidates();
+
+    void ensureFallbackFaceLocked();
+    void fallbackDiscoveryWorker();
+    /**
+     * @brief Starts one fallback worker run (discovery on first call, then
+     *        one deferred candidate load per subsequent call). The caller
+     *        must hold mFallbackMutex. No-op while a run is in flight.
+     */
+    void startFallbackWorker();
+    /**
+     * @brief Starts fallback discovery on a worker thread (once), so the
+     *        fontconfig/filesystem probe and the eager first-face load never
+     *        stall the calling (UI) thread.
+     */
+    void initFallback();
+
+    /**
+     * Bundles a fallback face with the library and per-face mutex locks held
+     * through the caller's FT operations on the returned face. The manager
+     * mutex is NOT part of this lock: lockFallbackFace releases it before
+     * returning, once face selection has finished.
+     */
+    struct FallbackFaceLock {
+        FT_FaceRec_* face = nullptr;
+        std::unique_lock<std::mutex> ftLock;    // FreeType::sFaceMutex (held through FT ops)
+        std::unique_lock<std::mutex> faceLock;  // per-face mutex (held through FT ops)
+
+        explicit operator bool() const noexcept { return face != nullptr; }
+    };
+
+    /**
+     * Ensures fallback faces are loaded (once) and returns the first face
+     * that contains the given codepoint. The manager mutex is released before
+     * the function returns; the returned FallbackFaceLock carries the shared
+     * FreeType library lock (sFaceMutex) and a per-face mutex, the latter two
+     * held through the FT operations on the returned face.
+     *
+     * @note Discovery runs on a worker thread (initFallback). Calls made
+     *       before discovery completes return no face immediately; once it
+     *       completes, calls serialize on mFallbackMutex and may kick the
+     *       worker to load a deferred candidate in the background (never on
+     *       the calling thread). If no worker could be started at all
+     *       (thread creation failed), every call returns no face.
+     */
+    [[nodiscard]]
+    FallbackFaceLock lockFallbackFace(char32_t codepoint);
+
+    /**
+     * @return The fallback-discovery generation: incremented whenever a new
+     *         fallback face becomes available. AFont re-renders a cached
+     *         failed/provisional glyph only when this value differs from the
+     *         generation recorded on the glyph (see AFont::Character::
+     *         fallbackGeneration), so re-renders happen at most once per face
+     *         load rather than on every lookup.
+     */
+    uint64_t fallbackGeneration() const {
+        return mFallbackGeneration.load(std::memory_order_acquire);
+    }
 
 	AString getPathToFont(const AString& family);
 
