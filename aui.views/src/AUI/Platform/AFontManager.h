@@ -17,6 +17,7 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/Common/AByteBuffer.h>
 #include <atomic>
+#include <condition_variable>
 #include <cstddef>
 #include <cstdint>
 #include <memory>
@@ -104,10 +105,16 @@ private:
     /**
      * True while a fallback worker run (discovery or a deferred candidate
      * load) is in flight on mFallbackThread. While set, lockFallbackFace
-     * returns no face immediately (rather than blocking the caller).
+     * waits on mFallbackCv until the run completes, so the freshly loaded
+     * faces are probed instead of rendering a provisional tofu glyph.
      */
     std::atomic<bool> mFallbackPending = false;
     std::thread mFallbackThread;
+    /**
+     * Notified when a worker run finishes (pending clears): wakes
+     * lockFallbackFace callers blocked on an in-flight discovery.
+     */
+    std::condition_variable mFallbackCv;
 
     /**
      * Incremented (release) whenever a new fallback face is loaded into

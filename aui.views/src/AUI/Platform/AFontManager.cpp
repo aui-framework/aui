@@ -75,6 +75,7 @@ void AFontManager::startFallbackWorker() {
     } catch (const std::system_error& e) {
         // Fallback discovery is best-effort; never fail font manager construction.
         mFallbackPending.store(false, std::memory_order_release);
+        mFallbackCv.notify_all();
         // No worker can ever run discovery now; lockFallbackFace must report
         // a miss instead of running it inline on the calling thread.
         mFallbackWorkerUnavailable = true;
@@ -116,6 +117,9 @@ void AFontManager::fallbackDiscoveryWorker() {
     // Release-store: the mutex-protected discovery result (loaded faces,
     // deferred candidates) is visible to any thread that observes the clear.
     mFallbackPending.store(false, std::memory_order_release);
+    // Wake lockFallbackFace waiters: the run is over, loaded faces can be
+    // probed and the missed glyph rendered instead of staying tofu.
+    mFallbackCv.notify_all();
 }
 
 bool AFontManager::loadOneFallbackLocked(const FallbackCandidate& candidate) {
@@ -220,20 +224,17 @@ void AFontManager::ensureFallbackFaceLocked() {
 }
 
 AFontManager::FallbackFaceLock AFontManager::lockFallbackFace(char32_t codepoint) {
-    // Discovery is still running on the worker thread: no face is ready yet,
-    // so report a miss immediately rather than blocking the caller. AFont
-    // re-renders provisional/failed glyphs once the fallback generation
-    // advances, so these codepoints are retried when discovery completes.
-    if (mFallbackPending.load(std::memory_order_acquire)) {
-        return { nullptr };
-    }
+    std::unique_lock lk(mFallbackMutex);
 
-    std::unique_lock lk(mFallbackMutex, std::try_to_lock);
-    if (!lk.owns_lock()) {
-        // A worker run holds the mutex and may be doing file IO. Report a
-        // miss; the generation bump retries this glyph once the run ends.
-        return { nullptr };
-    }
+    // If discovery is in flight, wait for it to finish before probing. The
+    // worker does the font-file IO, so this wait never runs IO on the calling
+    // (UI) thread. Returning a miss here instead would render a provisional
+    // .notdef (tofu) glyph and cache it; the generation-gate retry only
+    // re-renders on a later getCharacter call, and a static (never
+    // repainting) surface would show tofu forever. The wait is bounded by
+    // the in-flight run: once initial discovery completes, pending is false
+    // and later lookups proceed without waiting.
+    mFallbackCv.wait(lk, [&] { return !mFallbackPending.load(std::memory_order_acquire); });
     if (mFallbackWorkerUnavailable) {
         // Discovery can never run off-thread (worker thread creation failed)
         // and must not run on the calling (UI) thread: report a miss. The
