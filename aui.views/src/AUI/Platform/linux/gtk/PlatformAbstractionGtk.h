@@ -61,6 +61,7 @@ public:
     void windowQuit(AWindow &window) override;
     void windowAnnounceMinMaxSize(AWindow &window) override;
     void windowManagerInitNativeWindow(const IRenderingContext::Init &init) override;
+    void setTaskbarProgress(AWindow& window, aui::float_within_0_1 p) override;
     float windowGetDpiRatio(AWindow &window) override;
     AMessageBox::ResultButton messageBoxShow(
         AWindow *parent, const AString &title, const AString &message, AMessageBox::Icon icon,

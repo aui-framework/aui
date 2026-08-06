@@ -46,6 +46,8 @@ public:
         Atom netWmSyncRequestCounter;
         Atom netWmIcon;
         Atom cardinal;
+        Atom progressAtom;
+        Atom progressPulseAtom;
     } ourAtoms;
 
     ~PlatformAbstractionX11() override = default;
@@ -66,6 +68,7 @@ public:
     // PLATFORM/DESKTOP
     glm::ivec2 desktopGetMousePosition() override;
     void desktopSetMousePosition(glm::ivec2 pos) override;
+    void setTaskbarProgress(AWindow& window, aui::float_within_0_1 p) override;
 
 
     // WINDOW

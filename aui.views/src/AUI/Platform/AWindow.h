@@ -206,6 +206,16 @@ public:
     }
 
     /**
+     * @brief Sets the progress indicator on the taskbar/dock.
+     * @param p progress value from 0.0 (no progress) to 1.0 (complete). 0.0 hides the indicator.
+     * @details
+     * On Windows, displays progress on the taskbar button.
+     * On macOS, displays progress on the dock icon.
+     * On Linux, works on desktop environments like GNOME/Cinnamon. (Unfortunately, it doesn’t work on KDE Plasma.)
+     */
+    void setTaskbarProgress(aui::float_within_0_1 p);
+
+    /**
      * @brief Wraps your AView to window.
      * @param view view to wrap
      * @param title window title
