@@ -13,6 +13,8 @@
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AView.h"
 #include "AUI/Render/IRenderer.h"
+#include <AUI/Render/APaint.hpp>
+#include <AUI/Render/ACanvas.hpp>
 #include <utility>
 
 #include "AUI/Platform/AWindow.h"
@@ -40,7 +42,7 @@ bool isDefinitelyInvisible(AView& view) {
 }
 }
 
-void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOfTheContainer) {
+void AViewContainerBase::drawView(const _<AView>& view, ARenderContext ctx) {
     if (aui::view::impl::isDefinitelyInvisible(*view)) [[unlikely]] {
         return;
     }
@@ -49,66 +51,23 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext contextOf
         return;
     }
 
-    auto contextOfTheView = contextOfTheContainer.withShiftedPosition(-view->getPosition());
-    ARect<int> rectOfTheView{ .p1 = {0, 0}, .p2 = view->getSize() };
-    if (!ranges::any_of(contextOfTheView.clippingRects, [&](const auto& r) {
-      return rectOfTheView.isIntersects(r);
-    })) {
+    if (!ctx.clipRect.isIntersects(ARect<float>::fromTopLeftPositionAndSize(view->getPosition() - 8, view->getSize() + 16))) {
         return;
     }
 
-    const auto prevStencilLevel = contextOfTheView.render.getStencilDepth();
+    auto saved = ctx.canvas.save();
 
-    const bool showRedraw = [&] {
-      if (view->mRedrawRequested) [[unlikely]] {
-          if (auto w = AWindow::current()) [[unlikely]] {
-              if (auto& p = w->profiling()) {
-                  if (p->highlightRedrawRequests) {
-                      return true;
-                  }
-              }
-          }
-      }
-      return false;
-    }();
-    AUI_DEFER {
-      if (showRedraw) [[unlikely]] {
-          auto c = contextOfTheView.render.getColor();
-          AUI_DEFER { contextOfTheView.render.setColorForced(c); };
-          contextOfTheView.render.rectangle(ASolidBrush{0x40ff00ff_argb}, view->getPosition(), view->getSize());
-      }
-    };
+    auto shiftedContext = ctx.withShiftedPosition(view->getPosition());
 
-    RenderHints::PushState s(contextOfTheView.render);
-    glm::mat4 t(1.f);
-    view->getTransform(t);
-    contextOfTheView.render.setTransform(t);
-    contextOfTheView.render.setColor(AColor(1, 1, 1, view->getOpacity()));
-    if (view->mRenderToTexture) [[unlikely]] { // view was prerendered to texture; see AView::markPixelDataInvalid
-        view->mRenderToTexture->skipRedrawUntilTextureIsPresented = false;
-        // Check invalidArea is not dirty; otherwise we would have to draw the views without render-to-texture
-        // optimizations.
-        // Unfortunately, we can't quickly refresh the texture here because aui's main render buffer is already in use
-        // and contains uncommited data.
-        if (view->mRenderToTexture->drawFromTexture) {
-            view->mRenderToTexture->rendererInterface->draw(contextOfTheContainer.render);
-            return;
-        }
-    }
     try {
-        view->render(contextOfTheView);
-        view->postRender(contextOfTheView);
-    }
-    catch (const AException& e) {
+        view->render(shiftedContext);
+        view->postRender(shiftedContext);
+    } catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Unable to render view: " << e;
-        contextOfTheView.render.setStencilDepth(prevStencilLevel);
         return;
     }
 
-    {
-        auto currentStencilLevel = contextOfTheView.render.getStencilDepth();
-        AUI_ASSERT(currentStencilLevel == prevStencilLevel);
-    }
+    ctx.canvas.restore(saved);
 }
 
 
@@ -277,6 +236,9 @@ void AViewContainerBase::removeView(size_t index) {
 }
 
 void AViewContainerBase::render(ARenderContext context) {
+    if (mOverflow == AOverflow::HIDDEN || mOverflow == AOverflow::HIDDEN_FROM_THIS) {
+        //context.clipRect = context.clipRect.intersect(ARect<float>::fromTopLeftPositionAndSize({0, 0}, getSize()));
+    }
     AView::render(context);
     renderChildren(context);
 }
@@ -527,17 +489,8 @@ void AViewContainerBase::applyGeometryToChildrenIfNecessary() {
     }
     mWantsLayoutUpdate = false;
     mLastLayoutUpdateSize = getSize();
-    AUI_ASSERT(!mRepaintTrap.hasValue());
-    mRepaintTrap.emplace();
-    AUI_DEFER {
-      mRepaintTrap.reset();
-    };
     applyGeometryToChildren();
-    if (mRepaintTrap->triggered) {
-        // if the trap is triggered during resize, it means at least one view has changed its position or size hence
-        // we would like to repaint whole container
-        redraw();
-    }
+    redraw();
     mConsumesClickCache.reset();
 }
 
@@ -716,9 +669,5 @@ void AViewContainerBase::forceUpdateLayoutRecursively() {
 }
 
 void AViewContainerBase::markPixelDataInvalid(ARect<int> invalidArea) {
-    if (mRepaintTrap) {
-        mRepaintTrap->triggered = true;
-        return;
-    }
     AView::markPixelDataInvalid(invalidArea);
 }

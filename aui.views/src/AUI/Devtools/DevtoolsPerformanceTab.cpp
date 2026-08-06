@@ -37,6 +37,8 @@
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Render/ABrush.h"
+#include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/IRendererBackend.h>
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Render/ITexture.h"
 #include "AUI/Traits/values.h"
@@ -67,10 +69,10 @@ namespace {
         void render(ARenderContext ctx) override {
             AView::render(ctx);
             if (mTexture == nullptr) {
-                mTexture = ctx.render.getNewTexture();
+                mTexture = ctx.backend.createTexture(mImage.size(), mImage.format());
             }
 
-            ctx.render.rectangle(ATexturedBrush {
+            ctx.canvas.rectangle(ATexturedBrush {
                 .texture = mTexture,
                 .imageRendering = ImageRendering::PIXELATED,
             }, {0, 0}, mImage.size() * plotScale());
@@ -80,11 +82,11 @@ namespace {
             }
 
             if (mHoveredFrameIndex && !mSelectedFrameIndex) {
-                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.canvas.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
 
             if (mSelectedFrameIndex) {
-                ctx.render.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.canvas.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
         }
 
@@ -148,7 +150,7 @@ namespace {
             mImage.setWithPositionCheck(glm::uvec2{mFrameIndex, mImage.size().y - timeToY(6'250us) - 1}, AFormattedColorConverter(AColor::RED)); // 160 fps
 
             // nullsafe lol?
-            AUI_NULLSAFE(mTexture)->setImage(mImage);
+            AUI_NULLSAFE(mTexture)->upload(mImage);
             mFrameIndex++;
             mFrameIndex %= mImage.size().x;
             redraw();
@@ -207,7 +209,7 @@ namespace {
         };
         using SectionStatMap = AMap<AString /* section name */, SectionStat>;
 
-        AFormattedImage<APixelFormat::RGBA_BYTE> mImage;
+        AFormattedImage<APixelFormat::R8G8B8A8_UNORM> mImage;
         _<ITexture> mTexture;
         unsigned mFrameIndex = 0;
 

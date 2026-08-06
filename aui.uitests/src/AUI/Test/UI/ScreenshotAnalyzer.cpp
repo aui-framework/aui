@@ -15,8 +15,9 @@
 
 #include "ScreenshotAnalyzer.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Util/AStubWindowManager.h"
 
 ScreenshotAnalyzer ScreenshotAnalyzer::makeScreenshot() {
-    return AWindow::current()->getRenderingContext()->makeScreenshot();
+    return dynamic_cast<AStubWindowManager&>(ASurface::getWindowManager()).makeScreenshot(*dynamic_cast<AWindow*>(AWindow::current()));
 }
 

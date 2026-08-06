@@ -48,6 +48,7 @@
 #include "AUI/Traits/values.h"
 #include "AUI/Util/ALayoutInflater.h"
 #include "AUI/Render/ARenderContext.h"
+#include <AUI/Render/ACanvas.hpp>
 #include "AUI/View/ASpacerFixed.h"
 #include "AUI/View/ASplitter.h"
 #include "AUI/View/ATabView.h"
@@ -78,7 +79,7 @@ public:
         AViewContainerBase::render(ctx);
         auto view = mView.lock();
         if (!view) {
-            ctx.render.string({0, 10}, "Expired");
+            ctx.canvas.string(APaint{}, {0, 10}, "Expired");
             return;
         }
 

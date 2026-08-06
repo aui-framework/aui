@@ -13,6 +13,7 @@
 
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Platform/Entry.h>
+#include <AUI/Render/ACanvas.hpp>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/AScrollArea.h>
@@ -31,7 +32,7 @@ constexpr CellState operator!(CellState s) {
     return s == CellState::ALIVE ? CellState::DEAD : CellState::ALIVE;
 }
 
-using CellsImage = AFormattedImage<APixelFormat::RGBA_BYTE>;
+using CellsImage = AFormattedImage<APixelFormat::R8G8B8A8_UNORM>;
 
 class Cells : public AObject {
 public:
@@ -128,7 +129,7 @@ public:
     void render(ARenderContext ctx) override {
         AView::render(ctx);
         if (mTexture) {
-            ctx.render.rectangle(ATexturedBrush { mTexture }, { 0, 0 }, float(SCALE) * glm::vec2(mCells->size()));
+            ctx.canvas.rectangle({ATexturedBrush { mTexture }}, { 0, 0 }, float(SCALE) * glm::vec2(mCells->size()));
         }
         auto drawGrid = [&] {
             ASmallVector<std::pair<glm::vec2, glm::vec2>, 128 * 2> points;
@@ -138,7 +139,7 @@ public:
             for (int i = 1; i < mCells->size().y; ++i) {
                 points << std::make_pair(glm::vec2(0.f, i * SCALE), glm::vec2(getSize().x, i * SCALE));
             }
-            ctx.render.lines(ASolidBrush { AColor::GRAY }, points);
+            ctx.canvas.lines(APaint{ASolidBrush{AColor::GRAY}}, points);
         };
         drawGrid();
     }
@@ -160,7 +161,8 @@ private:
 
     void updateTexture() {
         if (!mTexture) {
-            mTexture = AWindow::current()->getRenderingContext()->renderer().getNewTexture();
+            auto& backend = AWindow::current()->getRenderingContext()->backend();
+            mTexture = backend.createTexture(mCells->size(), APixelFormat::R8G8B8A8_UNORM);
         }
 
         CellsImage image(mCells->size());
@@ -174,7 +176,7 @@ private:
                             : AColor::TRANSPARENT_BLACK));
             }
         }
-        mTexture->setImage(image);
+        mTexture->upload(image);
         redraw();
     }
 }; /// end

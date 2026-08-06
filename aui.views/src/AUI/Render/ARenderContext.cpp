@@ -11,11 +11,14 @@
 
 #include "ARenderContext.h"
 
-void ARenderContext::clip(ARect<int> clipping) {
-    for (auto& r : clippingRects) {
-        r.p1 = glm::max(r.min(), clipping.min());
-        r.p2 = glm::min(r.max(), clipping.max());
-    }
+#include <AUI/Render/ACanvas.hpp>
 
-    clippingRects.removeIf([](auto r) { return r.area() == 0; });
+ARenderContext ARenderContext::withShiftedPosition(const glm::vec2& position) const {
+    canvas.translate(position);
+    return {
+        .canvas = canvas,
+        .backend = backend,
+        .render = render,
+        .clipRect = { clipRect.p1 - position, clipRect.p2 - position },
+    };
 }

@@ -14,13 +14,16 @@
 //
 
 #include "FractalView.h"
-#include "AUI/Render/IRenderer.h"
+#include "AUI/Render/ACanvas.hpp"
 #include <glm/gtc/matrix_transform.hpp>
+#include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
 
 static gl::Program::Uniform UNIFORM_TR("tr");
 static gl::Program::Uniform UNIFORM_SQ("sq");
 static gl::Program::Uniform UNIFORM_RATIO("ratio");
 static gl::Program::Uniform UNIFORM_ITERATIONS("iterations");
+static gl::Program::Uniform UNIFORM_TRANSFORM("SL_uniform_transform");
+static gl::Program::Uniform UNIFORM_TEX("tex");
 
 FractalView::FractalView() : mTransform(1.f) {
     setExpanding();
@@ -44,11 +47,8 @@ void main() {
 
 in vec2 pass_uv;
 
-#define product(a, b) vec2(a.x*b.x-a.y*b.y, a.x*b.y+a.y*b.x)
-#define conjugate(a) vec2(a.x,-a.y)
-#define divide(a, b) vec2(((a.x*b.x+a.y*b.y)/(b.x*b.x+b.y*b.y)),((a.y*b.x-a.x*b.y)/(b.x*b.x+b.y*b.y)))
+#define product(a) vec2(a.x*a.x-a.y*a.y, 2.0*a.x*a.y)
 
-uniform float c;
 uniform int iterations;
 uniform mat4 tr;
 uniform sampler2D tex;
@@ -60,9 +60,8 @@ void main() {
     vec2 v = vec2(0, 0);
     int i = 0;
     for (; i < iterations; ++i) {
-        v = product(v, v) + tmp_pass_uv;
-        vec2 tmp = v * v;
-        if ((v.x + v.y) > 4) {
+        v = product(v) + tmp_pass_uv;
+        if (dot(v, v) > 4.0) {
             break;
         }
     }
@@ -76,30 +75,65 @@ void main() {
 )", { "pos", "uv" }, gl::GLSLOptions { .custom = true });
     mShader.compile();
     mShader.use();
-    mShader.set(UNIFORM_TR, mTransform);
-    mShader.set(UNIFORM_SQ, 1.f);
+    mShader.set(UNIFORM_TEX, 0);
 
     mTexture = _new<gl::Texture2D>();
     mTexture->tex2D(*AImage::fromUrl(":img/color_scheme_wikipedia.png"));
+    mTexture->setupLinear();
+    mTexture->setupClampToEdge();
 }
 
 void FractalView::render(ARenderContext context) {
     AView::render(context);
 
-    mShader.use();
-    mTexture->bind();
-    context.render.rectangle(ACustomShaderBrush {}, { 0, 0 }, getSize());
+    if (getSize().x <= 0 || getSize().y <= 0) return;
+
+    if (mFboTexture.getSize() != glm::u32vec2(getSize())) {
+        mFboTexture.tex2D(getSize(), APixelFormat::R8G8B8A8_UNORM);
+        mFbo.bind();
+        glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, mFboTexture.getHandle(), 0);
+
+        if (auto backend = dynamic_cast<OpenGLBackend*>(&context.backend)) {
+            mWrappedFboTexture = backend->createFramebufferWrapper(mFboTexture.getHandle(), getSize());
+            mWrappedFboTexture->setOrigin(TextureOrigin::BOTTOM_LEFT);
+        }
+    }
+
+    if (mWrappedFboTexture) {
+        mFbo.bind();
+        glViewport(0, 0, getSize().x, getSize().y);
+        mShader.use();
+        mShader.set(UNIFORM_TR, mTransform);
+        mShader.set(UNIFORM_RATIO, mAspectRatio);
+        mShader.set(UNIFORM_ITERATIONS, (int)mIterations);
+        mShader.set(UNIFORM_TRANSFORM, glm::mat4(1.f));
+        mTexture->bind(0);
+
+        static constexpr glm::vec2 pos[] = {
+            {-1, -1}, { 1, -1}, {-1,  1}, { 1,  1}
+        };
+        static constexpr glm::vec2 uv[] = {
+            {0, 0}, {1, 0}, {0, 1}, {1, 1}
+        };
+        mQuadVao.insert(0, AArrayView<glm::vec2>(pos, 4), "pos");
+        mQuadVao.insert(1, AArrayView<glm::vec2>(uv, 4), "uv");
+        mQuadVao.bind();
+        mQuadVao.drawArrays(GL_TRIANGLE_STRIP, 4);
+
+        gl::Framebuffer::unbind();
+
+        context.canvas.rectangle(APaint { ATexturedBrush { mWrappedFboTexture } }, { 0, 0 }, getSize());
+    }
 }
 
 void FractalView::setSize(glm::ivec2 size) {
     AView::setSize(size);
-    mShader.use();
-    mShader.set(UNIFORM_RATIO, mAspectRatio = float(size.x) / float(size.y));
+    mAspectRatio = float(size.x) / float(size.y);
 }
 
 void FractalView::setIterations(unsigned it) {
-    mShader.use();
-    mShader.set(UNIFORM_ITERATIONS, int(it));
+    mIterations = it;
+    redraw();
 }
 
 void FractalView::onScroll(const AScrollEvent& event) {
@@ -122,8 +156,6 @@ void FractalView::reset() {
 }
 
 void FractalView::handleMatrixUpdated() {
-    mShader.use();
-    mShader.set(UNIFORM_TR, mTransform);
     emit centerPosChanged(getPlotPosition(), getPlotScale());
 }
 

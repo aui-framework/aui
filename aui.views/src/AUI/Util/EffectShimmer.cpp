@@ -24,7 +24,7 @@ void EffectShimmer::draw(AView* view) {
     const auto transparent = AColor(glm::vec4(glm::vec3(mColor), 0.f));
 
     /*
-    ctx.render.rect(ALinearGradientBrush {
+    ctx.canvas.rect(ALinearGradientBrush {
         transparent,
         mColor,
         transparent,
@@ -32,7 +32,7 @@ void EffectShimmer::draw(AView* view) {
     }, {(t * 4 - 2) * view->getSize().x, 0}, view->getSize());
 
 
-    ctx.render.rect(ALinearGradientBrush {
+    ctx.canvas.rect(ALinearGradientBrush {
         mColor,
         transparent,
         mColor,

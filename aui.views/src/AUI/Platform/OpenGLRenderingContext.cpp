@@ -10,76 +10,61 @@
  */
 
 #include "OpenGLRenderingContext.h"
-#include "AUI/GL/RenderTarget/RenderbufferRenderTarget.h"
+#include <AUI/Render/ARender/GL/gl.h>
 
 static constexpr auto LOG_TAG = "OpenGLRenderingContext";
 
-void OpenGLRenderingContext::tryEnableFramebuffer(glm::uvec2 windowSize) {
-    try {
-        mFramebuffer.emplace<gl::Framebuffer>(newOffscreenRenderingFramebuffer(windowSize));
-    } catch (const AException& e) {
-        ALogger::err(LOG_TAG) << "Unable to initialize multisample framebuffer: " << e;
-        mFramebuffer = Failed{};
-    }
-}
+OpenGLRenderingContext::OpenGLRenderingContext(const ARenderingContextOptions::OpenGL& config) : mConfig(config) {}
 
-gl::Framebuffer OpenGLRenderingContext::newOffscreenRenderingFramebuffer(glm::uvec2 initialSize) {
-    gl::Framebuffer framebuffer;
-    framebuffer.setSupersamplingRatio(2);
-    framebuffer.resize(initialSize);
-    auto albedo = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::RGBA8, gl::Multisampling::DISABLED>>();
-    framebuffer.attach(albedo, GL_COLOR_ATTACHMENT0);
-    auto depth = _new<gl::RenderbufferRenderTarget<gl::InternalFormat::DEPTH24_STENCIL8, gl::Multisampling::DISABLED>>();
-    framebuffer.attach(depth, GL_DEPTH_STENCIL_ATTACHMENT /* 0x84F9*/ /* GL_DEPTH_STENCIL */);
-    return framebuffer;
+#if !defined(_WIN32)
+void OpenGLRenderingContext::bindContext() {
+
 }
+#endif
 
 void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
-    if (std::get_if<NotTried>(&mFramebuffer)) {
-        tryEnableFramebuffer(windowSize);
+    mViewportSize = windowSize;
+    if (!mBackbufferTarget || mBackbufferTarget->getSize() != mViewportSize) {
+        mBackbufferTarget = mRenderer->createFramebufferWrapper(gl::Framebuffer::DEFAULT_FB, mViewportSize);
     }
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        if (fb->size() != windowSize) {
-            fb->resize(windowSize);
-        }
-        fb->bind();
-        mViewportSize = fb->supersampledSize();
-    } else {
-        mViewportSize = windowSize;
+    if (!mWindowTarget || mWindowTarget->getSize() != mViewportSize) {
+        mWindowTarget = mRenderer->createTexture(mViewportSize, APixelFormat::R8G8B8A8_UNORM, TextureFilter::LINEAR);
+        mWindowTarget->setOrigin(mFlipY ? TextureOrigin::BOTTOM_LEFT : TextureOrigin::TOP_LEFT);
     }
-    bindViewport();
-}
-
-void OpenGLRenderingContext::endFramebuffer() {
-#if !AUI_PLATFORM_EMSCRIPTEN
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        fb->bindForRead();
-        glBindFramebuffer(GL_DRAW_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
-        glBlitFramebuffer(0, 0,                       // src pos
-                          fb->supersampledSize().x, fb->supersampledSize().y, // src size
-                          0, 0,                       // dst pos
-                          fb->size().x, fb->size().y, // dst size
-                          GL_COLOR_BUFFER_BIT,        // mask
-                          GL_LINEAR);                // filter
-        gl::Framebuffer::unbind();
-    }
-#endif
-}
-
-void OpenGLRenderingContext::bindViewport() {
-    glViewport(0, 0, mViewportSize.x, mViewportSize.y);
 }
 
 uint32_t OpenGLRenderingContext::getDefaultFb() const noexcept {
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        return fb->getHandle();
-    }
-    return 0;
+    return gl::Framebuffer::DEFAULT_FB;
 }
 
-uint32_t OpenGLRenderingContext::getSupersamplingRatio() const noexcept {
-    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-        return fb->supersamlingRatio();
+AImage OpenGLRenderingContext::makeScreenshot() {
+    bindContext();
+    if (mWindowTarget) {
+        return mRenderer->readback(mWindowTarget);
     }
-    return 1;
+    return {};
+}
+
+void OpenGLRenderingContext::presentToBackbuffer() {
+    if (!mWindowTarget || !mBackbufferTarget) {
+        return;
+    }
+
+    mPresentDisplayList.clear();
+    ADisplayListCanvas canvas(mPresentDisplayList, *mRenderer);
+    canvas.clear(AColor::TRANSPARENT_BLACK);
+    canvas.rectangle(
+        APaint {
+            .brush = ATexturedBrush {
+                .texture = mWindowTarget,
+                .imageRendering = ImageRendering::SMOOTH,
+                .premultiplied = true,
+            },
+            //.blending = Blending::CLEAR,
+        },
+        {0.f, 0.f},
+        glm::vec2(mViewportSize));
+    mPresentDisplayList.optimize();
+    mPresentDisplayList.draw(*mRenderer, mBackbufferTarget);
+    mPresentDisplayList.clear();
 }

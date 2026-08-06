@@ -11,6 +11,7 @@
 
 #include "DemoGraphView.h"
 #include <AUI/ASS/ASS.h>
+#include <AUI/Render/ACanvas.hpp>
 
 constexpr auto POINT_COUNT = 100.f;
 
@@ -29,6 +30,6 @@ DemoGraphView::DemoGraphView()
 void DemoGraphView::render(ARenderContext ctx) {
     AView::render(ctx);
 
-    ctx.render.lines(ASolidBrush{0xff0000_rgb }, mPoints, ABorderStyle::Dashed{}, 4_dp);
+    ctx.canvas.lines({ASolidBrush{0xff0000_rgb }}, mPoints, ABorderStyle::Dashed{}, 4_dp);
 
 }

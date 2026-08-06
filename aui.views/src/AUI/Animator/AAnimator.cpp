@@ -9,14 +9,11 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2772 on 8/20/20.
-//
-
 #include <AUI/Platform/AWindow.h>
 #include "AAnimator.h"
+#include <AUI/Render/ACanvas.hpp>
 
-void AAnimator::animate(AView* view, IRenderer& render) {
+void AAnimator::animate(AView* view, ACanvas& render) {
     if (mIsPlaying) {
         AWindow::current()->flagRedraw();
         auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -39,7 +36,7 @@ void AAnimator::animate(AView* view, IRenderer& render) {
     doAnimation(view, mCurve(mCurrentTheta), render);
 }
 
-void AAnimator::postRender(AView* view, IRenderer& render) {
+void AAnimator::postRender(AView* view, ACanvas& render) {
     doPostRender(view, mCurrentTheta, render);
 }
 
@@ -48,22 +45,22 @@ void AAnimator::pause() {
     mIsPlaying = false;
 }
 
-void AAnimator::translateToCenter(IRenderer& render) {
+void AAnimator::translateToCenter(ACanvas& render) {
     translateToCenter(mView, render);
 }
 
-void AAnimator::translateToCorner(IRenderer& render) {
+void AAnimator::translateToCorner(ACanvas& render) {
     translateToCorner(mView, render);
 }
 
-void AAnimator::translateToCenter(AView* view, IRenderer& render) {
+void AAnimator::translateToCenter(AView* view, ACanvas& render) {
     render.setTransform(
             glm::translate(glm::mat4(1.f),
                            glm::vec3(glm::vec2(view->getSize().x,
                                                view->getSize().y + view->getTotalFieldVertical() - 1) / 2.f, 0.f)));
 }
 
-void AAnimator::translateToCorner(AView* view, IRenderer& render) {
+void AAnimator::translateToCorner(AView* view, ACanvas& render) {
     render.setTransform(
             glm::translate(glm::mat4(1.f),
                            glm::vec3(-glm::vec2(view->getSize().x,
@@ -79,13 +76,13 @@ _<AAnimator> AAnimator::combine(const AVector<_<AAnimator>>& animators) {
         ACombiningAnimator(const AVector<_<AAnimator>>& animator) : mAnimator(animator) {}
 
     protected:
-        void doAnimation(AView* view, float theta, IRenderer& render) override {
+        void doAnimation(AView* view, float theta, ACanvas& render) override {
             for (auto& animator : mAnimator) {
                 animator->animate(view, render);
             }
         }
 
-        void doPostRender(AView* view, float theta, IRenderer& render) override {
+        void doPostRender(AView* view, float theta, ACanvas& render) override {
             for (auto& animator : mAnimator) {
                 animator->doPostRender(view, theta, render);
             }

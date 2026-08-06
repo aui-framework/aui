@@ -9,19 +9,20 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 6/6/2021.
-//
-
 #include "AEmbedContext.h"
 
 #include <glm/fwd.hpp>
 #include <glm/ext/matrix_clip_space.hpp>
-#include <AUI/GL/State.h>
+#include <AUI/Render/ARender/GL/State.h>
 #include <AUI/Platform/ASurface.h>
 #include <AUI/Platform/AWindow.h>
-#include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
 #include <AUI/Util/ALayoutInflater.h>
+#include <AUI/Render/ARender/ADrawList.hpp>
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
+#include <AUI/Platform/IRenderingContext.h>
+#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/RendererCanvas.h>
 
 class AEmbedContext::EmbedWindow: public ASurface {
     friend class AEmbedContext;
@@ -117,16 +118,21 @@ void AEmbedContext::windowMakeCurrent() {
 
 void AEmbedContext::windowRender() {
     AThread::processMessages();
-    auto& render = mContainer->getRenderingContext()->renderer();
-    render.setWindow(mContainer.get());
+    auto renderingContext = mContainer->getRenderingContext().get();
+    if (!renderingContext) return;
+    auto& render = renderingContext->renderer();
+    auto& backend = renderingContext->backend();
+    auto& canvas = renderingContext->canvas();
     if (mContainer->mRequiresLayoutUpdate) {
         mContainer->mRequiresLayoutUpdate = false;
         mContainer->applyGeometryToChildrenIfNecessary();
     }
-    AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
+    renderingContext->beginPaint(*mContainer);
+    AUI_DEFER {
+        renderingContext->endPaint(*mContainer);
+    };
     mContainer->mRequiresRedraw = false;
-    mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .render = render });
-    AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
+    mContainer->render({.canvas = canvas, .backend = backend, .render = render});
 }
 
 void AEmbedContext::setContainer(const _<AViewContainer>& container) {

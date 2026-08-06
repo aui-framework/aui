@@ -30,6 +30,8 @@ namespace testing {
     class UITest;
 }
 
+struct ARenderContext;
+
 class API_AUI_VIEWS ASurface: public AViewContainer {
     friend class SoftwareRenderer;
     friend class IPlatformAbstraction;
@@ -37,7 +39,7 @@ class API_AUI_VIEWS ASurface: public AViewContainer {
     friend struct IRenderingContext::Init;
 
 public:
-    using BeforeFrameQueue = AMessageQueue<AFakeMutex, IRenderer&>;
+    using BeforeFrameQueue = AMessageQueue<AFakeMutex, ARenderContext>;
 
     ASurface();
 
@@ -452,11 +454,21 @@ protected:
 
     void markPixelDataInvalid(ARect<int> invalidArea) override;
 
+    [[nodiscard]]
+    const AOptional<ARect<int>>& getInvalidArea() const noexcept {
+        return mInvalidArea;
+    }
+
+    void resetInvalidArea() {
+        mInvalidArea.reset();
+    }
+
 private:
     void processTouchscreenKeyboardRequest();
 
     _weak<AView> mFocusedView;
     aui::lazy<Profiling> mProfiling = [] { return Profiling{}; };
+    AOptional<ARect<int>> mInvalidArea;
     float mDpiRatio = 1.f;
     ScalingParams mScalingParams;
 

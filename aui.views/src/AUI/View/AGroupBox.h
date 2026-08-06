@@ -35,6 +35,7 @@
  * Title is done by hacking the vertical layout and forcing the frame top side to the center of the title view.
  */
 class API_AUI_VIEWS AGroupBox: public AViewContainerBase {
+    friend class AGroupBoxInner;
 public:
     AGroupBox(_<AView> titleView, _<AView> contentView);
 

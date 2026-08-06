@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -16,20 +16,22 @@
 #include "AUI/Font/AFontFamily.h"
 #include "AUI/Font/AFont.h"
 
+class IRendererBackend;
+namespace aui { class AFontCache; }
+
 class API_AUI_VIEWS AFontManager {
 public:
-	AFontManager();
+    AFontManager();
     AFontManager(const AFontManager&) = delete;
     virtual ~AFontManager();
 
     static AFontManager& inst();
 
-	[[nodiscard]] _<AFontFamily> getDefaultFamily() {
-        return mDefaultFamily;
-    }
-	[[nodiscard]] _<AFont> getDefaultFont() {
-        return mDefaultFont;
-    }
+    [[nodiscard]]
+    _<aui::AFontCache> createCache(IRendererBackend* renderer);
+
+    [[nodiscard]] _<AFontFamily> getDefaultFamily() { return mDefaultFamily; }
+    [[nodiscard]] _<AFont> getDefaultFont() { return mDefaultFont; }
 
     [[nodiscard]]
     _<AFontFamily> getFontFamily(const AString& name) const {
@@ -45,6 +47,7 @@ public:
         }
         return mLoadedFont[url] = loadFont(url);
     }
+
 private:
     AMap<AUrl, _<AFont>> mLoadedFont;
     AMap<AString, _<AFontFamily>> mFamilies;
@@ -52,10 +55,9 @@ private:
     _<AFontFamily> mDefaultFamily;
     _<AFont> mDefaultFont;
 
-	AString getPathToFont(const AString& family);
+    AString getPathToFont(const AString& family);
 
     _<AFont> loadFont(const AUrl& url);
 
-
-	friend class AFont;
+    friend class AFont;
 };

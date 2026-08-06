@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -18,6 +18,8 @@
 
 #include <AUI/Common/AString.h>
 #include <AUI/Render/IRenderer.h>
+#include <AUI/Render/ACanvas.hpp>
+#include <AUI/Render/IRendererBackend.h>
 
 
 inline uint64_t asKey(const glm::ivec2 size) {
@@ -38,19 +40,22 @@ glm::ivec2 AVectorDrawable::getSizeHint() {
     return mFactory->getSizeHint();
 }
 
-void AVectorDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
+void AVectorDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) {
     auto& size = params.size;
     if (size.x < 1 || size.y < 1) {
         return;
     }
     auto key = asKey(size);
     auto doDraw = [&](const _<ITexture>& texture) {
-        render.rectangle(ATexturedBrush{
-                                     .texture = texture,
-                                     .uv1 = params.cropUvTopLeft,
-                                     .uv2 = params.cropUvBottomRight,
-                                     .imageRendering = ImageRendering::PIXELATED,
-                                     .repeat = params.repeat,
+        ctx.canvas.rectangle(APaint{
+                                     .brush = ATexturedBrush{
+                                             .texture = texture,
+                                             .uv1 = params.cropUvTopLeft,
+                                             .uv2 = params.cropUvBottomRight,
+                                             .imageRendering = ImageRendering::PIXELATED,
+                                             .repeat = params.repeat,
+                                     },
+                                     .color = params.color,
                              },
                              params.offset,
                              size);
@@ -74,9 +79,10 @@ void AVectorDrawable::draw(IRenderer& render, const IDrawable::Params& params) {
         textureSize.y = getSizeHint().y;
     }
 
-    // rasterization
-    auto texture = render.getNewTexture();
-    texture->setImage(mFactory->provideImage(glm::max(textureSize, glm::ivec2(0))));
+    auto& backend = ctx.backend;
+    auto img = mFactory->provideImage(glm::max(textureSize, glm::ivec2(0)));
+    auto texture = backend.createTexture(img.size(), img.format(), TextureFilter::NEAREST);
+    texture->upload(img);
     mRasterized.push_back({key, texture});
     doDraw(texture);
 }

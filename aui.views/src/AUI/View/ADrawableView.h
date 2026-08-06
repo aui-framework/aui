@@ -80,10 +80,7 @@ public:
     ~ADrawableView() override = default;
     void render(ARenderContext context) override;
 
-    void setDrawable(const _<IDrawable>& drawable) {
-        mDrawable = drawable;
-        redraw();
-    }
+    void setDrawable(const _<IDrawable>& drawable);
 
     [[nodiscard]]
     const _<IDrawable>& getDrawable() const noexcept {

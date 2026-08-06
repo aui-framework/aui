@@ -34,6 +34,12 @@ public:
 
     bool hasAnimationFinished() override;
 
+    ARect<int> getDirtyRect() override;
+
+    void prepareNextFrame() override;
+
+    uint32_t getCurrentFrameLength() override;
+
 private:
     AByteBuffer mGifData;
     std::chrono::time_point<std::chrono::high_resolution_clock> mLastFrameStarted;
@@ -41,10 +47,15 @@ private:
     size_t mFrameCount;
     size_t mWidth = 0;
     size_t mHeight = 0;
-    uint32_t mCurrentFrameLength;
+    uint32_t mCurrentFrameLength = 0;
     bool mAnimationFinished = false;
+    ARect<int> mDirtyRect;
     nsgif_t* mContext;
     uint8_t* mLastFrameBuffer = nullptr;
+
+    bool mIsPrepared = false;
+    uint32_t mNextFrameDelay;
+    uint32_t mNextFrameIndex;
 
     AImage fetchImage();
 };

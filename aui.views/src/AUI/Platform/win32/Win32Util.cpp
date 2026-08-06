@@ -51,12 +51,12 @@ aui::win32::Bitmap aui::win32::imageRgbToBitmap(AImageView image, BitmapMode mod
     auto hbmpColor = CreateDIBSection(hdcMemColor, &bmi, DIB_RGB_COLORS, &data, nullptr, 0x0);
     auto hbmpOldColor = (HBITMAP)SelectObject(hdcMemColor, hbmpColor);
 
-    if (image.format() == (APixelFormat::BGRA | APixelFormat::BYTE)) {
+    if (image.format() == (APixelFormat::B8G8R8A8_UNORM)) {
         std::memcpy(data, image.buffer().data(), bmi.bmiHeader.biSizeImage);
     } else {
         for (int y = 0; y < image.height(); ++y) {
             for (int x = 0; x < image.width(); ++x) {
-                reinterpret_cast<AFormattedColor<APixelFormat::BGRA | APixelFormat::BYTE>*>(data)[y * image.width() + x] = AFormattedColorConverter(image.get({x, y}));
+                reinterpret_cast<AFormattedColor<APixelFormat::B8G8R8A8_UNORM>*>(data)[y * image.width() + x] = AFormattedColorConverter(image.get({x, y}));
             }
         }
     }
@@ -91,7 +91,7 @@ AImage aui::win32::bitmapToImage(HBITMAP hbitmap) {
     SelectObject(compatDC, oldBitmap);
 
     height = std::abs(height);
-    AImage image(std::move(pixels), {width, height}, APixelFormat::BGRA | APixelFormat::BYTE);
+    AImage image(std::move(pixels), {width, height}, APixelFormat::B8G8R8A8_UNORM);
     image.mirrorVertically();
     return image;
 }

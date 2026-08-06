@@ -90,6 +90,10 @@ public:
         return AAngleRadians(mValue / k);
     }
 
+    bool operator==(const AAngleRadians& rhs) const noexcept {
+        return mValue == rhs.mValue;
+    }
+
 private:
     float mValue = 0.f;
 };

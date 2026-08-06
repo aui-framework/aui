@@ -27,7 +27,9 @@
  */
 class ABorderStyle {
 public:
-    struct Solid {};
+    struct Solid {
+        bool operator==(const Solid&) const noexcept = default;
+    };
     
     /**
      * @brief Displays a series of short square-ended dashes or line segments.
@@ -52,6 +54,8 @@ public:
          * Otherwise, it would try to adjust unset values in order to achieve smooth results.
          */
         AOptional<float> spaceBetweenDashes = 1.0f;
+
+        bool operator==(const Dashed&) const noexcept = default;
     };
 
     using Impl = std::variant<Solid, Dashed>;
@@ -61,6 +65,10 @@ public:
 
     const Impl& value() const noexcept {
         return mValue;
+    }
+
+    bool operator==(const ABorderStyle& other) const noexcept {
+        return mValue == other.mValue;
     }
 
 private:

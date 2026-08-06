@@ -10,7 +10,7 @@
  */
 
 #pragma once
-#include "AUI/Software/SoftwareRenderer.h"
+#include "AUI/Render/IRendererBackend.h"
 
 /**
  * @brief Window manager used to stub the default window manager.
@@ -29,8 +29,8 @@
 class API_AUI_VIEWS AStubWindowManager: public AWindowManager {
 public:
     void initNativeWindow(const IRenderingContext::Init& init) override;
-    static AImage makeScreenshot(aui::no_escape<AWindow> window);
-    static void drawFrame();
+    static AImage makeScreenshot(AWindow& window);
+    static void drawFrame(AWindow& window);
 
     /**
      * @brief Stub window manager configuration to narrow ui test/benchmark scope.
@@ -40,7 +40,7 @@ public:
         /**
          * @brief Renderer used for window manager.
          */
-        _unique<IRenderer> renderer = std::make_unique<SoftwareRenderer>();
+        _<IRendererBackend> renderer;
     };
 
     static void setConfig(Config config);

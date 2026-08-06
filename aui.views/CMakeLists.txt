@@ -35,6 +35,10 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
     aui_module(aui.views EXPORT aui)
     aui_enable_tests(aui.views)
 
+    # comment this on conflict with other glad
+    target_compile_definitions(aui.views PUBLIC GLAD_GLAPI_EXPORT)
+    target_compile_definitions(aui.views PRIVATE GLAD_GLAPI_EXPORT_BUILD)
+
     if (AUI_PLATFORM_LINUX)
         auib_use_system_libs_begin()
         find_package(PkgConfig REQUIRED)
@@ -73,23 +77,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
     else ()
         aui_compile_assets(aui.views EXCLUDE uni/font/Roboto.ttf)
     endif ()
-
-    auisl_shader(aui.views basic.vsh)
-    auisl_shader(aui.views basic_uv.vsh)
-    auisl_shader(aui.views shadow.fsh)
-    auisl_shader(aui.views shadow_inner.fsh)
-    auisl_shader(aui.views rect_solid.fsh)
-    auisl_shader(aui.views rect_solid_rounded.fsh)
-    auisl_shader(aui.views rect_textured.fsh)
-    auisl_shader(aui.views rect_unblend.fsh)
-    auisl_shader(aui.views rect_gradient.fsh)
-    auisl_shader(aui.views rect_gradient_rounded.fsh)
-    auisl_shader(aui.views border_rounded.fsh)
-    auisl_shader(aui.views symbol.vsh)
-    auisl_shader(aui.views symbol.fsh)
-    auisl_shader(aui.views symbol_sub.fsh)
-    auisl_shader(aui.views square_sector.fsh)
-    auisl_shader(aui.views line_solid_dashed.fsh)
+    aui_compile_assets(aui.views DIR shaders)
 
     target_compile_definitions(aui.views PRIVATE
         $<$<OR:$<PLATFORM_ID:MinGW>,$<PLATFORM_ID:Windows>>:UNICODE=1>

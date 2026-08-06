@@ -26,28 +26,34 @@
 class API_AUI_IMAGE AImage;
 class API_AUI_IMAGE AImageView;
 
-template <auto imageFormat = APixelFormat::DEFAULT>
+template <auto imageFormat = APixelFormat::R8G8B8A8_UNORM>
 class AFormattedImageView;
 
-template <auto imageFormat = APixelFormat::DEFAULT>
+template <auto imageFormat = APixelFormat::R8G8B8A8_UNORM>
 class AFormattedImage;
 
 template <typename T>
 concept AImageViewVisitor = requires(T t) {
-    t(std::declval<const AFormattedImageView<APixelFormat::RGB | APixelFormat::BYTE>&>());
-    t(std::declval<const AFormattedImageView<APixelFormat::RGBA | APixelFormat::BYTE>&>());
-    t(std::declval<const AFormattedImageView<APixelFormat::RGB | APixelFormat::FLOAT>&>());
-    t(std::declval<const AFormattedImageView<APixelFormat::RGBA | APixelFormat::FLOAT>&>());
-    // etc...
+    t(std::declval<const AFormattedImageView<APixelFormat::R8_UNORM>&>());
+    t(std::declval<const AFormattedImageView<APixelFormat::R8G8_UNORM>&>());
+    t(std::declval<const AFormattedImageView<APixelFormat::R8G8B8_UNORM>&>());
+    t(std::declval<const AFormattedImageView<APixelFormat::R8G8B8A8_UNORM>&>());
+    t(std::declval<const AFormattedImageView<APixelFormat::B8G8R8A8_UNORM>&>());
+    t(std::declval<const AFormattedImageView<APixelFormat::R16G16B16A16_SFLOAT>&>());
+    t(std::declval<const AFormattedImageView<APixelFormat::R32G32B32A32_SFLOAT>&>());
+    t(std::declval<const AFormattedImageView<APixelFormat::A2R10G10B10_UNORM_PACK32>&>());
 };
 
 template <typename T>
 concept AImageVisitor = requires(T t) {
-    t(std::declval<AFormattedImage<APixelFormat::RGB | APixelFormat::BYTE>&>());
-    t(std::declval<AFormattedImage<APixelFormat::RGBA | APixelFormat::BYTE>&>());
-    t(std::declval<AFormattedImage<APixelFormat::RGB | APixelFormat::FLOAT>&>());
-    t(std::declval<AFormattedImage<APixelFormat::RGBA | APixelFormat::FLOAT>&>());
-    // etc...
+    t(std::declval<AFormattedImage<APixelFormat::R8_UNORM>&>());
+    t(std::declval<AFormattedImage<APixelFormat::R8G8_UNORM>&>());
+    t(std::declval<AFormattedImage<APixelFormat::R8G8B8_UNORM>&>());
+    t(std::declval<AFormattedImage<APixelFormat::R8G8B8A8_UNORM>&>());
+    t(std::declval<AFormattedImage<APixelFormat::B8G8R8A8_UNORM>&>());
+    t(std::declval<AFormattedImage<APixelFormat::R16G16B16A16_SFLOAT>&>());
+    t(std::declval<AFormattedImage<APixelFormat::R32G32B32A32_SFLOAT>&>());
+    t(std::declval<AFormattedImage<APixelFormat::A2R10G10B10_UNORM_PACK32>&>());
 };
 
 /**
@@ -143,7 +149,7 @@ public:
      */
     [[nodiscard]]
     std::uint8_t bytesPerPixel() const noexcept {
-        return mFormat.bytesPerPixel();
+        return ::bytesPerPixel(mFormat);
     }
 
     /**
@@ -239,7 +245,7 @@ public:
      * “Give me an image in format X, and I’ll call your callback with an image view in format X, converting only if
      * necessary.”
      */
-    template<auto /* APixelFormat::Value */ desiredFormat>
+    template<auto /* APixelFormat */ desiredFormat>
     void convert(aui::invocable<AFormattedImageView<desiredFormat>> auto && consumer) const;
 
     /**
@@ -261,6 +267,11 @@ public:
         return buffer().data();
     }
 
+    [[nodiscard]]
+    size_t stride() const noexcept {
+        return mStride;
+    }
+
 protected:
     AByteBufferView mData;
     size_t mStride;
@@ -272,13 +283,13 @@ protected:
  * @brief Same as AImageView but all universal AColor methods replaced with concrete specific AFormattedColor type thus
  * can be used by performance critical code.
  */
-template <auto /* APixelFormat::Value */ f>
+template <auto /* APixelFormat */ f>
 class AFormattedImageView : public AImageView {
 public:
     using Color = AFormattedColor<f>;
-    static constexpr int FORMAT = f;
+    static constexpr APixelFormat FORMAT = f;
 
-    constexpr int format() const noexcept { return f; }
+    constexpr APixelFormat format() const noexcept { return f; }
 
     AFormattedImageView() { mFormat = f; }
 
@@ -314,26 +325,24 @@ public:
 
 template <AImageViewVisitor Visitor>
 auto AImageView::visit(Visitor&& visitor) const {
-#define AUI_CASE(v)                                                                                           \
-    case v: {                                                                                                 \
-        switch (format() & APixelFormat::TYPE_BITS) {                                                         \
-            case APixelFormat::BYTE:                                                                          \
-                return visitor(reinterpret_cast<const AFormattedImageView<v | APixelFormat::BYTE>&>(*this));  \
-            case APixelFormat::FLOAT:                                                                         \
-                return visitor(reinterpret_cast<const AFormattedImageView<v | APixelFormat::FLOAT>&>(*this)); \
-        }                                                                                                     \
-    }
-
-    switch (format() & APixelFormat::COMPONENT_BITS) {
-        AUI_CASE(APixelFormat::R)
-        AUI_CASE(APixelFormat::RG)
-        AUI_CASE(APixelFormat::RGB)
-        AUI_CASE(APixelFormat::RGBA)
-        AUI_CASE(APixelFormat::ARGB)
-        AUI_CASE(APixelFormat::BGRA)
-
+    switch (format()) {
+        case APixelFormat::R8_UNORM:
+            return visitor(reinterpret_cast<const AFormattedImageView<APixelFormat::R8_UNORM>&>(*this));
+        case APixelFormat::R8G8_UNORM:
+            return visitor(reinterpret_cast<const AFormattedImageView<APixelFormat::R8G8_UNORM>&>(*this));
+        case APixelFormat::R8G8B8_UNORM:
+            return visitor(reinterpret_cast<const AFormattedImageView<APixelFormat::R8G8B8_UNORM>&>(*this));
+        case APixelFormat::R8G8B8A8_UNORM:
+            return visitor(reinterpret_cast<const AFormattedImageView<APixelFormat::R8G8B8A8_UNORM>&>(*this));
+        case APixelFormat::B8G8R8A8_UNORM:
+            return visitor(reinterpret_cast<const AFormattedImageView<APixelFormat::B8G8R8A8_UNORM>&>(*this));
+        case APixelFormat::R16G16B16A16_SFLOAT:
+            return visitor(reinterpret_cast<const AFormattedImageView<APixelFormat::R16G16B16A16_SFLOAT>&>(*this));
+        case APixelFormat::R32G32B32A32_SFLOAT:
+            return visitor(reinterpret_cast<const AFormattedImageView<APixelFormat::R32G32B32A32_SFLOAT>&>(*this));
+        case APixelFormat::A2R10G10B10_UNORM_PACK32:
+            return visitor(reinterpret_cast<const AFormattedImageView<APixelFormat::A2R10G10B10_UNORM_PACK32>&>(*this));
         default:
             throw AException("unknown color format");
     }
-#undef AUI_CASE
 }
