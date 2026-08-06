@@ -23,7 +23,7 @@
 #include <AUI/Image/AImageLoaderRegistry.h>
 #include <AUI/Util/AImageDrawable.h>
 
-void ass::prop::Property<ass::BackgroundImage>::draw(
+void ass::legacy::Property<ass::BackgroundImage>::draw(
     const ARenderContext& ctx, AView* view, const _<IDrawable>& drawable, const ass::BackgroundImage& info) {
     ass::BackgroundCropping& cropping = view->getAssHelper()->state.backgroundCropping;
     auto imageRendering = view->getAssHelper()->state.imageRendering;
@@ -272,7 +272,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
     }
 }
 
-void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ass::BackgroundImage>::renderFor(AView* view, const ARenderContext& ctx) {
     ass::BackgroundImage& info = view->getAssHelper()->state.backgroundUrl;
     if (info.image &&
         std::visit(
@@ -294,15 +294,15 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARe
     }
 }
 
-void ass::prop::Property<ass::BackgroundImage>::applyFor(AView* view) {
+void ass::legacy::Property<ass::BackgroundImage>::applyFor(AView* view) {
     view->getAssHelper()->state.backgroundUrl = mInfo;
 }
 
-ass::prop::PropertySlot ass::prop::Property<ass::BackgroundImage>::getPropertySlot() const {
-    return ass::prop::PropertySlot::BACKGROUND_IMAGE;
+ass::legacy::PropertySlot ass::legacy::Property<ass::BackgroundImage>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::BACKGROUND_IMAGE;
 }
 
-AString ass::prop::Property<ass::BackgroundImage>::toString() const {
+AString ass::legacy::Property<ass::BackgroundImage>::toString() const {
     if (!mInfo.image) {
         return "BackgroundImage(empty)";
     }

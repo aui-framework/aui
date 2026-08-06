@@ -208,11 +208,11 @@ public:
             Vertical {
               Centered {
                 Horizontal {
-                  Button { Label { "Undo" }, { me::undo } } AUI_LET {
+                  Button { .content = Label { "Undo" }, .onClick = [this] { undo(); } } AUI_LET {
                           connect(
                               AUI_REACT(mState.history.nextAction != mState.history.begin()), AUI_SLOT(it)::setEnabled);
                       },
-                  Button { Label { "Redo" }, { me::redo } } AUI_LET {
+                  Button { .content = Label { "Redo" }, .onClick = [this] { redo(); } } AUI_LET {
                           connect(
                               AUI_REACT(mState.history.nextAction != mState.history.end()), AUI_SLOT(it)::setEnabled);
                       },

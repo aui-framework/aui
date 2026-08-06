@@ -16,9 +16,20 @@
 #include "Expanding.h"
 
 
-void ass::prop::Property<ass::Expanding>::applyFor(AView* view) {
+void ass::legacy::Property<ass::Expanding>::applyFor(AView* view) {
     view->setExpanding({
                                mInfo.expandingX.orDefault(view->getExpandingHorizontal()),
                                mInfo.expandingY.orDefault(view->getExpandingVertical()),
     });
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, Expanding value) {
+    return thiz.then([value](AView& view) {
+        view.setExpanding({
+            value.expandingX.orDefault(view.getExpandingHorizontal()),
+            value.expandingY.orDefault(view.getExpandingVertical()),
+        });
+    });
+}
+}   // namespace ass

@@ -16,7 +16,7 @@ namespace declarative::experimental {
 
 _<AView> Dynamic::operator()() {
     auto v = _new<DynamicView>();
-    content.bindTo(ASlotDef{AUI_SLOT(v.get())::setContent});
+    content.bindTo(AUI_SLOT(v)::setContent);
     return v;
 }
 

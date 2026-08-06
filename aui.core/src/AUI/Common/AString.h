@@ -47,43 +47,43 @@ class API_AUI_CORE AUtf8View;
  *
  * ## Construction
  * `AString` can be constructed from any common character type:
- * @code{.cpp}
+ * ```cpp
  * AString a = "hello";    // const char* (UTF-8)
  * AString b = u8"hello";  // const char8_t* (UTF-8)
  * AString c = u"hello";   // const char16_t* (UTF-16)
  * AString d = U"hello";   // const char32_t* (UTF-32)
  * AString e = AString::fromLatin1("caf\xe9"); // Latin-1 -> UTF-8
- * @endcode
+ * ```
  *
  * ## Encoding conversion
  * Convert to other encodings on demand - the internal UTF-8 storage is never mutated:
- * @code{.cpp}
+ * ```cpp
  * std::u16string utf16 = str.toUtf16();
  * AByteBuffer raw = str.encode(AStringEncoding::UTF16);
- * @endcode
+ * ```
  *
  * ## String manipulation
- * @code{.cpp}
+ * ```cpp
  * AString s = "  Hello, World!  ";
  * s.trim();                        // "Hello, World!"
  * s.replaceAll("World", "AUI");    // "Hello, AUI!"
  * auto parts = s.split(", ");      // AStringVector{"Hello", "AUI!"}
- * @endcode
+ * ```
  *
  * ## Numeric parsing
  * Parsing methods return @ref AOptional to signal failure without exceptions:
- * @code{.cpp}
+ * ```cpp
  * AOptional<int32_t>  i = AString("42").toInt();      // 42
  * AOptional<double>   d = AString("3.14").toDouble(); // 3.14
  * AOptional<int32_t>  x = AString("bad").toInt();     // nullopt
- * @endcode
+ * ```
  *
  * ## Numeric formatting
- * @code{.cpp}
+ * ```cpp
  * AString s1 = AString::number(42);     // "42"
  * AString s2 = AString::number(3.14f);  // "3.14" (trailing zeros stripped)
  * AString s3 = AString::numberHex(255); // "ff"
- * @endcode
+ * ```
  *
  * @note For non-owning string references, prefer @ref AStringView. For iterating over
  * individual Unicode code points, use @ref AUtf8View via @ref utf8().

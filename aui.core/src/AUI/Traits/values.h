@@ -224,11 +224,17 @@ public:
     T& operator*() const noexcept { return *value; }
 };
 
+
+template<typename T>
+concept LazyRequirements =
+    aui::same_as<T, void> ||
+    requires (T& dst, T t) { dst = std::move(t); };
+
 /**
  * @brief A value that initializes when accessed for the first time.
  * @tparam T
  */
-template <typename T = void>
+template <LazyRequirements T = void>
 struct lazy {
 private:
     struct EvaluationLoopTrap {};
@@ -337,7 +343,7 @@ public:
  * Unlike <code>aui::lazy</code>, internal logic of <code>aui::atomic_lazy</code> is threadsafe.
  * @tparam T
  */
-template <typename T>
+template <LazyRequirements T>
 struct atomic_lazy {
 private:
     mutable AMutex sync;

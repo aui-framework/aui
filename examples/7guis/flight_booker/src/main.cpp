@@ -56,7 +56,7 @@ AOptional<system_clock::time_point> parseDate(AStringView s) {
 
 template<>
 struct std::common_type<ass::BackgroundSolid, std::nullptr_t> {
-    using type = _<ass::prop::IPropertyBase>;
+    using type = _<ass::legacy::IPropertyBase>;
 };
 
 auto dateTextField(_<DateTextFieldState> state) {
@@ -113,7 +113,9 @@ AUI_ENTRY {
     window->setContents(Centered {
       Vertical {
         _new<ADropdownList>(AListModel<AString>::make({ "one-way flight", "return flight" })) AUI_LET {
-                AObject::connect(AUI_REACT(state->isReturnFlight ? 1 : 0), it->selectionId());
+                AObject::connect(AUI_REACT(state->isReturnFlight ? 1 : 0), it, [&it = *it](int newSelection) {
+                    it.selectionId() = newSelection;
+                });
                 AObject::connect(it->selectionId().changed, AObject::GENERIC_OBSERVER, [=](int newSelection) {
                     state->isReturnFlight = newSelection == 1;
                 });

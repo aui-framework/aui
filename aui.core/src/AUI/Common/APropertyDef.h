@@ -38,7 +38,7 @@ struct OwningContainer {
  * <!-- aui:experimental -->
  * You can use this way if you are required to define custom behaviour on getter/setter. As a downside, you have to
  * write extra boilerplate code: define property, data field, signal, getter and setter checking equality. Also,
- * APropertyDef requires the class to derive `AObject`. Most of AView's properties are defined this way.
+ * APropertyDef requires the class to derive `AObject`. Most of retained-UI views properties are defined this way.
  *
  * See [property system](property-system.md) for usage examples.
  *
@@ -110,6 +110,10 @@ struct APropertyDef {
         return *this;
     }
 
+    void setValue(Underlying value) const {
+        std::invoke(set, *const_cast<Model*>(base), std::move(value));
+    }
+
     [[nodiscard]]
     GetterReturnT value() const noexcept {
         aui::react::DependencyObserverScope::addDependency(changed);
@@ -159,14 +163,6 @@ struct APropertyDef {
         if (changed.hasOutgoingConnections()) {
             emit changed(this->value());
         }
-    }
-
-    /**
-     * @brief Makes ASlotDef that assigns value to this property.
-     */
-    [[nodiscard]]
-    auto assignment() noexcept {
-        return aui::detail::property::makeAssignment(std::move(*this));
     }
 
 private:
