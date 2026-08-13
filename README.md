@@ -262,15 +262,3 @@ depends on severity and our own needs. In fact, we'd be happy if you submit a pu
 best to help you merge your changes to upstream.
 
 Please refer to [CONTRIBUTING.md](https://github.com/aui-framework/aui/blob/master/CONTRIBUTING.md)
-
-## Star History
-
-<div align = center>
- <a href="https://star-history.dera.page/#aui-framework/aui&Date">
-  <picture>
-    <source media="(prefers-color-scheme: dark)" srcset="https://star-history.dera.page/svg?repos=aui-framework/aui&type=Date&theme=dark" />
-    <source media="(prefers-color-scheme: light)" srcset="https://star-history.dera.page/svg?repos=aui-framework/aui&type=Date" />
-    <img alt="Star History Chart" src="https://star-history.dera.page/svg?repos=aui-framework/aui&type=Date" />
-  </picture>
- </a>
-</div>
