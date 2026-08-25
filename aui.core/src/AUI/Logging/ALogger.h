@@ -65,6 +65,8 @@ public:
         ERR,
         DEBUG,
         TRACE,
+
+        /// specific level for disable logging
         DISABLED,
     };
 
@@ -260,7 +262,7 @@ public:
      * @details Default is enabled. When disabled, plain level names (INFO, WARN, etc.)
      * are used instead of ANSI-colored ones.
      */
-    void enableColors(bool enabled) { global().mColorsEnabled = enabled; }
+    void enableColors(bool enabled) { mColorsEnabled = enabled; }
 
     [[nodiscard]]
     APath logFile() {
