@@ -192,6 +192,80 @@ void ASurface::focusNextView() {
     }
 }
 
+void ASurface::focusPrevView() {
+    AView* beginPoint = getFocusedView().get();
+
+    bool triedToSearchFromBeginning = false;
+
+    if (beginPoint == nullptr) {
+        beginPoint = this;
+        triedToSearchFromBeginning = true;
+    }
+    auto target = beginPoint;
+    while (target != nullptr) {
+        if (auto asContainer = dynamic_cast<AViewContainer*>(target)) {
+            // container
+            if (!asContainer->getViews().empty()) {
+                target = asContainer->getViews().last().get();
+                continue;
+            }
+        }
+        if (target == beginPoint || !target->handlesNonMouseNavigation() || target->getVisibilityRecursive() == Visibility::GONE) {
+            // we should jump to the previous element
+            if (target->getParent()) {
+                // up though hierarchy
+                while (auto parent = target->getParent()) {
+                    auto& parentViews = parent->getViews();
+
+                    auto index = [&]() -> size_t {
+                        for (size_t i = 0; i < parentViews.size(); ++i)
+                        {
+                            if (parentViews[i].get() == target)
+                                return i;
+                        }
+
+                        return static_cast<size_t>(-1);
+                    }() ;
+                    if (index == static_cast<size_t>(-1) || index == 0) {
+                        // jump to the previous container since we already visited all the elements in current container
+                        target = target->getParent();
+                        if (target == nullptr) {
+                            if (triedToSearchFromBeginning) {
+                                break;
+                            } else {
+                                beginPoint = target = this;
+                                triedToSearchFromBeginning = true;
+                                break;
+                            }
+                        }
+                    } else {
+                        target = parentViews[index - 1].get();
+                        break;
+                    }
+                }
+            } else {
+                // root element
+                if (triedToSearchFromBeginning) {
+                    // already tried searching from beginning, breaking loop
+                    target = nullptr;
+                    break;
+                } else {
+                    // try to search from the end
+                    beginPoint = target = this;
+                    triedToSearchFromBeginning = true;
+                }
+            }
+        } else {
+            // found something what is not beginPoint
+            break;
+        }
+    }
+
+    if (target != this) {
+        target->focus();
+    }
+}
+
 void ASurface::closeOverlappingSurfacesOnClick() {
     // creating copy because of comodification
     AVector<_<AOverlappingSurface>> surfacesToClose;
