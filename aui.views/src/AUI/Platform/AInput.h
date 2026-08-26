@@ -171,6 +171,13 @@ namespace AInput {
 #else
       LCONTROL,
 #endif
+
+        RCMD_CTRL =              ///< Right-hand counterpart of CMD_CTRL
+#if AUI_PLATFORM_APPLE
+      RSYSTEM,
+#else
+      RCONTROL,
+#endif
     };
     API_AUI_VIEWS Key fromNative(int w);
 
