@@ -219,22 +219,37 @@ AString AFontManager::getPathToFont(const AString& family) {
 
     Pattern pattern = FcPatternCreate();
     auto tmp = family.toStdString();
+    auto os = FcObjectSetBuild(FC_FILE,
+                               FC_WIDTH,
+                               FC_STYLE,
+                               FC_WEIGHT,
+                               nullptr);
     FcPatternAddString(pattern, FC_FAMILY, reinterpret_cast<const FcChar8*>(tmp.c_str()));
     FcPatternAddString(pattern, FC_STYLE, reinterpret_cast<const FcChar8*>("Regular"));
     FcPatternAddInteger(pattern, FC_WEIGHT, FC_WEIGHT_REGULAR);
     FcPatternAddInteger(pattern, FC_WIDTH, FC_WIDTH_NORMAL);
-    FcConfigSubstitute(nullptr, pattern, FcMatchPattern);
-    FcDefaultSubstitute(pattern);
 
-    FcResult result;
-    if (FcPattern* match = FcFontMatch(nullptr, pattern, &result)) {
-        FcChar8* file = nullptr;
-        AString path;
-        if (FcPatternGetString(match, FC_FILE, 0, &file) == FcResultMatch) {
-            path = reinterpret_cast<const char*>(file);
+    struct FcFontSetWrap {
+        FcFontSet* value;
+
+        FcFontSetWrap(FcFontSet* value) : value(value) {}
+        ~FcFontSetWrap() {
+            if (value) {
+                FcFontSetDestroy(value);
+            }
         }
-        FcPatternDestroy(match);
-        return path;
+        operator bool() const {
+            return value != nullptr;
+        }
+        FcFontSet* operator->() const {
+            return value;
+        }
+    };
+    FcFontSetWrap fs(FcFontList(nullptr, pattern, os));
+    FcObjectSetDestroy(os);
+    if (fs && fs->nfont > 0) {
+        return pattern::get<AString>(fs->fonts[0], FC_FILE);
+    } else {
+        return {};
     }
-    return {};
 }
