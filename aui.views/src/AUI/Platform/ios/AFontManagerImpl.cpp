@@ -15,7 +15,6 @@
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Platform/apple/ACFPtr.h>
 #include <CoreText/CoreText.h>
-#include <CoreGraphics/CoreGraphics.h>
 #include <CoreFoundation/CoreFoundation.h>
 #include <climits>
 #include <cstring>
