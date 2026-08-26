@@ -118,15 +118,11 @@ bool isEventReserved(NSEvent* event) {
     ALOG_DEBUG(LOG_TAG) << "insertText";
     // Could be NSString or NSAttributedString, so we have
     // to test and convert.
-    AString str = [&]{
-        if ([string isKindOfClass:[NSAttributedString class]]) {
-            return [[string string] UTF8String];
-        } else {
-            return [string UTF8String];
-        }
-    }();
-    
-    for (const auto c : str) {
+    NSString* text = [string isKindOfClass:[NSAttributedString class]] ? [string string] : string;
+
+    // AUtf8View decodes UTF-8 into code points; iterating the bytes directly would
+    // feed each byte to onCharEntered as a Latin-1 char.
+    for (const auto c : AUtf8View([text UTF8String])) {
         mAWindow->onCharEntered(c);
     }
 }
