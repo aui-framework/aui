@@ -208,7 +208,6 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
             AScrollArea::Builder().withContents(std::conditional_t<
                                                 aui::platform::current::is_mobile(), Vertical, Horizontal> {
               Vertical {
-                // CJK font test
                 GroupBox {
                   Label { "CJK Font Test" },
                   Vertical {
