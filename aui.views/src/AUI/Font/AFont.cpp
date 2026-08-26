@@ -288,11 +288,11 @@ AFontFamily::Weight AFont::getFontWeight() const {
 }
 
 int AFont::getAscenderHeight(unsigned size) const {
-    if (mFace->units_per_EM == 0) return 0;
-    return mFace->ascender * int(size) / mFace->units_per_EM;
+    if (mFace->height == 0) return 0;
+    return int(mFace->ascender) * int(size) / mFace->height;
 }
 
 int AFont::getDescenderHeight(unsigned size) const {
-    if (mFace->units_per_EM == 0) return 0;
-    return -mFace->descender * int(size) / mFace->units_per_EM;
+    if (mFace->height == 0) return 0;
+    return -int(mFace->descender) * int(size) / mFace->height;
 }
