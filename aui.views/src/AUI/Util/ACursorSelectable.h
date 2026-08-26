@@ -30,7 +30,14 @@ public:
 
     struct Selection
     {
+        /**
+         * @brief Codepoint begin
+         */
         unsigned begin;
+
+        /**
+         * @brief Codepoint end
+         */
         unsigned end;
 
         [[nodiscard]]
@@ -64,7 +71,7 @@ public:
         if (!hasSelection())
             return {};
         auto t = getText();
-    	return {t.bytes().begin() + selection().begin, t.bytes().begin() + selection().end };
+    	return AString(getText().utf8().substr(selection().begin, selection().end - selection().begin).bytes());
     }
 
     /**

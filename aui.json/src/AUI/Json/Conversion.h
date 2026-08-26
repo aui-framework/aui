@@ -22,6 +22,7 @@
 #include <AUI/Reflect/AEnumerate.h>
 #include <AUI/Traits/strings.h>
 #include <AUI/Common/AColor.h>
+#include <AUI/Json/Path.h>
 
 /**
  * <p>Json conversion trait.</p>
@@ -57,24 +58,16 @@ namespace aui {
     }
     template<typename T>
     inline T from_json(const AJson& v) {
-        try {
-            static_assert(aui::has_json_converter<T>, "this type does not implement AJsonConv<T> trait");
-            T dst;
-            AJsonConv<T>::fromJson(v, dst);
-            return dst;
-        } catch (...) {
-            throw AJsonException("While converting from json to cpp\n" + AJson::toString(v), std::current_exception());
-        }
+        static_assert(aui::has_json_converter<T>, "this type does not implement AJsonConv<T> trait");
+        T dst;
+        AJsonConv<T>::fromJson(v, dst);
+        return dst;
     }
 
     template<typename T>
     inline void from_json(const AJson& v, T& dst) {
-        try {
-            static_assert(aui::has_json_converter<T>, "this type does not implement AJsonConv<T> trait");
-            AJsonConv<T>::fromJson(v, dst);
-        } catch (...) {
-            throw AJsonException("While converting from json to cpp\n" + AJson::toString(v), std::current_exception());
-        }
+        static_assert(aui::has_json_converter<T>, "this type does not implement AJsonConv<T> trait");
+        AJsonConv<T>::fromJson(v, dst);
     }
 }
 
@@ -105,10 +98,13 @@ namespace aui::impl::json {
 
         void operator()(const AJson::Object& object) {
             if (auto c = object.contains(name)) {
+                aui::impl::json::PathSegmentGuard _guard{AString(name)};
                 aui::from_json<T>(c->second, value);
             } else {
                 if (!(flags & AJsonFieldFlags::OPTIONAL)) {
-                    throw AJsonException(R"(field "{}" is not present)"_format(name));
+                    auto path = aui::impl::json::currentPath();
+                    auto location = path.empty() ? AString(name) : path + "." + name;
+                    throw AJsonException(R"(field "{}" is not present)"_format(location));
                 }
             }
         }
@@ -432,7 +428,9 @@ struct AJsonConv<T> {
         if constexpr (requires(T&& t) { t.reserve(static_cast<size_t>(0)); }) {
             dst.reserve(array.size());
         }
+        std::size_t i = 0;
         for (const auto& elem : array) {
+            aui::impl::json::PathSegmentGuard _guard{i++};
             dst << aui::from_json<std::decay_t<decltype(*dst.begin())>>(elem);
         }
     }
@@ -453,8 +451,9 @@ struct AJsonConv<std::valarray<T>> {
     static void fromJson(const AJson& json, std::valarray<T>& dst) {
         auto& array = json.asArray();
         dst.resize(array.size());
-        size_t i = 0;
+        std::size_t i = 0;
         for (const auto& elem : array) {
+            aui::impl::json::PathSegmentGuard _guard{i};
             dst[i++] = aui::from_json<T>(elem);
         }
     }
@@ -474,6 +473,7 @@ struct AJsonConv<AMap<AString, T>> {
         dst.clear();
 
         for (const auto&[k, v]: object) {
+            aui::impl::json::PathSegmentGuard _guard{k};
             dst.emplace(k, aui::from_json<T>(v));
         }
     }

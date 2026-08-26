@@ -18,6 +18,8 @@
 
 static constexpr auto LOG_TAG = "AUIView";
 
+extern bool gKeyStates[AInput::KEYCOUNT + 1];
+
 namespace {
 
 glm::ivec2 pos(AWindow* window, NSEvent* event) {
@@ -227,7 +229,9 @@ bool isEventReserved(NSEvent* event) {
     // We only handle key down events and just simply forward other events.
     if (eventType != NSEventTypeKeyDown) {
       //_hostHelper->ForwardKeyboardEvent(event, latencyInfo);
-        mAWindow->onKeyUp(AInput::fromNative(keyCode));
+        auto key = AInput::fromNative(keyCode);
+        gKeyStates[key] = false;
+        mAWindow->onKeyUp(key);
 
       // Possibly autohide the cursor.
       if (shouldAutohideCursor) {
@@ -264,6 +268,9 @@ bool isEventReserved(NSEvent* event) {
       [NSCursor setHiddenUntilMouseMoves:YES];
     }
 
+
+    auto key = AInput::fromNative(keyCode);
+    gKeyStates[key] = true;
     mAWindow->onKeyDown(AInput::fromNative(keyCode));
 }
 
