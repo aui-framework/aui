@@ -25,7 +25,7 @@ AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
     return {
         { "/System/Library/Fonts/PingFang.ttc" },
         { "/System/Library/Fonts/AppleSDGothicNeo.ttc" },
-        { AString(u8"/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc") },
+        { "/System/Library/Fonts/ヒラギノ角ゴシック W3.ttc" },
         { "/System/Library/Fonts/Hiragino Sans GB.ttc" },
         { "/System/Library/Fonts/Supplemental/AppleSDGothicNeo.ttc" },
     };

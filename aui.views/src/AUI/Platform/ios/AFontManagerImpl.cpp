@@ -13,6 +13,7 @@
 #include <AUI/Font/FreeType.h>
 #include <AUI/Common/AByteBuffer.h>
 #include <AUI/IO/AFileInputStream.h>
+#include <AUI/Platform/apple/ACFPtr.h>
 #include <CoreText/CoreText.h>
 #include <CoreGraphics/CoreGraphics.h>
 #include <CoreFoundation/CoreFoundation.h>
@@ -98,28 +99,29 @@ AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
     };
 
     for (CFStringRef name : fontNames) {
-        if (CTFontRef font = CTFontCreateWithName(name, 0.0, NULL)) {
-            CFStringRef postScriptName = CTFontCopyPostScriptName(font);
-            if (postScriptName && CFStringCompare(postScriptName, name, 0) == kCFCompareEqualTo) {
-                if (CFURLRef url = static_cast<CFURLRef>(CTFontCopyAttribute(font, kCTFontURLAttribute))) {
-                    if (CFStringRef path = CFURLCopyFileSystemPath(url, kCFURLPOSIXPathStyle)) {
-                        const CFIndex maxLen =
-                            CFStringGetMaximumSizeForEncoding(CFStringGetLength(path), kCFStringEncodingUTF8) + 1;
-                        std::string cpath(static_cast<size_t>(maxLen), '\0');
-                        if (CFStringGetCString(path, cpath.data(), maxLen, kCFStringEncodingUTF8)) {
-                            cpath.resize(std::strlen(cpath.data()));
-                            const int faceIndex = faceIndexForPostScriptName(cpath, postScriptName);
-                            candidates.push_back({ AString(std::move(cpath)), faceIndex, {} });
-                        }
-                        CFRelease(path);
-                    }
-                    CFRelease(url);
-                }
-            }
-            if (postScriptName) {
-                CFRelease(postScriptName);
-            }
-            CFRelease(font);
+        ACFPtr<CTFontRef> font(CTFontCreateWithName(name, 0.0, nullptr));
+        if (!font) {
+            continue;
+        }
+        ACFPtr<CFStringRef> postScriptName(CTFontCopyPostScriptName(font.get()));
+        if (!postScriptName || CFStringCompare(postScriptName.get(), name, 0) != kCFCompareEqualTo) {
+            continue;
+        }
+        ACFPtr<CFURLRef> url(static_cast<CFURLRef>(CTFontCopyAttribute(font.get(), kCTFontURLAttribute)));
+        if (!url) {
+            continue;
+        }
+        ACFPtr<CFStringRef> path(CFURLCopyFileSystemPath(url.get(), kCFURLPOSIXPathStyle));
+        if (!path) {
+            continue;
+        }
+        const CFIndex maxLen =
+            CFStringGetMaximumSizeForEncoding(CFStringGetLength(path.get()), kCFStringEncodingUTF8) + 1;
+        std::string cpath(static_cast<size_t>(maxLen), '\0');
+        if (CFStringGetCString(path.get(), cpath.data(), maxLen, kCFStringEncodingUTF8)) {
+            cpath.resize(std::strlen(cpath.data()));
+            const int faceIndex = faceIndexForPostScriptName(cpath, postScriptName.get());
+            candidates.push_back({ AString(std::move(cpath)), faceIndex, {} });
         }
     }
     return candidates;

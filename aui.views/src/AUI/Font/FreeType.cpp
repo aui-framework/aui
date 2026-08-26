@@ -15,8 +15,6 @@
 #include <freetype/ftmodapi.h>
 
 
-std::mutex FreeType::sFaceMutex;
-
 FreeType::FreeType() {
 	FT_Init_FreeType(&ft);
 

@@ -71,10 +71,7 @@ struct API_AUI_VIEWS AFontStyle {
                 advanceY += lineHeight;
                 callback.onNextLine();
             } else {
-                // getCharacter returns an immutable snapshot: the cache may
-                // re-render (replace) this glyph on another thread at any
-                // time, so all image/metrics reads come from the copy.
-                const AFont::Character ch = font->getCharacter(fe, c);
+                AFont::Character& ch = font->getCharacter(fe, c);
                 if (ch.empty()) {
                     callback.onSymbolAdded({toPixel(advance), advanceY});
                     advance += kerningFor(i, c);
@@ -101,7 +98,7 @@ struct API_AUI_VIEWS AFontStyle {
         outAdvanceY = (glm::max)(outAdvanceY, advanceY + lineHeight);
     }
 
-    AFont::Character getCharacter(char32_t c) {
+    AFont::Character& getCharacter(char32_t c) {
         return font->getCharacter(getFontEntry(), c);
     }
 

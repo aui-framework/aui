@@ -692,44 +692,24 @@ public:
             OpenGLMultiStringCanvas* self;
             void onSymbolAdded(glm::ivec2 p) { self->notifySymbolAdded({p}); }
             void onNextLine() { self->nextLine(); }
-            void onGlyph(glm::ivec2 pos, const AFont::Character& ch, const AFont::FontEntry& fe, AChar c) {
+            void onGlyph(glm::ivec2 pos, AFont::Character& ch, const AFont::FontEntry& fe, AChar c) {
                 int width = ch.image->width();
                 int height = ch.image->height();
-                glm::vec4 uv{0.f};
-                bool uvProduced = false;
+                glm::vec4 uv;
 
-                // The renderer cache handle is stored on the cached glyph;
-                // read and write it through the synchronized accessor so
-                // check-then-insert is atomic across render threads. The
-                // accessor skips its callback only when the glyph is not
-                // cached; walkString caches every glyph via getCharacter
-                // before invoking onGlyph, so the callback always runs here
-                // — the flag below is defensive so a degenerate UV
-                // rectangle is never emitted if that ever changes.
-                self->mFontStyle.font->withCharacterRendererData(fe, c, [&](void*& rendererData) {
-                    uvProduced = true;
-                    auto* cached = reinterpret_cast<OpenGLRenderer::CharacterData*>(rendererData);
-                    if (cached == nullptr || cached->fallbackGeneration != ch.fallbackGeneration) {
-                        uv = self->mEntryData->texturePacker.insert(*ch.image);
+                if (ch.rendererData == nullptr) {
+                    uv = self->mEntryData->texturePacker.insert(*ch.image);
 
-                        const float BIAS = 0.1f;
-                        uv.x += BIAS;
-                        uv.y += BIAS;
-                        uv.z -= BIAS;
-                        uv.w -= BIAS;
-                        // The font lock held here is per-font; mCharData is
-                        // shared by every font of this renderer, so appends
-                        // need the renderer-wide cache mutex.
-                        std::lock_guard lock(self->mRenderer->mFontCacheMutex);
-                        self->mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv, ch.fallbackGeneration});
-                        rendererData = &self->mRenderer->mCharData.last();
-                        self->mEntryData->isTextureInvalid = true;
-                    } else {
-                        uv = cached->uv;
-                    }
-                });
-                if (!uvProduced) {
-                    return;   // no atlas UV: skip vertex emission
+                    const float BIAS = 0.1f;
+                    uv.x += BIAS;
+                    uv.y += BIAS;
+                    uv.z -= BIAS;
+                    uv.w -= BIAS;
+                    self->mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv});
+                    ch.rendererData = &self->mRenderer->mCharData.last();
+                    self->mEntryData->isTextureInvalid = true;
+                } else {
+                    uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(ch.rendererData)->uv;
                 }
 
                 self->mVertices.push_back({glm::vec2(pos.x, pos.y + height), glm::vec2(uv.x, uv.w)});
@@ -795,25 +775,13 @@ _<IRenderer::IPrerenderedString> OpenGLRenderer::prerenderString(glm::vec2 posit
 
 OpenGLRenderer::FontEntryData* OpenGLRenderer::getFontEntryData(const AFontStyle& fontStyle) {
     auto fe = fontStyle.getFontEntry();
-    FontEntryData* entryData = nullptr;
-    // FontData::rendererData is shared renderer cache state; read and write
-    // it through the synchronized accessor so check-then-create is atomic
-    // when several render threads use the same font size.
-    fontStyle.font->withFontEntryRendererData(fe, [&](void*& rendererData) {
-        if (rendererData == nullptr) {
-            // The font lock held here is per-font; mFontEntryData is shared
-            // by every font of this renderer, so appends need the
-            // renderer-wide cache mutex.
-            std::lock_guard lock(mFontCacheMutex);
-            mFontEntryData.emplace_back();
-            rendererData = entryData = &mFontEntryData.last();
-        } else {
-            entryData = reinterpret_cast<FontEntryData*>(rendererData);
-        }
-    });
-    // withFontEntryRendererData always invokes its callback (no skip path),
-    // so entryData is guaranteed to be assigned here.
-    AUI_ASSERT(entryData != nullptr);
+    FontEntryData* entryData;
+    if (fe.second.rendererData == nullptr) {
+        mFontEntryData.emplace_back();
+        fe.second.rendererData = entryData = &mFontEntryData.last();
+    } else {
+        entryData = reinterpret_cast<FontEntryData*>(fe.second.rendererData);
+    }
     return entryData;
 }
 

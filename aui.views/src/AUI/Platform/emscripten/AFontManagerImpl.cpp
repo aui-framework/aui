@@ -17,11 +17,6 @@ AFontManager::AFontManager():
     mFreeType(_new<FreeType>()),
     mDefaultFont(loadFont(":uni/font/Roboto.ttf"))
 {
-    // Deliberately no initFallback(): Emscripten builds may lack thread
-    // support (std::thread requires -pthread with worker support), and
-    // fallbackCandidates() returns an empty list anyway, so discovery would
-    // find nothing. Fallback stays disabled: the deferred queue is never
-    // populated, so lockFallbackFace never kicks a worker either.
 }
 
 AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {

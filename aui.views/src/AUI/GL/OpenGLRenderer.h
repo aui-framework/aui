@@ -18,7 +18,6 @@
 #include "AUI/Render/ABorderStyle.h"
 #include "AUI/Render/IRenderer.h"
 #include "AUI/GL/RenderTarget/TextureRenderTarget.h"
-#include <mutex>
 
 class API_AUI_VIEWS OpenGLRenderer final: public IRenderer {
     friend class OpenGLPrerenderedString;
@@ -67,32 +66,12 @@ private:
     gl::Texture2D mGradientTexture;
 
 
-    /**
-     * Per-glyph atlas entry. The glyph's fallbackGeneration is kept instead
-     * of the _<AImage>: the pixels are already copied into the atlas image
-     * (SimpleTexturePacker::onInsert), so the retained bitmap would only
-     * serve as an identity token, keeping stale bitmaps resident after
-     * re-renders. The generation differs exactly when a re-render replaced
-     * the cached glyph (getCharacterLocked re-renders only after the
-     * generation advances), so it is a safe, non-reusable identity. A raw
-     * pointer would not be: the address could be reused by a later glyph.
-     */
     struct CharacterData {
         glm::vec4 uv;
-        uint64_t fallbackGeneration;
     };
 
     ADeque<CharacterData> mCharData;
     ADeque<FontEntryData> mFontEntryData;
-    /**
-     * @brief Serializes appends to mCharData and mFontEntryData. Element
-     *        addresses are stable (ADeque never reallocates) and elements are
-     *        immutable after insertion, so only the mutation itself needs
-     *        guarding: the AFont glyph-cache lock held by the with*RendererData
-     *        callbacks is per-font, while these deques are shared by every
-     *        font rendered by this renderer.
-     */
-    std::mutex mFontCacheMutex;
     IRenderViewToTexture* mRenderToTextureTarget = nullptr;
 
     struct FramebufferWithTextureRT {
