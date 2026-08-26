@@ -145,7 +145,7 @@ void ASurface::focusNextView() {
                     auto index = [&]() -> size_t {
                         for (size_t i = 0; i < parentViews.size(); ++i)
                         {
-                            if (parentViews[i].get() == target)
+                            if (parentViews.at(i).get() == target)
                                 return i;
                         }
 
@@ -165,7 +165,7 @@ void ASurface::focusNextView() {
                             }
                         }
                     } else {
-                        target = parentViews[index].get();
+                        target = parentViews.at(index).get();
                         break;
                     }
                 }
@@ -220,7 +220,7 @@ void ASurface::focusPrevView() {
                     auto index = [&]() -> size_t {
                         for (size_t i = 0; i < parentViews.size(); ++i)
                         {
-                            if (parentViews[i].get() == target)
+                            if (parentViews.at(i).get() == target)
                                 return i;
                         }
 
@@ -239,7 +239,7 @@ void ASurface::focusPrevView() {
                             }
                         }
                     } else {
-                        target = parentViews[index - 1].get();
+                        target = parentViews.at(index - 1).get();
                         break;
                     }
                 }
