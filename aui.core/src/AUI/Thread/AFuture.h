@@ -172,6 +172,17 @@ namespace aui::impl::future {
                 return bool(value);
             }
 
+            [[nodiscard]]
+            bool hasException() const noexcept {
+                return bool(exception);
+            }
+
+            void checkForSelfWait() {
+                if (!hasResult() && AThread::current() == thread) {
+                    throw AException("self wait?");
+                }
+            }
+
             bool setThread(_<AAbstractThread> thr) noexcept {
                 std::unique_lock lock(mutex);
                 if (cancelled) return true;
@@ -406,6 +417,14 @@ namespace aui::impl::future {
         }
 
         /**
+         * @return true if the exception was received.
+         */
+        [[nodiscard]]
+        bool hasException() const noexcept {
+            return (*mInner)->hasException();
+        }
+
+        /**
          * @return true if asynchronous operation was successfuly completed and supplied a value, which can be obtained
          * without waiting.
          */
@@ -434,7 +453,15 @@ namespace aui::impl::future {
 
         template<aui::invocable<const AException&> Callback>
         void onError(Callback&& callback) const {
+            if (hasException()) { // cheap lookahead
+                std::invoke(callback, *(*mInner)->exception);
+                return;
+            }
             std::unique_lock lock((*mInner)->mutex);
+            if (hasException()) { // not so cheap, but cheapier than adding the callback to inner
+                std::invoke(callback, *(*mInner)->exception);
+                return;
+            }
             (*mInner)->addOnErrorCallback(std::forward<Callback>(callback));
         }
 
@@ -443,6 +470,10 @@ namespace aui::impl::future {
          */
         template<aui::invocable Callback>
         void onFinally(Callback&& callback) const {
+            if (hasResult()) { // cheap lookahead
+                std::invoke(callback);
+                return;
+            }
             std::unique_lock lock((*mInner)->mutex);
             (*mInner)->addOnSuccessCallback([callback](const auto&...) { callback(); });
             (*mInner)->addOnErrorCallback([callback = std::move(callback)](const auto&...) { callback(); });
@@ -545,9 +576,7 @@ namespace aui::impl::future {
 
     private:
         void checkForSelfWait() const {
-            if (!(*mInner)->hasResult() && AThread::current() == (*mInner)->thread) {
-                throw AException("self wait?");
-            }
+            (*mInner)->checkForSelfWait();
         }
     };
 
@@ -615,8 +644,15 @@ namespace aui::impl::future {
  * AFuture provides a set of functions for both "value emitting" side: supplyValue(), supplyException(), and "value
  * receiving" side: operator->(), operator*(), get().
  *
- * When AFuture's operation is completed it calls either onSuccess() or onError(). These callbacks are excepted to be
- * called in any case. Use onFinally() to handle both.
+ * When AFuture's operation is completed, it calls either `onSuccess()` (on success) or `onError()` (on failure).
+ * Use `onFinally()` to handle both cases with a single callback.
+ *
+ * These callbacks are guaranteed to be called in exactly one of two moments:
+ * - **during resolution** — called by `supplyValue()`/`supplyException()` right after the result is stored;
+ * - **at subscription time** — if the future is already resolved when `onSuccess()`/`onError()` is called,
+ *   the callback is invoked immediately.
+ *
+ * This design eliminates the race condition between checking the resolution state and registering a callback.
  *
  * AFuture is a shared_ptr-based wrapper so it can be easily copied, pointing to the same task.
  *
@@ -924,6 +960,7 @@ void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapp
         if (flags & AFutureWait::ALLOW_STACKFUL_COROUTINES) {
             if (auto threadPoolWorker = _cast<AThreadPool::Worker>(AThread::current())) {
                 if (hasResult()) return; // for sure
+                checkForSelfWait();
                 AUI_ASSERT(lock.owns_lock());
                 auto callback = [threadPoolWorker](auto&&...) {
                     threadPoolWorker->threadPool().wakeUpAll();

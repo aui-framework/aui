@@ -58,23 +58,34 @@ public:
     template<typename T>
     AAsyncHolder& operator<<(AFuture<T> future) {
         std::unique_lock lock(mSync);
+        // Capture the caller thread's event loop at the time of registration. When the future completes on any
+        // thread, we notify the event loop so that "while (!async.empty()) { loop.iteration(); }" patterns
+        // never deadlock even if the future resolves on a non-event-loop thread.
+        _<AAbstractThread> callerThread = AThread::current();
+        auto notifyCallerEventLoop = [callerThread] {
+            callerThread->notifyCurrentEventLoop();
+        };
         if constexpr (std::is_same_v<void, T>) {
             auto impl = future.inner().get();
             mFutureSet << future;
             lock.unlock();
-            future.onSuccess([this, impl]() {
+            future.onSuccess([this, impl, notifyCallerEventLoop]() {
                 std::unique_lock lock(mSync);
                 mFutureSet.removeIf([&](const AFuture<>& f) {
                     return f.inner().get() == impl;
                 });
+                lock.unlock();
+                notifyCallerEventLoop();
             });
 
-            future.onError([this, impl](const AException& e) {
+            future.onError([this, impl, notifyCallerEventLoop](const AException& e) {
                 std::unique_lock lock(mSync);
                 mOnException(e);
                 mFutureSet.removeIf([&](const AFuture<>& f) {
                     return f.inner().get() == impl;
                 });
+                lock.unlock();
+                notifyCallerEventLoop();
             });
         } else {
             auto uniquePtr = std::make_unique<Future<T>>(future);
@@ -82,19 +93,23 @@ public:
 
             lock.unlock();
 
-            future.onSuccess([this, it](const T& result) {
+            future.onSuccess([this, it, notifyCallerEventLoop](const T& result) {
                 AUI_ASSERTX(!mDead, "you have concurrency issues");
                 std::unique_lock lock(mSync);
                 AUI_ASSERT(!mCustomTypeFutures.empty());
                 mCustomTypeFutures.erase(it);
+                lock.unlock();
+                notifyCallerEventLoop();
             });
 
-            future.onError([this, it](const AException& result) {
+            future.onError([this, it, notifyCallerEventLoop](const AException& result) {
                 AUI_ASSERTX(!mDead, "you have concurrency issues");
                 std::unique_lock lock(mSync);
                 mOnException(result);
                 AUI_ASSERT(!mCustomTypeFutures.empty());
                 mCustomTypeFutures.erase(it);
+                lock.unlock();
+                notifyCallerEventLoop();
             });
         }
         return *this;
@@ -103,7 +118,13 @@ public:
     [[nodiscard]]
     std::size_t size() const {
         std::unique_lock lock(mSync);
-        return mFutureSet.size();
+        return mFutureSet.size() + mCustomTypeFutures.size();
+    }
+
+    [[nodiscard]]
+    bool empty() const {
+        std::unique_lock lock(mSync);
+        return mFutureSet.empty() && mCustomTypeFutures.empty();
     }
 
     void waitForAll() {
