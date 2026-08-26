@@ -116,7 +116,7 @@ TEST(Coroutines, CoAwait) {
 
     AEventLoop loop;
     IEventLoop::Handle h(&loop);
-    while (async.size() > 0) {
+    while (!async.empty()) {
         loop.iteration();
     }
     /// [co_await1]
@@ -137,7 +137,7 @@ TEST(Coroutines, CoAwaitException) {
 
     AEventLoop loop;
     IEventLoop::Handle h(&loop);
-    while (async.size() > 0) {
+    while (!async.empty()) {
         loop.iteration();
     }
 }
@@ -153,7 +153,7 @@ TEST(Coroutines, CoAwaitPreservesThread) {
 
     AEventLoop loop;
     IEventLoop::Handle h(&loop);
-    while (async.size() > 0) {
+    while (!async.empty()) {
         loop.iteration();
     }
     /// [co_await1]
@@ -180,6 +180,8 @@ static auto switch_to_new_thread(std::thread &out) {
 
 TEST(Coroutines, CoAwait3rdPartyCoro) {
     AAsyncHolder async;
+    AEventLoop loop;
+    IEventLoop::Handle h(&loop);
     std::thread thread;
     auto future = [](std::thread &thread) -> AFuture<int> {
         auto original = AThread::current();
@@ -189,10 +191,7 @@ TEST(Coroutines, CoAwait3rdPartyCoro) {
     }(thread);
     async << future;
 
-
-    AEventLoop loop;
-    IEventLoop::Handle h(&loop);
-    while (async.size() > 0) {
+    while (!async.empty()) {
         loop.iteration();
     }
     thread.join();

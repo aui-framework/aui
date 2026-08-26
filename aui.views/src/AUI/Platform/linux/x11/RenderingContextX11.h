@@ -37,4 +37,5 @@ protected:
     void xDestroyNativeWindow(ASurface& window);
     Sync mXsyncRequestCounter;
     XIC mIC = nullptr;
+    AString mWindowClass;
 };

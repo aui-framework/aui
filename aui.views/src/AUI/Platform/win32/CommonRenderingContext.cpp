@@ -18,6 +18,8 @@
 #include <AUI/Platform/win32/Theme.h>
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Platform/ARenderingContextOptions.h>
+#include <AUI/AppInfo.h>
+#include <algorithm>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto window = reinterpret_cast<AWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
@@ -41,10 +43,15 @@ void CommonRenderingContext::init(const Init& init) {
     // CREATE WINDOW
     WNDCLASSEX winClass;
 
-
+    // Generate window class name from app_id with random suffix for uniqueness
+    // On Windows, multiple instances need unique class names
     ARandom r;
     for (;;) {
-        mWindowClass = "AUI-" + AString::number(r.nextInt());
+        // Use app_id as base, replacing dots with underscores for Windows compatibility
+        AString baseClass = aui::app_info::app_id;
+        std::replace(baseClass.begin(), baseClass.end(), '.', '_');
+        // Add random suffix to ensure uniqueness per instance
+        mWindowClass = baseClass + "_" + AString::number(r.nextInt());
         auto u16windowClass = aui::win32::toWchar(mWindowClass);
         winClass.lpszClassName = u16windowClass.c_str();
         winClass.cbSize = sizeof(WNDCLASSEX);

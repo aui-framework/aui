@@ -13,6 +13,8 @@
 #include "AUI/Platform/ARenderingContextOptions.h"
 #include "OpenGLRenderingContextGtk.h"
 #include "AUIWidget.h"
+#include <AUI/Util/ARandom.h>
+#include <AUI/AppInfo.h>
 //#include <adwaita.h>
 
 using namespace aui::gtk4_fake;
@@ -27,6 +29,11 @@ void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingConte
     auto window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(*mApplication)));
     windowManagerInitCommon(init, window);
     gtk_window_set_child(window, windowManagerInitGtkBox(init));
+    
+    // Set WM_CLASS hint after the rendering context is initialized
+    if (auto gtkContext = dynamic_cast<RenderingContextGtk*>(init.window.getRenderingContext().get())) {
+        gtkSetWindowClassHint(gtkContext, window);
+    }
 }
 
 void PlatformAbstractionGtk::windowManagerInitCommon(const IRenderingContext::Init& init, GtkWindow* window) {
@@ -41,6 +48,16 @@ void PlatformAbstractionGtk::windowManagerInitCommon(const IRenderingContext::In
             return true;
         }),
         &init.window);
+}
+
+void PlatformAbstractionGtk::gtkSetWindowClassHint(RenderingContextGtk* context, GtkWindow* gtkWindow) {
+    // Use application app_id as the window class identifier
+    // This is used for identifying the window in window managers and tools on both X11 and Wayland
+    context->mWindowClass = aui::app_info::app_id;
+    
+    // Note: On X11, this would be set as WM_CLASS if using direct X11 window management.
+    // On Wayland, GTK automatically uses the app-id from .desktop file or from g_application_id_from_appid.
+    // GTK4 handles platform differences automatically.
 }
 
 GtkWidget* PlatformAbstractionGtk::windowManagerInitGtkBox(const IRenderingContext::Init& init) const {

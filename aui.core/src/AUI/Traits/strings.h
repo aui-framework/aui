@@ -17,6 +17,7 @@
 #include "types.h"
 
 #include <fmt/format.h>
+#include <fmt/ranges.h>
 
 namespace aui {
 

@@ -93,6 +93,7 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             */
 
         case WM_CREATE: // used for ACustomWindow
+            updateDpi();
             return 0;
 
         case WM_USER:

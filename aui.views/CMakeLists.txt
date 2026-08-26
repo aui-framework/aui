@@ -68,7 +68,7 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
         endforeach ()
     endif ()
 
-    if (NOT AUI_PLATFORM_WINDOWS)
+    if (NOT AUI_PLATFORM_WIN)
         aui_compile_assets(aui.views)
     else ()
         aui_compile_assets(aui.views EXCLUDE uni/font/Roboto.ttf)

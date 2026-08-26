@@ -49,7 +49,7 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(ASurface* targetWindow) {
           /// [fromItems]
           AText::fromItems(
               { "These settings are applicable for render-to-texture optimizations.",
-                makeLink("Learn more", "https://aui-framework.github.io/master/md_docs_Render_to_texture.html") }),
+                makeLink("Learn more", "https://aui-framework.github.io/master/render-to-texture/") }),
           CheckBox {
             AUI_REACT(*targetWindow->profiling()->highlightRedrawRequests),
             [targetWindow](bool checked) {

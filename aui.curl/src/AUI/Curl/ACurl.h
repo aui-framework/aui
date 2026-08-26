@@ -424,7 +424,13 @@ public:
         };
 
         Builder& withHeaders(AVector<AString> headers) {
-            mHeaders = std::move(headers);
+            if (mHeaders.empty()) {
+                mHeaders = std::move(headers);
+            } else {
+                for (auto& h : headers) {
+                    mHeaders.push_back(std::move(h));
+                }
+            }
             return *this;
         }
 
