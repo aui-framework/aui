@@ -13,6 +13,7 @@
 
 #include <ft2build.h>
 #include <freetype/freetype.h>
+class FreeType {
 private:
 	FT_Library ft;
 public:

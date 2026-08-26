@@ -277,5 +277,8 @@ public:
     }
 
     [[nodiscard]]
+    bool isBold() const;
+
+    [[nodiscard]]
     bool isItalic() const;
 };
