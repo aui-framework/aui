@@ -15,6 +15,11 @@
 #include "AUI/Performance/APerformanceFrame.h"
 #include "AUI/Performance/APerformanceSection.h"
 #include "AUI/Platform/AWindow.h"
+#include <AUI/Render/ARender/ADrawList.hpp>
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
+#include <AUI/Platform/IRenderingContext.h>
+#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/RendererCanvas.h>
 #include "AUI/Thread/AThread.h"
 #include "SoftwareRenderingContext.h"
 #include "ARenderingContextOptions.h"
@@ -49,9 +54,45 @@ void AWindow::onClosed() {
 
 void AWindow::doDrawWindow() {
     APerformanceSection s("AWindow::doDrawWindow");
-    auto& renderer = mRenderingContext->renderer();
-    renderer.setWindow(this);
-    render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = getSize() } }, .render = renderer });
+    auto& rc = *mRenderingContext;
+    auto saved = rc.canvas().save();
+    AUI_DEFER {
+        rc.canvas().restore(saved);
+        resetInvalidArea();
+    };
+
+    bool highlightRedrawRequests = false;
+    if (auto& p = profiling()) [[unlikely]] {
+        highlightRedrawRequests = p->highlightRedrawRequests;
+    }
+
+    ARect<float> clipRect = ARect<float>::fromTopLeftPositionAndSize({0, 0}, getSize());
+    if (!highlightRedrawRequests && getInvalidArea()) {
+        ARect<int> expandedArea = getInvalidArea().value();
+        expandedArea.p1 -= 8;
+        expandedArea.p2 += 8;
+        clipRect = ARect<float>::fromTopLeftPositionAndSize(expandedArea.min(), expandedArea.size());
+        rc.canvas().pushClipRect(clipRect);
+        APaint clear_paint;
+        clear_paint.blending = Blending::CLEAR;
+        rc.canvas().rectangle(clear_paint, expandedArea.min(), expandedArea.size());
+    } else {
+        rc.canvas().clear();
+    }
+
+    render(ARenderContext {
+        .canvas = rc.canvas(),
+        .backend = rc.backend(),
+        .render = rc.renderer(),
+        .clipRect = clipRect,
+    });
+
+    if (highlightRedrawRequests && getInvalidArea()) {
+        ARect<int> expandedArea = getInvalidArea().value();
+        expandedArea.p1 -= 8;
+        expandedArea.p2 += 8;
+        rc.canvas().rectangle(APaint{ASolidBrush{0x40ff00ff_argb}}, expandedArea.min(), expandedArea.size());
+    }
 }
 
 void AWindow::createDevtoolsWindow() {

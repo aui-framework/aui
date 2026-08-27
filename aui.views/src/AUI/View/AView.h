@@ -44,7 +44,6 @@
 #include <AUI/Event/APointerReleasedEvent.h>
 #include <AUI/Event/APointerMoveEvent.h>
 #include <AUI/Render/ITexture.h>
-#include <AUI/Render/IRenderViewToTexture.h>
 #include <AUI/Enum/AFloat.h>
 #include <AUI/Common/AProperty.h>
 
@@ -176,8 +175,6 @@ public:
      */
     ASurface* getWindow() const;
 
-    virtual void drawStencilMask(ARenderContext ctx);
-
     /**
      * @brief Draws this AView. Noone should call this function except rendering routine.
      * @see AView::drawView
@@ -192,8 +189,6 @@ public:
      * @see AView::drawView
      */
     virtual void postRender(ARenderContext ctx);
-
-    void popStencilIfNeeded(ARenderContext ctx);
 
     [[nodiscard]]
     const AVector<AString>& getAssNames() const noexcept {
@@ -672,7 +667,7 @@ public:
         return mTextColor;
     }
 
-    void setTextColor(AColor color) {
+    virtual void setTextColor(AColor color) {
         mTextColor = color;
     }
 
@@ -1165,6 +1160,8 @@ private:
      */
     AOverflowMask mOverflowMask = AOverflowMask::ROUNDED_RECT;
 
+    _<ITexture> mMaskTexture;
+
     /**
      * @see Visibility
      */
@@ -1255,19 +1252,6 @@ private:
      * @brief Floating value for AText.
      */
     AFloat mFloating = AFloat::NONE;
-
-    struct RenderToTexture {
-        _unique<IRenderViewToTexture> rendererInterface;
-        IRenderViewToTexture::InvalidArea invalidArea;
-
-        bool drawFromTexture = true;
-
-        /**
-         * @brief Helps avoiding unwanted redrawing if RenderToTexture-capable view is not actually visible.
-         */
-        bool skipRedrawUntilTextureIsPresented = false;
-    };
-    AOptional<RenderToTexture> mRenderToTexture;
 
     /**
      * @brief Applies state-dependent styles and invalidates pixel data, layout, repaint if needed.

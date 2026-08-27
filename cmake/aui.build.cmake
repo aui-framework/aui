@@ -348,8 +348,8 @@ macro(_aui_import_google_benchmark)
                 find_package(benchmark REQUIRED CONFIG)
             else()
                 auib_import(benchmark https://github.com/google/benchmark
-                            VERSION 7e413be55370f0f4567761fe71ea8232d6871d06
-                            CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+                            VERSION a8460680f0df91fd26205e0931708a26c3b4094d
+                            CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF -DBENCHMARK_ENABLE_WERROR=OFF
                             LINK STATIC)
             endif()
             set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)
@@ -1253,42 +1253,6 @@ function(aui_module AUI_MODULE_NAME)
         endif()
     endif()
 endfunction(aui_module)
-
-# links the auisl shader located in shaders/<NAME>
-function(auisl_shader TARGET NAME)
-    set(_path ${CMAKE_CURRENT_SOURCE_DIR}/shaders/${NAME})
-    if (NOT EXISTS ${_path})
-        message(FATAL_ERROR "shader not exists: ${_path}")
-    endif()
-
-    if (NOT TARGET ${TARGET})
-        message(FATAL_ERROR "no such target: ${TARGET}")
-    endif()
-
-    set(_compiled_shader_dir ${CMAKE_CURRENT_BINARY_DIR}/shaders/AUISL/Generated)
-    file(MAKE_DIRECTORY ${_compiled_shader_dir})
-
-    set(_targets software glsl120)
-    _aui_check_toolbox()
-    if (TARGET aui.toolbox)
-        set(_toolbox_dep aui.toolbox)
-    else()
-        set(_toolbox_dep ${AUI_TOOLBOX_EXE})
-    endif()
-    foreach(_target ${_targets})
-        set(_output "${_compiled_shader_dir}/${NAME}.${_target}.cpp")
-
-        add_custom_command(
-                OUTPUT ${_output}
-                DEPENDS ${_path} ${_toolbox_dep}
-                COMMAND ${AUI_TOOLBOX_EXE}
-                ARGS auisl ${_target} ${_path} ${_output}
-        )
-        target_sources(${TARGET} PRIVATE ${_output})
-    endforeach()
-
-    target_include_directories(${TARGET} PRIVATE ${CMAKE_CURRENT_BINARY_DIR}/shaders)
-endfunction()
 
 macro(_auib_weak_set VAR_NAME)
     if (NOT VAR_NAME)

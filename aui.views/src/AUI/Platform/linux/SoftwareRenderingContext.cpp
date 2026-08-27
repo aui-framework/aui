@@ -10,10 +10,14 @@
  */
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include <AUI/Render/IRendererBackend.h>
 #include "AUI/Common/AByteBufferView.h"
+#include "AUI/Common/AByteBuffer.h"
 #include "AUI/Image/AImage.h"
 #include "AUI/Image/APixelFormat.h"
-#include "AUI/Software/SoftwareRenderer.h"
+#include "AUI/Render/ARender/Software/SoftwareRenderer.h"
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
+#include <AUI/Render/RendererCanvas.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext() {}
 
@@ -24,11 +28,29 @@ SoftwareRenderingContext::~SoftwareRenderingContext() {
     }
 }
 
-void SoftwareRenderingContext::beginPaint(ASurface &window) {
-    std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
+IRendererBackend& SoftwareRenderingContext::backend() {
+    return *mRenderer;
 }
 
-void SoftwareRenderingContext::endPaint(ASurface &window) { CommonRenderingContext::endPaint(window); }
+void SoftwareRenderingContext::init(const Init& init) {
+    mRenderer = _new<SoftwareRenderer>();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
+
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
+}
+
+void SoftwareRenderingContext::beginPaint(ASurface &window) {
+    mDrawList.clear();
+    if (!mRenderer) return;
+    mWindowTarget = mRenderer->createFramebufferWrapper(mBitmapSize, { mBitmapBlob, mBitmapSize.x * mBitmapSize.y * 4 });
+}
+
+void SoftwareRenderingContext::endPaint(ASurface &window) {
+    mDrawList.optimize();
+    mDrawList.draw(*mRenderer, mWindowTarget);
+    mDrawList.clear();
+    CommonRenderingContext::endPaint(window);
+}
 
 void SoftwareRenderingContext::beginResize(ASurface &window) {}
 
@@ -45,19 +67,9 @@ void SoftwareRenderingContext::reallocate() {
         free(mBitmapBlob);
     }
     mBitmapBlob = static_cast<uint8_t *>(malloc(mBitmapSize.x * mBitmapSize.y * 4));
-
-    mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
+    memset(mBitmapBlob, 0, mBitmapSize.x * mBitmapSize.y * 4);
 }
 
 AImage SoftwareRenderingContext::makeScreenshot() {
-    AByteBuffer data;
-    size_t s = mBitmapSize.x * mBitmapSize.y * 4;
-    data.resize(s);
-    std::memcpy(data.data(), mBitmapBlob, s);
-    return AImageView(data, mBitmapSize, APixelFormat::BGRA | APixelFormat::BYTE).convert(APixelFormat::RGBA_BYTE);
-}
-
-IRenderer &SoftwareRenderingContext::renderer() {
-    static SoftwareRenderer r;
-    return r;
+    return mRenderer->readback(mWindowTarget);
 }

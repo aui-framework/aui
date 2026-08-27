@@ -9,14 +9,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2772 on 8/20/20.
-//
-
 #include "ARotationAnimator.h"
-#include "AUI/Render/IRenderer.h"
+#include <AUI/Render/ACanvas.hpp>
 
-void ARotationAnimator::doAnimation(AView* view, float theta, IRenderer& render) {
+void ARotationAnimator::doAnimation(AView* view, float theta, ACanvas& render) {
     translateToCenter(view, render);
     render.setTransform(
             glm::rotate(glm::mat4(1.f), glm::mix(mBegin.radians(), mEnd.radians(), theta), glm::vec3{0.f, 0.f, 1.f}));

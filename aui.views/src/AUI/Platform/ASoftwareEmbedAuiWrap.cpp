@@ -15,7 +15,7 @@
 
 #include "ASoftwareEmbedAuiWrap.h"
 
-#include <AUI/Software/SoftwareRenderer.h>
+#include <AUI/Render/ARender/Software/SoftwareRenderer.h>
 
 #if AUI_PLATFORM_LINUX
 #include <AUI/Platform/linux/x11/SoftwareRenderingContextX11.h>

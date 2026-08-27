@@ -19,7 +19,7 @@
 #include "Curves/viscous_fluid.h"
 
 class AView;
-class IRenderer;
+class ACanvas;
 
 using AAnimationCurve = std::function<float(float)>;
 
@@ -38,21 +38,15 @@ private:
     AAnimationCurve mCurve = aui::animation_curves::Standard();
 
 protected:
-    /**
-     * @brief Does the animation (sets matrix, colors, etc...)
-     * @param view target view to perform animation for.
-     * @param theta animation time value [0;1] where 0 - start of the animation, 1 - end of the animation.
-     * @param render renderer.
-     */
-    virtual void doAnimation(AView* view, float theta, IRenderer& render) {};
+    virtual void doAnimation(AView* view, float theta, ACanvas& render) {};
 
-    virtual void doPostRender(AView* view, float theta, IRenderer& render) {};
+    virtual void doPostRender(AView* view, float theta, ACanvas& render) {};
 
-    void translateToCenter(IRenderer& render);
-    void translateToCorner(IRenderer& render);
+    void translateToCenter(ACanvas& render);
+    void translateToCorner(ACanvas& render);
 
-    static void translateToCenter(AView* view, IRenderer& render);
-    static void translateToCorner(AView* view, IRenderer& render);
+    static void translateToCenter(AView* view, ACanvas& render);
+    static void translateToCorner(AView* view, ACanvas& render);
 
 public:
 
@@ -60,8 +54,8 @@ public:
         mCurve = curve;
     }
 
-    void animate(AView* view, IRenderer& render);
-    void postRender(AView* view, IRenderer& render);
+    void animate(AView* view, ACanvas& render);
+    void postRender(AView* view, ACanvas& render);
     void pause();
 
     void setDuration(float period) {

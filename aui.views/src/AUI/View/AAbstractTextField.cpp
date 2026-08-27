@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -41,7 +41,7 @@ int AAbstractTextField::getContentMinimumHeight() {
 void AAbstractTextField::render(ARenderContext ctx) {
     AView::render(ctx);
 
-    prerenderStringIfNeeded(ctx.render);
+    prerenderStringIfNeeded(ctx.canvas);
 
     AStaticVector<ARect<int>, 1> selectionRects;
     int y = mPadding.top + getVerticalAlignmentOffset() - getFontStyle().getAscenderHeight() - getFontStyle().getDescenderHeight() * 2;
@@ -52,16 +52,16 @@ void AAbstractTextField::render(ARenderContext ctx) {
         selectionRects.push_back(ARect<int>::fromTopLeftPositionAndSize({mPadding.left + beginPos, y},
                                                                         {endPos - beginPos, getFontStyle().size + getFontStyle().getAscenderHeight()}));
     }
-    drawSelectionBeforeAndAfter(ctx.render, selectionRects, [&] {
-        doDrawString(ctx.render);
+    drawSelectionBeforeAndAfter(ctx.canvas, selectionRects, [&] {
+        doDrawString(ctx.canvas);
     });
     if (!mIsEditable) {
         return;
     }
-    drawCursor(ctx.render, {mAbsoluteCursorPos + mPadding.left, y});
+    drawCursor(ctx.canvas, {mAbsoluteCursorPos + mPadding.left, y});
 }
 
-void AAbstractTextField::doDrawString(IRenderer& render) {
+void AAbstractTextField::doDrawString(ACanvas& render) {
     if (!mPrerenderedString) {
         return;
     }
@@ -69,8 +69,7 @@ void AAbstractTextField::doDrawString(IRenderer& render) {
 
     render.translate(
             {mPadding.left - mHorizontalScroll + mTextAlignOffset, getVerticalAlignmentOffset()});
-    render.setColor(textColor());
-    mPrerenderedString->draw();
+    mPrerenderedString->draw(render);
 }
 
 
@@ -177,7 +176,7 @@ void AAbstractTextField::onCharEntered(AChar c) {
     emit textChanging(AString(mContents));
 }
 
-void AAbstractTextField::prerenderStringIfNeeded(IRenderer& render) {
+void AAbstractTextField::prerenderStringIfNeeded(ACanvas& render) {
     if (!mPrerenderedString) {
         auto text = getDisplayText() + mSuffix.toUtf32();
         updateTextAlignOffset();

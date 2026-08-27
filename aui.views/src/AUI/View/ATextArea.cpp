@@ -177,6 +177,7 @@ void ATextArea::setText(const AString& t) {
     mEngine.setEntries(std::move(entries));
 
     AAbstractTypeable::setText(t);
+    clearSelection();
     performLayout();
     mCompiledText = t;
 }
@@ -424,6 +425,12 @@ glm::ivec2 ATextArea::getPosByIndex(size_t index) {
         }
         it = std::prev(it);
     }
+    if (relativeIndex == (*it)->getCharacterCount()) {
+        auto next = std::next(it);
+        if (next != entities().end()) {
+            return (*next)->getPosByIndex(0) - mPadding.leftTop();
+        }
+    }
     return (*it)->getPosByIndex(glm::min(relativeIndex, (*it)->getCharacterCount())) - mPadding.leftTop();
 }
 
@@ -457,52 +464,63 @@ void ATextArea::setSize(glm::ivec2 size) {
 
 void ATextArea::render(ARenderContext context) {
     AViewContainerBase::render(context);
-    AStaticVector<ARect<int>, 3> selectionRects;
-    if (hasSelection() && hasFocus()) {
+    AVector<ARect<int>> selectionRects;
+    if (hasSelection()) {
         auto s = selection();
-        auto beginPos = getPosByIndex(s.begin);
-        auto endPos = getPosByIndex(s.end);
-        const auto LINE_HEIGHT = int(getFontStyle().size) + getFontStyle().getDescenderHeight();
-        endPos.y += LINE_HEIGHT;
-        for (auto i: {&beginPos, &endPos}) *i += glm::ivec2{mPadding.left, mPadding.top};
-        const auto LINES_OF_SELECTION = (endPos.y - beginPos.y) / LINE_HEIGHT;
-        const auto LEFT_POS = mPadding.left;
-        const auto RIGHT_POS = getWidth() - mPadding.right;
-        switch (LINES_OF_SELECTION) {
-            default:
-                // .................
-                // .....############ // second rect
-                // ################# // first rect
-                // ################# // first rect
-                // ################# // first rect
-                // ################# // first rect
-                // ###########...... // third rect
-                // .................
-                selectionRects.push_back(ARect<int>{.p1 = {LEFT_POS, beginPos.y + LINE_HEIGHT},
-                        .p2 = {RIGHT_POS, endPos.y - LINE_HEIGHT}});
-                [[fallthrough]];
-            case 2:
-                // .................
-                // .....############ // first rect
-                // ###########...... // second rect
-                // .................
-                selectionRects.push_back(ARect<int>{.p1 = beginPos, .p2 = {RIGHT_POS, beginPos.y + LINE_HEIGHT}});
-                selectionRects.push_back(ARect<int>{.p1 = {LEFT_POS, endPos.y - LINE_HEIGHT}, .p2 = endPos});
-                break;
-            case 1:
-                // .................
-                // ....##########... // first rect
-                // .................
-                selectionRects.push_back(ARect<int>::fromTopLeftPositionAndSize(beginPos,
-                                                                                endPos - beginPos));
-                break;
+        const auto SELECTION_HEIGHT = int(getFontStyle().size);
+        auto displayText = getDisplayText();
+        auto glyphWidth = [&](char32_t c) {
+            if (c == U'\n') {
+                return 0;
+            }
+            if (c == U' ') {
+                return getFontStyle().getSpaceWidth();
+            }
+            return int(getFontStyle().getCharacter(c).horizontal.advance);
+        };
+
+        for (size_t i = s.begin; i < s.end && i < displayText.size();) {
+            if (displayText[i] == U'\n') {
+                ++i;
+                continue;
+            }
+
+            auto beginPos = getPosByIndex(i) + mPadding.leftTop();
+            auto lineY = beginPos.y;
+            auto lineEnd = i;
+
+            for (; lineEnd < s.end && lineEnd < displayText.size(); ++lineEnd) {
+                if (displayText[lineEnd] == U'\n') {
+                    break;
+                }
+                if (lineEnd != i && getPosByIndex(lineEnd).y != lineY) {
+                    break;
+                }
+            }
+
+            auto lastCharIndex = lineEnd - 1;
+            auto endPos = getPosByIndex(lineEnd) + mPadding.leftTop();
+            if (endPos.y != lineY) {
+                endPos = (getPosByIndex(lastCharIndex) + mPadding.leftTop()) + glm::ivec2(glyphWidth(displayText[lastCharIndex]), 0);
+            }
+
+            if (endPos.x <= beginPos.x) {
+                i = lineEnd + (lineEnd < displayText.size() && displayText[lineEnd] == U'\n');
+                continue;
+            }
+
+            selectionRects << ARect<int>{
+                .p1 = beginPos,
+                .p2 = {endPos.x, beginPos.y + SELECTION_HEIGHT},
+            };
+            i = lineEnd + (lineEnd < displayText.size() && displayText[lineEnd] == U'\n');
         }
     }
-    drawSelectionBeforeAndAfter(context.render, selectionRects, [&] {
+    drawSelectionBeforeAndAfter(context.canvas, selectionRects, [&] {
         doDrawString(context);
     });
 
-    drawCursor(context.render, mCursorPosition + mPadding.leftTop());
+    drawCursor(context.canvas, mCursorPosition + mPadding.leftTop());
 }
 
 bool ATextArea::capturesFocus() {
@@ -566,4 +584,3 @@ bool ATextArea::isPasswordField() const noexcept {
 ATextInputType ATextArea::textInputType() const noexcept {
     return ATextInputType::MULTILINE;
 }
-

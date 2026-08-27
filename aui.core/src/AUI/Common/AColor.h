@@ -125,6 +125,11 @@ public:
 
     AColor opacify(float d) { return { x, y, z, a * d }; }
 
+    [[nodiscard]]
+    constexpr AColor premultiply() const noexcept {
+        return { r * a, g * a, b * a, a };
+    }
+
     static const AColor BLACK;
     static const AColor WHITE;
     static const AColor RED;

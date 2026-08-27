@@ -323,16 +323,6 @@ protected:
 
     template<typename Iterator>
     void drawViews(Iterator begin, Iterator end, ARenderContext contextPassedToContainer) {
-        switch (mOverflow) {
-            case AOverflow::VISIBLE: break;
-            case AOverflow::HIDDEN:
-            case AOverflow::HIDDEN_FROM_THIS:
-                contextPassedToContainer.clip(ARect<int>{
-                    .p1 = {0, 0},
-                    .p2 = getSize(),
-                });
-        }
-
         std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
         if (!lock) {
             throw AException("drawViews: can't ensure safe iteration");
@@ -428,12 +418,6 @@ private:
     ASpinlockMutex mViewsSafeIteration;
     AVector<_<AView>> mViews;
     bool mSizeSet = false;
-
-
-    struct RepaintTrap {
-        bool triggered = false;
-    };
-    AOptional<RepaintTrap> mRepaintTrap;
 
     struct ConsumesClickCache {
         glm::ivec2 position;

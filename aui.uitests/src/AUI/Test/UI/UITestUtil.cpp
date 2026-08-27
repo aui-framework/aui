@@ -25,6 +25,6 @@ void uitest::setup() {
 }
 
 void uitest::frame() {
-    AStubWindowManager::drawFrame();
+    AStubWindowManager::drawFrame(*dynamic_cast<AWindow*>(AWindow::current()));
     AThread::processMessages();
 }

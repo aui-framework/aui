@@ -15,8 +15,8 @@
 
 #pragma once
 
-#include <AUI/Common/AObject.h>
-#include <AUI/Common/ASignal.h>
+#include "AUI/Common/AObject.h"
+#include "AUI/Common/ASignal.h"
 #include <AUI/Common/AVector.h>
 #include <optional>
 
@@ -52,6 +52,7 @@ public:
         ass::BackgroundImage backgroundUrl;
         ass::BackgroundCropping backgroundCropping;
         AOptional<_<IDrawable>> backgroundImage;
+        _<AAbstractSignal::Connection> backgroundImageDirtyConnection;
         ImageRendering imageRendering = ImageRendering::PIXELATED;
     } state;
 signals:

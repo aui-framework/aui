@@ -9,150 +9,251 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by Alex2772 on 12/12/2022.
-//
-
 #pragma once
 
 #include <cstdint>
 #include <cstddef>
+#include <algorithm>
+#include <functional>
+#include <bit>
+#include <type_traits>
 
+#include <glm/gtc/packing.hpp>
 #include <AUI/Common/AColor.h>
 
 /**
  * @brief Pixel in-memory format descriptor (type, count and order of subpixel components).
  * @ingroup image
  */
-class APixelFormat {
-public:
-    enum Value : std::uint32_t {
-        UNKNOWN = 0,
-        BYTE = 0b1,
-        FLOAT = 0b10,
-        R      = 0b000001'00,
-        RG     = 0b000011'00,
-        RGB    = 0b000111'00,
-        RGBA   = 0b001111'00,
-        ARGB   = 0b011111'00,
-        BGRA   = 0b111111'00,
+enum class APixelFormat : std::uint8_t {
+    UNKNOWN = 0,
+    
+    R8_UNORM,
+    R8G8_UNORM,
+    R8G8B8_UNORM,
+    R8G8B8A8_UNORM,
+    B8G8R8A8_UNORM,
+    
+    R16G16B16A16_SFLOAT,
+    R32G32B32A32_SFLOAT,
 
-        RGB_BYTE = RGB | BYTE,
-        RGBA_BYTE = RGBA | BYTE,
-        RGBA_FLOAT = RGBA | FLOAT,
+    A2R10G10B10_UNORM_PACK32, // Unsupported by OpenGL
 
-        // WARNING! please handle AImageView::visit cases when adding new enum values
+    // WARNING! please handle AImageView::visit cases when adding new enum values
 
-        DEFAULT = RGBA | BYTE,
-    };
-
-    static constexpr std::uint32_t COMPONENT_BITS = BGRA;
-    static constexpr std::uint32_t TYPE_BITS = 0b11;
-
-    constexpr APixelFormat(Value value) noexcept: mValue(value) {}
-    constexpr APixelFormat(std::uint32_t value) noexcept: mValue((Value)value) {}
-
-    constexpr operator Value() const noexcept {
-        return mValue;
-    }
-
-    [[nodiscard]]
-    uint8_t bytesPerPixel() const noexcept {
-        std::uint8_t b;
-        switch (static_cast<std::uint8_t>(mValue & COMPONENT_BITS)) {
-            case R: b = 1;   break;
-            case RG: b = 2;  break;
-            case RGB: b = 3; break;
-            default: b = 4;  break;
-        }
-        if (mValue & FLOAT)
-        {
-            b *= 4;
-        }
-        return b;
-    }
-
-
-private:
-    Value mValue;
+    DEFAULT = R8G8B8A8_UNORM,
 };
+
+[[nodiscard]]
+inline constexpr uint8_t bytesPerPixel(APixelFormat format) noexcept {
+    switch (format) {
+        case APixelFormat::R8_UNORM: return 1;
+        case APixelFormat::R8G8_UNORM: return 2;
+        case APixelFormat::R8G8B8_UNORM: return 3;
+        case APixelFormat::R8G8B8A8_UNORM:
+        case APixelFormat::B8G8R8A8_UNORM:
+        case APixelFormat::A2R10G10B10_UNORM_PACK32: return 4;
+        case APixelFormat::R16G16B16A16_SFLOAT: return 8;
+        case APixelFormat::R32G32B32A32_SFLOAT: return 16;
+        default: return 0;
+    }
+}
 
 namespace aui::pixel_format {
     namespace detail {
+        constexpr std::uint16_t pack_half(float f) noexcept {
+            std::uint32_t i = std::bit_cast<std::uint32_t>(f);
+            std::uint32_t s = (i >> 16) & 0x8000;
+            int32_t e = ((i >> 23) & 0xFF) - 127;
+            uint32_t m = i & 0x7FFFFF;
 
-        template<typename T, std::uint32_t componentBits>
+            if (e <= -15) {
+                if (e < -24) return s;
+                m |= 0x800000;
+                uint32_t shift = -e - 14;
+                m >>= shift;
+                return s | (m >> 13);
+            } else if (e >= 16) {
+                return s | 0x7C00; // Infinity
+            } else {
+                return s | ((e + 15) << 10) | (m >> 13);
+            }
+        }
+        constexpr float unpack_half(std::uint16_t h) noexcept {
+            uint32_t s = (h & 0x8000) << 16;
+            int32_t e = ((h >> 10) & 0x1F);
+            uint32_t m = h & 0x03FF;
+
+            if (e == 0) {
+                if (m == 0) return std::bit_cast<float>(s);
+                while (!(m & 0x0400)) {
+                    m <<= 1;
+                    e--;
+                }
+                e++;
+                m &= ~0x0400;
+            } else if (e == 31) {
+                if (m == 0) return std::bit_cast<float>(s | 0x7F800000);
+                return std::bit_cast<float>(s | 0x7F800000 | (m << 13));
+            }
+            return std::bit_cast<float>(s | ((e + 127 - 15) << 23) | (m << 13));
+        }
+    }
+
+    /**
+     * @brief Half-precision floating point wrapper.
+     */
+    struct float16 {
+        std::uint16_t bits;
+
+        constexpr float16() noexcept : bits(0) {}
+        constexpr explicit float16(float f) noexcept : bits(0) {
+            if (std::is_constant_evaluated()) {
+                bits = detail::pack_half(f);
+            } else {
+                bits = glm::packHalf1x16(f);
+            }
+        }
+        constexpr operator float() const noexcept {
+            if (std::is_constant_evaluated()) {
+                return detail::unpack_half(bits);
+            } else {
+                return glm::unpackHalf1x16(bits);
+            }
+        }
+
+        constexpr float16& operator+=(float16 rhs) noexcept {
+            if (std::is_constant_evaluated()) {
+                bits = detail::pack_half(float(*this) + float(rhs));
+            } else {
+                bits = glm::packHalf1x16(float(*this) + float(rhs));
+            }
+            return *this;
+        }
+        constexpr float16& operator-=(float16 rhs) noexcept {
+            if (std::is_constant_evaluated()) {
+                bits = detail::pack_half(float(*this) - float(rhs));
+            } else {
+                bits = glm::packHalf1x16(float(*this) - float(rhs));
+            }
+            return *this;
+        }
+        constexpr float16& operator*=(float16 rhs) noexcept {
+            if (std::is_constant_evaluated()) {
+                bits = detail::pack_half(float(*this) * float(rhs));
+            } else {
+                bits = glm::packHalf1x16(float(*this) * float(rhs));
+            }
+            return *this;
+        }
+        constexpr float16& operator/=(float16 rhs) noexcept {
+            if (std::is_constant_evaluated()) {
+                bits = detail::pack_half(float(*this) / float(rhs));
+            } else {
+                bits = glm::packHalf1x16(float(*this) / float(rhs));
+            }
+            return *this;
+        }
+
+        auto operator<=>(const float16&) const = default;
+    };
+
+    constexpr float16 operator+(float16 lhs, float16 rhs) noexcept { return lhs += rhs; }
+    constexpr float16 operator-(float16 lhs, float16 rhs) noexcept { return lhs -= rhs; }
+    constexpr float16 operator*(float16 lhs, float16 rhs) noexcept { return lhs *= rhs; }
+    constexpr float16 operator/(float16 lhs, float16 rhs) noexcept { return lhs /= rhs; }
+
+    namespace detail {
+        template<typename T, APixelFormat format>
         struct component_representation;
 
-        template<typename T> struct component_representation<T, APixelFormat::R> {
+        template<typename T> struct component_representation<T, APixelFormat::R8_UNORM> {
             T r;
         };
 
-        template<typename T> struct component_representation<T, APixelFormat::RG> {
+        template<typename T> struct component_representation<T, APixelFormat::R8G8_UNORM> {
             T r, g;
         };
 
-        template<typename T> struct component_representation<T, APixelFormat::RGB> {
+        template<typename T> struct component_representation<T, APixelFormat::R8G8B8_UNORM> {
             T r, g, b;
         };
 
-        template<typename T> struct component_representation<T, APixelFormat::RGBA> {
+        template<typename T> struct component_representation<T, APixelFormat::R8G8B8A8_UNORM> {
             T r, g, b, a;
         };
-        template<          > struct component_representation<float, APixelFormat::RGBA>: AColor {
+        template<          > struct component_representation<float, APixelFormat::R32G32B32A32_SFLOAT>: AColor {
             using AColor::AColor;
         };
 
-        template<typename T> struct component_representation<T, APixelFormat::BGRA> {
+        template<typename T> struct component_representation<T, APixelFormat::B8G8R8A8_UNORM> {
             T b, g, r, a;
         };
 
-        template<typename T> struct component_representation<T, APixelFormat::ARGB> {
-            T a, r, g, b;
+        template<typename T> struct component_representation<T, APixelFormat::R16G16B16A16_SFLOAT> {
+            T r, g, b, a;
         };
 
-        template<std::uint32_t componentBits>
-        constexpr std::size_t component_count() {
-            return sizeof(component_representation<std::uint8_t, componentBits>);
-        }
-
-
-        template<std::uint32_t typeBits>
-        struct type;
-
-        template<>
-        struct type<APixelFormat::FLOAT> {
-            using value = float;
+        template<typename T> struct component_representation<T, APixelFormat::A2R10G10B10_UNORM_PACK32> {
+            T packed;
         };
 
-        template<>
-        struct type<APixelFormat::BYTE> {
-            using value = std::uint8_t;
-        };
+        template<APixelFormat format>
+        struct format_traits_impl;
 
+        template<> struct format_traits_impl<APixelFormat::R8_UNORM> {
+            using component_t = std::uint8_t;
+            static constexpr std::size_t COMPONENT_COUNT = 1;
+        };
+        template<> struct format_traits_impl<APixelFormat::R8G8_UNORM> {
+            using component_t = std::uint8_t;
+            static constexpr std::size_t COMPONENT_COUNT = 2;
+        };
+        template<> struct format_traits_impl<APixelFormat::R8G8B8_UNORM> {
+            using component_t = std::uint8_t;
+            static constexpr std::size_t COMPONENT_COUNT = 3;
+        };
+        template<> struct format_traits_impl<APixelFormat::R8G8B8A8_UNORM> {
+            using component_t = std::uint8_t;
+            static constexpr std::size_t COMPONENT_COUNT = 4;
+        };
+        template<> struct format_traits_impl<APixelFormat::B8G8R8A8_UNORM> {
+            using component_t = std::uint8_t;
+            static constexpr std::size_t COMPONENT_COUNT = 4;
+        };
+        template<> struct format_traits_impl<APixelFormat::R16G16B16A16_SFLOAT> {
+            using component_t = float16;
+            static constexpr std::size_t COMPONENT_COUNT = 4;
+        };
+        template<> struct format_traits_impl<APixelFormat::R32G32B32A32_SFLOAT> {
+            using component_t = float;
+            static constexpr std::size_t COMPONENT_COUNT = 4;
+        };
+        template<> struct format_traits_impl<APixelFormat::A2R10G10B10_UNORM_PACK32> {
+            using component_t = std::uint32_t;
+            static constexpr std::size_t COMPONENT_COUNT = 1;
+        };
 
         template<typename T>
-        constexpr auto format_of = (APixelFormat)T::FORMAT;
+        constexpr auto format_of = T::FORMAT;
         template<>
-        inline constexpr auto format_of<AColor> = APixelFormat::RGBA_FLOAT;
+        inline constexpr auto format_of<AColor> = APixelFormat::R32G32B32A32_SFLOAT;
     }
 
-    template<std::uint32_t format>
+    template<APixelFormat format>
     struct traits {
-        static constexpr std::size_t FORMAT = format;
-        static constexpr std::size_t COMPONENT_COUNT = detail::component_count<format & APixelFormat::COMPONENT_BITS>();
-        using component_t = typename detail::type<format & APixelFormat::TYPE_BITS>::value;
-
+        static constexpr APixelFormat FORMAT = format;
+        using impl = detail::format_traits_impl<format>;
+        static constexpr std::size_t COMPONENT_COUNT = impl::COMPONENT_COUNT;
+        using component_t = typename impl::component_t;
 
     private:
-        using representation_t_impl = detail::component_representation<component_t, format & APixelFormat::COMPONENT_BITS>;
-
-
+        using representation_t_impl = detail::component_representation<component_t, format>;
 
     public:
-
         struct representation_t: representation_t_impl {
             using super = representation_t_impl;
-            static constexpr std::size_t FORMAT = format;
+            static constexpr APixelFormat FORMAT = format;
             explicit operator AColor() const noexcept;
 
             component_t* begin() {
@@ -172,19 +273,19 @@ namespace aui::pixel_format {
             }
 
             representation_t& operator+=(representation_t rhs) noexcept {
-                std::transform(begin(), end(), rhs, begin(), std::plus<component_t>{});
+                std::transform(begin(), end(), rhs.begin(), begin(), std::plus<component_t>{});
                 return *this;
             }
             representation_t& operator-=(representation_t rhs) noexcept {
-                std::transform(begin(), end(), rhs, begin(), std::minus<component_t>{});
+                std::transform(begin(), end(), rhs.begin(), begin(), std::minus<component_t>{});
                 return *this;
             }
             representation_t& operator*=(representation_t rhs) noexcept {
-                std::transform(begin(), end(), rhs, begin(), std::multiplies<component_t>{});
+                std::transform(begin(), end(), rhs.begin(), begin(), std::multiplies<component_t>{});
                 return *this;
             }
             representation_t& operator/=(representation_t rhs) noexcept {
-                std::transform(begin(), end(), rhs, begin(), std::divides<component_t>{});
+                std::transform(begin(), end(), rhs.begin(), begin(), std::divides<component_t>{});
                 return *this;
             }
 
@@ -228,73 +329,85 @@ namespace aui::pixel_format {
         };
     };
 
-    template<typename From, typename To>
-    struct component_converter;
+    template<APixelFormat from, APixelFormat to>
+    constexpr typename aui::pixel_format::traits<to>::representation_t convert(typename aui::pixel_format::traits<from>::representation_t in);
 
-    template<typename T>
-    struct component_converter<T, T> {
-        static constexpr T convert(T t) {
-            return t;
-        }
-    };
-
-    template<>
-    struct component_converter<std::uint8_t, float> {
-        static constexpr float convert(std::uint8_t t) {
-            return float(t) / 255.f;
-        }
-    };
-
-    template<>
-    struct component_converter<float, std::uint8_t> {
-        static constexpr std::uint8_t convert(float t) {
-            return std::uint8_t(t * 255.f);
-        }
-    };
-
-
-    template<APixelFormat::Value from, APixelFormat::Value to>
+    // Default convert implementation via AColor
+    template<APixelFormat from, APixelFormat to>
     constexpr typename aui::pixel_format::traits<to>::representation_t convert(typename aui::pixel_format::traits<from>::representation_t in) {
-        using traits_from = aui::pixel_format::traits<from>;
-        using traits_to = aui::pixel_format::traits<to>;
-        constexpr std::size_t countFrom = traits_from::COMPONENT_COUNT;
-        constexpr std::size_t countTo = traits_to::COMPONENT_COUNT;
-
-        typename traits_to::representation_t out;
-
-        using my_component_converter = component_converter<typename traits_from::component_t, typename traits_to::component_t>;
-
-        out.r = my_component_converter::convert(in.r);
-        if constexpr(countTo > 1) {
-            if constexpr(countFrom > 1) {
-                out.g = my_component_converter::convert(in.g);
-            } else {
-                out.g = my_component_converter::convert(0);
+        if constexpr (from == to) {
+            return in;
+        } else {
+            AColor c = static_cast<AColor>(in);
+            typename aui::pixel_format::traits<to>::representation_t out;
+            
+            // Re-pack into target
+            if constexpr (to == APixelFormat::R8_UNORM) {
+                out.r = static_cast<std::uint8_t>(glm::clamp(c.r, 0.f, 1.f) * 255.f);
+            } else if constexpr (to == APixelFormat::R8G8_UNORM) {
+                out.r = static_cast<std::uint8_t>(glm::clamp(c.r, 0.f, 1.f) * 255.f);
+                out.g = static_cast<std::uint8_t>(glm::clamp(c.g, 0.f, 1.f) * 255.f);
+            } else if constexpr (to == APixelFormat::R8G8B8_UNORM) {
+                out.r = static_cast<std::uint8_t>(glm::clamp(c.r, 0.f, 1.f) * 255.f);
+                out.g = static_cast<std::uint8_t>(glm::clamp(c.g, 0.f, 1.f) * 255.f);
+                out.b = static_cast<std::uint8_t>(glm::clamp(c.b, 0.f, 1.f) * 255.f);
+            } else if constexpr (to == APixelFormat::R8G8B8A8_UNORM) {
+                out.r = static_cast<std::uint8_t>(glm::clamp(c.r, 0.f, 1.f) * 255.f);
+                out.g = static_cast<std::uint8_t>(glm::clamp(c.g, 0.f, 1.f) * 255.f);
+                out.b = static_cast<std::uint8_t>(glm::clamp(c.b, 0.f, 1.f) * 255.f);
+                out.a = static_cast<std::uint8_t>(glm::clamp(c.a, 0.f, 1.f) * 255.f);
+            } else if constexpr (to == APixelFormat::B8G8R8A8_UNORM) {
+                out.b = static_cast<std::uint8_t>(glm::clamp(c.b, 0.f, 1.f) * 255.f);
+                out.g = static_cast<std::uint8_t>(glm::clamp(c.g, 0.f, 1.f) * 255.f);
+                out.r = static_cast<std::uint8_t>(glm::clamp(c.r, 0.f, 1.f) * 255.f);
+                out.a = static_cast<std::uint8_t>(glm::clamp(c.a, 0.f, 1.f) * 255.f);
+            } else if constexpr (to == APixelFormat::R16G16B16A16_SFLOAT) {
+                out.r = float16(c.r);
+                out.g = float16(c.g);
+                out.b = float16(c.b);
+                out.a = float16(c.a);
+            } else if constexpr (to == APixelFormat::R32G32B32A32_SFLOAT) {
+                out.r = c.r;
+                out.g = c.g;
+                out.b = c.b;
+                out.a = c.a;
+            } else if constexpr (to == APixelFormat::A2R10G10B10_UNORM_PACK32) {
+                std::uint32_t r = static_cast<std::uint32_t>(glm::clamp(c.r, 0.f, 1.f) * 1023.f);
+                std::uint32_t g = static_cast<std::uint32_t>(glm::clamp(c.g, 0.f, 1.f) * 1023.f);
+                std::uint32_t b = static_cast<std::uint32_t>(glm::clamp(c.b, 0.f, 1.f) * 1023.f);
+                std::uint32_t a = static_cast<std::uint32_t>(glm::clamp(c.a, 0.f, 1.f) * 3.f);
+                out.packed = (a << 30) | (r << 20) | (g << 10) | b;
             }
+            return out;
         }
-
-        if constexpr(countTo > 2) {
-            if constexpr(countFrom > 2) {
-                out.b = my_component_converter::convert(in.b);
-            } else {
-                out.b = my_component_converter::convert(0);
-            }
-        }
-
-        if constexpr(countTo > 3) {
-            if constexpr(countFrom > 3) {
-                out.a = my_component_converter::convert(in.a);
-            } else {
-                out.a = component_converter<float, typename traits_to::component_t>::convert(1);
-            }
-        }
-
-        return out;
     }
 
-    template<std::uint32_t format>
+    template<APixelFormat format>
     traits<format>::representation_t::operator AColor() const noexcept {
-        return convert<(APixelFormat::Value)format, (APixelFormat::Value)(APixelFormat::RGBA | APixelFormat::FLOAT)>(*this);
+        if constexpr (format == APixelFormat::R8_UNORM) {
+            return AColor(this->r / 255.f, 0.f, 0.f, 1.f);
+        } else if constexpr (format == APixelFormat::R8G8_UNORM) {
+            return AColor(this->r / 255.f, this->g / 255.f, 0.f, 1.f);
+        } else if constexpr (format == APixelFormat::R8G8B8_UNORM) {
+            return AColor(this->r / 255.f, this->g / 255.f, this->b / 255.f, 1.f);
+        } else if constexpr (format == APixelFormat::R8G8B8A8_UNORM) {
+            return AColor(this->r / 255.f, this->g / 255.f, this->b / 255.f, this->a / 255.f);
+        } else if constexpr (format == APixelFormat::B8G8R8A8_UNORM) {
+            return AColor(this->r / 255.f, this->g / 255.f, this->b / 255.f, this->a / 255.f);
+        } else if constexpr (format == APixelFormat::R16G16B16A16_SFLOAT) {
+            return AColor(float(this->r), float(this->g), float(this->b), float(this->a));
+        } else if constexpr (format == APixelFormat::R32G32B32A32_SFLOAT) {
+            return AColor(this->r, this->g, this->b, this->a);
+        } else if constexpr (format == APixelFormat::A2R10G10B10_UNORM_PACK32) {
+            return AColor(
+                ((this->packed >> 20) & 0x3FF) / 1023.f,
+                ((this->packed >> 10) & 0x3FF) / 1023.f,
+                ((this->packed) & 0x3FF) / 1023.f,
+                ((this->packed >> 30) & 0x3) / 3.f
+            );
+        } else {
+            return AColor(0.f);
+        }
     }
 }
 
@@ -303,7 +416,7 @@ namespace aui::pixel_format {
 /**
  * @brief Unlike AColor, this type is not universal and has a format and thus may be used in performance critical code.
  */
-template<auto pixelFormat = APixelFormat::DEFAULT>
+template<APixelFormat pixelFormat = APixelFormat::DEFAULT>
 using AFormattedColor = typename aui::pixel_format::traits<pixelFormat>::representation_t;
 
 template<typename Source>

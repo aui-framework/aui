@@ -17,11 +17,13 @@
 #include "BackgroundImage.h"
 #include <AUI/Platform/AWindow.h>
 #include "AUI/Platform/APlatform.h"
+#include <AUI/Render/ACanvas.hpp>
 #include <AUI/Render/RenderHints.h>
 #include <AUI/ASS/AAssHelper.h>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Image/AImageLoaderRegistry.h>
 #include <AUI/Util/AImageDrawable.h>
+#include <AUI/Image/AAnimatedDrawable.h>
 
 void ass::prop::Property<ass::BackgroundImage>::draw(
     const ARenderContext& ctx, AView* view, const _<IDrawable>& drawable, const ass::BackgroundImage& info) {
@@ -30,14 +32,13 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
 
     auto scale = info.scale.orDefault(glm::vec2 { 1, 1 });
     auto drawableDrawWrapper = [&](const glm::ivec2& size) {
-        RenderHints::PushColor c(ctx.render);
-        ctx.render.setColor(info.overlayColor.orDefault(0xffffff_rgb));
         IDrawable::Params p;
         p.offset = { 0, 0 };
         p.size = glm::vec2(size) * scale;
         p.repeat = info.rep.orDefault(Repeat::NONE);
         p.imageRendering = imageRendering;
-        drawable->draw(ctx.render, p);
+        p.color = info.overlayColor.orDefault(AColor::WHITE);
+        drawable->draw(ctx, p);
     };
 
     switch (info.sizing.orDefault(Sizing::FIT_PADDING)) {
@@ -46,15 +47,14 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             break;
         }
         case Sizing::TILE: {
-            RenderHints::PushColor c(ctx.render);
-            ctx.render.setColor(info.overlayColor.orDefault(0xffffff_rgb));
             IDrawable::Params p;
             p.offset = { 0, 0 };
             p.size = glm::vec2(view->getSize());
             p.repeat = info.rep.orDefault(Repeat::NONE);
             p.cropUvBottomRight = glm::vec2(view->getSize()) / scale;
             p.imageRendering = imageRendering;
-            drawable->draw(ctx.render, p);
+            p.color = info.overlayColor.orDefault(AColor::WHITE);
+            drawable->draw(ctx, p);
             break;
         }
         case Sizing::COVER: {
@@ -62,7 +62,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             if (viewSize.y == 0 || viewSize.x == 0) {
                 return;
             }
-            RenderHints::PushMatrix m(ctx.render);
+            RenderHints::PushMatrix m(ctx.canvas);
             glm::ivec2 imageSize = drawable->getSizeHint();
             glm::ivec2 size;
 
@@ -73,13 +73,13 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
                 size.y = viewSize.y;
                 size.x = size.y * imageSize.x / imageSize.y;
             }
-            ctx.render.setTransform(
+            ctx.canvas.setTransform(
                 glm::translate(glm::mat4(1.f), glm::vec3 { glm::vec2(viewSize - size) / 2.f, 0.f }));
             drawableDrawWrapper(size);
             break;
         }
         case Sizing::CONTAIN: {
-            RenderHints::PushMatrix m(ctx.render);
+            RenderHints::PushMatrix m(ctx.canvas);
             glm::ivec2 viewSize = view->getSize();
             if (viewSize.x == 0 || viewSize.y == 0) {
                 break;
@@ -95,13 +95,13 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
                 size.y = viewSize.y;
                 size.x = size.y * imageSize.x / imageSize.y;
             }
-            ctx.render.setTransform(
+            ctx.canvas.setTransform(
                 glm::translate(glm::mat4(1.f), glm::vec3 { glm::vec2(viewSize - size) / 2.f, 0.f }));
             drawableDrawWrapper(size);
             break;
         }
         case Sizing::CONTAIN_PADDING: {
-            RenderHints::PushMatrix m(ctx.render);
+            RenderHints::PushMatrix m(ctx.canvas);
             glm::ivec2 viewSize = view->getSize() - view->getPadding().occupiedSize();
             if (viewSize.x == 0 || viewSize.y == 0) {
                 break;
@@ -117,15 +117,15 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
                 size.y = viewSize.y;
                 size.x = size.y * imageSize.x / imageSize.y;
             }
-            ctx.render.setTransform(glm::translate(
+            ctx.canvas.setTransform(glm::translate(
                 glm::mat4(1.f),
                 glm::vec3 { glm::vec2(viewSize - size) / 2.f + glm::vec2(view->getPadding().leftTop()), 0.f }));
             drawableDrawWrapper(size);
             break;
         }
         case Sizing::FIT_PADDING: {
-            RenderHints::PushMatrix m(ctx.render);
-            ctx.render.setTransform(
+            RenderHints::PushMatrix m(ctx.canvas);
+            ctx.canvas.setTransform(
                 glm::translate(glm::mat4(1.f), glm::vec3 { view->getPadding().left, view->getPadding().top, 0.f }));
             drawableDrawWrapper(
                 view->getSize() - glm::ivec2 { view->getPadding().horizontal(), view->getPadding().vertical() });
@@ -141,8 +141,9 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             p.cropUvBottomRight = offset + cropping.size.orDefault({ 1, 1 });
             p.size = view->getSize();
             p.imageRendering = imageRendering;
+            p.color = info.overlayColor.orDefault(AColor::WHITE);
 
-            drawable->draw(ctx.render, p);
+            drawable->draw(ctx, p);
             break;
         }
         case Sizing::SPLIT_2X2: {
@@ -164,7 +165,8 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
                 p.size = { width, height };
                 p.imageRendering = imageRendering;
                 p.renderingSize = { textureWidth, textureHeight };
-                drawable->draw(ctx.render, p);
+                p.color = info.overlayColor.orDefault(AColor::WHITE);
+                drawable->draw(ctx, p);
             };
 
             // upper left
@@ -241,27 +243,21 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
         }
 
         case Sizing::CENTER: {
-            RenderHints::PushMatrix m(ctx.render);
+            RenderHints::PushMatrix m(ctx.canvas);
             glm::vec2 viewSize = view->getSize();
             glm::vec2 imageSize = drawable->getSizeHint();
 
             if (drawable->isDpiDependent())
                 imageSize *= AWindow::current()->getDpiRatio();
 
-            ctx.render.setTransform(
+            ctx.canvas.setTransform(
                 glm::translate(glm::mat4(1.f), glm::vec3 { glm::vec2(viewSize - imageSize) / 2.f, 0.f }));
-
-            RenderHints::PushMask mask(ctx.render, [&] {
-                ctx.render.rectangle(ASolidBrush {}, { 0, 0 }, view->getSize());
-            });
 
             drawableDrawWrapper(imageSize);
             break;
         }
+
         case Sizing::NONE: {
-            RenderHints::PushMask mask(ctx.render, [&] {
-                ctx.render.rectangle(ASolidBrush {}, { 0, 0 }, view->getSize());
-            });
             glm::vec2 imageSize = glm::vec2(drawable->getSizeHint());
 
             if (drawable->isDpiDependent())
@@ -282,11 +278,19 @@ void ass::prop::Property<ass::BackgroundImage>::renderFor(AView* view, const ARe
             *info.image)) {
         if (!view->getAssHelper()->state.backgroundImage) {
             // resolve background image by url
-            view->getAssHelper()->state.backgroundImage = std::visit(
+            auto drawable = std::visit(
                 aui::lambda_overloaded {
                   [](const _<IDrawable>& drawable) { return drawable; },
                   [](const AString& s) { return IDrawable::fromUrl(s); } },
                 *info.image);
+            view->getAssHelper()->state.backgroundImage = drawable;
+            if (auto animated = _cast<AAnimatedDrawable>(drawable)) {
+                view->getAssHelper()->state.backgroundImageDirtyConnection = AObject::connect(animated->dirty, view, [view] {
+                   view->redraw();
+                });
+            } else {
+                view->getAssHelper()->state.backgroundImageDirtyConnection = {};
+            }
         }
         if (auto drawable = *view->getAssHelper()->state.backgroundImage) {
             draw(ctx, view, drawable, info);

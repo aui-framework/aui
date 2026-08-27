@@ -18,11 +18,14 @@
 
 #include <AUI/Platform/CommonRenderingContext.h>
 #include "ARenderingContextOptions.h"
-#include "AUI/GL/OpenGLRenderer.h"
+#include "AUI/Render/ARender/GL/OpenGLBackend.hpp"
+#include <AUI/Render/ARender/ADrawList.hpp>
+#include <AUI/Render/ARender/ADisplayListCanvas.hpp>
+#include <AUI/Render/RendererCanvas.h>
 
 class OpenGLRenderingContext: public CommonRenderingContext {
 public:
-    OpenGLRenderingContext(const ARenderingContextOptions::OpenGL& config) : mConfig(config) {}
+    OpenGLRenderingContext(const ARenderingContextOptions::OpenGL& config);
 
     ~OpenGLRenderingContext() override;
 
@@ -30,7 +33,7 @@ public:
 
 #if !AUI_PLATFORM_LINUX
     // to be implemented by IPlatformAbstraction
-    void init(const Init& init);
+    void init(const Init& init) override;
     void destroyNativeWindow(ASurface& window) override;
 #endif
 
@@ -42,51 +45,49 @@ public:
     [[nodiscard]]
     uint32_t getDefaultFb() const noexcept;
 
-    void bindViewport();
-
     [[nodiscard]]
     glm::uvec2 viewportSize() const noexcept {
         return mViewportSize;
     }
 
-    [[nodiscard]]
-    uint32_t getSupersamplingRatio() const noexcept;
-
-    [[nodiscard]]
-    AOptional<gl::Framebuffer*> framebuffer() noexcept {
-        if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
-            return fb;
-        }
-        return std::nullopt;
+    IRenderer& renderer() override {
+        return *mRendererWrapper;
     }
 
-    IRenderer& renderer() override {
+    IRendererBackend& backend() override {
         return *mRenderer;
     }
 
-    static gl::Framebuffer newOffscreenRenderingFramebuffer(glm::uvec2 initialSize);
+    ACanvas& canvas() override {
+        return *mCanvas;
+    }
 
 protected:
-    _<OpenGLRenderer> mRenderer;
-    glm::uvec2 mViewportSize;
-    struct NotTried{}; struct Failed{}; std::variant<NotTried, Failed, gl::Framebuffer> mFramebuffer;
-    static _<OpenGLRenderer> ourRenderer() {
-        static _weak<OpenGLRenderer> g;
+    virtual void bindContext();
+    _<OpenGLBackend> mRenderer;
+    ADrawList mDrawList;
+    ADrawList mPresentDisplayList;
+    _unique<ADisplayListCanvas> mCanvas;
+    _unique<RendererCanvas> mRendererWrapper;
+    glm::uvec2 mViewportSize { 0, 0 };
+    _<ITexture> mWindowTarget;
+    _<ITexture> mBackbufferTarget;
+    bool mFlipY = false;
+    static _<OpenGLBackend> ourRenderer() {
+        static _weak<OpenGLBackend> g;
         if (auto v = g.lock()) {
             return v;
         }
-        auto temp = _new<OpenGLRenderer>();
+        auto temp = _new<OpenGLBackend>();
         g = temp;
         return temp;
     }
 
-    virtual void endFramebuffer();
-
 private:
     ARenderingContextOptions::OpenGL mConfig;
 
-    void tryEnableFramebuffer(glm::uvec2 windowSize);
     void beginFramebuffer(glm::uvec2 windowSize);
+    void presentToBackbuffer();
 
 #if AUI_PLATFORM_WIN
     static HGLRC ourHrc;

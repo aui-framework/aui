@@ -16,31 +16,30 @@
 #include "TextBorder.h"
 #include <AUI/View/AAbstractLabel.h>
 #include <AUI/Render/RenderHints.h>
+#include <AUI/Render/ACanvas.hpp>
 
 void ass::prop::Property<ass::TextBorder>::renderFor(AView* view, const ARenderContext& ctx) {
     if (auto label = dynamic_cast<AAbstractLabel*>(view)) {
-        RenderHints::PushColor c(ctx.render);
-        ctx.render.setColor(mInfo.borderColor);
 
         {
-            RenderHints::PushMatrix m(ctx.render);
-            ctx.render.translate({-1, 0});
-            label->doRenderText(ctx.render);
+            RenderHints::PushMatrix m(ctx.canvas);
+            ctx.canvas.translate({-1, 0});
+            label->doRenderText(ctx);
         }
         {
-            RenderHints::PushMatrix m(ctx.render);
-            ctx.render.translate({1, 0});
-            label->doRenderText(ctx.render);
+            RenderHints::PushMatrix m(ctx.canvas);
+            ctx.canvas.translate({1, 0});
+            label->doRenderText(ctx);
         }
         {
-            RenderHints::PushMatrix m(ctx.render);
-            ctx.render.translate({0, -1});
-            label->doRenderText(ctx.render);
+            RenderHints::PushMatrix m(ctx.canvas);
+            ctx.canvas.translate({0, -1});
+            label->doRenderText(ctx);
         }
         {
-            RenderHints::PushMatrix m(ctx.render);
-            ctx.render.translate({0, 1});
-            label->doRenderText(ctx.render);
+            RenderHints::PushMatrix m(ctx.canvas);
+            ctx.canvas.translate({0, 1});
+            label->doRenderText(ctx);
         }
     }
 }

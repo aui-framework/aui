@@ -141,8 +141,8 @@ AImage AImageView::convert(APixelFormat format) const {
             using source_image_t      = std::decay_t<decltype(source)>;
             using destination_image_t = std::decay_t<decltype(destination)>;
 
-            static constexpr auto sourceFormat      = (APixelFormat::Value)source_image_t::FORMAT;
-            static constexpr auto destinationFormat = (APixelFormat::Value)destination_image_t::FORMAT;
+            static constexpr auto sourceFormat      = (APixelFormat)source_image_t::FORMAT;
+            static constexpr auto destinationFormat = (APixelFormat)destination_image_t::FORMAT;
 
             std::transform(source.begin(), source.end(), destination.begin(), aui::pixel_format::convert<sourceFormat, destinationFormat>);
         });
@@ -158,8 +158,8 @@ AImageView::AImageView(const AImage& v): AImageView(v.mOwnedBuffer, v.mSize, v.m
 void AImage::insert(glm::uvec2 position, AImageView image) {
     visit([&](auto& destination) {
         image.visit([&](const auto& source) {
-            static constexpr auto sourceFormat      = (APixelFormat::Value)std::decay_t<decltype(source)>::FORMAT;
-            static constexpr auto destinationFormat = (APixelFormat::Value)std::decay_t<decltype(destination)>::FORMAT;
+            static constexpr auto sourceFormat      = (APixelFormat)std::decay_t<decltype(source)>::FORMAT;
+            static constexpr auto destinationFormat = (APixelFormat)std::decay_t<decltype(destination)>::FORMAT;
 
             for (unsigned y = 0; y < image.height(); ++y) {
                 auto targetPosY = position.y + y;
