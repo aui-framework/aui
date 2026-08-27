@@ -157,14 +157,17 @@ namespace AInput {
         INTERNATIONAL1,          ///< The Ro (JIS) key (Cosmo_USB2ADB.c)
         INTERNATIONAL3,          ///< The Yen (JIS) key (Cosmo_USB2ADB.c)
 
-#if AUI_PLATFORM_APPLE
-        CMD = LSYSTEM,           ///< The CMD key (Apple only)
-#endif
-
         /* key count */
         KEYCOUNT,                ///< Keep last -- the total number of keyboard keys
 
         /* meta keys */
+        /* Aliases live below KEYCOUNT on purpose: an alias assigns an earlier value, so anything
+           declared after it would continue counting from there. KEYCOUNT above must stay the real
+           key count -- it sizes the key state array. */
+#if AUI_PLATFORM_APPLE
+        CMD = LSYSTEM,           ///< The CMD key (Apple only)
+#endif
+
         CMD_CTRL =               ///< Maps to CMD on Apple platforms, CTRL otherwise
 #if AUI_PLATFORM_APPLE
       CMD,
