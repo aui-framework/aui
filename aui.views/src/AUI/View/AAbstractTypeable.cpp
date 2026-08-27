@@ -181,6 +181,9 @@ void AAbstractTypeable::eraseSelection() {
 }
 
 void AAbstractTypeable::paste(AString content) {
+    // The cursor may sit past the end if the text was replaced from the outside; typeableInsert
+    // would then throw out_of_range.
+    mCursorIndex = std::min(mCursorIndex, static_cast<unsigned>(length()));
     auto pastePos = mCursorIndex;
     AOptional<AString> prevContents;
     if (mCursorSelection) {
@@ -196,7 +199,9 @@ void AAbstractTypeable::paste(AString content) {
         content = content.replacedAll("\n", "");
     }
     if (typeableInsert(pastePos, content)) {
-        mCursorIndex = pastePos + content.length();
+        // AString holds UTF-8 bytes while the contents are code points, so the cursor must advance
+        // by the number of characters inserted, not by the byte count.
+        mCursorIndex = pastePos + content.utf8().length();
         mCursorSelection.reset();
 
         typeableInvalidateFont();
