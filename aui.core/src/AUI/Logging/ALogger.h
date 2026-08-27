@@ -269,7 +269,7 @@ public:
         return mLogFile.valueOrException().path();
     }
 
-     void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
+    void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
         std::unique_lock lock(mOnLogged);
         mOnLogged = std::move(callback);
     }

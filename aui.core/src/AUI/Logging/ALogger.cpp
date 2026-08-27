@@ -25,8 +25,7 @@
 #endif
 
 ALogger::ALogger() {
-    const auto logColor = aui::args().value("aui-log-color");
-    if (logColor == "off")
+    if (const char* logColor = std::getenv("AUI_LOG_COLOR"); logColor && AString(logColor) == "off")
         mColorsEnabled = false;
 
 #ifdef AUI_SHARED_PTR_FIND_INSTANCES
@@ -38,8 +37,7 @@ ALogger::ALogger() {
 }
 
 ALogger::ALogger(AString filename) {
-    const auto logColor = aui::args().value("aui-log-color");
-    if (logColor == "off")
+    if (const char* logColor = std::getenv("AUI_LOG_COLOR"); logColor && AString(logColor) == "off")
         mColorsEnabled = false;
     setLogFileImpl(std::move(filename));
 }
