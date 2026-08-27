@@ -665,10 +665,19 @@ function(_auib_git_clone _url _version _source_dir)
         message(FATAL_ERROR "git executable not found.")
     endif()
 
+    # NOTE: All git calls below use `${CMAKE_COMMAND} -E env GIT_DISCOVERY_ACROSS_FILESYSTEM=1`
+    # to work around a Linux filesystem boundary issue. When the .aui/repo cache directory resides
+    # on a separate mount point (e.g. /var on overlayfs/btrfs subvolume), git refuses to traverse
+    # the boundary to find the .git directory unless GIT_DISCOVERY_ACROSS_FILESYSTEM=1 is set.
+    # Without it, git fails with:
+    #   "fatal: not a git repository (or any parent up to mount point /var)"
+    # CMake's execute_process does not inherit this variable from the environment, so it must be
+    # injected explicitly for every git invocation in this function.
+
     file(MAKE_DIRECTORY "${_source_dir}")
 
     execute_process(
-            COMMAND ${GIT_EXECUTABLE} remote get-url origin
+            COMMAND ${CMAKE_COMMAND} -E env GIT_DISCOVERY_ACROSS_FILESYSTEM=1 ${GIT_EXECUTABLE} remote get-url origin
             WORKING_DIRECTORY "${_source_dir}"
             RESULT_VARIABLE _err
             OUTPUT_VARIABLE _existing_remote
@@ -679,7 +688,7 @@ function(_auib_git_clone _url _version _source_dir)
     if (_err EQUAL 0)
         message(STATUS "[AUI.BOOT] Reusing existing repo in ${_source_dir}")
         execute_process(
-                COMMAND ${GIT_EXECUTABLE} remote remove origin
+                COMMAND ${CMAKE_COMMAND} -E env GIT_DISCOVERY_ACROSS_FILESYSTEM=1 ${GIT_EXECUTABLE} remote remove origin
                 WORKING_DIRECTORY "${_source_dir}"
                 RESULT_VARIABLE _remove_err
                 OUTPUT_QUIET
@@ -690,7 +699,7 @@ function(_auib_git_clone _url _version _source_dir)
             file(REMOVE_RECURSE "${_source_dir}")
             file(MAKE_DIRECTORY "${_source_dir}")
             execute_process(
-                    COMMAND ${GIT_EXECUTABLE} init
+                    COMMAND ${CMAKE_COMMAND} -E env GIT_DISCOVERY_ACROSS_FILESYSTEM=1 ${GIT_EXECUTABLE} init
                     WORKING_DIRECTORY "${_source_dir}"
                     RESULT_VARIABLE _err
                     OUTPUT_QUIET
@@ -702,7 +711,7 @@ function(_auib_git_clone _url _version _source_dir)
     else()
         message(STATUS "[AUI.BOOT] Initializing empty repo in ${_source_dir}")
         execute_process(
-                COMMAND ${GIT_EXECUTABLE} init
+                COMMAND ${CMAKE_COMMAND} -E env GIT_DISCOVERY_ACROSS_FILESYSTEM=1 ${GIT_EXECUTABLE} init
                 WORKING_DIRECTORY "${_source_dir}"
                 RESULT_VARIABLE _err
                 OUTPUT_QUIET
@@ -713,7 +722,7 @@ function(_auib_git_clone _url _version _source_dir)
     endif()
 
     execute_process(
-            COMMAND ${GIT_EXECUTABLE} remote add origin "${_url}"
+            COMMAND ${CMAKE_COMMAND} -E env GIT_DISCOVERY_ACROSS_FILESYSTEM=1 ${GIT_EXECUTABLE} remote add origin "${_url}"
             WORKING_DIRECTORY "${_source_dir}"
             RESULT_VARIABLE _err
             OUTPUT_QUIET
@@ -724,7 +733,7 @@ function(_auib_git_clone _url _version _source_dir)
 
     message(STATUS "[AUI.BOOT] Fetching ${_version} from ${_url}")
     execute_process(
-            COMMAND ${GIT_EXECUTABLE} fetch --depth 1 origin "${_version}"
+            COMMAND ${CMAKE_COMMAND} -E env GIT_DISCOVERY_ACROSS_FILESYSTEM=1 ${GIT_EXECUTABLE} fetch --depth 1 origin "${_version}"
             WORKING_DIRECTORY "${_source_dir}"
             RESULT_VARIABLE _err
             OUTPUT_QUIET
@@ -733,7 +742,7 @@ function(_auib_git_clone _url _version _source_dir)
     if (NOT _err EQUAL 0)
         message(STATUS "[AUI.BOOT] Shallow fetch failed, retrying without --depth (tag/hash may not be advertised)")
         execute_process(
-                COMMAND ${GIT_EXECUTABLE} fetch origin "${_version}"
+                COMMAND ${CMAKE_COMMAND} -E env GIT_DISCOVERY_ACROSS_FILESYSTEM=1 ${GIT_EXECUTABLE} fetch origin "${_version}"
                 WORKING_DIRECTORY "${_source_dir}"
                 RESULT_VARIABLE _err
                 OUTPUT_QUIET
@@ -744,7 +753,7 @@ function(_auib_git_clone _url _version _source_dir)
     endif()
 
     execute_process(
-            COMMAND ${GIT_EXECUTABLE} reset --hard FETCH_HEAD
+            COMMAND ${CMAKE_COMMAND} -E env GIT_DISCOVERY_ACROSS_FILESYSTEM=1 ${GIT_EXECUTABLE} reset --hard FETCH_HEAD
             WORKING_DIRECTORY "${_source_dir}"
             RESULT_VARIABLE _err
             OUTPUT_QUIET
@@ -755,7 +764,7 @@ function(_auib_git_clone _url _version _source_dir)
 
     message(STATUS "[AUI.BOOT] Updating submodules in ${_source_dir}")
     execute_process(
-            COMMAND ${GIT_EXECUTABLE} submodule update --init --recursive --depth 1
+            COMMAND ${CMAKE_COMMAND} -E env GIT_DISCOVERY_ACROSS_FILESYSTEM=1 ${GIT_EXECUTABLE} submodule update --init --recursive --depth 1
             WORKING_DIRECTORY "${_source_dir}"
             RESULT_VARIABLE _err
             OUTPUT_QUIET
