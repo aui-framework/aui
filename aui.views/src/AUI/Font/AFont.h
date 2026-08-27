@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -11,7 +11,10 @@
 
 #pragma once
 
+#include <cstdint>
 #include <string>
+#include <iterator>
+#include <memory>
 #include <glm/glm.hpp>
 #include <AUI/Url/AUrl.h>
 
@@ -80,12 +83,71 @@ public:
          */
         Metrics vertical{};
 
+        /**
+         * @brief True when FT_Load_Char failed for this glyph (the font does not
+         *        contain a usable glyph, not even .notdef). Such glyphs should get
+         *        a space-width advance fallback rather than their (zero) advance.
+         */
+        bool glyphFailed = false;
+
         [[nodiscard]]
         bool empty() const {
             return image == nullptr;
         }
 
+        /**
+         * @return The effective horizontal advance for an empty (no-bitmap) glyph:
+         *         the glyph's computed advance if positive, or zero for legitimately
+         *         zero-advance glyphs (combining marks, ZWJ/ZWNJ, variation selectors).
+         *         The space-width fallback is only applied when the glyph genuinely
+         *         failed to load (glyphFailed == true).
+         */
+        [[nodiscard]]
+        float emptyAdvance(float spaceWidth) const {
+            return emptyAdvanceFor(horizontal.advance, glyphFailed, spaceWidth);
+        }
+
         void* rendererData = nullptr;
+    };
+
+    /**
+     * @brief Lightweight per-glyph measurement data for text layout, without
+     *        the bitmap (no _<AImage> shared-pointer traffic). Returned by
+     *        getCharacterMetrics for measurement-only paths.
+     */
+    struct GlyphMetrics {
+        /**
+         * @brief Horizontal advance in pixels (Character::horizontal.advance).
+         */
+        float advance = 0.f;
+
+        /**
+         * @brief True when FT_Load_Char failed for this glyph (see
+         *        Character::glyphFailed): the advance is not usable and the
+         *        space width should be used instead.
+         */
+        bool glyphFailed = false;
+
+        /**
+         * @brief True when the glyph has a bitmap (Character::empty() ==
+         *        !hasImage); empty-bitmap glyphs (spaces, combining marks)
+         *        still carry a usable advance.
+         */
+        bool hasImage = false;
+
+        /**
+         * @return The effective advance for layout: the glyph's own advance
+         *         when it has a bitmap, otherwise the space-width fallback
+         *         for failed glyphs, the glyph's advance for empty-bitmap
+         *         glyphs with a positive advance, or zero for legitimately
+         *         zero-advance glyphs (combining marks, ZWJ/ZWNJ, variation
+         *         selectors).
+         */
+        [[nodiscard]]
+        float effectiveAdvance(float spaceWidth) const {
+            if (hasImage) return advance;
+            return emptyAdvanceFor(advance, glyphFailed, spaceWidth);
+        }
     };
 
     struct FontKey {
@@ -102,23 +164,26 @@ public:
     };
 
     struct FontData {
-        AVector<AOptional<Character>> characters;
+        AMap<char32_t, Character> characters;
         void* rendererData = nullptr;
     };
 
-
     using FontEntry = std::pair<FontKey, FontData&>;
-
 
 private:
     _<FreeType> ft;
     AByteBuffer mFontDataBuffer;
-    FT_FaceRec_* mFace;
+    FT_FaceRec_* mFace = nullptr;
+    AFontManager* mFontManager = nullptr;
 
     AMap<FontKey, FontData> mCharData;
+    unsigned mFacePixelSize = 0;
 
-    FontData& getFontEntry(unsigned size, FontRendering fr) {
-        return mCharData[FontKey{size, fr}];
+    bool hasGlyph(char32_t codepoint) const;
+
+    static float emptyAdvanceFor(float advance, bool glyphFailed, float spaceWidth) {
+        if (glyphFailed) return spaceWidth;
+        return advance > 0.f ? advance : 0.f;
     }
 
     Character renderGlyph(const FontEntry& fs, AChar glyph);
@@ -132,11 +197,15 @@ public:
         return {key, mCharData[key]};
     }
 
-    glm::vec2 getKerning(wchar_t left, wchar_t right);
+    glm::vec2 getKerning(char32_t left, char32_t right, unsigned size);
+
+    ~AFont();
 
     AFont(const AFont&) = delete;
+    AFont& operator=(const AFont&) = delete;
 
     Character& getCharacter(const FontEntry& charset, AChar glyph);
+    GlyphMetrics getCharacterMetrics(const FontEntry& charset, AChar glyph);
 
     int length(const FontEntry& charset, AStringView text);
 
@@ -147,6 +216,8 @@ public:
         int size = charset.first.size;
         float prevLineAdvance = 0;
         float advance = 0;
+        const bool hasKerning = isHasKerning();
+        const float spaceWidth = getSpaceWidth(size);
 
         for (Iterator i = begin; i != end; ++i) {
             if (*i == U' ') {
@@ -155,11 +226,14 @@ public:
                 advance = 0;
                 prevLineAdvance = glm::max(prevLineAdvance, advance);
             } else {
-                Character& ch = getCharacter(charset, *i);
-                if (!ch.empty()) {
-                    advance += ch.horizontal.advance;
-                } else
-                    advance += getSpaceWidth(size);
+                const GlyphMetrics m = getCharacterMetrics(charset, *i);
+                if (hasKerning) {
+                    auto next = std::next(i);
+                    if (next != end) {
+                        advance += getKerning(*i, *next, size).x;
+                    }
+                }
+                advance += m.effectiveAdvance(spaceWidth);
             }
         }
         return int(glm::ceil(glm::max(prevLineAdvance, advance)));
@@ -168,11 +242,16 @@ public:
     AString
     trimStringToWidth(const FontEntry& charset, AString::iterator begin, AString::iterator end, float maxWidth) {
         float width = 0;
+        const bool hasKerning = isHasKerning();
         for (auto i = begin; i != end; i++) {
             if (*i == '\n') {
                 return AString(begin, i);
             }
-            float charWidth = length(charset, i, std::next(i));
+            auto next = std::next(i);
+            float charWidth = length(charset, i, next);
+            if (next != end && hasKerning) {
+                charWidth += getKerning(*i, *next, charset.first.size).x;
+            }
             if (width + charWidth > maxWidth) {
                 return AString(begin, i);
             }
@@ -180,7 +259,6 @@ public:
         }
         return AString(begin, end);
     }
-
 
     bool isHasKerning();
 
@@ -197,6 +275,9 @@ public:
     int getSpaceWidth(unsigned size) {
         return size * 10 / 23;
     }
+
+    [[nodiscard]]
+    bool isBold() const;
 
     [[nodiscard]]
     bool isItalic() const;
