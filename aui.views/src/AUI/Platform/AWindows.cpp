@@ -183,7 +183,7 @@ void AWindow::onFocusLost() {
 
 void AWindow::onKeyDown(AInput::Key key) {
     ASurface::onKeyDown(key);
-    if (mFocusNextViewOnTab && key == AInput::Key::TAB) {
+    if (getFocusedView().get()!=nullptr && key == AInput::Key::TAB) {
         if (AInput::isKeyDown(AInput::LSHIFT) || AInput::isKeyDown(AInput::RSHIFT)) {
             focusPrevView();
         } else {
