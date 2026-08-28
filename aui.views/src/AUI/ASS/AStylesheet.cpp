@@ -137,6 +137,10 @@ AStylesheet::AStylesheet() {
             Border {1_dp, getOsThemeColor() * glm::vec4(1, 1, 1, 0.3f)}
         },
         {
+            t<AButton>::focus(),
+            Border { 1_dp, getOsThemeColor() },
+        },
+        {
             t<AButton>::active(),
             BackgroundSolid{0xfafafa_rgb},
         },
@@ -255,6 +259,10 @@ AStylesheet::AStylesheet() {
         {
             t<ACheckBox>(), // styles the checkbox + contents container
             LayoutSpacing { 4_dp }, // specifies space between ACheckBox::Box and contents
+        },
+        {
+            t<ACheckBox>::focus(),
+            Border { 1_dp, getOsThemeColor() },
         },
         {
             t<ACheckBox::Box>(), // styling box itself

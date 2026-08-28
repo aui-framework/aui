@@ -112,7 +112,6 @@ TEST_F(UIStyleTest, MouseMoveWithClick) {
  */
 TEST_F(UIStyleTest, Opacity) {
     setupStateStyles();
-    testing::InSequence s;
     using namespace ass;
 
     mView AUI_OVERRIDE_STYLE {
@@ -191,4 +190,27 @@ TEST_F(UIStyleTest, Merge) {
     mView->addAssName("test2");
     By::type<View>().check(pixelColorAt({0.f, 0.5f}, AColor::BLACK)); // outside of cross
     By::type<View>().check(pixelColorAt({0.5f, 0.5f}, AColor::RED)); // within cross, overlayed by red
+}
+
+/**
+ * Checks that keyboard focus (focus()/setFocusedView) triggers the focused sub-selector.
+ */
+TEST_F(UIStyleTest, Focused) {
+    using namespace ass;
+
+    mView AUI_OVERRIDE_STYLE {
+        BackgroundSolid { AColor::BLACK },
+        on_state::Focused {
+            BackgroundSolid { AColor::RED },
+        },
+    };
+    By::type<View>().check(averageColor(AColor::BLACK), "view should be uncolored");
+
+    mView->focus();
+    uitest::frame();
+    By::type<View>().check(averageColor(AColor::RED), "view should be colored when focused");
+
+    mWindow->setFocusedView(nullptr);
+    uitest::frame();
+    By::type<View>().check(averageColor(AColor::BLACK), "view should be uncolored when focus is lost");
 }

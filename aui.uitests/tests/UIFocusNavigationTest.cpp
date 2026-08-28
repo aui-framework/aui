@@ -16,6 +16,7 @@
 #include <AUI/View/ATextField.h>
 #include <AUI/View/AView.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/ASS/AStylesheet.h>
 
 using namespace declarative;
 
@@ -373,4 +374,39 @@ TEST_F(UIFocusNavigationOnControls, NavigationOrder) {
     mWindow->focusNextView();
     pump();
     EXPECT_EQ(focused(), static_cast<AView*>(mWindow->button.get()));
+}
+
+/**
+ * A focused AButton must draw the theme-color focus outline (like a text field).
+ */
+TEST_F(UIFocusNavigationOnControls, ButtonDrawsFocusOutline) {
+    mWindow->setFocusedView(nullptr);
+    pump();
+
+    By::type<AButton>().check(pixelColorAt({0.5f, 0.02f}, 0xcacaca_rgb, 0.3f),
+        "button should have the default border when unfocused");
+
+    mWindow->focusNextView();
+    pump();
+    ASSERT_EQ(focused(), static_cast<AView*>(mWindow->button.get()));
+
+    By::type<AButton>().check(pixelColorAt({0.5f, 0.02f}, AStylesheet::getOsThemeColor(), 0.3f),
+        "button should draw the focus outline when focused");
+}
+
+/**
+ * A focused ACheckBox must draw the theme-color focus outline (like a text field).
+ */
+TEST_F(UIFocusNavigationOnControls, CheckBoxDrawsFocusOutline) {
+    mWindow->setFocusedView(nullptr);
+    pump();
+
+    mWindow->focusNextView(); // button
+    pump();
+    mWindow->focusNextView(); // checkbox
+    pump();
+    ASSERT_EQ(focused(), static_cast<AView*>(mWindow->checkBox.get()));
+
+    By::type<ACheckBox>().check(pixelColorAt({0.5f, 0.02f}, AStylesheet::getOsThemeColor(), 0.3f),
+        "checkbox should draw the focus outline when focused");
 }
