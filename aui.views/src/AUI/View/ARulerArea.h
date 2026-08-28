@@ -39,7 +39,7 @@ protected:
 
 public:
     ARulerArea(const _<AView>& wrappedView);
-    void onLayout(int w, int h) override;
+    void onLayout(glm::ivec2 size) override;
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
     void invalidateFont() override;

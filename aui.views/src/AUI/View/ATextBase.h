@@ -248,8 +248,8 @@ protected:
     AViewContainerBase::requestLayout();
   }
 
-  void onLayout(int w, int h) override {
-    AViewContainerBase::onLayout(w, h);
+  void onLayout(glm::ivec2 size) override {
+    AViewContainerBase::onLayout(size);
     mPrerenderedString = nullptr;
   }
 

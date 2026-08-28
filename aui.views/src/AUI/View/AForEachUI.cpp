@@ -158,14 +158,14 @@ void AForEachUIBase::onViewGraphSubtreeChanged() {
     mViewport = std::move(viewport);
 }
 
-void AForEachUIBase::onLayout(int w, int h) {
+void AForEachUIBase::onLayout(glm::ivec2 size) {
     if (auto window = getWindow()) {
         mLastKnownWindow = window;
     }
     if (!getLayout()) {
-        AViewContainerBase::onLayout(w, h);
+        AViewContainerBase::onLayout(size);
         clearUnusedSharedCacheEntries();
-        mLastOnLayoutSize = {w, h};
+        mLastOnLayoutSize = size;
         return;
     }
 
@@ -178,9 +178,9 @@ void AForEachUIBase::onLayout(int w, int h) {
                 addView(i);
             }
         }
-        AViewContainerBase::onLayout(w, h);
+        AViewContainerBase::onLayout(size);
         clearUnusedSharedCacheEntries();
-        mLastOnLayoutSize = {w, h};
+        mLastOnLayoutSize = size;
         return;
     }
 
@@ -194,19 +194,19 @@ void AForEachUIBase::onLayout(int w, int h) {
     }
 
     if (getViews().empty()) {
-        AViewContainerBase::onLayout(w, h);
+        AViewContainerBase::onLayout(size);
         clearUnusedSharedCacheEntries();
-        mLastOnLayoutSize = {w, h};
+        mLastOnLayoutSize = size;
         return;
     }
 
     int diff = [&] {
         switch (getLayout()->getLayoutDirection()) {
             case ALayoutDirection::HORIZONTAL:
-                return mLastOnLayoutSize.x - w;
+                return mLastOnLayoutSize.x - size.x;
 
             case ALayoutDirection::VERTICAL:
-                return mLastOnLayoutSize.y - h;
+                return mLastOnLayoutSize.y - size.y;
 
             case ALayoutDirection::NONE:
                 break;
@@ -214,15 +214,15 @@ void AForEachUIBase::onLayout(int w, int h) {
         return 0;
     }();
     if (diff == 0) {
-        AViewContainerBase::onLayout(w, h);
+        AViewContainerBase::onLayout(size);
         clearUnusedSharedCacheEntries();
-        mLastOnLayoutSize = {w, h};
+        mLastOnLayoutSize = size;
         return;
     }
     inflate({ .backward = diff < 0, .forward = diff > 0 });
-    AViewContainerBase::onLayout(w, h);
+    AViewContainerBase::onLayout(size);
     clearUnusedSharedCacheEntries();
-    mLastOnLayoutSize = {w, h};
+    mLastOnLayoutSize = size;
 }
 
 void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
@@ -298,7 +298,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             addView(it, 0);
 
             viewport->compensateLayoutUpdatesByScroll(
-                prevFirstView, [this] { AViewContainerBase::onLayout(getWidth(), getHeight()); }, axisMask());
+                prevFirstView, [this] { AViewContainerBase::onLayout(getSize()); }, axisMask());
             auto diff = prevFirstView->getPosition() - getViews().first()->getPosition();
             inflateTill += diff;
 
@@ -331,7 +331,7 @@ void AForEachUIBase::inflate(aui::for_each_ui::detail::InflateOpts opts) {
             addView(it);
             needsMinSizeUpdate = true;
             viewport->compensateLayoutUpdatesByScroll(
-                getViews().first(), [this] { AViewContainerBase::onLayout(getWidth(), getHeight()); }, axisMask());
+                getViews().first(), [this] { AViewContainerBase::onLayout(getSize()); }, axisMask());
         }
     }
 

@@ -78,7 +78,7 @@ public:
     void changeBy(double v);
 
 protected:
-    void onLayout(int w, int h) override;
+    void onLayout(glm::ivec2 size) override;
 
    signals:
     /**

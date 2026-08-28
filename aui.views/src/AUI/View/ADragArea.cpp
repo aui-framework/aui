@@ -127,7 +127,7 @@ void ADragArea::handleMouseMove() {
     }
 }
 
-void ADragArea::onLayout(int width, int height) {
+void ADragArea::onLayout(glm::ivec2 size) {
     const auto x = getPadding().left;
     const auto y = getPadding().top;
 
@@ -135,14 +135,14 @@ void ADragArea::onLayout(int width, int height) {
         v->ensureAssUpdated();
         auto margins = v->getMargin();
         auto measuredSize = v->measure({
-            .maxInline = std::max(0, width - margins.horizontal()),
-            .maxBlock = std::max(0, height - margins.vertical()),
+            .maxInline = std::max(0, size.x - margins.horizontal()),
+            .maxBlock = std::max(0, size.y - margins.vertical()),
         });
         auto finalWidth = measuredSize.x + margins.horizontal();
-        auto finalX = (width - finalWidth) / 2;
+        auto finalX = (size.x - finalWidth) / 2;
 
         auto finalHeight = measuredSize.y + margins.vertical();
-        auto finalY = (height - finalHeight) / 2;
+        auto finalY = (size.y - finalHeight) / 2;
 
         if (DragAreaLayout::isViewMarkedToBeCentered(*v)) {
             v->layout(finalX + x + margins.left,
@@ -155,7 +155,7 @@ void ADragArea::onLayout(int width, int height) {
             setValidPositionFor(v, v->getPosition());
         }
     }
-    AViewContainerBase::onLayout(width, height);
+    AViewContainerBase::onLayout(size);
 }
 
 void ADragArea::endDragging() {

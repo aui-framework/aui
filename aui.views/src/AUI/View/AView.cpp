@@ -614,7 +614,7 @@ void AView::layout(int x, int y, int w, int h) {
   auto oldSize = mSize;
   setPosition({ x, y });
   setSize({ w, h });
-  onLayout(mSize.x, mSize.y);
+  onLayout(mSize);
   mSkipUntilLayoutUpdate = false;
   mWantsLayoutUpdate = false;
   mLastLayoutSize = mSize;
@@ -623,7 +623,7 @@ void AView::layout(int x, int y, int w, int h) {
   }
 }
 
-void AView::onLayout(int w, int h) {
+void AView::onLayout(glm::ivec2 size) {
 }
 
 bool AView::consumesClick(const glm::ivec2& pos) {

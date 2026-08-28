@@ -61,7 +61,7 @@ public:
     using List = aui::any_view<Entry>;
     AForEachUIBase() {}
     ~AForEachUIBase() override = default;
-    void onLayout(int w, int h) override;
+    void onLayout(glm::ivec2 size) override;
 
 protected:
     struct Cache {

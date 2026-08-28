@@ -1004,7 +1004,7 @@ protected:
    */
   virtual AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height);
 
-  virtual void onLayout(int w, int h);
+  virtual void onLayout(glm::ivec2 size);
 
   /**
    * @brief Converts touch screen events to desktop.

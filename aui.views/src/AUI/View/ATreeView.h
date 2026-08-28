@@ -41,7 +41,7 @@ public:
   void setModel(const _<ITreeModel<AString>>& model);
   glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
   AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
-  void onLayout(int w, int h) override;
+  void onLayout(glm::ivec2 size) override;
   void onScroll(const AScrollEvent& event) override;
   void handleMouseMove(ItemView* pView);
 

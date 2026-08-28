@@ -62,9 +62,9 @@ public:
     emits<aui::float_within_0_1> valueChanged;
 
 protected:
-    void onLayout(int w, int h) override {
-        auto handleSize = mHandle->measure(AConstraints::fixedBlock(h));
-        mHandle->layout({w * mValue - handleSize.x / 2.f, 0}, { handleSize.x, h });
+    void onLayout(glm::ivec2 size) override {
+        auto handleSize = mHandle->measure(AConstraints::fixedBlock(size.y));
+        mHandle->layout({size.x * mValue - handleSize.x / 2.f, 0}, { handleSize.x, size.y });
     }
 
 private:

@@ -312,8 +312,8 @@ void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
     }
   }
 }
-void AText::onLayout(int w, int h) {
-  ATextBase::onLayout(w, h);
+void AText::onLayout(glm::ivec2 size) {
+  ATextBase::onLayout(size);
   performLayout();
 
   int y = 0;
@@ -321,5 +321,5 @@ void AText::onLayout(int w, int h) {
   if (mVerticalAlign == VerticalAlign::MIDDLE) {
     y += (getContentHeight() - textHeight) / 2;
   }
-  mViewsContainer->layout(0, y, w, textHeight);
+  mViewsContainer->layout(0, y, size.x, textHeight);
 }

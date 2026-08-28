@@ -438,9 +438,9 @@ void ASurface::flagRedraw() {
 
 }
 
-void ASurface::onLayout(int w, int h) {
+void ASurface::onLayout(glm::ivec2 size) {
   APerformanceSection updateLayout("layout update");
-  AViewContainer::onLayout(w, h);
+  AViewContainer::onLayout(size);
   emit layoutUpdateComplete;
 }
 

@@ -132,8 +132,8 @@ AMinMaxAxis AAbstractLabel::onComputeIntrinsicMinMaxAxis(int height) {
     //    E
     //    R
 
-void AAbstractLabel::onLayout(int w, int h) {
-    AView::onLayout(w, h);
+void AAbstractLabel::onLayout(glm::ivec2 size) {
+    AView::onLayout(size);
     if (mTextOverflow != ATextOverflow::NONE) {
         mPrerendered = nullptr;
         redraw();

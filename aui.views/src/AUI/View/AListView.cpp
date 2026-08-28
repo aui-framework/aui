@@ -29,10 +29,10 @@ class AListViewContainer : public AViewContainer {
     mutable std::size_t mIndex = -1;
 
    public:
-    void onLayout(int w, int h) override {
+    void onLayout(glm::ivec2 size) override {
         if (getLayout())
-            getLayout()->layout(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
-                                  getSize().y - mPadding.vertical());
+            getLayout()->layout(mPadding.left, mPadding.top - mScrollY, size.x - mPadding.horizontal(),
+                                  size.y - mPadding.vertical());
     }
 
     _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept override {
@@ -58,7 +58,7 @@ class AListViewContainer : public AViewContainer {
 
     void setScrollY(int scrollY) {
         mScrollY = scrollY;
-        onLayout(getWidth(), getHeight());
+        onLayout(getSize());
     }
 
     size_t getIndex() const { return mIndex; }

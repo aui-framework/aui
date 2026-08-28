@@ -110,7 +110,7 @@ class AViewContainer;
  * |--------|---------|-----------|
  * | `onIntrinsicMeasure(AConstraints)` | Returns preferred **content** size under given constraints | **Usually** |
  * | `onComputeIntrinsicMinMaxAxis(int height)` | Returns min/max **content** width for a given height | **Sometimes** |
- * | `onLayout(int w, int h)` | Called when position/size are finalized; use to position children | Only for containers |
+ * | `onLayout(glm::ivec2 size)` | Called when position/size are finalized; use to position children | Only for containers |
  *
  * !!! note "Intrinsic = content only"
  *
@@ -176,13 +176,13 @@ class AViewContainer;
  * ### 3. `onLayout` – finalising geometry (containers only)
  *
  * ```cpp
- * void MyContainer::onLayout(int w, int h) override {
- *     // w, h are the final content size of this container.
+ * void MyContainer::onLayout(glm::ivec2 size) override {
+ *     // size is the final {width, height} of this container.
  *     // Position and size each child explicitly:
  *     for (auto& child : mChildren) {
- *         glm::ivec2 size = child->measure(AConstraints{ .maxInline = w, .maxBlock = h });
- *         child->layout(0, currentY, size.x, size.y);
- *         currentY += size.y;
+ *         glm::ivec2 childSize = child->measure(AConstraints{ .maxInline = size.x, .maxBlock = size.y });
+ *         child->layout(0, currentY, childSize.x, childSize.y);
+ *         currentY += childSize.y;
  *     }
  * }
  * ```
@@ -216,7 +216,7 @@ class AViewContainer;
  *        ▼
  * measure(constraints)         ← public; adds padding / FixedSize / MinSize / MaxSize, cached
  *
- * onLayout(w, h)
+ * onLayout(size)
  *        │
  *        │  (override in containers to position children)
  *        ▼
@@ -231,7 +231,7 @@ class AViewContainer;
  *    how to share available space among children.
  * 4. Once widths are decided, the layout manager calls `child->measure(constraints)` to get the
  *    final preferred size for each child under the resolved constraints.
- * 5. The layout manager calls `child->layout(x, y, w, h)` which invokes `child->onLayout(w, h)`.
+ * 5. The layout manager calls `child->layout(x, y, w, h)` which invokes `child->onLayout({w, h})`.
  * 6. Results of `measure()` are cached in `mMeasureCache` keyed by `AConstraints`; the cache is
  *    invalidated by `requestLayout()`.
  *
@@ -462,9 +462,17 @@ class AViewContainer;
  *
  * - Size of each view in tree is [calculated](#MEASURE_PIPELINE) during this phase.
  * - [AView::redraw] - triggers surface redraw. Surface applies layout before rendering.
- * - [AView::layout] - entry point for positioning and sizing a view. Performs layout only if really needed (i.e., if
- *   there was a resize event, or [AView::requestLayout] was called). Sets position and size, then calls
- *   [AView::onLayout].
+ * - [AView::layout] - the single entry point for positioning and sizing a view. Replaces the old
+ *   `applyGeometryToChildrenIfNecessary()`. Skips work if position, size and `mWantsLayoutUpdate` flag are all
+ *   unchanged; otherwise sets position/size and calls [AView::onLayout(glm::ivec2)]. Always called by the parent layout
+ *   manager — **do not call directly**.
+ *
+ * !!! note "Migration from master"
+ *
+ *     `applyGeometryToChildrenIfNecessary()` no longer exists. The equivalent sequence on `feat/layout-measure` is:
+ *     call `requestLayout()` to invalidate caches, then let the normal render cycle drive `layout()` top-down.
+ *     If you need to force an immediate synchronous layout pass (e.g. in tests), call `layout(x, y, w, h)` directly
+ *     on the root container with its current geometry.
  *
  * ### Size calculation { #SIZE_CALCULATION }
  *
@@ -492,6 +500,23 @@ public:
     ALayout() = default;
     ~ALayout() override = default;
 
+    /**
+     * @brief Invalidates cached measurement results, triggering a layout recalculation.
+     * @details
+     * Call this whenever the layout manager's content changes in a way that may affect sizes (e.g. a child was
+     * added/removed, spacing changed). Clears `mMeasureCache` and `mMinMaxSizesCache` and propagates the
+     * invalidation up the view tree so that all ancestor containers re-measure themselves.
+     *
+     * This is the direct replacement for the old `markMinContentSizeInvalid()` from the Qt-style layout system.
+     * The two are equivalent — `requestLayout()` additionally invalidates both measure caches introduced by
+     * the new [MEASURE_PIPELINE].
+     *
+     * !!! note
+     *
+     *     You rarely need to call this manually. It is called automatically when ASS properties change,
+     *     when a view is resized, or when [addView]/[removeView] is called. Override this in a custom layout
+     *     manager only if you maintain extra internal caches that also need clearing.
+     */
     virtual void requestLayout();
 
     /**

@@ -49,7 +49,7 @@ public:
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
-    void onLayout(int w, int h) override;
+    void onLayout(glm::ivec2 size) override;
 
     bool consumesClick(const glm::ivec2& position) override {
         return true;

@@ -40,8 +40,8 @@ bool isDefinitelyInvisible(AView& view) {
 }
 }
 
-void AViewContainerBase::onLayout(int w, int h) {
-  AView::onLayout(w, h);
+void AViewContainerBase::onLayout(glm::ivec2 size) {
+  AView::onLayout(size);
   AUI_ASSERT(!mRepaintTrap.hasValue());
   mRepaintTrap.emplace();
   AUI_DEFER {
@@ -53,7 +53,7 @@ void AViewContainerBase::onLayout(int w, int h) {
       throw AException("onLayout: can't ensure safe iteration");
     }
     mLayout->layout(mPadding.left, mPadding.top,
-                      getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
+                      size.x - mPadding.horizontal(), size.y - mPadding.vertical());
   }
   if (mRepaintTrap->triggered) {
     // if the trap is triggered during resize, it means at least one view has changed its position or size hence
@@ -682,7 +682,7 @@ void AViewContainerBase::forceUpdateLayoutRecursively() {
     for (const auto& view: mViews) {
         view->forceUpdateLayoutRecursively();
     }
-    onLayout(getSize().x, getSize().y);
+    onLayout(getSize());
 }
 
 void AViewContainerBase::markPixelDataInvalid(ARect<int> invalidArea) {

@@ -111,7 +111,7 @@ public:
 public:
     AProgressBar();
 
-    void onLayout(int w, int h) override;
+    void onLayout(glm::ivec2 size) override;
 
 private:
     aui::float_within_0_1 mValue = 0.f;

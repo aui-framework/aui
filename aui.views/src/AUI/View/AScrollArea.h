@@ -48,7 +48,7 @@ public:
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
-    void onLayout(int w, int h) override;
+    void onLayout(glm::ivec2 size) override;
 
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;

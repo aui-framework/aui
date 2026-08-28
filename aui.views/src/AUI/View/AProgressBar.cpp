@@ -29,8 +29,8 @@ AProgressBar::~AProgressBar() {
 
 }
 
-void AProgressBar::onLayout(int w, int h) {
-    AViewContainerBase::onLayout(w, h);
+void AProgressBar::onLayout(glm::ivec2 size) {
+    AViewContainerBase::onLayout(size);
     updateInnerWidth();
 }
 

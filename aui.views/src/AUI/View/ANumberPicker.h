@@ -84,7 +84,7 @@ public:
     void setMax(int64_t max);
 
 protected:
-    void onLayout(int w, int h) override;
+    void onLayout(glm::ivec2 size) override;
 
 signals:
     /**

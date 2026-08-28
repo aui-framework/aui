@@ -135,8 +135,8 @@ void ADoubleNumberPicker::changeBy(double v) {
     emit valueChanging(v);
 }
 
-void ADoubleNumberPicker::onLayout(int w, int h) {
-    AViewContainerBase::onLayout(w, h);
+void ADoubleNumberPicker::onLayout(glm::ivec2 size) {
+    AViewContainerBase::onLayout(size);
 
     if (getViews().size() < 2) {
         return;

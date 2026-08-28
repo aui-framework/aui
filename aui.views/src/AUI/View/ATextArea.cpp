@@ -453,8 +453,8 @@ void ATextArea::onCursorIndexChanged() {
                                                        {1, getFontStyle().size}));
 }
 
-void ATextArea::onLayout(int w, int h) {
-    ATextBase::onLayout(w, h);
+void ATextArea::onLayout(glm::ivec2 size) {
+    ATextBase::onLayout(size);
     if (auto scrollArea = findScrollArea()) {
         for (const auto& scrollbar: {scrollArea->horizontalScrollbar(), scrollArea->verticalScrollbar()}) {
             if (!scrollbar) {

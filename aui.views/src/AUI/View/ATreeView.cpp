@@ -246,8 +246,8 @@ AMinMaxAxis ATreeView::onComputeIntrinsicMinMaxAxis(int height) {
   return AScrollArea::onComputeIntrinsicMinMaxAxis(height);
 }
 
-void ATreeView::onLayout(int w, int h) {
-  AScrollArea::onLayout(w, h);
+void ATreeView::onLayout(glm::ivec2 size) {
+  AScrollArea::onLayout(size);
 }
 
 void ATreeView::onScroll(const AScrollEvent& event) {

@@ -23,9 +23,9 @@ public:
         };
     }
 
-    void onLayout(int w, int h) override {
-        AView::onLayout(w, h);
-        lastLaidOutSize = { w, h };
+    void onLayout(glm::ivec2 size) override {
+        AView::onLayout(size);
+        lastLaidOutSize = size;
     }
 
     glm::ivec2 lastLaidOutSize = {};

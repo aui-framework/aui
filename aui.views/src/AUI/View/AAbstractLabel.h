@@ -99,7 +99,7 @@ public:
         invalidateFont();
     }
 
-    void onLayout(int w, int h) override;
+    void onLayout(glm::ivec2 size) override;
 
     void invalidateAllStyles() override;
 

@@ -143,8 +143,8 @@ void ANumberPicker::changeBy(int64_t v) {
     emit valueChanging(getValue());
 }
 
-void ANumberPicker::onLayout(int w, int h) {
-    AViewContainerBase::onLayout(w, h);
+void ANumberPicker::onLayout(glm::ivec2 size) {
+    AViewContainerBase::onLayout(size);
 
     if (getViews().size() < 2) {
         return;

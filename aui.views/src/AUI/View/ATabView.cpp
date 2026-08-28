@@ -76,13 +76,13 @@ AMinMaxAxis ATabView::onComputeIntrinsicMinMaxAxis(int height) {
     };
 }
 
-void ATabView::onLayout(int w, int h) {
-    AViewContainerBase::onLayout(w, h);
+void ATabView::onLayout(glm::ivec2 size) {
+    AViewContainerBase::onLayout(size);
 
-    const int contentWidth = std::max(0, w - mPadding.horizontal());
+    const int contentWidth = std::max(0, size.x - mPadding.horizontal());
     const auto rowMeasured = mRow->measure(AConstraints::fixedInline(contentWidth));
-    const int rowHeight = std::min(rowMeasured.y, std::max(0, h - mPadding.vertical()));
-    const int pageHeight = std::max(0, h - mPadding.vertical() - rowHeight);
+    const int rowHeight = std::min(rowMeasured.y, std::max(0, size.y - mPadding.vertical()));
+    const int pageHeight = std::max(0, size.y - mPadding.vertical() - rowHeight);
 
     mRow->layout(mPadding.left, mPadding.top, contentWidth, rowHeight);
     mPageView->layout(mPadding.left, mPadding.top + rowHeight, contentWidth, pageHeight);

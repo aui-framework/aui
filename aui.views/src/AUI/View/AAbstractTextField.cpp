@@ -256,8 +256,8 @@ AString AAbstractTextField::toString() const {
     return AString(mContents);
 }
 
-void AAbstractTextField::onLayout(int w, int h) {
-    AView::onLayout(w, h);
+void AAbstractTextField::onLayout(glm::ivec2 size) {
+    AView::onLayout(size);
     onCursorIndexChanged(); // cursor and horizontal scroll should respond to size changes.
 }
 

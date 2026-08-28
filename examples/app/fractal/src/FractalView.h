@@ -39,7 +39,7 @@ public:
 
     void onScroll(const AScrollEvent& event) override;
 
-    void onLayout(int w, int h) override;
+    void onLayout(glm::ivec2 size) override;
 
     gl::Program& getShader() { return mShader; }
 

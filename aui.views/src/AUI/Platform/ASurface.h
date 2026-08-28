@@ -457,7 +457,7 @@ protected:
   virtual void showTouchscreenKeyboardImpl();
   virtual void hideTouchscreenKeyboardImpl();
 
-  void onLayout(int w, int h) override;
+  void onLayout(glm::ivec2 size) override;
 
   void markPixelDataInvalid(ARect<int> invalidArea) override;
 

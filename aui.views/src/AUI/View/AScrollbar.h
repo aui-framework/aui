@@ -26,7 +26,7 @@ class AScrollbarButton: public AView {
 public:
     explicit AScrollbarButton(AScrollbar& scrollbar) : mScrollbar(scrollbar) {}
 
-    void onLayout(int w, int h) override;
+    void onLayout(glm::ivec2 size) override;
 
 private:
     AScrollbar& mScrollbar;
@@ -40,7 +40,7 @@ private:
 public:
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
-    void onLayout(int w, int h) override;
+    void onLayout(glm::ivec2 size) override;
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
@@ -134,7 +134,7 @@ public:
 
     void onPointerPressed(const APointerPressedEvent& event) override;
 
-    void onLayout(int w, int h) override;
+    void onLayout(glm::ivec2 size) override;
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 

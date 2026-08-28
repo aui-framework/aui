@@ -88,10 +88,10 @@ namespace {
             }
         }
 
-        void onLayout(int w, int h) override {
-            AView::onLayout(w, h);
+        void onLayout(glm::ivec2 size) override {
+            AView::onLayout(size);
 
-            const auto imageSize = glm::uvec2{w, h} / plotScale();
+            const auto imageSize = glm::uvec2{size} / plotScale();
             if (mImage.size() == imageSize) {
                 return;
             }

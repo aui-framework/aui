@@ -70,7 +70,7 @@ TEST_F(UILayoutTest, SmallCorner1) {
     class View : public ALabel {
     public:
         using ALabel::ALabel;
-        void onLayout(int w, int h) override {
+        void onLayout(glm::ivec2 size) override {
             auto box = By::name("Box").one();
             AUI_ASSERT((getCenterPointInWindow().x <= box->getPositionInWindow().x + box->getWidth()));
         }
