@@ -167,8 +167,9 @@ bool AAbstractLabel::processTextOverflow(AString& text, int maxWidth) {
     bool isTextTooLarge = getFontStyle().getWidth(text) > maxWidth;
     if (!isTextTooLarge) return false;
 
-    auto truncation_point = findTruncationPoint(text.begin(), text.end(), maxWidth, mTextOverflow, getFontStyle());
-    text.erase(truncation_point, text.end());
+    auto utf8_view = text.utf8();
+    auto truncation_point = findTruncationPoint(utf8_view.begin(), utf8_view.end(), maxWidth, mTextOverflow, getFontStyle());
+    text.erase(truncation_point.data() - text.data());
 
     if (mTextOverflow == ATextOverflow::ELLIPSIS) {
         auto ending = AChar(ELLIPSIS).toUtf8();

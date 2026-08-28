@@ -687,85 +687,39 @@ public:
     template<class UnicodeString>
     void addStringT(const glm::ivec2& position, UnicodeString text) noexcept {
         mVertices.reserve(mVertices.capacity() + text.length() * 4);
-        auto& font = mFontStyle.font;
-        auto& texturePacker = mEntryData->texturePacker;
-        auto fe = mFontStyle.getFontEntry();
 
-        const bool hasKerning = font->isHasKerning();
+        struct Cb {
+            OpenGLMultiStringCanvas* self;
+            void onSymbolAdded(glm::ivec2 p) { self->notifySymbolAdded({p}); }
+            void onNextLine() { self->nextLine(); }
+            void onGlyph(glm::ivec2 pos, AFont::Character& ch, const AFont::FontEntry& fe, AChar c) {
+                int width = ch.image->width();
+                int height = ch.image->height();
+                glm::vec4 uv;
 
-        int advanceX = position.x;
-        int advanceY = position.y;
-        size_t counter = 0;
-        float advance = advanceX;
-        for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
-            AChar c = *i;
-            if (c == ' ') {
-                notifySymbolAdded({glm::ivec2{advance, advanceY}});
-                advance += mFontStyle.getSpaceWidth();
-            } else if (c == '\n') {
-                notifySymbolAdded({glm::ivec2{advance, advanceY}});
-                advanceX = (glm::max)(advanceX, int(glm::ceil(advance)));
-                advance = position.x;
-                advanceY += mFontStyle.getLineHeight();
-                nextLine();
-            } else {
-                AFont::Character& ch = font->getCharacter(fe, c);
-                if (ch.empty()) {
-                    advance += mFontStyle.getSpaceWidth();
-                    continue;
-                }
-                if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
+                if (ch.rendererData == nullptr) {
+                    uv = self->mEntryData->texturePacker.insert(*ch.image);
 
-                    int posX = advance + ch.horizontal.bearing.x;
-                    int posY = advanceY - ch.horizontal.bearing.y;
-                    int width = ch.image->width();
-                    int height = ch.image->height();
-
-                    glm::vec4 uv;
-
-                    if (ch.rendererData == nullptr) {
-                        uv = texturePacker.insert(*ch.image);
-
-                        const float BIAS = 0.1f;
-                        uv.x += BIAS;
-                        uv.y += BIAS;
-                        uv.z -= BIAS;
-                        uv.w -= BIAS;
-                        mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv});
-                        ch.rendererData = &mRenderer->mCharData.last();
-                        mEntryData->isTextureInvalid = true;
-                    } else {
-                        uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(ch.rendererData)->uv;
-                    }
-
-                    notifySymbolAdded({glm::ivec2{posX, posY}});
-                    mVertices.push_back({glm::vec2(posX, posY + height),
-                                         glm::vec2(uv.x, uv.w)});
-                    mVertices.push_back({glm::vec2(posX + width, posY + height),
-                                         glm::vec2(uv.z, uv.w)});
-                    mVertices.push_back({glm::vec2(posX, posY),
-                                         glm::vec2(uv.x, uv.y)});
-                    mVertices.push_back({glm::vec2(posX + width, posY),
-                                         glm::vec2(uv.z, uv.y)});
-
+                    const float BIAS = 0.1f;
+                    uv.x += BIAS;
+                    uv.y += BIAS;
+                    uv.z -= BIAS;
+                    uv.w -= BIAS;
+                    self->mRenderer->mCharData.push_back(OpenGLRenderer::CharacterData{uv});
+                    ch.rendererData = &self->mRenderer->mCharData.last();
+                    self->mEntryData->isTextureInvalid = true;
+                } else {
+                    uv = reinterpret_cast<OpenGLRenderer::CharacterData*>(ch.rendererData)->uv;
                 }
 
-                if (hasKerning) {
-                    auto next = std::next(i);
-                    if (next != text.end()) {
-                        auto kerning = font->getKerning(c, *next);
-                        advance += kerning.x;
-                    }
-                }
-
-                advance += ch.horizontal.advance;
+                self->mVertices.push_back({glm::vec2(pos.x, pos.y + height), glm::vec2(uv.x, uv.w)});
+                self->mVertices.push_back({glm::vec2(pos.x + width, pos.y + height), glm::vec2(uv.z, uv.w)});
+                self->mVertices.push_back({glm::vec2(pos.x, pos.y), glm::vec2(uv.x, uv.y)});
+                self->mVertices.push_back({glm::vec2(pos.x + width, pos.y), glm::vec2(uv.z, uv.y)});
             }
-        }
+        } cb { this };
 
-        notifySymbolAdded({glm::ivec2{advance, advanceY}});
-
-        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, int(glm::ceil(advance))));
-        mAdvanceY = advanceY + mFontStyle.getLineHeight();
+        mFontStyle.walkString(position, text, mAdvanceX, mAdvanceY, cb);
     }
 
     void addString(const glm::ivec2& position, AStringView text) noexcept override {
