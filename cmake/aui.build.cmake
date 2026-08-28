@@ -349,7 +349,7 @@ macro(_aui_import_google_benchmark)
             else()
                 auib_import(benchmark https://github.com/google/benchmark
                             VERSION 7e413be55370f0f4567761fe71ea8232d6871d06
-                            CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF
+                            CMAKE_ARGS -DBENCHMARK_ENABLE_GTEST_TESTS=OFF -DBENCHMARK_ENABLE_TESTING=OFF
                             LINK STATIC)
             endif()
             set_property(TARGET benchmark::benchmark PROPERTY IMPORTED_GLOBAL TRUE)

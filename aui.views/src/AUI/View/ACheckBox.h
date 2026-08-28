@@ -135,6 +135,10 @@ public:
         return mBox;
     }
 
+    void onKeyDown(AInput::Key key) override;
+    bool handlesNonMouseNavigation() override;
+    bool capturesFocus() override;
+
     /**
      * @brief Represents the box/drawing part of the checkbox itself; without labels or other decorations.
      *

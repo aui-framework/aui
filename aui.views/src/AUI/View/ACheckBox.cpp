@@ -30,6 +30,21 @@ ACheckBox::Box::Box() {
     connect(checked.changed, [this] { emit customCssPropertyChanged; });
 }
 
+void ACheckBox::onKeyDown(AInput::Key key) {
+    AViewContainerBase::onKeyDown(key);
+    if (key == AInput::RETURN) {
+        click();
+    }
+}
+
+bool ACheckBox::handlesNonMouseNavigation() {
+    return true;
+}
+
+bool ACheckBox::capturesFocus() {
+    return true;
+}
+
 _<AView> declarative::CheckBox::operator()() {
     auto checkbox = _new<ACheckBox>(std::move(content));
     checkbox->clicked.clearAllOutgoingConnectionsWith(checkbox); // removes default legacy behavior

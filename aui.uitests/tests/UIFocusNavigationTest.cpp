@@ -11,6 +11,9 @@
 
 #include <AUI/UITest.h>
 #include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/View/AButton.h>
+#include <AUI/View/ACheckBox.h>
+#include <AUI/View/ATextField.h>
 #include <AUI/View/AView.h>
 #include <AUI/Platform/AWindow.h>
 
@@ -260,4 +263,114 @@ TEST_F(UIFocusNavigation, NoFocusableViews) {
     mWindow->focusPrevView();
     pump();
     EXPECT_EQ(focused(), nullptr);
+}
+
+/**
+ * AButton, ACheckBox and ATextField must all participate in the keyboard focus navigation.
+ */
+class UIFocusNavigationOnControls : public testing::UITest {
+protected:
+    class TestWindow : public AWindow {
+    public:
+        _<AButton> button;
+        _<ACheckBox> checkBox;
+        _<ATextField> textField;
+        int buttonClicks = 0;
+
+        TestWindow() {
+            button = _new<AButton>("Button");
+            checkBox = _new<ACheckBox>(Label { "Checkbox" });
+            textField = _new<ATextField>();
+
+            setContents(Vertical {
+                button,
+                checkBox,
+                textField,
+            });
+
+            AObject::connect(button->clicked, this, [this] { ++buttonClicks; });
+        }
+    };
+
+    _<TestWindow> mWindow;
+
+    void SetUp() override {
+        UITest::SetUp();
+
+        mWindow = _new<TestWindow>();
+        mWindow->show();
+        uitest::frame();
+    }
+
+    [[nodiscard]] AView* focused() const {
+        return mWindow->getFocusedView().get();
+    }
+
+    static void pump() {
+        uitest::frame();
+    }
+};
+
+/**
+ * focusNextView() must focus AButton and RETURN must activate it.
+ */
+TEST_F(UIFocusNavigationOnControls, ButtonIsFocusedAndActivatedByEnter) {
+    mWindow->setFocusedView(nullptr);
+    pump();
+    ASSERT_EQ(focused(), nullptr);
+
+    mWindow->focusNextView();
+    pump();
+    EXPECT_EQ(focused(), static_cast<AView*>(mWindow->button.get()));
+
+    mWindow->onKeyDown(AInput::RETURN);
+    EXPECT_EQ(mWindow->buttonClicks, 1);
+
+    mWindow->onKeyDown(AInput::RETURN);
+    EXPECT_EQ(mWindow->buttonClicks, 2);
+}
+
+/**
+ * focusNextView() must focus ACheckBox and RETURN must toggle it.
+ */
+TEST_F(UIFocusNavigationOnControls, CheckBoxIsFocusedAndToggledByEnter) {
+    mWindow->setFocusedView(nullptr);
+    pump();
+
+    mWindow->focusNextView(); // button
+    pump();
+    mWindow->focusNextView(); // checkbox
+    pump();
+    ASSERT_EQ(focused(), static_cast<AView*>(mWindow->checkBox.get()));
+
+    EXPECT_FALSE(*mWindow->checkBox->checked());
+    mWindow->onKeyDown(AInput::RETURN);
+    EXPECT_TRUE(*mWindow->checkBox->checked());
+
+    mWindow->onKeyDown(AInput::RETURN);
+    EXPECT_FALSE(*mWindow->checkBox->checked());
+}
+
+/**
+ * Focus traversal must cycle through button, checkbox and text field in order.
+ */
+TEST_F(UIFocusNavigationOnControls, NavigationOrder) {
+    mWindow->setFocusedView(nullptr);
+    pump();
+
+    mWindow->focusNextView();
+    pump();
+    EXPECT_EQ(focused(), static_cast<AView*>(mWindow->button.get()));
+
+    mWindow->focusNextView();
+    pump();
+    EXPECT_EQ(focused(), static_cast<AView*>(mWindow->checkBox.get()));
+
+    mWindow->focusNextView();
+    pump();
+    EXPECT_EQ(focused(), static_cast<AView*>(mWindow->textField.get()));
+
+    mWindow->focusNextView();
+    pump();
+    EXPECT_EQ(focused(), static_cast<AView*>(mWindow->button.get()));
 }
