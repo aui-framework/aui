@@ -27,8 +27,11 @@ class AListViewContainer : public AViewContainer {
     mutable std::size_t mIndex = -1;
 
    public:
+    AListViewContainer() {
+        setOverflow(AOverflow::HIDDEN);
+    }
+
     void applyGeometryToChildren() override {
-        if (getLayout())
             getLayout()->onResize(mPadding.left, mPadding.top - mScrollY, getSize().x - mPadding.horizontal(),
                                   getSize().y - mPadding.vertical());
     }
@@ -55,8 +58,10 @@ class AListViewContainer : public AViewContainer {
     }
 
     void setScrollY(int scrollY) {
+        if (mScrollY == scrollY) return;
         mScrollY = scrollY;
         applyGeometryToChildrenIfNecessary();
+        redraw();
     }
 
     size_t getIndex() const { return mIndex; }

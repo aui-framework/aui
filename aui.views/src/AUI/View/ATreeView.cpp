@@ -30,11 +30,16 @@ private:
     size_t mIndex = -1;
 
 public:
-    void setScrollY(int scrollY) {
-        mScrollY = scrollY;
-        applyGeometryToChildren();
+    ContainerView() {
+        setOverflow(AOverflow::HIDDEN);
     }
 
+    void setScrollY(int scrollY) {
+        if (mScrollY == scrollY) return;
+        mScrollY = scrollY;
+        applyGeometryToChildren();
+        redraw();
+    }
     void applyGeometryToChildren() override {
         getLayout()->onResize(mPadding.left, mPadding.top - mScrollY,
                               getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
@@ -199,9 +204,8 @@ ATreeView::ATreeView():
         return _new<ALabel>(model->itemAt(index));
     })
 {
-
+    setOverflow(AOverflow::HIDDEN);
 }
-
 ATreeView::ATreeView(const _<ITreeModel<AString>>& model):
     ATreeView()
 {
