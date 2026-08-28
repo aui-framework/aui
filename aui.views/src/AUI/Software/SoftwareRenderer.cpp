@@ -368,7 +368,13 @@ void SoftwareRenderer::popMaskAfter() {
 
 struct CharEntry {
     glm::ivec2 position;
-    AImage* image;
+    /**
+     * Shared reference: AFont may re-render (replace) a cached provisional
+     * glyph at any later getCharacter call, which would free a raw pointer.
+     * The prerendered string is drawn after the lookups, so the image must
+     * be retained by reference count.
+     */
+    _<AImage> image;
 };
 
 class SoftwarePrerenderedString: public IRenderer::IPrerenderedString {
@@ -448,67 +454,18 @@ public:
     template<class UnicodeString>
     void addStringT(const glm::ivec2& position, UnicodeString text) noexcept {
         mCharEntries.reserve(mCharEntries.capacity() + text.length());
-        auto& font = mFontStyle.font;
-        auto fe = mFontStyle.getFontEntry();
 
-        const bool hasKerning = font->isHasKerning();
-
-        int prevWidth = -1;
-
-        int advanceX = position.x;
-        int advanceY = position.y;
-        size_t counter = 0;
-        int advance = advanceX;
-        for (auto i = text.begin(); i != text.end(); ++i, ++counter) {
-            AChar c = *i;
-            if (c == ' ') {
-                notifySymbolAdded({glm::ivec2{advance, advanceY}});
-                advance += mFontStyle.getSpaceWidth();
+        struct Cb {
+            SoftwareMultiStringCanvas* self;
+            void onSymbolAdded(glm::ivec2 p) { self->notifySymbolAdded({p}); }
+            void onNextLine() { self->nextLine(); }
+            void onGlyph(glm::ivec2 pos, const AFont::Character& ch, const AFont::FontEntry&, AChar) {
+                self->mCharEntries.push_back(CharEntry{pos, ch.image});
             }
-            else if (c == '\n') {
-                notifySymbolAdded({glm::ivec2{advance, advanceY}});
-                advanceX = (glm::max)(advanceX, advance);
-                advance = position.x;
-                advanceY += mFontStyle.getLineHeight();
-                nextLine();
-            }
-            else {
-                AFont::Character& ch = font->getCharacter(fe, c);
-                if (ch.empty()) {
-                    advance += mFontStyle.getSpaceWidth();
-                    continue;
-                }
-                if ((advance >= 0 && advance <= 99999) /* || gui3d */) {
-                    glm::ivec2 pos{ advance,  advanceY };
-                    pos.x += ch.horizontal.bearing.x;
-                    pos.y -= ch.horizontal.bearing.y;
-                    notifySymbolAdded({pos});
-                    mCharEntries.push_back(CharEntry{
-                            pos,
-                            ch.image.get()
-                    });
-                }
+        } cb { this };
 
-                if (hasKerning) {
-                    auto next = std::next(i);
-                    if (next != text.end())
-                    {
-                        auto kerning = font->getKerning(c, *next);
-                        advance += kerning.x;
-                    }
-                }
-
-                advance += ch.horizontal.advance;
-                advance = glm::floor(advance);
-            }
-        }
-
-        notifySymbolAdded({glm::ivec2{advance, advanceY}});
-
-        mAdvanceX = (glm::max)(mAdvanceX, (glm::max)(advanceX, advance));
-        mAdvanceY = advanceY + mFontStyle.getLineHeight();
+        mFontStyle.walkString(position, text, mAdvanceX, mAdvanceY, cb);
     }
-
     void addString(const glm::ivec2& position, AStringView text) noexcept override {
         addStringT(position, text.utf8());
     }

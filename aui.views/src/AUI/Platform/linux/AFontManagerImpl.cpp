@@ -86,6 +86,87 @@ AFontManager::AFontManager() :
         mDefaultFont = loadFont(":uni/font/Roboto.ttf");
         ALogger::info(LOG_TAG) << "Using fallback internal font";
     }
+
+    // Pre-warm fallback face to avoid UI-thread stall on first missing-glyph render.
+    initFallback();
+}
+
+AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
+    // Use fontconfig to find a CJK-capable sans-serif font.
+    // Ensure fontconfig is initialized before using default config (nullptr).
+    if (!FcInit()) {
+        ALogger::warn(LOG_TAG) << "FcInit() failed; CJK fallback unavailable";
+        return {};
+    }
+    // Use a charset-based query with representative codepoints from each CJK
+    // script (Han, Hiragana, Hangul) so that Kana-only and Hangul-only fonts
+    // can enter the candidate list, not just Han-capable ones.
+    static constexpr FcChar32 kProbeCodepoints[] = { 0x4E2D /*中*/, 0x3042 /*あ*/, 0xAC00 /*가*/ };
+    FcPattern* pattern = FcPatternCreate();
+    FcCharSet* charset = FcCharSetCreate();
+    if (!pattern || !charset) {
+        // Allocation failure (memory exhaustion): never call fontconfig APIs
+        // with null handles (FcPatternAddCharSet would crash). Discovery is
+        // best-effort; log and leave the fallback pool empty.
+        if (pattern) FcPatternDestroy(pattern);
+        if (charset) FcCharSetDestroy(charset);
+        ALogger::warn(LOG_TAG) << "fontconfig allocation failed; CJK fallback unavailable";
+        return {};
+    }
+    for (auto probe : kProbeCodepoints) {
+        FcCharSetAddChar(charset, probe);
+    }
+    FcPatternAddCharSet(pattern, FC_CHARSET, charset);
+    FcPatternAddString(pattern, FC_FAMILY, reinterpret_cast<const FcChar8*>("sans"));
+    FcConfigSubstitute(nullptr, pattern, FcMatchPattern);
+    FcDefaultSubstitute(pattern);
+    FcCharSetDestroy(charset);
+
+    // Use FcFontSort to obtain an ordered set of CJK-capable candidates.
+    // FcFontMatch would only return a single best match, which cannot populate
+    // the deferred-candidate pool for lazy loading on codepoint miss.
+    // The list is capped: loaded fallback faces are never released, so an
+    // unbounded candidate pool would keep opening font files for the whole
+    // process lifetime on codepoint misses (e.g. emoji, rare symbols).
+    constexpr size_t kMaxFallbackCandidates = 8;
+    AVector<AFontManager::FallbackCandidate> candidates;
+    FcResult result;
+    FcFontSet* fontSet = FcFontSort(nullptr, pattern, FcTrue, nullptr, &result);
+    if (fontSet) {
+        for (int i = 0; i < fontSet->nfont && candidates.size() < kMaxFallbackCandidates; ++i) {
+            FcPattern* font = fontSet->fonts[i];
+            // Verify the font covers at least one of the CJK scripts; reject
+            // fonts whose charset cannot be read too — they would consume a
+            // candidate slot and a lazy load attempt without any proof of
+            // coverage.
+            FcCharSet* fontCharset = nullptr;
+            if (FcPatternGetCharSet(font, FC_CHARSET, 0, &fontCharset) != FcResultMatch) {
+                continue;
+            }
+            bool coversAny = false;
+            for (auto probe : kProbeCodepoints) {
+                if (FcCharSetHasChar(fontCharset, probe)) {
+                    coversAny = true;
+                    break;
+                }
+            }
+            if (!coversAny) {
+                continue;   // Skip fonts that cover none of the CJK scripts.
+            }
+            FcChar8* path = nullptr;
+            int faceIndex = 0;
+            if (FcPatternGetString(font, FC_FILE, 0, &path) == FcResultMatch) {
+                FcPatternGetInteger(font, FC_INDEX, 0, &faceIndex);
+                candidates.push_back({ AString(reinterpret_cast<const char*>(path)), faceIndex });
+            }
+        }
+        FcFontSetDestroy(fontSet);
+    }
+    FcPatternDestroy(pattern);
+    if (candidates.empty()) {
+        ALogger::warn(LOG_TAG) << "No CJK fallback font found via fontconfig";
+    }
+    return candidates;
 }
 
 namespace {
@@ -138,13 +219,14 @@ AString AFontManager::getPathToFont(const AString& family) {
 
     Pattern pattern = FcPatternCreate();
     auto tmp = family.toStdString();
-    //FcDefaultSubstitute(pattern);
-    auto os = FcObjectSetBuild (FC_FILE,
-                                FC_WIDTH,
-                                FC_STYLE,
-                                nullptr);
+    auto os = FcObjectSetBuild(FC_FILE,
+                               FC_WIDTH,
+                               FC_STYLE,
+                               FC_WEIGHT,
+                               nullptr);
     FcPatternAddString(pattern, FC_FAMILY, reinterpret_cast<const FcChar8*>(tmp.c_str()));
     FcPatternAddString(pattern, FC_STYLE, reinterpret_cast<const FcChar8*>("Regular"));
+    FcPatternAddInteger(pattern, FC_WEIGHT, FC_WEIGHT_REGULAR);
     FcPatternAddInteger(pattern, FC_WIDTH, FC_WIDTH_NORMAL);
 
     struct FcFontSetWrap {
