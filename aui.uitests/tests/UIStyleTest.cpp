@@ -196,6 +196,7 @@ TEST_F(UIStyleTest, Focused) {
     using namespace ass;
 
     mView AUI_OVERRIDE_STYLE {
+        MinSize { 10_dp },
         BackgroundSolid { AColor::BLACK },
         on_state::Focused {
             BackgroundSolid { AColor::RED },
