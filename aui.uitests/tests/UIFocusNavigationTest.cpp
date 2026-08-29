@@ -15,6 +15,11 @@
 #include <AUI/View/ACheckBox.h>
 #include <AUI/View/ATextField.h>
 #include <AUI/View/ARadioButton.h>
+#include <AUI/View/AListView.h>
+#include <AUI/View/ATreeView.h>
+#include <AUI/Model/AListModel.h>
+#include <AUI/Model/ATreeModel.h>
+#include <AUI/Platform/AInput.h>
 #include <AUI/View/AView.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/ASS/AStylesheet.h>
@@ -460,4 +465,300 @@ TEST_F(UIFocusNavigationOnControls, RadioButtonDrawsFocusOutline) {
 
     By::type<ARadioButton>().check(pixelColorAt({0.5f, 0.02f}, AStylesheet::getOsThemeColor(), 0.3f),
         "radio button should draw the focus outline when focused");
+}
+
+/**
+ * AListView must participate in the keyboard focus navigation and navigate its items with arrow keys.
+ */
+class UIFocusNavigationOnListView : public testing::UITest {
+protected:
+    class TestWindow : public AWindow {
+    public:
+        _<AListView> listView;
+        int selectedRow = -1;
+        int selectionCount = 0;
+
+        TestWindow() {
+            auto model = _new<AListModel<AString>>();
+            for (int i = 0; i < 40; ++i) {
+                model->push_back("Item {}"_format(i));
+            }
+            listView = _new<AListView>(model);
+            setContents(listView);
+
+            AObject::connect(listView->selectionChanged, this,
+                             [this](const AListModelSelection<AString>& selection) {
+                                 ++selectionCount;
+                                 selectedRow = selection.empty() ? -1 : int(selection.begin().getIndex().getRow());
+                             });
+        }
+    };
+
+    _<TestWindow> mWindow;
+
+    void SetUp() override {
+        UITest::SetUp();
+
+        mWindow = _new<TestWindow>();
+        mWindow->show();
+        uitest::frame();
+    }
+
+    [[nodiscard]] AView* focused() const {
+        return mWindow->getFocusedView().get();
+    }
+
+    static void pump() {
+        uitest::frame();
+    }
+
+    void focusListView() {
+        mWindow->setFocusedView(nullptr);
+        pump();
+        mWindow->focusNextView();
+        pump();
+        ASSERT_EQ(focused(), By::text("Item 0").one().get());
+    }
+};
+
+/**
+ * focusNextView() must focus the items inside AListView so that arrow keys move the focus and selection.
+ */
+TEST_F(UIFocusNavigationOnListView, IsFocusedByTab) {
+    focusListView();
+}
+
+/**
+ * UP and DOWN arrow keys must move the focus and selection within AListView, clamping at the edges.
+ */
+TEST_F(UIFocusNavigationOnListView, ArrowKeysNavigateSelection) {
+    focusListView();
+    EXPECT_EQ(mWindow->selectedRow, -1) << "tabbing in must not change the selection";
+
+    mWindow->onKeyDown(AInput::DOWN);
+    pump();
+    EXPECT_EQ(mWindow->selectedRow, 1);
+    EXPECT_EQ(focused(), By::text("Item 1").one().get());
+
+    mWindow->onKeyDown(AInput::DOWN);
+    pump();
+    EXPECT_EQ(mWindow->selectedRow, 2);
+
+    mWindow->onKeyDown(AInput::UP);
+    pump();
+    EXPECT_EQ(mWindow->selectedRow, 1);
+
+    // clamping at the top
+    mWindow->onKeyDown(AInput::UP);
+    mWindow->onKeyDown(AInput::UP);
+    mWindow->onKeyDown(AInput::UP);
+    pump();
+    EXPECT_EQ(mWindow->selectedRow, 0);
+    EXPECT_EQ(focused(), By::text("Item 0").one().get());
+}
+
+/**
+ * The selected item must be scrolled into view ("shown") when it is selected via the keyboard.
+ */
+TEST_F(UIFocusNavigationOnListView, SelectedItemIsShown) {
+    focusListView();
+
+    for (int i = 0; i < 40; ++i) {
+        mWindow->onKeyDown(AInput::DOWN);
+        pump();
+    }
+    ASSERT_EQ(mWindow->selectedRow, 39);
+    EXPECT_GT(mWindow->listView->scroll().y, 0u) << "the list must scroll to reveal the selected item";
+
+    const auto listTop = mWindow->listView->getPositionInWindow().y;
+    const auto listBottom = listTop + mWindow->listView->getHeight();
+
+    const auto item = By::text("Item 39").one();
+    ASSERT_TRUE(item != nullptr);
+    const auto itemTop = item->getPositionInWindow().y;
+    const auto itemBottom = itemTop + item->getHeight();
+
+    EXPECT_GE(itemTop, listTop - 1) << "the selected item must be within the visible area";
+    EXPECT_LE(itemBottom, listBottom + 1) << "the selected item must be within the visible area";
+}
+
+/**
+ * ATreeView must participate in the keyboard focus navigation and support arrow-key navigation,
+ * including expanding/collapsing with LEFT/RIGHT.
+ */
+class UIFocusNavigationOnTreeView : public testing::UITest {
+protected:
+    class TestWindow : public AWindow {
+    public:
+        _<ATreeView> treeView;
+        _<ATreeModel<AString>> model;
+        AString selectedItem;
+        int selectionCount = 0;
+
+        TestWindow() {
+            AVector<ATreeModel<AString>::Item> items;
+            items << ATreeModel<AString>::Item {
+                "Parent 1",
+                {
+                    ATreeModel<AString>::Item { "Child 1", {} },
+                    ATreeModel<AString>::Item { "Child 2", {} },
+                },
+            };
+            for (int i = 2; i <= 40; ++i) {
+                items << ATreeModel<AString>::Item { "Parent {}"_format(i), {} };
+            }
+            model = _new<ATreeModel<AString>>(std::move(items));
+
+            treeView = _new<ATreeView>(model);
+            setContents(treeView);
+
+            AObject::connect(treeView->itemSelected, this, [this](const ATreeModelIndex& index) {
+                ++selectionCount;
+                selectedItem = model->itemAt(index);
+            });
+        }
+    };
+
+    _<TestWindow> mWindow;
+
+    void SetUp() override {
+        UITest::SetUp();
+
+        mWindow = _new<TestWindow>();
+        mWindow->show();
+        uitest::frame();
+    }
+
+    [[nodiscard]] AView* focused() const {
+        return mWindow->getFocusedView().get();
+    }
+
+    static void pump() {
+        uitest::frame();
+    }
+
+    void focusTreeView() {
+        mWindow->setFocusedView(nullptr);
+        pump();
+        mWindow->focusNextView();
+        pump();
+        ASSERT_EQ(focused(), By::text("Parent 1").one().get());
+    }
+};
+
+/**
+ * focusNextView() must focus the items inside ATreeView so that arrow keys navigate them.
+ */
+TEST_F(UIFocusNavigationOnTreeView, IsFocusedByTab) {
+    focusTreeView();
+}
+
+/**
+ * UP/DOWN move the focus and selection across the visible items; RIGHT expands a collapsed group, DOWN enters
+ * its children, and LEFT returns to the parent and collapses it.
+ */
+TEST_F(UIFocusNavigationOnTreeView, ArrowKeysNavigateSelection) {
+    focusTreeView();
+    EXPECT_EQ(mWindow->selectionCount, 0) << "tabbing in must not change the selection";
+
+    mWindow->onKeyDown(AInput::DOWN);
+    pump();
+    EXPECT_EQ(mWindow->selectedItem, "Parent 2");
+
+    mWindow->onKeyDown(AInput::DOWN);
+    pump();
+    EXPECT_EQ(mWindow->selectedItem, "Parent 3");
+
+    mWindow->onKeyDown(AInput::UP);
+    pump();
+    EXPECT_EQ(mWindow->selectedItem, "Parent 2");
+
+    // back to the parent group
+    mWindow->onKeyDown(AInput::UP);
+    pump();
+    EXPECT_EQ(mWindow->selectedItem, "Parent 1");
+
+    // expand "Parent 1" (was collapsed)
+    mWindow->onKeyDown(AInput::RIGHT);
+    pump();
+    EXPECT_EQ(mWindow->selectedItem, "Parent 1");
+
+    mWindow->onKeyDown(AInput::DOWN);
+    pump();
+    EXPECT_EQ(mWindow->selectedItem, "Child 1");
+
+    mWindow->onKeyDown(AInput::DOWN);
+    pump();
+    EXPECT_EQ(mWindow->selectedItem, "Child 2");
+
+    // go back to the parent
+    mWindow->onKeyDown(AInput::LEFT);
+    pump();
+    EXPECT_EQ(mWindow->selectedItem, "Parent 1");
+
+    // collapse "Parent 1"
+    mWindow->onKeyDown(AInput::LEFT);
+    pump();
+    EXPECT_EQ(mWindow->selectedItem, "Parent 1");
+
+    // children are now hidden, so the next DOWN lands on the next root item
+    mWindow->onKeyDown(AInput::DOWN);
+    pump();
+    EXPECT_EQ(mWindow->selectedItem, "Parent 2");
+}
+
+/**
+ * RETURN must expand a collapsed folder, collapse an expanded folder and merely select a leaf item.
+ */
+TEST_F(UIFocusNavigationOnTreeView, EnterOpensAndClosesFolder) {
+    focusTreeView();
+
+    // RETURN on a leaf ("Parent 2") just selects it
+    mWindow->onKeyDown(AInput::DOWN);
+    pump();
+    ASSERT_EQ(mWindow->selectedItem, "Parent 2");
+
+    mWindow->onKeyDown(AInput::UP); // back to folder "Parent 1"
+    pump();
+
+    // RETURN opens the folder
+    mWindow->onKeyDown(AInput::RETURN);
+    pump();
+    mWindow->onKeyDown(AInput::DOWN);
+    pump();
+    EXPECT_EQ(mWindow->selectedItem, "Child 1");
+
+    // RETURN closes the folder
+    mWindow->onKeyDown(AInput::UP); // back to "Parent 1"
+    pump();
+    mWindow->onKeyDown(AInput::RETURN);
+    pump();
+    mWindow->onKeyDown(AInput::DOWN);
+    pump();
+    EXPECT_EQ(mWindow->selectedItem, "Parent 2");
+}
+
+/**
+ * The selected item must be scrolled into view ("shown") when it is selected via the keyboard.
+ */
+TEST_F(UIFocusNavigationOnTreeView, SelectedItemIsShown) {
+    focusTreeView();
+
+    for (int i = 0; i < 60; ++i) {
+        mWindow->onKeyDown(AInput::DOWN);
+        pump();
+    }
+    ASSERT_EQ(mWindow->selectedItem, "Parent 40");
+    EXPECT_GT(mWindow->selectionCount, 0);
+
+    const auto treeTop = mWindow->treeView->getPositionInWindow().y;
+    const auto treeBottom = treeTop + mWindow->treeView->getHeight();
+
+    const auto item = By::text("Parent 40").one();
+    ASSERT_TRUE(item != nullptr);
+    const auto itemTop = item->getPositionInWindow().y;
+    const auto itemBottom = itemTop + item->getHeight();
+
+    EXPECT_GE(itemTop, treeTop - 1) << "the selected item must be within the visible area";
+    EXPECT_LE(itemBottom, treeBottom + 1) << "the selected item must be within the visible area";
 }

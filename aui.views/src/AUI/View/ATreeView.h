@@ -70,6 +70,12 @@ private:
     void handleMousePressed(ItemView* v);
     void handleMouseDoubleClicked(ItemView* v);
     void handleSelected(ItemView* v);
+    void ensureVisible(const _<ItemView>& itemView);
+
+    void onItemFocusAcquired(ItemView* item);
+    void onItemKeyDown(ItemView* item, AInput::Key key);
+
+    static void collectVisibleItems(const _<AViewContainer>& container, AVector<_<ItemView>>& out);
 
     void fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndexOrRoot& index);
     void makeElement(const _<AViewContainer>& container, const ATreeModelIndex& childIndex, bool isGroup, const _<ATreeView::ItemView>& itemView);

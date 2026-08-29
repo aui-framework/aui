@@ -382,6 +382,10 @@ AStylesheet::AStylesheet() {
             AOverflow::HIDDEN,
         },
         {
+            c::focus(".list-item"),
+            Border { 1_dp, getOsThemeColor() },
+        },
+        {
             t<ATreeView>() > t<AViewContainer>() > c(".list-item") > t<AAbstractLabel>(),
             Padding { 0, 2_dp },
             Margin { 0 },

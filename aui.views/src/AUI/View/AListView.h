@@ -101,4 +101,8 @@ private:
     void handleMouseDoubleClicked(AListItem* item);
 
     void clearSelectionInternal();
+
+    void onItemFocusAcquired(AListItem* item);
+    void onItemKeyDown(AListItem* item, AInput::Key key);
+    std::size_t indexOfItem(AListItem* item) const;
 };
