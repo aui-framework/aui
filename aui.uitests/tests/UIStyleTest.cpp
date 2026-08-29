@@ -192,9 +192,6 @@ TEST_F(UIStyleTest, Merge) {
     By::type<View>().check(pixelColorAt({0.5f, 0.5f}, AColor::RED)); // within cross, overlayed by red
 }
 
-/**
- * Checks that keyboard focus (focus()/setFocusedView) triggers the focused sub-selector.
- */
 TEST_F(UIStyleTest, Focused) {
     using namespace ass;
 
