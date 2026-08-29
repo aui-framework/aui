@@ -484,7 +484,7 @@ protected:
                 model->push_back("Item {}"_format(i));
             }
             listView = _new<AListView>(model);
-            setContents(listView);
+            setContents(Vertical { listView });
 
             AObject::connect(listView->selectionChanged, this,
                              [this](const AListModelSelection<AString>& selection) {
@@ -610,7 +610,7 @@ protected:
             model = _new<ATreeModel<AString>>(std::move(items));
 
             treeView = _new<ATreeView>(model);
-            setContents(treeView);
+            setContents(Vertical { treeView });
 
             AObject::connect(treeView->itemSelected, this, [this](const ATreeModelIndex& index) {
                 ++selectionCount;
@@ -642,7 +642,9 @@ protected:
         pump();
         mWindow->focusNextView();
         pump();
-        ASSERT_EQ(focused(), By::text("Parent 1").one().get());
+        const auto label = By::text("Parent 1").one();
+        ASSERT_NE(label, nullptr);
+        ASSERT_EQ(focused(), label->getParent());
     }
 };
 
