@@ -42,12 +42,7 @@ _<AImage> AImage::fromUrl(const AUrl& url) {
         if (auto raster = AImageLoaderRegistry::inst().loadRaster(buffer))
             return raster;
     } catch (const AException& e) {
-        #if AUI_BUILD_TESTS
-        if (url.full() != "builtin://__aui/icon_512x512.png")
-            ALogger::err("Could not load image: " + url.full() + ": " + e.getMessage());
-        #else
         ALogger::err("Could not load image: " + url.full() + ": " + e.getMessage());
-        #endif
     }
     return nullptr;
 }
