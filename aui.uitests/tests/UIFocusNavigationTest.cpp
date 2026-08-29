@@ -14,6 +14,7 @@
 #include <AUI/View/AButton.h>
 #include <AUI/View/ACheckBox.h>
 #include <AUI/View/ATextField.h>
+#include <AUI/View/ARadioButton.h>
 #include <AUI/View/AView.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/ASS/AStylesheet.h>
@@ -276,17 +277,20 @@ protected:
         _<AButton> button;
         _<ACheckBox> checkBox;
         _<ATextField> textField;
+        _<ARadioButton> radioButton;
         int buttonClicks = 0;
 
         TestWindow() {
             button = _new<AButton>("Button");
             checkBox = _new<ACheckBox>(Label { "Checkbox" });
             textField = _new<ATextField>();
+            radioButton = _new<ARadioButton>(Label { "Radio" });
 
             setContents(Vertical {
                 button,
                 checkBox,
                 textField,
+                radioButton,
             });
 
             AObject::connect(button->clicked, this, [this] { ++buttonClicks; });
@@ -373,6 +377,10 @@ TEST_F(UIFocusNavigationOnControls, NavigationOrder) {
 
     mWindow->focusNextView();
     pump();
+    EXPECT_EQ(focused(), static_cast<AView*>(mWindow->radioButton.get()));
+
+    mWindow->focusNextView();
+    pump();
     EXPECT_EQ(focused(), static_cast<AView*>(mWindow->button.get()));
 }
 
@@ -409,4 +417,47 @@ TEST_F(UIFocusNavigationOnControls, CheckBoxDrawsFocusOutline) {
 
     By::type<ACheckBox>().check(pixelColorAt({0.5f, 0.02f}, AStylesheet::getOsThemeColor(), 0.3f),
         "checkbox should draw the focus outline when focused");
+}
+
+/**
+ * focusNextView() must focus ARadioButton and RETURN must check it.
+ */
+TEST_F(UIFocusNavigationOnControls, RadioButtonIsFocusedAndCheckedByEnter) {
+    mWindow->setFocusedView(nullptr);
+    pump();
+
+    mWindow->focusNextView(); // button
+    pump();
+    mWindow->focusNextView(); // checkbox
+    pump();
+    mWindow->focusNextView(); // text field
+    pump();
+    mWindow->focusNextView(); // radio button
+    pump();
+    ASSERT_EQ(focused(), static_cast<AView*>(mWindow->radioButton.get()));
+
+    EXPECT_FALSE(*mWindow->radioButton->checked());
+    mWindow->onKeyDown(AInput::RETURN);
+    EXPECT_TRUE(*mWindow->radioButton->checked());
+}
+
+/**
+ * A focused ARadioButton must draw the theme-color focus outline (like a text field).
+ */
+TEST_F(UIFocusNavigationOnControls, RadioButtonDrawsFocusOutline) {
+    mWindow->setFocusedView(nullptr);
+    pump();
+
+    mWindow->focusNextView(); // button
+    pump();
+    mWindow->focusNextView(); // checkbox
+    pump();
+    mWindow->focusNextView(); // text field
+    pump();
+    mWindow->focusNextView(); // radio button
+    pump();
+    ASSERT_EQ(focused(), static_cast<AView*>(mWindow->radioButton.get()));
+
+    By::type<ARadioButton>().check(pixelColorAt({0.5f, 0.02f}, AStylesheet::getOsThemeColor(), 0.3f),
+        "radio button should draw the focus outline when focused");
 }

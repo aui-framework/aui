@@ -327,6 +327,10 @@ AStylesheet::AStylesheet() {
             LayoutSpacing { 4_dp }, // specifies space between ARadioButton::Circle and contents
         },
         {
+            t<ARadioButton>::focus(),
+            Border { 1_dp, getOsThemeColor() },
+        },
+        {
             t<ARadioButton::Circle>(), // styles the circle itself
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_dp, 0x333333_rgb },

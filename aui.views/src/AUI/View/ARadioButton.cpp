@@ -31,6 +31,21 @@ ARadioButton::~ARadioButton()
 {
 }
 
+void ARadioButton::onKeyDown(AInput::Key key) {
+    AViewContainerBase::onKeyDown(key);
+    if (key == AInput::RETURN) {
+        click();
+    }
+}
+
+bool ARadioButton::handlesNonMouseNavigation() {
+    return true;
+}
+
+bool ARadioButton::capturesFocus() {
+    return true;
+}
+
 ARadioButton::Circle::Circle() {
     connect(checked.changed, [this] { emit customCssPropertyChanged; });
 }
