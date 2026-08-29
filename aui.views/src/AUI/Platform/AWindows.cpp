@@ -33,6 +33,7 @@
 
 #ifdef AUI_PLATFORM_LINUX
 #include <AUI/Platform/linux/IPlatformAbstraction.h>
+#include <AUI/Util/ABuiltinFiles.h>
 #endif
 
 
@@ -254,9 +255,11 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
 #if AUI_PLATFORM_LINUX
     // on linux, we have to manually provide an icon for the system.
-    // __aui/icon_512x512.png is provided by aui_app cmake command.
-    if (auto _icon = AImage::fromUrl(":__aui/icon_512x512.png")) {
-        IPlatformAbstraction::current().windowSetIcon(*this,*_icon);
+    // __aui/icon_512x512.png is provided by aui_app cmake command (only when APP_ICON is set).
+    if (ABuiltinFiles::contains("__aui/icon_512x512.png")) {
+        if (auto _icon = AImage::fromUrl(":__aui/icon_512x512.png")) {
+            IPlatformAbstraction::current().windowSetIcon(*this,*_icon);
+        }
     }
 #endif
 }
