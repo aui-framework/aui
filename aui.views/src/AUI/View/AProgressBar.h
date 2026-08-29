@@ -151,7 +151,7 @@ struct ProgressBar {
      * The returned view is a simple rectangle that visually represents
      * the progress bar's fill area.
      */
-    static _<AView> defaultInner();
+    API_AUI_VIEWS static _<AView> defaultInner();
 
     API_AUI_VIEWS _<AView> operator()();
 };
