@@ -46,7 +46,8 @@ public:
         if (!glm::all(glm::lessThan(uposition, mContext->bitmapSize()))) return;
 
         if (mDrawingToStencil) {
-            if (color.a > 0.5f) {
+            auto expectedDepth = (mDrawingStencilDirection == INCREASE) ? mStencilDepth : (mStencilDepth + 1);
+            if (color.a > 0.5f && mContext->stencil(position) == expectedDepth) {
                 mContext->stencil(position) += mDrawingStencilDirection;
             }
         } else {

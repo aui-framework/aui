@@ -19,21 +19,58 @@
 
 using namespace declarative;
 
+namespace {
+    class Inner: public AViewContainerBase {
+    friend class AGroupBox;
+    public:
+        Inner(_<AView> title, const _<AViewContainer>& contents) : mTitle(std::move(title)) {
+            setContents(contents);
+        }
+
+        void drawStencilMask(ARenderContext ctx) override {
+            AView::drawStencilMask(ctx);
+
+            RenderHints::PushMatrix transform(ctx.render);
+            auto d = mTitle->getPositionInWindow() - getPositionInWindow();
+            
+            ctx.render.popMaskBefore(); // switches stencil op to decrement
+            ctx.render.rectangle(ASolidBrush{},
+                                 d,
+                                 mTitle->getSize());
+            ctx.render.pushMaskBefore(); // switches stencil op back to increment
+        }
+
+    private:
+        _<AView> mTitle;
+    };
+}
+
 AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView):
     mTitle(std::move(titleView)),
     mContent(std::move(contentView)) {
+
 
     setLayout(std::make_unique<AVerticalLayout>());
 
     using namespace declarative;
     setContents(Vertical {
         Horizontal { mTitle } << ".agroupbox-title",
-        mFrame = Vertical {
-            Vertical::Expanding {
-                mContent AUI_LET { it->setExpanding(); }
-            }
-        } << ".agroupbox-inner" AUI_OVERRIDE_STYLE { Expanding {} },
+        mFrame = _new<Inner>(mTitle,
+                            /*
+                             * Using two nested container because view's masking does not affect it's background (style), but does for
+                             * its children.
+                             */
+                             Vertical {
+                                 Vertical::Expanding {
+                                     mContent AUI_LET { it->setExpanding(); }
+                                 }  << ".agroupbox-inner"
+                             } AUI_OVERRIDE_STYLE {
+                                     Expanding {},
+                                     AOverflow::HIDDEN, // forces to call drawStencilMask
+                             }) AUI_LET {
+        },
     });
+
     if (auto asCheckbox = _cast<ACheckBox>(mTitle)) {
         connect(asCheckbox->checked(), me::updateCheckboxState);
     } else if (auto asCheckbox = _cast<ACheckBox::Box>(mTitle)) {

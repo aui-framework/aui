@@ -798,31 +798,33 @@ bool OpenGLRenderer::isVaoAvailable() const noexcept {
 }
 
 void OpenGLRenderer::pushMaskBefore() {
-    glStencilFunc(GL_ALWAYS, 0, 0xff);
+    mDrawingToStencil = true;
+    glStencilFunc(GL_EQUAL, mStencilDepth, 0xff);
     glStencilOp(GL_KEEP, GL_INCR, GL_INCR);
     glStencilMask(0xff);
     glColorMask(false, false, false, false);
 }
 
 void OpenGLRenderer::pushMaskAfter() {
+    mDrawingToStencil = false;
     glColorMask(true, true, true, true);
     glStencilMask(0x00);
     glStencilFunc(GL_EQUAL, ++mStencilDepth, 0xff);
 }
 
 void OpenGLRenderer::popMaskBefore() {
-    glStencilFunc(GL_ALWAYS, 0, 0xff);
+    glStencilFunc(GL_EQUAL, mDrawingToStencil ? mStencilDepth + 1 : mStencilDepth, 0xff);
     glStencilOp(GL_KEEP, GL_DECR, GL_DECR);
     glStencilMask(0xff);
     glColorMask(false, false, false, false);
 }
 
 void OpenGLRenderer::popMaskAfter() {
+    mDrawingToStencil = false;
     glColorMask(true, true, true, true);
     glStencilMask(0x00);
     glStencilFunc(GL_EQUAL, --mStencilDepth, 0xff);
 }
-
 bool OpenGLRenderer::setupLineShader(const ABrush& brush, const ABorderStyle& style, float widthPx) {
     return std::visit(aui::lambda_overloaded{
         [&](const ABorderStyle::Solid&) {
