@@ -40,12 +40,12 @@ ASurface::ASurface() {
 
 ASurface::~ASurface() {
     // Close any overlapping surfaces (context menus, dropdowns, tooltips) that were attached to this window.
-    AVector<AOverlappingSurface*> toClose;
+    AVector<_<AOverlappingSurface>> toClose;
     toClose.reserve(mOverlappingSurfaces.size());
     for (auto& surface : mOverlappingSurfaces) {
-        toClose << surface.get();
+        toClose << surface;
     }
-    for (auto* surface : toClose) {
+    for (auto& surface : toClose) {
         closeOverlappingSurface(surface);
     }
 

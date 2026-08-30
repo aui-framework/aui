@@ -19,7 +19,7 @@
 #include <X11/Xlib.h>
 #include <X11/Xatom.h>
 
-ACustomWindow::ACustomWindow(const AString& name, int width, int height, AWindow* parent) :
+ACustomWindow::ACustomWindow(const AString& name, AMetric width, AMetric height, AWindow* parent) :
         AWindow(name, width, height, parent) {
     setWindowStyle(WindowStyle::NO_TITLEBAR);
 }
