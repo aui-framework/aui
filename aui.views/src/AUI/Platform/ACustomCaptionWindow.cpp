@@ -12,7 +12,7 @@
 #include "ACustomCaptionWindow.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 
-ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, int width, int height, bool stacked, AWindow* parent, WindowStyle ws)
+ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, AMetric width, AMetric height, bool stacked, AWindow* parent, WindowStyle ws)
   : ACustomWindow(name, width, height, parent), CustomCaptionWindowImplCurrent() {
     setWindowStyle(windowStyle() | ws);
     initCustomCaption(name, stacked, this);
