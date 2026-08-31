@@ -149,6 +149,9 @@ void RenderingContextX11::xInitNativeWindow(
     if (mIC == nullptr) {
         mIC = XCreateIC(im, XNInputStyle, XIMPreeditNone | XIMStatusNone, XNClientWindow, handle, nullptr);
     }
+    if (mIC == nullptr) {
+        ALogger::warn("X11") << "XCreateIC failed for all input styles; IME and non-ASCII input are unavailable";
+    }
     if (mIC != nullptr) {
         XSetICFocus(mIC);
         unsigned long fevent = 0;

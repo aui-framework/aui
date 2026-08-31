@@ -13,7 +13,18 @@
 namespace {
 std::string gClipboardText;
 std::string gPrimaryText;
+Time gClipboardTimestamp = CurrentTime;
+Time gPrimaryTimestamp = CurrentTime;
 
+Time getServerTime(Display* dpy, Window win, Atom prop) {
+    unsigned char dummy = 0;
+    XChangeProperty(dpy, win, prop, XA_INTEGER, 8, PropModeReplace, &dummy, 1);
+    XEvent ev;
+    XIfEvent(dpy, &ev, [](Display*, XEvent* event, XPointer arg) -> Bool {
+        return event->type == PropertyNotify && event->xproperty.atom == reinterpret_cast<Atom>(arg);
+    }, reinterpret_cast<XPointer>(prop));
+    return ev.xproperty.time;
+}
 AWindow* getTopLevelWindow() {
     auto basicWindow = AWindow::current();
     auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
@@ -47,12 +58,15 @@ void PlatformAbstractionX11::setClipboardText(const AString& text) {
     gClipboardText = text.toStdString();
     gPrimaryText = text.toStdString();
     auto handle = nativeHandle(*auiWindow);
+    Time time = getServerTime(ourDisplay, handle, ourAtoms.auiClipboard);
+    gClipboardTimestamp = time;
+    gPrimaryTimestamp = time;
     XSetSelectionOwner(
         PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard, handle,
-        CurrentTime);
+        time);
     XSetSelectionOwner(
         PlatformAbstractionX11::ourDisplay, XA_PRIMARY, handle,
-        CurrentTime);
+        time);
     XFlush(PlatformAbstractionX11::ourDisplay);
 }
 
@@ -218,6 +232,7 @@ void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
     }
 
     const auto& textToServe = (ev.xselectionrequest.selection == XA_PRIMARY) ? gPrimaryText : gClipboardText;
+    Time timestampToServe = (ev.xselectionrequest.selection == XA_PRIMARY) ? gPrimaryTimestamp : gClipboardTimestamp;
 
     if (target == multipleAtom) {
         Atom actualType;
@@ -233,7 +248,7 @@ void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
             for (unsigned long i = 0; i < itemCount; i += 2) {
                 Atom pairTarget = atomPairs[i];
                 Atom pairProp = atomPairs[i + 1];
-                if (!convertSingleTarget(ourDisplay, ev.xselectionrequest.requestor, pairProp, pairTarget, textToServe, ev.xselectionrequest.time)) {
+                if (!convertSingleTarget(ourDisplay, ev.xselectionrequest.requestor, pairProp, pairTarget, textToServe, timestampToServe)) {
                     atomPairs[i] = None;
                 }
             }
@@ -245,7 +260,7 @@ void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
             ssev.property = None;
         }
     } else {
-        if (!convertSingleTarget(ourDisplay, ev.xselectionrequest.requestor, property, target, textToServe, ev.xselectionrequest.time)) {
+        if (!convertSingleTarget(ourDisplay, ev.xselectionrequest.requestor, property, target, textToServe, timestampToServe)) {
             ssev.property = None;
         }
     }

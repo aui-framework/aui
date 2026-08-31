@@ -827,6 +827,14 @@ inline char32_t keysymToUnicode(KeySym keysym) noexcept {
         { 0x13be, 0x0178 },
         { 0x20ac, 0x20ac },
     };
+    static_assert([] {
+        for (size_t i = 1; i < std::size(keysymtab); ++i) {
+            if (keysymtab[i - 1].keysym >= keysymtab[i].keysym) {
+                return false;
+            }
+        }
+        return true;
+    }(), "keysymtab must be strictly sorted by keysym");
 
     auto it = std::lower_bound(
         std::begin(keysymtab), std::end(keysymtab), keysym,

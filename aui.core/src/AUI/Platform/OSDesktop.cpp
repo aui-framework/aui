@@ -126,11 +126,19 @@ namespace aui::detail {
         }
 #endif
         if (!isUtf8) {
+#if AUI_PLATFORM_WIN
+            if (std::setlocale(LC_ALL, ".UTF-8") == nullptr && std::setlocale(LC_ALL, ".UTF8") == nullptr) {
+                if (loc == nullptr) {
+                    std::setlocale(LC_ALL, "C");
+                }
+            }
+#else
             if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
                 if (loc == nullptr) {
                     std::setlocale(LC_ALL, "C");
                 }
             }
+#endif
         }
         std::setlocale(LC_NUMERIC, "C");
     }
