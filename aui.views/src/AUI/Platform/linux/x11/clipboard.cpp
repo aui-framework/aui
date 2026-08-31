@@ -148,10 +148,14 @@ void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
         target == ourAtoms.textPlain ||
         target == ourAtoms.textPlainUtf8 ||
         target == textAtom) {
+        Atom responseType = target;
+        if (target == textAtom) {
+            responseType = ourAtoms.utf8String;
+        }
         XChangeProperty(ourDisplay,
                         ev.xselectionrequest.requestor,
                         property,
-                        target,
+                        responseType,
                         8,
                         PropModeReplace,
                         reinterpret_cast<const unsigned char*>(gClipboardText.data()),

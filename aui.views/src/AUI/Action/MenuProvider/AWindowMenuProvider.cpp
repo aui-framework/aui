@@ -88,8 +88,8 @@ class AMenuContainer : public AViewContainerBase {
 
                         auto onAction = i.onAction;
                         connect(view->pressed, [onAction] {
-                            onAction();
                             AMenu::close();
+                            onAction();
                         });
                     } else {
                         view->disable();
