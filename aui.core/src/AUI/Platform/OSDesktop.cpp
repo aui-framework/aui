@@ -128,15 +128,13 @@ namespace aui::detail {
         if (!isUtf8) {
 #if AUI_PLATFORM_WIN
             if (std::setlocale(LC_ALL, ".UTF-8") == nullptr && std::setlocale(LC_ALL, ".UTF8") == nullptr) {
-                if (loc == nullptr) {
-                    std::setlocale(LC_ALL, "C");
-                }
+                ALogger::warn("AUI") << "Failed to select a UTF-8 locale; falling back to C";
+                std::setlocale(LC_ALL, "C");
             }
 #else
-            if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
-                if (loc == nullptr) {
-                    std::setlocale(LC_ALL, "C");
-                }
+            if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr && std::setlocale(LC_ALL, "en_US.UTF-8") == nullptr && std::setlocale(LC_ALL, "UTF-8") == nullptr) {
+                ALogger::warn("AUI") << "Failed to select a UTF-8 locale; falling back to C";
+                std::setlocale(LC_ALL, "C");
             }
 #endif
         }

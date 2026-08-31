@@ -85,17 +85,24 @@ AString PlatformAbstractionX11::getClipboardText() {
     auto auiWindow = getTopLevelWindow();
     if (!auiWindow)
         return {};
-    auto nativeHandle = auiWindow->getNativeHandle();
-    AUI_ASSERT(nativeHandle);
+    auto handle = auiWindow->getNativeHandle();
+    AUI_ASSERT(handle);
+    bool isOurWindow = false;
+    for (const auto& w : AWindow::getWindowManager().getWindows()) {
+        if (w && nativeHandle(*w) == owner) {
+            isOurWindow = true;
+            break;
+        }
+    }
 
-    if (owner == nativeHandle) {
+    if (isOurWindow) {
         const auto& data = (requestedSelection == XA_PRIMARY) ? gPrimaryText : gClipboardText;
         if (!data.empty()) {
             return AString::fromUtf8(data);
         }
     }
 
-    XConvertSelection(PlatformAbstractionX11::ourDisplay, requestedSelection, PlatformAbstractionX11::ourAtoms.utf8String, PlatformAbstractionX11::ourAtoms.auiClipboard, nativeHandle,
+    XConvertSelection(PlatformAbstractionX11::ourDisplay, requestedSelection, PlatformAbstractionX11::ourAtoms.utf8String, PlatformAbstractionX11::ourAtoms.auiClipboard, handle,
                       CurrentTime);
     XFlush(PlatformAbstractionX11::ourDisplay);
     XEvent ev;
@@ -113,7 +120,7 @@ AString PlatformAbstractionX11::getClipboardText() {
                 unsigned long size, dul;
                 unsigned char *prop_ret = NULL;
 
-                XGetWindowProperty(PlatformAbstractionX11::ourDisplay, nativeHandle, PlatformAbstractionX11::ourAtoms.auiClipboard, 0, 0, False, AnyPropertyType,
+                XGetWindowProperty(PlatformAbstractionX11::ourDisplay, handle, PlatformAbstractionX11::ourAtoms.auiClipboard, 0, 0, False, AnyPropertyType,
                                    &type, &di, &dul, &size, &prop_ret);
                 XFree(prop_ret);
 
@@ -123,12 +130,12 @@ AString PlatformAbstractionX11::getClipboardText() {
                     return {};
                 }
 
-                XGetWindowProperty(PlatformAbstractionX11::ourDisplay, nativeHandle, PlatformAbstractionX11::ourAtoms.auiClipboard, 0, size, False, AnyPropertyType,
+                XGetWindowProperty(PlatformAbstractionX11::ourDisplay, handle, PlatformAbstractionX11::ourAtoms.auiClipboard, 0, size, False, AnyPropertyType,
                                    &da, &di, &dul, &dul, &prop_ret);
                 AString clipboardData = reinterpret_cast<const char*>(prop_ret);
                 XFree(prop_ret);
 
-                XDeleteProperty(PlatformAbstractionX11::ourDisplay, nativeHandle, PlatformAbstractionX11::ourAtoms.auiClipboard);
+                XDeleteProperty(PlatformAbstractionX11::ourDisplay, handle, PlatformAbstractionX11::ourAtoms.auiClipboard);
                 return clipboardData;
             }
             default:

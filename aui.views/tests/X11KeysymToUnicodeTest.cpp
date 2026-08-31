@@ -109,7 +109,6 @@ TEST(X11KeysymToUnicodeTest, LocaleFallbackUnderCLocale) {
         std::string saved;
         ~LocaleRestorer() {
             std::setlocale(LC_ALL, saved.c_str());
-            std::setlocale(LC_NUMERIC, "C");
         }
     } restorer{savedLocale};
 
