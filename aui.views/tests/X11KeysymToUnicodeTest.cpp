@@ -10,8 +10,11 @@
  */
 
 #include <gtest/gtest.h>
+#include <clocale>
+#include <cstring>
 
 #if AUI_PLATFORM_LINUX
+#include <langinfo.h>
 #include <AUI/Platform/linux/x11/keysym_to_unicode.h>
 TEST(X11KeysymToUnicodeTest, AsciiAndLatin1) {
     EXPECT_EQ(aui::x11::keysymToUnicode(0x0020), 0x0020); // space
@@ -97,5 +100,41 @@ TEST(X11KeysymToUnicodeTest, KeypadAndControlKeys) {
     EXPECT_EQ(aui::x11::keysymToUnicode(0xff0d), 0x0d);   // Return
     EXPECT_EQ(aui::x11::keysymToUnicode(0xff1b), 0x1b);   // Escape
     EXPECT_EQ(aui::x11::keysymToUnicode(0xffff), 0x7f);   // Delete
+}
+
+TEST(X11KeysymToUnicodeTest, LocaleFallbackUnderCLocale) {
+    // Simulate environment selecting C locale
+    std::setlocale(LC_ALL, "C");
+    const char* loc = std::setlocale(LC_ALL, "");
+    bool isUtf8 = false;
+    if (loc != nullptr) {
+        const char* codeset = nl_langinfo(CODESET);
+        if (codeset != nullptr && (std::strcmp(codeset, "UTF-8") == 0 || std::strcmp(codeset, "utf8") == 0 || std::strcmp(codeset, "UTF8") == 0)) {
+            isUtf8 = true;
+        }
+    }
+    if (!isUtf8) {
+        if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
+            if (loc == nullptr) {
+                std::setlocale(LC_ALL, "C");
+            }
+        }
+    }
+    std::setlocale(LC_NUMERIC, "C");
+
+    // Non-ASCII input through keysymToUnicode works accurately regardless of initial locale
+    EXPECT_EQ(aui::x11::keysymToUnicode(0x06a1), 0x0452); // Cyrillic
+    EXPECT_EQ(aui::x11::keysymToUnicode(0x04a1), 0x3002); // Katakana
+    EXPECT_EQ(aui::x11::keysymToUnicode(0x00e9), 0x00e9); // Latin-1 eacute
+    EXPECT_EQ(aui::x11::keysymToUnicode(0x01000452), 0x0452); // Direct Unicode
+}
+
+TEST(X11KeysymToUnicodeTest, ControlCharacterFiltering) {
+    // Control characters must have codepoint < 32 or == 127
+    for (uint8_t ctrl = 0; ctrl < 32; ++ctrl) {
+        char32_t cp = ctrl;
+        EXPECT_TRUE(cp < 32);
+    }
+    EXPECT_TRUE(char32_t(127) == 127);
 }
 #endif

@@ -13,6 +13,8 @@
 #include <cmath>
 #include <cstdlib>
 #include <clocale>
+#include <cstring>
+#include <langinfo.h>
 #include <AUI/Util/ARandom.h>
 #include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Util/kAUI.h"
@@ -23,10 +25,19 @@
 void RenderingContextX11::xInitNativeWindow(
     const IRenderingContext::Init& init, XSetWindowAttributes& swa, XVisualInfo* vi) {
     AUI_DO_ONCE {
-        if (std::setlocale(LC_ALL, "") == nullptr) {
-            ALogger::warn("X11") << "Failed to set default locale from environment";
+        const char* loc = std::setlocale(LC_ALL, "");
+        bool isUtf8 = false;
+        if (loc != nullptr) {
+            const char* codeset = nl_langinfo(CODESET);
+            if (codeset != nullptr && (std::strcmp(codeset, "UTF-8") == 0 || std::strcmp(codeset, "utf8") == 0 || std::strcmp(codeset, "UTF8") == 0)) {
+                isUtf8 = true;
+            }
+        }
+        if (!isUtf8) {
             if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
-                std::setlocale(LC_ALL, "C");
+                if (loc == nullptr) {
+                    std::setlocale(LC_ALL, "C");
+                }
             }
         }
         std::setlocale(LC_NUMERIC, "C");
@@ -174,13 +185,13 @@ void RenderingContextX11::xInitNativeWindow(
 }
 
 void RenderingContextX11::xDestroyNativeWindow(ASurface& window) {
-    if (mFontSet) {
-        XFreeFontSet(PlatformAbstractionX11::ourDisplay, mFontSet);
-        mFontSet = nullptr;
-    }
     if (mIC) {
         XDestroyIC(mIC);
         mIC = nullptr;
+    }
+    if (mFontSet) {
+        XFreeFontSet(PlatformAbstractionX11::ourDisplay, mFontSet);
+        mFontSet = nullptr;
     }
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         XDestroyWindow(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(*w));

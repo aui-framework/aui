@@ -100,7 +100,7 @@ public:
 
 private:
     void xProcessEvent(XEvent& ev);
-    void xClipboardClear();
+    void xClipboardClear(Atom selection = None);
     void xHandleClipboard(const XEvent& ev);
 
     Pipe mNotifyPipe;

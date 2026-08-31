@@ -12,6 +12,7 @@
 #include "PlatformAbstractionX11.h"
 namespace {
 std::string gClipboardText;
+std::string gPrimaryText;
 
 AWindow* getTopLevelWindow() {
     auto basicWindow = AWindow::current();
@@ -44,6 +45,7 @@ void PlatformAbstractionX11::setClipboardText(const AString& text) {
     if (!auiWindow)
         return;
     gClipboardText = text.toStdString();
+    gPrimaryText = text.toStdString();
     auto handle = nativeHandle(*auiWindow);
     XSetSelectionOwner(
         PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard, handle,
@@ -73,7 +75,10 @@ AString PlatformAbstractionX11::getClipboardText() {
     AUI_ASSERT(nativeHandle);
 
     if (owner == nativeHandle) {
-        return AString::fromUtf8(gClipboardText);
+        const auto& data = (requestedSelection == XA_PRIMARY) ? gPrimaryText : gClipboardText;
+        if (!data.empty()) {
+            return AString::fromUtf8(data);
+        }
     }
 
     XConvertSelection(PlatformAbstractionX11::ourDisplay, requestedSelection, PlatformAbstractionX11::ourAtoms.utf8String, PlatformAbstractionX11::ourAtoms.auiClipboard, nativeHandle,
@@ -121,8 +126,15 @@ AString PlatformAbstractionX11::getClipboardText() {
     return "";
 }
 
-void PlatformAbstractionX11::xClipboardClear() {
-    gClipboardText.clear();
+void PlatformAbstractionX11::xClipboardClear(Atom selection) {
+    if (selection == ourAtoms.clipboard) {
+        gClipboardText.clear();
+    } else if (selection == XA_PRIMARY) {
+        gPrimaryText.clear();
+    } else {
+        gClipboardText.clear();
+        gPrimaryText.clear();
+    }
 }
 
 void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
@@ -144,6 +156,8 @@ void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
     ssev.property = property;
     ssev.time = ev.xselectionrequest.time;
 
+    const auto& textToServe = (ev.xselectionrequest.selection == XA_PRIMARY) ? gPrimaryText : gClipboardText;
+
     if (target == ourAtoms.utf8String ||
         target == ourAtoms.textPlain ||
         target == ourAtoms.textPlainUtf8 ||
@@ -158,11 +172,11 @@ void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
                         responseType,
                         8,
                         PropModeReplace,
-                        reinterpret_cast<const unsigned char*>(gClipboardText.data()),
-                        static_cast<int>(gClipboardText.size()));
+                        reinterpret_cast<const unsigned char*>(textToServe.data()),
+                        static_cast<int>(textToServe.size()));
     } else if (target == stringAtom || target == XA_STRING) {
         std::string latin1;
-        for (char32_t c : AString::fromUtf8(gClipboardText).toUtf32()) {
+        for (char32_t c : AString::fromUtf8(textToServe).toUtf32()) {
             if (c <= 0xff) {
                 latin1 += static_cast<char>(c);
             } else {

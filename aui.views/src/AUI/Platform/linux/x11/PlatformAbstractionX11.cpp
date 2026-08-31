@@ -11,6 +11,8 @@
 
 #include <unistd.h>
 #include <clocale>
+#include <cstring>
+#include <langinfo.h>
 #include <poll.h>
 #include <fcntl.h>
 #include <vector>
@@ -99,10 +101,19 @@ void PlatformAbstractionX11::ensureXLibInitialized() {
     struct DisplayInstance {
     public:
         DisplayInstance() {
-            if (std::setlocale(LC_ALL, "") == nullptr) {
-                ALogger::warn("X11") << "Failed to set default locale from environment";
+            const char* loc = std::setlocale(LC_ALL, "");
+            bool isUtf8 = false;
+            if (loc != nullptr) {
+                const char* codeset = nl_langinfo(CODESET);
+                if (codeset != nullptr && (std::strcmp(codeset, "UTF-8") == 0 || std::strcmp(codeset, "utf8") == 0 || std::strcmp(codeset, "UTF8") == 0)) {
+                    isUtf8 = true;
+                }
+            }
+            if (!isUtf8) {
                 if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
-                    std::setlocale(LC_ALL, "C");
+                    if (loc == nullptr) {
+                        std::setlocale(LC_ALL, "C");
+                    }
                 }
             }
             std::setlocale(LC_NUMERIC, "C");
@@ -221,28 +232,19 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                                 if (count > 0) {
                                     AStringView s(dynBuf.data(), count);
                                     for (const auto& c : s.utf8()) {
-                                        if (c.codepoint() != 0 && c.codepoint() != 27 && c.codepoint() != 127) {
+                                        if (c.codepoint() >= 32 && c.codepoint() != 127) {
                                             window->onCharEntered(c);
                                         }
                                     }
                                 }
                             } else if (count > 0 && status != XBufferOverflow) {
-                                switch (static_cast<uint8_t>(buf[0])) {
-                                    case 0:
-                                        break;   // nul
-                                    case 27:
-                                        break;   // esc
-                                    case 127:
-                                        break;   // del
-                                    default: {
-                                        AStringView s(buf, count);
-                                        for (const auto& c : s.utf8()) {
-                                            window->onCharEntered(c);
-                                        }
-                                        break;
+                                AStringView s(buf, count);
+                                for (const auto& c : s.utf8()) {
+                                    if (c.codepoint() >= 32 && c.codepoint() != 127) {
+                                        window->onCharEntered(c);
                                     }
                                 }
-                            } else if (count == 0 && keysym >= 0x80 && status != XLookupNone) {
+                            } else if (count == 0 && keysym >= 0x80 && (ev.xkey.state & ControlMask) == 0 && status != XLookupNone) {
                                 char32_t u = aui::x11::keysymToUnicode(keysym);
                                 if (u >= 32 && u != 127) {
                                     window->onCharEntered(AChar(u));
@@ -381,9 +383,7 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
 
                     case SelectionClear: {
                         // lost clipboard ownership -> clean up
-                        if (ev.xselectionclear.selection == ourAtoms.clipboard) {
-                            xClipboardClear();
-                        }
+                        xClipboardClear(ev.xselectionclear.selection);
                         break;
                     }
 

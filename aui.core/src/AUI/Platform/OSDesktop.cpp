@@ -11,6 +11,10 @@
 
 #include <chrono>
 #include <clocale>
+#include <cstring>
+#if !AUI_PLATFORM_WIN
+#include <langinfo.h>
+#endif
 #if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
 #include <AUI/api.h>
 #include <AUI/Common/AStringVector.h>
@@ -112,10 +116,21 @@ namespace aui::detail {
 }
 
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
-    if (std::setlocale(LC_ALL, "") == nullptr) {
-        ALogger::warn("AUI") << "Failed to set default locale from environment";
+    const char* loc = std::setlocale(LC_ALL, "");
+    bool isUtf8 = false;
+#if !AUI_PLATFORM_WIN
+    if (loc != nullptr) {
+        const char* codeset = nl_langinfo(CODESET);
+        if (codeset != nullptr && (std::strcmp(codeset, "UTF-8") == 0 || std::strcmp(codeset, "utf8") == 0 || std::strcmp(codeset, "UTF8") == 0)) {
+            isUtf8 = true;
+        }
+    }
+#endif
+    if (!isUtf8) {
         if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
-            std::setlocale(LC_ALL, "C");
+            if (loc == nullptr) {
+                std::setlocale(LC_ALL, "C");
+            }
         }
     }
     std::setlocale(LC_NUMERIC, "C");
