@@ -401,6 +401,14 @@ protected:
      */
     void setContents(const _<AViewContainer>& container);
 
+    template <typename Container>
+    requires (!aui::convertible_to<Container, _<AViewContainer>>)
+    void setContents(Container&&) {
+        static_assert(
+            aui::always_false<Container>,
+            "====================> AViewContainer::setContents: Passed an AView instead of AViewContainer; wrap AView with some kind of container, i.e., view -> Centered { view }");
+    }
+
     /**
      * @brief Set new layout manager for this AViewContainerBase. DESTROYS OLD LAYOUT MANAGER WITH ITS VIEWS!!!
      */

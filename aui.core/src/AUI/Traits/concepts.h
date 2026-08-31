@@ -154,6 +154,9 @@ namespace aui {
     static_assert(is_tuple<std::tuple<double>>);
     static_assert(!is_tuple<int>);
     static_assert(!is_tuple<double>);
+
+    template<typename...>
+    inline constexpr bool always_false = false;
 }
 
 // AObject-related concepts
