@@ -87,7 +87,10 @@ class AMenuContainer : public AViewContainerBase {
                         });
 
                         auto onAction = i.onAction;
-                        connect(view->pressed, [this, onAction] { onAction(); close(); });
+                        connect(view->pressed, [onAction] {
+                            onAction();
+                            AMenu::close();
+                        });
                     } else {
                         view->disable();
                     }

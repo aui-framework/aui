@@ -18,7 +18,7 @@
 
 #include "AAbstractTypeable.h"
 #include <AUI/Platform/AWindow.h>
-
+#include <AUI/Action/AMenu.h>
 /**
  * @brief Basic implementation of type shortcuts and selection for editable text fields.
  * @details Used as base in ATextArea and ATextField, both of them using own way of text handling and rendering.
@@ -105,9 +105,14 @@ public:
 
         if (event.pointerIndex != APointerIndex::button(AInput::RBUTTON)) {
             ACursorSelectable::handleMouseReleased(event);
+            if (this->hasSelection()) {
+                auto menuModel = this->composeContextMenu();
+                if (!menuModel.empty()) {
+                    AMenu::show(menuModel);
+                }
+            }
         }
     }
-
     bool wantsTouchscreenKeyboard() override {
         return true;
     }

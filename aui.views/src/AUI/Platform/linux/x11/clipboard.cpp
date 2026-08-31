@@ -72,7 +72,7 @@ AString PlatformAbstractionX11::getClipboardText() {
     auto nativeHandle = auiWindow->getNativeHandle();
     AUI_ASSERT(nativeHandle);
 
-    if (owner == nativeHandle && !gClipboardText.empty()) {
+    if (owner == nativeHandle) {
         return AString::fromUtf8(gClipboardText);
     }
 
@@ -182,8 +182,6 @@ void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
             textAtom,
             stringAtom,
             XA_STRING,
-            XInternAtom(ourDisplay, "TIMESTAMP", False),
-            XInternAtom(ourDisplay, "MULTIPLE", False),
         };
         XChangeProperty(ourDisplay,
                         ev.xselectionrequest.requestor,
