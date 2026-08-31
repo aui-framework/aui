@@ -250,15 +250,20 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                             }
                         } else {
                             count = XLookupString((XKeyPressedEvent*) &ev, buf, sizeof(buf) - 1, &keysym, nullptr);
-                            char32_t u = aui::x11::keysymToUnicode(keysym);
-                            if (u >= 32 && u != 127) {
-                                window->onCharEntered(AChar(u));
-                            } else if (count > 0) {
-                                for (int i = 0; i < count; ++i) {
-                                    uint8_t byte = static_cast<uint8_t>(buf[i]);
-                                    if (byte >= 32 && byte != 127) {
-                                        window->onCharEntered(AChar(static_cast<char32_t>(byte)));
+                            if (count > 0) {
+                                uint8_t firstByte = static_cast<uint8_t>(buf[0]);
+                                if (firstByte >= 32 && firstByte != 127) {
+                                    for (int i = 0; i < count; ++i) {
+                                        uint8_t byte = static_cast<uint8_t>(buf[i]);
+                                        if (byte >= 32 && byte != 127) {
+                                            window->onCharEntered(AChar(static_cast<char32_t>(byte)));
+                                        }
                                     }
+                                }
+                            } else if (count == 0 && keysym >= 0x80 && (ev.xkey.state & ControlMask) == 0) {
+                                char32_t u = aui::x11::keysymToUnicode(keysym);
+                                if (u >= 32 && u != 127) {
+                                    window->onCharEntered(AChar(u));
                                 }
                             }
                         }
@@ -376,7 +381,9 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
 
                     case SelectionClear: {
                         // lost clipboard ownership -> clean up
-                        xClipboardClear();
+                        if (ev.xselectionclear.selection == ourAtoms.clipboard) {
+                            xClipboardClear();
+                        }
                         break;
                     }
 

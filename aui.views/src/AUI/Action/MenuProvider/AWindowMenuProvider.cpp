@@ -152,6 +152,7 @@ void AWindowMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
     surfaceContainer->addView(menu);
     menu->setSurface(surfaceContainer);
+    mMenuContainer = menu;
     surfaceContainer->setOverlappingSurfaceSize(menu->getMinimumSize());
 }
 

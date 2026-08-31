@@ -28,8 +28,8 @@ inline char32_t keysymToUnicode(KeySym keysym) noexcept {
         return 0;
     }
 
-    // Direct Unicode representation in modern X11 (0x01000000 - 0x0110ffff)
-    if (keysym >= 0x01000000 && keysym <= 0x0110ffff) {
+    // Direct Unicode representation in modern X11 (0x01000100 - 0x0110ffff)
+    if (keysym >= 0x01000100 && keysym <= 0x0110ffff) {
         return static_cast<char32_t>(keysym - 0x01000000);
     }
 

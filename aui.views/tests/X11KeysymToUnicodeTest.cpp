@@ -22,8 +22,12 @@ TEST(X11KeysymToUnicodeTest, AsciiAndLatin1) {
 }
 
 TEST(X11KeysymToUnicodeTest, DirectUnicode) {
+    EXPECT_EQ(aui::x11::keysymToUnicode(0x010000ff), 0);      // below lower bound (0x01000100) -> 0
+    EXPECT_EQ(aui::x11::keysymToUnicode(0x01000100), 0x0100); // lower bound U+0100
     EXPECT_EQ(aui::x11::keysymToUnicode(0x01000452), 0x0452); // direct Unicode U+0452
     EXPECT_EQ(aui::x11::keysymToUnicode(0x01003002), 0x3002); // direct Unicode U+3002
+    EXPECT_EQ(aui::x11::keysymToUnicode(0x0110ffff), 0x10ffff); // upper bound U+10FFFF
+    EXPECT_EQ(aui::x11::keysymToUnicode(0x01110000), 0);      // above upper bound -> 0
     EXPECT_EQ(aui::x11::keysymToUnicode(0x0100d800), 0);      // surrogate start -> 0
     EXPECT_EQ(aui::x11::keysymToUnicode(0x0100dfff), 0);      // surrogate end -> 0
 }

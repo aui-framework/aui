@@ -55,10 +55,12 @@ void PlatformAbstractionX11::setClipboardText(const AString& text) {
 }
 
 AString PlatformAbstractionX11::getClipboardText() {
-    auto owner = XGetSelectionOwner(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard);
+    Atom requestedSelection = ourAtoms.clipboard;
+    auto owner = XGetSelectionOwner(PlatformAbstractionX11::ourDisplay, requestedSelection);
     if (owner == None)
     {
-        owner = XGetSelectionOwner(PlatformAbstractionX11::ourDisplay, XA_PRIMARY);
+        requestedSelection = XA_PRIMARY;
+        owner = XGetSelectionOwner(PlatformAbstractionX11::ourDisplay, requestedSelection);
     }
     if (owner == None)
     {
@@ -74,7 +76,7 @@ AString PlatformAbstractionX11::getClipboardText() {
         return AString::fromUtf8(gClipboardText);
     }
 
-    XConvertSelection(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard, PlatformAbstractionX11::ourAtoms.utf8String, PlatformAbstractionX11::ourAtoms.auiClipboard, nativeHandle,
+    XConvertSelection(PlatformAbstractionX11::ourDisplay, requestedSelection, PlatformAbstractionX11::ourAtoms.utf8String, PlatformAbstractionX11::ourAtoms.auiClipboard, nativeHandle,
                       CurrentTime);
     XFlush(PlatformAbstractionX11::ourDisplay);
     XEvent ev;
@@ -145,29 +147,40 @@ void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
     if (target == ourAtoms.utf8String ||
         target == ourAtoms.textPlain ||
         target == ourAtoms.textPlainUtf8 ||
-        target == stringAtom ||
-        target == textAtom ||
-        target == XA_STRING) {
-        Atom responseType = target;
-        if (target == textAtom) {
-            responseType = ourAtoms.utf8String;
-        }
+        target == textAtom) {
         XChangeProperty(ourDisplay,
                         ev.xselectionrequest.requestor,
                         property,
-                        responseType,
+                        target,
                         8,
                         PropModeReplace,
                         reinterpret_cast<const unsigned char*>(gClipboardText.data()),
                         static_cast<int>(gClipboardText.size()));
+    } else if (target == stringAtom || target == XA_STRING) {
+        std::string latin1;
+        for (char32_t c : AString::fromUtf8(gClipboardText).toUtf32()) {
+            if (c <= 0xff) {
+                latin1 += static_cast<char>(c);
+            } else {
+                latin1 += '?';
+            }
+        }
+        XChangeProperty(ourDisplay,
+                        ev.xselectionrequest.requestor,
+                        property,
+                        target,
+                        8,
+                        PropModeReplace,
+                        reinterpret_cast<const unsigned char*>(latin1.data()),
+                        static_cast<int>(latin1.size()));
     } else if (target == ourAtoms.targets) {
         Atom atoms[] = {
             ourAtoms.targets,
             ourAtoms.utf8String,
             ourAtoms.textPlain,
             ourAtoms.textPlainUtf8,
-            stringAtom,
             textAtom,
+            stringAtom,
             XA_STRING,
             XInternAtom(ourDisplay, "TIMESTAMP", False),
             XInternAtom(ourDisplay, "MULTIPLE", False),
