@@ -12,35 +12,71 @@
 #include "PlatformAbstractionX11.h"
 namespace {
 std::string gClipboardText;
+
+AWindow* getTopLevelWindow() {
+    auto basicWindow = AWindow::current();
+    auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
+    if (auiWindow) {
+        while (auto p = dynamic_cast<AWindow*>(auiWindow->getParent())) {
+            auiWindow = p;
+        }
+        if (!(auiWindow->windowStyle() & WindowStyle::SYS)) {
+            return auiWindow;
+        }
+    }
+    for (const auto& w : AWindow::getWindowManager().getWindows()) {
+        if (w && !(w->windowStyle() & WindowStyle::SYS)) {
+            return w.get();
+        }
+    }
+    if (auiWindow) {
+        return auiWindow;
+    }
+    if (!AWindow::getWindowManager().getWindows().empty()) {
+        return AWindow::getWindowManager().getWindows().front().get();
+    }
+    return nullptr;
+}
 }
 
 void PlatformAbstractionX11::setClipboardText(const AString& text) {
-    auto basicWindow = AWindow::current();
-    auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
+    auto auiWindow = getTopLevelWindow();
     if (!auiWindow)
         return;
     gClipboardText = text.toStdString();
+    auto handle = nativeHandle(*auiWindow);
     XSetSelectionOwner(
-        PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard, nativeHandle(*auiWindow),
+        PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard, handle,
         CurrentTime);
+    XSetSelectionOwner(
+        PlatformAbstractionX11::ourDisplay, XA_PRIMARY, handle,
+        CurrentTime);
+    XFlush(PlatformAbstractionX11::ourDisplay);
 }
 
 AString PlatformAbstractionX11::getClipboardText() {
     auto owner = XGetSelectionOwner(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard);
     if (owner == None)
     {
+        owner = XGetSelectionOwner(PlatformAbstractionX11::ourDisplay, XA_PRIMARY);
+    }
+    if (owner == None)
+    {
         return {};
     }
-    auto basicWindow = AWindow::current();
-    auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
+    auto auiWindow = getTopLevelWindow();
     if (!auiWindow)
         return {};
     auto nativeHandle = auiWindow->getNativeHandle();
     AUI_ASSERT(nativeHandle);
 
+    if (owner == nativeHandle && !gClipboardText.empty()) {
+        return AString::fromUtf8(gClipboardText);
+    }
+
     XConvertSelection(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard, PlatformAbstractionX11::ourAtoms.utf8String, PlatformAbstractionX11::ourAtoms.auiClipboard, nativeHandle,
                       CurrentTime);
-
+    XFlush(PlatformAbstractionX11::ourDisplay);
     XEvent ev;
     for (int i = 0; i < 30; ++i)
     {
@@ -92,51 +128,62 @@ void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
         return;
     }
 
+    Atom target = ev.xselectionrequest.target;
+    Atom property = ev.xselectionrequest.property;
+    Atom stringAtom = XInternAtom(ourDisplay, "STRING", False);
+    Atom textAtom = XInternAtom(ourDisplay, "TEXT", False);
 
-    char* targetName = XGetAtomName(ourDisplay, ev.xselectionrequest.target);
-    char* propertyName = XGetAtomName(ourDisplay, ev.xselectionrequest.property);
-    ALogger::info("{}: {}"_format(targetName, propertyName));
-    XFree(targetName);
-    XFree(propertyName);
-    if (ev.xselectionrequest.target == ourAtoms.utf8String ||
-        ev.xselectionrequest.target == ourAtoms.textPlain ||
-        ev.xselectionrequest.target == ourAtoms.textPlainUtf8) { // check for UTF8_STRING
+    XSelectionEvent ssev = { 0 };
+    ssev.type = SelectionNotify;
+    ssev.display = ourDisplay;
+    ssev.requestor = ev.xselectionrequest.requestor;
+    ssev.selection = ev.xselectionrequest.selection;
+    ssev.target = target;
+    ssev.property = property;
+    ssev.time = ev.xselectionrequest.time;
+
+    if (target == ourAtoms.utf8String ||
+        target == ourAtoms.textPlain ||
+        target == ourAtoms.textPlainUtf8 ||
+        target == stringAtom ||
+        target == textAtom ||
+        target == XA_STRING) {
+        Atom responseType = target;
+        if (target == textAtom) {
+            responseType = ourAtoms.utf8String;
+        }
         XChangeProperty(ourDisplay,
                         ev.xselectionrequest.requestor,
-                        ev.xselectionrequest.property,
-                        ev.xselectionrequest.target,
+                        property,
+                        responseType,
                         8,
                         PropModeReplace,
-                        (unsigned char*) gClipboardText.c_str(),
-                        gClipboardText.size());
-    } else if (ev.xselectionrequest.target == ourAtoms.targets) { // data type request
+                        reinterpret_cast<const unsigned char*>(gClipboardText.data()),
+                        static_cast<int>(gClipboardText.size()));
+    } else if (target == ourAtoms.targets) {
         Atom atoms[] = {
-            XInternAtom(ourDisplay, "TIMESTAMP", false),
-            XInternAtom(ourDisplay, "TARGETS", false),
-            XInternAtom(ourDisplay, "SAVE_TARGETS", false),
-            XInternAtom(ourDisplay, "MULTIPLE", false),
-            XInternAtom(ourDisplay, "STRING", false),
-            XInternAtom(ourDisplay, "UTF8_STRING", false),
-            XInternAtom(ourDisplay, "text/plain", false),
-            XInternAtom(ourDisplay, "text/plain;charset=utf-8", false),
+            ourAtoms.targets,
+            ourAtoms.utf8String,
+            ourAtoms.textPlain,
+            ourAtoms.textPlainUtf8,
+            stringAtom,
+            textAtom,
+            XA_STRING,
+            XInternAtom(ourDisplay, "TIMESTAMP", False),
+            XInternAtom(ourDisplay, "MULTIPLE", False),
         };
         XChangeProperty(ourDisplay,
                         ev.xselectionrequest.requestor,
-                        ev.xselectionrequest.property,
-                        ev.xselectionrequest.target,
-                        8,
+                        property,
+                        XA_ATOM,
+                        32,
                         PropModeReplace,
-                        (unsigned char*) atoms,
-                        sizeof(atoms));
+                        reinterpret_cast<const unsigned char*>(atoms),
+                        static_cast<int>(std::size(atoms)));
+    } else {
+        ssev.property = None;
     }
 
-    XSelectionEvent ssev;
-    ssev.type = SelectionNotify;
-    ssev.requestor = ev.xselectionrequest.requestor;
-    ssev.selection = ev.xselectionrequest.selection;
-    ssev.target = ev.xselectionrequest.target;
-    ssev.property = ev.xselectionrequest.property;
-    ssev.time = ev.xselectionrequest.time;
-
-    XSendEvent(ourDisplay, ev.xselectionrequest.requestor, True, NoEventMask, (XEvent *)&ssev);
+    XSendEvent(ourDisplay, ev.xselectionrequest.requestor, False, 0, (XEvent *)&ssev);
+    XFlush(ourDisplay);
 }

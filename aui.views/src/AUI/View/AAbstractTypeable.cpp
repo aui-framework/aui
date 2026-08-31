@@ -282,11 +282,11 @@ void AAbstractTypeable::enterChar(AChar c)
 }
 
 AMenuModel AAbstractTypeable::composeContextMenuImpl() {
-    return { { .name = "aui.cut"_i18n, .shortcut = AInput::LCONTROL + AInput::X, .onAction = [&]{cutToClipboard();}, .enabled = hasSelection(), },
-             { .name = "aui.copy"_i18n, .shortcut = AInput::LCONTROL + AInput::C, .onAction = [&]{copyToClipboard();}, .enabled = hasSelection() },
-             { .name = "aui.paste"_i18n, .shortcut = AInput::LCONTROL + AInput::V, .onAction = [&]{pasteFromClipboard();}, .enabled = !AClipboard::isEmpty() },
+    return { { .name = "aui.cut"_i18n, .shortcut = AInput::LCONTROL + AInput::X, .onAction = [this]{cutToClipboard();}, .enabled = hasSelection(), },
+             { .name = "aui.copy"_i18n, .shortcut = AInput::LCONTROL + AInput::C, .onAction = [this]{copyToClipboard();}, .enabled = hasSelection() },
+             { .name = "aui.paste"_i18n, .shortcut = AInput::LCONTROL + AInput::V, .onAction = [this]{pasteFromClipboard();}, .enabled = !AClipboard::isEmpty() },
              { .type = AMenu::SEPARATOR, },
-             { .name = "aui.select_all"_i18n, .shortcut = AInput::LCONTROL + AInput::A, .onAction = [&]{selectAll();}, .enabled = !getText().empty() } };
+             { .name = "aui.select_all"_i18n, .shortcut = AInput::LCONTROL + AInput::A, .onAction = [this]{selectAll();}, .enabled = !getText().empty() } };
 }
 
 void AAbstractTypeable::setText(const AString& t)
