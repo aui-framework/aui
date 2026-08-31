@@ -99,7 +99,12 @@ void PlatformAbstractionX11::ensureXLibInitialized() {
     struct DisplayInstance {
     public:
         DisplayInstance() {
-            std::setlocale(LC_ALL, "");
+            if (std::setlocale(LC_ALL, "") == nullptr) {
+                ALogger::warn("X11") << "Failed to set default locale from environment";
+                if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
+                    std::setlocale(LC_ALL, "C");
+                }
+            }
             std::setlocale(LC_NUMERIC, "C");
             auto d = ourDisplay = XOpenDisplay(nullptr);
             if (d == nullptr)
@@ -221,31 +226,40 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                                         }
                                     }
                                 }
+                            } else if (count > 0 && status != XBufferOverflow) {
+                                switch (static_cast<uint8_t>(buf[0])) {
+                                    case 0:
+                                        break;   // nul
+                                    case 27:
+                                        break;   // esc
+                                    case 127:
+                                        break;   // del
+                                    default: {
+                                        AStringView s(buf, count);
+                                        for (const auto& c : s.utf8()) {
+                                            window->onCharEntered(c);
+                                        }
+                                        break;
+                                    }
+                                }
+                            } else if (count == 0 && keysym >= 0x80 && status != XLookupNone) {
+                                char32_t u = aui::x11::keysymToUnicode(keysym);
+                                if (u >= 32 && u != 127) {
+                                    window->onCharEntered(AChar(u));
+                                }
                             }
                         } else {
                             count = XLookupString((XKeyPressedEvent*) &ev, buf, sizeof(buf) - 1, &keysym, nullptr);
-                        }
-
-                        if (count > 0 && status != XBufferOverflow) {
-                            switch (buf[0]) {
-                                case 0:
-                                    break;   // nul
-                                case 27:
-                                    break;   // esc
-                                case 127:
-                                    break;   // del
-                                default: {
-                                    AStringView s(buf, count);
-                                    for (const auto& c : s.utf8()) {
-                                        window->onCharEntered(c);
-                                    }
-                                    break;
-                                }
-                            }
-                        } else if (count == 0 && keysym >= 0x80 && status != XLookupNone) {
                             char32_t u = aui::x11::keysymToUnicode(keysym);
                             if (u >= 32 && u != 127) {
                                 window->onCharEntered(AChar(u));
+                            } else if (count > 0) {
+                                for (int i = 0; i < count; ++i) {
+                                    uint8_t byte = static_cast<uint8_t>(buf[i]);
+                                    if (byte >= 32 && byte != 127) {
+                                        window->onCharEntered(AChar(static_cast<char32_t>(byte)));
+                                    }
+                                }
                             }
                         }
                         window->onKeyDown(AInput::fromNative(ev.xkey.keycode));

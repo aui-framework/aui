@@ -23,7 +23,12 @@
 void RenderingContextX11::xInitNativeWindow(
     const IRenderingContext::Init& init, XSetWindowAttributes& swa, XVisualInfo* vi) {
     AUI_DO_ONCE {
-        std::setlocale(LC_ALL, "");
+        if (std::setlocale(LC_ALL, "") == nullptr) {
+            ALogger::warn("X11") << "Failed to set default locale from environment";
+            if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
+                std::setlocale(LC_ALL, "C");
+            }
+        }
         std::setlocale(LC_NUMERIC, "C");
         if (!XSupportsLocale() || (XSetLocaleModifiers("") == nullptr && XSetLocaleModifiers("@im=none") == nullptr)) {
             throw AException("Your X server does not support locales.");
@@ -173,7 +178,10 @@ void RenderingContextX11::xDestroyNativeWindow(ASurface& window) {
         XFreeFontSet(PlatformAbstractionX11::ourDisplay, mFontSet);
         mFontSet = nullptr;
     }
-    XDestroyIC(mIC);
+    if (mIC) {
+        XDestroyIC(mIC);
+        mIC = nullptr;
+    }
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         XDestroyWindow(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(*w));
     }

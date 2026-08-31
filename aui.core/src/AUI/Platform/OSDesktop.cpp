@@ -112,7 +112,12 @@ namespace aui::detail {
 }
 
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
-    std::setlocale(LC_ALL, "");
+    if (std::setlocale(LC_ALL, "") == nullptr) {
+        ALogger::warn("AUI") << "Failed to set default locale from environment";
+        if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
+            std::setlocale(LC_ALL, "C");
+        }
+    }
     std::setlocale(LC_NUMERIC, "C");
     aui::detail::argc = argc;
     aui::detail::argv = argv;

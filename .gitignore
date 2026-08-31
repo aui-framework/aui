@@ -358,4 +358,6 @@ install.json
 
 # mkdocs output
 site/
+
+# tests output
 reports/
