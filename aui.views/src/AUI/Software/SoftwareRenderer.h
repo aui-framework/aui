@@ -20,6 +20,7 @@ class API_AUI_VIEWS SoftwareRenderer: public IRenderer {
 private:
     SoftwareRenderingContext* mContext;
     bool mDrawingToStencil = false;
+    bool mInPushMask = false;
     enum {
         INCREASE = 1,
         DECREASE = -1
@@ -46,7 +47,9 @@ public:
         if (!glm::all(glm::lessThan(uposition, mContext->bitmapSize()))) return;
 
         if (mDrawingToStencil) {
-            auto expectedDepth = (mDrawingStencilDirection == INCREASE) ? mStencilDepth : (mStencilDepth + 1);
+            auto expectedDepth = (mDrawingStencilDirection == INCREASE)
+                ? mStencilDepth
+                : (mInPushMask ? mStencilDepth + 1 : mStencilDepth);
             if (color.a > 0.5f && mContext->stencil(position) == expectedDepth) {
                 mContext->stencil(position) += mDrawingStencilDirection;
             }
