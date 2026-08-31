@@ -137,15 +137,69 @@ void PlatformAbstractionX11::xClipboardClear(Atom selection) {
     }
 }
 
-void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
-    if (ev.xselectionrequest.property == None) {
-        return;
+static bool convertSingleTarget(Display* dpy, Window requestor, Atom property, Atom target, const std::string& text, Time timestamp) {
+    if (property == None) {
+        return false;
     }
+    Atom utf8String = XInternAtom(dpy, "UTF8_STRING", False);
+    Atom textPlain = XInternAtom(dpy, "text/plain", False);
+    Atom textPlainUtf8 = XInternAtom(dpy, "text/plain;charset=utf-8", False);
+    Atom stringAtom = XInternAtom(dpy, "STRING", False);
+    Atom textAtom = XInternAtom(dpy, "TEXT", False);
+    Atom targetsAtom = XInternAtom(dpy, "TARGETS", False);
+    Atom timestampAtom = XInternAtom(dpy, "TIMESTAMP", False);
 
+    if (target == utf8String || target == textPlain || target == textPlainUtf8 || target == textAtom) {
+        Atom responseType = (target == textAtom) ? utf8String : target;
+        XChangeProperty(dpy, requestor, property, responseType, 8, PropModeReplace,
+                        reinterpret_cast<const unsigned char*>(text.data()), static_cast<int>(text.size()));
+        return true;
+    }
+    if (target == stringAtom || target == XA_STRING) {
+        std::string latin1;
+        for (char32_t c : AString::fromUtf8(text).toUtf32()) {
+            latin1 += (c <= 0xff) ? static_cast<char>(c) : '?';
+        }
+        XChangeProperty(dpy, requestor, property, target, 8, PropModeReplace,
+                        reinterpret_cast<const unsigned char*>(latin1.data()), static_cast<int>(latin1.size()));
+        return true;
+    }
+    if (target == targetsAtom) {
+        Atom atoms[] = {
+            targetsAtom,
+            XInternAtom(dpy, "MULTIPLE", False),
+            timestampAtom,
+            utf8String,
+            textPlain,
+            textPlainUtf8,
+            textAtom,
+            stringAtom,
+            XA_STRING,
+        };
+        XChangeProperty(dpy, requestor, property, XA_ATOM, 32, PropModeReplace,
+                        reinterpret_cast<const unsigned char*>(atoms), static_cast<int>(std::size(atoms)));
+        return true;
+    }
+    if (target == timestampAtom) {
+        XChangeProperty(dpy, requestor, property, XA_INTEGER, 32, PropModeReplace,
+                        reinterpret_cast<const unsigned char*>(&timestamp), 1);
+        return true;
+    }
+    return false;
+}
+
+void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
     Atom target = ev.xselectionrequest.target;
     Atom property = ev.xselectionrequest.property;
-    Atom stringAtom = XInternAtom(ourDisplay, "STRING", False);
-    Atom textAtom = XInternAtom(ourDisplay, "TEXT", False);
+    Atom multipleAtom = XInternAtom(ourDisplay, "MULTIPLE", False);
+
+    if (property == None) {
+        if (target == multipleAtom) {
+            property = None;
+        } else {
+            property = target;
+        }
+    }
 
     XSelectionEvent ssev = { 0 };
     ssev.type = SelectionNotify;
@@ -156,63 +210,46 @@ void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
     ssev.property = property;
     ssev.time = ev.xselectionrequest.time;
 
-    const auto& textToServe = (ev.xselectionrequest.selection == XA_PRIMARY) ? gPrimaryText : gClipboardText;
-
-    if (target == ourAtoms.utf8String ||
-        target == ourAtoms.textPlain ||
-        target == ourAtoms.textPlainUtf8 ||
-        target == textAtom) {
-        Atom responseType = target;
-        if (target == textAtom) {
-            responseType = ourAtoms.utf8String;
-        }
-        XChangeProperty(ourDisplay,
-                        ev.xselectionrequest.requestor,
-                        property,
-                        responseType,
-                        8,
-                        PropModeReplace,
-                        reinterpret_cast<const unsigned char*>(textToServe.data()),
-                        static_cast<int>(textToServe.size()));
-    } else if (target == stringAtom || target == XA_STRING) {
-        std::string latin1;
-        for (char32_t c : AString::fromUtf8(textToServe).toUtf32()) {
-            if (c <= 0xff) {
-                latin1 += static_cast<char>(c);
-            } else {
-                latin1 += '?';
-            }
-        }
-        XChangeProperty(ourDisplay,
-                        ev.xselectionrequest.requestor,
-                        property,
-                        target,
-                        8,
-                        PropModeReplace,
-                        reinterpret_cast<const unsigned char*>(latin1.data()),
-                        static_cast<int>(latin1.size()));
-    } else if (target == ourAtoms.targets) {
-        Atom atoms[] = {
-            ourAtoms.targets,
-            ourAtoms.utf8String,
-            ourAtoms.textPlain,
-            ourAtoms.textPlainUtf8,
-            textAtom,
-            stringAtom,
-            XA_STRING,
-        };
-        XChangeProperty(ourDisplay,
-                        ev.xselectionrequest.requestor,
-                        property,
-                        XA_ATOM,
-                        32,
-                        PropModeReplace,
-                        reinterpret_cast<const unsigned char*>(atoms),
-                        static_cast<int>(std::size(atoms)));
-    } else {
+    if (property == None) {
         ssev.property = None;
+        XSendEvent(ourDisplay, ev.xselectionrequest.requestor, False, 0, (XEvent*)&ssev);
+        XFlush(ourDisplay);
+        return;
     }
 
-    XSendEvent(ourDisplay, ev.xselectionrequest.requestor, False, 0, (XEvent *)&ssev);
+    const auto& textToServe = (ev.xselectionrequest.selection == XA_PRIMARY) ? gPrimaryText : gClipboardText;
+
+    if (target == multipleAtom) {
+        Atom actualType;
+        int actualFormat;
+        unsigned long itemCount = 0, bytesAfter = 0;
+        unsigned char* data = nullptr;
+
+        XGetWindowProperty(ourDisplay, ev.xselectionrequest.requestor, property, 0, 0x1000, False,
+                           AnyPropertyType, &actualType, &actualFormat, &itemCount, &bytesAfter, &data);
+
+        if (data != nullptr && actualFormat == 32 && itemCount % 2 == 0) {
+            auto* atomPairs = reinterpret_cast<Atom*>(data);
+            for (unsigned long i = 0; i < itemCount; i += 2) {
+                Atom pairTarget = atomPairs[i];
+                Atom pairProp = atomPairs[i + 1];
+                if (!convertSingleTarget(ourDisplay, ev.xselectionrequest.requestor, pairProp, pairTarget, textToServe, ev.xselectionrequest.time)) {
+                    atomPairs[i] = None;
+                }
+            }
+            XChangeProperty(ourDisplay, ev.xselectionrequest.requestor, property, actualType, 32, PropModeReplace,
+                            data, static_cast<int>(itemCount));
+            XFree(data);
+        } else {
+            if (data) XFree(data);
+            ssev.property = None;
+        }
+    } else {
+        if (!convertSingleTarget(ourDisplay, ev.xselectionrequest.requestor, property, target, textToServe, ev.xselectionrequest.time)) {
+            ssev.property = None;
+        }
+    }
+
+    XSendEvent(ourDisplay, ev.xselectionrequest.requestor, False, 0, (XEvent*)&ssev);
     XFlush(ourDisplay);
 }

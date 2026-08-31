@@ -113,27 +113,31 @@ const ACommandLineArgs& aui::args() noexcept {
 namespace aui::detail {
     int argc;
     char** argv;
+
+    void initUtf8Locale() noexcept {
+        const char* loc = std::setlocale(LC_ALL, "");
+        bool isUtf8 = false;
+#if !AUI_PLATFORM_WIN
+        if (loc != nullptr) {
+            const char* codeset = nl_langinfo(CODESET);
+            if (codeset != nullptr && (std::strcmp(codeset, "UTF-8") == 0 || std::strcmp(codeset, "utf8") == 0 || std::strcmp(codeset, "UTF8") == 0)) {
+                isUtf8 = true;
+            }
+        }
+#endif
+        if (!isUtf8) {
+            if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
+                if (loc == nullptr) {
+                    std::setlocale(LC_ALL, "C");
+                }
+            }
+        }
+        std::setlocale(LC_NUMERIC, "C");
+    }
 }
 
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
-    const char* loc = std::setlocale(LC_ALL, "");
-    bool isUtf8 = false;
-#if !AUI_PLATFORM_WIN
-    if (loc != nullptr) {
-        const char* codeset = nl_langinfo(CODESET);
-        if (codeset != nullptr && (std::strcmp(codeset, "UTF-8") == 0 || std::strcmp(codeset, "utf8") == 0 || std::strcmp(codeset, "UTF8") == 0)) {
-            isUtf8 = true;
-        }
-    }
-#endif
-    if (!isUtf8) {
-        if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
-            if (loc == nullptr) {
-                std::setlocale(LC_ALL, "C");
-            }
-        }
-    }
-    std::setlocale(LC_NUMERIC, "C");
+    aui::detail::initUtf8Locale();
     aui::detail::argc = argc;
     aui::detail::argv = argv;
     setupUIThread();

@@ -10,9 +10,7 @@
  */
 
 #include <unistd.h>
-#include <clocale>
-#include <cstring>
-#include <langinfo.h>
+#include <AUI/Platform/Entry.h>
 #include <poll.h>
 #include <fcntl.h>
 #include <vector>
@@ -101,22 +99,7 @@ void PlatformAbstractionX11::ensureXLibInitialized() {
     struct DisplayInstance {
     public:
         DisplayInstance() {
-            const char* loc = std::setlocale(LC_ALL, "");
-            bool isUtf8 = false;
-            if (loc != nullptr) {
-                const char* codeset = nl_langinfo(CODESET);
-                if (codeset != nullptr && (std::strcmp(codeset, "UTF-8") == 0 || std::strcmp(codeset, "utf8") == 0 || std::strcmp(codeset, "UTF8") == 0)) {
-                    isUtf8 = true;
-                }
-            }
-            if (!isUtf8) {
-                if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
-                    if (loc == nullptr) {
-                        std::setlocale(LC_ALL, "C");
-                    }
-                }
-            }
-            std::setlocale(LC_NUMERIC, "C");
+            aui::detail::initUtf8Locale();
             auto d = ourDisplay = XOpenDisplay(nullptr);
             if (d == nullptr)
                 return;
@@ -219,10 +202,7 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                         char buf[0x100] {'\0'};
                         Status status = 0;
                         auto x11ctx = dynamic_cast<RenderingContextX11*>(window->getRenderingContext().get());
-                        if (!x11ctx) {
-                            break;
-                        }
-                        if (x11ctx->ic()) {
+                        if (x11ctx != nullptr && x11ctx->ic()) {
                             count = Xutf8LookupString(
                                 (XIC) x11ctx->ic(), (XKeyPressedEvent*) &ev, buf, sizeof(buf) - 1, &keysym, &status);
                             if (status == XBufferOverflow && count > 0) {

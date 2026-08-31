@@ -11,10 +11,10 @@
 
 #include <gtest/gtest.h>
 #include <clocale>
-#include <cstring>
+#include <string>
 
 #if AUI_PLATFORM_LINUX
-#include <langinfo.h>
+#include <AUI/Platform/Entry.h>
 #include <AUI/Platform/linux/x11/keysym_to_unicode.h>
 TEST(X11KeysymToUnicodeTest, AsciiAndLatin1) {
     EXPECT_EQ(aui::x11::keysymToUnicode(0x0020), 0x0020); // space
@@ -103,24 +103,19 @@ TEST(X11KeysymToUnicodeTest, KeypadAndControlKeys) {
 }
 
 TEST(X11KeysymToUnicodeTest, LocaleFallbackUnderCLocale) {
+    const char* cur = std::setlocale(LC_ALL, nullptr);
+    const std::string savedLocale = cur ? cur : "C";
+    struct LocaleRestorer {
+        std::string saved;
+        ~LocaleRestorer() {
+            std::setlocale(LC_ALL, saved.c_str());
+            std::setlocale(LC_NUMERIC, "C");
+        }
+    } restorer{savedLocale};
+
     // Simulate environment selecting C locale
     std::setlocale(LC_ALL, "C");
-    const char* loc = std::setlocale(LC_ALL, "");
-    bool isUtf8 = false;
-    if (loc != nullptr) {
-        const char* codeset = nl_langinfo(CODESET);
-        if (codeset != nullptr && (std::strcmp(codeset, "UTF-8") == 0 || std::strcmp(codeset, "utf8") == 0 || std::strcmp(codeset, "UTF8") == 0)) {
-            isUtf8 = true;
-        }
-    }
-    if (!isUtf8) {
-        if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
-            if (loc == nullptr) {
-                std::setlocale(LC_ALL, "C");
-            }
-        }
-    }
-    std::setlocale(LC_NUMERIC, "C");
+    aui::detail::initUtf8Locale();
 
     // Non-ASCII input through keysymToUnicode works accurately regardless of initial locale
     EXPECT_EQ(aui::x11::keysymToUnicode(0x06a1), 0x0452); // Cyrillic
@@ -130,11 +125,13 @@ TEST(X11KeysymToUnicodeTest, LocaleFallbackUnderCLocale) {
 }
 
 TEST(X11KeysymToUnicodeTest, ControlCharacterFiltering) {
-    // Control characters must have codepoint < 32 or == 127
-    for (uint8_t ctrl = 0; ctrl < 32; ++ctrl) {
-        char32_t cp = ctrl;
-        EXPECT_TRUE(cp < 32);
-    }
-    EXPECT_TRUE(char32_t(127) == 127);
+    // Control keysyms convert to ASCII control codes (< 32 or == 127) and are filtered from onCharEntered
+    EXPECT_EQ(aui::x11::keysymToUnicode(0xff08), 0x08); // BackSpace (< 32)
+    EXPECT_EQ(aui::x11::keysymToUnicode(0xff09), 0x09); // Tab (< 32)
+    EXPECT_EQ(aui::x11::keysymToUnicode(0xff0a), 0x0a); // Linefeed (< 32)
+    EXPECT_EQ(aui::x11::keysymToUnicode(0xff0b), 0x0b); // Clear (< 32)
+    EXPECT_EQ(aui::x11::keysymToUnicode(0xff0d), 0x0d); // Return (< 32)
+    EXPECT_EQ(aui::x11::keysymToUnicode(0xff1b), 0x1b); // Escape (< 32)
+    EXPECT_EQ(aui::x11::keysymToUnicode(0xffff), 0x7f); // Delete (== 127)
 }
 #endif

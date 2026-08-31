@@ -105,12 +105,6 @@ public:
 
         if (event.pointerIndex != APointerIndex::button(AInput::RBUTTON)) {
             ACursorSelectable::handleMouseReleased(event);
-            if (this->hasSelection()) {
-                auto menuModel = this->composeContextMenu();
-                if (!menuModel.empty()) {
-                    AMenu::show(menuModel);
-                }
-            }
         }
     }
     bool wantsTouchscreenKeyboard() override {

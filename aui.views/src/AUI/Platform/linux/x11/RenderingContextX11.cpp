@@ -12,9 +12,7 @@
 #include "RenderingContextX11.h"
 #include <cmath>
 #include <cstdlib>
-#include <clocale>
-#include <cstring>
-#include <langinfo.h>
+#include <AUI/Platform/Entry.h>
 #include <AUI/Util/ARandom.h>
 #include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Util/kAUI.h"
@@ -25,22 +23,7 @@
 void RenderingContextX11::xInitNativeWindow(
     const IRenderingContext::Init& init, XSetWindowAttributes& swa, XVisualInfo* vi) {
     AUI_DO_ONCE {
-        const char* loc = std::setlocale(LC_ALL, "");
-        bool isUtf8 = false;
-        if (loc != nullptr) {
-            const char* codeset = nl_langinfo(CODESET);
-            if (codeset != nullptr && (std::strcmp(codeset, "UTF-8") == 0 || std::strcmp(codeset, "utf8") == 0 || std::strcmp(codeset, "UTF8") == 0)) {
-                isUtf8 = true;
-            }
-        }
-        if (!isUtf8) {
-            if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr) {
-                if (loc == nullptr) {
-                    std::setlocale(LC_ALL, "C");
-                }
-            }
-        }
-        std::setlocale(LC_NUMERIC, "C");
+        aui::detail::initUtf8Locale();
         if (!XSupportsLocale() || (XSetLocaleModifiers("") == nullptr && XSetLocaleModifiers("@im=none") == nullptr)) {
             throw AException("Your X server does not support locales.");
         }
