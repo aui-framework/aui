@@ -25,7 +25,7 @@ struct ViewActionType: ViewActionClick<> {
 
         uitest::frame();
         // type
-        for (auto c : text) {
+        for (auto c : text.utf8()) {
             window->onCharEntered(c);
             uitest::frame();
         }

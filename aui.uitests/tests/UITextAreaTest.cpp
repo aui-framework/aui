@@ -187,6 +187,15 @@ TEST_F(UITextArea, Type1) {
     EXPECT_EQ(entries().size(), 1);
 }
 
+TEST_F(UITextArea, TypeNonAscii) {
+    mTextArea->clear();
+    EXPECT_EQ(mTextArea->text(), "");
+    By::type<ATextArea>()
+        .perform(type("Привет мир! こんにちは"))
+        ;
+    EXPECT_EQ(mTextArea->text(), "Привет мир! こんにちは");
+}
+
 TEST_F(UITextArea, Type2a) {
     mTextArea->clear();
     EXPECT_EQ(mTextArea->text(), "");

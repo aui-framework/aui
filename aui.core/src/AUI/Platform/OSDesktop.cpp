@@ -10,6 +10,7 @@
  */
 
 #include <chrono>
+#include <clocale>
 #if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
 #include <AUI/api.h>
 #include <AUI/Common/AStringVector.h>
@@ -111,6 +112,8 @@ namespace aui::detail {
 }
 
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
+    std::setlocale(LC_ALL, "");
+    std::setlocale(LC_NUMERIC, "C");
     aui::detail::argc = argc;
     aui::detail::argv = argv;
     setupUIThread();

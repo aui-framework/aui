@@ -31,11 +31,14 @@ public:
     Sync& sync() { return mXsyncRequestCounter; }
 
     XIC ic() { return mIC; }
+    void setImeSpotLocation(glm::ivec2 pos);
+
 
 protected:
     void xInitNativeWindow(const IRenderingContext::Init& init, XSetWindowAttributes& swa, XVisualInfo* vi);
     void xDestroyNativeWindow(ASurface& window);
     Sync mXsyncRequestCounter;
     XIC mIC = nullptr;
+    XFontSet mFontSet = nullptr;
     AString mWindowClass;
 };
