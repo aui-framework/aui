@@ -18,9 +18,13 @@
 #include <AUI/Util/ARaiiHelper.h>
 #include "AUI/Thread/AMutex.h"
 #include "AUI/IO/AFileOutputStream.h"
+#include "AUI/Common/AVector.h"
+#include "AUI/Logging/ALogSink.h"
+#include "AUI/Logging/AFileSink.h"
 #include <fmt/format.h>
 #include <fmt/chrono.h>
 #include <AUI/Thread/AMutexWrapper.h>
+#include <memory>
 
 class AString;
 
@@ -56,6 +60,12 @@ class AString;
  *   }
  * }
  * ```
+ *
+ * Logger dispatches messages to a list of sinks (spdlog-style).
+ * By default, the logger uses the native platform sink:
+ * ConsoleSink (stdout) on desktop, AAndroidSink (logcat) on Android,
+ * AAppleLogSink (NSLog) on iOS/macOS.
+ * Use `setLogFile()` or `sinks().push_back(...)` to add more destinations.
  */
 class API_AUI_CORE ALogger final {
 public:
@@ -239,10 +249,36 @@ public:
     }
 
     /**
-     * @brief Sets log file.
+     * @brief Returns a modifiable reference to the list of log sinks.
+     * @details
+     * Mirrors spdlog's logger::sinks(). Messages are dispatched to all sinks
+     * in order. By default, contains a ConsoleSink.
+     *
+     * Example:
+     * ```cpp
+     * // Add a file sink
+     * ALogger::global().sinks().push_back(std::make_shared<AFileSink>("/tmp/app.log"));
+     *
+     * // Remove all sinks
+     * ALogger::global().sinks().clear();
+     * ```
+     */
+    AVector<std::shared_ptr<ALogSink>>& sinks() { return mSinks; }
+
+    /**
+     * @brief Returns the default sinks for the current platform.
+     * @details
+     * - **Desktop:** AConsoleSink (stdout with colors)
+     * - **Android:** AAndroidSink (logcat via __android_log_print)
+     * - **iOS/macOS:** AAppleLogSink (NSLog)
+     */
+    static AVector<std::shared_ptr<ALogSink>> defaultSinks();
+
+    /**
+     * @brief Sets log file by adding a file sink.
      * @param path path to the log file.
      * @details
-     * Log file is opened immediately in setLogFile.
+     * Log file is opened immediately. A file sink is added to the sink list.
      *
      * If you want to change the log file of ALogger::global(), consider using ALogger::setLogFileForGlobal instead.
      * `ALogger::global().setLogFile(...)` expression would cause the default log file location to open and to close
@@ -262,12 +298,10 @@ public:
      * @details Default is enabled. When disabled, plain level names (INFO, WARN, etc.)
      * are used instead of ANSI-colored ones.
      */
-    void enableColors(bool enabled) { mColorsEnabled = enabled; }
+    void enableColors(bool enabled);
 
     [[nodiscard]]
-    APath logFile() {
-        return mLogFile.valueOrException().path();
-    }
+    APath logFile();
 
     void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
         std::unique_lock lock(mOnLogged);
@@ -283,24 +317,12 @@ public:
     template <aui::invocable Callable>
     void doLogFileAccessSafe(Callable action) {
         std::unique_lock lock(mLogSync);
-        ARaiiHelper opener = [&] {
-            if (!mLogFile)
+        for (auto& sink : mSinks) {
+            if (auto* fileSink = dynamic_cast<AFileSink*>(sink.get())) {
+                fileSink->doAccessSafe(std::move(action));
                 return;
-            try {
-                mLogFile->open(true);
-            } catch (const AException& e) {
-                auto path = mLogFile->path();
-                mLogFile.reset();
-                lock.unlock();
-                log(WARN, "Logger", AStringView(fmt::format("Unable to reopen file {}: {}", path, e.getMessage())));
             }
-        };
-        if (!mLogFile || !mLogFile->nativeHandle()) {
-            action();
-            return;
         }
-
-        mLogFile->close();
         action();
     }
 
@@ -318,7 +340,7 @@ public:
     LogWriter log(Level level, AStringView prefix) { return { *this, level, prefix }; }
 
 private:
-    AOptional<AFileOutputStream> mLogFile;
+    AVector<std::shared_ptr<ALogSink>> mSinks;
     AMutex mLogSync;
     AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 

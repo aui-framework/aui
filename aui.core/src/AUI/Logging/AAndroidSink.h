@@ -1,0 +1,31 @@
+/*
+ * AUI Framework - Declarative UI toolkit for modern C++20
+ * Copyright (C) 2020-2025 Alex2772 and Contributors
+ *
+ * SPDX-License-Identifier: MPL-2.0
+ *
+ * This Source Code Form is subject to the terms of the Mozilla Public
+ * License, v. 2.0. If a copy of the MPL was not distributed with this
+ * file, You can obtain one at http://mozilla.org/MPL/2.0/.
+ */
+
+#pragma once
+
+#include "ALogSink.h"
+#include <AUI/Core.h>
+
+/**
+ * @brief Android logcat log sink.
+ * @ingroup core
+ * @details
+ * Routes log output to the Android logcat via `__android_log_print`.
+ * Mirrors spdlog's android_sink.
+ */
+class API_AUI_CORE AAndroidSink : public ALogSink {
+public:
+    AAndroidSink();
+
+    void write(const ALogMessage& message) override;
+    void flush() override;
+    std::string_view name() const noexcept override;
+};

@@ -10,81 +10,20 @@
  */
 
 #include "ALogger.h"
+#include "AConsoleSink.h"
+#include "AAndroidSink.h"
+#include "AFileSink.h"
 #include "AUI/Platform/AProcess.h"
 #include "AUI/Platform/Entry.h"
 #include "AUI/Util/ACommandLineArgs.h"
-#include <fmt/color.h>
+#include "detail/LogFormat.h"
 #include <fmt/format.h>
 
-#if AUI_PLATFORM_ANDROID
-#include <android/log.h>
-#else
+#if AUI_PLATFORM_APPLE
+#include "AAppleLogSink.h"
+#endif
+
 #include <ctime>
-#include <AUI/IO/AFileOutputStream.h>
-
-#endif
-
-ALogger::ALogger() {
-    if (const char* logColor = std::getenv("AUI_LOG_COLOR"); logColor && AString(logColor) == "0")
-        mColorsEnabled = false;
-
-#ifdef AUI_SHARED_PTR_FIND_INSTANCES
-    log(WARN, "Performance",
-        "AUI_SHARED_PTR_FIND_INSTANCES is enabled which dramatically drops performance"
-        " since it creates stacktrace on every shared_ptr (_<T>) construction. Use it if"
-        " and only if it's actually needed.");
-#endif
-}
-
-ALogger::ALogger(AString filename) {
-    if (const char* logColor = std::getenv("AUI_LOG_COLOR"); logColor && AString(logColor) == "0")
-        mColorsEnabled = false;
-    setLogFileImpl(std::move(filename));
-}
-
-static const char* levelCStr(ALogger::Level level) {
-    switch (level) {
-        case ALogger::INFO:
-            return "INFO";
-
-        case ALogger::WARN:
-            return "WARN";
-
-        case ALogger::ERR:
-            return "ERR";
-
-        case ALogger::DEBUG:
-            return "DEBUG";
-
-        case ALogger::TRACE:
-            return "TRACE";
-    }
-
-    return "UNKNOWN";
-}
-
-#if !AUI_PLATFORM_ANDROID
-static std::string levelCStrColored(ALogger::Level level) {
-    switch (level) {
-        case ALogger::INFO:
-            return fmt::format(fmt::fg(fmt::color::green), "{}", "INFO");
-
-        case ALogger::WARN:
-            return fmt::format(fmt::fg(fmt::color::yellow), "{}", "WARN");
-
-        case ALogger::ERR:
-            return fmt::format(fmt::fg(fmt::color::red), "{}", "ERR");
-
-        case ALogger::DEBUG:
-            return fmt::format(fmt::fg(fmt::color::cyan), "{}", "DEBUG");
-
-        case ALogger::TRACE:
-            return fmt::format(fmt::fg(fmt::color::gray), "{}", "TRACE");
-    }
-
-    return "UNKNOWN";
-}
-#endif
 
 static ALogger& globalImpl(AOptional<APath> path = std::nullopt) {
 #if AUI_PLATFORM_EMSCRIPTEN
@@ -111,57 +50,6 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
         }
     }
 
-#if AUI_PLATFORM_ANDROID
-    int prio;
-    switch (level) {
-        case INFO:
-            prio = ANDROID_LOG_INFO;
-            break;
-        case WARN:
-            prio = ANDROID_LOG_WARN;
-            break;
-        case ERR:
-            prio = ANDROID_LOG_ERROR;
-            break;
-        case DEBUG:
-            prio = ANDROID_LOG_DEBUG;
-            break;
-        default:
-            AUI_ASSERT(0);
-    }
-    if (message.length() == 0) {
-        __android_log_print(prio, "AUI", "%s", prefix.data());
-    } else {
-        __android_log_print(prio, prefix.data(), "%s", message.data());
-    }
-
-    if (mLogFile) {
-        std::time_t t = std::time(nullptr);
-        std::tm* tm;
-        tm = localtime(&t);
-        const char* levelName = levelCStr(level);
-        char timebuf[64];
-        std::strftime(timebuf, sizeof(timebuf), "%H:%M:%S", tm);
-
-        std::string threadName;
-        if (auto currentThread = AThread::current()) {
-            threadName = currentThread->threadName().toStdString();
-        } else {
-            threadName = "?";
-        }
-
-        std::unique_lock lock(mLogSync);
-        if (message.length() == 0) {
-            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}]: {}",
-                         timebuf, threadName, levelName, prefix);
-        } else {
-            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}][{}]: {}",
-                         timebuf, threadName, prefix, levelName, message);
-        }
-        fflush(mLogFile->nativeHandle());
-    }
-
-#else
     std::time_t t = std::time(nullptr);
     std::tm* tm;
     tm = localtime(&t);
@@ -175,40 +63,82 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
         threadName = "?";
     }
 
-    const char* levelName = levelCStr(level);
-    auto coloredLevel = mColorsEnabled ? levelCStrColored(level) : levelName;
+    ALogMessage msg;
+    msg.level = level;
+    msg.prefix = prefix;
+    msg.message = message;
+    msg.threadName = threadName;
+    msg.timestamp = timebuf;
 
     std::unique_lock lock(mLogSync);
-    if (message.length() == 0) {
-        auto consoleMsg = fmt::format("[{}][{}][{}]: {}", timebuf, threadName, coloredLevel, prefix);
-        fputs(consoleMsg.c_str(), stdout);
-        fputc('\n', stdout);
-        if (mLogFile) {
-            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}]: {}",
-           timebuf, threadName, levelName, prefix);
-        }
-    } else {
-        auto consoleMsg = fmt::format("[{}][{}][{}][{}]: {}", timebuf, threadName, prefix, coloredLevel, message);
-        fputs(consoleMsg.c_str(), stdout);
-        fputc('\n', stdout);
-        if (mLogFile) {
-            fmt::println(mLogFile->nativeHandle(), "[{}][{}][{}][{}]: {}",
-           timebuf, threadName, prefix, levelName, message);
-        }
+    for (auto& sink : mSinks) {
+        sink->write(msg);
     }
-    fflush(stdout);
-    if (mLogFile) {
-        fflush(mLogFile->nativeHandle());
-    }
-#endif
 }
 
 void ALogger::setLogFileImpl(AString path) {
-    mLogFile = AFileOutputStream(std::move(path));
-    log(INFO, "Logger", ("Log file: " + mLogFile->path()));
+    auto sink = std::make_shared<AFileSink>(std::move(path));
+    mSinks.push_back(sink);
+    log(INFO, "Logger", ("Log file: " + sink->path()));
 }
 
-ALogger::~ALogger() { mLogFile.reset(); }
+ALogger::ALogger() {
+    if (const char* logColor = std::getenv("AUI_LOG_COLOR"); logColor && AString(logColor) == "0")
+        mColorsEnabled = false;
+
+    mSinks = defaultSinks();
+
+#ifdef AUI_SHARED_PTR_FIND_INSTANCES
+    log(WARN, "Performance",
+        "AUI_SHARED_PTR_FIND_INSTANCES is enabled which dramatically drops performance"
+        " since it creates stacktrace on every shared_ptr (_<T>) construction. Use it if"
+        " and only if it's actually needed.");
+#endif
+}
+
+ALogger::ALogger(AString filename) {
+    if (const char* logColor = std::getenv("AUI_LOG_COLOR"); logColor && AString(logColor) == "0")
+        mColorsEnabled = false;
+
+    mSinks = defaultSinks();
+    setLogFileImpl(std::move(filename));
+}
+
+ALogger::~ALogger() {
+    for (auto& sink : mSinks) {
+        sink->flush();
+    }
+}
+
+AVector<std::shared_ptr<ALogSink>> ALogger::defaultSinks() {
+    AVector<std::shared_ptr<ALogSink>> sinks;
+#if AUI_PLATFORM_ANDROID
+    sinks.push_back(std::make_shared<AAndroidSink>());
+#elif AUI_PLATFORM_APPLE
+    sinks.push_back(std::make_shared<AAppleLogSink>());
+#else
+    sinks.push_back(std::make_shared<AConsoleSink>());
+#endif
+    return sinks;
+}
+
+void ALogger::enableColors(bool enabled) {
+    mColorsEnabled = enabled;
+    for (auto& sink : mSinks) {
+        if (auto* console = dynamic_cast<AConsoleSink*>(sink.get())) {
+            console->setColorsEnabled(enabled);
+        }
+    }
+}
+
+APath ALogger::logFile() {
+    for (auto& sink : mSinks) {
+        if (auto* fileSink = dynamic_cast<AFileSink*>(sink.get())) {
+            return fileSink->path();
+        }
+    }
+    throw AException("No file sink configured");
+}
 
 bool ALogger::isTraceImpl() {
     return std::getenv("AUI_TRACE") != nullptr;
