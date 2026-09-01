@@ -20,9 +20,14 @@ Time getServerTime(Display* dpy, Window win, Atom prop) {
     unsigned char dummy = 0;
     XChangeProperty(dpy, win, prop, XA_INTEGER, 8, PropModeReplace, &dummy, 1);
     XEvent ev;
+    struct PredData {
+        Window win;
+        Atom prop;
+    } pred{win, prop};
     XIfEvent(dpy, &ev, [](Display*, XEvent* event, XPointer arg) -> Bool {
-        return event->type == PropertyNotify && event->xproperty.atom == reinterpret_cast<Atom>(arg);
-    }, reinterpret_cast<XPointer>(prop));
+        auto* d = reinterpret_cast<PredData*>(arg);
+        return event->type == PropertyNotify && event->xproperty.window == d->win && event->xproperty.atom == d->prop;
+    }, reinterpret_cast<XPointer>(&pred));
     return ev.xproperty.time;
 }
 AWindow* getTopLevelWindow() {

@@ -14,6 +14,7 @@
 #include <string>
 
 #if AUI_PLATFORM_LINUX
+#include <langinfo.h>
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/linux/x11/keysym_to_unicode.h>
 TEST(X11KeysymToUnicodeTest, AsciiAndLatin1) {
@@ -116,6 +117,15 @@ TEST(X11KeysymToUnicodeTest, LocaleFallbackUnderCLocale) {
     std::setlocale(LC_ALL, "C");
     aui::detail::initUtf8Locale();
 
+    // initUtf8Locale must leave a UTF-8 codeset selected and preserve LC_NUMERIC=C
+#if AUI_PLATFORM_LINUX
+    const char* codeset = nl_langinfo(CODESET);
+    ASSERT_NE(codeset, nullptr);
+    EXPECT_STRCASEEQ(codeset, "UTF-8");
+#endif
+    const char* numLoc = std::setlocale(LC_NUMERIC, nullptr);
+    ASSERT_NE(numLoc, nullptr);
+    EXPECT_STREQ(numLoc, "C");
     // Non-ASCII input through keysymToUnicode works accurately regardless of initial locale
     EXPECT_EQ(aui::x11::keysymToUnicode(0x06a1), 0x0452); // Cyrillic
     EXPECT_EQ(aui::x11::keysymToUnicode(0x04a1), 0x3002); // Katakana

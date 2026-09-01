@@ -300,7 +300,7 @@ void AAbstractTypeable::setText(const AString& t)
 }
 
 void AAbstractTypeable::updateSelectionOnTextSet(const AString& t) {
-    mCursorIndex = t.length();
+    mCursorIndex = length();
     mCursorSelection = 0;
 }
 
