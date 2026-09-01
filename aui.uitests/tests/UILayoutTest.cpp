@@ -434,3 +434,12 @@ TEST_F(UILayoutTest, Margin7) {
 
     AUI_REPEAT(10) { uitest::frame(); }
 }
+
+static_assert(aui::convertible_to<declarative::Centered, _<AViewContainer>>);
+static_assert(aui::convertible_to<declarative::Vertical, _<AViewContainer>>);
+static_assert(aui::convertible_to<declarative::Horizontal, _<AViewContainer>>);
+static_assert(aui::convertible_to<declarative::Stacked, _<AViewContainer>>);
+static_assert(aui::convertible_to<declarative::Button, _<AViewContainer>>);
+static_assert(!aui::convertible_to<declarative::Label, _<AViewContainer>>);
+static_assert(!aui::convertible_to<_<AView>, _<AViewContainer>>);
+static_assert(!aui::convertible_to<_<ALabel>, _<AViewContainer>>);
