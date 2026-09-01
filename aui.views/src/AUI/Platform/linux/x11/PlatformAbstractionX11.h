@@ -42,6 +42,10 @@ public:
         Atom auiClipboard;
         Atom incr;
         Atom targets;
+        Atom stringAtom;
+        Atom textAtom;
+        Atom timestampAtom;
+        Atom multiple;
         Atom netWmSyncRequest;
         Atom netWmSyncRequestCounter;
         Atom netWmIcon;

@@ -62,6 +62,19 @@ static void updateImeSpotLocation(AWindow* window) {
         }
     }
 }
+static void emitPrintableUtf8(AWindow& window, AStringView s) {
+    for (const auto& c : s.utf8()) {
+        if (c.codepoint() >= 32 && c.codepoint() != 127) {
+            window.onCharEntered(c);
+        }
+    }
+}
+
+static void emitPrintableCodepoint(AWindow& window, char32_t u) {
+    if (u >= 32 && u != 127) {
+        window.onCharEntered(AChar(u));
+    }
+}
 
 
 static void xSendEventToWM(AWindow& window, Atom atom, long a, long b, long c, long d, long e) {
@@ -120,6 +133,10 @@ void PlatformAbstractionX11::ensureXLibInitialized() {
             ourAtoms.auiClipboard = XInternAtom(d, "AUI_CLIPBOARD", False);
             ourAtoms.incr = XInternAtom(d, "INCR", False);
             ourAtoms.targets = XInternAtom(d, "TARGETS", False);
+            ourAtoms.stringAtom = XInternAtom(d, "STRING", False);
+            ourAtoms.textAtom = XInternAtom(d, "TEXT", False);
+            ourAtoms.timestampAtom = XInternAtom(d, "TIMESTAMP", False);
+            ourAtoms.multiple = XInternAtom(d, "MULTIPLE", False);
             ourAtoms.netWmSyncRequest = XInternAtom(d, "_NET_WM_SYNC_REQUEST", False);
             ourAtoms.netWmSyncRequestCounter = XInternAtom(d, "_NET_WM_SYNC_REQUEST_COUNTER", False);
             ourAtoms.netWmIcon = XInternAtom(ourDisplay, "_NET_WM_ICON", False);
@@ -210,25 +227,12 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                                 count = Xutf8LookupString(
                                     (XIC) x11ctx->ic(), (XKeyPressedEvent*) &ev, dynBuf.data(), count, &keysym, &status);
                                 if (count > 0) {
-                                    AStringView s(dynBuf.data(), count);
-                                    for (const auto& c : s.utf8()) {
-                                        if (c.codepoint() >= 32 && c.codepoint() != 127) {
-                                            window->onCharEntered(c);
-                                        }
-                                    }
+                                    emitPrintableUtf8(*window, AStringView(dynBuf.data(), count));
                                 }
                             } else if (count > 0 && status != XBufferOverflow) {
-                                AStringView s(buf, count);
-                                for (const auto& c : s.utf8()) {
-                                    if (c.codepoint() >= 32 && c.codepoint() != 127) {
-                                        window->onCharEntered(c);
-                                    }
-                                }
+                                emitPrintableUtf8(*window, AStringView(buf, count));
                             } else if (count == 0 && keysym >= 0x80 && (ev.xkey.state & ControlMask) == 0 && status != XLookupNone) {
-                                char32_t u = aui::x11::keysymToUnicode(keysym);
-                                if (u >= 32 && u != 127) {
-                                    window->onCharEntered(AChar(u));
-                                }
+                                emitPrintableCodepoint(*window, aui::x11::keysymToUnicode(keysym));
                             }
                         } else {
                             count = XLookupString((XKeyPressedEvent*) &ev, buf, sizeof(buf) - 1, &keysym, nullptr);
@@ -236,17 +240,11 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                                 uint8_t firstByte = static_cast<uint8_t>(buf[0]);
                                 if (firstByte >= 32 && firstByte != 127) {
                                     for (int i = 0; i < count; ++i) {
-                                        uint8_t byte = static_cast<uint8_t>(buf[i]);
-                                        if (byte >= 32 && byte != 127) {
-                                            window->onCharEntered(AChar(static_cast<char32_t>(byte)));
-                                        }
+                                        emitPrintableCodepoint(*window, static_cast<uint8_t>(buf[i]));
                                     }
                                 }
                             } else if (count == 0 && keysym >= 0x80 && (ev.xkey.state & ControlMask) == 0) {
-                                char32_t u = aui::x11::keysymToUnicode(keysym);
-                                if (u >= 32 && u != 127) {
-                                    window->onCharEntered(AChar(u));
-                                }
+                                emitPrintableCodepoint(*window, aui::x11::keysymToUnicode(keysym));
                             }
                         }
                         window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
@@ -729,4 +727,9 @@ void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
     }
 }
 
-void PlatformAbstractionX11::init() {}
+void PlatformAbstractionX11::init() {
+    ensureXLibInitialized();
+    if (ourDisplay == nullptr) {
+        throw AException("Could not open X11 display");
+    }
+}

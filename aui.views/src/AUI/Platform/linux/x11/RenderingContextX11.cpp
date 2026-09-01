@@ -32,7 +32,6 @@ void RenderingContextX11::xInitNativeWindow(
     PlatformAbstractionX11::ensureXLibInitialized();
 
     static XIM im = nullptr;
-    static XIMStyles* styles;
 
     if (im == nullptr) {
         const char* xmodifiers = std::getenv("XMODIFIERS");
@@ -48,7 +47,7 @@ void RenderingContextX11::xInitNativeWindow(
             XSetLocaleModifiers("@im=ibus");
             im = XOpenIM(PlatformAbstractionX11::ourDisplay, nullptr, nullptr, nullptr);
         }
-        if (im == nullptr) {
+        if (im == nullptr && (xmodifiers == nullptr || *xmodifiers == '\0')) {
             XSetLocaleModifiers("");
             im = XOpenIM(PlatformAbstractionX11::ourDisplay, nullptr, nullptr, nullptr);
         }
@@ -62,9 +61,6 @@ void RenderingContextX11::xInitNativeWindow(
         }
         if (im == nullptr) {
             throw AException("Could not open input method");
-        }
-        if (XGetIMValues(im, XNQueryInputStyle, &styles, nullptr)) {
-            styles = nullptr;
         }
     }
 

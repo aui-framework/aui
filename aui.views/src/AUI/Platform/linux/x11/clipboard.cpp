@@ -56,16 +56,11 @@ void PlatformAbstractionX11::setClipboardText(const AString& text) {
     if (!auiWindow)
         return;
     gClipboardText = text.toStdString();
-    gPrimaryText = text.toStdString();
     auto handle = nativeHandle(*auiWindow);
     Time time = getServerTime(ourDisplay, handle, ourAtoms.auiClipboard);
     gClipboardTimestamp = time;
-    gPrimaryTimestamp = time;
     XSetSelectionOwner(
         PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard, handle,
-        time);
-    XSetSelectionOwner(
-        PlatformAbstractionX11::ourDisplay, XA_PRIMARY, handle,
         time);
     XFlush(PlatformAbstractionX11::ourDisplay);
 }
@@ -97,9 +92,7 @@ AString PlatformAbstractionX11::getClipboardText() {
 
     if (isOurWindow) {
         const auto& data = (requestedSelection == XA_PRIMARY) ? gPrimaryText : gClipboardText;
-        if (!data.empty()) {
-            return AString::fromUtf8(data);
-        }
+        return AString::fromUtf8(data);
     }
 
     XConvertSelection(PlatformAbstractionX11::ourDisplay, requestedSelection, PlatformAbstractionX11::ourAtoms.utf8String, PlatformAbstractionX11::ourAtoms.auiClipboard, handle,
@@ -162,21 +155,15 @@ static bool convertSingleTarget(Display* dpy, Window requestor, Atom property, A
     if (property == None) {
         return false;
     }
-    Atom utf8String = XInternAtom(dpy, "UTF8_STRING", False);
-    Atom textPlain = XInternAtom(dpy, "text/plain", False);
-    Atom textPlainUtf8 = XInternAtom(dpy, "text/plain;charset=utf-8", False);
-    Atom stringAtom = XInternAtom(dpy, "STRING", False);
-    Atom textAtom = XInternAtom(dpy, "TEXT", False);
-    Atom targetsAtom = XInternAtom(dpy, "TARGETS", False);
-    Atom timestampAtom = XInternAtom(dpy, "TIMESTAMP", False);
+    const auto& atoms = PlatformAbstractionX11::ourAtoms;
 
-    if (target == utf8String || target == textPlain || target == textPlainUtf8 || target == textAtom) {
-        Atom responseType = (target == textAtom) ? utf8String : target;
+    if (target == atoms.utf8String || target == atoms.textPlain || target == atoms.textPlainUtf8 || target == atoms.textAtom) {
+        Atom responseType = (target == atoms.textAtom) ? atoms.utf8String : target;
         XChangeProperty(dpy, requestor, property, responseType, 8, PropModeReplace,
                         reinterpret_cast<const unsigned char*>(text.data()), static_cast<int>(text.size()));
         return true;
     }
-    if (target == stringAtom || target == XA_STRING) {
+    if (target == atoms.stringAtom || target == XA_STRING) {
         std::string latin1;
         for (char32_t c : AString::fromUtf8(text).toUtf32()) {
             latin1 += (c <= 0xff) ? static_cast<char>(c) : '?';
@@ -185,23 +172,23 @@ static bool convertSingleTarget(Display* dpy, Window requestor, Atom property, A
                         reinterpret_cast<const unsigned char*>(latin1.data()), static_cast<int>(latin1.size()));
         return true;
     }
-    if (target == targetsAtom) {
-        Atom atoms[] = {
-            targetsAtom,
-            XInternAtom(dpy, "MULTIPLE", False),
-            timestampAtom,
-            utf8String,
-            textPlain,
-            textPlainUtf8,
-            textAtom,
-            stringAtom,
+    if (target == atoms.targets) {
+        Atom targetList[] = {
+            atoms.targets,
+            atoms.multiple,
+            atoms.timestampAtom,
+            atoms.utf8String,
+            atoms.textPlain,
+            atoms.textPlainUtf8,
+            atoms.textAtom,
+            atoms.stringAtom,
             XA_STRING,
         };
         XChangeProperty(dpy, requestor, property, XA_ATOM, 32, PropModeReplace,
-                        reinterpret_cast<const unsigned char*>(atoms), static_cast<int>(std::size(atoms)));
+                        reinterpret_cast<const unsigned char*>(targetList), static_cast<int>(std::size(targetList)));
         return true;
     }
-    if (target == timestampAtom) {
+    if (target == atoms.timestampAtom) {
         XChangeProperty(dpy, requestor, property, XA_INTEGER, 32, PropModeReplace,
                         reinterpret_cast<const unsigned char*>(&timestamp), 1);
         return true;
@@ -212,8 +199,7 @@ static bool convertSingleTarget(Display* dpy, Window requestor, Atom property, A
 void PlatformAbstractionX11::xHandleClipboard(const XEvent& ev) {
     Atom target = ev.xselectionrequest.target;
     Atom property = ev.xselectionrequest.property;
-    Atom multipleAtom = XInternAtom(ourDisplay, "MULTIPLE", False);
-
+    Atom multipleAtom = ourAtoms.multiple;
     if (property == None) {
         if (target == multipleAtom) {
             property = None;
