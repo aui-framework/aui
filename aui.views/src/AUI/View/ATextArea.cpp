@@ -473,7 +473,7 @@ void ATextArea::render(ARenderContext context) {
                 .p1 = beginPos,
                 .p2 = { RIGHT_POS, beginPos.y + LINE_RENDER_HEIGHT }
             });
-            if (endPos.y > beginPos.y + int(getFontStyle().size)) {
+            if (endPos.y > beginPos.y + LINE_RENDER_HEIGHT) {
                 selectionRects.push_back(ARect<int>{
                     .p1 = { LEFT_POS, beginPos.y + LINE_RENDER_HEIGHT },
                     .p2 = { RIGHT_POS, endPos.y }

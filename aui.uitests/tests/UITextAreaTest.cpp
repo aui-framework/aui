@@ -372,3 +372,17 @@ TEST_F(UITextArea, NextLineCursorPos) {
     mTextArea->moveCursorLeft();
     EXPECT_EQ(mTextArea->getCursorPosition().y, 0);
 }
+
+TEST_F(UITextArea, SelectionWithNonDefaultLineSpacing) {
+    mTextArea->setCustomStyle({ FixedSize { 300_dp, {} }, LineHeight { 1.5f } });
+    mTextArea->setText("line one\nline two\nline three");
+    uitest::frame();
+
+    // Select across 2 adjacent lines
+    mTextArea->setSelection({2, 14});
+    uitest::frame();
+
+    // Select across 3 lines (including full middle line)
+    mTextArea->setSelection({2, 24});
+    uitest::frame();
+}

@@ -12,6 +12,7 @@
 #include <gtest/gtest.h>
 #include <clocale>
 #include <string>
+#include <cstring>
 
 #if AUI_PLATFORM_LINUX
 #include <langinfo.h>
@@ -121,7 +122,15 @@ TEST(X11KeysymToUnicodeTest, LocaleFallbackUnderCLocale) {
 #if AUI_PLATFORM_LINUX
     const char* codeset = nl_langinfo(CODESET);
     ASSERT_NE(codeset, nullptr);
-    EXPECT_STRCASEEQ(codeset, "UTF-8");
+    const bool isUtf8Codeset = strcasecmp(codeset, "UTF-8") == 0 || strcasecmp(codeset, "UTF8") == 0;
+    if (!isUtf8Codeset) {
+        // When no UTF-8 locale is installed on the system, initUtf8Locale falls back to "C"
+        const char* allLoc = std::setlocale(LC_ALL, nullptr);
+        ASSERT_NE(allLoc, nullptr);
+        EXPECT_STREQ(allLoc, "C");
+    } else {
+        EXPECT_TRUE(isUtf8Codeset);
+    }
 #endif
     const char* numLoc = std::setlocale(LC_NUMERIC, nullptr);
     ASSERT_NE(numLoc, nullptr);
