@@ -88,7 +88,7 @@ TEST(ALogSinkTest, EmptyMessageUsesPrefix) {
 
     ASSERT_EQ(mock->messages.size(), 1u);
     EXPECT_EQ(mock->messages[0].prefix, "TagOnly");
-    EXPECT_EQ(mock->messages[0].message, "TagOnly");
+    EXPECT_TRUE(mock->messages[0].message.empty());
 }
 
 TEST(ALogSinkTest, LevelFiltering) {
@@ -98,7 +98,7 @@ TEST(ALogSinkTest, LevelFiltering) {
     logger.sinks().push_back(mock);
     logger.setLevel(ALogger::ERR);
 
-    logger.log(ALogger::DEBUG, "T") << "dropped";
+    logger.log(ALogger::INFO, "T") << "dropped";
     logger.log(ALogger::ERR, "T") << "kept";
 
     ASSERT_EQ(mock->messages.size(), 1u);

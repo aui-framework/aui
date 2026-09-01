@@ -12,7 +12,7 @@
 #pragma once
 
 #include <AUI/Core.h>
-#include <string_view>
+#include <string>
 
 /**
  * @brief A single log record passed from an ALogger to its sinks.
@@ -23,16 +23,16 @@ struct ALogMessage {
     int level = 0;
 
     /// Log prefix (e.g. tag / component name).
-    std::string_view prefix;
+    std::string prefix;
 
     /// Raw log message body. May be empty, in which case `prefix` is the body.
-    std::string_view message;
+    std::string message;
 
     /// Current thread name.
-    std::string_view threadName;
+    std::string threadName;
 
     /// Timestamp formatted as "HH:MM:SS".
-    std::string_view timestamp;
+    std::string timestamp;
 };
 
 /**
