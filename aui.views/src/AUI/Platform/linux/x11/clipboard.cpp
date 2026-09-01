@@ -123,12 +123,14 @@ AString PlatformAbstractionX11::getClipboardText() {
                     return {};
                 }
 
+                unsigned long nitems = 0;
                 XGetWindowProperty(PlatformAbstractionX11::ourDisplay, handle, PlatformAbstractionX11::ourAtoms.auiClipboard, 0, size, False, AnyPropertyType,
-                                   &da, &di, &dul, &dul, &prop_ret);
-                AString clipboardData = reinterpret_cast<const char*>(prop_ret);
-                XFree(prop_ret);
-
-                XDeleteProperty(PlatformAbstractionX11::ourDisplay, handle, PlatformAbstractionX11::ourAtoms.auiClipboard);
+                                   &da, &di, &nitems, &dul, &prop_ret);
+                AString clipboardData;
+                if (prop_ret != nullptr) {
+                    clipboardData = AString::fromUtf8(std::string_view(reinterpret_cast<const char*>(prop_ret), nitems));
+                    XFree(prop_ret);
+                }
                 return clipboardData;
             }
             default:

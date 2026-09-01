@@ -729,6 +729,9 @@ void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
 
 void PlatformAbstractionX11::init() {
     ensureXLibInitialized();
+    if (UITestState::isTesting()) {
+        return;
+    }
     if (ourDisplay == nullptr) {
         throw AException("Could not open X11 display");
     }

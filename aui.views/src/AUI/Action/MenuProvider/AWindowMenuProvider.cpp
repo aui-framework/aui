@@ -88,8 +88,10 @@ class AMenuContainer : public AViewContainerBase {
 
                         auto onAction = i.onAction;
                         connect(view->pressed, [onAction] {
-                            AMenu::close();
-                            onAction();
+                            AThread::current()->enqueue([onAction] {
+                                AMenu::close();
+                                onAction();
+                            });
                         });
                     } else {
                         view->disable();
