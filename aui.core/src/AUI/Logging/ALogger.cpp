@@ -77,7 +77,7 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
 }
 
 void ALogger::setLogFileImpl(AString path) {
-    auto sink = std::make_shared<AFileSink>(std::move(path));
+    auto sink = _new<AFileSink>(std::move(path));
     mSinks.push_back(sink);
     log(INFO, "Logger", ("Log file: " + sink->path()));
 }
@@ -110,14 +110,14 @@ ALogger::~ALogger() {
     }
 }
 
-AVector<std::shared_ptr<ALogSink>> ALogger::defaultSinks() {
-    AVector<std::shared_ptr<ALogSink>> sinks;
+AVector<_<ALogSink>> ALogger::defaultSinks() {
+    AVector<_<ALogSink>> sinks;
 #if AUI_PLATFORM_ANDROID
-    sinks.push_back(std::make_shared<AAndroidSink>());
+    sinks.push_back(_new<AAndroidSink>());
 #elif AUI_PLATFORM_APPLE
-    sinks.push_back(std::make_shared<AAppleLogSink>());
+    sinks.push_back(_new<AAppleLogSink>());
 #else
-    sinks.push_back(std::make_shared<AConsoleSink>());
+    sinks.push_back(_new<AConsoleSink>());
 #endif
     return sinks;
 }

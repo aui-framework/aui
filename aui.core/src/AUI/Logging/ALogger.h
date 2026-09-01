@@ -24,7 +24,7 @@
 #include <fmt/format.h>
 #include <fmt/chrono.h>
 #include <AUI/Thread/AMutexWrapper.h>
-#include <memory>
+#include <AUI/Common/SharedPtr.h>
 
 class AString;
 
@@ -257,13 +257,13 @@ public:
      * Example:
      * ```cpp
      * // Add a file sink
-     * ALogger::global().sinks().push_back(std::make_shared<AFileSink>("/tmp/app.log"));
+     * ALogger::global().sinks().push_back(_new<AFileSink>("/tmp/app.log"));
      *
      * // Remove all sinks
      * ALogger::global().sinks().clear();
      * ```
      */
-    AVector<std::shared_ptr<ALogSink>>& sinks() { return mSinks; }
+    AVector<_<ALogSink>>& sinks() { return mSinks; }
 
     /**
      * @brief Returns the default sinks for the current platform.
@@ -272,7 +272,7 @@ public:
      * - **Android:** AAndroidSink (logcat via __android_log_print)
      * - **iOS/macOS:** AAppleLogSink (NSLog)
      */
-    static AVector<std::shared_ptr<ALogSink>> defaultSinks();
+    static AVector<_<ALogSink>> defaultSinks();
 
     /**
      * @brief Sets log file by adding a file sink.
@@ -340,7 +340,7 @@ public:
     LogWriter log(Level level, AStringView prefix) { return { *this, level, prefix }; }
 
 private:
-    AVector<std::shared_ptr<ALogSink>> mSinks;
+    AVector<_<ALogSink>> mSinks;
     AMutex mLogSync;
     AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 
