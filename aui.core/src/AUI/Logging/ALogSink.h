@@ -13,7 +13,6 @@
 
 #include <AUI/Core.h>
 #include <string>
-#include <functional>
 
 /**
  * @brief A single log record passed from an ALogger to its sinks.
@@ -65,12 +64,4 @@ public:
      * @brief Returns a human-readable name for this sink.
      */
     virtual std::string_view name() const noexcept = 0;
-
-    /**
-     * @brief Safely executes an action with exclusive access to a file-backed resource, if any.
-     * @details Sinks that back a file (e.g. AFileSink) override this to close the file, run the
-     * action, and reopen it, returning `true`. The default implementation does nothing and returns
-     * `false`, meaning this sink does not own a file resource.
-     */
-    virtual bool doAccessSafe(const std::function<void()>& action) { return false; }
 };

@@ -16,7 +16,7 @@
 #include <AUI/IO/AFileOutputStream.h>
 #include <AUI/IO/APath.h>
 #include <AUI/Thread/AMutex.h>
-#include <AUI/Util/ARaiiHelper.h>
+#include <AUI/Common/SharedPtr.h>
 
 /**
  * @brief File log sink.
@@ -38,30 +38,12 @@ public:
     APath path() const;
 
     /**
-     * @brief Closes the file, executes an action, then reopens it.
-     * @details Useful for reading the log file while it's being written to.
+     * @brief Returns the underlying file output stream, shared with the owning ALogger.
      */
-    bool doAccessSafe(const std::function<void()>& action) override {
-        std::unique_lock lock(mSync);
-        ARaiiHelper opener = [&] {
-            try {
-                mFile.open(true);
-            } catch (const AException& e) {
-                auto p = mFile.path();
-                mFile = AFileOutputStream(std::move(p));
-                lock.unlock();
-            }
-        };
-        if (!mFile.nativeHandle()) {
-            action();
-            return true;
-        }
-        mFile.close();
-        action();
-        return true;
-    }
+    [[nodiscard]]
+    _<AFileOutputStream> fileStream() const { return mFile; }
 
 private:
-    AFileOutputStream mFile;
+    _<AFileOutputStream> mFile;
     AMutex mSync;
 };

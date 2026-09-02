@@ -317,12 +317,24 @@ public:
     template <aui::invocable Callable>
     void doLogFileAccessSafe(Callable action) {
         std::unique_lock lock(mLogSync);
-        for (auto& sink : mSinks) {
-            if (auto* fileSink = dynamic_cast<AFileSink*>(sink.get())) {
-                fileSink->doAccessSafe(std::move(action));
+        ARaiiHelper opener = [&] {
+            if (!mLogFile)
                 return;
+            try {
+                mLogFile->open(true);
+            } catch (const AException& e) {
+                auto path = mLogFile->path();
+                mLogFile.reset();
+                lock.unlock();
+                log(WARN, "Logger", AStringView(fmt::format("Unable to reopen file {}: {}", path, e.getMessage())));
             }
+        };
+        if (!mLogFile || !mLogFile->nativeHandle()) {
+            action();
+            return;
         }
+
+        mLogFile->close();
         action();
     }
 
@@ -341,6 +353,7 @@ public:
 
 private:
     AVector<_<ALogSink>> mSinks;
+    _<AFileOutputStream> mLogFile;
     AMutex mLogSync;
     AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 

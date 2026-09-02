@@ -77,6 +77,7 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
 void ALogger::setLogFileImpl(AString path) {
     auto sink = _new<AFileSink>(std::move(path));
     mSinks.push_back(sink);
+    mLogFile = sink->fileStream();
     log(INFO, "Logger", ("Log file: " + sink->path()));
 }
 
@@ -106,6 +107,7 @@ ALogger::~ALogger() {
     for (auto& sink : mSinks) {
         sink->flush();
     }
+    mLogFile.reset();
 }
 
 AVector<_<ALogSink>> ALogger::defaultSinks() {
@@ -130,6 +132,9 @@ void ALogger::enableColors(bool enabled) {
 }
 
 APath ALogger::logFile() {
+    if (mLogFile) {
+        return mLogFile->path();
+    }
     for (auto& sink : mSinks) {
         if (auto* fileSink = dynamic_cast<AFileSink*>(sink.get())) {
             return fileSink->path();

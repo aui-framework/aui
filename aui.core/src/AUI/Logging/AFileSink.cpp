@@ -14,7 +14,7 @@
 #include <fmt/format.h>
 #include <cstdio>
 
-AFileSink::AFileSink(APath path) : mFile(std::move(path)) {}
+AFileSink::AFileSink(APath path) : mFile(_new<AFileOutputStream>(std::move(path))) {}
 
 AFileSink::~AFileSink() {
     flush();
@@ -24,20 +24,20 @@ void AFileSink::write(const ALogMessage& message) {
     std::unique_lock lock(mSync);
     auto timestamp = aui::detail::log::formatTimestamp(message.timestampMs);
     if (message.message.empty()) {
-        fmt::println(mFile.nativeHandle(), "[{}][{}][{}]: {}",
+        fmt::println(mFile->nativeHandle(), "[{}][{}][{}]: {}",
                      timestamp, message.threadName,
                      aui::detail::log::levelCStr(message.level), message.prefix);
     } else {
-        fmt::println(mFile.nativeHandle(), "[{}][{}][{}][{}]: {}",
+        fmt::println(mFile->nativeHandle(), "[{}][{}][{}][{}]: {}",
                      timestamp, message.threadName, message.prefix,
                      aui::detail::log::levelCStr(message.level), message.message);
     }
-    fflush(mFile.nativeHandle());
+    fflush(mFile->nativeHandle());
 }
 
 void AFileSink::flush() {
     std::unique_lock lock(mSync);
-    fflush(mFile.nativeHandle());
+    fflush(mFile->nativeHandle());
 }
 
 std::string_view AFileSink::name() const noexcept {
@@ -45,5 +45,5 @@ std::string_view AFileSink::name() const noexcept {
 }
 
 APath AFileSink::path() const {
-    return mFile.path();
+    return mFile->path();
 }
