@@ -23,7 +23,7 @@
 #include "AAppleLogSink.h"
 #endif
 
-#include <ctime>
+#include <chrono>
 
 static ALogger& globalImpl(AOptional<APath> path = std::nullopt) {
 #if AUI_PLATFORM_EMSCRIPTEN
@@ -50,11 +50,9 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
         }
     }
 
-    std::time_t t = std::time(nullptr);
-    std::tm* tm;
-    tm = localtime(&t);
-    char timebuf[64];
-    std::strftime(timebuf, sizeof(timebuf), "%H:%M:%S", tm);
+    auto now = std::chrono::system_clock::now();
+    long long timestampMs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 
     std::string threadName;
     if (auto currentThread = AThread::current()) {
@@ -68,7 +66,7 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
     msg.prefix = prefix;
     msg.message = message;
     msg.threadName = threadName;
-    msg.timestamp = timebuf;
+    msg.timestampMs = timestampMs;
 
     std::unique_lock lock(mLogSync);
     for (auto& sink : mSinks) {

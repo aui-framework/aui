@@ -22,13 +22,14 @@ AFileSink::~AFileSink() {
 
 void AFileSink::write(const ALogMessage& message) {
     std::unique_lock lock(mSync);
+    auto timestamp = aui::detail::log::formatTimestamp(message.timestampMs);
     if (message.message.empty()) {
         fmt::println(mFile.nativeHandle(), "[{}][{}][{}]: {}",
-                     message.timestamp, message.threadName,
+                     timestamp, message.threadName,
                      aui::detail::log::levelCStr(message.level), message.prefix);
     } else {
         fmt::println(mFile.nativeHandle(), "[{}][{}][{}][{}]: {}",
-                     message.timestamp, message.threadName, message.prefix,
+                     timestamp, message.threadName, message.prefix,
                      aui::detail::log::levelCStr(message.level), message.message);
     }
     fflush(mFile.nativeHandle());

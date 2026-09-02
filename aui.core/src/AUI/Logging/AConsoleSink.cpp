@@ -12,12 +12,19 @@
 #include "AConsoleSink.h"
 #include "detail/LogFormat.h"
 #include <cstdio>
+#include <chrono>
 #include <fmt/format.h>
 #include <fmt/color.h>
+#include <AUI/Common/AStringView.h>
+#include <AUI/Core.h>
+
+#if AUI_PLATFORM_WIN
+#include <windows.h>
+#endif
 
 static std::string levelColored(int level, bool useColors) {
     if (!useColors)
-        return aui::detail::log::levelCStr(level);
+        return std::string(aui::detail::log::levelCStr(level));
     switch (level) {
         case 0: return fmt::format(fmt::fg(fmt::color::green), "{}", "INFO");
         case 1: return fmt::format(fmt::fg(fmt::color::yellow), "{}", "WARN");
@@ -31,25 +38,34 @@ static std::string levelColored(int level, bool useColors) {
 AConsoleSink::AConsoleSink(bool useColors) : mUseColors(useColors) {}
 
 void AConsoleSink::write(const ALogMessage& message) {
+    auto timestamp = aui::detail::log::formatTimestamp(message.timestampMs);
     std::string consoleMsg;
     if (message.message.empty()) {
         consoleMsg = fmt::format("[{}][{}][{}]: {}",
-                                 message.timestamp, message.threadName,
+                                 timestamp, message.threadName,
                                  levelColored(message.level, mUseColors),
                                  message.prefix);
     } else {
         consoleMsg = fmt::format("[{}][{}][{}][{}]: {}",
-                                 message.timestamp, message.threadName, message.prefix,
+                                 timestamp, message.threadName, message.prefix,
                                  levelColored(message.level, mUseColors),
                                  message.message);
     }
+//#if AUI_PLATFORM_WIN
+//    std::wstring wideMessage = aui::win32::toWchar(AStringView(consoleMsg));
+//    OutputDebugStringW(wideMessage.c_str());
+//    OutputDebugStringW(L"\n");
+//#else
     fputs(consoleMsg.c_str(), stdout);
     fputc('\n', stdout);
     fflush(stdout);
+//#endif
 }
 
 void AConsoleSink::flush() {
+#if !AUI_PLATFORM_WIN
     fflush(stdout);
+#endif
 }
 
 std::string_view AConsoleSink::name() const noexcept {

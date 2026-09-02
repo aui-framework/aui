@@ -41,8 +41,7 @@ public:
      * @brief Closes the file, executes an action, then reopens it.
      * @details Useful for reading the log file while it's being written to.
      */
-    template <aui::invocable Callable>
-    void doAccessSafe(Callable action) {
+    bool doAccessSafe(const std::function<void()>& action) override {
         std::unique_lock lock(mSync);
         ARaiiHelper opener = [&] {
             try {
@@ -55,10 +54,11 @@ public:
         };
         if (!mFile.nativeHandle()) {
             action();
-            return;
+            return true;
         }
         mFile.close();
         action();
+        return true;
     }
 
 private:
