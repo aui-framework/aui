@@ -434,3 +434,30 @@ TEST_F(UILayoutTest, Margin7) {
 
     AUI_REPEAT(10) { uitest::frame(); }
 }
+
+TEST_F(UILayoutTest, ExpandingDoesNotAffectParent1) {
+    // this test verifies that an Expanding view (i.e. a spacer) does not affect parents (i.e., wrapper) geometry.
+    // in AUI, spacing affects the environment **within** a container, not the container itself.
+    _<AView> spacer = SpacerExpanding {};
+    _<AView> wrapper = Vertical { spacer };
+    inflate(
+        Stacked {
+          wrapper,
+        } AUI_OVERRIDE_STYLE { FixedSize { 100_dp, 100_dp } });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+    EXPECT_EQ(*wrapper->size(), glm::ivec2(0)); // no content -> zero size.
+}
+
+TEST_F(UILayoutTest, ExpandingDoesNotAffectParent2) {
+    // same as ExpandingDoesNotAffectParent1 but using Horizontal instead.
+    _<AView> spacer = SpacerExpanding {};
+    _<AView> wrapper = Horizontal { spacer };
+    inflate(
+        Stacked {
+          wrapper,
+        } AUI_OVERRIDE_STYLE { FixedSize { 100_dp, 100_dp } });
+
+    AUI_REPEAT(10) { uitest::frame(); }
+    EXPECT_EQ(*wrapper->size(), glm::ivec2(0)); // no content -> zero size.
+}
