@@ -19,9 +19,10 @@
 #include <AUI/Util/AMetric.h>
 #include <AUI/Enum/AOverflow.h> // defined here
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<ATextOverflow>: IPropertyBase {
         private:
@@ -40,4 +41,6 @@ namespace ass {
             }
         };
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, ATextOverflow value);
 }

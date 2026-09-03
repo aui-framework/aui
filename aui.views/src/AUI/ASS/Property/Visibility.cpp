@@ -12,6 +12,14 @@
 
 #include "Visibility.h"
 
-void ass::prop::Property<Visibility>::applyFor(AView* view) {
+void ass::legacy::Property<Visibility>::applyFor(AView* view) {
     view->setVisibility(mInfo);
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, Visibility value) {
+    return thiz.then([value](AView& view) {
+        view.setVisibility(value);
+    });
+}
+}   // namespace ass

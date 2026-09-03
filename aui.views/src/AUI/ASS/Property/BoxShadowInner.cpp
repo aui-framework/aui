@@ -13,11 +13,11 @@
 // Created by alex2 on 01.01.2021.
 //
 
-#include "BoxShadowInner.h"
 #include "AUI/Render/IRenderer.h"
+#include "BoxShadowInner.h"
 
 
-void ass::prop::Property<ass::BoxShadowInner>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ass::BoxShadowInner>::renderFor(AView* view, const ARenderContext& ctx) {
     ctx.render.boxShadowInner({0, 0},
                              glm::vec2(view->getSize()),
                              mInfo.blurRadius,
@@ -27,10 +27,23 @@ void ass::prop::Property<ass::BoxShadowInner>::renderFor(AView* view, const ARen
                              {mInfo.offsetX.getValuePx(), mInfo.offsetY.getValuePx()});
 }
 
-ass::prop::PropertySlot ass::prop::Property<ass::BoxShadowInner>::getPropertySlot() const {
-    return ass::prop::PropertySlot::SHADOW_INNER;
+ass::legacy::PropertySlot ass::legacy::Property<ass::BoxShadowInner>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::SHADOW_INNER;
 }
 
-bool ass::prop::Property<ass::BoxShadowInner>::isNone() {
+bool ass::legacy::Property<ass::BoxShadowInner>::isNone() {
     return mInfo.color.isFullyTransparent();
 }
+namespace ass {
+Modifier operator|(Modifier thiz, BoxShadowInner value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        ctx.render.boxShadowInner({0, 0},
+                                 glm::vec2(ctx.size),
+                                 value.blurRadius,
+                                 value.spreadRadius,
+                                 0.f,
+                                 value.color,
+                                 {value.offsetX.getValuePx(), value.offsetY.getValuePx()});
+    });
+}
+}   // namespace ass

@@ -23,16 +23,13 @@ public:
             /// [AButton_example]
             Button {
                 .content = Label { "Click me" },
-                .onClick = {me::onClick},
+                .onClick = [this] {
+                    ALogger::info("Test") << "Hello world!";
+                },
                 .isDefault = true,
             },
             /// [AButton_example]
         });
-    }
-
-private:
-    void onClick() {
-        ALogger::info("Test") << "Hello world!";
     }
 };
 

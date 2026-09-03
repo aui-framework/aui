@@ -13,8 +13,9 @@
 
 #include "IProperty.h"
 #include <AUI/Enum/Visibility.h> // defined here
+#include <AUI/Util/Declarative/Modifier.h>
 
-namespace ass::prop {
+namespace ass::legacy {
     template<>
     struct API_AUI_VIEWS Property<Visibility>: IPropertyBase {
     private:
@@ -32,4 +33,6 @@ namespace ass::prop {
             return mInfo;
         }
     };
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, Visibility value);
 }
