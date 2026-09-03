@@ -79,6 +79,10 @@ void AView::redraw() {
 
 void AView::requestLayout() {
   AUI_ASSERT_UI_THREAD_ONLY();
+  if (mLayoutGuard.is_locked()) {
+    return;
+    //throw AException("AView::requestLayout() is forbidden during AView::onLayout");
+  }
   mWantsLayoutUpdate = true;
   mLastLayoutSize = glm::ivec2(-1, -1);
   mMeasureCache.clear();
@@ -142,7 +146,7 @@ void AView::render(ARenderContext ctx) {
     if (mAnimator)
         mAnimator->animate(this, ctx.render);
 
-    ensureAssUpdated();
+    //ensureAssUpdated();
 
     // draw list
     for (unsigned i = 0; i <= int(ass::prop::PropertySlot::SHADOW); ++i) {
@@ -264,7 +268,7 @@ bool AView::hasFocus() const {
 }
 
 AMinMaxAxis AView::computeMinMaxAxis(int height) {
-  ensureAssUpdated();
+  //ensureAssUpdated();
   if (auto cached = mMinMaxSizesCache.get(height)) {
     return *cached;
   }
@@ -288,7 +292,7 @@ AMinMaxAxis AView::computeMinMaxAxis(int height) {
 }
 
 glm::ivec2 AView::measure(AConstraints constraints) {
-  ensureAssUpdated();
+  //ensureAssUpdated();
   if (auto cached = mMeasureCache.get(constraints)) {
     return *cached;
   }
@@ -614,7 +618,11 @@ void AView::layout(int x, int y, int w, int h) {
   auto oldSize = mSize;
   setPosition({ x, y });
   setSize({ w, h });
-  onLayout(mSize);
+  {
+    std::unique_lock lock(mLayoutGuard, std::try_to_lock);
+    AUI_ASSERTX(lock.owns_lock(), "unable to lock layout of itself? recursive lock?");
+    onLayout(mSize);
+  }
   mSkipUntilLayoutUpdate = false;
   mWantsLayoutUpdate = false;
   mLastLayoutSize = mSize;

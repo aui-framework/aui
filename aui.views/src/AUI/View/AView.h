@@ -344,7 +344,6 @@ public:
    */
   [[nodiscard]]
   const ABoxFields& getMargin() {
-    ensureAssUpdated();
     return mMargin;
   }
 
@@ -378,7 +377,6 @@ public:
    */
   [[nodiscard]]
   const ABoxFields& getPadding() {
-    ensureAssUpdated();
     return mPadding;
   }
 
@@ -932,6 +930,7 @@ protected:
 
   bool mWantsLayoutUpdate = true;
   glm::ivec2 mLastLayoutSize = { -1, -1 };
+  ASpinlockMutex mLayoutGuard;
 
   AFixedSizeCache<AConstraints, glm::ivec2, 8> mMeasureCache;
   AFixedSizeCache<int, AMinMaxAxis, 4> mMinMaxSizesCache;
