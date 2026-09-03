@@ -227,16 +227,19 @@ public:
   }
 
   /**
-   * @brief Computes the preferred (max-content) main axis size of the container.
+   * @brief Computes the content size of the container along the main axis.
+   * @param minimum if true, expanding children contribute their minimum (min-content); if false, their preferred
+   *        size (max-content).
    * @details
-   * Expanding children contribute their own preferred size only. Growing them is a matter of distributing the free
-   * space of a container whose main axis size is already known, so it must not affect the size of the container
-   * itself; an expanding child with no content (i.e. ASpacerExpanding) contributes nothing.
+   * An expanding child takes the space its container already has, but never dictates it: a child with no content
+   * (i.e. ASpacerExpanding) contributes nothing to either size. Growing such a child is a matter of distributing the
+   * free space of a container whose main axis size is already known, which happens later, in resolveMainAxisSizes.
    */
   template <ranges::range Views>
-  static int preferredMainAxisSize(Views&& views, int spacing, glm::ivec2 padded_size) {
+  static int mainAxisContentSize(Views&& views, int spacing, glm::ivec2 padded_size, bool minimum) {
     int total = 0;
     int visible_count = 0;
+    const int available_perp = Axis::perpAxis(padded_size);
 
     for (const auto& view : views) {
       if (!isLayoutParticipant(view)) continue;
@@ -245,9 +248,18 @@ public:
       const auto margins   = view->getMargin().occupiedSize();
       const int fixed_size = Axis::ourAxis(view->getFixedSize());
       const int raw_max    = Axis::ourAxis(view->getMaxSize());
-      const int child_perp = glm::max(0, Axis::perpAxis(padded_size - margins));
+      const int child_perp =
+          available_perp == -1 ? -1 : glm::max(0, available_perp - Axis::perpAxis(margins));
 
-      int size = fixed_size > 0 ? fixed_size : computePreferredMainAxisSize(view, child_perp).first;
+      int size;
+      if (fixed_size > 0) {
+        size = fixed_size;
+      } else if (minimum && Axis::ourAxis(view->getExpanding()) > 0) {
+        // measuring with no space at all on our axis yields the child's minimum.
+        size = Axis::measuredOur(view->measure(Axis::fixedOurCappedPerp(0, child_perp)));
+      } else {
+        size = computePreferredMainAxisSize(view, child_perp).first;
+      }
       if (raw_max != -1) {
         size = glm::min(size, raw_max);
       }
@@ -437,13 +449,19 @@ public:
     Axis::perpAxis(padded_size) = perp_limit == -1 ? -1 : perp_limit;
 
     // Expanding children do not contribute to the size of their container; they only take the space the container
-    // already has. Thus, our own main axis size is the preferred size of the children, clamped to the constraints;
-    // only then children are resolved against it, exactly like layout() does — this correctly distributes
-    // remaining space to expanding children (e.g. wrapping text).
+    // already has. Thus, our own main axis size is derived from the children's content sizes and then children are
+    // resolved against it, exactly like layout() does — this correctly distributes remaining space to expanding
+    // children (e.g. wrapping text).
     Axis::ourAxis(padded_size) = 0;
-    int our_size = preferredMainAxisSize(views, spacing, padded_size);
-    if (our_limit != -1) {
-      our_size = glm::min(our_size, our_limit);
+    const int min_content = mainAxisContentSize(views, spacing, padded_size, true);
+    int our_size;
+    if (our_limit == -1) {
+      // no space to fit into; expanding children must not inflate us (see AView::pack).
+      our_size = min_content;
+    } else {
+      // fit-content: take the space we are given, but no more than our content actually asks for.
+      const int max_content = mainAxisContentSize(views, spacing, padded_size, false);
+      our_size = glm::min(max_content, glm::max(min_content, our_limit));
     }
     Axis::ourAxis(padded_size) = glm::max(our_size, our_min);
 
