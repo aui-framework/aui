@@ -481,7 +481,7 @@ TEST_F(UILayoutTest, ExpandingDoesNotAffectParent1) {
           wrapper,
         } AUI_OVERRIDE_STYLE { FixedSize { 100_dp, 100_dp } });
 
-    AUI_REPEAT(10) { uitest::frame(); }
+    settleLayout();
     EXPECT_EQ(*wrapper->size(), glm::ivec2(0)); // no content -> zero size.
 }
 
@@ -494,6 +494,6 @@ TEST_F(UILayoutTest, ExpandingDoesNotAffectParent2) {
           wrapper,
         } AUI_OVERRIDE_STYLE { FixedSize { 100_dp, 100_dp } });
 
-    AUI_REPEAT(10) { uitest::frame(); }
+    settleLayout();
     EXPECT_EQ(*wrapper->size(), glm::ivec2(0)); // no content -> zero size.
 }
