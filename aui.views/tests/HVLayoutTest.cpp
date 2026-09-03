@@ -228,7 +228,9 @@ TEST(HVLayout, HorizontalPreferredHeightUsesBaselineHeightForExpandingChildrenWi
   EXPECT_EQ(HorizontalHVLayout::preferredHeight(views, 0, 40), 10);
 }
 
-TEST(HVLayout, HorizontalIntrinsicWidthUsesMinimumForExpandingChildrenWhenUnbounded) {
+// An unbounded intrinsic measure is a max-content measure: an expanding child contributes its own preferred size
+// (nothing, if it has no content), but never grabs space the container does not have yet.
+TEST(HVLayout, HorizontalIntrinsicWidthUsesPreferredSizeForExpandingChildrenWhenUnbounded) {
   auto fixed = fixedItem(24, 24);
 
   auto expanding = dynamicItem(200, 12);
@@ -240,7 +242,24 @@ TEST(HVLayout, HorizontalIntrinsicWidthUsesMinimumForExpandingChildrenWhenUnboun
 
   AVector<_<AView>> views { fixed, expanding, spacer };
 
-  EXPECT_EQ(HorizontalHVLayout::preferredWidth(views, 0, -1), 34);
+  EXPECT_EQ(HorizontalHVLayout::preferredWidth(views, 0, -1), 224);
+}
+
+// ...but when the main axis is bounded, the preferred size is clamped to it and expanding children are squeezed
+// down to their minimum, in the order of their weights.
+TEST(HVLayout, HorizontalIntrinsicWidthUsesMinimumForExpandingChildrenWhenBounded) {
+  auto fixed = fixedItem(24, 24);
+
+  auto expanding = dynamicItem(200, 12);
+  expanding->setExpanding({ 1, 0 });
+  setStyledMinSize(expanding, 10, 0);
+
+  auto spacer = dynamicItem(0, 0);
+  spacer->setExpanding({ 4, 0 });
+
+  AVector<_<AView>> views { fixed, expanding, spacer };
+
+  EXPECT_EQ(HorizontalHVLayout::onIntrinsicMeasure(views, 0, AConstraints { .maxInline = 50 }).x, 50);
 }
 
 TEST(HVLayout, HorizontalPreferredHeightWithoutBlockConstraintSkipsGoneExpander) {
