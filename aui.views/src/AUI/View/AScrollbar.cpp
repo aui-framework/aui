@@ -513,6 +513,7 @@ void AScrollbar::onLayout(glm::ivec2 size) {
 
   updateScrollHandleSize();
   AViewContainerBase::onLayout(size);
+  AViewContainerBase::onLayout(size); // TODO(Nelonn): remove this shit
 }
 
 void AScrollbar::scrollToEnd() {
