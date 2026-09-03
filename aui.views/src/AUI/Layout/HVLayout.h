@@ -226,6 +226,38 @@ public:
     }
   }
 
+  /**
+   * @brief Computes the preferred (max-content) main axis size of the container.
+   * @details
+   * Expanding children contribute their own preferred size only. Growing them is a matter of distributing the free
+   * space of a container whose main axis size is already known, so it must not affect the size of the container
+   * itself; an expanding child with no content (i.e. ASpacerExpanding) contributes nothing.
+   */
+  template <ranges::range Views>
+  static int preferredMainAxisSize(Views&& views, int spacing, glm::ivec2 padded_size) {
+    int total = 0;
+    int visible_count = 0;
+
+    for (const auto& view : views) {
+      if (!isLayoutParticipant(view)) continue;
+      ++visible_count;
+
+      const auto margins   = view->getMargin().occupiedSize();
+      const int fixed_size = Axis::ourAxis(view->getFixedSize());
+      const int raw_max    = Axis::ourAxis(view->getMaxSize());
+      const int child_perp = glm::max(0, Axis::perpAxis(padded_size - margins));
+
+      int size = fixed_size > 0 ? fixed_size : computePreferredMainAxisSize(view, child_perp).first;
+      if (raw_max != -1) {
+        size = glm::min(size, raw_max);
+      }
+
+      total += size + Axis::ourAxis(margins);
+    }
+
+    return total + glm::max(0, visible_count - 1) * spacing;
+  }
+
   template <ranges::range Views>
   static std::vector<MainAxisSizeInfo> resolveMainAxisSizes(
       Views&& views,
@@ -393,20 +425,28 @@ public:
   template <ranges::range Views>
   static glm::ivec2 onIntrinsicMeasure(Views&& views, int spacing, AConstraints constraints) {
     // Derive padded_size from constraints so we can reuse resolveMainAxisSizes.
-    // For unbounded axes use a large sentinel value.
     const int our_limit  = (direction == ALayoutDirection::HORIZONTAL)
-                           ? (constraints.isUnlimitedInline() ? 0 : constraints.maxInline)
-                           : (constraints.isUnlimitedBlock()  ? 0 : constraints.maxBlock);
+                           ? (constraints.isUnlimitedInline() ? -1 : constraints.maxInline)
+                           : (constraints.isUnlimitedBlock()  ? -1 : constraints.maxBlock);
+    const int our_min    = (direction == ALayoutDirection::HORIZONTAL) ? constraints.minInline : constraints.minBlock;
     const int perp_limit = (direction == ALayoutDirection::HORIZONTAL)
                                ? constraints.maxBlock
                                : constraints.maxInline;
 
     glm::ivec2 padded_size;
-    Axis::ourAxis(padded_size) = our_limit;
     Axis::perpAxis(padded_size) = perp_limit == -1 ? -1 : perp_limit;
 
-    // Resolve main-axis sizes exactly like layout() does — this correctly
-    // distributes remaining space to expanding children (e.g. wrapping text).
+    // Expanding children do not contribute to the size of their container; they only take the space the container
+    // already has. Thus, our own main axis size is the preferred size of the children, clamped to the constraints;
+    // only then children are resolved against it, exactly like layout() does — this correctly distributes
+    // remaining space to expanding children (e.g. wrapping text).
+    Axis::ourAxis(padded_size) = 0;
+    int our_size = preferredMainAxisSize(views, spacing, padded_size);
+    if (our_limit != -1) {
+      our_size = glm::min(our_size, our_limit);
+    }
+    Axis::ourAxis(padded_size) = glm::max(our_size, our_min);
+
     const auto resolved = resolveMainAxisSizes(views, spacing, padded_size);
 
     int total_our     = -spacing;
