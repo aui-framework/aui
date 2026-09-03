@@ -1,6 +1,6 @@
 # options: https://clang.llvm.org/docs/ClangFormatStyleOptions.html
 BasedOnStyle: Google
-IndentWidth: 2
+IndentWidth: 4
 ColumnLimit: 120
 # does (int) x instead of (int)x
 SpaceAfterCStyleCast: true
@@ -28,9 +28,9 @@ SortIncludes: Never
 
 ################################################# UI BUILDING ##########################################################
 
-# use shorter indentation for UI building stuff (like in Dart/Flutter)
-BracedInitializerIndentWidth: 2
-ConstructorInitializerIndentWidth: 2
+# indentation for UI building stuff (like in Dart/Flutter)
+BracedInitializerIndentWidth: 4
+ConstructorInitializerIndentWidth: 4
 
 # better spacing around AUI_OVERRIDE_STYLE and AUI_LET.
 # before:
