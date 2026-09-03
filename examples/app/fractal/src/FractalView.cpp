@@ -94,7 +94,7 @@ void FractalView::render(ARenderContext context) {
 void FractalView::onLayout(glm::ivec2 size) {
     AView::onLayout(size);
     mShader.use();
-    mShader.set(UNIFORM_RATIO, mAspectRatio = float(w) / float(h));
+    mShader.set(UNIFORM_RATIO, mAspectRatio = float(size.x) / float(size.y));
 }
 
 void FractalView::setIterations(unsigned it) {
