@@ -150,8 +150,17 @@ void ADragArea::onLayout(glm::ivec2 size) {
                            finalWidth - margins.horizontal(),
                            finalHeight - margins.vertical());
         } else {
-            v->setSize({finalWidth - margins.horizontal(),
-                        finalHeight - margins.vertical()});
+            // In the new AUI, setSize() alone does NOT trigger onLayout() on a
+            // container child (unlike old AUI where AViewContainerBase::setSize
+            // called applyGeometryToChildrenIfNecessary). We must call layout()
+            // so that the child's own layout pass runs (e.g. Horizontal/Vertical
+            // redistributes expanding Spacers). After layout() we re-clamp the
+            // position because layout() writes the position from its arguments,
+            // but the real position is managed externally via areaSetPos/setPos.
+            auto currentPos = v->getPosition();
+            v->layout(currentPos.x, currentPos.y,
+                      finalWidth - margins.horizontal(),
+                      finalHeight - margins.vertical());
             setValidPositionFor(v, v->getPosition());
         }
     }
