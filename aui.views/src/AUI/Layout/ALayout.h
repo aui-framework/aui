@@ -100,6 +100,45 @@ class AViewContainer;
  *
  * ---
  *
+ * ## Terminology { #TERMINOLOGY }
+ *
+ * The layout system uses a handful of specific terms. Here is what they mean:
+ *
+ * **Measure** — the process of asking a view "how much space do you want?" without committing to a final position.
+ * Analogous to CSS `getComputedStyle` / Flutter `layout` dry-run / Android `measure`. The result is a preferred size
+ * under given constraints, cached until `requestLayout()` is called.
+ *
+ * **Layout** — the process of telling a view "here is your final position and size". Called after measure. Analogous
+ * to CSS layout / Flutter `layout` / Android `layout`.
+ *
+ * **Intrinsic** — means "content only, before the framework applies its wrapper logic". When you override
+ * `onIntrinsicMeasure`, you only deal with the raw content size — padding, margin, `ass::FixedSize`, `ass::MinSize`,
+ * `ass::MaxSize` are **not your concern**; the public `measure()` adds them on top automatically. Think of it as
+ * "what size would this view naturally want if it had no external constraints imposed by the stylesheet?"
+ *
+ * **Constraints** (`AConstraints`) — a box of four numbers passed into measure: minimum and maximum allowed width
+ * (`minInline` / `maxInline`) and height (`minBlock` / `maxBlock`). A value of `-1` means unlimited. Inspired by
+ * [Flutter's BoxConstraints](https://api.flutter.dev/flutter/rendering/BoxConstraints-class.html) and
+ * [Chromium LayoutNG's ConstraintSpace](https://www.chromium.org/blink/layoutng/).
+ *
+ * **MinMaxAxis** (`AMinMaxAxis`) — a pair `{min, max}` representing the range of widths a view can occupy for a
+ * given height. Used by layout managers to decide how to share horizontal space before committing to constraints.
+ *
+ * **Inline axis / inline size** — in a standard left-to-right horizontal layout this is simply the **width (X)**.
+ * The name comes from CSS writing modes: "inline" is the direction text flows within a line. AUI uses this term
+ * instead of "width" so that the same layout code remains correct for future RTL or vertical-text writing modes,
+ * where "inline" would map to the opposite or perpendicular axis.
+ *
+ * **Block axis / block size** — in a standard left-to-right horizontal layout this is simply the **height (Y)**.
+ * "Block" is the direction in which blocks of text stack. Same rationale as above.
+ *
+ * **TL;DR for LTR layouts:** inline = width, block = height.
+ *
+ * **Free space** — container size minus the sum of children's measured minimum sizes. Distributed among children
+ * with non-zero [Expanding](#EXPANDING) values after the measure pass.
+ *
+ * ---
+ *
  * ## Implementing a custom AView: what to override { #CUSTOM_VIEW }
  *
  * If you are implementing a custom [AView] (say, `MyView`), here is what you need to know about the layout system.
@@ -112,11 +151,13 @@ class AViewContainer;
  * | `onComputeIntrinsicMinMaxAxis(int height)` | Returns min/max **content** width for a given height | **Sometimes** |
  * | `onLayout(glm::ivec2 size)` | Called when position/size are finalized; use to position children | Only for containers |
  *
- * !!! note "Intrinsic = content only"
+ * !!! note "What does 'intrinsic' mean?"
  *
- *     "Intrinsic" means you deal with **content** coordinates only. The framework's public `measure()` and
- *     `computeMinMaxAxis()` wrap your intrinsic overrides and automatically account for padding, margin,
- *     `ass::FixedSize`, `ass::MinSize`, `ass::MaxSize` etc. **Never call your own intrinsic methods directly.**
+ *     **Intrinsic** = "what size does the content itself want, ignoring all external stylesheet rules?"
+ *     When you override `onIntrinsicMeasure`, you only return the raw content size. The framework's public
+ *     `measure()` and `computeMinMaxAxis()` then wrap your result and add padding, margin, `ass::FixedSize`,
+ *     `ass::MinSize`, `ass::MaxSize` on top. **Never call the `on*` intrinsic methods directly** — always go
+ *     through the public wrappers. See [TERMINOLOGY] for the full glossary.
  *
  * ### 1. `onIntrinsicMeasure` – the primary override
  *
@@ -239,12 +280,30 @@ class AViewContainer;
  *
  * AUI uses CSS-inspired axis names to stay writing-mode agnostic (for future RTL/vertical text support):
  *
- * | AUI term | Meaning (LTR horizontal layout) |
- * |----------|---------------------------------|
- * | **inline** | horizontal (X) axis |
- * | **block**  | vertical (Y) axis |
+ * | AUI term | LTR horizontal (default) | RTL horizontal | Vertical (e.g. Japanese) |
+ * |----------|--------------------------|----------------|--------------------------|
+ * | **inline** | horizontal ➡️ (X) | horizontal ⬅️ (X) | vertical ⬇️ (Y) |
+ * | **block**  | vertical ⬇️ (Y) | vertical ⬇️ (Y) | horizontal ➡️ (X) |
  *
  * ### Relationship to Expanding / stretch factors
+ *
+ * !!! note "Qt heritage & Flexbox roadmap"
+ *
+ *     `Expanding` is inherited from Qt's `QSizePolicy::expandingDirections()` / `QSizePolicy::HorizontalPolicy`
+ *     model. In Qt, the stretch factor was the *primary* sizing mechanism. In AUI it has been demoted to a
+ *     *secondary* one: `measure()` / `computeMinMaxAxis()` run first and establish preferred sizes, then
+ *     Expanding distributes whatever space is left over. The API surface (`setExpanding()`, `ass::Expanding`,
+ *     `SpacerExpanding`) is intentionally kept familiar for Qt users.
+ *
+ *     **Known limitation:** Expanding only *grows* views beyond their measured minimum — it cannot *shrink*
+ *     them below it. CSS `flex-shrink` / `flex-wrap` / `align-items` are therefore not expressible with the
+ *     current mechanism.
+ *
+ *     **Future plan:** A dedicated `AFlexLayout` will implement the full CSS Flexbox algorithm on top of the
+ *     same `measure()` / `computeMinMaxAxis()` infrastructure. `Expanding` in `AHorizontalLayout` /
+ *     `AVerticalLayout` will remain as a backward-compatible convenience shorthand, analogous to Android's
+ *     `LinearLayout` `layout_weight` coexisting with `ConstraintLayout`. When `AFlexLayout` lands,
+ *     `setExpanding(n)` will map to `flex-grow: n` inside flex containers.
  *
  * `Expanding` (stretch factor) is a **secondary** mechanism layered on top of measurement. After the layout manager
  * has measured all children via `computeMinMaxAxis` / `measure`, it distributes remaining **free space** among
