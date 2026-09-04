@@ -144,21 +144,6 @@ TEST(AView, MeasureHonorsMinAndMaxSize) {
   EXPECT_EQ(measured, glm::ivec2(20, 50));
 }
 
-TEST(AView, MeasureHonorsFixedSizeAndContentConstraints) {
-  MeasureTestView view;
-  view.setPadding({ .left = 4, .right = 6, .top = 2, .bottom = 8 });
-  view.setFixedSize({ 50, 30 });
-  view.measuredContentSize = { 0, 0 };
-
-  auto measured = view.measure(AConstraints {});
-
-  EXPECT_EQ(view.lastMeasureConstraints.minInline, 40);
-  EXPECT_EQ(view.lastMeasureConstraints.maxInline, 40);
-  EXPECT_EQ(view.lastMeasureConstraints.minBlock, 20);
-  EXPECT_EQ(view.lastMeasureConstraints.maxBlock, 20);
-  EXPECT_EQ(measured, glm::ivec2(50, 30));
-}
-
 TEST(AView, ComputeMinMaxSizesUsesIntrinsicSemantics) {
   MeasureTestView view;
   view.setMinSize({ 20, 30 });

@@ -495,6 +495,30 @@ TEST_F(UILayoutTest, CenteredExpandingCappedByMax) {
     expectGeometry(mock, 48, 48, 4, 4);
 }
 
+TEST_F(UILayoutTest, CenteredOverflowingChildIsCenteredEqually) {
+    // a child larger than its Centered container overflows it equally on all sides, and, since the container has a
+    // fixed size, does not grow it.
+    auto oversized = _new<AView>() AUI_OVERRIDE_STYLE {
+        FixedSize { 200_dp },
+    };
+    _<AView> centered = Centered {
+        oversized,
+    } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } };
+
+    inflate(centered);
+
+    settleLayout();
+    EXPECT_EQ(*centered->size(), glm::ivec2(100));   // contents do not affect a fixed size.
+    expectGeometry(oversized, -50, -50, 200, 200);   // (100 - 200) / 2 = -50
+
+    const int overflowLeft = -oversized->getPosition().x;
+    const int overflowRight = (oversized->getPosition().x + oversized->getSize().x) - centered->getSize().x;
+    const int overflowTop = -oversized->getPosition().y;
+    const int overflowBottom = (oversized->getPosition().y + oversized->getSize().y) - centered->getSize().y;
+    EXPECT_EQ(overflowLeft, overflowRight) << "horizontal overflow is not equal on both sides";
+    EXPECT_EQ(overflowTop, overflowBottom) << "vertical overflow is not equal on both sides";
+}
+
 TEST_F(UILayoutTest, FixedSizeIsLaw) {
     // a FixedSize view is exactly that size, no matter how large its contents are.
     auto oversizedContent = _new<AView>() AUI_OVERRIDE_STYLE {
