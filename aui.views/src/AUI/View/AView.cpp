@@ -293,6 +293,11 @@ AMinMaxAxis AView::computeMinMaxAxis(int height) {
 
 glm::ivec2 AView::measure(AConstraints constraints) {
   ensureAssUpdated();
+
+  if (mFixedSize.x != 0 && mFixedSize.y != 0) {
+      return mFixedSize;
+  }
+
   if (auto cached = mMeasureCache.get(constraints)) {
     return *cached;
   }
@@ -349,10 +354,14 @@ glm::ivec2 AView::measure(AConstraints constraints) {
   glm::ivec2 measured;
   measured.x = std::max(content_size.x + hPadding, effective.minInline);
   measured.y = std::max(content_size.y + vPadding, effective.minBlock);
-  if (mMaxSize.x != -1) {
+  if (mFixedSize.x != 0) {
+    measured.x = mFixedSize.x; // contents that do not fit overflow instead of growing us.
+  } else if (mMaxSize.x != -1) {
     measured.x = std::min(measured.x, effectiveMaxInline);
   }
-  if (mMaxSize.y != -1) {
+  if (mFixedSize.y != 0) {
+    measured.y = mFixedSize.y;
+  } else if (mMaxSize.y != -1) {
     measured.y = std::min(measured.y, effectiveMaxBlock);
   }
 

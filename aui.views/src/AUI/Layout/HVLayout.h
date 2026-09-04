@@ -242,6 +242,7 @@ public:
     const int available_perp = Axis::perpAxis(padded_size);
 
     for (const auto& view : views) {
+      view->ensureAssUpdated();   // getFixedSize/getMaxSize/getExpanding below are style-derived.
       if (!isLayoutParticipant(view)) continue;
       ++visible_count;
 
@@ -287,6 +288,7 @@ public:
     for (const auto& view : views) {
       MainAxisSizeInfo info;
 
+      view->ensureAssUpdated();   // getFixedSize/getMaxSize/getExpanding below are style-derived.
       if (!isLayoutParticipant(view)) {
         result.push_back(info);
         continue;

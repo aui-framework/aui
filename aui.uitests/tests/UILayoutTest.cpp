@@ -495,6 +495,22 @@ TEST_F(UILayoutTest, CenteredExpandingCappedByMax) {
     expectGeometry(mock, 48, 48, 4, 4);
 }
 
+TEST_F(UILayoutTest, FixedSizeIsLaw) {
+    // a FixedSize view is exactly that size, no matter how large its contents are.
+    auto oversizedContent = _new<AView>() AUI_OVERRIDE_STYLE {
+        FixedSize { 100_dp },
+    };
+    auto box = Horizontal {
+        oversizedContent,
+    } AUI_OVERRIDE_STYLE { FixedSize { 52_dp } };
+
+    inflate(Centered { box } AUI_OVERRIDE_STYLE { FixedSize(200_dp) });
+
+    settleLayout();
+    EXPECT_EQ(box->measure(AConstraints {}), glm::ivec2(52));
+    expectGeometry(box, 74, 74, 52, 52);   // (200 - 52) / 2 = 74
+}
+
 TEST_F(UILayoutTest, ExpandingTextHasNonZeroIntrinsicWidth) {
     auto text = AText::fromString("middle");
     EXPECT_GT(text->computeMinMaxAxis().max, 0);
