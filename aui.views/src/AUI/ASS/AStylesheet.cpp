@@ -593,6 +593,11 @@ AStylesheet::AStylesheet() {
             c(".menu-item-shortcut"),
             TextColor { 0x404040_rgb },
         },
+        {
+            c(".menu-item-icon"),
+            FixedSize { 16_dp },
+            Margin { 0, 6_dp, 0, 0 },
+        },
 
         {
             c::disabled(".menu-item"),

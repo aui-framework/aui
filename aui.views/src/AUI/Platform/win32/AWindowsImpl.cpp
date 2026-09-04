@@ -50,6 +50,7 @@
 #include <AUI/Platform/AMessageBox.h>
 #include <AUI/Platform/win32/AComBase.h>
 #include <AUI/Platform/win32/Theme.h>
+#include <dwmapi.h>
 
 LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
@@ -95,6 +96,52 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case WM_CREATE: // used for ACustomWindow
             updateDpi();
             return 0;
+
+        case WM_NCCALCSIZE: {
+            if (!(mWindowStyle & WindowStyle::NO_TITLEBAR) || wParam == FALSE) {
+                break;
+            }
+            // Collapse the caption strip into the client area while keeping DWM-drawn buttons.
+            auto* params = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+            const int frameX = GetSystemMetrics(SM_CXFRAME);
+            const int frameY = GetSystemMetrics(SM_CYFRAME);
+            const int padding = GetSystemMetrics(SM_CXPADDEDBORDER);
+            RECT& rc = params->rgrc[0];
+            rc.right -= frameX + padding;
+            rc.left += frameX + padding;
+            rc.bottom -= frameY + padding;
+            if (IsZoomed(hwnd)) {
+                // Maximized windows would otherwise be clipped off-screen by the frame.
+                rc.top += padding;
+            }
+            return 0;
+        }
+
+        case WM_NCHITTEST: {
+            if (!(mWindowStyle & WindowStyle::NO_TITLEBAR)) {
+                break;
+            }
+            // Let DWM claim hits on the min/max/close glyphs it rendered.
+            LRESULT dwmResult = 0;
+            if (DwmDefWindowProc(hwnd, uMsg, wParam, lParam, &dwmResult)) {
+                return dwmResult;
+            }
+            const LRESULT hit = DefWindowProc(hwnd, uMsg, wParam, lParam);
+            if (hit == HTCLIENT) {
+                // Inside the reclaimed caption strip: mark as draggable caption so
+                // the OS handles move/snap layouts. The application is responsible
+                // for reserving space above interactive views so this doesn't swallow
+                // input meant for them.
+                POINT pt { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+                ScreenToClient(hwnd, &pt);
+                const int captionHeight = GetSystemMetrics(SM_CYCAPTION) +
+                                          GetSystemMetrics(SM_CXPADDEDBORDER);
+                if (pt.y >= 0 && pt.y < captionHeight) {
+                    return HTCAPTION;
+                }
+            }
+            return hit;
+        }
 
         case WM_USER:
             return 0;
@@ -348,6 +395,23 @@ void AWindow::setWindowStyle(WindowStyle ws) {
             LONG lExStyle = GetWindowLong(mHandle, GWL_EXSTYLE);
             lExStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
             SetWindowLong(mHandle, GWL_EXSTYLE, lExStyle);
+            SetWindowPos(mHandle, NULL, 0, 0, 0, 0,
+                         SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+        }
+        if (!!(ws & WindowStyle::NO_TITLEBAR)) {
+            // Keep WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX so DWM keeps
+            // rendering the caption buttons; our WM_NCCALCSIZE handler collapses the visible
+            // titlebar into the client area.
+            LONG style = GetWindowLong(mHandle, GWL_STYLE);
+            style |= WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
+            if (!(ws & WindowStyle::NO_RESIZE)) {
+                style |= WS_THICKFRAME;
+            }
+            SetWindowLongPtr(mHandle, GWL_STYLE, style);
+
+            const MARGINS extend = { 0, 0, 1, 0 };
+            DwmExtendFrameIntoClientArea(mHandle, &extend);
+
             SetWindowPos(mHandle, NULL, 0, 0, 0, 0,
                          SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
         }

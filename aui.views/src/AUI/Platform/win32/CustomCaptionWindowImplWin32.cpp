@@ -14,9 +14,27 @@
 //
 
 #include "CustomCaptionWindowImplWin32.h"
+#include "AUI/Platform/AWindow.h"
+#include "AUI/Enum/WindowStyle.h"
+#include "AUI/Enum/Visibility.h"
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Common/Plugin.h>
 #include <AUI/ASS/Property/BackgroundImage.h>
+
+#include <windows.h>
+
+namespace {
+bool containsPoint(const _<AButton>& button, int px, int py) {
+    if (!button) return false;
+    if (button->getVisibility() == Visibility::GONE) return false;
+    const auto topLeft = button->getPositionInWindow();
+    const auto size = button->getSize();
+    return px >= topLeft.x && py >= topLeft.y &&
+           px < topLeft.x + size.x && py < topLeft.y + size.y;
+}
+
+constexpr auto kNcHoverClass = ".nc-hover";
+}
 
 void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool stacked, AViewContainer* to) {
     auto caption = _new<AViewContainer>();
@@ -63,6 +81,14 @@ void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool s
     }
     mContentContainer->setExpanding({1, 1});
 
+    // Hide the minimize/maximize buttons when the window style opts out of them.
+    if (auto* window = dynamic_cast<AWindow*>(to)) {
+        if (!!(window->windowStyle() & WindowStyle::NO_MINIMIZE_MAXIMIZE)) {
+            mMinimizeButton->setVisibility(Visibility::GONE);
+            mMiddleButton->setVisibility(Visibility::GONE);
+        }
+    }
+
     updateMiddleButtonIcon();
 }
 
@@ -76,4 +102,28 @@ void CustomCaptionWindowImplWin32::updateMiddleButtonIcon() {
             ass::BackgroundImage {":uni/caption/maximize.svg", {}, {}, ass::Sizing::CENTER }
         });
     }
+}
+
+AOptional<std::int32_t> CustomCaptionWindowImplWin32::hitTestCaptionButton(int clientPxX, int clientPxY) const {
+    if (containsPoint(mMinimizeButton, clientPxX, clientPxY)) return HTMINBUTTON;
+    if (containsPoint(mMiddleButton, clientPxX, clientPxY))   return HTMAXBUTTON;
+    if (containsPoint(mCloseButton, clientPxX, clientPxY))    return HTCLOSE;
+    return std::nullopt;
+}
+
+void CustomCaptionWindowImplWin32::updateCaptionButtonNcHover(std::int32_t hitCode) {
+    auto applyHover = [&](const _<AButton>& button, bool active) {
+        if (!button) return;
+        // Toggle the ASS class without disturbing other names the button already carries.
+        const auto& names = button->getAssNames();
+        const bool hasClass = names.contains(kNcHoverClass);
+        if (active && !hasClass) {
+            button->addAssName(kNcHoverClass);
+        } else if (!active && hasClass) {
+            button->removeAssName(kNcHoverClass);
+        }
+    };
+    applyHover(mMinimizeButton, hitCode == HTMINBUTTON);
+    applyHover(mMiddleButton,   hitCode == HTMAXBUTTON);
+    applyHover(mCloseButton,    hitCode == HTCLOSE);
 }
