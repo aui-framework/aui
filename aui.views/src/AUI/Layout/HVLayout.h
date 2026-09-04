@@ -227,6 +227,57 @@ public:
   }
 
   /**
+   * @brief Squeezes children that do not fit into the container.
+   * @details
+   * A child never gets more space than its container actually has: children that ask for more are shrunk
+   * proportionally instead of overflowing. A fixed size is the only exception — it is law, and such a child overflows
+   * its container as is.
+   */
+  template <ranges::range Views>
+  static void shrinkToFit(Views&& views, std::vector<MainAxisSizeInfo>& sizes, int container_axis_size, int spacing) {
+    int occupied = 0;
+    int shrinkable = 0;
+    int visible_count = 0;
+
+    size_t index = 0;
+    for (const auto& view : views) {
+      const auto& info = sizes[index++];
+      if (!info.visible) continue;
+      ++visible_count;
+      occupied += info.finalSize + Axis::ourAxis(view->getMargin().occupiedSize());
+      if (Axis::ourAxis(view->getFixedSize()) == 0) {
+        shrinkable += info.finalSize;
+      }
+    }
+    occupied += glm::max(0, visible_count - 1) * spacing;
+
+    const int excess = occupied - container_axis_size;
+    if (excess <= 0 || shrinkable <= 0) {
+      return;
+    }
+
+    const int target = glm::max(0, shrinkable - excess);
+    int distributed = 0;
+    int remaining_shrinkable = shrinkable;
+
+    index = 0;
+    for (const auto& view : views) {
+      auto& info = sizes[index++];
+      if (!info.visible || info.finalSize <= 0 || Axis::ourAxis(view->getFixedSize()) != 0) continue;
+
+      remaining_shrinkable -= info.finalSize;
+      // the last one takes the rounding remainder, so the children add up to the container exactly.
+      const int shrunk = remaining_shrinkable <= 0
+          ? target - distributed
+          : static_cast<int>((static_cast<long long>(info.finalSize) * target) / shrinkable);
+
+      info.finalSize = glm::max(0, shrunk);
+      distributed += info.finalSize;
+      info.measuredSize.reset();   // measured at a size the child no longer has.
+    }
+  }
+
+  /**
    * @brief Computes the content size of the container along the main axis.
    * @param minimum if true, expanding children contribute their minimum (min-content); if false, their preferred
    *        size (max-content).
@@ -299,7 +350,12 @@ public:
       const int fixed_size = Axis::ourAxis(view->getFixedSize());
       const int expanding  = Axis::ourAxis(view->getExpanding());
       const int raw_max    = Axis::ourAxis(view->getMaxSize());
-      const int child_perp = glm::max(0, Axis::perpAxis(padded_size - view->getMargin().occupiedSize()));
+      // -1 means "unlimited", and must stay that way: asking a child how big it wants to be within zero space is
+      // not the same question as asking it within unlimited space.
+      const int perp_available = Axis::perpAxis(padded_size);
+      const int child_perp = perp_available == -1
+          ? -1
+          : glm::max(0, perp_available - Axis::perpAxis(view->getMargin().occupiedSize()));
 
       info.maxSize = (raw_max != -1) ? raw_max : 1000000000;
       info.measured_perp_constraint = child_perp;
@@ -332,6 +388,9 @@ public:
     if (total_weight > 0) {
       distributeRemainingSpace(views, result, remaining_space);
     }
+
+    // children may end up larger than their share (i.e. because of their minimum size), so check unconditionally.
+    shrinkToFit(views, result, container_axis_size, spacing);
 
     return result;
   }
@@ -380,6 +439,11 @@ public:
         }
       } else {
         view_size_perp = computePerpendicularSize(view, view_size_our, available_perp, max_perp);
+      }
+
+      if (Axis::perpAxis(view->getFixedSize()) == 0) {
+        // same as on the main axis: we never hand out more space than we have.
+        view_size_perp = glm::min(view_size_perp, glm::max(0, available_perp));
       }
 
       view->layout(
@@ -455,15 +519,15 @@ public:
     // resolved against it, exactly like layout() does — this correctly distributes remaining space to expanding
     // children (e.g. wrapping text).
     Axis::ourAxis(padded_size) = 0;
-    const int min_content = mainAxisContentSize(views, spacing, padded_size, true);
     int our_size;
     if (our_limit == -1) {
       // no space to fit into; expanding children must not inflate us (see AView::pack).
-      our_size = min_content;
+      our_size = mainAxisContentSize(views, spacing, padded_size, true);
     } else {
-      // fit-content: take the space we are given, but no more than our content actually asks for.
+      // fit-content: take the space we are given, but no more than our content actually asks for. Contents that
+      // ask for more do not entitle us to more: they get squeezed in shrinkToFit instead.
       const int max_content = mainAxisContentSize(views, spacing, padded_size, false);
-      our_size = glm::min(max_content, glm::max(min_content, our_limit));
+      our_size = glm::min(max_content, our_limit);
     }
     Axis::ourAxis(padded_size) = glm::max(our_size, our_min);
 

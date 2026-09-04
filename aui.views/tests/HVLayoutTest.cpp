@@ -210,7 +210,7 @@ TEST(HVLayout, HorizontalFixedExpandingFixedKeepsTrailingChildInside) {
   EXPECT_RECT(trailing, 96, 0, 24, 24);
 }
 
-TEST(HVLayout, HorizontalPreferredHeightUsesBaselineHeightForExpandingChildrenWithoutBlockConstraint) {
+TEST(HVLayout, HorizontalPreferredHeightUsesFinalWidthOfExpandingChildren) {
   auto fixed = fixedItem(20, 10);
 
   auto wrapped = dynamicItem(
@@ -225,7 +225,9 @@ TEST(HVLayout, HorizontalPreferredHeightUsesBaselineHeightForExpandingChildrenWi
 
   AVector<_<AView>> views { fixed, wrapped };
 
-  EXPECT_EQ(HorizontalHVLayout::preferredHeight(views, 0, 40), 10);
+  // within a row of 40, the expanding child ends up 20 wide, so the row is as tall as the child is at 20 — this is
+  // what makes wrapping text report its height correctly.
+  EXPECT_EQ(HorizontalHVLayout::preferredHeight(views, 0, 40), 40);
 }
 
 TEST(HVLayout, HorizontalIntrinsicWidthUsesMinimumForExpandingChildrenWhenUnbounded) {
@@ -256,13 +258,14 @@ TEST(HVLayout, HorizontalPreferredHeightWithoutBlockConstraintSkipsGoneExpander)
         if (width == -1) {
           return 10;
         }
-        return width <= 20 ? 40 : 10;
+        // 20 is the width the child gets only if the GONE expander is skipped.
+        return width == 20 ? 40 : 90;
       });
   wrapped->setExpanding({ 1, 0 });
 
   AVector<_<AView>> views { fixed, gone, wrapped };
 
-  EXPECT_EQ(HorizontalHVLayout::preferredHeight(views, 0, 40), 10);
+  EXPECT_EQ(HorizontalHVLayout::preferredHeight(views, 0, 40), 40);
 }
 
 TEST(HVLayout, HorizontalComputeMinMaxSizesUsesChildrenAndSpacing) {
@@ -524,7 +527,9 @@ TEST(HVLayout, VerticalLayoutUsesWidthFromFinalHeight) {
   AVector<_<AView>> views { child };
   VerticalHVLayout::layout({ 0, 0 }, { 40, 100 }, views, 0);
 
-  EXPECT_RECT(child, 0, 0, 60, 20);
+  // the height comes from the final height pass; the width is 40 rather than the child's styled minimum of 60,
+  // because a container never gives a child more space than it has itself.
+  EXPECT_RECT(child, 0, 0, 40, 20);
 }
 
 TEST(HVLayout, PerpendicularContribution) {

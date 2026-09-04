@@ -37,6 +37,15 @@ void AStackedLayout::layout(int x, int y, int width, int height) {
 
     auto measuredSize = v->measure(constraints);
 
+    // a child never gets more space than we have: it is squeezed instead of overflowing us. A fixed size is the only
+    // exception — it is law, and such a child overflows us as is.
+    if (v->getFixedSize().x == 0) {
+      measuredSize.x = std::min(measuredSize.x, std::max(0, width - margins.horizontal()));
+    }
+    if (v->getFixedSize().y == 0) {
+      measuredSize.y = std::min(measuredSize.y, std::max(0, height - margins.vertical()));
+    }
+
     int finalWidth = measuredSize.x + margins.horizontal();
     int finalHeight = measuredSize.y + margins.vertical();
 

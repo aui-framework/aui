@@ -592,22 +592,10 @@ void AView::setPosition(glm::ivec2 position) {
 
 void AView::setSize(glm::ivec2 size) {
   auto newSize = mSize;
-  if (mFixedSize.x != 0) {
-    newSize.x = mFixedSize.x;
-  } else {
-    newSize.x = size.x;
-    if (mMinSize.x != 0) {
-      newSize.x = glm::max(mMinSize.x, newSize.x);
-    }
-  }
-  if (mFixedSize.y != 0) {
-    newSize.y = mFixedSize.y;
-  } else {
-    newSize.y = size.y;
-    if (mMinSize.y != 0) {
-      newSize.y = glm::max(mMinSize.y, newSize.y);
-    }
-  }
+  // our container decides how much space we get: if it has less than our min size, we are squeezed, not overflowing.
+  // a fixed size is the only exception — it is law.
+  newSize.x = mFixedSize.x != 0 ? mFixedSize.x : size.x;
+  newSize.y = mFixedSize.y != 0 ? mFixedSize.y : size.y;
   if (mMaxSize.x != -1) {
     newSize.x = glm::min(newSize.x, mMaxSize.x);
   }

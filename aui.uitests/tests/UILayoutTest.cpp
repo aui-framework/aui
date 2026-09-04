@@ -519,6 +519,66 @@ TEST_F(UILayoutTest, CenteredOverflowingChildIsCenteredEqually) {
     EXPECT_EQ(overflowTop, overflowBottom) << "vertical overflow is not equal on both sides";
 }
 
+// A container never gives its child more space than it has itself: a child whose minimum does not fit is squeezed
+// down to the container instead of overflowing it.
+TEST_F(UILayoutTest, MinSizeYieldsToCenteredContainer) {
+    auto child = _new<AView>() AUI_OVERRIDE_STYLE {
+        MinSize { 120_dp },
+    };
+    inflate(Centered { child } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } });
+
+    settleLayout();
+    expectGeometry(child, 0, 0, 100, 100);
+}
+
+TEST_F(UILayoutTest, MinSizeYieldsToHorizontalContainer) {
+    auto child = _new<AView>() AUI_OVERRIDE_STYLE {
+        MinSize { 120_dp },
+    };
+    inflate(Horizontal { child } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } });
+
+    settleLayout();
+    expectGeometry(child, 0, 0, 100, 100);
+}
+
+TEST_F(UILayoutTest, MinSizeYieldsToVerticalContainer) {
+    auto child = _new<AView>() AUI_OVERRIDE_STYLE {
+        MinSize { 120_dp },
+    };
+    inflate(Vertical { child } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } });
+
+    settleLayout();
+    expectGeometry(child, 0, 0, 100, 100);
+}
+
+TEST_F(UILayoutTest, MinSizesAreSqueezedProportionally) {
+    // 120 and 60 do not fit into 100, so both are shrunk keeping their 2:1 ratio, and together they fill it exactly.
+    auto wide = _new<AView>() AUI_OVERRIDE_STYLE { MinSize { 120_dp, {} } };
+    auto narrow = _new<AView>() AUI_OVERRIDE_STYLE { MinSize { 60_dp, {} } };
+    inflate(Horizontal {
+        wide,
+        narrow,
+    } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } });
+
+    settleLayout();
+    EXPECT_EQ(wide->getPosition().x, 0);
+    EXPECT_EQ(narrow->getPosition().x, wide->getSize().x);
+    EXPECT_EQ(wide->getSize().x + narrow->getSize().x, 100) << "children do not fill the container exactly";
+    EXPECT_NEAR(wide->getSize().x, 2 * narrow->getSize().x, 2) << "children are not shrunk proportionally";
+}
+
+TEST_F(UILayoutTest, FixedSizeChildIsNotSqueezed) {
+    // ...but a fixed size is law: such a child keeps its size and overflows the container instead.
+    auto child = _new<AView>() AUI_OVERRIDE_STYLE {
+        FixedSize { 200_dp },
+    };
+    inflate(Horizontal { child } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } });
+
+    settleLayout();
+    EXPECT_EQ(child->getSize().x, 200);
+    EXPECT_EQ(child->getSize().y, 200);
+}
+
 TEST_F(UILayoutTest, FixedSizeIsLaw) {
     // a FixedSize view is exactly that size, no matter how large its contents are.
     auto oversizedContent = _new<AView>() AUI_OVERRIDE_STYLE {

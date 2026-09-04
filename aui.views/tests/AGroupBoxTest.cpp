@@ -67,7 +67,9 @@ private:
 
 } // namespace
 
-TEST(AGroupBox, KeepsStyledMinimumWidthOfContentWhenParentIsNarrower) {
+// A container never hands out more space than it has, so the styled minimum of the contents yields to a narrower
+// parent instead of overflowing it.
+TEST(AGroupBox, StyledMinimumWidthOfContentYieldsToNarrowerParent) {
     auto groupBox = _new<AGroupBox>(
         _new<FixedMeasureView>(20, 10),
         _new<PreferredButMinConstrainedView>(120, 20, glm::ivec2(60, 0)));
@@ -78,10 +80,10 @@ TEST(AGroupBox, KeepsStyledMinimumWidthOfContentWhenParentIsNarrower) {
 
     parent->layout(0, 0, 60, 100);
 
-    EXPECT_EQ(groupBox->getWidth(), 76);
+    EXPECT_EQ(groupBox->getWidth(), 60);
 }
 
-TEST(AGroupBox, KeepsStyledMinimumWidthThroughExpandingParentLayout) {
+TEST(AGroupBox, StyledMinimumWidthYieldsToNarrowerExpandingParentLayout) {
     auto groupBox = _new<AGroupBox>(
         _new<FixedMeasureView>(20, 10),
         _new<PreferredButMinConstrainedView>(120, 20, glm::ivec2(60, 0)));
@@ -93,5 +95,5 @@ TEST(AGroupBox, KeepsStyledMinimumWidthThroughExpandingParentLayout) {
 
     parent->layout(0, 0, 40, 100);
 
-    EXPECT_EQ(groupBox->getWidth(), 76);
+    EXPECT_EQ(groupBox->getWidth(), 40);
 }
