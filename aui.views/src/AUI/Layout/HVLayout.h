@@ -229,51 +229,80 @@ public:
   /**
    * @brief Squeezes children that do not fit into the container.
    * @details
-   * A child never gets more space than its container actually has: children that ask for more are shrunk
-   * proportionally instead of overflowing. A fixed size is the only exception — it is law, and such a child overflows
-   * its container as is.
+   * A child never gets more space than its container actually has. The deficit is taken from the end: a child keeps
+   * its size as long as the children after it have anything left to give, so an overcommitted row loses its trailing
+   * children instead of squeezing everything at once. A fixed size is the only exception — it is law, and such a
+   * child overflows its container as is.
    */
   template <ranges::range Views>
   static void shrinkToFit(Views&& views, std::vector<MainAxisSizeInfo>& sizes, int container_axis_size, int spacing) {
     int occupied = 0;
-    int shrinkable = 0;
     int visible_count = 0;
+    std::vector<bool> shrinkable(sizes.size(), false);
 
     size_t index = 0;
     for (const auto& view : views) {
-      const auto& info = sizes[index++];
-      if (!info.visible) continue;
-      ++visible_count;
-      occupied += info.finalSize + Axis::ourAxis(view->getMargin().occupiedSize());
-      if (Axis::ourAxis(view->getFixedSize()) == 0) {
-        shrinkable += info.finalSize;
+      const auto& info = sizes[index];
+      if (info.visible) {
+        ++visible_count;
+        occupied += info.finalSize + Axis::ourAxis(view->getMargin().occupiedSize());
+        shrinkable[index] = Axis::ourAxis(view->getFixedSize()) == 0;
       }
+      ++index;
     }
     occupied += glm::max(0, visible_count - 1) * spacing;
 
-    const int excess = occupied - container_axis_size;
-    if (excess <= 0 || shrinkable <= 0) {
+    int excess = occupied - container_axis_size;
+    if (excess <= 0) {
       return;
     }
 
-    const int target = glm::max(0, shrinkable - excess);
-    int distributed = 0;
-    int remaining_shrinkable = shrinkable;
-
-    index = 0;
-    for (const auto& view : views) {
-      auto& info = sizes[index++];
-      if (!info.visible || info.finalSize <= 0 || Axis::ourAxis(view->getFixedSize()) != 0) continue;
-
-      remaining_shrinkable -= info.finalSize;
-      // the last one takes the rounding remainder, so the children add up to the container exactly.
-      const int shrunk = remaining_shrinkable <= 0
-          ? target - distributed
-          : static_cast<int>((static_cast<long long>(info.finalSize) * target) / shrinkable);
-
-      info.finalSize = glm::max(0, shrunk);
-      distributed += info.finalSize;
+    // children laid out at their own size give up space from the end: one keeps its size as long as the children
+    // after it have anything left to give.
+    for (size_t i = sizes.size(); i-- > 0 && excess > 0;) {
+      auto& info = sizes[i];
+      if (!info.visible || !shrinkable[i] || info.weight > 0 || info.finalSize <= 0) {
+        continue;
+      }
+      const int given = glm::min(info.finalSize, excess);
+      info.finalSize -= given;
+      excess -= given;
       info.measuredSize.reset();   // measured at a size the child no longer has.
+    }
+
+    if (excess <= 0) {
+      return;
+    }
+
+    // expanding children asked to share the space in the first place, so they give it up proportionally, keeping
+    // equal siblings equal.
+    int expanding = 0;
+    size_t last_expanding = sizes.size();
+    for (size_t i = 0; i < sizes.size(); ++i) {
+      const auto& info = sizes[i];
+      if (!info.visible || !shrinkable[i] || info.weight <= 0 || info.finalSize <= 0) {
+        continue;
+      }
+      expanding += info.finalSize;
+      last_expanding = i;
+    }
+    if (expanding <= 0) {
+      return;
+    }
+
+    const int target = glm::max(0, expanding - excess);
+    int distributed = 0;
+    for (size_t i = 0; i < sizes.size(); ++i) {
+      auto& info = sizes[i];
+      if (!info.visible || !shrinkable[i] || info.weight <= 0 || info.finalSize <= 0) {
+        continue;
+      }
+      // the last one takes the rounding remainder, so the children add up to the container exactly.
+      info.finalSize = i == last_expanding
+          ? glm::max(0, target - distributed)
+          : static_cast<int>((static_cast<long long>(info.finalSize) * target) / expanding);
+      distributed += info.finalSize;
+      info.measuredSize.reset();
     }
   }
 

@@ -551,8 +551,9 @@ TEST_F(UILayoutTest, MinSizeYieldsToVerticalContainer) {
     expectGeometry(child, 0, 0, 100, 100);
 }
 
-TEST_F(UILayoutTest, MinSizesAreSqueezedProportionally) {
-    // 120 and 60 do not fit into 100, so both are shrunk keeping their 2:1 ratio, and together they fill it exactly.
+TEST_F(UILayoutTest, MinSizesAreSqueezedFromTheEndUntilTheyFit) {
+    // 120 and 60 do not fit into 100: the trailing one gives up everything it has, and only the remaining deficit is
+    // taken from the leading one.
     auto wide = _new<AView>() AUI_OVERRIDE_STYLE { MinSize { 120_dp, {} } };
     auto narrow = _new<AView>() AUI_OVERRIDE_STYLE { MinSize { 60_dp, {} } };
     inflate(Horizontal {
@@ -562,9 +563,9 @@ TEST_F(UILayoutTest, MinSizesAreSqueezedProportionally) {
 
     settleLayout();
     EXPECT_EQ(wide->getPosition().x, 0);
-    EXPECT_EQ(narrow->getPosition().x, wide->getSize().x);
+    EXPECT_EQ(wide->getSize().x, 100);
+    EXPECT_EQ(narrow->getSize().x, 0);
     EXPECT_EQ(wide->getSize().x + narrow->getSize().x, 100) << "children do not fill the container exactly";
-    EXPECT_NEAR(wide->getSize().x, 2 * narrow->getSize().x, 2) << "children are not shrunk proportionally";
 }
 
 TEST_F(UILayoutTest, FixedSizeChildIsNotSqueezed) {
@@ -577,6 +578,63 @@ TEST_F(UILayoutTest, FixedSizeChildIsNotSqueezed) {
     settleLayout();
     EXPECT_EQ(child->getSize().x, 200);
     EXPECT_EQ(child->getSize().y, 200);
+}
+
+// When the children do not fit, the ones that come first keep their size: the deficit is taken from the end, so a
+// toolbar loses its trailing items rather than squeezing everything at once.
+TEST_F(UILayoutTest, OvercommitmentKeepsEarlierChildrenIntact) {
+    auto first = _new<AView>() AUI_OVERRIDE_STYLE { MinSize { 60_dp, {} } };
+    auto second = _new<AView>() AUI_OVERRIDE_STYLE { MinSize { 60_dp, {} } };
+
+    inflate(Horizontal {
+        first,
+        second,
+    } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } });
+
+    settleLayout();
+    EXPECT_EQ(first->getSize().x, 60) << "the first child shrank while the one after it still had space to give";
+    EXPECT_EQ(second->getPosition().x, 60);
+    EXPECT_EQ(second->getSize().x, 40);
+}
+
+// examples/ui/overcommitment_horizontal: two buttons in a row too narrow for both of them. The leading one stays
+// fully visible; it is the trailing one that runs out of room.
+TEST_F(UILayoutTest, OvercommittedRowKeepsLeadingButtonAtItsNaturalWidth) {
+    _<AView> visible = Button { Label { "Visible" } };
+    _<AView> overlapping = Button { Label { "Overlaps with border" } };
+
+    inflate(Vertical {
+        Horizontal {
+            visible,
+            overlapping,
+        },
+        Button { Label { "OK" } },
+    } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } });
+
+    settleLayout();
+    EXPECT_GT(visible->getSize().x, 0);
+    EXPECT_EQ(visible->getSize().x, visible->measure(AConstraints {}).x)
+        << "the leading button did not keep its natural width";
+    EXPECT_LT(overlapping->getSize().x, overlapping->measure(AConstraints {}).x)
+        << "the trailing button was expected to be the one running out of room";
+}
+
+TEST_F(UILayoutTest, OvercommitmentIsTakenFromTheEndBackwards) {
+    auto first = _new<AView>() AUI_OVERRIDE_STYLE { MinSize { 60_dp, {} } };
+    auto second = _new<AView>() AUI_OVERRIDE_STYLE { MinSize { 60_dp, {} } };
+    auto third = _new<AView>() AUI_OVERRIDE_STYLE { MinSize { 60_dp, {} } };
+
+    inflate(Horizontal {
+        first,
+        second,
+        third,
+    } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } });
+
+    settleLayout();
+    // the last one gives everything it has, and only then the one before it gives the rest.
+    EXPECT_EQ(first->getSize().x, 60);
+    EXPECT_EQ(second->getSize().x, 40);
+    EXPECT_EQ(third->getSize().x, 0);
 }
 
 // Identical group boxes stacked in a Vertical must all fit their contents: none of them may collapse, and none may
