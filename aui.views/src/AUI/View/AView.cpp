@@ -268,7 +268,7 @@ bool AView::hasFocus() const {
 }
 
 AMinMaxAxis AView::computeMinMaxAxis(int height) {
-  //ensureAssUpdated();
+  ensureAssUpdated();
   if (auto cached = mMinMaxSizesCache.get(height)) {
     return *cached;
   }
@@ -292,7 +292,7 @@ AMinMaxAxis AView::computeMinMaxAxis(int height) {
 }
 
 glm::ivec2 AView::measure(AConstraints constraints) {
-  //ensureAssUpdated();
+  ensureAssUpdated();
   if (auto cached = mMeasureCache.get(constraints)) {
     return *cached;
   }
@@ -307,21 +307,25 @@ glm::ivec2 AView::measure(AConstraints constraints) {
     effective.minInline = effective.maxInline = mFixedSize.x;
     unlimitedInline = false;
   } else {
-    effective.minInline = std::max(effective.minInline, mMinSize.x);
     if (mMaxSize.x != -1) {
       effective.maxInline = unlimitedInline ? mMaxSize.x : std::min(effective.maxInline, mMaxSize.x);
+      // our parent may stretch us (i.e. expanding in AStackedLayout), but never past our max size.
+      effective.minInline = std::min(effective.minInline, mMaxSize.x);
       unlimitedInline = false;
     }
+    // our own min size wins over our max size, though.
+    effective.minInline = std::max(effective.minInline, mMinSize.x);
   }
   if (mFixedSize.y != 0) {
     effective.minBlock = effective.maxBlock = mFixedSize.y;
     unlimitedBlock = false;
   } else {
-    effective.minBlock = std::max(effective.minBlock, mMinSize.y);
     if (mMaxSize.y != -1) {
       effective.maxBlock = unlimitedBlock ? mMaxSize.y : std::min(effective.maxBlock, mMaxSize.y);
+      effective.minBlock = std::min(effective.minBlock, mMaxSize.y);
       unlimitedBlock = false;
     }
+    effective.minBlock = std::max(effective.minBlock, mMinSize.y);
   }
 
   const int effectiveMaxInline = unlimitedInline

@@ -480,6 +480,7 @@ TEST_F(UILayoutTest, CenteredExpanding) {
 
 TEST_F(UILayoutTest, CenteredExpandingCappedByMax) {
     auto mock = _new<AView>() AUI_OVERRIDE_STYLE {
+        Expanding {},
         MaxSize { 4_dp },
     };
 
