@@ -109,26 +109,6 @@ TEST_F(UIType, HelloNotAppearsAfterClick) {
  * 1. types "Steve" to the text field
  * 2. clicks the button
  */
-TEST_F(UIType, ZZDebugGeometry) {
-    auto dump = [](const char* stage) {
-        auto w = AWindow::current();
-        std::cout << stage << ": window=" << w->getSize().x << "x" << w->getSize().y;
-        for (auto& v : By::type<ATextField>().toSet()) {
-            std::cout << " | field=" << v->getSize().x << "x" << v->getSize().y;
-        }
-        for (auto& v : By::type<AButton>().toSet()) {
-            std::cout << " | button=" << v->getSize().x << "x" << v->getSize().y;
-        }
-        std::cout << std::endl;
-    };
-    uitest::frame();
-    dump("initial");
-    By::name("#username").perform(type("Steve"));
-    dump("after type");
-    uitest::frame();
-    dump("after frame");
-}
-
 TEST_F(UIType, HelloAppearsAfterClick) {
     // type "Steve" to the text field
     By::name("#username").perform(type("Steve"));

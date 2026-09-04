@@ -472,7 +472,7 @@ TEST(HVLayout, HorizontalWeightSaturationComplex) {
   EXPECT_RECT(e3, 60, 0, 40, 20);
 }
 
-TEST(HVLayout, HorizontalExpandingHonorsStyledMinimumWhenShareIsTooSmall) {
+TEST(HVLayout, HorizontalStyledMinimumsAreSqueezedWhenTheyDoNotFit) {
   auto left = fixedItem(0, 20);
   left->setExpanding({ 1, 0 });
   setStyledMinSize(left, 20, 0);
@@ -484,8 +484,10 @@ TEST(HVLayout, HorizontalExpandingHonorsStyledMinimumWhenShareIsTooSmall) {
   AVector<_<AView>> views { left, right };
   HorizontalHVLayout::layout({ 0, 0 }, { 20, 20 }, views, 0);
 
-  EXPECT_RECT(left, 0, 0, 20, 20);
-  EXPECT_RECT(right, 20, 0, 10, 20);
+  // styled minimums of 20 and 10 do not fit into 20, so both are squeezed keeping their 2:1 ratio and fill the
+  // container exactly, rather than overflowing it.
+  EXPECT_RECT(left, 0, 0, 13, 20);
+  EXPECT_RECT(right, 13, 0, 7, 20);
 }
 
 TEST(HVLayout, VerticalSpacingAndMargins) {

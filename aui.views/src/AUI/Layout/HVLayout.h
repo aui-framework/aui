@@ -519,15 +519,17 @@ public:
     // resolved against it, exactly like layout() does — this correctly distributes remaining space to expanding
     // children (e.g. wrapping text).
     Axis::ourAxis(padded_size) = 0;
+    const int min_content = mainAxisContentSize(views, spacing, padded_size, true);
     int our_size;
     if (our_limit == -1) {
       // no space to fit into; expanding children must not inflate us (see AView::pack).
-      our_size = mainAxisContentSize(views, spacing, padded_size, true);
+      our_size = min_content;
     } else {
-      // fit-content: take the space we are given, but no more than our content actually asks for. Contents that
-      // ask for more do not entitle us to more: they get squeezed in shrinkToFit instead.
+      // fit-content: take the space we are given, but no more than our content actually asks for. Reporting less
+      // than our contents need would be a lie — being given less space than that is a separate matter, and it is
+      // shrinkToFit that squeezes children into what we actually get.
       const int max_content = mainAxisContentSize(views, spacing, padded_size, false);
-      our_size = glm::min(max_content, our_limit);
+      our_size = glm::min(max_content, glm::max(min_content, our_limit));
     }
     Axis::ourAxis(padded_size) = glm::max(our_size, our_min);
 

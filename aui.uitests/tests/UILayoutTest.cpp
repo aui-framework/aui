@@ -579,6 +579,44 @@ TEST_F(UILayoutTest, FixedSizeChildIsNotSqueezed) {
     EXPECT_EQ(child->getSize().y, 200);
 }
 
+// Identical group boxes stacked in a Vertical must all fit their contents: none of them may collapse, and none may
+// hog the container.
+TEST_F(UILayoutTest, GroupBoxesInVerticalKeepTheirContentHeight) {
+    struct Box {
+        _<AView> box, title, body;
+    };
+    AVector<Box> boxes;
+    auto groupBox = [&] {
+        _<AView> title = Label { "Title" };
+        _<AView> body = Label { "Body" };
+        _<AView> box = GroupBox {
+            title,
+            Vertical {
+                body,
+            },
+        };
+        boxes << Box { box, title, body };
+        return box;
+    };
+
+    inflate(Vertical {
+        groupBox(),
+        groupBox(),
+        groupBox(),
+        groupBox(),
+    } AUI_OVERRIDE_STYLE { FixedSize { 200_dp, 400_dp } });
+
+    settleLayout();
+    for (const auto& i : boxes) {
+        EXPECT_GT(i.title->getSize().y, 0) << "title collapsed";
+        EXPECT_GT(i.body->getSize().y, 0) << "body collapsed";
+        EXPECT_GE(i.box->getSize().y, i.title->getSize().y + i.body->getSize().y)
+            << "group box does not fit its own contents";
+        EXPECT_EQ(i.box->getSize().y, boxes.first().box->getSize().y)
+            << "group boxes with equal contents differ in height";
+    }
+}
+
 TEST_F(UILayoutTest, FixedSizeIsLaw) {
     // a FixedSize view is exactly that size, no matter how large its contents are.
     auto oversizedContent = _new<AView>() AUI_OVERRIDE_STYLE {
