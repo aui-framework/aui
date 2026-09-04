@@ -430,6 +430,70 @@ TEST_F(UILayoutTest, Margin7) {
     expectGeometry(mock, 20, 10, 70, 70);
 }
 
+TEST_F(UILayoutTest, Centered1) {
+    auto mock = _new<AView>() AUI_OVERRIDE_STYLE {
+        FixedSize { 4_dp },
+    };
+
+    // an FixedSize view in a Centered container => becomes in center (your captain).
+
+    inflate(
+        Centered {
+          mock,
+        } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    settleLayout();
+    expectGeometry(mock, 48, 48, 4, 4);
+}
+
+TEST_F(UILayoutTest, Centered2) {
+    auto mock = _new<AView>() AUI_OVERRIDE_STYLE {
+        MinSize { 4_dp },
+    };
+
+    // MinSize acts like FixedSize in a Centered.
+
+    inflate(
+        Centered {
+          mock,
+        } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    settleLayout();
+    expectGeometry(mock, 48, 48, 4, 4);
+}
+
+TEST_F(UILayoutTest, CenteredExpanding) {
+    auto mock = _new<AView>() AUI_OVERRIDE_STYLE {
+        Expanding {},
+    };
+
+    // an expanding in a Centered container => covers entire Centered.
+
+    inflate(
+        Centered {
+          mock,
+        } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    settleLayout();
+    expectGeometry(mock, 0, 0, 100, 100);
+}
+
+TEST_F(UILayoutTest, CenteredExpandingCappedByMax) {
+    auto mock = _new<AView>() AUI_OVERRIDE_STYLE {
+        MaxSize { 4_dp },
+    };
+
+    // MaxSize + Expanding acts like FixedSize in a Centered.
+
+    inflate(
+        Centered {
+          mock,
+        } AUI_OVERRIDE_STYLE { FixedSize(100_dp) });
+
+    settleLayout();
+    expectGeometry(mock, 48, 48, 4, 4);
+}
+
 TEST_F(UILayoutTest, ExpandingTextHasNonZeroIntrinsicWidth) {
     auto text = AText::fromString("middle");
     EXPECT_GT(text->computeMinMaxAxis().max, 0);
