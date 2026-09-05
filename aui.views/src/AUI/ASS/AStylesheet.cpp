@@ -137,6 +137,10 @@ AStylesheet::AStylesheet() {
             Border {1_dp, getOsThemeColor() * glm::vec4(1, 1, 1, 0.3f)}
         },
         {
+            t<AButton>::focus(),
+            Border { 1_dp, getOsThemeColor() },
+        },
+        {
             t<AButton>::active(),
             BackgroundSolid{0xfafafa_rgb},
         },
@@ -257,6 +261,10 @@ AStylesheet::AStylesheet() {
             LayoutSpacing { 4_dp }, // specifies space between ACheckBox::Box and contents
         },
         {
+            t<ACheckBox>::focus(),
+            Border { 1_dp, getOsThemeColor() },
+        },
+        {
             t<ACheckBox::Box>(), // styling box itself
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_dp, 0x333333_rgb },
@@ -319,6 +327,10 @@ AStylesheet::AStylesheet() {
             LayoutSpacing { 4_dp }, // specifies space between ARadioButton::Circle and contents
         },
         {
+            t<ARadioButton>::focus(),
+            Border { 1_dp, getOsThemeColor() },
+        },
+        {
             t<ARadioButton::Circle>(), // styles the circle itself
             BackgroundSolid { 0xffffff_rgb },
             Border { 1_dp, 0x333333_rgb },
@@ -368,6 +380,10 @@ AStylesheet::AStylesheet() {
             Expanding { 0, 1 },
             MinSize { 120_dp, 80_dp },
             AOverflow::HIDDEN,
+        },
+        {
+            c::focus(".list-item"),
+            Border { 1_dp, getOsThemeColor() },
         },
         {
             t<ATreeView>() > t<AViewContainer>() > c(".list-item") > t<AAbstractLabel>(),

@@ -16,6 +16,15 @@
 #include "AUI/Platform/ADesktop.h"
 #include <AUI/Util/kAUI.h>
 
+namespace {
+class ANumberPickerButton : public AButton {
+public:
+    bool capturesFocus() override {
+        return false;
+    }
+};
+}
+
 bool ANumberPicker::ANumberPickerField::isValidText(std::u32string_view text) {
     if (text.length() > 10)
         return false;
@@ -60,11 +69,11 @@ ANumberPicker::ANumberPicker() {
 
     auto c = _new<AViewContainer>();
     c->addAssName(".up-down-wrapper");
-    auto up = _new<AButton>() AUI_LET {
+    auto up = _new<ANumberPickerButton>() AUI_LET {
         it->setDefault();
         it << ".up";
     };
-    auto down = _new<AButton>() AUI_LET {
+    auto down = _new<ANumberPickerButton>() AUI_LET {
         it->setDefault();
         it << ".down";
     };
