@@ -216,7 +216,7 @@ TEST(ALogSinkTest, DefaultSinks) {
 #elif AUI_PLATFORM_APPLE
     EXPECT_EQ(sinks[0]->name(), "apple");
 #elif AUI_PLATFORM_WIN
-    EXPECT_EQ(sinks[0]->name(), "window_debug");
+    EXPECT_EQ(sinks[0]->name(), "windows_debug");
 #else
     EXPECT_EQ(sinks[0]->name(), "console");
 #endif
