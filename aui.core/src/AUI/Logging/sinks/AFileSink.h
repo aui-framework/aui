@@ -32,7 +32,7 @@ public:
 
     void write(const ALogMessage& message) override;
     void flush() override;
-    std::string_view name() const noexcept override;
+    AStringView name() const noexcept override;
 
     [[nodiscard]]
     APath path() const;

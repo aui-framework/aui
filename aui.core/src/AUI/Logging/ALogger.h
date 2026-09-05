@@ -19,8 +19,8 @@
 #include "AUI/Thread/AMutex.h"
 #include "AUI/IO/AFileOutputStream.h"
 #include "AUI/Common/AVector.h"
-#include "AUI/Logging/ALogSink.h"
-#include "AUI/Logging/AFileSink.h"
+#include "AUI/Logging/sinks/ALogSink.h"
+#include "AUI/Logging/sinks/AFileSink.h"
 #include <fmt/format.h>
 #include <fmt/chrono.h>
 #include <AUI/Thread/AMutexWrapper.h>
@@ -63,8 +63,8 @@ class AString;
  *
  * Logger dispatches messages to a list of sinks (spdlog-style).
  * By default, the logger uses the native platform sink:
- * ConsoleSink (stdout) on desktop, AAndroidSink (logcat) on Android,
- * AAppleLogSink (NSLog) on iOS/macOS.
+ * AConsoleSink (stdout) on most desktops, AWindowDebugSink (OutputDebugStringW)
+ * on Windows, AAndroidSink (logcat) on Android, AAppleLogSink (NSLog) on iOS/macOS.
  * Use `setLogFile()` or `sinks().push_back(...)` to add more destinations.
  */
 class API_AUI_CORE ALogger final {
@@ -268,9 +268,10 @@ public:
     /**
      * @brief Returns the default sinks for the current platform.
      * @details
-     * - **Desktop:** AConsoleSink (stdout with colors)
+     * - **Windows:** AWindowDebugSink (OutputDebugStringW)
      * - **Android:** AAndroidSink (logcat via __android_log_print)
      * - **iOS/macOS:** AAppleLogSink (NSLog)
+     * - **Other desktops:** AConsoleSink (stdout with colors)
      */
     static AVector<_<ALogSink>> defaultSinks();
 

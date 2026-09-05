@@ -15,17 +15,17 @@
 #include <AUI/Core.h>
 
 /**
- * @brief Android logcat log sink.
+ * @brief Windows debugger output (OutputDebugStringW) log sink.
  * @ingroup core
  * @details
- * Routes log output to the Android logcat via `__android_log_print`.
- * Mirrors spdlog's android_sink.
+ * Routes log output to the Windows debugger via `OutputDebugStringW`.
+ * Mirrors spdlog's msvc_sink.
  */
-class API_AUI_CORE AAndroidSink : public ALogSink {
+class API_AUI_CORE AWindowDebugSink : public ALogSink {
 public:
-    AAndroidSink();
+    AWindowDebugSink();
 
     void write(const ALogMessage& message) override;
     void flush() override;
-    std::string_view name() const noexcept override;
+    AStringView name() const noexcept override;
 };

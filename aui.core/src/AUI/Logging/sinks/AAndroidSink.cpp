@@ -39,6 +39,6 @@ void AAndroidSink::write(const ALogMessage& message) {
 
 void AAndroidSink::flush() {}
 
-std::string_view AAndroidSink::name() const noexcept {
+AStringView AAndroidSink::name() const noexcept {
     return "android";
 }

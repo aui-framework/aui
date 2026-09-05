@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "AUI/Logging/AAppleLogSink.h"
+#include "AUI/Logging/sinks/AAppleLogSink.h"
 
 #import <Foundation/Foundation.h>
 #include <string>
@@ -26,6 +26,6 @@ void AAppleLogSink::write(const ALogMessage& message) {
 
 void AAppleLogSink::flush() {}
 
-std::string_view AAppleLogSink::name() const noexcept {
+AStringView AAppleLogSink::name() const noexcept {
     return "apple";
 }

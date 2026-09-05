@@ -12,6 +12,7 @@
 #pragma once
 
 #include <AUI/Core.h>
+#include <AUI/Common/AStringView.h>
 #include <string>
 
 /**
@@ -63,5 +64,5 @@ public:
     /**
      * @brief Returns a human-readable name for this sink.
      */
-    virtual std::string_view name() const noexcept = 0;
+    virtual AStringView name() const noexcept = 0;
 };

@@ -11,9 +11,9 @@
 
 #include <gtest/gtest.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/Logging/ALogSink.h>
-#include <AUI/Logging/AConsoleSink.h>
-#include <AUI/Logging/AFileSink.h>
+#include <AUI/Logging/sinks/ALogSink.h>
+#include <AUI/Logging/sinks/AConsoleSink.h>
+#include <AUI/Logging/sinks/AFileSink.h>
 #include <AUI/IO/APath.h>
 #include <AUI/Common/AVector.h>
 #include <cstdio>
@@ -36,7 +36,7 @@ public:
         ++flushCount;
     }
 
-    std::string_view name() const noexcept override {
+    AStringView name() const noexcept override {
         return "mock";
     }
 };
@@ -130,9 +130,7 @@ TEST(ALogSinkTest, MessageFieldsPopulated) {
     EXPECT_EQ(msg.level, static_cast<int>(ALogger::TRACE));
     EXPECT_EQ(msg.prefix, "MyTag");
     EXPECT_EQ(msg.message, "debug msg");
-    EXPECT_EQ(msg.timestamp.size(), 8u);
-    EXPECT_EQ(msg.timestamp[2], ':');
-    EXPECT_EQ(msg.timestamp[5], ':');
+    EXPECT_GT(msg.timestampMs, 0);
 }
 
 TEST(ALogSinkTest, FlushCalledOnDestruction) {
@@ -217,6 +215,8 @@ TEST(ALogSinkTest, DefaultSinks) {
     EXPECT_EQ(sinks[0]->name(), "android");
 #elif AUI_PLATFORM_APPLE
     EXPECT_EQ(sinks[0]->name(), "apple");
+#elif AUI_PLATFORM_WIN
+    EXPECT_EQ(sinks[0]->name(), "window_debug");
 #else
     EXPECT_EQ(sinks[0]->name(), "console");
 #endif

@@ -33,9 +33,9 @@ public:
 
     void write(const ALogMessage& message) override;
     void flush() override;
-    std::string_view name() const noexcept override;
+    AStringView name() const noexcept override;
 
-    void setColorsEnabled(bool enabled) { mUseColors = enabled; }
+    void setColorsEnabled(bool enabled) { mUseColors = enabled && !AUI_PLATFORM_WIN; }
 
 private:
     bool mUseColors;

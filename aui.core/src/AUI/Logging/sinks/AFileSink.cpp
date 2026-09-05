@@ -40,7 +40,7 @@ void AFileSink::flush() {
     fflush(mFile->nativeHandle());
 }
 
-std::string_view AFileSink::name() const noexcept {
+AStringView AFileSink::name() const noexcept {
     return "file";
 }
 

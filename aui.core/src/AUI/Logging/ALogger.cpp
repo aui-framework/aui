@@ -10,17 +10,18 @@
  */
 
 #include "ALogger.h"
-#include "AConsoleSink.h"
-#include "AAndroidSink.h"
-#include "AFileSink.h"
+#include "sinks/AConsoleSink.h"
+#include "sinks/AAndroidSink.h"
+#include "sinks/AFileSink.h"
+#include "sinks/AWindowDebugSink.h"
 #include "AUI/Platform/AProcess.h"
 #include "AUI/Platform/Entry.h"
 #include "AUI/Util/ACommandLineArgs.h"
-#include "detail/LogFormat.h"
+#include "sinks/detail/LogFormat.h"
 #include <fmt/format.h>
 
 #if AUI_PLATFORM_APPLE
-#include "AAppleLogSink.h"
+#include "sinks/AAppleLogSink.h"
 #endif
 
 #include <chrono>
@@ -116,6 +117,8 @@ AVector<_<ALogSink>> ALogger::defaultSinks() {
     sinks.push_back(_new<AAndroidSink>());
 #elif AUI_PLATFORM_APPLE
     sinks.push_back(_new<AAppleLogSink>());
+#elif AUI_PLATFORM_WIN
+    sinks.push_back(_new<AWindowDebugSink>());
 #else
     sinks.push_back(_new<AConsoleSink>());
 #endif
