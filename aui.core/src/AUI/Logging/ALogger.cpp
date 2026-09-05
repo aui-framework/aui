@@ -138,12 +138,7 @@ APath ALogger::logFile() {
     if (mLogFile) {
         return mLogFile->path();
     }
-    for (auto& sink : mSinks) {
-        if (auto* fileSink = dynamic_cast<AFileSink*>(sink.get())) {
-            return fileSink->path();
-        }
-    }
-    throw AException("No file sink configured");
+    throw AException("No log file configured");
 }
 
 bool ALogger::isTraceImpl() {
