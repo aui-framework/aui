@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -34,28 +34,33 @@ void AAbstractLabel::render(ARenderContext context) {
     doRenderText(context.render);
 }
 
-int AAbstractLabel::getContentMinimumWidth() {
-    switch (mTextOverflow) {
-        case ATextOverflow::ELLIPSIS:
-            return getFontStyle().getWidth(AString::fromUtf32(std::u32string_view(&ELLIPSIS, 1)));
-        case ATextOverflow::CLIP:
-            return 0;
-        case ATextOverflow::NONE:
-            break;
+glm::ivec2 AAbstractLabel::onIntrinsicMeasure(AConstraints constraints) {
+    AString text = getTransformedText();
+    AFontStyle& style = getFontStyle();
+    int measuredWidth = style.getWidth(text);
+    if (mTextOverflow != ATextOverflow::NONE && !constraints.isUnlimitedInline() && measuredWidth > constraints.maxInline) {
+        const int availableWidth = constraints.maxInline;
+        measuredWidth = availableWidth;
+        processTextOverflow(text, availableWidth);
     }
-
-    int acc = mPrerendered ? mPrerendered->getWidth() : getFontStyle().getWidth(mText);
-    if (mIcon) {
-        acc += getIconSize().x * 2;
-    }
-    return acc;
+    return {
+        measuredWidth,
+        style.getLineHeight(),
+    };
 }
 
-int AAbstractLabel::getContentMinimumHeight() {
-    if (mText.empty())
-        return 0;
+AMinMaxAxis AAbstractLabel::onComputeIntrinsicMinMaxAxis(int height) {
+    int width = mPrerendered ? mPrerendered->getWidth() : getFontStyle().getWidth(mText);
+    if (mIcon) {
+        width += getIconSize().x * 2;
+    }
+    return {
+        .min = width,
+        .max = width,
+    };
+}
 
-    // Normally, text will be rendered as this:
+// Normally, text will be rendered as this:
     //
     //
     //      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
@@ -127,12 +132,8 @@ int AAbstractLabel::getContentMinimumHeight() {
     //    E
     //    R
 
-    return getFontStyle().size * (1 + ranges::count(mText.toStdString(), '\n')) + getFontStyle().font->getDescenderHeight(getFontStyle().size);
-}
-
-
-void AAbstractLabel::setSize(glm::ivec2 size) {
-    AView::setSize(size);
+void AAbstractLabel::onLayout(glm::ivec2 size) {
+    AView::onLayout(size);
     if (mTextOverflow != ATextOverflow::NONE) {
         mPrerendered = nullptr;
         redraw();
@@ -160,43 +161,35 @@ Iterator findTruncationPoint(Iterator begin, Iterator end, int maxWidth, ATextOv
     return findFirstOverflowedIndex(begin, end, availableWidth, fontStyle);
 }
 
-void AAbstractLabel::processTextOverflow(AString& text) {
-    if (mTextOverflow == ATextOverflow::NONE) return;
+bool AAbstractLabel::processTextOverflow(AString& text, int maxWidth) {
+    if (mTextOverflow == ATextOverflow::NONE) return false;
 
-    int overflowingWidth;
-    if (getFixedSize().x == 0) {
-        overflowingWidth = getMaxSize().x;
-    } else {
-        overflowingWidth = std::min(getMaxSize().x, getFixedSize().x);
-    }
-
-    overflowingWidth = std::min(overflowingWidth, mSize.x);
-
-    mIsTextTooLarge = getFontStyle().getWidth(text) > overflowingWidth;
-    if (!mIsTextTooLarge) return;
+    bool isTextTooLarge = getFontStyle().getWidth(text) > maxWidth;
+    if (!isTextTooLarge) return false;
 
     auto utf8_view = text.utf8();
-    auto truncation_point = findTruncationPoint(utf8_view.begin(), utf8_view.end(), overflowingWidth, mTextOverflow, getFontStyle());
+    auto truncation_point = findTruncationPoint(utf8_view.begin(), utf8_view.end(), maxWidth, mTextOverflow, getFontStyle());
     text.erase(truncation_point.data() - text.data());
 
     if (mTextOverflow == ATextOverflow::ELLIPSIS) {
         auto ending = AChar(ELLIPSIS).toUtf8();
         text.append(AStringView(ending.begin(), ending.end()));
     }
+    return true;
 }
 
-void AAbstractLabel::doPrerender(IRenderer& render) {
+void AAbstractLabel::doPrerender(IRenderer& render, int maxWidth) {
     auto fs = getFontStyle();
     if (!mText.empty()) {
         AString transformedText = getTransformedText();
-        processTextOverflow(transformedText);
+        mIsTextTooLarge = processTextOverflow(transformedText, maxWidth);
         mPrerendered = render.prerenderString({0, 0}, transformedText, fs);
     }
 }
 
 void AAbstractLabel::doRenderText(IRenderer& render) {
     if (!mPrerendered) {
-        doPrerender(render);
+        doPrerender(render, getSize().x);
     }
 
 
@@ -268,12 +261,12 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
         if (mPrerendered) {
             int y = mPadding.top + getFontStyle().getAscenderHeight();
 
-            // adding height of descender we established in getContentMinimumHeight, see explanation there.
+            // adding height of descender we established in intrinsic height, see explanation there.
             y += getFontStyle().font->getDescenderHeight(getFontStyle().size);
 
             if (mVerticalAlign == VerticalAlign::MIDDLE) {
                 y = (glm::max)(y,
-                               y + int(glm::ceil((getContentHeight() - getContentMinimumHeight())) / 2.0));
+                               y + int(glm::ceil((getContentHeight() - int(getFontStyle().getLineHeight()))) / 2.0));
             }
             RenderHints::PushMatrix m(render);
             render.translate({mTextLeftOffset + mPadding.left, y});
@@ -307,7 +300,7 @@ void AAbstractLabel::onDpiChanged() {
 
 void AAbstractLabel::invalidateFont() {
     mPrerendered = nullptr;
-    markMinContentSizeInvalid();
+    requestLayout();
     redraw();
 }
 
@@ -330,7 +323,7 @@ void AAbstractLabel::setText(AString newText) {
     mText = std::move(newText);
     mPrerendered = nullptr;
 
-    markMinContentSizeInvalid();
+    requestLayout();
     redraw();
 
     emit mTextChanged(mText);

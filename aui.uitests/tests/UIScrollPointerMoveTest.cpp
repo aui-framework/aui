@@ -43,12 +43,12 @@ protected:
     void SetUp() override {
         UITest::SetUp();
 
-        mWindow = _new<AWindow>();
+        mWindow = _new<AWindow>("Test window", 200_dp, 100_dp);
         using namespace declarative;
         ALayoutInflater::inflate(mWindow,
                                  Vertical {
                                    Centered {
-                                     AScrollArea::Builder().withContents(Vertical {
+                                     mScrollArea = AScrollArea::Builder().withContents(Vertical {
                                        Label { "Some bullshit" },
                                        Label { "Some bullshit" },
                                        Label { "Some bullshit" },
@@ -66,12 +66,14 @@ protected:
                                        Label { "Some bullshit" },
                                        Label { "Some bullshit" },
                                      }).build() AUI_OVERRIDE_STYLE {
-                                       MinSize { 100_dp },
+                                       FixedSize { 150_dp, 100_dp },
                                      }
                                    }
                                  }
         );
         mWindow->show();
+        uitest::frame();
+        ASSERT_TRUE(bool(mScrollArea->verticalScrollbar()->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
     }
 
     void TearDown() override {
@@ -81,6 +83,7 @@ protected:
     }
 
     _<AWindow> mWindow;
+    _<AScrollArea> mScrollArea;
     _<ViewMock> mView;
 };
 

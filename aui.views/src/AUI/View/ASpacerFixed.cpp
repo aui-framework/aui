@@ -11,26 +11,18 @@
 
 #include "ASpacerFixed.h"
 
-int ASpacerFixed::getContentMinimumWidth() {
+AMinMaxAxis ASpacerFixed::onComputeIntrinsicMinMaxAxis(int height) {
     if (auto parent = getParent()) {
         if (const auto& layout = parent->getLayout()) {
             if (layout->getLayoutDirection() == ALayoutDirection::HORIZONTAL) {
-                return int(mSpace.getValuePx());
+                return {
+                    .min = static_cast<int>(mSpace.getValuePx()),
+                    .max = static_cast<int>(mSpace.getValuePx()),
+                };
             }
         }
     }
-    return 0;
-}
-
-int ASpacerFixed::getContentMinimumHeight() {
-    if (auto parent = getParent()) {
-        if (const auto& layout = parent->getLayout()) {
-            if (layout->getLayoutDirection() == ALayoutDirection::VERTICAL) {
-                return int(mSpace.getValuePx());
-            }
-        }
-    }
-    return 0;
+    return {};
 }
 
 bool ASpacerFixed::consumesClick(const glm::ivec2& pos) {

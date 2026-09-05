@@ -16,12 +16,13 @@
 #pragma once
 
 #include "IProperty.h"
+#include "AUI/Common/IStringable.h"
 #include <AUI/Render/FontRendering.h> // defined here
 
 namespace ass {
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<FontRendering>: IPropertyBase {
+        struct API_AUI_VIEWS Property<FontRendering>: IPropertyBase, IStringable {
         private:
             FontRendering mInfo;
 
@@ -35,6 +36,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "FontRendering({})"_format(mInfo);
             }
         };
 

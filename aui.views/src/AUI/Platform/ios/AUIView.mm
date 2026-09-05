@@ -129,7 +129,7 @@ static GLuint defaultFb, colorBuffer = 0;
     
     CGSize size = self.bounds.size;
     float scale = (float)self.contentScaleFactor;
-    auiWindow()->setSize({size.width * scale, size.height * scale});
+    auiWindow()->onResize(size.width * scale, size.height * scale);
 }
 
 - (void) startAnimation

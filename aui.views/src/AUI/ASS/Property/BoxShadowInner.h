@@ -17,6 +17,7 @@
 
 
 #include <AUI/Util/AMetric.h>
+#include "AUI/Common/IStringable.h"
 #include "IProperty.h"
 
 namespace ass {
@@ -59,7 +60,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<BoxShadowInner>: IPropertyBase {
+        struct API_AUI_VIEWS Property<BoxShadowInner>: IPropertyBase, IStringable {
         private:
             BoxShadowInner mInfo;
 
@@ -77,6 +78,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "BoxShadowInner(offsetX={}, offsetY={}, blur={}, spread={}, color={})"_format(mInfo.offsetX, mInfo.offsetY, mInfo.blurRadius, mInfo.spreadRadius, mInfo.color);
             }
         };
     }

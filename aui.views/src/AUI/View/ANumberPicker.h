@@ -83,6 +83,9 @@ public:
 
     void setMax(int64_t max);
 
+protected:
+    void onLayout(glm::ivec2 size) override;
+
 signals:
     /**
      * @brief Number changed.

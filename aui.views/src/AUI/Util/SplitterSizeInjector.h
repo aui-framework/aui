@@ -25,21 +25,60 @@ struct SizeInjector {
         return item.view->name(std::forward<Args>(args)...); \
     }
     ASPLITTER_IMPL_FORWARD_METHOD(ensureAssUpdated)
-    ASPLITTER_IMPL_FORWARD_METHOD(getExpanding)
     ASPLITTER_IMPL_FORWARD_METHOD(getVisibility)
     ASPLITTER_IMPL_FORWARD_METHOD(getMargin)
-    ASPLITTER_IMPL_FORWARD_METHOD(setGeometry)
+    ASPLITTER_IMPL_FORWARD_METHOD(layout)
     ASPLITTER_IMPL_FORWARD_METHOD(getSize)
-    ASPLITTER_IMPL_FORWARD_METHOD(getFixedSize)
     ASPLITTER_IMPL_FORWARD_METHOD(getMaxSize)
+    ASPLITTER_IMPL_FORWARD_METHOD(getMinSize)
 
-    glm::ivec2 getMinimumSize() const {
-        auto size = item.view->getMinimumSize();
+    glm::ivec2 getFixedSize() const {
+        auto fixedSize = item.view->getFixedSize();
         if (item.overridedSize) {
-            auto& value = aui::layout_direction::getAxisValue(direction, size);
-            value = glm::max(*item.overridedSize, value);
+            aui::layout_direction::getAxisValue(direction, fixedSize) = 0;
         }
-        return size;
+        return fixedSize;
+    }
+
+    glm::ivec2 measure(AConstraints constraints) const {
+        if (item.overridedSize) {
+            const int overridedAxis = glm::max(
+                aui::layout_direction::getAxisValue(direction, item.view->getMinSize()),
+                *item.overridedSize);
+            if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+                constraints.minInline = overridedAxis;
+                constraints.maxInline = overridedAxis;
+            } else {
+                constraints.minBlock = overridedAxis;
+                constraints.maxBlock = overridedAxis;
+            }
+        }
+        return item.view->measure(constraints);
+    }
+
+    glm::ivec2 getExpanding() const {
+        auto expanding = item.view->getExpanding();
+        if (item.overridedSize) {
+            auto& value = aui::layout_direction::getAxisValue(direction, expanding);
+            value = 0;
+        }
+        return expanding;
+    }
+
+    glm::ivec2 getMinSize() const {
+        return item.view->getMinSize();
+    }
+
+    AMinMaxAxis computeMinMaxAxis(int height = -1) const {
+        auto value = item.view->computeMinMaxAxis(height);
+        if (item.overridedSize) {
+            if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+                const int overridedAxis = glm::max(item.view->getMinSize().x, *item.overridedSize);
+                value.min = overridedAxis;
+                value.max = overridedAxis;
+            }
+        }
+        return value;
     }
 
     bool operator==(const SizeInjector& rhs) const noexcept { return item.view == rhs.item.view; }

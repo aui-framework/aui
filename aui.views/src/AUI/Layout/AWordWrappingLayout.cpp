@@ -36,21 +36,39 @@ void AWordWrappingLayout::removeView(aui::no_escape<AView> view, size_t index) {
     mViewEntry.removeAt(index);
 }
 
-
-
-int AWordWrappingLayout::getMinimumWidth() {
-    return 0;
-}
-
-int AWordWrappingLayout::getMinimumHeight() {
-    int m = 0;
-    for (auto& view : mViews) {
-        m = (glm::max)(view->getPosition().y + view->getSize().y, m);
+glm::ivec2 AWordWrappingLayout::onIntrinsicMeasure(AConstraints constraints) {
+    int width = 0;
+    for (auto& v : mViewEntry) {
+        width = std::max(width, v.getSize().x);
     }
-    return m;
+    if (constraints.isUnlimitedInline()) {
+        int height = 0;
+        for (auto& v : mViewEntry) {
+            height += v.getSize().y;
+        }
+        return { width, height };
+    }
+    AVector<_<AWordWrappingEngineBase::Entry>> entries;
+    for (auto& v : mViewEntry) {
+        entries << aui::ptr::fake_shared(&v);
+    }
+    AWordWrappingEngine we;
+    we.setEntries(std::move(entries));
+    we.performLayout({0, 0}, {constraints.maxInline, constraints.maxBlock});
+    return { constraints.maxInline, we.height().valueOr(0) };
 }
 
-void AWordWrappingLayout::onResize(int x, int y, int width, int height) {
+AMinMaxAxis AWordWrappingLayout::onComputeIntrinsicMinMaxAxis(int) {
+    AMinMaxAxis result;
+    for (auto& viewEntry : mViewEntry) {
+        const auto size = viewEntry.getSize();
+        result.min = glm::max(result.min, size.x);
+        result.max += size.x;
+    }
+    return result;
+}
+
+void AWordWrappingLayout::layout(int x, int y, int width, int height) {
     AVector<_<AWordWrappingEngineBase::Entry>> entries;
     for (auto& v : mViewEntry) {
         entries << aui::ptr::fake_shared(&v);

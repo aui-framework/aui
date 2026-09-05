@@ -187,13 +187,9 @@ public:
 
     glm::ivec2 getWindowPosition() const;
 
-    void setPosition(glm::ivec2 position) override;
-    void setSize(glm::ivec2 size) override;
-    void setGeometry(int x, int y, int width, int height) override;
-
-#if AUI_PLATFORM_LINUX
-    void applyGeometryToChildren() override;
-#endif
+    void setPosition(glm::ivec2 position);
+    void setSize(glm::ivec2 size);
+    void setGeometry(int x, int y, int width, int height);
 
     void onFocusAcquired() override;
     void onFocusLost() override;
@@ -217,10 +213,10 @@ public:
      */
     static _<AWindow> wrapViewToWindow(const _<AView>& view, const AString& title, int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT);
 
-    /**
-     * @return Current window for current thread.
-     */
-    static ASurface* current();
+    [[deprecated("Use ASurface::current()")]]
+    static ASurface* current() {
+      return ASurface::current();
+    }
 
     /**
      * @brief Translates coordinates from the coordinate space of this window to the coordinate space of another window.

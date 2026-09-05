@@ -50,7 +50,7 @@ namespace Util {
             return { float(r.x), float(r.y), float(r.x + r.width), float(r.y + r.height) };
         }
 
-        virtual void onResize(T& data, dim side) = 0;
+        virtual void layout(T& data, dim side) = 0;
         virtual void onInsert(T& data, const dim& x, const dim& y) = 0;
 
     public:
@@ -67,7 +67,7 @@ namespace Util {
         void resize(T& data, dim size)
         {
             side = size;
-            this->onResize(data, size);
+            this->layout(data, size);
         }
     };
 }

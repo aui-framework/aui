@@ -12,14 +12,15 @@
 //#ifdef _DEBUG
 
 #include "DevtoolsPanel.h"
-#include "AUI/Devtools/DevtoolsLayoutTab.h"
-#include "AUI/Devtools/DevtoolsPerformanceTab.h"
-#include "AUI/Devtools/DevtoolsPointerInspect.h"
-#include "AUI/Platform/ASurface.h"
-#include "AUI/Util/UIBuildingHelpers.h"
-#include "AUI/View/ATabView.h"
-#include "DevtoolsProfilingOptions.h"
-#include "DevtoolsThreadsTab.h"
+
+#include <AUI/Devtools/DevtoolsLayoutTab.h>
+#include <AUI/Devtools/DevtoolsPerformanceTab.h>
+#include <AUI/Devtools/DevtoolsPointerInspect.h>
+#include <AUI/Platform/ASurface.h>
+#include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/View/ATabView.h>
+#include <AUI/Devtools/DevtoolsProfilingOptions.h>
+#include <AUI/Devtools/DevtoolsThreadsTab.h>
 
 using namespace declarative;
 

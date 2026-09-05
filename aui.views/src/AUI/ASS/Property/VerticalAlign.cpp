@@ -18,6 +18,7 @@
 #include "VerticalAlign.h"
 #include "AUI/View/AText.h"
 #include "AUI/View/ATextArea.h"
+#include "AUI/View/AAbstractTextField.h"
 
 void ass::prop::Property<VerticalAlign>::applyFor(AView* view) {
     if (auto v = dynamic_cast<AAbstractLabel*>(view)) {
@@ -31,6 +32,11 @@ void ass::prop::Property<VerticalAlign>::applyFor(AView* view) {
     }
 
     if (auto v = dynamic_cast<ATextArea*>(view)) {
+        v->setVerticalAlign(mInfo);
+        return;
+    }
+
+    if (auto v = dynamic_cast<AAbstractTextField*>(view)) {
         v->setVerticalAlign(mInfo);
         return;
     }

@@ -18,6 +18,7 @@
 #include "ViewPropertiesView.h"
 #include <AUI/ASS/ASS.h>
 #include <AUI/Common/IStringable.h>
+#include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AClipboard.h>
 #include <AUI/Reflect/AReflect.h>
 #include <AUI/Traits/iterators.h>
@@ -36,9 +37,23 @@
 #include "AUI/View/AGroupBox.h"
 #include "AUI/Common/AString.h"
 #include "AUI/View/AForEachUI.h"
+#include "AUI/View/ANumberPicker.h"
+
+#include <chrono>
 
 using namespace ass;
 using namespace declarative;
+using namespace std::chrono;
+
+namespace {
+void logDurationIfNonZero(const char* phase, high_resolution_clock::time_point start) {
+    const auto durationMs = duration_cast<milliseconds>(high_resolution_clock::now() - start).count();
+    if (durationMs == 0) {
+        return;
+    }
+    ALogger::info("ViewPropertiesView") << phase << " took " << durationMs << " ms";
+}
+}
 
 ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
     setCustomStyle({
@@ -54,100 +69,136 @@ ViewPropertiesView::ViewPropertiesView(const _<AView>& targetView) {
     setTargetView(targetView);
 }
 
+glm::ivec2 ViewPropertiesView::onIntrinsicMeasure(AConstraints constraints) {
+    const auto start = high_resolution_clock::now();
+    auto result = AScrollArea::onIntrinsicMeasure(constraints);
+    logDurationIfNonZero(("measure " + std::to_string(constraints.maxInline) + " " + std::to_string(constraints.maxBlock)).c_str(), start);
+    return result;
+}
+
 void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
-    if (!targetView) {
-        return;
-    }
-    AUI_NULLSAFE(targetView->getWindow())->profiling()->highlightView = targetView;
-    AUI_NULLSAFE(targetView->getWindow())->redraw();
+  if (!targetView) {
+    return;
+  }
+  AUI_NULLSAFE(targetView->getWindow())->profiling()->highlightView = targetView;
+  AUI_NULLSAFE(targetView->getWindow())->redraw();
 
-    mTargetView = targetView;
-    if (!targetView)
-        return;
+  mTargetView = targetView;
+  if (!targetView)
+    return;
 
-    ADeque<ass::prop::IPropertyBase*> applicableDeclarations;
+  ADeque<ass::prop::IPropertyBase*> applicableDeclarations;
 
-    auto addressStr = "{}"_format((void*) targetView.get());
-    _<AViewContainer> dst = Vertical {
-        _new<ALabel>(Devtools::prettyViewName(targetView.get())) AUI_OVERRIDE_STYLE { FontSize { 14_pt } },
-        Horizontal {
-          Label { addressStr },
-          Button { Label { "Copy" }, [addressStr] { AClipboard::copyToClipboard(addressStr); } },
-        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+  auto addressStr = "{}"_format((void*) targetView.get());
+  _<AViewContainer> dst;
+  dst = Vertical {
+    _new<ALabel>(Devtools::prettyViewName(targetView.get())) AUI_OVERRIDE_STYLE { FontSize { 14_pt } },
+    Horizontal {
+      Label { addressStr },
+      Button { Label { "Copy" }, [addressStr] { AClipboard::copyToClipboard(addressStr); } },
+      Button { Label { "Request Layout" }, [targetView] { targetView->requestLayout(); } },
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
 
-        Label { AUI_REACT("Min size = {}px"_format(targetView->getMinimumSize())) },
-        Label { AUI_REACT("Size = {}px"_format(targetView->size())) },
+    Label { AUI_REACT("Size = {}px"_format(targetView->size())) },
+    Label { AUI_REACT("Min size = {}px"_format(targetView->getMinSize())) },
+    Label { AUI_REACT("Max size = {}px"_format(targetView->getMaxSize())) },
+    Label { AUI_REACT("Fixed size = {}px"_format(targetView->getFixedSize())) },
 
-        Vertical {
-          CheckBox {
-            AUI_REACT(targetView->enabled()),
-            [targetView](bool enabled) { targetView->enabled() = enabled; },
-            Label { "Enabled" },
-          },
-          CheckBox {
-            AUI_REACT(targetView->expanding() != glm::ivec2(0)),
+    // TODO(Nelonn): COMPUTE THIS EATING FPS LIKE A SHIT
+    Label { AUI_REACT("Compute min size = {}px"_format(targetView->computeMinMaxAxis().min)) },
+    Label { AUI_REACT("Compute max size = {}px"_format(targetView->computeMinMaxAxis().max)) },
+    Label { AUI_REACT("Measure (width -1) = {}px"_format(targetView->measure(AConstraints {}))) },
+    Label { AUI_REACT("Measure (width 0) = {}px"_format(targetView->measure(AConstraints::fixedInline(0)))) },
+    Label { AUI_REACT("Measure (w 256 h 40) = {}px"_format(targetView->measure(AConstraints { .maxInline = 256, .maxBlock = 40 }))) },
+    Label { AUI_REACT("Measure (width 256) = {}px"_format(targetView->measure(AConstraints { .maxInline = 256 }))) },
+    Label { AUI_REACT("Measure (width 512) = {}px"_format(targetView->measure(AConstraints { .maxInline = 512 }))) },
+    Label { AUI_REACT("Measure (height 512) = {}px"_format(targetView->measure(AConstraints { .maxBlock = 512 }))) },
+    Label { AUI_REACT("Measure (w 512 h 512) = {}px"_format(targetView->measure(AConstraints {
+      .maxInline = 512, .maxBlock = 512 }))) },
 
-            [this, targetView](bool expanding) { targetView->expanding() = expanding ? glm::ivec2(1) : glm::ivec2(0); },
-            Label { "Expanding" },
-          },
-        },
+    Vertical {
+      CheckBox {
+        AUI_REACT(targetView->enabled()),
+        [targetView](bool enabled) { targetView->enabled() = enabled; },
+        Label { "Enabled" },
+      },
+      Horizontal {
+        Label { "Expanding" },
+        _new<ANumberPicker>().connect(
+            &ANumberPicker::valueChanged,
+            [targetView](int64_t val) {
+              targetView->expanding() = glm::ivec2(val, targetView->expanding()->y);
+            }) AUI_LET {
+              it->setMin(0);
+              it->setValue(targetView->expanding()->x);
+            },
+        _new<ANumberPicker>().connect(
+            &ANumberPicker::valueChanged,
+            [targetView](int64_t val) {
+              targetView->expanding() = glm::ivec2(targetView->expanding()->x, val);
+            }) AUI_LET {
+              it->setMin(0);
+              it->setValue(targetView->expanding()->y);
+            },
+      },
+    },
 
-        AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", ")),
+    AText::fromString((targetView->getAssNames() | ranges::to<AStringVector>()).join(", "), { WordBreak::BREAK_ALL }),
 
-        Button {
-          Label { "Add \"DevtoolsTest\" stylesheet name" },
+    Button {
+      Label { "Add \"DevtoolsTest\" stylesheet name" },
 
-          [this, targetView] {
-              setTargetView(targetView);
-              targetView->addAssName("DevtoolsTest");
-          },
-        } AUI_LET { it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest")); },
+      [this, targetView] {
+        setTargetView(targetView);
+        targetView->addAssName("DevtoolsTest");
+      },
+    } AUI_LET { it->setEnabled(!targetView->getAssNames().contains("DevtoolsTest")); },
 
-        GroupBox {
-          Label { "Visibility" },
-          AUI_DECLARATIVE_FOR(i, aui::enumerate::ALL_VALUES<Visibility>, AVerticalLayout) {
-              return RadioButton {
-                  AUI_REACT(targetView->visibility() == i),
-                  [=] { targetView->visibility() = i;  },
-                  Label { "{}"_format(i) },
-              };
-          },
-        },
+    GroupBox {
+      Label { "Visibility" },
+      AUI_DECLARATIVE_FOR(i, aui::enumerate::ALL_VALUES<Visibility>, AVerticalLayout) {
+        return RadioButton {
+          AUI_REACT(targetView->visibility() == i),
+          [=] { targetView->visibility() = i; },
+          Label { "{}"_format(i) },
+        };
+      },
+    },
 
-        Label { "view's custom style" },
-        Label { "{" } << ".declaration_br",
-    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } };
+    Label { "view's custom style" },
+    Label { "{" } << ".declaration_br",
+  } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } };
 
-    displayApplicableRule(dst, applicableDeclarations, &targetView->getCustomAss());
+  displayApplicableRule(dst, applicableDeclarations, &targetView->getCustomAss());
 
-    for (const auto& r : aui::reverse_iterator_wrap(targetView->getAssHelper()->getPossiblyApplicableRules())) {
-        if (r.getSelector().isStateApplicable(targetView.get())) {
-            AStringVector sl;
-            for (auto& ss : r.getSelector().getSubSelectors()) {
-                if (auto classOf = _cast<class_of>(ss)) {
-                    sl << "ass::class_of(\"{}\")"_format(classOf->getClasses().join(", "));
-                } else {
-                    sl << IStringable::toString(ss);
-                }
-            }
-            if (sl.size() == 1) {
-                dst->addView(_new<ALabel>(sl.join(',') + ","));
-            } else {
-                dst->addView(_new<ALabel>("{" + sl.join(',') + "},"));
-            }
-            displayApplicableRule(dst, applicableDeclarations, &r);
-        }
-    }
-    dst->addView(_new<ALabel>("}") << ".declaration_br");
-    AScrollArea::setContents(dst);
+  for (const auto& r : aui::reverse_iterator_wrap(targetView->getAssHelper()->getPossiblyApplicableRules())) {
+      if (r.getSelector().isStateApplicable(targetView.get())) {
+          AStringVector sl;
+          for (auto& ss : r.getSelector().getSubSelectors()) {
+              if (auto classOf = _cast<class_of>(ss)) {
+                  sl << "ass::class_of(\"{}\")"_format(classOf->getClasses().join(", "));
+              } else {
+                  sl << IStringable::toString(ss);
+              }
+          }
+          if (sl.size() == 1) {
+              dst->addView(_new<ALabel>(sl.join(',') + ","));
+          } else {
+              dst->addView(_new<ALabel>("{" + sl.join(',') + "},"));
+          }
+          displayApplicableRule(dst, applicableDeclarations, &r);
+      }
+  }
+  dst->addView(_new<ALabel>("}") << ".declaration_br");
+  AScrollArea::setContents(dst);
 
-    applyGeometryToChildrenIfNecessary();
-    redraw();
+  redraw();
 }
 
 void ViewPropertiesView::displayApplicableRule(
     const _<AViewContainer>& dst, ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
     const ass::PropertyList* rule) {
+    const auto start = high_resolution_clock::now();
     for (const auto& decl : rule->declarations()) {
         applicableDeclarations.push_front(decl.get());
         dst->addView(_new<ALabel>(IStringable::toString(decl)) AUI_OVERRIDE_STYLE { Opacity { 0.7f } });
@@ -158,13 +209,15 @@ void ViewPropertiesView::displayApplicableRule(
     dst->addView(
         _new<AHDividerView>()
             AUI_OVERRIDE_STYLE { BackgroundSolid { 0x505050_rgb }, Margin { 5_dp, 0 }, MinSize { {}, 10_dp } });
+    logDurationIfNonZero("displayApplicableRule", start);
 }
 
 void ViewPropertiesView::requestTargetUpdate() {
+    const auto start = high_resolution_clock::now();
     if (auto targetView = mTargetView.lock()) {
         if (auto targetWindow = targetView->getWindow()) {
-            targetWindow->applyGeometryToChildrenIfNecessary();
             targetWindow->redraw();
         }
     }
+    logDurationIfNonZero("requestTargetUpdate", start);
 }

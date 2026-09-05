@@ -10,11 +10,14 @@
  */
 
 #pragma once
-#include "AUI/Common/AObject.h"
-#include "AUI/Common/ADeque.h"
-#include "AUI/View/AView.h"
-#include "AUI/Common/SharedPtr.h"
-#include "AUI/Util/ALayoutDirection.h"
+
+#include <AUI/Common/AObject.h>
+#include <AUI/Common/ADeque.h>
+#include <AUI/Common/AFixedSizeCache.hpp>
+#include <AUI/View/AView.h>
+#include <AUI/Common/SharedPtr.h>
+#include <AUI/Util/ALayoutDirection.h>
+#include <limits>
 
 class AViewContainer;
 
@@ -30,6 +33,14 @@ class AViewContainer;
  * another [container](aviewcontainer.md). Such nested combinations allows to replicate nearly any UI layout.
  *
  * This approach can be found in many popular declarative UI frameworks.
+ *
+ * !!! note "Design inspiration"
+ *
+ *     The measurement pipeline (constraint propagation, intrinsic measure, inline/block axis terminology, per-constraints
+ *     caching) is heavily inspired by [Chromium's LayoutNG](https://www.chromium.org/blink/layoutng/) — the layout
+ *     engine powering Chrome/Edge since ~2019. LayoutNG introduced the idea of passing an immutable
+ *     `ConstraintSpace` into each layout node and getting back an immutable fragment, which maps directly to AUI's
+ *     `AConstraints → measure() → layout()` pipeline.
  *
  * The ALayout is the base class for all layout managers in AUI. Layout managers are responsible for:
  *
@@ -86,6 +97,224 @@ class AViewContainer;
  * 7. **Nesting** - you can nest containers into containers, and so on. When we say "container", it means a
  *    [AViewContainer]. When we say "Vertical", we imply a [AViewContainer] with [AVerticalLayout] as the
  *    layout manager.
+ *
+ * ---
+ *
+ * ## Terminology { #TERMINOLOGY }
+ *
+ * The layout system uses a handful of specific terms. Here is what they mean:
+ *
+ * **Measure** — the process of asking a view "how much space do you want?" without committing to a final position.
+ * Analogous to CSS `getComputedStyle` / Flutter `layout` dry-run / Android `measure`. The result is a preferred size
+ * under given constraints, cached until `requestLayout()` is called.
+ *
+ * **Layout** — the process of telling a view "here is your final position and size". Called after measure. Analogous
+ * to CSS layout / Flutter `layout` / Android `layout`.
+ *
+ * **Intrinsic** — means "content only, before the framework applies its wrapper logic". When you override
+ * `onIntrinsicMeasure`, you only deal with the raw content size — padding, margin, `ass::FixedSize`, `ass::MinSize`,
+ * `ass::MaxSize` are **not your concern**; the public `measure()` adds them on top automatically. Think of it as
+ * "what size would this view naturally want if it had no external constraints imposed by the stylesheet?"
+ *
+ * **Constraints** (`AConstraints`) — a box of four numbers passed into measure: minimum and maximum allowed width
+ * (`minInline` / `maxInline`) and height (`minBlock` / `maxBlock`). A value of `-1` means unlimited. Inspired by
+ * [Flutter's BoxConstraints](https://api.flutter.dev/flutter/rendering/BoxConstraints-class.html) and
+ * [Chromium LayoutNG's ConstraintSpace](https://www.chromium.org/blink/layoutng/).
+ *
+ * **MinMaxAxis** (`AMinMaxAxis`) — a pair `{min, max}` representing the range of widths a view can occupy for a
+ * given height. Used by layout managers to decide how to share horizontal space before committing to constraints.
+ *
+ * **Inline axis / inline size** — in a standard left-to-right horizontal layout this is simply the **width (X)**.
+ * The name comes from CSS writing modes: "inline" is the direction text flows within a line. AUI uses this term
+ * instead of "width" so that the same layout code remains correct for future RTL or vertical-text writing modes,
+ * where "inline" would map to the opposite or perpendicular axis.
+ *
+ * **Block axis / block size** — in a standard left-to-right horizontal layout this is simply the **height (Y)**.
+ * "Block" is the direction in which blocks of text stack. Same rationale as above.
+ *
+ * **TL;DR for LTR layouts:** inline = width, block = height.
+ *
+ * **Free space** — container size minus the sum of children's measured minimum sizes. Distributed among children
+ * with non-zero [Expanding](#EXPANDING) values after the measure pass.
+ *
+ * ---
+ *
+ * ## Implementing a custom AView: what to override { #CUSTOM_VIEW }
+ *
+ * If you are implementing a custom [AView] (say, `MyView`), here is what you need to know about the layout system.
+ *
+ * There are **three virtual methods** you may override in [AView]:
+ *
+ * | Method | Purpose | Override? |
+ * |--------|---------|-----------|
+ * | `onIntrinsicMeasure(AConstraints)` | Returns preferred **content** size under given constraints | **Usually** |
+ * | `onComputeIntrinsicMinMaxAxis(int height)` | Returns min/max **content** width for a given height | **Sometimes** |
+ * | `onLayout(glm::ivec2 size)` | Called when position/size are finalized; use to position children | Only for containers |
+ *
+ * !!! note "What does 'intrinsic' mean?"
+ *
+ *     **Intrinsic** = "what size does the content itself want, ignoring all external stylesheet rules?"
+ *     When you override `onIntrinsicMeasure`, you only return the raw content size. The framework's public
+ *     `measure()` and `computeMinMaxAxis()` then wrap your result and add padding, margin, `ass::FixedSize`,
+ *     `ass::MinSize`, `ass::MaxSize` on top. **Never call the `on*` intrinsic methods directly** — always go
+ *     through the public wrappers. See [TERMINOLOGY] for the full glossary.
+ *
+ * ### 1. `onIntrinsicMeasure` – the primary override
+ *
+ * ```cpp
+ * glm::ivec2 MyView::onIntrinsicMeasure(AConstraints constraints) override {
+ *     // constraints describe the *content* box available to this view.
+ *     // Return the preferred content {width, height}.
+ *     int w = computeMyPreferredWidth();
+ *     int h = computeMyPreferredHeight();
+ *     return {w, h};
+ * }
+ * ```
+ *
+ * `AConstraints` carries four fields:
+ *
+ * | Field | Meaning |
+ * |-------|---------|
+ * | `minInline` | Minimum required width (usually 0) |
+ * | `maxInline` | Maximum allowed width, or `-1` if unlimited |
+ * | `minBlock`  | Minimum required height (usually 0) |
+ * | `maxBlock`  | Maximum allowed height, or `-1` if unlimited |
+ *
+ * Helper predicates: `isUnlimitedInline()`, `isUnlimitedBlock()`, `isInlineTight()`, `isBlockTight()`.
+ *
+ * **Real example – AAbstractLabel:**
+ * ```cpp
+ * glm::ivec2 AAbstractLabel::onIntrinsicMeasure(AConstraints constraints) {
+ *     int measuredWidth = getFontStyle().getWidth(getTransformedText());
+ *     if (mTextOverflow != ATextOverflow::NONE
+ *             && !constraints.isUnlimitedInline()
+ *             && measuredWidth > constraints.maxInline) {
+ *         measuredWidth = constraints.maxInline;  // clamp and trigger ellipsis
+ *     }
+ *     return { measuredWidth, getFontStyle().getLineHeight() };
+ * }
+ * ```
+ *
+ * ### 2. `onComputeIntrinsicMinMaxAxis` – width-for-height query
+ *
+ * ```cpp
+ * AMinMaxAxis MyView::onComputeIntrinsicMinMaxAxis(int height) override {
+ *     // height is the content height, or -1 if unconstrained.
+ *     // Return {min content width, max content width}.
+ *     int w = computeMyContentWidth(height);
+ *     return { .min = w, .max = w };
+ * }
+ * ```
+ *
+ * This is called by layout managers that need to know the range of widths a view can occupy before they have
+ * committed to a height (e.g., to determine how to share horizontal space). If your view has a fixed intrinsic
+ * width regardless of height, just return `{w, w}`. If the view can stretch, return different `min` and `max`.
+ *
+ * **When to override:** always override alongside `onIntrinsicMeasure` when your content width depends on
+ * available height (e.g., word-wrapped text, aspect-ratio-locked images). For a simple fixed-content view
+ * the default implementation (which delegates to `onIntrinsicMeasure`) is usually sufficient.
+ *
+ * ### 3. `onLayout` – finalising geometry (containers only)
+ *
+ * ```cpp
+ * void MyContainer::onLayout(glm::ivec2 size) override {
+ *     // size is the final {width, height} of this container.
+ *     // Position and size each child explicitly:
+ *     for (auto& child : mChildren) {
+ *         glm::ivec2 childSize = child->measure(AConstraints{ .maxInline = size.x, .maxBlock = size.y });
+ *         child->layout(0, currentY, childSize.x, childSize.y);
+ *         currentY += childSize.y;
+ *     }
+ * }
+ * ```
+ *
+ * For most leaf views (labels, images, custom-drawn widgets) you **do not** need to override `onLayout`.
+ *
+ * ### Summary for leaf view implementors
+ *
+ * If you only draw content and have no children, you need **one thing**:
+ * ```cpp
+ * glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+ * ```
+ * Everything else (padding, margins, fixed/min/max size, caching) is handled by the framework.
+ *
+ * ---
+ *
+ * ## Measurement pipeline in detail { #MEASURE_PIPELINE }
+ *
+ * The layout system has **three entry points**, from simplest to most complex:
+ *
+ * ```
+ * onComputeIntrinsicMinMaxAxis(height)
+ *        │
+ *        │  (override for content min/max width)
+ *        ▼
+ * computeMinMaxAxis(height)    ← public; adds padding / FixedSize / MinSize / MaxSize
+ *
+ * onIntrinsicMeasure(constraints)
+ *        │
+ *        │  (override for content preferred size)
+ *        ▼
+ * measure(constraints)         ← public; adds padding / FixedSize / MinSize / MaxSize, cached
+ *
+ * onLayout(size)
+ *        │
+ *        │  (override in containers to position children)
+ *        ▼
+ * layout(x, y, w, h)           ← public; sets position & size, calls onLayout
+ * ```
+ *
+ * **Step-by-step during a layout pass:**
+ *
+ * 1. Something triggers `AView::requestLayout()` (resize, style change, content change).
+ * 2. On the next render frame, `AViewContainer::layout()` is invoked on the root container.
+ * 3. The layout manager calls `child->computeMinMaxAxis(height)` for each child to determine
+ *    how to share available space among children.
+ * 4. Once widths are decided, the layout manager calls `child->measure(constraints)` to get the
+ *    final preferred size for each child under the resolved constraints.
+ * 5. The layout manager calls `child->layout(x, y, w, h)` which invokes `child->onLayout({w, h})`.
+ * 6. Results of `measure()` are cached in `mMeasureCache` keyed by `AConstraints`; the cache is
+ *    invalidated by `requestLayout()`.
+ *
+ * ### Axis terminology
+ *
+ * AUI uses CSS-inspired axis names to stay writing-mode agnostic (for future RTL/vertical text support):
+ *
+ * | AUI term | LTR horizontal (default) | RTL horizontal | Vertical (e.g. Japanese) |
+ * |----------|--------------------------|----------------|--------------------------|
+ * | **inline** | horizontal ➡️ (X) | horizontal ⬅️ (X) | vertical ⬇️ (Y) |
+ * | **block**  | vertical ⬇️ (Y) | vertical ⬇️ (Y) | horizontal ➡️ (X) |
+ *
+ * ### Relationship to Expanding / stretch factors
+ *
+ * !!! note "Qt heritage & Flexbox roadmap"
+ *
+ *     `Expanding` is inherited from Qt's `QSizePolicy::expandingDirections()` / `QSizePolicy::HorizontalPolicy`
+ *     model. In Qt, the stretch factor was the *primary* sizing mechanism. In AUI it has been demoted to a
+ *     *secondary* one: `measure()` / `computeMinMaxAxis()` run first and establish preferred sizes, then
+ *     Expanding distributes whatever space is left over. The API surface (`setExpanding()`, `ass::Expanding`,
+ *     `SpacerExpanding`) is intentionally kept familiar for Qt users.
+ *
+ *     **Known limitation:** Expanding only *grows* views beyond their measured minimum — it cannot *shrink*
+ *     them below it. CSS `flex-shrink` / `flex-wrap` / `align-items` are therefore not expressible with the
+ *     current mechanism.
+ *
+ *     **Future plan:** A dedicated `AFlexLayout` will implement the full CSS Flexbox algorithm on top of the
+ *     same `measure()` / `computeMinMaxAxis()` infrastructure. `Expanding` in `AHorizontalLayout` /
+ *     `AVerticalLayout` will remain as a backward-compatible convenience shorthand, analogous to Android's
+ *     `LinearLayout` `layout_weight` coexisting with `ConstraintLayout`. When `AFlexLayout` lands,
+ *     `setExpanding(n)` will map to `flex-grow: n` inside flex containers.
+ *
+ * `Expanding` (stretch factor) is a **secondary** mechanism layered on top of measurement. After the layout manager
+ * has measured all children via `computeMinMaxAxis` / `measure`, it distributes remaining **free space** among
+ * children that have a non-zero expanding value, proportionally to that value. A child with `Expanding(2)` gets twice
+ * as much free space as one with `Expanding(1)`.
+ *
+ * Free space = container size − sum of children's measured minimum sizes.
+ *
+ * `ass::FixedSize` on a child makes the layout manager ignore that child's expanding value for the fixed axis.
+ *
+ * ---
  *
  * ## Layout Examples
  *
@@ -180,31 +409,36 @@ class AViewContainer;
  * </table>
  *
  * ## Expanding { #EXPANDING }
- * Expanding (often referred as stretch factor) is a property of any AView. Expanding is an expansion coefficient set on
- * per-axis basic (i.e, one value along x axis, another value along y axis), however it's convenient to set both values.
- * Hints layout manager how much this AView should be extended relative to other AViews in the same container.
+ *
+ * Expanding is a **stretch factor** — a secondary, opt-in property that tells the layout manager how to distribute
+ * **free space** left over after all children have been measured.
+ *
+ * !!! note "Measure first, expand second"
+ *
+ *     The layout pipeline always runs [measure](#MEASURE_PIPELINE) first: every child reports its preferred size via
+ *     `onIntrinsicMeasure`. Only *after* that does the layout manager look at Expanding to distribute whatever space
+ *     remains. Expanding never replaces measurement — it only stretches views beyond their measured minimum.
  *
  * !!! note
  *
- *     You can use [AUI Devtools](devtools.md) to play around with layouts, especially with
- *     [Expanding](#EXPANDING) property, to get better understanding on how does layout work in AUI.
+ *     You can use [AUI Devtools](devtools.md) to play around with layouts, especially with the
+ *     [Expanding](#EXPANDING) property, to get better understanding of how layout works in AUI.
  *
- * Horizontal layouts ignore y expanding of their children, Vertical layouts ignore x expanding of their children.
+ * Expanding is set per-axis (one value for X, one for Y), though it is convenient to set both at once.
+ * Horizontal layouts ignore the Y expanding of their children; Vertical layouts ignore the X expanding.
  *
- * Views are normally created without any expanding set. When Expanding views appear in a layout they are given a share
- * of space in accordance with their expanding or their minimum size whichever gives more space to them. Expanding is
- * used to change how much space views are given in proportion to one another.
+ * Views are created without any expanding by default — they take exactly as much space as their measured size
+ * requires. When one or more children have a non-zero expanding value, the layout manager collects the **free space**
+ * (container size minus the sum of all children's measured minimum sizes) and distributes it proportionally to the
+ * expanding weights.
  *
- * Expanding view does not affect parent's size or parent's expanding property. Use AView::setExpanding() on parent, or
- * `Expanding` variant of declarative container notation (`Vertical::Expanding`, `Horizontal::Expanding`,
- * `Stacked::Expanding`) for such case.
+ * Expanding a child does **not** affect the parent's own size or expanding property. To make the container itself
+ * grow, use [AView::setExpanding()] on the parent, or the `Expanding` variant of declarative container notation
+ * (`Vertical::Expanding`, `Horizontal::Expanding`, `Stacked::Expanding`).
  *
- * Expanding views use free space of their container to grow.
- *
- * Free space of a container is determined by its size subtracted by sum of minimum sizes of its children. Please note
- * that your container would probably occupy minimum possible size (determined by minimum sizes of its children). It
- * order to make container larger than minimum possible size, you can specify FixedSize or MinSize or Expanding to the
- * container.
+ * Free space of a container is its size minus the sum of its children's measured minimum sizes. Note that a
+ * container normally shrinks to the minimum size required by its children. To give the container extra space to
+ * distribute, set `ass::FixedSize`, `ass::MinSize`, or `Expanding` on the container itself.
  *
  * You can use ass::Expanding [ASS](ass.md) property, or AView::setExpanding method to specify Expanding:
  * <table>
@@ -283,52 +517,31 @@ class AViewContainer;
  *
  *     FixedSize nullifies Expanding's action (on per axis basic).
  *
- * ## Implementation details
- *
- * The process of applying position and size involves several key functions:
- * ```
- * AWindow::redraw()
- * └─> AWindow::applyGeometryToChildrenIfNecessary()
- *     └─> AWindow::applyGeometryToChildren()
- *         └─> ALayout::onResize()                                                  ┐
- *             └─> AViewContainerBase::getMinimumSize()              ┐              │
- *                 └─> AViewContainerBase::getContentMinimumWidth()  │              │
- *                     └─> ALayout::getMinimumWidth()                │              │
- *                         └─> AView::getMinimumWidth()              │ cached       │
- *                 └─> AViewContainerBase::getContentMinimumHeight() │              │ potentially
- *                     └─> ALayout::getMinimumHeight()               │              │ recursive
- *                         └─> AView::getMinimumHeight()             ┘              │
- *             └─> AViewContainerBase::setGeometry()                                │
- *                 └─> AViewContainerBase::setSize()                                │
- *                     └─> AViewContainerBase::applyGeometryToChildrenIfNecessary() │
- *                         └─> AViewContainerBase::applyGeometryToChildren()        │
- *                             └─> ALayout::onResize()                              ┘
- *                                 └─> AView::setGeometry()
- * ```
- *
  * ### Applying size
  *
- * - Size of each view in tree is [calculated](#SIZE_CALCULATION) on this phase
- * - [AView::redraw](AWindow::redraw) - geometry is applied before rendering
- * - [applyGeometryToChildrenIfNecessary](AViewContainerBase::applyGeometryToChildrenIfNecessary) - applies geometry
- *   only if really needed (i.e., if there were a resize event, or views were added or removed)
- * - [applyGeometryToChildren](AViewContainerBase::applyGeometryToChildren) - applies geometry to its children with
- *   no preconditions
- * - [ALayout::onResize] - implemented by layout manager, whose have their own algorithms of arranging views
- * - [AView::setGeometry] - sets geometry of a view (which might be a container)
+ * - Size of each view in tree is [calculated](#MEASURE_PIPELINE) during this phase.
+ * - [AView::redraw] - triggers surface redraw. Surface applies layout before rendering.
+ * - [AView::layout] - the single entry point for positioning and sizing a view. Replaces the old
+ *   `applyGeometryToChildrenIfNecessary()`. Skips work if position, size and `mWantsLayoutUpdate` flag are all
+ *   unchanged; otherwise sets position/size and calls [AView::onLayout(glm::ivec2)]. Always called by the parent layout
+ *   manager — **do not call directly**.
+ *
+ * !!! note "Migration from master"
+ *
+ *     `applyGeometryToChildrenIfNecessary()` no longer exists. The equivalent sequence on `feat/layout-measure` is:
+ *     call `requestLayout()` to invalidate caches, then let the normal render cycle drive `layout()` top-down.
+ *     If you need to force an immediate synchronous layout pass (e.g. in tests), call `layout(x, y, w, h)` directly
+ *     on the root container with its current geometry.
  *
  * ### Size calculation { #SIZE_CALCULATION }
  *
- * - Layout manager queries **Minimum size** which is determined with [AView::getMinimumSize()] and cached until the
- *   view or its children call [AView::markMinContentSizeInvalid()]. It considers:
- *     - Children's minimum sizes (if any). A child includes its [ass::Padding] to its minimum size.
- *     - Children's [ass::Margin]
- *     - Container's [ass::Padding]
- *     - Container's [ass::LayoutSpacing]
- *     - Other constraints such as [ass::FixedSize]
- * - After minimum sizes of children are calculated, layout manager queries their **expanding** ratios, and gives such
- *   views a share of free space if available. Unlike minimum size, [EXPANDING] ratio does not depend on children's
- *   [EXPANDING] ratios.
+ * See [MEASURE_PIPELINE] for the full pipeline. In brief:
+ * - [AView::computeMinMaxAxis] — returns min/max inline (width) range for a given block (height). Wraps
+ *   [AView::onComputeIntrinsicMinMaxAxis] and adds padding, fixed/min/max constraints.
+ * - [AView::measure] — returns preferred outer size under [AConstraints]. Wraps [AView::onIntrinsicMeasure]
+ *   and adds padding, fixed/min/max constraints. Result is cached per-constraints set.
+ * - After measured sizes of children are determined, the layout manager distributes remaining **free space** among
+ *   children that have a non-zero [EXPANDING] value, proportionally to that value.
  *
  * ### Special cases
  *
@@ -344,7 +557,26 @@ class AViewContainer;
 class API_AUI_VIEWS ALayout : public AObject {
 public:
     ALayout() = default;
-    virtual ~ALayout() = default;
+    ~ALayout() override = default;
+
+    /**
+     * @brief Invalidates cached measurement results, triggering a layout recalculation.
+     * @details
+     * Call this whenever the layout manager's content changes in a way that may affect sizes (e.g. a child was
+     * added/removed, spacing changed). Clears `mMeasureCache` and `mMinMaxSizesCache` and propagates the
+     * invalidation up the view tree so that all ancestor containers re-measure themselves.
+     *
+     * This is the direct replacement for the old `markMinContentSizeInvalid()` from the Qt-style layout system.
+     * The two are equivalent — `requestLayout()` additionally invalidates both measure caches introduced by
+     * the new [MEASURE_PIPELINE].
+     *
+     * !!! note
+     *
+     *     You rarely need to call this manually. It is called automatically when ASS properties change,
+     *     when a view is resized, or when [addView]/[removeView] is called. Override this in a custom layout
+     *     manager only if you maintain extra internal caches that also need clearing.
+     */
+    virtual void requestLayout();
 
     /**
      * @brief Applies geometry to children.
@@ -355,7 +587,7 @@ public:
      * @details
      * See [layout-managers] for more info.
      */
-    virtual void onResize(int x, int y, int width, int height) = 0;
+    virtual void layout(int x, int y, int width, int height) = 0;
 
     /**
      * @brief Attaches view to the layout.
@@ -377,8 +609,66 @@ public:
      */
     virtual void removeView(aui::no_escape<AView> view, size_t index) = 0;
 
-    virtual int getMinimumWidth() = 0;
-    virtual int getMinimumHeight() = 0;
+    /**
+     * @brief Returns min/max preferred inline (width) size of the layout for a given block (height).
+     * @param height Content height in px, or -1 for unconstrained.
+     * @return [AMinMaxAxis] with `min` and `max` outer widths.
+     * @details
+     * Wraps [onComputeIntrinsicMinMaxAxis] and applies padding, `ass::FixedSize`, `ass::MinSize`, `ass::MaxSize`.
+     * Result is cached; invalidated by `requestLayout()`.
+     * Do **not** override this method — override [onComputeIntrinsicMinMaxAxis] instead.
+     * See [MEASURE_PIPELINE] for the full pipeline.
+     */
+    AMinMaxAxis computeMinMaxAxis(int height = -1);
+
+    /**
+     * @brief Returns the preferred outer size of the layout under given constraints.
+     * @param constraints Constraints describing the available space (see [AConstraints]).
+     * @return Preferred outer `{width, height}` in px.
+     * @details
+     * Wraps [onIntrinsicMeasure] and applies padding, `ass::FixedSize`, `ass::MinSize`, `ass::MaxSize`.
+     * Result is cached per `AConstraints` key; invalidated by `requestLayout()`.
+     * Do **not** override this method — override [onIntrinsicMeasure] instead.
+     * See [MEASURE_PIPELINE] for the full pipeline.
+     */
+    glm::ivec2 measure(AConstraints constraints);
+
+    int getMinimumWidth();
+    int getMinimumHeight();
+    glm::ivec2 getMinimumSize() { return { getMinimumWidth(), getMinimumHeight() }; }
+
+    /**
+     * @brief Computes the preferred **content** size under given constraints.
+     * @param constraints Constraints describing the available **content** space (padding already subtracted).
+     * @return Preferred content `{width, height}` in px.
+     * @details
+     * Override this in a layout manager to report how much space the managed children need.
+     * The public [measure] wraps this method and handles padding, `ass::FixedSize`, `ass::MinSize`, `ass::MaxSize`
+     * automatically — **never call** `onIntrinsicMeasure` directly.
+     *
+     * The default implementation delegates to [onComputeIntrinsicMinMaxAxis] and clamps to constraints.
+     * See [MEASURE_PIPELINE] for the full pipeline.
+     */
+    virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints) {
+        const auto minMax = onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedBlock() ? -1 : constraints.maxBlock);
+        const int maxInline = constraints.isUnlimitedInline() ? std::numeric_limits<int>::max() : constraints.maxInline;
+        return {
+            std::clamp(minMax.max, constraints.minInline, maxInline),
+            constraints.minBlock,
+        };
+    }
+
+    /**
+     * @brief Computes the min/max preferred **content** inline (width) size for a given content height.
+     * @param height Content height in px, or -1 for unconstrained.
+     * @return [AMinMaxAxis] with `min` and `max` content widths.
+     * @details
+     * Override this in a layout manager to report the range of widths the managed children need.
+     * The public [computeMinMaxAxis] wraps this method and handles padding, `ass::FixedSize`, etc.
+     * automatically — **never call** `onComputeIntrinsicMinMaxAxis` directly.
+     * See [MEASURE_PIPELINE] for the full pipeline.
+     */
+    virtual AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) = 0;
 
     /**
      * @brief Visits all views in the layout.
@@ -392,4 +682,8 @@ public:
      * @param spacing spacing in px.
      */
     virtual void setSpacing(int spacing);
+
+protected:
+    AFixedSizeCache<AConstraints, glm::ivec2, 8> mMeasureCache;
+    AFixedSizeCache<int, AMinMaxAxis, 4> mMinMaxSizesCache;
 };

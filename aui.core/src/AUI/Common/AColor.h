@@ -16,6 +16,8 @@
 #include <glm/gtx/norm.hpp>
 #include <ostream>
 #include "AUI/Traits/values.h"
+#include "AUI/Common/AString.h"
+#include <fmt/format.h>
 
 class AString;
 
@@ -202,3 +204,10 @@ struct std::hash<AColor> {
         return result;
     }
 };
+
+template <> struct fmt::formatter<AColor>: fmt::formatter<std::string> {
+    auto format(const AColor& s, fmt::format_context& ctx) const {
+        return fmt::formatter<std::string>::format(s.toString(), ctx);
+    }
+};
+

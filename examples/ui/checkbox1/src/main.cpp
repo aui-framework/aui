@@ -10,6 +10,10 @@
 */
 
 /// [ACheckBox_example]
+#include "AUI/View/AButton.h"
+#include "AUI/View/AGroupBox.h"
+#include "AUI/View/AListView.h"
+
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
@@ -19,28 +23,28 @@ using namespace ass;
 using namespace declarative;
 
 struct State {
-    AProperty<bool> checked = false;
+  AProperty<bool> checked = false;
 };
 
 _<AView> minimalCheckBox(_<AProperty<bool>> state) {
-    return CheckBox {
-        .checked = AUI_REACT(*state),
-        .onCheckedChange = [state](bool checked) { *state = checked; },
-        .content = Label { "Minimal checkbox" },
-    };
+  return CheckBox {
+    .checked = AUI_REACT(*state),
+    .onCheckedChange = [state](bool checked) { *state = checked; },
+    .content = Label { "Minimal checkbox" },
+  };
 }
 
 AUI_ENTRY {
-    auto window = _new<AWindow>("Checkbox", 300_dp, 100_dp);
-    auto state = _new<State>();
-    window->setContents(
-        Vertical {
-            minimalCheckBox(AUI_PTR_ALIAS(state, checked)),
-            Label { AUI_REACT(state->checked ? "Checkbox is checked" : "Checkbox is not checked") },
-        }
-    );
-    window->show();
-    return 0;
+  auto window = _new<AWindow>("Checkbox", 300_dp, 100_dp);
+  auto state = _new<State>();
+  window->setContents(
+    Vertical {
+      minimalCheckBox(AUI_PTR_ALIAS(state, checked)),
+      Label { AUI_REACT(state->checked ? "Checkbox is checked" : "Checkbox is not checked") },
+    }
+  );
+  window->show();
+  return 0;
 }
 /// [ACheckBox_example]
 

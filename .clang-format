@@ -15,7 +15,7 @@ AlignConsecutiveMacros: Consecutive
 # use \n instead of \r\n
 UseCRLF: false
 
-AccessModifierOffset: -4
+AccessModifierOffset: -2
 EmptyLineBeforeAccessModifier: Always
 EmptyLineAfterAccessModifier: Never
 
@@ -28,9 +28,9 @@ SortIncludes: Never
 
 ################################################# UI BUILDING ##########################################################
 
-# use shorter indentation for UI building stuff (like in Dart/Flutter)
-BracedInitializerIndentWidth: 2
-ConstructorInitializerIndentWidth: 2
+# indentation for UI building stuff (like in Dart/Flutter)
+BracedInitializerIndentWidth: 4
+ConstructorInitializerIndentWidth: 4
 
 # better spacing around AUI_OVERRIDE_STYLE and AUI_LET.
 # before:

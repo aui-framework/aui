@@ -50,8 +50,8 @@ LRESULT ACustomWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lPara
     {
         MINMAXINFO* info = reinterpret_cast<MINMAXINFO*>(lParam);
 
-        info->ptMinTrackSize.x = getMinimumWidth();
-        info->ptMinTrackSize.y = getMinimumHeight();
+        info->ptMinTrackSize.x = getMinSize().x;
+        info->ptMinTrackSize.y = getMinSize().y;
         return 0;
     }
     case WM_NCCALCSIZE:
@@ -165,8 +165,7 @@ ACustomWindow::ACustomWindow(const AString& name, int width, int height, AWindow
     windowNativePreInit(name, width, height, parent, WindowStyle::DEFAULT);
 }
 
-void ACustomWindow::setSize(glm::ivec2 size)
-{
+void ACustomWindow::setSize(glm::ivec2 size) {
     AViewContainer::setSize(size);
     auto pos = getWindowPosition();
 

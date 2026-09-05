@@ -48,7 +48,7 @@ struct ViewAssertionSizeIsMinimal {
     AOptional<int> value;
 
     bool operator()(const _<AView>& v) {
-        return v->getSize()[I] == v->getMinimumSize()[I];
+        return v->getSize()[I] == v->getMinSize()[I];
     }
 };
 

@@ -21,6 +21,9 @@
 
 
 void ass::prop::Property<ImageRendering>::renderFor(AView* view, const ARenderContext& ctx) {
+    if (view->getAssHelper() == nullptr) {
+        return;
+    }
     view->getAssHelper()->state.imageRendering = mInfo;
 }
 

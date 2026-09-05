@@ -206,7 +206,7 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                         glm::ivec2 size = { ev.xconfigure.width, ev.xconfigure.height };
                         if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
                             AUI_NULLSAFE(window->getRenderingContext())->beginResize(*window);
-                            window->AViewContainer::setSize(size);
+                            window->onResize(size.x, size.y);
                             AUI_NULLSAFE(window->getRenderingContext())->endResize(*window);
                         }
                         if (auto w = _cast<ACustomWindow>(window)) {
@@ -474,8 +474,8 @@ void PlatformAbstractionX11::windowSetSize(AWindow& window, glm::ivec2 size) {
 
         XGetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizehints, &userhints);
 
-        sizehints->min_width = window.getMinimumWidth();
-        sizehints->min_height = window.getMinimumHeight();
+        sizehints->min_width = window.getMinSize().x;
+        sizehints->min_height = window.getMinSize().y;
         sizehints->flags |= PMinSize;
 
         XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizehints);
@@ -648,10 +648,10 @@ void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
     if (PlatformAbstractionX11::ourDisplay != nullptr) {
         auto sizeHints = aui::ptr::manage_unique(XAllocSizeHints(), XFree);
         sizeHints->flags = PMinSize | PMaxSize;
-        sizeHints->min_width = window.getMinimumWidth();
-        sizeHints->min_height = window.getMinimumHeight();
-        sizeHints->max_width = window.getMaxSize().x;
-        sizeHints->max_height = window.getMaxSize().y;
+        sizeHints->min_width = window.getMinSize().x;
+        sizeHints->min_height = window.getMinSize().y;
+        sizeHints->max_width = window.getMaxSize().x == -1 ? 100000 : window.getMaxSize().x;
+        sizeHints->max_height = window.getMaxSize().y == -1 ? 100000 : window.getMaxSize().y;
         XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizeHints.get());
     }
 }
