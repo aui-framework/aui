@@ -21,6 +21,7 @@
 #include "AUI/Common/AVector.h"
 #include "AUI/Logging/sinks/ALogSink.h"
 #include "AUI/Logging/sinks/AFileSink.h"
+#include "AUI/Common/AException.h"
 #include <fmt/format.h>
 #include <fmt/chrono.h>
 #include <AUI/Thread/AMutexWrapper.h>
@@ -65,7 +66,8 @@ class AString;
  * By default, the logger uses the native platform sink:
  * AConsoleSink (stdout) on most desktops, AWindowDebugSink (OutputDebugStringW)
  * on Windows, AAndroidSink (logcat) on Android, AAppleLogSink (NSLog) on iOS/macOS.
- * Use `setLogFile()` or `sinks().push_back(...)` to add more destinations.
+ * In addition, an AFileSink is added on desktop platforms.
+ * Use `sinks().push_back(...)` to add more destinations.
  */
 class API_AUI_CORE ALogger final {
 public:
@@ -216,12 +218,11 @@ public:
     };
 
     /**
-     * @brief Constructor for an extra log file.
-     * @param filename file name
+     * @brief Constructor.
      * @details
-     * For the global logger, use ALogger::info, ALogger::warn, etc...
+     * Creates a logger with the default sink list. For the global logger, use
+     * ALogger::info, ALogger::warn, etc...
      */
-    ALogger(AString filename);
     ALogger();
     ~ALogger();
 
@@ -252,7 +253,7 @@ public:
      * @brief Returns a modifiable reference to the list of log sinks.
      * @details
      * Mirrors spdlog's logger::sinks(). Messages are dispatched to all sinks
-     * in order. By default, contains a ConsoleSink.
+     * in order. By default, contains a platform sink and a file sink.
      *
      * Example:
      * ```cpp
@@ -272,27 +273,10 @@ public:
      * - **Android:** AAndroidSink (logcat via __android_log_print)
      * - **iOS/macOS:** AAppleLogSink (NSLog)
      * - **Other desktops:** AConsoleSink (stdout with colors)
+     *
+     * On all non-Emscripten platforms, an AFileSink is added as well.
      */
     static AVector<_<ALogSink>> defaultSinks();
-
-    /**
-     * @brief Sets log file by adding a file sink.
-     * @param path path to the log file.
-     * @details
-     * Log file is opened immediately. A file sink is added to the sink list.
-     *
-     * If you want to change the log file of ALogger::global(), consider using ALogger::setLogFileForGlobal instead.
-     * `ALogger::global().setLogFile(...)` expression would cause the default log file location to open and to close
-     * immediately, when opening a log file in the specified location, causing empty file and two `Log file:` entries.
-     */
-    void setLogFile(APath path) { setLogFileImpl(std::move(path)); }
-
-    /**
-     * @brief Sets log file for `ALogger::global()`.
-     * @param path path to the log file.
-     * @see ALogger::setLogFile
-     */
-    static void setLogFileForGlobal(APath path);
 
     /**
      * @brief Enables or disables colored output for the global logger.
@@ -301,42 +285,9 @@ public:
      */
     void enableColors(bool enabled);
 
-    [[nodiscard]]
-    APath logFile();
-
     void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
         std::unique_lock lock(mOnLogged);
         mOnLogged = std::move(callback);
-    }
-    /**
-     * @brief Allows to perform some action (access safely) on log file (which is opened all over the execution process)
-     * @details
-     * Useful when sending log file to remote server.
-     *
-     * On Windows, for instance, doesn't allow to read the file when it's already opened.
-     */
-    template <aui::invocable Callable>
-    void doLogFileAccessSafe(Callable action) {
-        std::unique_lock lock(mLogSync);
-        ARaiiHelper opener = [&] {
-            if (!mLogFile)
-                return;
-            try {
-                mLogFile->open(true);
-            } catch (const AException& e) {
-                auto path = mLogFile->path();
-                mLogFile.reset();
-                lock.unlock();
-                log(WARN, "Logger", AStringView(fmt::format("Unable to reopen file {}: {}", path, e.getMessage())));
-            }
-        };
-        if (!mLogFile || !mLogFile->nativeHandle()) {
-            action();
-            return;
-        }
-
-        mLogFile->close();
-        action();
     }
 
     static LogWriter info(AStringView str) { return { global(), INFO, str }; }
@@ -354,7 +305,6 @@ public:
 
 private:
     AVector<_<ALogSink>> mSinks;
-    _<AFileOutputStream> mLogFile;
     AMutex mLogSync;
     AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 
@@ -365,8 +315,6 @@ private:
     bool mColorsEnabled = true;
 
     static bool isTraceImpl();
-
-    void setLogFileImpl(AString path);
 
     /**
      * @brief Writes a log entry.

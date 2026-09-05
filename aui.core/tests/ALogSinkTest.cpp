@@ -210,7 +210,12 @@ TEST(ALogSinkTest, FileSinkWritesToFile) {
 
 TEST(ALogSinkTest, DefaultSinks) {
     auto sinks = ALogger::defaultSinks();
+#if AUI_PLATFORM_EMSCRIPTEN
     ASSERT_EQ(sinks.size(), 1u);
+#else
+    ASSERT_EQ(sinks.size(), 2u);
+    EXPECT_EQ(sinks[1]->name(), "file");
+#endif
 #if AUI_PLATFORM_ANDROID
     EXPECT_EQ(sinks[0]->name(), "android");
 #elif AUI_PLATFORM_APPLE

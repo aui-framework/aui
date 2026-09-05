@@ -18,6 +18,7 @@
 #include "AUI/Platform/Entry.h"
 #include "AUI/Util/ACommandLineArgs.h"
 #include "sinks/detail/LogFormat.h"
+#include <AUI/IO/APath.h>
 #include <fmt/format.h>
 
 #if AUI_PLATFORM_APPLE
@@ -26,19 +27,10 @@
 
 #include <chrono>
 
-static ALogger& globalImpl(AOptional<APath> path = std::nullopt) {
-#if AUI_PLATFORM_EMSCRIPTEN
+ALogger& ALogger::global() {
     static ALogger l;
-#else
-    static ALogger l(std::move(
-        path.valueOr(APath::getDefaultPath(APath::TEMP).makeDirs() / "aui.{}.log"_format(AProcess::self()->getPid()))));
-#endif
     return l;
 }
-
-ALogger& ALogger::global() { return globalImpl(); }
-
-void ALogger::setLogFileForGlobal(APath path) { globalImpl(std::move(path)); }
 
 
 void ALogger::log(Level level, AStringView prefix, AStringView message) {
@@ -75,13 +67,6 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
     }
 }
 
-void ALogger::setLogFileImpl(AString path) {
-    auto sink = _new<AFileSink>(std::move(path));
-    mSinks.push_back(sink);
-    mLogFile = sink->fileStream();
-    log(INFO, "Logger", ("Log file: " + sink->path()));
-}
-
 ALogger::ALogger() {
     if (const char* logColor = std::getenv("AUI_LOG_COLOR"); logColor && AString(logColor) == "0")
         mColorsEnabled = false;
@@ -96,19 +81,10 @@ ALogger::ALogger() {
 #endif
 }
 
-ALogger::ALogger(AString filename) {
-    if (const char* logColor = std::getenv("AUI_LOG_COLOR"); logColor && AString(logColor) == "0")
-        mColorsEnabled = false;
-
-    mSinks = defaultSinks();
-    setLogFileImpl(std::move(filename));
-}
-
 ALogger::~ALogger() {
     for (auto& sink : mSinks) {
         sink->flush();
     }
-    mLogFile.reset();
 }
 
 AVector<_<ALogSink>> ALogger::defaultSinks() {
@@ -122,6 +98,10 @@ AVector<_<ALogSink>> ALogger::defaultSinks() {
 #else
     sinks.push_back(_new<AConsoleSink>());
 #endif
+#if !AUI_PLATFORM_EMSCRIPTEN
+    sinks.push_back(_new<AFileSink>(APath::getDefaultPath(APath::TEMP).makeDirs() /
+                                    "aui.{}.log"_format(AProcess::self()->getPid())));
+#endif
     return sinks;
 }
 
@@ -132,13 +112,6 @@ void ALogger::enableColors(bool enabled) {
             console->setColorsEnabled(enabled);
         }
     }
-}
-
-APath ALogger::logFile() {
-    if (mLogFile) {
-        return mLogFile->path();
-    }
-    throw AException("No log file configured");
 }
 
 bool ALogger::isTraceImpl() {

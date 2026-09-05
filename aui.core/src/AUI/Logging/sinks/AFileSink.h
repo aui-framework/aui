@@ -38,7 +38,7 @@ public:
     APath path() const;
 
     /**
-     * @brief Returns the underlying file output stream, shared with the owning ALogger.
+     * @brief Returns the underlying file output stream.
      */
     [[nodiscard]]
     _<AFileOutputStream> fileStream() const { return mFile; }
