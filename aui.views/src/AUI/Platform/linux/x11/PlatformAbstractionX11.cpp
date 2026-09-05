@@ -10,10 +10,14 @@
  */
 
 #include <unistd.h>
+#include <AUI/Platform/Entry.h>
 #include <poll.h>
 #include <fcntl.h>
 #include <vector>
 
+#include <AUI/Font/IFontView.h>
+#include <AUI/Util/ACursorSelectable.h>
+#include "keysym_to_unicode.h"
 #include "PlatformAbstractionX11.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/UITestState.h"
@@ -42,6 +46,36 @@ static unsigned long xGetWindowProperty(AWindow& window, Atom property, Atom typ
 
     return itemCount;
 }
+static void updateImeSpotLocation(AWindow* window) {
+    if (!window) return;
+    auto x11ctx = dynamic_cast<RenderingContextX11*>(window->getRenderingContext().get());
+    if (!x11ctx || !x11ctx->ic()) return;
+    if (auto target = window->getFocusedView()) {
+        if (auto cursorSelectable = _cast<ACursorSelectable>(target)) {
+            auto pos = target->getPositionInWindow() + cursorSelectable->getCursorPosition() + target->getPadding().leftTop();
+            if (auto fontView = _cast<IFontView>(target)) {
+                pos.y += static_cast<int>(fontView->getFontStyle().size) + fontView->getFontStyle().getDescenderHeight();
+            }
+            pos.x = std::clamp(pos.x, 0, std::max(0, window->getWidth() - 10));
+            pos.y = std::clamp(pos.y, 0, std::max(0, window->getHeight() - 10));
+            x11ctx->setImeSpotLocation(pos);
+        }
+    }
+}
+static void emitPrintableUtf8(AWindow& window, AStringView s) {
+    for (const auto& c : s.utf8()) {
+        if (c.codepoint() >= 32 && c.codepoint() != 127) {
+            window.onCharEntered(c);
+        }
+    }
+}
+
+static void emitPrintableCodepoint(AWindow& window, char32_t u) {
+    if (u >= 32 && u != 127) {
+        window.onCharEntered(AChar(u));
+    }
+}
+
 
 static void xSendEventToWM(AWindow& window, Atom atom, long a, long b, long c, long d, long e) {
     if (!PlatformAbstractionX11::nativeHandle(window))
@@ -78,6 +112,7 @@ void PlatformAbstractionX11::ensureXLibInitialized() {
     struct DisplayInstance {
     public:
         DisplayInstance() {
+            aui::detail::initUtf8Locale();
             auto d = ourDisplay = XOpenDisplay(nullptr);
             if (d == nullptr)
                 return;
@@ -98,6 +133,10 @@ void PlatformAbstractionX11::ensureXLibInitialized() {
             ourAtoms.auiClipboard = XInternAtom(d, "AUI_CLIPBOARD", False);
             ourAtoms.incr = XInternAtom(d, "INCR", False);
             ourAtoms.targets = XInternAtom(d, "TARGETS", False);
+            ourAtoms.stringAtom = XInternAtom(d, "STRING", False);
+            ourAtoms.textAtom = XInternAtom(d, "TEXT", False);
+            ourAtoms.timestampAtom = XInternAtom(d, "TIMESTAMP", False);
+            ourAtoms.multiple = XInternAtom(d, "MULTIPLE", False);
             ourAtoms.netWmSyncRequest = XInternAtom(d, "_NET_WM_SYNC_REQUEST", False);
             ourAtoms.netWmSyncRequestCounter = XInternAtom(d, "_NET_WM_SYNC_REQUEST_COUNTER", False);
             ourAtoms.netWmIcon = XInternAtom(ourDisplay, "_NET_WM_ICON", False);
@@ -127,6 +166,9 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
         while (XPending(ourDisplay)) {
             AWindow::getWindowManager().watchdog().runOperation([&] {
                 XNextEvent(ourDisplay, &ev);
+                if (XFilterEvent(&ev, None)) {
+                    return;
+                }
                 _<AWindow> window;
                 switch (ev.type) {
                     case Expose: {
@@ -151,34 +193,62 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                         }
                         break;
                     }
+                    case FocusIn: {
+                        window = locateWindow(ev.xfocus.window);
+                        if (auto x11ctx = dynamic_cast<RenderingContextX11*>(window->getRenderingContext().get())) {
+                            if (x11ctx->ic()) {
+                                XSetICFocus((XIC) x11ctx->ic());
+                            }
+                            updateImeSpotLocation(window.get());
+                        }
+                        break;
+                    }
+                    case FocusOut: {
+                        window = locateWindow(ev.xfocus.window);
+                        if (auto x11ctx = dynamic_cast<RenderingContextX11*>(window->getRenderingContext().get())) {
+                            if (x11ctx->ic()) {
+                                XUnsetICFocus((XIC) x11ctx->ic());
+                            }
+                        }
+                        break;
+                    }
                     case KeyPress: {
                         window = locateWindow(ev.xkey.window);
                         int count = 0;
                         KeySym keysym = 0;
-                        char buf[0x20] {'\0'};
+                        char buf[0x100] {'\0'};
                         Status status = 0;
                         auto x11ctx = dynamic_cast<RenderingContextX11*>(window->getRenderingContext().get());
-                        if (!x11ctx) {
-                            break;
-                        }
-                        count = Xutf8LookupString(
-                            (XIC) x11ctx->ic(), (XKeyPressedEvent*) &ev, buf, sizeof(buf) - 1, &keysym, &status);
-
-                        if (count > 0) {
-                            switch (buf[0]) {
-                                case 27:
-                                    break;   // esc
-                                case 127:
-                                    break;   // del
-                                default:
-                                    AStringView s(buf);
-                                    AUI_ASSERT(!s.empty());
-                                    for (const auto& c : s.utf8()) {
-                                      window->onCharEntered(c);
+                        if (x11ctx != nullptr && x11ctx->ic()) {
+                            count = Xutf8LookupString(
+                                (XIC) x11ctx->ic(), (XKeyPressedEvent*) &ev, buf, sizeof(buf) - 1, &keysym, &status);
+                            if (status == XBufferOverflow && count > 0) {
+                                std::vector<char> dynBuf(static_cast<size_t>(count) + 1, '\0');
+                                count = Xutf8LookupString(
+                                    (XIC) x11ctx->ic(), (XKeyPressedEvent*) &ev, dynBuf.data(), count, &keysym, &status);
+                                if (count > 0) {
+                                    emitPrintableUtf8(*window, AStringView(dynBuf.data(), count));
+                                }
+                            } else if (count > 0 && status != XBufferOverflow) {
+                                emitPrintableUtf8(*window, AStringView(buf, count));
+                            } else if (count == 0 && keysym >= 0x80 && (ev.xkey.state & ControlMask) == 0 && status != XLookupNone) {
+                                emitPrintableCodepoint(*window, aui::x11::keysymToUnicode(keysym));
+                            }
+                        } else {
+                            count = XLookupString((XKeyPressedEvent*) &ev, buf, sizeof(buf) - 1, &keysym, nullptr);
+                            if (count > 0) {
+                                uint8_t firstByte = static_cast<uint8_t>(buf[0]);
+                                if (firstByte >= 32 && firstByte != 127) {
+                                    for (int i = 0; i < count; ++i) {
+                                        emitPrintableCodepoint(*window, static_cast<uint8_t>(buf[i]));
                                     }
+                                }
+                            } else if (count == 0 && keysym >= 0x80 && (ev.xkey.state & ControlMask) == 0) {
+                                emitPrintableCodepoint(*window, aui::x11::keysymToUnicode(keysym));
                             }
                         }
                         window->onKeyDown(AInput::fromNative(ev.xkey.keycode));
+                        updateImeSpotLocation(window.get());
                         break;
                     }
                     case KeyRelease:
@@ -268,6 +338,7 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                                 { .position = { ev.xbutton.x, ev.xbutton.y },
                                   .pointerIndex = APointerIndex::button(
                                       static_cast<AInput::Key>(AInput::LBUTTON + ev.xbutton.button - 1)) });
+                            updateImeSpotLocation(window.get());
                         }
                         break;
                     }
@@ -290,7 +361,7 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
 
                     case SelectionClear: {
                         // lost clipboard ownership -> clean up
-                        xClipboardClear();
+                        xClipboardClear(ev.xselectionclear.selection);
                         break;
                     }
 
@@ -656,4 +727,12 @@ void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
     }
 }
 
-void PlatformAbstractionX11::init() {}
+void PlatformAbstractionX11::init() {
+    ensureXLibInitialized();
+    if (UITestState::isTesting()) {
+        return;
+    }
+    if (ourDisplay == nullptr) {
+        throw AException("Could not open X11 display");
+    }
+}

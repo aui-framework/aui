@@ -42,6 +42,10 @@ public:
         Atom auiClipboard;
         Atom incr;
         Atom targets;
+        Atom stringAtom;
+        Atom textAtom;
+        Atom timestampAtom;
+        Atom multiple;
         Atom netWmSyncRequest;
         Atom netWmSyncRequestCounter;
         Atom netWmIcon;
@@ -100,7 +104,7 @@ public:
 
 private:
     void xProcessEvent(XEvent& ev);
-    void xClipboardClear();
+    void xClipboardClear(Atom selection = None);
     void xHandleClipboard(const XEvent& ev);
 
     Pipe mNotifyPipe;

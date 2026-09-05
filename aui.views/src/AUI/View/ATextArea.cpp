@@ -388,9 +388,6 @@ void ATextArea::onCharEntered(AChar c) {
 }
 
 size_t ATextArea::length() const {
-    if (mCompiledText) {
-        return mCompiledText->length();
-    }
     return ranges::accumulate(entities(), size_t(0), std::plus<>{}, [](const _unique<aui::detail::TextBaseEntry>& e) {
         return e->getCharacterCount();
     });
@@ -460,42 +457,32 @@ void ATextArea::render(ARenderContext context) {
     AStaticVector<ARect<int>, 3> selectionRects;
     if (hasSelection() && hasFocus()) {
         auto s = selection();
-        auto beginPos = getPosByIndex(s.begin);
-        auto endPos = getPosByIndex(s.end);
-        const auto LINE_HEIGHT = int(getFontStyle().size) + getFontStyle().getDescenderHeight();
-        endPos.y += LINE_HEIGHT;
-        for (auto i: {&beginPos, &endPos}) *i += glm::ivec2{mPadding.left, mPadding.top};
-        const auto LINES_OF_SELECTION = (endPos.y - beginPos.y) / LINE_HEIGHT;
+        auto beginPos = getPosByIndex(s.begin) + mPadding.leftTop();
+        auto endPos = getPosByIndex(s.end) + mPadding.leftTop();
+        const auto LINE_RENDER_HEIGHT = int(getFontStyle().size) + getFontStyle().getDescenderHeight();
         const auto LEFT_POS = mPadding.left;
         const auto RIGHT_POS = getWidth() - mPadding.right;
-        switch (LINES_OF_SELECTION) {
-            default:
-                // .................
-                // .....############ // second rect
-                // ################# // first rect
-                // ################# // first rect
-                // ################# // first rect
-                // ################# // first rect
-                // ###########...... // third rect
-                // .................
-                selectionRects.push_back(ARect<int>{.p1 = {LEFT_POS, beginPos.y + LINE_HEIGHT},
-                        .p2 = {RIGHT_POS, endPos.y - LINE_HEIGHT}});
-                [[fallthrough]];
-            case 2:
-                // .................
-                // .....############ // first rect
-                // ###########...... // second rect
-                // .................
-                selectionRects.push_back(ARect<int>{.p1 = beginPos, .p2 = {RIGHT_POS, beginPos.y + LINE_HEIGHT}});
-                selectionRects.push_back(ARect<int>{.p1 = {LEFT_POS, endPos.y - LINE_HEIGHT}, .p2 = endPos});
-                break;
-            case 1:
-                // .................
-                // ....##########... // first rect
-                // .................
-                selectionRects.push_back(ARect<int>::fromTopLeftPositionAndSize(beginPos,
-                                                                                endPos - beginPos));
-                break;
+
+        if (beginPos.y == endPos.y) {
+            selectionRects.push_back(ARect<int>{
+                .p1 = beginPos,
+                .p2 = { endPos.x, beginPos.y + LINE_RENDER_HEIGHT }
+            });
+        } else {
+            selectionRects.push_back(ARect<int>{
+                .p1 = beginPos,
+                .p2 = { RIGHT_POS, beginPos.y + LINE_RENDER_HEIGHT }
+            });
+            if (endPos.y > beginPos.y + LINE_RENDER_HEIGHT) {
+                selectionRects.push_back(ARect<int>{
+                    .p1 = { LEFT_POS, beginPos.y + LINE_RENDER_HEIGHT },
+                    .p2 = { RIGHT_POS, endPos.y }
+                });
+            }
+            selectionRects.push_back(ARect<int>{
+                .p1 = { LEFT_POS, endPos.y },
+                .p2 = { endPos.x, endPos.y + LINE_RENDER_HEIGHT }
+            });
         }
     }
     drawSelectionBeforeAndAfter(context.render, selectionRects, [&] {

@@ -42,11 +42,11 @@ class AMenuContainer : public AViewContainerBase {
         else
             window = AWindow::current();
 
-        auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize());
+        auto surfaceContainer = window->createOverlappingSurface(pos, mSubWindow->getMinimumSize(), true);
         surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
         surfaceContainer->addView(mSubWindow);
         mSubWindow->setSurface(surfaceContainer);
-
+        surfaceContainer->setOverlappingSurfaceSize(mSubWindow->getMinimumSize());
         mSublistOnHoverDisplayDelay->stop();
     }
 
@@ -56,6 +56,7 @@ class AMenuContainer : public AViewContainerBase {
         mSublistOnHoverDisplayDelay = _new<ATimer>(200ms);
 
         addAssName(".menu");
+        addAssName(".menu-background");
         setExpanding();
         setLayout(std::make_unique<AVerticalLayout>());
         for (auto& i : vector) {
@@ -86,7 +87,12 @@ class AMenuContainer : public AViewContainerBase {
                         });
 
                         auto onAction = i.onAction;
-                        connect(view->pressed, [onAction] { onAction(); });
+                        connect(view->pressed, [onAction] {
+                            AThread::current()->enqueue([onAction] {
+                                AMenu::close();
+                                onAction();
+                            });
+                        });
                     } else {
                         view->disable();
                     }
@@ -147,11 +153,12 @@ void AWindowMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     mWindow = AWindow::current();
     auto mousePos = mWindow->getMousePos();
     auto menu = _new<AMenuContainer>(vector, mousePos);
-    auto surfaceContainer = mWindow->createOverlappingSurface(mousePos, menu->getMinimumSize());
+    auto surfaceContainer = mWindow->createOverlappingSurface(mousePos, menu->getMinimumSize(), true);
     surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
     surfaceContainer->addView(menu);
     menu->setSurface(surfaceContainer);
     mMenuContainer = menu;
+    surfaceContainer->setOverlappingSurfaceSize(menu->getMinimumSize());
 }
 
 void AWindowMenuProvider::closeMenu() {

@@ -187,6 +187,15 @@ TEST_F(UITextArea, Type1) {
     EXPECT_EQ(entries().size(), 1);
 }
 
+TEST_F(UITextArea, TypeNonAscii) {
+    mTextArea->clear();
+    EXPECT_EQ(mTextArea->text(), "");
+    By::type<ATextArea>()
+        .perform(type("Привет мир! こんにちは"))
+        ;
+    EXPECT_EQ(mTextArea->text(), "Привет мир! こんにちは");
+}
+
 TEST_F(UITextArea, Type2a) {
     mTextArea->clear();
     EXPECT_EQ(mTextArea->text(), "");
@@ -362,4 +371,18 @@ TEST_F(UITextArea, NextLineCursorPos) {
     EXPECT_GE(mTextArea->getCursorPosition().y, 0);
     mTextArea->moveCursorLeft();
     EXPECT_EQ(mTextArea->getCursorPosition().y, 0);
+}
+
+TEST_F(UITextArea, SelectionWithNonDefaultLineSpacing) {
+    mTextArea->setCustomStyle({ FixedSize { 300_dp, {} }, LineHeight { 1.5f } });
+    mTextArea->setText("line one\nline two\nline three");
+    uitest::frame();
+
+    // Select across 2 adjacent lines
+    mTextArea->setSelection({2, 14});
+    uitest::frame();
+
+    // Select across 3 lines (including full middle line)
+    mTextArea->setSelection({2, 24});
+    uitest::frame();
 }

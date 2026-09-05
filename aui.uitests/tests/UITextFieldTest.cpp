@@ -155,3 +155,19 @@ TEST_F(UITextField, CtrlShiftLeftRight) {
             .check(selectionMatches(0))
             ;
 }
+
+TEST_F(UITextField, CtrlSpace) {
+    By::type<ATextField>()
+            .perform(click({0, 0}))
+            .perform(keyDownAndUp(AInput::LCONTROL + AInput::SPACE))
+            .perform(type("a"))
+            .check(text("ahello world!"));
+}
+
+TEST_F(UITextField, TypeNonAscii) {
+    By::type<ATextField>()
+            .perform(click({0, 0}))
+            .perform(keyDownAndUp(AInput::LCONTROL + AInput::A))
+            .perform(type("Привет! こんにちは"))
+            .check(text("Привет! こんにちは"));
+}
