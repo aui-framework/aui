@@ -51,15 +51,15 @@ void AConsoleSink::write(const ALogMessage& message) {
                                  levelColored(message.level, mUseColors),
                                  message.message);
     }
-//#if AUI_PLATFORM_WIN
-//    std::wstring wideMessage = aui::win32::toWchar(AStringView(consoleMsg));
-//    OutputDebugStringW(wideMessage.c_str());
-//    OutputDebugStringW(L"\n");
-//#else
+#if AUI_PLATFORM_WIN
+    std::wstring wideMessage = aui::win32::toWchar(AStringView(consoleMsg));
+    OutputDebugStringW(wideMessage.c_str());
+    OutputDebugStringW(L"\n");
+#else
     fputs(consoleMsg.c_str(), stdout);
     fputc('\n', stdout);
     fflush(stdout);
-//#endif
+#endif
 }
 
 void AConsoleSink::flush() {
