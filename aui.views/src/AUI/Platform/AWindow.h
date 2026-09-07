@@ -361,6 +361,8 @@ private:
      */
     _<AWindow> mSelfHolder;
 
+    _<void> mLifetimeToken = _new<char>();
+
     AString mWindowTitle;
 
 #if AUI_PLATFORM_WIN

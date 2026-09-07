@@ -275,7 +275,10 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 
   setWindowStyle(ws);
 
-  AUI_UI_THREAD {
+  AUI_UI_THREAD_X [this, alive = _weak<void>(mLifetimeToken)] {
+    if (alive.expired()) {
+      return;
+    }
     emit mSizeChanged(getSize());
   };
 
