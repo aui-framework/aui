@@ -526,6 +526,18 @@ class AViewContainer;
  *   unchanged; otherwise sets position/size and calls [AView::onLayout(glm::ivec2)]. Always called by the parent layout
  *   manager — **do not call directly**.
  *
+ * ### Layout boundaries { #LAYOUT_BOUNDARIES }
+ *
+ * [AView::requestLayout] normally travels up the view hierarchy, up to the surface, which lays the whole hierarchy
+ * out before the next frame. A view whose size is fixed on both axes occupies exactly the same space no matter what
+ * happens inside it, so everything above it keeps the geometry it already has; such a view is a
+ * [layout boundary](AView::isLayoutBoundary) and the request stops there. Instead, the view enqueues itself in its
+ * surface (@see ASurface::enqueueLayoutRoot) and the surface lays out that subtree alone before rendering.
+ *
+ * The values the parent's layout does depend on — fixed size, min/max size, margin, expanding, visibility — are
+ * changed through [AView::markLayoutContributionChanged], which lifts the boundary for one request so that the
+ * parent finds out and lays out as usual.
+ *
  * !!! note "Migration from master"
  *
  *     `applyGeometryToChildrenIfNecessary()` no longer exists. The equivalent sequence on `feat/layout-measure` is:

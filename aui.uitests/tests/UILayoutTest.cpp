@@ -779,3 +779,90 @@ TEST_F(UILayoutTest, RelayoutHappens) {
     EXPECT_LE(label->getPosition().x, 32);
 }
 
+
+// A view with a fixed size on both axes is a layout boundary: whatever happens inside it, its outer size stays the
+// same, so the views above it keep the geometry they were given. It still has to be laid out itself, though.
+TEST_F(UILayoutTest, FixedSizeViewIsRelaidOutWithoutRelayoutingTheWindow) {
+    auto label = _new<ALabel>("");
+    _<AView> box = Stacked { label } AUI_OVERRIDE_STYLE { FixedSize { 64_dp, 64_dp } };
+    inflate(Vertical { box });
+    settleLayout();
+    ASSERT_EQ(label->getSize().x, 0);
+    ASSERT_EQ(label->getPosition().x, 32);
+
+    int windowLayouts = 0;
+    AObject::connect(mWindow->layoutUpdateComplete, mWindow, [&] { ++windowLayouts; });
+
+    // the label grows, requesting a layout from inside the fixed size box.
+    label->setText("55");
+    settleLayout();
+
+    // the box lays its contents out again, keeping the label centered...
+    EXPECT_GT(label->getSize().x, 0);
+    EXPECT_EQ(label->getPosition().x, (64 - label->getSize().x) / 2);
+    // ...and nothing above the box was laid out, because nothing above the box could have changed.
+    EXPECT_EQ(windowLayouts, 0);
+}
+
+// ...but as soon as something the parent's layout actually depends on changes, the request travels up as usual.
+TEST_F(UILayoutTest, ChangingFixedSizeOfAViewRelayoutsItsParent) {
+    _<AView> box = Stacked {} AUI_OVERRIDE_STYLE { FixedSize { 64_dp, 64_dp } };
+    auto sibling = _new<ALabel>("sibling");
+    inflate(Vertical { box, sibling } AUI_OVERRIDE_STYLE { LayoutSpacing { 0_dp } });
+    settleLayout();
+    const int siblingY = sibling->getPosition().y;
+
+    box->setFixedSize({ 64, 100 });
+    settleLayout();
+
+    EXPECT_EQ(box->getSize().y, 100);
+    EXPECT_EQ(sibling->getPosition().y, siblingY + 36);
+}
+
+TEST_F(UILayoutTest, ChangingMarginOfAFixedSizeViewRelayoutsItsParent) {
+    _<AView> box = Stacked {} AUI_OVERRIDE_STYLE { FixedSize { 64_dp, 64_dp } };
+    auto sibling = _new<ALabel>("sibling");
+    inflate(Vertical { box, sibling } AUI_OVERRIDE_STYLE { LayoutSpacing { 0_dp } });
+    settleLayout();
+    const int siblingY = sibling->getPosition().y;
+
+    box->setMargin({ .bottom = 20 });
+    settleLayout();
+
+    EXPECT_EQ(sibling->getPosition().y, siblingY + 20);
+}
+
+// Visibility is part of what the parent's layout depends on, so the parent finds out about it despite the boundary.
+TEST_F(UILayoutTest, HidingAFixedSizeViewRelayoutsItsParent) {
+    _<AView> box = Stacked {} AUI_OVERRIDE_STYLE { FixedSize { 64_dp, 64_dp } };
+    auto sibling = _new<ALabel>("sibling");
+    inflate(Vertical { box, sibling } AUI_OVERRIDE_STYLE { LayoutSpacing { 0_dp } });
+    settleLayout();
+    const int siblingY = sibling->getPosition().y;
+
+    box->setVisibility(Visibility::GONE);
+    settleLayout();
+    EXPECT_EQ(sibling->getPosition().y, siblingY - 64);
+
+    box->setVisibility(Visibility::VISIBLE);
+    settleLayout();
+    EXPECT_EQ(sibling->getPosition().y, siblingY);
+}
+
+// ...and once the parent knows, a view that occupies no space keeps its layout requests to itself again.
+TEST_F(UILayoutTest, ChangesInsideAGoneViewDoNotRelayoutTheWindow) {
+    auto label = _new<ALabel>("");
+    _<AView> box = Stacked { label };
+    inflate(Vertical { box, _new<ALabel>("sibling") });
+    settleLayout();
+    box->setVisibility(Visibility::GONE);
+    settleLayout();
+
+    int windowLayouts = 0;
+    AObject::connect(mWindow->layoutUpdateComplete, mWindow, [&] { ++windowLayouts; });
+
+    label->setText("55");
+    settleLayout();
+
+    EXPECT_EQ(windowLayouts, 0);
+}

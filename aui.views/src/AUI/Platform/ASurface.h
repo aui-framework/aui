@@ -169,6 +169,17 @@ public:
 
   void onResize(int width, int height);
 
+  /**
+   * @brief Schedules view to be laid out on its own, without laying out the rest of the surface.
+   * @details
+   * Called by AView::requestLayout of a view that is a layout boundary, i.e. a view whose geometry can't be
+   * affected by whatever happens inside it. Such a view is laid out by ASurface::applyPendingLayoutRoots before
+   * the next frame is drawn, instead of dragging the whole view hierarchy through a layout update.
+   *
+   * @see AView::isLayoutBoundary
+   */
+  void enqueueLayoutRoot(AView& view);
+
   void updateDpi();
 
   /**
@@ -459,12 +470,25 @@ protected:
 
   void onLayout(glm::ivec2 size) override;
 
+  /**
+   * @brief Lays out the views enqueued by ASurface::enqueueLayoutRoot.
+   * @details
+   * To be called by the surface implementation before rendering, after the surface's own layout update (if any).
+   * Views that were laid out in the meantime are skipped.
+   */
+  void applyPendingLayoutRoots();
+
   void markPixelDataInvalid(ARect<int> invalidArea) override;
 
 private:
   void processTouchscreenKeyboardRequest();
 
   _weak<AView> mFocusedView;
+
+  /**
+   * @see ASurface::enqueueLayoutRoot
+   */
+  AVector<_weak<AView>> mPendingLayoutRoots;
   aui::lazy<Profiling> mProfiling = [] { return Profiling{}; };
   float mDpiRatio = 1.f;
   ScalingParams mScalingParams;

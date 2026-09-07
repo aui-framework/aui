@@ -93,6 +93,7 @@ class ViewPropertiesView;
 class API_AUI_VIEWS AView : public AObject, public IInspectable {
   friend class AViewContainerBase;
   friend class AViewContainer;
+  friend class ASurface;
   friend class IRenderViewToTexture;
 
 public:
@@ -245,7 +246,7 @@ public:
       return;
     }
     mMinSize = minSize;
-    requestLayout();
+    markLayoutContributionChanged();
   }
 
   /**
@@ -259,7 +260,7 @@ public:
       return;
     }
     mMaxSize = maxSize;
-    requestLayout();
+    markLayoutContributionChanged();
   }
 
   /**
@@ -268,6 +269,35 @@ public:
    * See [layout-managers] for more info.
    */
   virtual void requestLayout();
+
+  /**
+   * @brief Whether a layout request from inside this view can be resolved without laying out the parent.
+   * @details
+   * A view whose size is fixed on both axes occupies exactly the same space no matter what happens inside it, so
+   * everything above it in the view hierarchy keeps the geometry it already has. Such a view is a layout boundary:
+   * AView::requestLayout stops here instead of travelling up to the surface, and the surface lays this view out
+   * on its own (@see ASurface::enqueueLayoutRoot).
+   *
+   * Whenever something the parent's layout does depend on changes — fixed size, min/max size, margin, expanding,
+   * visibility — AView::markLayoutContributionChanged lifts the boundary for one request, so the parent finds out.
+   */
+  [[nodiscard]]
+  bool isLayoutBoundary() const noexcept {
+    return mFixedSize.x != 0 && mFixedSize.y != 0 && mFixedSize == mSize;
+  }
+
+  /**
+   * @brief Marks that the space this view occupies in its parent changed, so the parent has to lay out again.
+   * @details
+   * To be called instead of AView::requestLayout by anything that changes fixed size, min/max size, margin,
+   * expanding or visibility of this view — the values the parent's layout manager reads from us.
+   *
+   * @see AView::isLayoutBoundary
+   */
+  void markLayoutContributionChanged() {
+    mLayoutContributionChanged = true;
+    requestLayout();
+  }
 
   /**
    * @see mExtraStylesheet
@@ -360,7 +390,7 @@ public:
       return;
     }
     mMargin = margin;
-    requestLayout();
+    markLayoutContributionChanged();
   }
 
   /**
@@ -473,7 +503,7 @@ public:
     }
     mExpanding = expanding;
     emit mExpandingChanged(expanding);
-    requestLayout();
+    markLayoutContributionChanged();
   }
 
   /**
@@ -547,7 +577,7 @@ public:
       return;
     }
     mFixedSize = size;
-    requestLayout();
+    markLayoutContributionChanged();
   }
 
   [[nodiscard]]
@@ -939,6 +969,22 @@ protected:
   emits<glm::ivec2> mSizeChanged;
 
   bool mWantsLayoutUpdate = true;
+
+  /**
+   * @brief Set while this view waits to be laid out by the surface as a layout root.
+   * @see AView::isLayoutBoundary
+   */
+  bool mPendingLayoutRoot = false;
+
+  /**
+   * @brief Set when the space we occupy in our parent changed and the parent doesn't know about it yet.
+   * @details
+   * Reset by AView::requestLayout as soon as the request is handed over to the parent.
+   *
+   * @see AView::markLayoutContributionChanged
+   */
+  bool mLayoutContributionChanged = true;
+
   glm::ivec2 mLastLayoutSize = { -1, -1 };
   ASpinlockMutex mLayoutGuard;
 
@@ -1062,6 +1108,13 @@ protected:
   virtual void commitStyle();
 
 private:
+  /**
+   * @brief Asks our surface to lay this view out as a layout root.
+   * @return true if the surface accepted the request, i.e. the request doesn't have to travel up the hierarchy.
+   * @see AView::isLayoutBoundary
+   */
+  bool enqueueAsLayoutRoot();
+
   /**
    * @brief Animation.
    */

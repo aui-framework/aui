@@ -444,6 +444,36 @@ void ASurface::onLayout(glm::ivec2 size) {
   emit layoutUpdateComplete;
 }
 
+void ASurface::enqueueLayoutRoot(AView& view) {
+  AUI_ASSERT_UI_THREAD_ONLY();
+  view.mPendingLayoutRoot = true;
+  mPendingLayoutRoots << aui::ptr::weak_from_this(&view);
+}
+
+void ASurface::applyPendingLayoutRoots() {
+  if (mPendingLayoutRoots.empty()) {
+    return;
+  }
+  APerformanceSection section("layout roots update");
+  for (const auto& weak : std::exchange(mPendingLayoutRoots, {})) {
+    auto view = weak.lock();
+    if (view == nullptr) {
+      continue;
+    }
+    view->mPendingLayoutRoot = false;
+    if (!view->mWantsLayoutUpdate) {
+      // laid out by someone else (i.e. by its parent) in the meantime.
+      continue;
+    }
+    if (view->getWindow() != this) {
+      // detached from us in the meantime.
+      continue;
+    }
+    // the view is a layout boundary, so its own geometry is exactly the one it already has.
+    view->layout(view->getPosition(), view->getSize());
+  }
+}
+
 void ASurface::render(ARenderContext context) {
   APerformanceSection root("render");
   currentWindowStorage() = this;

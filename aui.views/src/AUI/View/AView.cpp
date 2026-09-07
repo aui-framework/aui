@@ -14,6 +14,7 @@
 #include <exception>
 #include <limits>
 #include <stack>
+#include <tuple>
 #include <memory>
 #include <glm/gtc/matrix_transform.hpp>
 #include <AUI/Common/AException.h>
@@ -87,13 +88,32 @@ void AView::requestLayout() {
   mLastLayoutSize = glm::ivec2(-1, -1);
   mMeasureCache.clear();
   mMinMaxSizesCache.clear();
-  if (static_cast<bool>(getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
-    //if (mFixedSize == glm::ivec2(0) || mFixedSize != mSize) {
-      if (mParent) {
-        mParent->requestLayout();
-      }
-    //}
+  if (std::exchange(mLayoutContributionChanged, false)) {
+    AUI_NULLSAFE(mParent)->requestLayout();
+    return;
   }
+  if (!static_cast<bool>(getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+    return;
+  }
+  if (isLayoutBoundary() && enqueueAsLayoutRoot()) {
+    return;
+  }
+  AUI_NULLSAFE(mParent)->requestLayout();
+}
+
+bool AView::enqueueAsLayoutRoot() {
+  if (mPendingLayoutRoot) {
+    return true;
+  }
+  auto surface = getWindow();
+  if (surface == nullptr || surface == this) {
+    return false;
+  }
+  if (weak_from_this().expired()) {
+    return false;
+  }
+  surface->enqueueLayoutRoot(*this);
+  return true;
 }
 
 void AView::drawStencilMask(ARenderContext ctx) {
@@ -223,6 +243,8 @@ void AView::invalidateAllStyles()
 
 void AView::invalidateStateStylesImpl() {
     if (!mAssHelper) return;
+    const auto layoutRelevantStyle = [&] { return std::tuple(mMargin, mMinSize, mMaxSize); };
+    const auto before = layoutRelevantStyle();
     mCursor.reset();
     mOverflow = AOverflow::VISIBLE;
     mMargin = {};
@@ -259,6 +281,9 @@ void AView::invalidateStateStylesImpl() {
     }
     commitStyle();
 
+    if (before != layoutRelevantStyle()) {
+        mLayoutContributionChanged = true;
+    }
     requestLayout();
     redraw();
 }
@@ -626,6 +651,7 @@ void AView::layout(int x, int y, int w, int h) {
   }
   mSkipUntilLayoutUpdate = false;
   mWantsLayoutUpdate = false;
+  mPendingLayoutRoot = false;
   mLastLayoutSize = mSize;
   if (oldPosition != mPosition || oldSize != mSize) {
     emit geometryChanged(mPosition, mSize);
@@ -805,8 +831,7 @@ void AView::setVisibility(Visibility visibility) noexcept {
   }
   auto prev = std::exchange(mVisibility, visibility);
   if ((mVisibility & Visibility::FLAG_CONSUME_SPACE) != (prev & Visibility::FLAG_CONSUME_SPACE)) {
-    requestLayout();
-    AUI_NULLSAFE(mParent)->requestLayout();
+    markLayoutContributionChanged();
   }
   redraw();
   emit mVisibilityChanged(visibility);
