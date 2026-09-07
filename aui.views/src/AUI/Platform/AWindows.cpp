@@ -97,14 +97,19 @@ void AWindow::redraw() {
 
     if (mWantsLayoutUpdate) {
       ensureAssUpdated();
+      // laying our contents out in less space than they need produces garbage, so we never do: whatever the window
+      // manager makes of the minimum size we announce it (see IPlatformAbstraction::windowAnnounceMinMaxSize),
+      // contents that still don't fit overflow the window instead of being squeezed into it.
+      auto size = getSize();
+      const auto maxSize = getMaxSize();
+      if (maxSize.x != -1) size.x = glm::min(size.x, maxSize.x);
+      if (maxSize.y != -1) size.y = glm::min(size.y, maxSize.y);
+      size = glm::max(size, getMinimumSize());
+      AView::setSize(size);
 #if AUI_PLATFORM_WIN
-      auto minSize = getMinimumSize();
-      auto maxSize = getMaxSize();
-      auto currentSize = getSize();
-      if (maxSize.x != -1) currentSize.x = glm::min(currentSize.x, maxSize.x);
-      if (maxSize.y != -1) currentSize.y = glm::min(currentSize.y, maxSize.y);
-      currentSize = glm::max(currentSize, minSize);
-      setSize(currentSize);
+      // win32 lets us resize the native window right here, keeping it in sync with the layout. on the other
+      // platforms this would mean arguing with the window manager from inside a paint, so we don't.
+      setSize(size);
 #endif
       auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
       layout(getPosition(), getSize());
