@@ -12,198 +12,632 @@
 #pragma once
 
 #include <AUI/Util/ALayoutDirection.h>
+#include <AUI/Util/AConstraints.hpp>
+#include <AUI/Util/AMinMaxAxis.hpp>
+#include <AUI/Enum/Visibility.h>
+#include <range/v3/range.hpp>
+#include <algorithm>
+#include <limits>
+#include <optional>
+#include <vector>
 
 namespace aui {
 
-/**
- * @brief Shared implementation of AVerticalLayout and AHorizontalLayout.
- * @details
- * HVLayout does not strictly requires to layout AView. The only requirement is to pass range of items that implement
- * methods required by HVLayout (as AView does). This make compile time polymorphism possible.
- *
- * ASplitter is an example of object that requires AHorizontalLayout/AVerticalLayout-like behaviour with some changes.
- */
+template <ALayoutDirection D>
+struct AxisAdapter;
+
+template <>
+struct AxisAdapter<ALayoutDirection::HORIZONTAL> {
+  static AConstraints fixedPerp(int v) { return AConstraints::fixedBlock(v); }
+  static AConstraints fixedOur(int v) { return AConstraints::fixedInline(v); }
+  static AConstraints fixedOurCappedPerp(int our, int max_perp) {
+    return AConstraints { .minInline = our, .maxInline = our, .maxBlock = max_perp };
+  }
+
+  static AConstraints cappedPerp(int max_perp) {
+    return AConstraints { .maxBlock = max_perp };
+  }
+
+  template <typename T>
+  static T& ourAxis(glm::tvec2<T>& v) { return v.x; }
+  template <typename T>
+  static T ourAxis(const glm::tvec2<T>& v) { return v.x; }
+  template <typename T>
+  static T& perpAxis(glm::tvec2<T>& v) { return v.y; }
+  template <typename T>
+  static T perpAxis(const glm::tvec2<T>& v) { return v.y; }
+
+  static int measuredOur(glm::ivec2 v) { return v.x; }
+  static int measuredPerp(glm::ivec2 v) { return v.y; }
+};
+
+template <>
+struct AxisAdapter<ALayoutDirection::VERTICAL> {
+  static AConstraints fixedPerp(int v) { return AConstraints::fixedInline(v); }
+  static AConstraints fixedOur(int v) { return AConstraints::fixedBlock(v); }
+  static AConstraints fixedOurCappedPerp(int our, int max_perp) {
+    return AConstraints { .maxInline = max_perp, .minBlock = our, .maxBlock = our };
+  }
+
+  static AConstraints cappedPerp(int max_perp) {
+    return AConstraints { .maxInline = max_perp };
+  }
+
+  template <typename T>
+  static T& ourAxis(glm::tvec2<T>& v) { return v.y; }
+  template <typename T>
+  static T ourAxis(const glm::tvec2<T>& v) { return v.y; }
+  template <typename T>
+  static T& perpAxis(glm::tvec2<T>& v) { return v.x; }
+  template <typename T>
+  static T perpAxis(const glm::tvec2<T>& v) { return v.x; }
+
+  static int measuredOur(glm::ivec2 v) { return v.y; }
+  static int measuredPerp(glm::ivec2 v) { return v.x; }
+};
+
 template <ALayoutDirection direction>
 struct HVLayout {
-    /**
-     * @brief On direction == HORIZONTAL returns x; on direction == VERTICAL returns y
-     */
-    template <typename T>
-    [[nodiscard]]
-    static T& getAxisValue(glm::tvec2<T>& v) {
-        return aui::layout_direction::getAxisValue(direction, v);
+private:
+  using Axis = AxisAdapter<direction>;
+
+  template <typename View>
+  static bool consumesSpace(const View& view) {
+    return static_cast<bool>(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE);
+  }
+
+  template <typename View>
+  static bool isLayoutParticipant(const View& view) { return consumesSpace(view); }
+
+  struct MainAxisSizeInfo {
+    bool visible = false;
+    bool frozen = false;
+    int weight = 0;
+    int baseSize = 0;
+    int maxSize = std::numeric_limits<int>::max();
+    int finalSize = 0;
+    std::optional<glm::ivec2> measuredSize;
+    int measured_perp_constraint = -2;
+  };
+
+  template <ranges::range Views>
+  static void distributeRemainingSpace(Views&& views, std::vector<MainAxisSizeInfo>& sizes, int remaining_space) {
+    bool changed = true;
+
+    while (changed) {
+      changed = false;
+      long long current_weight = 0;
+
+      for (const auto& info : sizes) {
+        if (info.visible && info.weight > 0 && !info.frozen) {
+          current_weight += info.weight;
+        }
+      }
+
+      if (current_weight == 0) break;
+
+      size_t index = 0;
+      for (const auto& view : views) {
+        auto& info = sizes[index++];
+
+        if (info.visible && info.weight > 0 && !info.frozen) {
+          int share = static_cast<int>((static_cast<long long>(glm::max(0, remaining_space)) * info.weight) / current_weight);
+
+          if (share >= info.maxSize) {
+            info.finalSize = info.maxSize;
+            info.frozen = true;
+            remaining_space -= info.maxSize;
+            changed = true;
+            break;
+          }
+
+          AConstraints constraints;
+          if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+            constraints.minInline = 0;
+            constraints.maxInline = share;
+            constraints.minBlock = 0;
+            constraints.maxBlock = info.measured_perp_constraint;
+          } else {
+            constraints.minBlock = 0;
+            constraints.maxBlock = share;
+            constraints.minInline = 0;
+            constraints.maxInline = info.measured_perp_constraint;
+          }
+
+          auto measured = view->measure(constraints);
+          int measured_our = Axis::measuredOur(measured);
+
+          if (measured_our > share) {
+            info.finalSize = measured_our;
+            info.frozen = true;
+            info.measuredSize = measured;
+            remaining_space -= measured_our;
+            changed = true;
+            break;
+          } else {
+            info.finalSize = share;
+            info.measuredSize = measured;
+          }
+        }
+      }
+    }
+  }
+
+public:
+  template <typename T>
+  [[nodiscard]] static T& getAxisValue(glm::tvec2<T>& v) { return Axis::ourAxis(v); }
+  template <typename T>
+  [[nodiscard]] static T getAxisValue(const glm::tvec2<T>& v) { return Axis::ourAxis(v); }
+
+  template <typename T>
+  [[nodiscard]] static T& getPerpAxisValue(glm::tvec2<T>& v) { return Axis::perpAxis(v); }
+  template <typename T>
+  [[nodiscard]] static T getPerpAxisValue(const glm::tvec2<T>& v) { return Axis::perpAxis(v); }
+
+  template <typename View>
+  static int resolvePerpendicularSize(const View& view, int measured_perp, int available_perp_size, int max_perp_size) {
+    // TODO(Nelonn): think about it, kept for compatibility with existing layouts
+    //const bool perp_expanding = Axis::perpAxis(view->getExpanding()) != 0 && Axis::perpAxis(view->getFixedSize()) == 0;
+    //const int resolved_perp = perp_expanding ? glm::max(available_perp_size, measured_perp) : measured_perp;
+    const int resolved_perp = glm::max(available_perp_size, measured_perp);
+    return max_perp_size > 0 ? glm::min(resolved_perp, max_perp_size) : resolved_perp;
+  }
+
+  template <typename View>
+  static int computePerpendicularSize(const View& view, int our_axis_size, int available_perp_size, int max_perp_size) {
+    const auto constraints = max_perp_size > 0 ? Axis::fixedOurCappedPerp(our_axis_size, max_perp_size) : Axis::fixedOur(our_axis_size);
+    const int measured_perp = Axis::measuredPerp(view->measure(constraints));
+    return resolvePerpendicularSize(view, measured_perp, available_perp_size, max_perp_size);
+  }
+
+  template <typename View>
+  static std::pair<int, std::optional<glm::ivec2>> computePreferredMainAxisSize(const View& view, int perp_constraint) {
+    if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+      if (perp_constraint != -1) {
+        auto measured = view->measure(Axis::cappedPerp(perp_constraint));
+        return { Axis::measuredOur(measured), measured };
+      }
+      return { view->computeMinMaxAxis().max, std::nullopt };
+    } else {
+      const int intrinsic_max = view->computeMinMaxAxis().max;
+      const int fixed_perp = (perp_constraint == -1) ? intrinsic_max : glm::min(perp_constraint, intrinsic_max);
+      auto measured = view->measure(Axis::cappedPerp(fixed_perp));
+      return { Axis::measuredOur(measured), measured };
+    }
+  }
+
+  template <typename View>
+  static int computeMinimumPerpendicularContribution(const View& view, glm::ivec2 margin) {
+    if (!isLayoutParticipant(view)) return 0;
+    if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+      return Axis::measuredPerp(view->measure(Axis::fixedOur(view->computeMinMaxAxis().min))) + margin.y;
+    } else {
+      return view->computeMinMaxAxis().min + margin.x;
+    }
+  }
+
+  template <typename View>
+  static int computeMaximumPerpendicularContribution(const View& view, glm::ivec2 margin) {
+    if (!isLayoutParticipant(view)) return 0;
+    if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+      return Axis::measuredPerp(view->measure(Axis::fixedOur(view->computeMinMaxAxis().max))) + margin.y;
+    } else {
+      return view->computeMinMaxAxis().max + margin.x;
+    }
+  }
+
+  /**
+   * @brief Squeezes children that do not fit into the container.
+   * @details
+   * A child never gets more space than its container actually has. The deficit is taken from the end: a child keeps
+   * its size as long as the children after it have anything left to give, so an overcommitted row loses its trailing
+   * children instead of squeezing everything at once. A fixed size is the only exception — it is law, and such a
+   * child overflows its container as is.
+   */
+  template <ranges::range Views>
+  static void shrinkToFit(Views&& views, std::vector<MainAxisSizeInfo>& sizes, int container_axis_size, int spacing) {
+    int occupied = 0;
+    int visible_count = 0;
+    std::vector<bool> shrinkable(sizes.size(), false);
+
+    size_t index = 0;
+    for (const auto& view : views) {
+      const auto& info = sizes[index];
+      if (info.visible) {
+        ++visible_count;
+        occupied += info.finalSize + Axis::ourAxis(view->getMargin().occupiedSize());
+        shrinkable[index] = Axis::ourAxis(view->getFixedSize()) == 0;
+      }
+      ++index;
+    }
+    occupied += glm::max(0, visible_count - 1) * spacing;
+
+    int excess = occupied - container_axis_size;
+    if (excess <= 0) {
+      return;
     }
 
-    /**
-     * @brief On direction == HORIZONTAL returns x; on direction == VERTICAL returns y
-     */
-    template <typename T>
-    [[nodiscard]]
-    static T getAxisValue(const glm::tvec2<T>& v) {
-        return aui::layout_direction::getAxisValue(direction, v);
+    // children laid out at their own size give up space from the end: one keeps its size as long as the children
+    // after it have anything left to give.
+    for (size_t i = sizes.size(); i-- > 0 && excess > 0;) {
+      auto& info = sizes[i];
+      if (!info.visible || !shrinkable[i] || info.weight > 0 || info.finalSize <= 0) {
+        continue;
+      }
+      const int given = glm::min(info.finalSize, excess);
+      info.finalSize -= given;
+      excess -= given;
+      info.measuredSize.reset();   // measured at a size the child no longer has.
     }
 
-    /**
-     * @brief On direction == HORIZONTAL returns y; on direction == VERTICAL returns x
-     */
-    template <typename T>
-    [[nodiscard]]
-    static T& getPerpAxisValue(glm::tvec2<T>& v) {
-        return aui::layout_direction::getPerpendicularAxisValue(direction, v);
+    if (excess <= 0) {
+      return;
     }
 
-    /**
-     * @brief On direction == HORIZONTAL returns y; on direction == VERTICAL returns x
-     */
-    template <typename T>
-    [[nodiscard]]
-    static T getPerpAxisValue(const glm::tvec2<T>& v) {
-        return aui::layout_direction::getPerpendicularAxisValue(direction, v);
+    // expanding children asked to share the space in the first place, so they give it up proportionally, keeping
+    // equal siblings equal.
+    int expanding = 0;
+    size_t last_expanding = sizes.size();
+    for (size_t i = 0; i < sizes.size(); ++i) {
+      const auto& info = sizes[i];
+      if (!info.visible || !shrinkable[i] || info.weight <= 0 || info.finalSize <= 0) {
+        continue;
+      }
+      expanding += info.finalSize;
+      last_expanding = i;
+    }
+    if (expanding <= 0) {
+      return;
     }
 
-    static void onResize(glm::ivec2 paddedPosition, glm::ivec2 paddedSize, ranges::range auto&& views, int spacing) {
-        static constexpr auto FIXED_POINT_DENOMINATOR = 2 << 4;
+    const int target = glm::max(0, expanding - excess);
+    int distributed = 0;
+    for (size_t i = 0; i < sizes.size(); ++i) {
+      auto& info = sizes[i];
+      if (!info.visible || !shrinkable[i] || info.weight <= 0 || info.finalSize <= 0) {
+        continue;
+      }
+      // the last one takes the rounding remainder, so the children add up to the container exactly.
+      info.finalSize = i == last_expanding
+          ? glm::max(0, target - distributed)
+          : static_cast<int>((static_cast<long long>(info.finalSize) * target) / expanding);
+      distributed += info.finalSize;
+      info.measuredSize.reset();
+    }
+  }
 
-        if (views.empty())
-            return;
+  /**
+   * @brief Computes the content size of the container along the main axis.
+   * @param minimum if true, expanding children contribute their minimum (min-content); if false, their preferred
+   *        size (max-content).
+   * @details
+   * An expanding child takes the space its container already has, but never dictates it: a child with no content
+   * (i.e. ASpacerExpanding) contributes nothing to either size. Growing such a child is a matter of distributing the
+   * free space of a container whose main axis size is already known, which happens later, in resolveMainAxisSizes.
+   */
+  template <ranges::range Views>
+  static int mainAxisContentSize(Views&& views, int spacing, glm::ivec2 padded_size, bool minimum) {
+    int total = 0;
+    int visible_count = 0;
+    const int available_perp = Axis::perpAxis(padded_size);
 
-        int sum = 0;
-        int availableSpaceForExpandingViews = getAxisValue(paddedSize) + spacing;
+    for (const auto& view : views) {
+      view->ensureAssUpdated();   // getFixedSize/getMaxSize/getExpanding below are style-derived.
+      if (!isLayoutParticipant(view)) continue;
+      ++visible_count;
 
-        // first phase: calculate sum and availableSpaceForExpandingViews
-        for (const auto& view : views) {
-            view->ensureAssUpdated();
-            if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE))
-                continue;
-            int expanding = getAxisValue(view->getExpanding());
-            int minSpace = getAxisValue(view->getMinimumSize());
-            sum += expanding;
-            if (expanding == 0 || getAxisValue(view->getFixedSize()) != 0)   // expanding view is fixed size is equal to
-                                                                             // non-expanding
-                availableSpaceForExpandingViews -= minSpace + getAxisValue(view->getMargin().occupiedSize()) + spacing;
-            else
-                availableSpaceForExpandingViews -= getAxisValue(view->getMargin().occupiedSize()) + spacing;
-        }
+      const auto margins   = view->getMargin().occupiedSize();
+      const int fixed_size = Axis::ourAxis(view->getFixedSize());
+      const int raw_max    = Axis::ourAxis(view->getMaxSize());
+      const int child_perp =
+          available_perp == -1 ? -1 : glm::max(0, available_perp - Axis::perpAxis(margins));
 
-        bool containsExpandingItems = sum > 0;
+      int size;
+      if (fixed_size > 0) {
+        size = fixed_size;
+      } else if (minimum && Axis::ourAxis(view->getExpanding()) > 0) {
+        // measuring with no space at all on our axis yields the child's minimum.
+        size = Axis::measuredOur(view->measure(Axis::fixedOurCappedPerp(0, child_perp)));
+      } else {
+        size = computePreferredMainAxisSize(view, child_perp).first;
+      }
+      if (raw_max != -1) {
+        size = glm::min(size, raw_max);
+      }
 
-        sum = glm::max(sum, 1);
-
-        // second phase: validate availableSpaceForExpanding for expanding views with min size and max size
-        if (containsExpandingItems) {
-            for (const auto& view : views) {
-                if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE))
-                    continue;
-
-                int expanding = getAxisValue(view->getExpanding());
-
-                if (expanding == 0 || getAxisValue(view->getFixedSize()) != 0)   // expanding view is fixed size is
-                                                                                 // equal to non-expanding
-                    continue;
-
-                int spaceAcquiredByExpanding = availableSpaceForExpandingViews * expanding / sum;
-                int viewMinSize = getAxisValue(view->getMinimumSize());
-                auto viewMaxSize = view->getMaxSize();
-                int validatedSpace = glm::clamp(spaceAcquiredByExpanding, viewMinSize, getAxisValue(viewMaxSize));
-                availableSpaceForExpandingViews += (spaceAcquiredByExpanding - validatedSpace) * sum / expanding;
-            }
-        }
-
-        // third phase: apply layout to views
-        long long posOurAxis = getAxisValue(paddedPosition) * FIXED_POINT_DENOMINATOR;
-        const auto& last = views.back();
-        for (const auto& view : views) {
-            if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE))
-                continue;
-            auto margins = view->getMargin();
-            auto viewMaxSize = view->getMaxSize();
-
-            int viewPosOurAxis = posOurAxis / FIXED_POINT_DENOMINATOR + getAxisValue(margins.leftTop());
-            int viewPosPerpAxis = getPerpAxisValue(paddedPosition + margins.leftTop());
-
-            if (containsExpandingItems && view == last) {
-                // the last element should stick right to the border.
-                int viewSizeOurAxis =
-                    getAxisValue(paddedSize) - viewPosOurAxis - getAxisValue(margins.rightBottom()) +
-                    getAxisValue(paddedPosition);
-                int viewSizePerpAxis = getPerpAxisValue(paddedSize - margins.occupiedSize());
-
-                view->setGeometry(
-                    getAxisValue(glm::ivec2 { viewPosOurAxis, viewPosPerpAxis }),
-                    getAxisValue(glm::ivec2 { viewPosPerpAxis, viewPosOurAxis }),
-                    getAxisValue(glm::ivec2 { viewSizeOurAxis, viewSizePerpAxis }),
-                    getAxisValue(glm::ivec2 { viewSizePerpAxis, viewSizeOurAxis }));
-            } else {
-                int expanding = getAxisValue(view->getExpanding());
-                int viewMinSize = getAxisValue(view->getMinimumSize());
-                long long viewEndPos =
-                    posOurAxis +
-                    glm::clamp(
-                        FIXED_POINT_DENOMINATOR * availableSpaceForExpandingViews * expanding / sum,
-                        FIXED_POINT_DENOMINATOR * viewMinSize, FIXED_POINT_DENOMINATOR * getAxisValue(viewMaxSize));
-
-                int viewSizeOurAxis = viewEndPos / FIXED_POINT_DENOMINATOR - posOurAxis / FIXED_POINT_DENOMINATOR;
-                int viewSizePerpAxis =
-                    glm::min(getPerpAxisValue(paddedSize - margins.occupiedSize()), getPerpAxisValue(viewMaxSize));
-
-                view->setGeometry(
-                    getAxisValue(glm::ivec2 { viewPosOurAxis, viewPosPerpAxis }),
-                    getAxisValue(glm::ivec2 { viewPosPerpAxis, viewPosOurAxis }),
-                    getAxisValue(glm::ivec2 { viewSizeOurAxis, viewSizePerpAxis }),
-                    getAxisValue(glm::ivec2 { viewSizePerpAxis, viewSizeOurAxis }));
-
-                if (getAxisValue(view->getSize()) == viewSizeOurAxis) {
-                    posOurAxis = viewEndPos + (spacing + getAxisValue(margins.occupiedSize())) * FIXED_POINT_DENOMINATOR;
-                } else {
-                    // view has rejected the size we have provided, and we should adopt.
-                    // unfortunately, we lose the fractional part of the size.
-                    posOurAxis += (spacing + getAxisValue(view->getSize() + margins.occupiedSize())) * FIXED_POINT_DENOMINATOR;
-                }
-                availableSpaceForExpandingViews += viewSizeOurAxis - getAxisValue(view->getSize());
-            }
-        }
+      total += size + Axis::ourAxis(margins);
     }
 
-    static int getMinimumWidth(ranges::range auto&& views, int spacing) {
-        if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-            return getMinimumSizeOurAxis(views, spacing);
-        }
-        if constexpr (direction == ALayoutDirection::VERTICAL) {
-            return getMinimumSizePerpAxis(views, spacing);
-        }
+    return total + glm::max(0, visible_count - 1) * spacing;
+  }
+
+  template <ranges::range Views>
+  static std::vector<MainAxisSizeInfo> resolveMainAxisSizes(
+      Views&& views,
+      int spacing,
+      glm::ivec2 padded_size) {
+
+    std::vector<MainAxisSizeInfo> result;
+    result.reserve(static_cast<size_t>(ranges::distance(views)));
+
+    int container_axis_size = Axis::ourAxis(padded_size);
+    int remaining_space = container_axis_size;
+    int visible_count = 0;
+    long long total_weight = 0;
+
+    for (const auto& view : views) {
+      MainAxisSizeInfo info;
+
+      view->ensureAssUpdated();   // getFixedSize/getMaxSize/getExpanding below are style-derived.
+      if (!isLayoutParticipant(view)) {
+        result.push_back(info);
+        continue;
+      }
+
+      info.visible = true;
+
+      const int fixed_size = Axis::ourAxis(view->getFixedSize());
+      const int expanding  = Axis::ourAxis(view->getExpanding());
+      const int raw_max    = Axis::ourAxis(view->getMaxSize());
+      // -1 means "unlimited", and must stay that way: asking a child how big it wants to be within zero space is
+      // not the same question as asking it within unlimited space.
+      const int perp_available = Axis::perpAxis(padded_size);
+      const int child_perp = perp_available == -1
+          ? -1
+          : glm::max(0, perp_available - Axis::perpAxis(view->getMargin().occupiedSize()));
+
+      info.maxSize = (raw_max != -1) ? raw_max : 1000000000;
+      info.measured_perp_constraint = child_perp;
+
+      if (fixed_size > 0) {
+        info.baseSize = fixed_size;
+        info.maxSize  = fixed_size;
+        info.finalSize = fixed_size;
+        remaining_space -= fixed_size;
+      } else if (expanding > 0) {
+        info.weight = expanding;
+        total_weight += expanding;
+        info.baseSize = 0;
+        info.finalSize = 0;
+      } else {
+        auto [size, measured] = computePreferredMainAxisSize(view, child_perp);
+        info.baseSize      = size;
+        info.measuredSize  = measured;
+        info.finalSize     = size;
+        remaining_space -= size;
+      }
+
+      remaining_space -= Axis::ourAxis(view->getMargin().occupiedSize());
+      ++visible_count;
+      result.push_back(info);
     }
 
-    static int getMinimumHeight(ranges::range auto&& views, int spacing) {
-        if constexpr (direction == ALayoutDirection::VERTICAL) {
-            return getMinimumSizeOurAxis(views, spacing);
-        }
-        if constexpr (direction == ALayoutDirection::HORIZONTAL) {
-            return getMinimumSizePerpAxis(views, spacing);
-        }
+    remaining_space -= glm::max(0, visible_count - 1) * spacing;
+
+    if (total_weight > 0) {
+      distributeRemainingSpace(views, result, remaining_space);
     }
+
+    // children may end up larger than their share (i.e. because of their minimum size), so check unconditionally.
+    shrinkToFit(views, result, container_axis_size, spacing);
+
+    return result;
+  }
+
+  template <ranges::range Views>
+  static void layout(
+      glm::ivec2 padded_position,
+      glm::ivec2 padded_size,
+      Views&& views,
+      int spacing) {
+    if (views.empty()) return;
+
+    const auto resolved = resolveMainAxisSizes(views, spacing, padded_size);
+
+    int pos_our_axis = Axis::ourAxis(padded_position);
+    auto info = resolved.begin();
+
+    for (const auto& view : views) {
+      const auto& current_info = *info++;
+
+      if (!current_info.visible) continue;
+
+      const auto margins        = view->getMargin();
+      const int available_perp  = Axis::perpAxis(padded_size - margins.occupiedSize());
+      const int max_perp        = Axis::perpAxis(view->getMaxSize());
+
+      const int view_pos_our  = pos_our_axis + Axis::ourAxis(margins.leftTop());
+      const int view_pos_perp = Axis::perpAxis(padded_position + margins.leftTop());
+      const int view_size_our = current_info.finalSize;
+
+      int view_size_perp;
+
+      const int fixed_perp = Axis::perpAxis(view->getFixedSize());
+
+      if (fixed_perp > 0) {
+        view_size_perp = resolvePerpendicularSize(view, fixed_perp, available_perp, max_perp);
+      } else if (current_info.measuredSize) {
+        const bool main_axis_matches =
+            direction == ALayoutDirection::VERTICAL ||
+            Axis::measuredOur(*current_info.measuredSize) == view_size_our;
+
+        if (main_axis_matches) {
+          view_size_perp = resolvePerpendicularSize(view, Axis::measuredPerp(*current_info.measuredSize), available_perp, max_perp);
+        } else {
+          view_size_perp = computePerpendicularSize(view, view_size_our, available_perp, max_perp);
+        }
+      } else {
+        view_size_perp = computePerpendicularSize(view, view_size_our, available_perp, max_perp);
+      }
+
+      if (Axis::perpAxis(view->getFixedSize()) == 0) {
+        // same as on the main axis: we never hand out more space than we have.
+        view_size_perp = glm::min(view_size_perp, glm::max(0, available_perp));
+      }
+
+      view->layout(
+          Axis::ourAxis(glm::ivec2 { view_pos_our,  view_pos_perp }),
+          Axis::ourAxis(glm::ivec2 { view_pos_perp, view_pos_our  }),
+          Axis::ourAxis(glm::ivec2 { view_size_our,  view_size_perp }),
+          Axis::ourAxis(glm::ivec2 { view_size_perp, view_size_our  }));
+
+      pos_our_axis += view_size_our + Axis::ourAxis(margins.occupiedSize()) + spacing;
+    }
+  }
+
+  template <ranges::range Views>
+  static int preferredWidth(Views&& views, int spacing, int height) {
+    if constexpr (direction == ALayoutDirection::HORIZONTAL) return preferredOurAxis(views, spacing, height);
+    else return preferredPerpendicularAxis(views, spacing, height);
+  }
+
+  template <ranges::range Views>
+  static int preferredHeight(Views&& views, int spacing, int width) {
+    if constexpr (direction == ALayoutDirection::VERTICAL) return preferredOurAxis(views, spacing, width);
+    else return preferredPerpendicularAxis(views, spacing, width);
+  }
+
+  template <ranges::range Views>
+  static AMinMaxAxis computeIntrinsicMinMaxSizes(Views&& views, int spacing) {
+    AMinMaxAxis result;
+    int visible_count = 0;
+
+    for (const auto& view : views) {
+      if (!isLayoutParticipant(view)) continue;
+
+      const auto min_max  = view->computeMinMaxAxis();
+      const auto margin   = view->getMargin().occupiedSize();
+      const int child_min = min_max.min + margin.x;
+      const int child_max = min_max.max + margin.x;
+
+      if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+        result.min += child_min;
+        result.max += child_max;
+      } else {
+        result.min = glm::max(result.min, child_min);
+        result.max = glm::max(result.max, child_max);
+      }
+      ++visible_count;
+    }
+
+    const int total_spacing = glm::max(0, visible_count - 1) * spacing;
+    if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+      result.min += total_spacing;
+      result.max += total_spacing;
+    }
+
+    return result;
+  }
+
+  template <ranges::range Views>
+  static glm::ivec2 onIntrinsicMeasure(Views&& views, int spacing, AConstraints constraints) {
+    // Derive padded_size from constraints so we can reuse resolveMainAxisSizes.
+    const int our_limit  = (direction == ALayoutDirection::HORIZONTAL)
+                           ? (constraints.isUnlimitedInline() ? -1 : constraints.maxInline)
+                           : (constraints.isUnlimitedBlock()  ? -1 : constraints.maxBlock);
+    const int our_min    = (direction == ALayoutDirection::HORIZONTAL) ? constraints.minInline : constraints.minBlock;
+    const int perp_limit = (direction == ALayoutDirection::HORIZONTAL)
+                               ? constraints.maxBlock
+                               : constraints.maxInline;
+
+    glm::ivec2 padded_size;
+    Axis::perpAxis(padded_size) = perp_limit == -1 ? -1 : perp_limit;
+
+    // Expanding children do not contribute to the size of their container; they only take the space the container
+    // already has. Thus, our own main axis size is derived from the children's content sizes and then children are
+    // resolved against it, exactly like layout() does — this correctly distributes remaining space to expanding
+    // children (e.g. wrapping text).
+    Axis::ourAxis(padded_size) = 0;
+    const int min_content = mainAxisContentSize(views, spacing, padded_size, true);
+    int our_size;
+    if (our_limit == -1) {
+      // no space to fit into; expanding children must not inflate us (see AView::pack).
+      our_size = min_content;
+    } else {
+      // fit-content: take the space we are given, but no more than our content actually asks for. Reporting less
+      // than our contents need would be a lie — being given less space than that is a separate matter, and it is
+      // shrinkToFit that squeezes children into what we actually get.
+      const int max_content = mainAxisContentSize(views, spacing, padded_size, false);
+      our_size = glm::min(max_content, glm::max(min_content, our_limit));
+    }
+    Axis::ourAxis(padded_size) = glm::max(our_size, our_min);
+
+    const auto resolved = resolveMainAxisSizes(views, spacing, padded_size);
+
+    int total_our     = -spacing;
+    int max_perp      = 0;
+    int visible_count = 0;
+    auto info = resolved.begin();
+
+    for (const auto& v : views) {
+      const auto& current_info = *info++;
+      if (!current_info.visible) continue;
+      ++visible_count;
+
+      const int view_size_our  = current_info.finalSize;
+      //const int available_perp = std::max(0, Axis::perpAxis(padded_size) - Axis::perpAxis(v->getMargin().occupiedSize()));
+      const int available_perp = 0;
+      const int max_perp_view  = Axis::perpAxis(v->getMaxSize());
+
+      int child_perp;
+      const int fixed_perp = Axis::perpAxis(v->getFixedSize());
+      if (fixed_perp > 0) {
+        child_perp = resolvePerpendicularSize(v, fixed_perp, available_perp, max_perp_view);
+      } else if (current_info.measuredSize) {
+        // Reuse cached measurement only when the main-axis size matches —
+        // otherwise re-measure with the final main-axis size, exactly as
+        // layout() does, so wrapping text reports the correct height.
+        const bool main_axis_matches =
+            direction == ALayoutDirection::VERTICAL ||
+            Axis::measuredOur(*current_info.measuredSize) == view_size_our;
+
+        if (main_axis_matches) {
+          child_perp = resolvePerpendicularSize(v, Axis::measuredPerp(*current_info.measuredSize), available_perp, max_perp_view);
+        } else {
+          child_perp = computePerpendicularSize(v, view_size_our, available_perp, max_perp_view);
+        }
+      } else {
+        child_perp = computePerpendicularSize(v, view_size_our, available_perp, max_perp_view);
+      }
+
+      total_our += view_size_our + Axis::ourAxis(v->getMargin().occupiedSize()) + spacing;
+      max_perp = std::max(max_perp, child_perp + Axis::perpAxis(v->getMargin().occupiedSize()));
+    }
+
+    total_our = std::max(0, total_our);
+
+    if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+      const int width = constraints.isUnlimitedInline() ? std::max(total_our, constraints.minInline)
+                                                  : std::max(total_our, constraints.minInline);
+      return { width, std::max(max_perp, constraints.minBlock) };
+    } else {
+      const int height = constraints.isUnlimitedBlock() ? std::max(total_our, constraints.minBlock)
+                                                  : std::max(total_our, constraints.minBlock);
+      return { std::max(max_perp, constraints.minInline), height };
+    }
+  }
 
 private:
-    static int getMinimumSizeOurAxis(ranges::range auto&& views, int spacing) {
-        int minSize = -spacing;
+  template <ranges::range Views>
+  static int preferredOurAxis(Views&& views, int spacing, int perp_axis_constraint) {
+    AConstraints constraints;
+    if constexpr (direction == ALayoutDirection::HORIZONTAL) constraints.maxBlock = perp_axis_constraint;
+    else constraints.maxInline = perp_axis_constraint;
+    return Axis::ourAxis(onIntrinsicMeasure(views, spacing, constraints));
+  }
 
-        for (const auto& v : views) {
-            if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE))
-                continue;
-            minSize += getAxisValue(v->getMinimumSize() + v->getMargin().occupiedSize()) + spacing;
-        }
-
-        return glm::max(minSize, 0);
+  template <ranges::range Views>
+  static int preferredPerpendicularAxis(Views&& views, int spacing, int our_axis_constraint) {
+    AConstraints constraints;
+    if constexpr (direction == ALayoutDirection::HORIZONTAL) {
+      constraints.maxInline = our_axis_constraint;
+      constraints.minInline = our_axis_constraint;
+    } else {
+      constraints.maxBlock = our_axis_constraint;
+      constraints.minBlock = our_axis_constraint;
     }
-
-    static int getMinimumSizePerpAxis(ranges::range auto&& views, int spacing) {
-        int minSize = 0;
-        for (const auto& v : views) {
-            if (!(v->getVisibility() & Visibility::FLAG_CONSUME_SPACE))
-                continue;
-            auto h = getPerpAxisValue(v->getMinimumSize() + +v->getMargin().occupiedSize());
-            minSize = glm::max(minSize, int(h));
-        }
-        return minSize;
-    }
+    return Axis::perpAxis(onIntrinsicMeasure(views, spacing, constraints));
+  }
 };
+
 }   // namespace aui

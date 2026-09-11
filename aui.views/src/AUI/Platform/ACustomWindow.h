@@ -35,7 +35,7 @@ public:
 
     virtual bool isCaptionAt(const glm::ivec2& pos);
 
-    void setSize(glm::ivec2 size) override;
+    void setSize(glm::ivec2 size);
 
 signals:
     emits<glm::ivec2> dragBegin;

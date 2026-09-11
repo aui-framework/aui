@@ -17,6 +17,7 @@
 
 #include "AUI/Render/IRenderer.h"
 #include "IProperty.h"
+#include "AUI/Common/IStringable.h"
 
 namespace ass {
 
@@ -41,7 +42,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<BackgroundCropping>: IPropertyBase {
+        struct API_AUI_VIEWS Property<BackgroundCropping>: IPropertyBase, IStringable {
         private:
             BackgroundCropping mInfo;
 
@@ -55,6 +56,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "BackgroundCropping(offset={}, size={})"_format(mInfo.offset, mInfo.size);
             }
         };
 

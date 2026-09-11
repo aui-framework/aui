@@ -18,10 +18,11 @@
 
 #include <AUI/Enum/VerticalAlign.h> // defined here
 #include "IProperty.h"
+#include "AUI/Common/IStringable.h"
 
 namespace ass::prop {
     template<>
-    struct API_AUI_VIEWS Property<VerticalAlign>: IPropertyBase {
+    struct API_AUI_VIEWS Property<VerticalAlign>: IPropertyBase, IStringable {
     private:
         VerticalAlign mInfo;
 
@@ -35,6 +36,10 @@ namespace ass::prop {
         [[nodiscard]]
         const auto& value() const noexcept {
             return mInfo;
+        }
+
+        AString toString() const override {
+            return "VerticalAlign({})"_format(mInfo);
         }
     };
 }

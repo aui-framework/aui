@@ -13,10 +13,11 @@
 
 #include "IProperty.h"
 #include <AUI/Enum/Visibility.h> // defined here
+#include "AUI/Common/IStringable.h"
 
 namespace ass::prop {
     template<>
-    struct API_AUI_VIEWS Property<Visibility>: IPropertyBase {
+    struct API_AUI_VIEWS Property<Visibility>: IPropertyBase, IStringable {
     private:
         Visibility mInfo;
 
@@ -30,6 +31,10 @@ namespace ass::prop {
         [[nodiscard]]
         const auto& value() const noexcept {
             return mInfo;
+        }
+
+        AString toString() const override {
+            return "Visibility({})"_format(mInfo);
         }
     };
 }

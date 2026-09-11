@@ -16,6 +16,7 @@
 
 #pragma once
 
+#include <AUI/Reflect/AEnumerate.h>
 
 /**
  * @brief Controls the text vertical alignment of AView.
@@ -25,3 +26,5 @@ enum class VerticalAlign {
     DEFAULT,
     MIDDLE,
 };
+
+AUI_ENUM_VALUES(VerticalAlign, VerticalAlign::DEFAULT, VerticalAlign::MIDDLE)

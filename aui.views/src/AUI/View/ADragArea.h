@@ -40,7 +40,7 @@ public:
 
     void endDragging();
 
-    void applyGeometryToChildren() override;
+    void onLayout(glm::ivec2 size) override;
 
     class API_AUI_VIEWS ADraggableHandle: public AViewContainerBase {
         friend class ADragArea;

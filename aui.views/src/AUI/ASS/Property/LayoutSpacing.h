@@ -14,6 +14,7 @@
 
 #include <AUI/Platform/ACursor.h>
 #include <AUI/Util/AMetric.h>
+#include "AUI/Common/IStringable.h"
 #include "IProperty.h"
 
 namespace ass {
@@ -30,7 +31,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<LayoutSpacing>: IPropertyBase {
+        struct API_AUI_VIEWS Property<LayoutSpacing>: IPropertyBase, IStringable {
         private:
             LayoutSpacing mInfo;
 
@@ -45,6 +46,8 @@ namespace ass {
             const auto& value() const noexcept {
                 return mInfo;
             }
+
+            AString toString() const override { return "LayoutSpacing({})"_format(mInfo.spacing); }
         };
     }
 }

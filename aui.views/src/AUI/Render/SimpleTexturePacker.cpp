@@ -20,7 +20,7 @@ Util::SimpleTexturePacker::~SimpleTexturePacker() {
 
 }
 
-void Util::SimpleTexturePacker::onResize(AImage& data, Util::dim side) {
+void Util::SimpleTexturePacker::layout(AImage& data, Util::dim side) {
 	if (mImage) {
         AImage newImage(glm::uvec2(side, side), data.format());
         newImage.insert({0, 0}, *mImage);

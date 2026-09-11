@@ -18,21 +18,21 @@
 #include <unordered_map>
 
 static void runOnGLThread(std::function<void()> callback) {
-    AUI_NULLSAFE(AWindow::current())->getThread()->enqueue(std::move(callback));
+    AUI_NULLSAFE(ASurface::current())->getThread()->enqueue(std::move(callback));
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_AuiView_handleRedraw(JNIEnv *env, jclass clazz) {
     AUI_NULLSAFE(AThread::current()->getCurrentEventLoop())->loop();
-    AUI_NULLSAFE(dynamic_cast<AWindow*>(AWindow::current()))->AWindow::redraw();
+    AUI_NULLSAFE(dynamic_cast<AWindow*>(ASurface::current()))->AWindow::redraw();
 }
 
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_AuiView_handleResize(JNIEnv *env, jclass clazz, jint width, jint height) {
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->setSize({width, height});
+        AUI_NULLSAFE(ASurface::current())->onResize(width, height);
     });
 }
 
@@ -40,7 +40,7 @@ extern "C"
 JNIEXPORT void JNICALL
 Java_com_github_aui_android_AuiView_handleLongPress(JNIEnv *env, jclass clazz, jfloat x, jfloat y) {
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onGesture({x, y}, ALongPressEvent{});
+        AUI_NULLSAFE(ASurface::current())->onGesture({x, y}, ALongPressEvent{});
     });
 }
 
@@ -49,7 +49,7 @@ JNIEXPORT void JNICALL
 Java_com_github_aui_android_AuiView_handlePointerButtonDown(JNIEnv *env, jclass clazz, jfloat x,
                                                           jfloat y, jint pointerId) {
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onPointerPressed({{x, y}, APointerIndex::finger(pointerId)});
+        AUI_NULLSAFE(ASurface::current())->onPointerPressed({{x, y}, APointerIndex::finger(pointerId)});
     });
 }
 extern "C"
@@ -57,7 +57,7 @@ JNIEXPORT void JNICALL
 Java_com_github_aui_android_AuiView_handlePointerButtonUp(JNIEnv *env, jclass clazz, jfloat x,
                                                         jfloat y, jint pointerId) {
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onPointerReleased({{x, y}, APointerIndex::finger(pointerId)});
+        AUI_NULLSAFE(ASurface::current())->onPointerReleased({{x, y}, APointerIndex::finger(pointerId)});
     });
 }
 
@@ -74,6 +74,6 @@ Java_com_github_aui_android_AuiView_handlePointerMove(JNIEnv *env, jclass clazz,
     prevValues[pointerId] = currentValue;
 
     runOnGLThread([=] {
-        AUI_NULLSAFE(AWindow::current())->onPointerMove(currentValue, {APointerIndex::finger(pointerId)});
+        AUI_NULLSAFE(ASurface::current())->onPointerMove(currentValue, {APointerIndex::finger(pointerId)});
     });
 }

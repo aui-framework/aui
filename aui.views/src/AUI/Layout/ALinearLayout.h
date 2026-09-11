@@ -26,6 +26,7 @@ namespace aui::detail {
                 AUI_ASSERT(mViews[index].get() == view.ptr());
             }
             mViews.removeAt(index);
+            ALayout::requestLayout();
         }
 
         AVector<_<AView>> getAllViews() override {
@@ -39,6 +40,7 @@ namespace aui::detail {
                 at = mViews.begin() + *index;
             }
             mViews.insert(at, std::move(view));
+            ALayout::requestLayout();
         }
 
     protected:
