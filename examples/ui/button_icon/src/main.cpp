@@ -31,15 +31,15 @@ public:
                     SpacerFixed { 2_dp },
                     Label { "Button with icon" },
                   },
-              .onClick = { me::onClick },
+              .onClick = [] {
+                  ALogger::info("Test") << "Hello world!";
+              },
             },
             /// [AButton_example]
           },
         });
     }
 
-private:
-    void onClick() { ALogger::info("Test") << "Hello world!"; }
 };
 
 AUI_ENTRY {

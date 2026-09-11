@@ -60,7 +60,7 @@ _<AView> myLazyList(_<State> state) {
     });
 
     return Vertical {
-        AUI_DECLARATIVE_FOR(i, *state->items, AVerticalLayout) { return Label{} & i->value; },
+        AUI_DECLARATIVE_FOR(i, *state->items, AVerticalLayout) { return Label{ AUI_REACT("{}"_format(*i->value)) }; },
         Centered {
           _new<ASpinnerV2>() AUI_LET {
                   AObject::connect(it->redrawn, AObject::GENERIC_OBSERVER, [state] {

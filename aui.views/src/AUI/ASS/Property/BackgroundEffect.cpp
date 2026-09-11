@@ -18,7 +18,7 @@
 #include "IProperty.h"
 
 
-void ass::prop::Property<ass::BackgroundEffect>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ass::BackgroundEffect>::renderFor(AView* view, const ARenderContext& ctx) {
     for (auto& e : mInfo.mEffects)
     {
         e->draw(view);
@@ -27,11 +27,9 @@ void ass::prop::Property<ass::BackgroundEffect>::renderFor(AView* view, const AR
     IPropertyBase::renderFor(view, ctx);
 }
 
-bool ass::prop::Property<ass::BackgroundEffect>::isNone() {
+bool ass::legacy::Property<ass::BackgroundEffect>::isNone() {
     return mInfo.mEffects.empty();
 }
-ass::prop::PropertySlot ass::prop::Property<ass::BackgroundEffect>::getPropertySlot() const {
-    return ass::prop::PropertySlot::BACKGROUND_EFFECT;
+ass::legacy::PropertySlot ass::legacy::Property<ass::BackgroundEffect>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::BACKGROUND_EFFECT;
 }
-
-

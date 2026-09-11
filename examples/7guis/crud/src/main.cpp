@@ -27,56 +27,68 @@ struct User {
     APropertyPrecomputed<AString> displayName = [this] { return "{}, {}"_format(name, surname); };
 };
 
-class CRUDWindow: public AWindow {
+class CRUDWindow : public AWindow {
 public:
-    CRUDWindow(): AWindow("AUI - 7GUIs - CRUD", 300_dp, 200_dp) {
-        setExtraStylesheet(AStylesheet {
-          {
-            c("selected"),
-            BackgroundSolid { AColor::BLUE.transparentize(0.5f) },
-          }
-        });
+    CRUDWindow() : AWindow("AUI - 7GUIs - CRUD", 300_dp, 200_dp) {
+        setExtraStylesheet(AStylesheet { {
+          c("selected"),
+          BackgroundSolid { AColor::BLUE.transparentize(0.5f) },
+        } });
 
         auto FILTER_VIEW = ranges::views::filter([this](const _<User>& user) {
             return user->displayName->startsWith(*mFilterPrefix);
         });
 
-        setContents(Vertical {
-          Horizontal::Expanding {
-            Vertical::Expanding {
-              Horizontal {
-                Label { "Filter prefix:" },
-                _new<ATextField>() AUI_OVERRIDE_STYLE { Expanding(1, 0) } && mFilterPrefix,
+        setContents(
+            Vertical {
+              Horizontal::Expanding {
+                Vertical::Expanding {
+                  Horizontal {
+                    Label { "Filter prefix:" },
+                    _new<ATextField>() AUI_OVERRIDE_STYLE { Expanding(1, 0) } && mFilterPrefix,
+                  } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                  AScrollArea::Builder()
+                          .withExpanding()
+                          .withContents(
+                          AUI_DECLARATIVE_FOR(i, *mUsers | FILTER_VIEW, AVerticalLayout) {
+                              _<AView> view = Label { AUI_REACT(*i->displayName) };
+                              connect(mSelectedUser, view, [this, &view = *view, i] {
+                                  view.setAssName("selected", mSelectedUser == i);
+                              });
+                              connect(view->clicked, [this, i] {
+                                  mSelectedUser = i;
+                                  mEditedUser.name = i->name;
+                                  mEditedUser.surname = i->surname;
+                              });
+                              return view;
+                          })
+                          .build() AUI_OVERRIDE_STYLE { BackgroundSolid { AColor::WHITE } },
+                } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                Centered::Expanding {
+                  _form({
+                    { "Name:", _new<ATextField>() && mEditedUser.name },
+                    { "Surname:", _new<ATextField>() && mEditedUser.surname },
+                  }) AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                },
               } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-              AScrollArea::Builder().withExpanding().withContents(
-                  AUI_DECLARATIVE_FOR(i, *mUsers | FILTER_VIEW, AVerticalLayout) {
-                    auto view = _new<ALabel>();
-                    view & i->displayName;
-                    connect(mSelectedUser, view, [this, &view = *view, i] {
-                        view.setAssName("selected", mSelectedUser == i);
-                    });
-                    connect(view->clicked, [this, i] {
-                        mSelectedUser = i;
-                        mEditedUser.name = i->name;
-                        mEditedUser.surname = i->surname;
-                    });
-                    return view;
-                  }
-              ).build() AUI_OVERRIDE_STYLE { BackgroundSolid { AColor::WHITE } },
-            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-            Centered::Expanding {
-              _form({
-                { "Name:", _new<ATextField>() && mEditedUser.name },
-                { "Surname:", _new<ATextField>() && mEditedUser.surname },
-              }) AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-            },
-          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-          Horizontal {
-            Button { Label { "Create" }, {me::createClicked} } & mCreateEnabled > &AView::setEnabled,
-            Button { Label { "Update" }, {me::updateClicked} } & mUpdateEnabled > &AView::setEnabled,
-            Button { Label { "Delete" }, {me::deleteClicked} } & mDeleteEnabled > &AView::setEnabled,
-          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
+              Horizontal {
+                Button {
+                  .content = Label { "Create" },
+                  .onClick = [this] { createClicked(); },
+                  .modifier = AUI_REACT(Modifier{} | Enabled(isCreateAvailable()))
+                },
+                Button {
+                  .content = Label { "Update" },
+                  .onClick = [this] { updateClicked(); },
+                  .modifier = AUI_REACT(Modifier{} | Enabled(isUpdateAvailable()))
+                },
+                Button {
+                  .content = Label { "Delete" },
+                  .onClick = [this] { deleteClicked(); },
+                  .modifier = AUI_REACT(Modifier{} | Enabled(isDeleteAvailable()))
+                },
+              } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
     }
 
 private:
@@ -84,9 +96,9 @@ private:
     User mEditedUser;
     AProperty<_<User>> mSelectedUser;
     AProperty<AString> mFilterPrefix;
-    APropertyPrecomputed<bool> mCreateEnabled = [this] { return !(mEditedUser.surname->empty() || mEditedUser.name->empty()); };
-    APropertyPrecomputed<bool> mDeleteEnabled = [this] { return mSelectedUser != nullptr; };
-    APropertyPrecomputed<bool> mUpdateEnabled = [this] { return mCreateEnabled && mDeleteEnabled; };
+    bool isCreateAvailable() const { return !(mEditedUser.surname->empty() || mEditedUser.name->empty()); }
+    bool isDeleteAvailable() const { return mSelectedUser != nullptr; };
+    bool isUpdateAvailable() const { return isCreateAvailable() && isDeleteAvailable(); };
 
     void createClicked() {
         mUsers.writeScope() << aui::ptr::manage_shared(new User {

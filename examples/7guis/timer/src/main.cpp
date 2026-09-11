@@ -32,10 +32,9 @@ public:
             Horizontal {
               Label { "Elapsed Time:" },
               Centered::Expanding {
-                _new<AProgressBar>() AUI_LET {
-                        it & mElapsedTimeRatio;
-                        it->setCustomStyle({ Expanding { 1, 0 } });
-                    },
+                ProgressBar {
+                    .progress = AUI_REACT(*mElapsedTimeRatio),
+                } AUI_OVERRIDE_STYLE { Expanding { 1, 0 } },
               },
             } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
             Label { AUI_REACT("{:.1f}s"_format(duration_cast<milliseconds>(*mElapsedTime).count() / 1000.f)) },

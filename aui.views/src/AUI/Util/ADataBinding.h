@@ -66,19 +66,6 @@ public:
     }
 };
 
-template<aui::derived_from<AViewContainer> Container>
-struct [[deprecated("test")]] ADataBindingDefault<Container, _<AView>> {
-    static void setup(const _<AViewContainer>& container) {}
-    static auto property(const _<AViewContainer>& container) {
-        return ASlotDef {
-            container.get(),
-            [&container = *container](const _<AView>& viewToInflate) {
-                ALayoutInflater::inflate(container, viewToInflate);
-            },
-        };
-    }
-};
-
 template <typename Model>
 class ADataBinding;
 
@@ -509,11 +496,6 @@ inline const _<Object>& operator&(const _<Object>& object, Connectable&& binding
     aui::tuple_visitor<
         typename AAnySignalOrPropertyTraits<std::decay_t<Connectable>>::args>::for_each_all([&]<typename... T>() {
         using Binding = ADataBindingDefault<std::decay_t<Object>, std::decay_t<T>...>;
-        static_assert(
-            requires { { Binding::property(object) } -> AAnyProperty; } ||
-                requires { { Binding::property(object) } -> aui::derived_from<ASlotDefBase>; },
-            "ADataBindingDefault is required to have property() function to return any property or slot def; either "
-            "define proper ADataBindingDefault specialization or explicitly specify the destination property.");
         static_assert(
             requires { { Binding::setup(object) }; },
             "ADataBindingDefault is required to have setup(const _<Object>&) function; either define proper "

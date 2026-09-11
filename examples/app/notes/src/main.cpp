@@ -125,11 +125,15 @@ public:
                     Vertical {
                       Centered {
                         Horizontal {
-                          Button { Horizontal { Icon { ":img/save.svg" }, SpacerFixed { 2_dp }, Label { "Save" } },
-                                   { me::save } } &
-                              mDirty > &AView::setEnabled,
-                          Button { Horizontal { Icon { ":img/new.svg" }, SpacerFixed { 2_dp }, Label { "New Note" } },
-                                   { me::newNote } },
+                          Button {
+                            .content = Horizontal { Icon { ":img/save.svg" }, SpacerFixed { 2_dp }, Label { "Save" } },
+                            .onClick = [this] { save(); },
+                            .modifier = AUI_REACT(Modifier {} | Enabled { *mDirty }),
+                          },
+                          Button {
+                            .content =
+                                Horizontal { Icon { ":img/new.svg" }, SpacerFixed { 2_dp }, Label { "New Note" } },
+                            .onClick = [this] { newNote(); } },
                         } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } },
                       },
                       /// [scrollarea]
@@ -152,10 +156,9 @@ public:
                     Vertical::Expanding {
                       Centered {
                         Button {
-                          Horizontal { Icon { ":img/trash.svg" }, SpacerFixed { 2_dp }, Label { "Delete" } },
-                          { me::deleteCurrentNote },
-                        } AUI_LET {
-                            connect(AUI_REACT(mCurrentNote != nullptr), AUI_SLOT(it)::setEnabled);
+                          .content = Horizontal { Icon { ":img/trash.svg" }, SpacerFixed { 2_dp }, Label { "Delete" } },
+                          .onClick = [this] { deleteCurrentNote(); },
+                          .modifier = AUI_REACT(Modifier {} | Enabled { mCurrentNote != nullptr }),
                         },
                       },
                       experimental::Dynamic { AUI_REACT(noteEditor(mCurrentNote)) } AUI_OVERRIDE_STYLE { Expanding() },

@@ -17,8 +17,17 @@
 #include "AUI/Font/IFontView.h"
 #include <AUI/Platform/AFontManager.h>
 
-void ass::prop::Property<ass::FontFamily>::applyFor(AView* view) {
+void ass::legacy::Property<ass::FontFamily>::applyFor(AView* view) {
     // TODO useless
     auto family = AFontManager::inst().getFontFamily(mInfo.family);
     AUI_NULLSAFE(dynamic_cast<IFontView*>(view))->getFontStyle().font = AFontManager::inst().getDefaultFont();
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, FontFamily value) {
+    return thiz.then([value](AView& view) {
+        auto family = AFontManager::inst().getFontFamily(value.family);
+        AUI_NULLSAFE(dynamic_cast<IFontView*>(&view))->getFontStyle().font = AFontManager::inst().getDefaultFont();
+    });
+}
+}   // namespace ass
