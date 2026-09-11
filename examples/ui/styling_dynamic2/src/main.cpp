@@ -46,7 +46,7 @@ struct TitledColorPicker {
 
     _<AView> operator()() {
         return GroupBox {
-            Horizontal { color_picker::ColorView(color), Label { "Top color" } },
+            Horizontal { color_picker::ColorView(color), Label { std::move(title) } },
             color_picker::SlidersRGB {
               .color = color,
               .onColorChanged = std::move(onColorChanged),
