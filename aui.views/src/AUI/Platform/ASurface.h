@@ -270,13 +270,11 @@ public:
                                                     const glm::ivec2& size,
                                                     bool closeOnClick = true) {
         glm::ivec2 position = {0, 0};
-        auto maxPos = getSize() - size;
         for (unsigned index = 0; ; ++index) {
             auto optionalPosition = positionFactory(index);
             if (optionalPosition) {
                 position = *optionalPosition;
-
-                if (position.x >= 0 && position.y >= 0 && glm::all(glm::lessThan(position, maxPos))) {
+                if (position.x >= 0 && position.y >= 0) {
                     break;
                 }
             } else {
@@ -515,4 +513,3 @@ private:
  *
  */
 #define AUI_ASSERT_WORKER_THREAD_ONLY() { AUI_ASSERTX(AWindow::current() == nullptr || AThread::current() != AWindow::current()->getThread(), "this method should be used in worker thread only."); }
-

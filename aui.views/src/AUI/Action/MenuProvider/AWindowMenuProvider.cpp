@@ -17,9 +17,11 @@
 
 #include <AUI/Common/ATimer.h>
 #include <AUI/Common/AVector.h>
+#include <AUI/Image/IDrawable.h>
 #include <AUI/Layout/AVerticalLayout.h>
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/View/ADrawableView.h>
 #include <AUI/View/ALabel.h>
 
 using namespace declarative;
@@ -60,15 +62,18 @@ class AMenuContainer : public AViewContainerBase {
         setLayout(std::make_unique<AVerticalLayout>());
         for (auto& i : vector) {
             _<AView> view;
+            auto icon = (i.icon ? _new<ADrawableView>(i.icon) : _new<ADrawableView>()) << ".menu-item-icon";
 
             switch (i.type) {
                 case AMenu::SINGLE: {
                     if (i.shortcut.empty()) {
                         addView(view = Horizontal {
+                            icon,
                             _new<ALabel>(i.name) << ".menu-item-name",
                         } << ".menu-item");
                     } else {
                         addView(view = Horizontal {
+                            icon,
                             _new<ALabel>(i.name) << ".menu-item-name",
                             _new<ASpacerExpanding>(),
                             _new<ALabel>(i.shortcut) << ".menu-item-shortcut"
@@ -96,6 +101,7 @@ class AMenuContainer : public AViewContainerBase {
 
                 case AMenu::SUBLIST: {
                     addView(view = Horizontal {
+                        icon,
                         _new<ALabel>(i.name) << ".menu-item-name",
                         _new<ASpacerExpanding>(),
                         _new<ALabel>(">")

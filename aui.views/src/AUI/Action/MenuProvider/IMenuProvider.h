@@ -16,6 +16,7 @@
 
 class IMenuProvider {
 public:
+    virtual ~IMenuProvider() = default;
     virtual void createMenu(const AVector<AMenuItem>& vector) = 0;
     virtual void closeMenu() = 0;
     virtual bool isOpen() = 0;
