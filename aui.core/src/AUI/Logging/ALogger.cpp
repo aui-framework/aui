@@ -10,126 +10,42 @@
  */
 
 #include "ALogger.h"
+#include "sinks/AConsoleSink.h"
+#include "sinks/AAndroidSink.h"
+#include "sinks/AFileSink.h"
+#include "sinks/AWindowDebugSink.h"
 #include "AUI/Platform/AProcess.h"
+#include "AUI/Platform/Entry.h"
+#include "AUI/Util/ACommandLineArgs.h"
+#include "sinks/detail/LogFormat.h"
+#include <AUI/IO/APath.h>
+#include <fmt/format.h>
 
-#if AUI_PLATFORM_ANDROID
-#include <android/log.h>
-#else
-#include <ctime>
-#include <AUI/IO/AFileOutputStream.h>
-
+#if AUI_PLATFORM_APPLE
+#include "sinks/AAppleLogSink.h"
 #endif
 
-ALogger::ALogger() {
-#ifdef AUI_SHARED_PTR_FIND_INSTANCES
-    log(WARN, "Performance",
-        "AUI_SHARED_PTR_FIND_INSTANCES is enabled which dramatically drops performance"
-        " since it creates stacktrace on every shared_ptr (_<T>) construction. Use it if"
-        " and only if it's actually needed.");
-#endif
-}
+#include <chrono>
 
-static const char* levelCStr(ALogger::Level level) {
-    switch (level) {
-        case ALogger::INFO:
-            return "INFO";
-
-        case ALogger::WARN:
-            return "WARN";
-
-        case ALogger::ERR:
-            return "ERR";
-
-        case ALogger::DEBUG:
-            return "DEBUG";
-
-        case ALogger::TRACE:
-            return "TRACE";
-    }
-
-    return "UNKNOWN";
-}
-
-static ALogger& globalImpl(AOptional<APath> path = std::nullopt) {
-#if AUI_PLATFORM_EMSCRIPTEN
+ALogger& ALogger::global() {
     static ALogger l;
-#else
-    static ALogger l(std::move(
-        path.valueOr(APath::getDefaultPath(APath::TEMP).makeDirs() / "aui.{}.log"_format(AProcess::self()->getPid()))));
-#endif
     return l;
 }
 
-ALogger& ALogger::global() { return globalImpl(); }
-
-void ALogger::setLogFileForGlobal(APath path) { globalImpl(std::move(path)); }
 
 void ALogger::log(Level level, AStringView prefix, AStringView message) {
     {
         std::unique_lock lock(mOnLogged);
-        if (mOnLogged.value()) {
+        if (mOnLogged.value() && isLevelEnabled(level)) {
             auto onLogged = mOnLogged.value();
             lock.unlock();
             onLogged(prefix, message, level);
         }
     }
 
-#if AUI_PLATFORM_ANDROID
-    int prio;
-    switch (level) {
-        case INFO:
-            prio = ANDROID_LOG_INFO;
-            break;
-        case WARN:
-            prio = ANDROID_LOG_WARN;
-            break;
-        case ERR:
-            prio = ANDROID_LOG_ERROR;
-            break;
-        case DEBUG:
-            prio = ANDROID_LOG_DEBUG;
-            break;
-        default:
-            AUI_ASSERT(0);
-    }
-    if (message.length() == 0) {
-        __android_log_print(prio, "AUI", "%s", prefix.data());
-    } else {
-        __android_log_print(prio, prefix.data(), "%s", message.data());
-    }
-
-    if (mLogFile) {
-        std::time_t t = std::time(nullptr);
-        std::tm* tm;
-        tm = localtime(&t);
-        const char* levelName = levelCStr(level);
-        char timebuf[64];
-        std::strftime(timebuf, sizeof(timebuf), "%H:%M:%S", tm);
-
-        std::string threadName;
-        if (auto currentThread = AThread::current()) {
-            threadName = currentThread->threadName().toStdString();
-        } else {
-            threadName = "?";
-        }
-
-        std::unique_lock lock(mLogSync);
-        if (message.length() == 0) {
-            fprintf(
-                mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
-        } else {
-            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(),
-                    levelName, message.data());
-        }
-        fflush(mLogFile->nativeHandle());
-    }
-
-#else
-    std::time_t t = std::time(nullptr);
-    std::tm* tm;
-    tm = localtime(&t);
-    char timebuf[64];
-    std::strftime(timebuf, sizeof(timebuf), "%H:%M:%S", tm);
+    auto now = std::chrono::system_clock::now();
+    long long timestampMs =
+        std::chrono::duration_cast<std::chrono::milliseconds>(now.time_since_epoch()).count();
 
     std::string threadName;
     if (auto currentThread = AThread::current()) {
@@ -138,35 +54,65 @@ void ALogger::log(Level level, AStringView prefix, AStringView message) {
         threadName = "?";
     }
 
-    const char* levelName = levelCStr(level);
+    ALogMessage msg;
+    msg.level = level;
+    msg.prefix = prefix;
+    msg.message = message;
+    msg.threadName = threadName;
+    msg.timestampMs = timestampMs;
 
     std::unique_lock lock(mLogSync);
-    if (message.length() == 0) {
-        printf("[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
-        if (mLogFile) {
-            fprintf(
-                mLogFile->nativeHandle(), "[%s][%s][%s]: %s\n", timebuf, threadName.c_str(), levelName, prefix.data());
-        }
-    } else {
-        printf("[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(), levelName, message.data());
-        if (mLogFile) {
-            fprintf(mLogFile->nativeHandle(), "[%s][%s][%s][%s]: %s\n", timebuf, threadName.c_str(), prefix.data(),
-                    levelName, message.data());
-        }
+    for (auto& sink : mSinks) {
+        sink->write(msg);
     }
-    fflush(stdout);
-    if (mLogFile) {
-        fflush(mLogFile->nativeHandle());
-    }
+}
+
+ALogger::ALogger() {
+    if (const char* logColor = std::getenv("AUI_LOG_COLOR"); logColor && AString(logColor) == "0")
+        mColorsEnabled = false;
+
+    mSinks = defaultSinks();
+
+#ifdef AUI_SHARED_PTR_FIND_INSTANCES
+    log(WARN, "Performance",
+        "AUI_SHARED_PTR_FIND_INSTANCES is enabled which dramatically drops performance"
+        " since it creates stacktrace on every shared_ptr (_<T>) construction. Use it if"
+        " and only if it's actually needed.");
 #endif
 }
 
-void ALogger::setLogFileImpl(AString path) {
-    mLogFile = AFileOutputStream(std::move(path));
-    log(INFO, "Logger", ("Log file: " + mLogFile->path()));
+ALogger::~ALogger() {
+    for (auto& sink : mSinks) {
+        sink->flush();
+    }
 }
 
-ALogger::~ALogger() { mLogFile.reset(); }
+AVector<_<ALogSink>> ALogger::defaultSinks() {
+    AVector<_<ALogSink>> sinks;
+#if AUI_PLATFORM_ANDROID
+    sinks.push_back(_new<AAndroidSink>());
+#elif AUI_PLATFORM_APPLE
+    sinks.push_back(_new<AAppleLogSink>());
+#elif AUI_PLATFORM_WIN
+    sinks.push_back(_new<AWindowDebugSink>());
+#else
+    sinks.push_back(_new<AConsoleSink>());
+#endif
+#if !AUI_PLATFORM_EMSCRIPTEN
+    sinks.push_back(_new<AFileSink>(APath::getDefaultPath(APath::TEMP).makeDirs() /
+                                    "aui.{}.log"_format(AProcess::self()->getPid())));
+#endif
+    return sinks;
+}
+
+void ALogger::enableColors(bool enabled) {
+    mColorsEnabled = enabled;
+    for (auto& sink : mSinks) {
+        if (auto* console = dynamic_cast<AConsoleSink*>(sink.get())) {
+            console->setColorsEnabled(enabled);
+        }
+    }
+}
 
 bool ALogger::isTraceImpl() {
     return std::getenv("AUI_TRACE") != nullptr;

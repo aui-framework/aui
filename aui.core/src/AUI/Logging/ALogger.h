@@ -18,9 +18,14 @@
 #include <AUI/Util/ARaiiHelper.h>
 #include "AUI/Thread/AMutex.h"
 #include "AUI/IO/AFileOutputStream.h"
+#include "AUI/Common/AVector.h"
+#include "AUI/Logging/sinks/ALogSink.h"
+#include "AUI/Logging/sinks/AFileSink.h"
+#include "AUI/Common/AException.h"
 #include <fmt/format.h>
 #include <fmt/chrono.h>
 #include <AUI/Thread/AMutexWrapper.h>
+#include <AUI/Common/SharedPtr.h>
 
 class AString;
 
@@ -56,6 +61,13 @@ class AString;
  *   }
  * }
  * ```
+ *
+ * Logger dispatches messages to a list of sinks (spdlog-style).
+ * By default, the logger uses the native platform sink:
+ * AConsoleSink (stdout) on most desktops, AWindowDebugSink (OutputDebugStringW)
+ * on Windows, AAndroidSink (logcat) on Android, AAppleLogSink (NSLog) on iOS/macOS.
+ * In addition, an AFileSink is added on desktop platforms.
+ * Use `sinks().push_back(...)` to add more destinations.
  */
 class API_AUI_CORE ALogger final {
 public:
@@ -65,6 +77,9 @@ public:
         ERR,
         DEBUG,
         TRACE,
+
+        /// specific level for disable logging
+        DISABLED,
     };
 
     struct LogWriter {
@@ -72,6 +87,7 @@ public:
         ALogger& mLogger;
         Level mLevel;
         AStringView mPrefix;
+        bool mEnabled;
         struct Buffer {
         private:
             struct StackBuffer {
@@ -167,9 +183,10 @@ public:
 
     public:
         LogWriter(ALogger& logger, Level level, AStringView prefix)
-          : mLogger(logger), mLevel(level), mPrefix(std::move(prefix)) {}
+          : mLogger(logger), mLevel(level), mPrefix(std::move(prefix)), mEnabled(logger.isLevelEnabled(level)) {}
 
         ~LogWriter() {
+            if (!mEnabled) return;
             mBuffer.write(0);   // null terminator
             auto s = mBuffer.str();
             mLogger.log(mLevel, mPrefix, s);
@@ -177,6 +194,7 @@ public:
 
         template <typename T>
         LogWriter& operator<<(const T& t) noexcept {
+            if (!mEnabled) return *this;
             // avoid usage of std::ostream because it's expensive
             if constexpr (std::is_constructible_v<std::string_view, T>) {
                 std::string_view stringView(t);
@@ -200,12 +218,11 @@ public:
     };
 
     /**
-     * @brief Constructor for an extra log file.
-     * @param filename file name
+     * @brief Constructor.
      * @details
-     * For the global logger, use ALogger::info, ALogger::warn, etc...
+     * Creates a logger with the default sink list. For the global logger, use
+     * ALogger::info, ALogger::warn, etc...
      */
-    ALogger(AString filename) { setLogFileImpl(std::move(filename)); }
     ALogger();
     ~ALogger();
 
@@ -217,62 +234,60 @@ public:
     bool isTrace() { return global().mTrace; }
 
     /**
-     * @brief Sets log file.
-     * @param path path to the log file.
-     * @details
-     * Log file is opened immediately in setLogFile.
-     *
-     * If you want to change the log file of ALogger::global(), consider using ALogger::setLogFileForGlobal instead.
-     * `ALogger::global().setLogFile(...)` expression would cause the default log file location to open and to close
-     * immediately, when opening a log file in the specified location, causing empty file and two `Log file:` entries.
+     * @brief Sets the minimum log level for this logger instance.
+     * @details Messages with a level lower than this will be filtered out.
+     * Default is INFO (all messages pass through).
+     * Levels: INFO < WARN < ERR < DEBUG < TRACE < DISABLED
      */
-    void setLogFile(APath path) { setLogFileImpl(std::move(path)); }
+    void setLevel(Level level) { mMinLevel = level; }
 
     /**
-     * @brief Sets log file for `ALogger::global()`.
-     * @param path path to the log file.
-     * @see ALogger::setLogFile
+     * @brief Checks whether messages at the given level will be logged.
      */
-    static void setLogFileForGlobal(APath path);
-
     [[nodiscard]]
-    APath logFile() {
-        return mLogFile.valueOrException().path();
+    bool isLevelEnabled(Level level) {
+        return level >= mMinLevel;
     }
+
+    /**
+     * @brief Returns a modifiable reference to the list of log sinks.
+     * @details
+     * Mirrors spdlog's logger::sinks(). Messages are dispatched to all sinks
+     * in order. By default, contains a platform sink and a file sink.
+     *
+     * Example:
+     * ```cpp
+     * // Add a file sink
+     * ALogger::global().sinks().push_back(_new<AFileSink>("/tmp/app.log"));
+     *
+     * // Remove all sinks
+     * ALogger::global().sinks().clear();
+     * ```
+     */
+    AVector<_<ALogSink>>& sinks() { return mSinks; }
+
+    /**
+     * @brief Returns the default sinks for the current platform.
+     * @details
+     * - **Windows:** AWindowDebugSink (OutputDebugStringW)
+     * - **Android:** AAndroidSink (logcat via __android_log_print)
+     * - **iOS/macOS:** AAppleLogSink (NSLog)
+     * - **Other desktops:** AConsoleSink (stdout with colors)
+     *
+     * On all non-Emscripten platforms, an AFileSink is added as well.
+     */
+    static AVector<_<ALogSink>> defaultSinks();
+
+    /**
+     * @brief Enables or disables colored output for the global logger.
+     * @details Default is enabled. When disabled, plain level names (INFO, WARN, etc.)
+     * are used instead of ANSI-colored ones.
+     */
+    void enableColors(bool enabled);
 
     void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
         std::unique_lock lock(mOnLogged);
         mOnLogged = std::move(callback);
-    }
-    /**
-     * @brief Allows to perform some action (access safely) on log file (which is opened all over the execution process)
-     * @details
-     * Useful when sending log file to remote server.
-     *
-     * On Windows, for instance, doesn't allow to read the file when it's already opened.
-     */
-    template <aui::invocable Callable>
-    void doLogFileAccessSafe(Callable action) {
-        std::unique_lock lock(mLogSync);
-        ARaiiHelper opener = [&] {
-            if (!mLogFile)
-                return;
-            try {
-                mLogFile->open(true);
-            } catch (const AException& e) {
-                auto path = mLogFile->path();
-                mLogFile.reset();
-                lock.unlock();
-                log(WARN, "Logger", AStringView(fmt::format("Unable to reopen file {}: {}", path, e.getMessage())));
-            }
-        };
-        if (!mLogFile || !mLogFile->nativeHandle()) {
-            action();
-            return;
-        }
-
-        mLogFile->close();
-        action();
     }
 
     static LogWriter info(AStringView str) { return { global(), INFO, str }; }
@@ -289,16 +304,17 @@ public:
     LogWriter log(Level level, AStringView prefix) { return { *this, level, prefix }; }
 
 private:
-    AOptional<AFileOutputStream> mLogFile;
+    AVector<_<ALogSink>> mSinks;
     AMutex mLogSync;
     AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
 
+    Level mMinLevel = INFO;
+
     bool mDebug = AUI_DEBUG;
     bool mTrace = isTraceImpl();
+    bool mColorsEnabled = true;
 
     static bool isTraceImpl();
-
-    void setLogFileImpl(AString path);
 
     /**
      * @brief Writes a log entry.
