@@ -196,8 +196,43 @@ struct aui::detail::ConnectionSourceTraits<aui::react::Expression<Expr>> {
  * The lambda is wrapped with aui::react::Expression to be strongly typed.
  *
  * The `decltype(auto)` return type is used to avoid property copy when referenced.
+ *
+ * ## Implicit `this` capture is a hard error
+ *
+ * `[=]` copies *local variables* by value, but inside a member function it implicitly captures `this` (a pointer)
+ * and accesses data members through it. When `AUI_REACT` is used inside a member `operator()` of a temporary
+ * custom-view struct, that `this` dangles as soon as the enclosing full-expression ends, silently breaking
+ * reactivity (the precomputed property outlives the struct and re-evaluates against freed members).
+ *
+ * To turn this footgun into a compile-time error, `AUI_REACT` promotes the C++20 "implicit `this` capture via `[=]`"
+ * deprecation into an error locally. Free functions and lambdas that reference only local variables keep working;
+ * referencing a data member (i.e. capturing `this`) fails to build. Copy the members into locals first:
+ *
+ * ```cpp
+ * _<AView> operator()() {
+ *     auto value = this->value, min = this->min, max = this->max; // copy contract::In (shared_ptr) into locals
+ *     return Slider { .value = AUI_REACT((*value - *min) / (*max - *min)), ... };
+ * }
+ * ```
  */
-#define AUI_REACT(...)        \
-    ::aui::react::makeExpression(       \
-        [=]() -> decltype(auto) { return (__VA_ARGS__); } \
+#if AUI_COMPILER_CLANG
+#    define AUI_REACT_NO_THIS_CAPTURE_PUSH \
+        _Pragma("clang diagnostic push")   \
+        _Pragma("clang diagnostic error \"-Wdeprecated-this-capture\"")
+#    define AUI_REACT_NO_THIS_CAPTURE_POP _Pragma("clang diagnostic pop")
+#elif AUI_COMPILER_GCC
+#    define AUI_REACT_NO_THIS_CAPTURE_PUSH \
+        _Pragma("GCC diagnostic push")     \
+        _Pragma("GCC diagnostic error \"-Wdeprecated\"")
+#    define AUI_REACT_NO_THIS_CAPTURE_POP _Pragma("GCC diagnostic pop")
+#else
+#    define AUI_REACT_NO_THIS_CAPTURE_PUSH
+#    define AUI_REACT_NO_THIS_CAPTURE_POP
+#endif
+
+#define AUI_REACT(...)                                          \
+    ::aui::react::makeExpression(                               \
+        AUI_REACT_NO_THIS_CAPTURE_PUSH                          \
+        [=]() -> decltype(auto) { return (__VA_ARGS__); }       \
+        AUI_REACT_NO_THIS_CAPTURE_POP                           \
     )
