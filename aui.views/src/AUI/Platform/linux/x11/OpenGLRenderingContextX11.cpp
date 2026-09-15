@@ -150,7 +150,7 @@ void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
         swa.colormap = cmap;
         swa.event_mask =
             ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask |
-            PointerMotionMask | StructureNotifyMask | PropertyChangeMask | StructureNotifyMask;
+            PointerMotionMask | PropertyChangeMask | FocusChangeMask;
         if (glXCreateContextAttribsARB) {
             int attribList[] = {
                 GLX_CONTEXT_MAJOR_VERSION_ARB,

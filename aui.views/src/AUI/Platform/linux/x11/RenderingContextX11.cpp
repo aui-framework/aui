@@ -10,6 +10,9 @@
  */
 
 #include "RenderingContextX11.h"
+#include <cmath>
+#include <cstdlib>
+#include <AUI/Platform/Entry.h>
 #include <AUI/Util/ARandom.h>
 #include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Util/kAUI.h"
@@ -20,7 +23,8 @@
 void RenderingContextX11::xInitNativeWindow(
     const IRenderingContext::Init& init, XSetWindowAttributes& swa, XVisualInfo* vi) {
     AUI_DO_ONCE {
-        if (!XSupportsLocale() || XSetLocaleModifiers("@im=none") == nullptr) {
+        aui::detail::initUtf8Locale();
+        if (!XSupportsLocale() || (XSetLocaleModifiers("") == nullptr && XSetLocaleModifiers("@im=none") == nullptr)) {
             throw AException("Your X server does not support locales.");
         }
     }
@@ -28,15 +32,35 @@ void RenderingContextX11::xInitNativeWindow(
     PlatformAbstractionX11::ensureXLibInitialized();
 
     static XIM im = nullptr;
-    static XIMStyles* styles;
 
     if (im == nullptr) {
-        im = XOpenIM(PlatformAbstractionX11::ourDisplay, nullptr, nullptr, nullptr);
+        const char* xmodifiers = std::getenv("XMODIFIERS");
+        if (xmodifiers != nullptr && *xmodifiers != '\0') {
+            XSetLocaleModifiers("");
+            im = XOpenIM(PlatformAbstractionX11::ourDisplay, nullptr, nullptr, nullptr);
+        }
+        if (im == nullptr) {
+            XSetLocaleModifiers("@im=fcitx");
+            im = XOpenIM(PlatformAbstractionX11::ourDisplay, nullptr, nullptr, nullptr);
+        }
+        if (im == nullptr) {
+            XSetLocaleModifiers("@im=ibus");
+            im = XOpenIM(PlatformAbstractionX11::ourDisplay, nullptr, nullptr, nullptr);
+        }
+        if (im == nullptr && (xmodifiers == nullptr || *xmodifiers == '\0')) {
+            XSetLocaleModifiers("");
+            im = XOpenIM(PlatformAbstractionX11::ourDisplay, nullptr, nullptr, nullptr);
+        }
+        if (im == nullptr) {
+            XSetLocaleModifiers("@im=local");
+            im = XOpenIM(PlatformAbstractionX11::ourDisplay, nullptr, nullptr, nullptr);
+        }
+        if (im == nullptr) {
+            XSetLocaleModifiers("@im=none");
+            im = XOpenIM(PlatformAbstractionX11::ourDisplay, nullptr, nullptr, nullptr);
+        }
         if (im == nullptr) {
             throw AException("Could not open input method");
-        }
-        if (XGetIMValues(im, XNQueryInputStyle, &styles, nullptr)) {
-            throw AException("XIM Can't get styles");
         }
     }
 
@@ -70,12 +94,67 @@ void RenderingContextX11::xInitNativeWindow(
             (const unsigned char*) &mXsyncRequestCounter.counter, 1);
     }
 
-    mIC = XCreateIC(im, XNInputStyle, XIMPreeditNothing | XIMStatusNothing, XNClientWindow, handle, nullptr);
-    if (mIC == nullptr) {
-        throw AException("Could not get IC");
+    if (mFontSet == nullptr) {
+        char** missingList = nullptr;
+        int missingCount = 0;
+        char* defString = nullptr;
+        mFontSet = XCreateFontSet(
+            PlatformAbstractionX11::ourDisplay, "-*-*-*-*-*-*-*-*-*-*-*-*-*-*", &missingList, &missingCount, &defString);
+        if (missingList) {
+            XFreeStringList(missingList);
+        }
     }
-    XSetICFocus(mIC);
 
+    XPoint spot{ 0, 0 };
+    XVaNestedList preedit_attr = nullptr;
+    if (mFontSet) {
+        preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, XNFontSet, mFontSet, nullptr);
+    } else {
+        preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, nullptr);
+    }
+
+    if (preedit_attr != nullptr) {
+        mIC = XCreateIC(
+            im,
+            XNInputStyle, XIMPreeditPosition | XIMStatusNothing,
+            XNClientWindow, handle,
+            XNFocusWindow, handle,
+            XNPreeditAttributes, preedit_attr,
+            nullptr);
+    }
+    if (mIC == nullptr && preedit_attr != nullptr) {
+        mIC = XCreateIC(
+            im,
+            XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+            XNClientWindow, handle,
+            XNFocusWindow, handle,
+            XNPreeditAttributes, preedit_attr,
+            nullptr);
+    }
+    if (preedit_attr) {
+        XFree(preedit_attr);
+    }
+    if (mIC == nullptr) {
+        mIC = XCreateIC(
+            im,
+            XNInputStyle, XIMPreeditNothing | XIMStatusNothing,
+            XNClientWindow, handle,
+            XNFocusWindow, handle,
+            nullptr);
+    }
+    if (mIC == nullptr) {
+        mIC = XCreateIC(im, XNInputStyle, XIMPreeditNone | XIMStatusNone, XNClientWindow, handle, nullptr);
+    }
+    if (mIC == nullptr) {
+        ALogger::warn("X11") << "XCreateIC failed for all input styles; IME and non-ASCII input are unavailable";
+    }
+    if (mIC != nullptr) {
+        XSetICFocus(mIC);
+        unsigned long fevent = 0;
+        if (XGetICValues(mIC, XNFilterEvents, &fevent, nullptr) == nullptr) {
+            XSelectInput(PlatformAbstractionX11::ourDisplay, handle, swa.event_mask | fevent);
+        }
+    }
     auto title = init.name.toStdString();
     XStoreName(PlatformAbstractionX11::ourDisplay, handle, title.c_str());
     XChangeProperty(
@@ -88,8 +167,28 @@ void RenderingContextX11::xInitNativeWindow(
 }
 
 void RenderingContextX11::xDestroyNativeWindow(ASurface& window) {
-    XDestroyIC(mIC);
+    if (mIC) {
+        XDestroyIC(mIC);
+        mIC = nullptr;
+    }
+    if (mFontSet) {
+        XFreeFontSet(PlatformAbstractionX11::ourDisplay, mFontSet);
+        mFontSet = nullptr;
+    }
     if (auto w = dynamic_cast<AWindow*>(&window)) {
         XDestroyWindow(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(*w));
+    }
+}
+
+void RenderingContextX11::setImeSpotLocation(glm::ivec2 pos) {
+    if (!mIC) return;
+    XPoint spot{
+        static_cast<short>(pos.x),
+        static_cast<short>(pos.y)
+    };
+    XVaNestedList preedit_attr = XVaCreateNestedList(0, XNSpotLocation, &spot, nullptr);
+    if (preedit_attr) {
+        XSetICValues(mIC, XNPreeditAttributes, preedit_attr, nullptr);
+        XFree(preedit_attr);
     }
 }

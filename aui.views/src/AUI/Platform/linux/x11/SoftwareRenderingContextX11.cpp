@@ -40,7 +40,7 @@ void SoftwareRenderingContextX11::init(const IRenderingContext::Init& init) {
         swa.colormap = cmap;
         swa.event_mask =
             ExposureMask | KeyPressMask | KeyReleaseMask | ButtonPressMask | ButtonReleaseMask | StructureNotifyMask |
-            PointerMotionMask | StructureNotifyMask | PropertyChangeMask | StructureNotifyMask;
+            PointerMotionMask | PropertyChangeMask | FocusChangeMask;
     }
     xInitNativeWindow(init, swa, vi);
     mBitmapSize = init.window.getSize();
