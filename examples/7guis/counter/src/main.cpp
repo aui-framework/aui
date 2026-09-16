@@ -18,19 +18,21 @@
 using namespace declarative;
 
 /// [counter]
+struct CounterState {
+    AProperty<int> counter;
+};
+
 class CounterWindow : public AWindow {
 public:
     CounterWindow() : AWindow("AUI - 7GUIs - Counter", 200_dp, 100_dp) {
+        auto state = _new<CounterState>();
         setContents(Centered {
           Horizontal {
-            Label { AUI_REACT("Count: {}"_format(mCounter)) },
-            Button { Label { "Count" }, [this] { mCounter += 1; } },
+            Label { AUI_REACT("Count: {}"_format(state->counter)) },
+            Button { Label { "Count" }, [state] { state->counter += 1; } },
           } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
         });
     }
-
-private:
-    AProperty<int> mCounter;
 };
 /// [counter]
 

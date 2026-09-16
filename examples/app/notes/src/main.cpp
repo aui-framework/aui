@@ -102,6 +102,72 @@ _<AView> noteEditor(const _<Note>& note) {
 }
 /// [noteEditor]
 
+struct NotesState {
+    AProperty<AVector<_<Note>>> notes;
+    AProperty<_<Note>> currentNote;
+    AProperty<bool> dirty = false;
+
+    /// [load]
+    void load() {
+        try {
+            if (!"notes.json"_path.isRegularFileExists()) {
+                return;
+            }
+            aui::from_json(AJson::fromStream(AFileInputStream("notes.json")), notes);
+        } catch (const AException& e) {
+            ALogger::info(LOG_TAG) << "Can't load notes: " << e;
+        }
+    }
+    /// [load]
+
+    /// [save]
+    void save() {
+        AFileOutputStream("notes.json") << aui::to_json(*notes);
+        dirty = false;
+    }
+    /// [save]
+
+    /// [newNote]
+    void newNote() {
+        auto note = aui::ptr::manage_shared(new Note { .title = "Untitled" });
+        notes.writeScope()->push_back(note);
+        currentNote = std::move(note);
+    }
+    /// [newNote]
+
+    /// [deleteCurrentNote]
+    void deleteCurrentNote() {
+        if (currentNote == nullptr) {
+            return;
+        }
+        if (AMessageBox::show(
+                dynamic_cast<AWindow*>(AWindow::current()), "Do you really want to delete this note?",
+                "{}\n\nThis operation is irreversible!"_format((*currentNote)->title), AMessageBox::Icon::NONE,
+                AMessageBox::Button::OK_CANCEL) != AMessageBox::ResultButton::OK) {
+            return;
+        }
+
+        auto it = ranges::find(*notes, *currentNote);
+        it = notes.writeScope()->erase(it);
+        currentNote = it != notes->end() ? *it : nullptr;
+    }
+    /// [deleteCurrentNote]
+
+    void markDirty() { dirty = true; }
+
+    void observeChangesForDirty(const _<Note>& note) {
+        aui::reflect::for_each_field_value(
+            *note,
+            aui::lambda_overloaded {
+              [&](auto& field) {},
+              [&](APropertyReadable auto& field) {
+                  ALOG_DEBUG(LOG_TAG) << "Observing for changes " << &field;
+                  AObject::connect(field.changed, AObject::GENERIC_OBSERVER, [this] { markDirty(); });
+              },
+            });
+    }
+};
+
 class MainWindow : public AWindow {
 public:
     MainWindow() : AWindow("Notes") {
@@ -115,9 +181,11 @@ public:
             Padding { 0 },
           },
         });
-        load();
 
-        connect(mNotes.changed, me::markDirty);
+        auto state = _new<NotesState>();
+        state->load();
+
+        AObject::connect(state->notes.changed, [state] { state->markDirty(); });
 
         setContents(Vertical {
           ASplitter::Horizontal()
@@ -127,23 +195,23 @@ public:
                         Horizontal {
                           Button {
                             .content = Horizontal { Icon { ":img/save.svg" }, SpacerFixed { 2_dp }, Label { "Save" } },
-                            .onClick = [this] { save(); },
-                            .modifier = AUI_REACT(Modifier {} | Enabled { *mDirty }),
+                            .onClick = [state] { state->save(); },
+                            .modifier = AUI_REACT(Modifier {} | Enabled { *state->dirty }),
                           },
                           Button {
                             .content =
                                 Horizontal { Icon { ":img/new.svg" }, SpacerFixed { 2_dp }, Label { "New Note" } },
-                            .onClick = [this] { newNote(); } },
+                            .onClick = [state] { state->newNote(); } },
                         } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Padding { 4_dp } },
                       },
                       /// [scrollarea]
                       AScrollArea::Builder()
                           .withContents(
-                          AUI_DECLARATIVE_FOR(note, *mNotes, AVerticalLayout) {
-                              observeChangesForDirty(note);
+                          AUI_DECLARATIVE_FOR(note, *state->notes, AVerticalLayout) {
+                              state->observeChangesForDirty(note);
                               return notePreview(note) AUI_LET {
-                                  connect(it->clicked, [this, note] { mCurrentNote = note; });
-                                  it& mCurrentNote > [note](AView& view, const _<Note>& currentNote) {
+                                  connect(it->clicked, [state, note] { state->currentNote = note; });
+                                  it& state->currentNote > [note](AView& view, const _<Note>& currentNote) {
                                       ALOG_DEBUG(LOG_TAG) << "currentNote == note " << currentNote << " == " << note;
                                       view.setAssName(".plain_bg", currentNote == note);
                                   };
@@ -157,91 +225,31 @@ public:
                       Centered {
                         Button {
                           .content = Horizontal { Icon { ":img/trash.svg" }, SpacerFixed { 2_dp }, Label { "Delete" } },
-                          .onClick = [this] { deleteCurrentNote(); },
-                          .modifier = AUI_REACT(Modifier {} | Enabled { mCurrentNote != nullptr }),
+                          .onClick = [state] { state->deleteCurrentNote(); },
+                          .modifier = AUI_REACT(Modifier {} | Enabled { state->currentNote != nullptr }),
                         },
                       },
-                      experimental::Dynamic { AUI_REACT(noteEditor(mCurrentNote)) } AUI_OVERRIDE_STYLE { Expanding() },
+                      experimental::Dynamic { AUI_REACT(noteEditor(state->currentNote)) } AUI_OVERRIDE_STYLE { Expanding() },
                     } << ".plain_bg" AUI_OVERRIDE_STYLE { MinSize { 200_dp } },
                   })
                   .build() AUI_OVERRIDE_STYLE { Expanding() },
         });
 
-        if (mNotes->empty()) {
-            newNote();
+        if (state->notes->empty()) {
+            state->newNote();
         }
+
+        mState = state;
     }
 
     ~MainWindow() {
-        if (mDirty) {
-            save();
+        if (mState->dirty) {
+            mState->save();
         }
-    }
-
-    /// [load]
-    void load() {
-        try {
-            if (!"notes.json"_path.isRegularFileExists()) {
-                return;
-            }
-            aui::from_json(AJson::fromStream(AFileInputStream("notes.json")), mNotes);
-        } catch (const AException& e) {
-            ALogger::info(LOG_TAG) << "Can't load notes: " << e;
-        }
-    }
-    /// [load]
-
-    /// [save]
-    void save() {
-        AFileOutputStream("notes.json") << aui::to_json(*mNotes);
-        mDirty = false;
-    }
-    /// [save]
-
-    /// [newNote]
-    void newNote() {
-        auto note = aui::ptr::manage_shared(new Note { .title = "Untitled" });
-        mNotes.writeScope()->push_back(note);
-        mCurrentNote = std::move(note);
-    }
-    /// [newNote]
-
-    /// [deleteCurrentNote]
-    void deleteCurrentNote() {
-        if (mCurrentNote == nullptr) {
-            return;
-        }
-        if (AMessageBox::show(
-                this, "Do you really want to delete this note?",
-                "{}\n\nThis operation is irreversible!"_format((*mCurrentNote)->title), AMessageBox::Icon::NONE,
-                AMessageBox::Button::OK_CANCEL) != AMessageBox::ResultButton::OK) {
-            return;
-        }
-
-        auto it = ranges::find(*mNotes, *mCurrentNote);
-        it = mNotes.writeScope()->erase(it);
-        mCurrentNote = it != mNotes->end() ? *it : nullptr;
-    }
-    /// [deleteCurrentNote]
-
-    void markDirty() { mDirty = true; }
-
-    void observeChangesForDirty(const _<Note>& note) {
-        aui::reflect::for_each_field_value(
-            *note,
-            aui::lambda_overloaded {
-              [&](auto& field) {},
-              [&](APropertyReadable auto& field) {
-                  ALOG_DEBUG(LOG_TAG) << "Observing for changes " << &field;
-                  AObject::connect(field.changed, me::markDirty);
-              },
-            });
     }
 
 private:
-    AProperty<AVector<_<Note>>> mNotes;
-    AProperty<_<Note>> mCurrentNote;
-    AProperty<bool> mDirty = false;
+    _<NotesState> mState;
 };
 
 AUI_ENTRY {

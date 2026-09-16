@@ -209,9 +209,27 @@ struct aui::detail::ConnectionSourceTraits<aui::react::Expression<Expr>> {
  * referencing a data member (i.e. capturing `this`) fails to build. Copy the members into locals first:
  *
  * ```cpp
- * _<AView> operator()() {
+ * struct MyView {
+ *   AProperty<float> value = 0;
+ *   AProperty<float> min = 0;
+ *   AProperty<float> max = 100;
+ *   _<AView> operator()() {
  *     auto value = this->value, min = this->min, max = this->max; // copy contract::In (shared_ptr) into locals
  *     return Slider { .value = AUI_REACT((*value - *min) / (*max - *min)), ... };
+ *   }
+ * };
+ * ```
+ *
+ * Another approach:
+ *
+ * ```cpp
+ * struct State {
+ *   AProperty<float> value = 0;
+ *   AProperty<float> min = 0;
+ *   AProperty<float> max = 100;
+ * };
+ * _<AView> myView(const _<State>& state) {
+ *     return Slider { .value = AUI_REACT((*state->value - *state->min) / (*state->max - *state->min)), ... };
  * }
  * ```
  */
@@ -220,11 +238,6 @@ struct aui::detail::ConnectionSourceTraits<aui::react::Expression<Expr>> {
         _Pragma("clang diagnostic push")   \
         _Pragma("clang diagnostic error \"-Wdeprecated-this-capture\"")
 #    define AUI_REACT_NO_THIS_CAPTURE_POP _Pragma("clang diagnostic pop")
-#elif AUI_COMPILER_GCC
-#    define AUI_REACT_NO_THIS_CAPTURE_PUSH \
-        _Pragma("GCC diagnostic push")     \
-        _Pragma("GCC diagnostic error \"-Wdeprecated\"")
-#    define AUI_REACT_NO_THIS_CAPTURE_POP _Pragma("GCC diagnostic pop")
 #else
 #    define AUI_REACT_NO_THIS_CAPTURE_PUSH
 #    define AUI_REACT_NO_THIS_CAPTURE_POP
