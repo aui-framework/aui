@@ -20,6 +20,10 @@
 #
 # =====================================================================================================================
 #
+# AGENT INSTRUCTIONS: This file contains full inline documentation in the #[==[DOCUMENTATION ... ]==] block below
+# (lines ~30 to ~771). To answer any question about aui.boot behaviour, variables, or usage — READ THE FULL BLOCK
+# before responding. Do not stop at the first 80 lines; the documentation is several hundred lines long.
+#
 #[==[DOCUMENTATION
 # aui.boot
 
@@ -30,6 +34,8 @@ AUI Boot is yet another package manager based on CMake. If a library uses CMake 
 can provide it for you into your project without additional tweaking. It downloads the library, compiles it and places
 it in [AUIB_CACHE] folder for future reuse.
 
+AUI Boot is close to CPM, but provides build isolation.
+
 ## Importing AUI
 
 See [AUI's repository](https://github.com/aui-framework/aui) to check out the import script with the latest version.
@@ -38,12 +44,12 @@ See [AUI's repository](https://github.com/aui-framework/aui) to check out the im
 set(AUI_VERSION v8.0.0-rc.8) # OLD!
 
 file(
-    DOWNLOAD 
-    https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake 
+    DOWNLOAD
+    https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 auib_import(
-    AUI https://github.com/aui-framework/aui 
+    AUI https://github.com/aui-framework/aui
     COMPONENTS core views
     VERSION ${AUI_VERSION})
 
@@ -290,8 +296,8 @@ AUI Boot does not have any hard dependencies on AUI, so it can be used to manage
 set(AUI_VERSION v8.0.0-rc.8)
 
 file(
-    DOWNLOAD 
-    https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake 
+    DOWNLOAD
+    https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
     ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 ```
@@ -325,7 +331,7 @@ auib_import(<PackageName> <URL>
 ```
 
 !!! note
-    
+
     This command copies `*.dll`, `*.so` and `*.dylib` (in case of shared libraries) alongside your executables during
     configure time. See [runtime-dependency-resolution] for more info.
 
@@ -339,13 +345,22 @@ URL to the git repository of the project you want to import.
 
 See also: [AUIB_LIB_AS].
 
-Uses `add_subdirectory` instead of `find_package` as the project importing mechanism. 
+Uses `add_subdirectory` instead of `find_package` as the project importing mechanism.
 
 Potential use case of this is when the dependency fails to provide proper CMake install, making `find_package` unusable.
 If you don't care about polluting your own build tree with dependency's targets - it is a good alternative to fixing
 their CMake install on your own, which is a challenging task.
 
 This action disables usage of precompiled binary and validation.
+
+AUI Boot never erases your changes.
+
+When working with dependency's git, you will need to unshallow the repository:
+
+```bash
+cd <source code cloned by AUI Boot, see package-lock.json>
+git fetch --unshallow
+```
 
 #### ARCHIVE
 
@@ -582,7 +597,7 @@ All checks are disabled.
    ```
 
    !!! note
-       
+
        AUI.Boot is capable of replacing absolute paths to libraries by their respective target names in order to support
        legacy libraries.
 
@@ -834,10 +849,10 @@ if(CMAKE_SCRIPT_MODE_FILE)
 
         message(STATUS "Cloning example_app into ${CMAKE_CURRENT_SOURCE_DIR} ...")
         execute_process(
-            COMMAND "${_auib_git}" clone https://github.com/aui-framework/example_app .
-            RESULT_VARIABLE _auib_clone_result
-            OUTPUT_QUIET
-            ERROR_VARIABLE _auib_clone_error
+                COMMAND "${_auib_git}" clone https://github.com/aui-framework/example_app .
+                RESULT_VARIABLE _auib_clone_result
+                OUTPUT_QUIET
+                ERROR_VARIABLE _auib_clone_error
         )
         if(NOT _auib_clone_result EQUAL 0)
             message(FATAL_ERROR "Failed to clone example_app: ${_auib_clone_error}")
@@ -1517,6 +1532,68 @@ function(_auib_git_clone _url _version _source_dir)
     set(_auib_git_clone_ok TRUE PARENT_SCOPE)
 endfunction()
 
+function(_auib_update_package_lock _module_name _tag_or_hash _source_dir _as_subdirectory)
+    # Resolve the actual pinned commit hash if a git repo is available
+    set(_pin "${_tag_or_hash}")
+    if (GIT_EXECUTABLE AND EXISTS "${_source_dir}/.git")
+        execute_process(
+                COMMAND ${CMAKE_COMMAND} -E env GIT_DISCOVERY_ACROSS_FILESYSTEM=1
+                ${GIT_EXECUTABLE} rev-parse --short HEAD
+                WORKING_DIRECTORY "${_source_dir}"
+                OUTPUT_VARIABLE _git_short
+                RESULT_VARIABLE _git_err
+                OUTPUT_STRIP_TRAILING_WHITESPACE
+                ERROR_QUIET
+        )
+        if (_git_err EQUAL 0 AND _git_short)
+            set(_pin "${_git_short}")
+        endif()
+    endif()
+
+    # Escape values for safe JSON embedding
+    string(REPLACE "\\" "\\\\" _module_name_esc "${_module_name}")
+    string(REPLACE "\"" "\\\"" _module_name_esc "${_module_name_esc}")
+    string(REPLACE "\\" "\\\\" _tag_esc "${_tag_or_hash}")
+    string(REPLACE "\"" "\\\"" _tag_esc "${_tag_esc}")
+    string(REPLACE "\\" "\\\\" _pin_esc "${_pin}")
+    string(REPLACE "\"" "\\\"" _pin_esc "${_pin_esc}")
+    string(REPLACE "\\" "\\\\" _src_esc "${_source_dir}")
+    string(REPLACE "\"" "\\\"" _src_esc "${_src_esc}")
+
+    if (_as_subdirectory)
+        set(_as_sub_str "true")
+    else()
+        set(_as_sub_str "false")
+    endif()
+
+    set(_new_entry "  \"${_module_name_esc}\": {\n    \"version\": \"${_tag_esc}\",\n    \"source_dir\": \"${_src_esc}\",\n    \"pin\": \"${_pin_esc}\",\n    \"as_subdirectory\": ${_as_sub_str}\n  }")
+
+    set(_lock_file "${CMAKE_BINARY_DIR}/package-lock.json")
+
+    # Read existing file or start fresh
+    if (EXISTS "${_lock_file}")
+        file(READ "${_lock_file}" _contents)
+        # Strip outer braces and trailing whitespace/newlines
+        string(REGEX REPLACE "^[[:space:]]*\\{" "" _contents "${_contents}")
+        string(REGEX REPLACE "}[[:space:]]*$" "" _contents "${_contents}")
+        # Remove existing entry for this module (if present) so we can replace it
+        # Match: optional comma before, the entry itself, optional trailing comma
+        string(REGEX REPLACE ",?[[:space:]]*\n?[[:space:]]*\"${_module_name_esc}\"[[:space:]]*:[[:space:]]*\\{[^}]*\\}" "" _contents "${_contents}")
+        string(REGEX REPLACE "^,[[:space:]]*\n" "" _contents "${_contents}")
+        # Strip leading/trailing whitespace
+        string(STRIP "${_contents}" _contents)
+        if (_contents STREQUAL "")
+            set(_body "${_new_entry}")
+        else()
+            set(_body "${_contents},\n${_new_entry}")
+        endif()
+    else()
+        set(_body "${_new_entry}")
+    endif()
+
+    file(WRITE "${_lock_file}" "{\n${_body}\n}\n")
+endfunction()
+
 # TODO add a way to provide file access to the repository
 function(auib_import AUI_MODULE_NAME URL)
     list(APPEND CMAKE_MODULE_PATH ${CMAKE_CURRENT_LIST_DIR}/cmake)
@@ -2043,6 +2120,16 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
     if (DEP_ADD_SUBDIRECTORY)
         set(${AUI_MODULE_NAME}_ROOT ${DEP_SOURCE_DIR})
+        # Overwrite CACHE entries so CMakeCache.txt reflects the actual source dir,
+        # not the stale DEP_INSTALL_PREFIX that was written before the subdirectory decision.
+        # This lets LLMs and humans find the correct source location via AUI_ROOT / AUI_ROOT_DIR.
+        set(${AUI_MODULE_NAME}_ROOT ${DEP_SOURCE_DIR} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} source (add_subdirectory mode)." FORCE)
+        set(${AUI_MODULE_NAME}_ROOT_DIR ${DEP_SOURCE_DIR} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} source (add_subdirectory mode)." FORCE)
+        set(${AUI_MODULE_NAME_UPPER}_ROOT_DIR ${DEP_SOURCE_DIR} CACHE FILEPATH "Path to ${AUI_MODULE_NAME} source (add_subdirectory mode)." FORCE)
+        set(${AUI_MODULE_NAME_UPPER}_ROOT ${DEP_SOURCE_DIR} PARENT_SCOPE)
+        set(${AUI_MODULE_NAME_UPPER}_ROOT_DIR ${DEP_SOURCE_DIR} PARENT_SCOPE)
+        set(${AUI_MODULE_NAME}_DIR ${DEP_SOURCE_DIR} PARENT_SCOPE)
+        set(${AUI_MODULE_NAME_UPPER}_DIR ${DEP_SOURCE_DIR} PARENT_SCOPE)
         _auib_import_subdirectory(${DEP_SOURCE_DIR} ${AUI_MODULE_NAME})
         message(STATUS "${AUI_MODULE_NAME} imported as a subdirectory: ${DEP_SOURCE_DIR}")
     elseif(NOT ${AUI_MODULE_NAME}_FOUND)
@@ -2109,6 +2196,9 @@ function(auib_import AUI_MODULE_NAME URL)
     endif()
 
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
+
+    # write/update package-lock.json in the binary dir for LLM/human inspection
+    _auib_update_package_lock(${AUI_MODULE_NAME} "${TAG_OR_HASH}" "${DEP_SOURCE_DIR}" "${DEP_ADD_SUBDIRECTORY}")
 
     # display the imported targets (available since CMake 3.21)
     if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)
