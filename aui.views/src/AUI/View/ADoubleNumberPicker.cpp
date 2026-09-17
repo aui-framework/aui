@@ -17,6 +17,16 @@
 #include "AUI/Platform/ADesktop.h"
 #include <AUI/Util/kAUI.h>
 
+namespace {
+class ADoubleNumberPickerButton : public AButton {
+public:
+    bool capturesFocus() override
+    {
+        return false;
+    }
+};
+}
+
 bool ADoubleNumberPicker::ADoubleNumberPickerField::isValidText(std::u32string_view text)
 {
     return AString(text).toDouble().hasValue() || text.empty();
@@ -54,8 +64,8 @@ ADoubleNumberPicker::ADoubleNumberPicker()
 
     auto c = _new<AViewContainer>();
     c->addAssName(".up-down-wrapper");
-    auto up = _new<AButton>() AUI_LET { it->setDefault(); it  << ".up"; };
-    auto down = _new<AButton>() AUI_LET { it->setDefault(); it  << ".down"; };
+    auto up = _new<ADoubleNumberPickerButton>() AUI_LET { it->setDefault(); it  << ".up"; };
+    auto down = _new<ADoubleNumberPickerButton>() AUI_LET { it->setDefault(); it  << ".down"; };
     c->setLayout(std::make_unique<AVerticalLayout>());
     c->setExpanding({ 0, 0 });
     c->addView(up);

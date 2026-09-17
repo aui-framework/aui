@@ -17,6 +17,7 @@
 #include "ATreeView.h"
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/Layout/AVerticalLayout.h>
+#include <AUI/Platform/AInput.h>
 #include <AUI/Platform/AWindow.h>
 #include "ALabel.h"
 #include "ADrawableView.h"
@@ -152,6 +153,7 @@ public:
         AViewContainerBase::onPointerPressed(event);
 
         mTreeView->handleMousePressed(this);
+        focus();
     }
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override {
@@ -164,6 +166,20 @@ public:
         AViewContainerBase::onPointerMove(pos, event);
         mTreeView->handleMouseMove(this);
     }
+
+    void onFocusAcquired() override {
+        AViewContainerBase::onFocusAcquired();
+        mTreeView->onItemFocusAcquired(this);
+    }
+
+    void onKeyDown(AInput::Key key) override {
+        AViewContainerBase::onKeyDown(key);
+        mTreeView->onItemKeyDown(this, key);
+    }
+
+    bool handlesNonMouseNavigation() override { return true; }
+
+    bool capturesFocus() override { return true; }
 
     void setChildrenContainer(_<AViewContainer> childrenContainer) {
         mChildrenContainer = childrenContainer;
@@ -192,6 +208,21 @@ private:
     ATreeModelIndex mIndex;
     ATreeView* mTreeView;
 };
+
+/**
+ * @brief Collects currently visible (expanded) items in the order they appear on screen.
+ */
+void ATreeView::collectVisibleItems(const _<AViewContainer>& container, AVector<_<ATreeView::ItemView>>& out) {
+    for (const auto& view : container->getViews()) {
+        if (const auto& item = _cast<ATreeView::ItemView>(view)) {
+            out << item;
+        } else if (const auto& childContainer = _cast<AViewContainer>(view)) {
+            if (childContainer->getVisibility() == Visibility::VISIBLE) {
+                collectVisibleItems(childContainer, out);
+            }
+        }
+    }
+}
 
 
 ATreeView::ATreeView():
@@ -387,14 +418,102 @@ void ATreeView::select(const ATreeModelIndex& indexToSelect) {
         }
         itemView->focus();
         itemView->setSelected(true);
-
-        auto myPositionInWindow = getPositionInWindow();
-        auto targetPositionInWindow = itemView->getPositionInWindow();
-
-        mScrollbar->scroll(targetPositionInWindow.y - myPositionInWindow.y);
+        ensureVisible(itemView);
 
     } catch (const AException& e) {
         ALogger::warn("ATreeView") << "Failed to select view by index (unsynced model?): " << e;
+    }
+}
+
+void ATreeView::ensureVisible(const _<ATreeView::ItemView>& itemView) {
+    if (!itemView) {
+        return;
+    }
+    auto myPositionInWindow = getPositionInWindow();
+    auto targetPositionInWindow = itemView->getPositionInWindow();
+
+    mScrollbar->scroll(targetPositionInWindow.y - myPositionInWindow.y);
+}
+
+void ATreeView::onItemFocusAcquired(ItemView* item) {
+    if (!item) {
+        return;
+    }
+    // show the focused item
+    ensureVisible(aui::ptr::shared_from_this(item));
+}
+
+void ATreeView::onItemKeyDown(ItemView* item, AInput::Key key) {
+    if (!item) {
+        return;
+    }
+    switch (key) {
+        case AInput::UP:
+        case AInput::DOWN: {
+            AVector<_<ItemView>> visibleItems;
+            collectVisibleItems(mContent, visibleItems);
+            if (visibleItems.empty()) {
+                return;
+            }
+
+            std::size_t currentIndex = 0;
+            for (std::size_t i = 0; i < visibleItems.size(); ++i) {
+                if (visibleItems[i].get() == item) {
+                    currentIndex = i;
+                    break;
+                }
+            }
+
+            const std::size_t targetIndex = key == AInput::UP ? (currentIndex > 0 ? currentIndex - 1 : currentIndex)
+                                                              : (currentIndex + 1 < visibleItems.size() ? currentIndex + 1
+                                                                                                       : currentIndex);
+            if (visibleItems[targetIndex].get() != item) {
+                const auto& target = visibleItems[targetIndex];
+                target->setSelected(true);
+                target->focus();
+            }
+            break;
+        }
+        case AInput::LEFT:
+        case AInput::RIGHT: {
+            const bool hasChildren = mModel->childrenCount(item->getIndex()) != 0;
+            if (key == AInput::RIGHT) {
+                if (!hasChildren) {
+                    break;
+                }
+                if (item->childrenContainer()->getVisibility() == Visibility::VISIBLE) {
+                    const auto firstChild = mModel->indexOfChild(0, 0, item->getIndex());
+                    if (const auto& childView = indexToView(firstChild)) {
+                        childView->setSelected(true);
+                        childView->focus();
+                    }
+                } else {
+                    item->setExpanded(true);
+                }
+            } else { // AInput::LEFT
+                if (hasChildren && item->childrenContainer()->getVisibility() == Visibility::VISIBLE) {
+                    item->setExpanded(false);
+                } else {
+                    const auto parent = mModel->parent(item->getIndex());
+                    if (parent != ATreeModelIndex::ROOT) {
+                        if (const auto& parentView = indexToView(*parent)) {
+                            parentView->setSelected(true);
+                            parentView->focus();
+                        }
+                    }
+                }
+            }
+            break;
+        }
+        case AInput::RETURN:
+            if (mModel->childrenCount(item->getIndex()) != 0) {
+                item->toggleCollapse();
+            } else {
+                item->setSelected(true);
+            }
+            break;
+        default:
+            break;
     }
 }
 

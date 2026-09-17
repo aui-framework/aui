@@ -38,3 +38,18 @@ void AButton::setDefault(bool isDefault) {
 bool AButton::consumesClick(const glm::ivec2& pos) {
     return true;
 }
+
+void AButton::onKeyDown(AInput::Key key) {
+    AViewContainer::onKeyDown(key);
+    if (key == AInput::RETURN) {
+        click();
+    }
+}
+
+bool AButton::handlesNonMouseNavigation() {
+    return true;
+}
+
+bool AButton::capturesFocus() {
+    return true;
+}

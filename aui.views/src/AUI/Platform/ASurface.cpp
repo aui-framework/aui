@@ -117,79 +117,67 @@ void ASurface::updateFocusChain() {
     }
 }
 
+namespace {
+    void collectFocusableViews(const _<AView>& view, AVector<_<AView>>& out) {
+        if (view->getVisibility() != Visibility::VISIBLE) {
+            return;
+        }
+        if (!*view->enabled()) {
+            return;
+        }
+        if (view->handlesNonMouseNavigation() && view->capturesFocus()) {
+            out << view;
+        }
+        if (auto container = _cast<AViewContainerBase>(view)) {
+            for (const auto& child : container->getViews()) {
+                collectFocusableViews(child, out);
+            }
+        }
+    }
+}
+
 void ASurface::focusNextView() {
-    AView* beginPoint = getFocusedView().get();
-
-    bool triedToSearchFromBeginning = false;
-
-    if (beginPoint == nullptr) {
-        beginPoint = this;
-        triedToSearchFromBeginning = true;
+    AVector<_<AView>> focusableViews;
+    collectFocusableViews(aui::ptr::shared_from_this(this), focusableViews);
+    if (focusableViews.empty()) {
+        return;
     }
-    auto target = beginPoint;
-    while (target != nullptr) {
-        if (auto asContainer = dynamic_cast<AViewContainer*>(target)) {
-            // container
-            if (!asContainer->getViews().empty()) {
-                target = asContainer->getViews().first().get();
-                continue;
-            }
-        }
-        if (target == beginPoint || !target->handlesNonMouseNavigation() || target->getVisibilityRecursive() == Visibility::GONE) {
-            // we should jump to the next element
-            if (target->getParent()) {
-                // up though hierarchy
-                while (auto parent = target->getParent()) {
-                    auto& parentViews = parent->getViews();
 
-                    auto index = [&]() -> size_t {
-                        for (size_t i = 0; i < parentViews.size(); ++i)
-                        {
-                            if (parentViews[i].get() == target)
-                                return i;
-                        }
+    auto current = mFocusedView.lock();
+    if (!current) {
+        focusableViews.front()->focus();
+        return;
+    }
 
-                        return static_cast<size_t>(-1);
-                    }()  + 1;
-                    if (index >= parentViews.size()) {
-
-                        // jump to the next container since we already visited all the elements in current container
-                        target = target->getParent();
-                        if (target == nullptr) {
-                            if (triedToSearchFromBeginning) {
-                                break;
-                            } else {
-                                beginPoint = target = this;
-                                triedToSearchFromBeginning = true;
-                                break;
-                            }
-                        }
-                    } else {
-                        target = parentViews[index].get();
-                        break;
-                    }
-                }
-            } else {
-                // root element
-                if (triedToSearchFromBeginning) {
-                    // already tried searching from beginning, breaking loop
-                    target = nullptr;
-                    break;
-                } else {
-                    // try to search from beginning
-                    beginPoint = target = this;
-                    triedToSearchFromBeginning = true;
-                }
-            }
-        } else {
-            // found something what is not beginPoint
-            break;
+    for (size_t i = 0; i < focusableViews.size(); ++i) {
+        if (focusableViews[i] == current) {
+            focusableViews[(i + 1) % focusableViews.size()]->focus();
+            return;
         }
     }
+    focusableViews.front()->focus();
+}
 
-    if (target != this) {
-        target->focus();
+void ASurface::focusPrevView() {
+    AVector<_<AView>> focusableViews;
+    collectFocusableViews(aui::ptr::shared_from_this(this), focusableViews);
+    if (focusableViews.empty()) {
+        return;
     }
+
+    auto current = mFocusedView.lock();
+    if (!current) {
+        focusableViews.back()->focus();
+        return;
+    }
+
+    for (size_t i = 0; i < focusableViews.size(); ++i) {
+        if (focusableViews[i] == current) {
+            focusableViews[(i + focusableViews.size() - 1) % focusableViews.size()]->focus();
+            return;
+        }
+    }
+    focusableViews.back()->focus();
 }
 
 void ASurface::closeOverlappingSurfacesOnClick() {
