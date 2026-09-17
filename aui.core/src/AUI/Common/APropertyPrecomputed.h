@@ -220,7 +220,7 @@ struct aui::detail::ConnectionSourceTraits<aui::react::Expression<Expr>> {
         _Pragma("clang diagnostic push")   \
         _Pragma("clang diagnostic error \"-Wdeprecated-this-capture\"")
 #    define AUI_REACT_NO_THIS_CAPTURE_POP _Pragma("clang diagnostic pop")
-#elif AUI_COMPILER_GCC && __GNUC__ >= 14
+#elif AUI_COMPILER_GCC && __GNUC__ >= 16
 // _Pragma inside macro bodies expanded in non-top-level contexts (lambdas, initializer lists) is a GCC bug
 // fixed in GCC 14 (https://gcc.gnu.org/bugzilla/show_bug.cgi?id=55578)
 #    define AUI_REACT_NO_THIS_CAPTURE_PUSH \
