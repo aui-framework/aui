@@ -16,7 +16,7 @@
 #include <AUI/Render/RenderHints.h>
 #include "BorderLeft.h"
 
-void ass::prop::Property<ass::BorderLeft>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ass::BorderLeft>::renderFor(AView* view, const ARenderContext& ctx) {
     RenderHints::PushColor x(ctx.render);
     int w = mInfo.width;
 
@@ -26,10 +26,21 @@ void ass::prop::Property<ass::BorderLeft>::renderFor(AView* view, const ARenderC
 
 }
 
-bool ass::prop::Property<ass::BorderLeft>::isNone() {
+bool ass::legacy::Property<ass::BorderLeft>::isNone() {
     return mInfo.width <= 0.001f;
 }
 
-ass::prop::PropertySlot ass::prop::Property<ass::BorderLeft>::getPropertySlot() const {
-    return ass::prop::PropertySlot::BORDER;
+ass::legacy::PropertySlot ass::legacy::Property<ass::BorderLeft>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::BORDER;
 }
+namespace ass {
+Modifier operator|(Modifier thiz, BorderLeft value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        RenderHints::PushColor x(ctx.render);
+        int w = value.width;
+        ctx.render.rectangle(ASolidBrush{value.color},
+                             {0, 0},
+                             {w, ctx.size.y});
+    });
+}
+}   // namespace ass

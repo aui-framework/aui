@@ -11,7 +11,15 @@
 
 #include "CustomProperty.h"
 
-void ass::prop::Property<ass::CustomProperty>::applyFor(AView* view) {
+void ass::legacy::Property<ass::CustomProperty>::applyFor(AView* view) {
     AUI_NULLSAFE(mInfo.onApplyFor)(view);
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, CustomProperty value) {
+    return thiz.then([value](AView& view) {
+        AUI_NULLSAFE(value.onApplyFor)(&view);
+    });
+}
+}   // namespace ass
 

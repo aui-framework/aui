@@ -17,6 +17,7 @@
 
 #include <AUI/Util/ALayoutDirection.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
     /**
@@ -39,7 +40,7 @@ namespace ass {
         BackgroundGradient(AColor begin, AColor end, ALayoutDirection direction) noexcept: BackgroundGradient(begin, end, direction == ALayoutDirection::VERTICAL ? 180_deg : 90_deg) {}
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<BackgroundGradient>: IPropertyBase {
         private:
@@ -62,4 +63,6 @@ namespace ass {
         };
 
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, BackgroundGradient value);
 }

@@ -94,6 +94,18 @@ static void SmallPimpl_Copy(benchmark::State& state) {
     }
 }
 
+template<typename Pimpl, typename Impl>
+static void SmallPimpl_Move(benchmark::State& state) {
+    Pimpl pimpl1{Impl{}};
+    for (auto _ : state) {
+        state.PauseTiming();
+        Pimpl pimpl2{pimpl1};
+        state.ResumeTiming();
+        Pimpl pimpl3{std::move(pimpl2)};
+        benchmark::DoNotOptimize(pimpl3);
+    }
+}
+
 void invoke(std::function<void()>& t) {
     std::invoke(t);
 }
@@ -111,7 +123,6 @@ static void SmallPimpl_Invoke(benchmark::State& state) {
 }
 
 
-
 // std::function<void()> was added for comparison
 BENCHMARK(SmallPimpl_Allocation<aui::small_pimpl<ITest, 128>, SmallImpl>);
 BENCHMARK(SmallPimpl_Allocation<std::function<void()>, SmallImpl>);
@@ -125,6 +136,12 @@ BENCHMARK(SmallPimpl_Copy<aui::small_pimpl<ITest, 128>, MediumImpl>);
 BENCHMARK(SmallPimpl_Copy<std::function<void()>, MediumImpl>);
 BENCHMARK(SmallPimpl_Copy<aui::small_pimpl<ITest, 128>, BigImpl>);
 BENCHMARK(SmallPimpl_Copy<std::function<void()>, BigImpl>);
+BENCHMARK(SmallPimpl_Move<aui::small_pimpl<ITest, 128>, SmallImpl>);
+BENCHMARK(SmallPimpl_Move<std::function<void()>, SmallImpl>);
+BENCHMARK(SmallPimpl_Move<aui::small_pimpl<ITest, 128>, MediumImpl>);
+BENCHMARK(SmallPimpl_Move<std::function<void()>, MediumImpl>);
+BENCHMARK(SmallPimpl_Move<aui::small_pimpl<ITest, 128>, BigImpl>);
+BENCHMARK(SmallPimpl_Move<std::function<void()>, BigImpl>);
 BENCHMARK(SmallPimpl_Invoke<aui::small_pimpl<ITest, 128>, SmallImpl>);
 BENCHMARK(SmallPimpl_Invoke<std::function<void()>, SmallImpl>);
 BENCHMARK(SmallPimpl_Invoke<aui::small_pimpl<ITest, 128>, MediumImpl>);

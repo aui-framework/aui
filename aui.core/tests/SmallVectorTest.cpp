@@ -165,3 +165,45 @@ TEST_F(SmallVector, EraseFromMiddle) {
     EXPECT_EQ(*vector[1], 2);
     EXPECT_EQ(*vector[2], 3);
 }
+
+
+// Test copy constructor when vector is still in-place (size <= StaticVectorSize)
+TEST_F(SmallVector, CopyConstructorInPlace) {
+    ASmallVector<std::shared_ptr<int>, 2> original;
+    original.push_back(std::make_shared<int>(10));
+    original.push_back(std::make_shared<int>(20));
+
+    ASmallVector<std::shared_ptr<int>, 2> copy(original);
+
+    EXPECT_EQ(copy.size(), original.size());
+    EXPECT_EQ(*copy[0], 10);
+    EXPECT_EQ(*copy[1], 20);
+
+    // Modify original and ensure copy remains unchanged
+    original.pop_back();
+    EXPECT_EQ(original.size(), 1u);
+    EXPECT_EQ(copy.size(), 2u);
+}
+
+// Test copy constructor when vector has switched to dynamic allocation
+TEST_F(SmallVector, CopyConstructorDynamic) {
+    ASmallVector<std::shared_ptr<int>, 2> original;
+    original.push_back(std::make_shared<int>(1));
+    original.push_back(std::make_shared<int>(2));
+    original.push_back(std::make_shared<int>(3)); // triggers dynamic
+    original.push_back(std::make_shared<int>(4));
+
+    ASmallVector<std::shared_ptr<int>, 2> copy(original);
+
+    EXPECT_EQ(copy.size(), original.size());
+    EXPECT_EQ(*copy[0], 1);
+    EXPECT_EQ(*copy[1], 2);
+    EXPECT_EQ(*copy[2], 3);
+    EXPECT_EQ(*copy[3], 4);
+
+    // Modify original and ensure copy remains unchanged
+    original.erase(original.begin() + 1); // remove element 2
+    EXPECT_EQ(original.size(), 3u);
+    EXPECT_EQ(copy.size(), 4u);
+    EXPECT_EQ(*copy[1], 2); // copy still has 2
+}

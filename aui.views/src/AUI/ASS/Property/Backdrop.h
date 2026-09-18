@@ -17,6 +17,7 @@
 
 #include <initializer_list>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -98,7 +99,7 @@ namespace ass {
         Backdrop(std::initializer_list<Any> effects): effects(std::move(effects)) {}
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<Backdrop>: IPropertyBase {
         private:
@@ -119,6 +120,7 @@ namespace ass {
                 return mInfo;
             }
         };
+    }   // namespace legacy
 
-    }
-}
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, Backdrop value);
+}   // namespace ass

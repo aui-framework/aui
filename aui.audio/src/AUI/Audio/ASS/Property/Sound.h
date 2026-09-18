@@ -33,7 +33,7 @@ namespace ass {
     };
 
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct Property<Sound>: IPropertyBase {
         private:
