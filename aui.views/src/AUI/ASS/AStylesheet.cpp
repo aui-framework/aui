@@ -95,7 +95,15 @@ AStylesheet::AStylesheet() {
 
         // AText
         {
-            { t<AText>(), t<ATextArea>() },
+            { t<AText>() },
+            LineHeight { 1.f },
+            VerticalAlign::MIDDLE,
+            LineHeight::NORMAL,
+        },
+
+        // ATextArea
+        {
+            { t<ATextArea>() },
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,
             Expanding { 1, 0 },
