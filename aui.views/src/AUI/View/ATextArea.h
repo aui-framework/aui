@@ -72,6 +72,8 @@ public:
     void onLayout(glm::ivec2 size) override;
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int widthConstraint) override;
 
+    bool shrinksToOccupiedWidth() const override { return false; }
+
     bool isPasswordField() const noexcept override;
 
     ATextInputType textInputType() const noexcept override;

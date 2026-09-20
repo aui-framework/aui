@@ -186,11 +186,22 @@ public:
     width = std::max({ width, minMax.min, constraints.minInline });
 
     int height = 0;
-    if (auto engineHeight = measureLayoutForWidth(width)) {
-      height = *engineHeight + getFontStyle().getDescenderHeight();
+    int occupiedWidth = width;
+    if (auto measured = measureLayoutForWidth(width)) {
+      height = measured->y + getFontStyle().getDescenderHeight();
+      if (shrinksToOccupiedWidth()) {
+        occupiedWidth = std::min(std::max(measured->x, minMax.min), width);
+      }
     }
-    return { width, glm::max(height, constraints.minBlock) };
+    return { occupiedWidth, glm::max(height, constraints.minBlock) };
   }
+
+  /**
+   * @brief Whether this view may report less than the width it was offered, when the text does not fill it.
+   * @details
+   * Editable views want to keep the whole width: clicking to the right of the last character must still hit them.
+   */
+  virtual bool shrinksToOccupiedWidth() const { return true; }
 
   AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override {
     int preferredWidth = getPreferredWidth();
@@ -261,12 +272,19 @@ protected:
 
   void performLayout() { performLayoutForWidth(getSize().x - mPadding.horizontal()); }
 
-  AOptional<int> measureLayoutForWidth(int width) {
+  /**
+   * @brief Lays the text out for the given width without writing positions, reporting the space it occupies.
+   */
+  AOptional<glm::ivec2> measureLayoutForWidth(int width) {
     APerformanceSection s("ATextBase::measureLayoutForWidth");
     mEngine.setTextAlign(getFontStyle().align);
     mEngine.setLineHeight(getFontStyle().lineSpacing);
     mEngine.performLayout({ 0, 0 }, { std::max(0, width), std::numeric_limits<int>::max() / 4 }, false);
-    return mEngine.height();
+    auto height = mEngine.height();
+    if (!height) {
+      return std::nullopt;
+    }
+    return glm::ivec2 { mEngine.width().valueOr(0), *height };
   }
 
   void performLayoutForWidth(int width) {

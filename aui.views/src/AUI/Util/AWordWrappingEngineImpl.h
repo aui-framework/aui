@@ -19,6 +19,7 @@ template<typename Container>
 void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, const glm::ivec2& size, bool writePositions) {
     if (mEntries.empty()) {
         mHeight = 0;
+        mWidth = 0;
         return;
     }
 
@@ -56,6 +57,8 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
     AVector<FloatingEntry> leftFloat;
     AVector<FloatingEntry> rightFloat;
 
+    int maxRowWidth = 0;
+
     bool firstItem;
 
     auto beginRow = [&] {
@@ -71,7 +74,20 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
         currentRow = inflatedEntriesByRows.end() - 1;
     };
 
+    // contents of the row, with a trailing whitespace excluded - the same figure CENTER and RIGHT align by.
+    auto occupiedRowWidth = [&] {
+        int result = 0;
+        for (auto& i : leftFloat) result += i.occupiedHorizontalSpace;
+        for (auto& i : rightFloat) result += i.occupiedHorizontalSpace;
+        if (!currentRow->empty()) {
+            const auto end = currentRow->last().entry->escapesEdges() ? currentRow->end() - 1 : currentRow->end();
+            for (auto it = currentRow->begin(); it != end; ++it) result += it->occupiedHorizontalSpace;
+        }
+        return result;
+    };
+
     auto flushRow = [&](bool last) {
+        maxRowWidth = glm::max(maxRowWidth, occupiedRowWidth());
         const int currentYWithLineHeightApplied = currentY + (mLineHeight - 1.f) / 2.f * currentRowHeight;
         for (AVector<FloatingEntry>* floating : {&leftFloat, &rightFloat}) {
             for (FloatingEntry& i: *floating | ranges::views::reverse) {
@@ -251,4 +267,5 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
     }();
 
     mHeight = std::max(currentY + int(float(currentRowHeight) * mLineHeight), floatingMax) - offset.y;
+    mWidth = maxRowWidth;
 }
