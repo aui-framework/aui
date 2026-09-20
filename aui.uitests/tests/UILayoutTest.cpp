@@ -715,7 +715,7 @@ TEST_F(UILayoutTest, HorizontalSpacerExpandingConsumesRemainingSpace) {
 
 TEST_F(UILayoutTest, HorizontalFixedExpandingTextFixedKeepsTrailingChildInside) {
     auto leading = _new<AView>() AUI_OVERRIDE_STYLE { FixedSize { 24_dp } };
-    auto text = AText::fromString("middle");
+    auto text = AText::fromString("middle") AUI_OVERRIDE_STYLE { Expanding {} };
     auto trailing = _new<AView>() AUI_OVERRIDE_STYLE { FixedSize { 24_dp } };
 
     inflate(Horizontal {
@@ -870,10 +870,10 @@ TEST_F(UILayoutTest, ChangesInsideAGoneViewDoNotRelayoutTheWindow) {
 TEST_F(UILayoutTest, ATextCorrectlyCenteredOneLine) {
     // case: Center the AText via Centered container. Use a small single line string.
 
-    auto text = AText::fromString("kawai");
+    auto text = AText::fromString("kawai") AUI_OVERRIDE_STYLE { Border { 1_px, AColor::BLACK } };
     inflate(Centered { text } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } }); // fits in one line
     settleLayout();
-    const auto center = text->getCenterPointInWindow();
+    const auto center = text->getPosition() + text->getSize() / 2;
     EXPECT_NEAR(center.x, 50, 2);
     EXPECT_NEAR(center.y, 50, 2);
 }
@@ -881,10 +881,10 @@ TEST_F(UILayoutTest, ATextCorrectlyCenteredOneLine) {
 TEST_F(UILayoutTest, ATextCorrectlyCenteredMultiLine) {
     // case: Center the AText via Centered container. Using a long string that wouldn't fit in a single line.
 
-    auto text = AText::fromString("Weapons operational. Grapple primed. Hamster pumped.");
+    auto text = AText::fromString("Weapons operational. Grapple primed. Hamster pumped.") AUI_OVERRIDE_STYLE { Border { 1_px, AColor::BLACK } };
     inflate(Centered { text } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } }); // fits in one line
     settleLayout();
-    const auto center = text->getCenterPointInWindow();
+    const auto center = text->getPosition() + text->getSize() / 2;
 
     EXPECT_NEAR(center.x, 50, 2);
     EXPECT_NEAR(center.y, 50, 2);
