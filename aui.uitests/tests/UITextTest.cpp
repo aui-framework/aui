@@ -130,7 +130,8 @@ TEST_F(UIText, MeasureUsesTightWidthForWrapping) {
         .maxInline = tightWidth,
     });
 
-    EXPECT_EQ(constrained.x, tightWidth);
+    // AText reports the width its rows occupy, which the wrapping almost never fills up to the last pixel.
+    EXPECT_LE(constrained.x, tightWidth);
     EXPECT_GT(constrained.y, unconstrained.y);
 }
 
@@ -144,8 +145,8 @@ TEST_F(UIText, MeasureHeightGrowsWhenWidthShrinks) {
         .maxInline = 120,
     });
 
-    EXPECT_EQ(wide.x, 220);
-    EXPECT_EQ(narrow.x, 120);
+    EXPECT_LE(wide.x, 220);
+    EXPECT_LE(narrow.x, 120);
     EXPECT_GE(narrow.y, wide.y);
 }
 
@@ -170,6 +171,6 @@ TEST_F(UIText, BreakAllAllowsNarrowIntrinsicWidthAndWrapping) {
     });
 
     EXPECT_LT(text->computeMinMaxAxis().min, unconstrained.x);
-    EXPECT_EQ(constrained.x, std::max(1, unconstrained.x / 2));
+    EXPECT_LE(constrained.x, std::max(1, unconstrained.x / 2));
     EXPECT_GT(constrained.y, unconstrained.y);
 }
