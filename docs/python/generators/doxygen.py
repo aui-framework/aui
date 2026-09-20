@@ -14,6 +14,7 @@
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
 import re
+from collections import defaultdict
 
 import mkdocs_gen_files
 
@@ -23,13 +24,66 @@ from pathlib import Path
 from docs.python.generators.examples_helpers import (
     examples_for_symbol_with_snippets as _examples_for_symbol_with_snippets,
     examples_for_symbol as _examples_for_symbol,
-    compute_hl_lines as _compute_hl_lines,
+    compute_hl_lines as compute_highlight_lines,
     filter_examples_by_relevance as _filter_examples_by_relevance,
     dedupe_examples_list as _dedupe_examples_list,
 )
-from docs.python.generators.examples_helpers import _find_unquoted_word_on_nontrivial_line
+from docs.python.generators.examples_helpers import _find_unquoted_word_on_nontrivial_line, _strip_leading_blank_lines
 
 log = logging.getLogger('mkdocs')
+
+
+# Map of macro aliases to their canonical symbol names
+# Used to add macro tokens for highlighting only when they're relevant
+_MACRO_ALIASES = {
+    'AUI_DECLARATIVE_FOR': ['AForEachUI'],
+    'AUI_WITH_STYLE': ['PropertyListRecursive', 'ass::PropertyListRecursive'],
+}
+
+
+# Pre-computed map of canonical base names to their macro aliases for efficient lookup.
+_CANONICAL_BASE_TO_MACROS = defaultdict(list)
+for _macro, _canonicals in _MACRO_ALIASES.items():
+    for _canonical in _canonicals:
+        _base_name = _canonical.split('::')[-1]
+        _CANONICAL_BASE_TO_MACROS[_base_name].append(_macro)
+
+
+def _add_relevant_macro_aliases(tokens: list[str], snippet: str) -> list[str]:
+    """Add macro aliases to tokens only if they appear in snippet AND relate to existing tokens.
+    
+    This prevents unrelated macros from being highlighted. For example, when documenting
+    PropertyListRecursive, we want AUI_WITH_STYLE highlighted in examples. But when 
+    documenting AForEachUI, we don't want AUI_DECLARATIVE_FOR highlighted in unrelated
+    examples that happen to contain it.
+    """
+    result_set = set(tokens)
+    token_base_names = {token.split('::')[-1] for token in tokens}
+    
+    # Find all macros that could be relevant based on the tokens.
+    relevant_macros = set()
+    for base_name in token_base_names:
+        relevant_macros.update(_CANONICAL_BASE_TO_MACROS.get(base_name, []))
+
+    # Add relevant macros if they appear in the snippet and are not already present.
+    macros_to_check = relevant_macros - result_set
+    if macros_to_check:
+        result_set.update(re.findall(r'\b(' + '|'.join(map(re.escape, macros_to_check)) + r')\b', snippet))
+    return list(result_set)
+
+
+def _compute_hl_lines(snippet: str, tokens: list[str]) -> str | None:
+    """Compute highlight lines with automatic macro alias augmentation.
+    
+    Wraps compute_highlight_lines to automatically add relevant macro aliases,
+    eliminating the need for try-except blocks at all call sites.
+    """
+    try:
+        augmented_tokens = _add_relevant_macro_aliases(tokens, snippet)
+        return compute_highlight_lines(snippet, augmented_tokens)
+    except Exception as e:
+        log.warning(f"Error in _compute_hl_lines with macro augmentation: {e}")
+        return compute_highlight_lines(snippet, tokens)
 
 
 def _has_unquoted_match(snippet: str, names: list[str]) -> bool:
@@ -50,6 +104,50 @@ def _has_unquoted_match(snippet: str, names: list[str]) -> bool:
             if before == -1 or after == -1 or not (before < i < after):
                 return True
     return False
+
+
+def _example_title(ex: dict) -> str:
+    """Format example title with page link and conditional description."""
+    title_link = f"[{ex['title']}]({ex['id']}.md)"
+    desc = ex.get('description', '') or ''
+    if desc:
+        return f"{title_link} — {desc}"
+    return title_link
+
+def _print_example(ex, fos, tokens, *, printed_example_pairs=None):
+    """Print a formatted example block with consistent reference spacing.
+    
+    Returns True if the example was printed, False if skipped.
+    """
+    if not ex or 'src' not in ex:
+        return False
+    try:
+        src_rel = ex['src'].relative_to(Path.cwd())
+    except Exception:
+        src_rel = ex['src']
+    
+    if printed_example_pairs is not None:
+        pair = (ex.get('id'), str(src_rel))
+        if pair in printed_example_pairs:
+            return False
+        printed_example_pairs.add(pair)
+    
+    extension = common.determine_extension(ex['src'])
+    snippet = ex.get('snippet', '') or ''
+    hl = _compute_hl_lines(snippet, tokens)
+    hl_attr = f' hl_lines="{hl}"' if hl else ''
+    
+    print(f"\n??? note \"{src_rel}\"", file=fos)
+    print(file=fos)
+    print(f"    {_example_title(ex)}", file=fos)
+    print(file=fos)
+    if snippet:
+        render_lines = _strip_leading_blank_lines(snippet)
+        print(f"    ```{extension}{hl_attr}", file=fos)
+        for line in render_lines:
+            print(f"    {line}", file=fos)
+        print(f"    ```", file=fos)
+    return True
 
 
 
@@ -105,35 +203,7 @@ def embed_doc(nested, fos, names_to_search_examples=[], printed_example_pairs=se
             if exs:
                 print('\n**Examples:**\n', file=fos)
                 for ex in exs:
-                    if not ex or 'src' not in ex or not ex.get('snippet'):
-                        continue
-                    try:
-                        src_rel = ex['src'].relative_to(Path.cwd())
-                    except Exception:
-                        src_rel = ex['src']
-                    pair = (ex.get('id'), str(src_rel))
-                    if pair in printed_example_pairs:
-                        continue
-                    printed_example_pairs.add(pair)
-                    extension = common.determine_extension(ex['src'])
-                    # compute hl_lines using nested type tokens
-                    tokens = [i for i in names_to_search_examples]
-                    snippet = ex.get('snippet','') or ''
-                    try:
-                        if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
-                            tokens.append('AUI_DECLARATIVE_FOR')
-                    except Exception:
-                        pass
-                    hl = _compute_hl_lines(snippet, tokens)
-                    hl_attr = f' hl_lines="{hl}"' if hl else ''
-                    print(f"\n??? note \"{src_rel}\"", file=fos)
-                    print(file=fos)
-                    print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
-                    print(file=fos)
-                    print(f"    ```{extension}{hl_attr}", file=fos)
-                    for line in ex['snippet'].splitlines():
-                        print(f"    {line}", file=fos)
-                    print(f"    ```", file=fos)
+                    _print_example(ex, fos, [i for i in names_to_search_examples], printed_example_pairs=printed_example_pairs)
 
     # enums - see APath::DefaultPath
     if hasattr(nested, 'enum_values'):
@@ -236,7 +306,37 @@ def gen_pages():
             for type_entry in [i for i in doxygen if i[0] == '@brief']:
                 print(type_entry[1], file=fos)
 
-            # For non-class symbols (macros, free functions, enums), collect examples to print after Detailed Description
+            # collect broad examples (used as fallback for non-class symbols and as reference for class pages)
+            class_examples = []
+            try:
+                top_names = []
+                if hasattr(parse_entry, 'namespaced_name'):
+                    top_names.append(parse_entry.namespaced_name())
+                if hasattr(parse_entry, 'name'):
+                    top_names.append(parse_entry.name)
+                class_examples = [dict(ce) for ce in (
+                    _examples_for_symbol(top_names, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)) or [])
+                ]
+                # Normalize: _examples_for_symbol returns entries with `srcs` (list) but
+                # rendering/filtering expects `src` (single Path). Resolve to the source
+                # file that actually contains the queried symbol, not just srcs[0].
+                for ce in class_examples:
+                    if 'src' not in ce and ce.get('srcs'):
+                        ce['src'] = Path(ce['srcs'][0])  # fallback default
+                        for s in ce['srcs']:
+                            try:
+                                src_text = Path(s).read_text(encoding='utf-8', errors='ignore')
+                                candidate_names = _add_relevant_macro_aliases(top_names, src_text)
+                                if any(
+                                    name and _find_unquoted_word_on_nontrivial_line(name, src_text)
+                                    for name in candidate_names
+                                ):
+                                    ce['src'] = Path(s)
+                                    break
+                            except Exception:
+                                continue
+            except Exception:
+                class_examples = []
             if not isinstance(parse_entry, CppClass):
                 try:
                     names_to_search = []
@@ -263,42 +363,53 @@ def gen_pages():
                             except Exception:
                                 text = ''
                             snippet = e.get('snippet','') or ''
-                            # strongest: macro invocation AUI_DECLARATIVE_FOR
-                            if re.search(r"\bAUI_DECLARATIVE_FOR\s*\(", snippet) or re.search(r"\bAUI_DECLARATIVE_FOR\s*\(", text):
-                                return 0
-                            # header include for AForEachUI
-                            if re.search(r"#include\s+[<\"]AUI/View/AForEachUI.h[>\"]", text):
-                                return 1
-                            # unquoted AForEachUI occurrence on nontrivial line
+                            # strongest: macro invocation of the documented name
+                            for n in names_to_search:
+                                if not n:
+                                    continue
+                                if re.search(r"\b" + re.escape(n) + r"\s*\(", snippet):
+                                    return 0
+                            # header include for the documented name's class
+                            for n in names_to_search:
+                                if not n:
+                                    continue
+                                if re.search(r"#include\s+[<\"]AUI/.+/" + re.escape(n) + r"\.h[>\"]", text):
+                                    return 1
+                            # unquoted occurrence of documented name on nontrivial line
                             try:
-                                from docs.python.generators.examples_helpers import _find_unquoted_word_on_nontrivial_line
-                                if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in names_to_search if n):
+                                priority_names = _add_relevant_macro_aliases(names_to_search, f"{snippet}\n{text}")
+                                if any(_find_unquoted_word_on_nontrivial_line(n, text) for n in priority_names if n):
                                     return 2
                             except Exception:
                                 pass
-                            # prefer snippets that contain macro anchors
+                            # prefer snippets that contain any searched name as anchor
                             try:
-                                if any(re.search(re.escape(a), snippet) for a in (names_to_search or [])):
+                                priority_names = _add_relevant_macro_aliases(names_to_search, snippet)
+                                if any(re.search(re.escape(a), snippet) for a in (priority_names if priority_names else names_to_search or [])):
                                     return 3
                             except Exception:
                                 pass
                             return 10
+                        # Compute priority once per example to avoid redundant file I/O
+                        priorities = {}
+                        for e in exs:
+                            try:
+                                priorities[id(e)] = _example_priority(e)
+                            except Exception:
+                                priorities[id(e)] = 10
 
                         # sort examples by computed priority
-                        exs.sort(key=_example_priority)
+                        exs.sort(key=lambda e: priorities.get(id(e), 10))
                         # log per-example priority for debugging
                         try:
                             for e in exs:
-                                try:
-                                    p = _example_priority(e)
-                                except Exception:
-                                    p = None
-                                log.info(f"example candidate: id={e.get('id')} title={e.get('title')} priority={p}")
+                                p = priorities.get(id(e))
+                                log.debug(f"example candidate: id={e.get('id')} title={e.get('title')} priority={p}")
                         except Exception:
                             pass
                         # if any has strong signal (priority < 10), keep only those with strong signal
-                        if any(_example_priority(e) < 10 for e in exs):
-                            exs = [e for e in exs if _example_priority(e) < 10]
+                        if any(priorities.get(id(e), 10) < 10 for e in exs):
+                            exs = [e for e in exs if priorities.get(id(e), 10) < 10]
                         # if any example contains an unquoted match in its source file
                         # (and the match is on a non-trivial line), drop examples
                         # whose matches are exclusively inside quoted strings.
@@ -366,51 +477,13 @@ def gen_pages():
                     if exid in printed_example_ids:
                         continue
                     printed_example_ids.add(exid)
-                    try:
-                        src_rel = ex['src'].relative_to(Path.cwd())
-                    except Exception:
-                        src_rel = ex['src']
-                    pair = (ex.get('id'), str(src_rel))
-                    if pair in printed_example_pairs:
-                        continue
-                    printed_example_pairs.add(pair)
-                    extension = common.determine_extension(ex['src'])
-                    # compute hl_lines for this snippet using name tokens
                     tokens = []
                     if hasattr(parse_entry, 'namespaced_name'):
                         tokens.append(parse_entry.namespaced_name())
                     if hasattr(parse_entry, 'name'):
                         tokens.append(parse_entry.name)
-                    snippet = ex.get('snippet','') or ''
-                    try:
-                        # highlight macro invocation line when present
-                        if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
-                            tokens.append('AUI_DECLARATIVE_FOR')
-                        if any(t == 'AForEachUI' for t in tokens) and 'AUI_DECLARATIVE_FOR' not in tokens:
-                            tokens.append('AUI_DECLARATIVE_FOR')
-                    except Exception:
-                        pass
-                    hl = _compute_hl_lines(snippet, tokens)
-                    hl_attr = f' hl_lines="{hl}"' if hl else ''
-                    print(f"??? note \"{src_rel}\"", file=fos)
-                    print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
-                    print(f"    ```{extension}{hl_attr}", file=fos)
-                    for line in ex['snippet'].splitlines():
-                        print(f"    {line}", file=fos)
-                    print(f"    ```", file=fos)
+                    _print_example(ex, fos, tokens, printed_example_pairs=printed_example_pairs)
 
-            # collect class-level examples (don't print here; used as fallback per-method)
-            class_examples = []
-            try:
-                top_names = []
-                if hasattr(parse_entry, 'namespaced_name'):
-                    top_names.append(parse_entry.namespaced_name())
-                if hasattr(parse_entry, 'name'):
-                    top_names.append(parse_entry.name)
-                class_examples = _examples_for_symbol(top_names, examples_lists=getattr(examples_page, 'examples_lists', None), examples_index=getattr(examples_page, 'examples_index', None)) or []
-            except Exception:
-                class_examples = []
-                pass
 
             # For classes: print class-level examples once (used as fallback reference).
             if isinstance(parse_entry, CppClass) and class_examples:
@@ -486,39 +559,7 @@ def gen_pages():
                     if exs:
                         print('\n## Examples', file=fos)
                         for ex in exs:
-                            if not ex or 'src' not in ex or not ex.get('id'):
-                                # skip malformed example entries
-                                continue
-                            try:
-                                src_rel = ex['src'].relative_to(Path.cwd())
-                            except Exception:
-                                src_rel = ex['src']
-                            pair = (ex.get('id'), str(src_rel))
-                            if pair in printed_example_pairs:
-                                continue
-                            printed_example_pairs.add(pair)
-                            extension = common.determine_extension(ex['src'])
-                            # emit admonition header with no blank line after it
-                            # compute hl_lines using class tokens
-                            tokens = _extract_example_names(parse_entry)
-                            snippet = ex.get('snippet', '') or ''
-                            try:
-                                if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
-                                    tokens.append('AUI_DECLARATIVE_FOR')
-                                if any(t == 'AForEachUI' for t in tokens) and 'AUI_DECLARATIVE_FOR' not in tokens:
-                                    tokens.append('AUI_DECLARATIVE_FOR')
-                            except Exception:
-                                pass
-                            hl = _compute_hl_lines(snippet, tokens)
-                            hl_attr = f' hl_lines="{hl}"' if hl else ''
-                            print(f"\n??? note \"{src_rel}\"", file=fos)
-                            print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
-                            # print code block only when snippet is available
-                            if snippet:
-                                print(f"    ```{extension}{hl_attr}", file=fos)
-                                for line in snippet.splitlines():
-                                    print(f"    {line}", file=fos)
-                                print(f"    ```", file=fos)
+                            _print_example(ex, fos, _extract_example_names(parse_entry), printed_example_pairs=printed_example_pairs)
                 except Exception:
                     pass
 
@@ -612,32 +653,12 @@ def gen_pages():
                     if exs:
                         print('\n## Examples', file=fos)
                         for ex in exs:
-                            if not ex or 'src' not in ex or not ex.get('id'):
-                                continue
-                            try:
-                                src_rel = ex['src'].relative_to(Path.cwd())
-                            except Exception:
-                                src_rel = ex['src']
-                            pair = (ex.get('id'), str(src_rel))
-                            if pair in printed_example_pairs:
-                                continue
-                            printed_example_pairs.add(pair)
-                            extension = common.determine_extension(ex['src'])
                             tokens = []
                             if hasattr(parse_entry, 'namespaced_name'):
                                 tokens.append(parse_entry.namespaced_name())
                             if hasattr(parse_entry, 'name'):
                                 tokens.append(parse_entry.name)
-                            snippet = ex.get('snippet', '') or ''
-                            hl = _compute_hl_lines(snippet, tokens)
-                            hl_attr = f' hl_lines="{hl}"' if hl else ''
-                            print(f"\n??? note \"{src_rel}\"", file=fos)
-                            print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
-                            if snippet:
-                                print(f"    ```{extension}{hl_attr}", file=fos)
-                                for line in snippet.splitlines():
-                                    print(f"    {line}", file=fos)
-                                print(f"    ```", file=fos)
+                            _print_example(ex, fos, tokens, printed_example_pairs=printed_example_pairs)
                 except Exception:
                     pass
 
@@ -699,34 +720,7 @@ def gen_pages():
                         if exs:
                             print('## Examples', file=fos)
                             for ex in exs:
-                                if not ex or 'src' not in ex or not ex.get('snippet'):
-                                    continue
-                                try:
-                                    src_rel = ex['src'].relative_to(Path.cwd())
-                                except Exception:
-                                    src_rel = ex['src']
-                                pair = (ex.get('id'), str(src_rel))
-                                if pair in printed_example_pairs:
-                                    continue
-                                printed_example_pairs.add(pair)
-                                extension = common.determine_extension(ex['src'])
-                                tokens = [field.name]
-                                snippet = ex.get('snippet','') or ''
-                                try:
-                                    if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
-                                        tokens.append('AUI_DECLARATIVE_FOR')
-                                except Exception:
-                                    pass
-                                hl = _compute_hl_lines(snippet, tokens)
-                                hl_attr = f' hl_lines="{hl}"' if hl else ''
-                                print(f"\n??? note \"{src_rel}\"", file=fos)
-                                print(file=fos)
-                                print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
-                                print(file=fos)
-                                print(f"    ```{extension}{hl_attr}", file=fos)
-                                for line in ex['snippet'].splitlines():
-                                    print(f"    {line}", file=fos)
-                                print(f"    ```", file=fos)
+                                _print_example(ex, fos, [field.name], printed_example_pairs=printed_example_pairs)
 
             if hasattr(parse_entry, 'methods'):
                 methods = [i for i in parse_entry.methods if i.visibility != 'private' and i.doc is not None]
@@ -806,30 +800,7 @@ def gen_pages():
                                 if method_exs:
                                     print('\n**Examples:**\n', file=fos)
                                     for ex in method_exs:
-                                        if not ex or 'src' not in ex or not ex.get('snippet'):
-                                            continue
-                                        try:
-                                            src_rel = ex['src'].relative_to(Path.cwd())
-                                        except Exception:
-                                            src_rel = ex['src']
-                                        extension = common.determine_extension(ex['src'])
-                                        tokens = [method_full, overload.name]
-                                        snippet = ex.get('snippet','') or ''
-                                        try:
-                                            if 'AUI_DECLARATIVE_FOR' in snippet and 'AUI_DECLARATIVE_FOR' not in tokens:
-                                                tokens.append('AUI_DECLARATIVE_FOR')
-                                        except Exception:
-                                            pass
-                                        hl = _compute_hl_lines(snippet, tokens)
-                                        hl_attr = f' hl_lines="{hl}"' if hl else ''
-                                        print(f"\n??? note \"{src_rel}\"", file=fos)
-                                        print(file=fos)
-                                        print(f"    [{ex['title']}]({ex['id']}.md) - {ex.get('description','')}", file=fos)
-                                        print(file=fos)
-                                        print(f"    ```{extension}{hl_attr}", file=fos)
-                                        for line in ex['snippet'].splitlines():
-                                            print(f"    {line}", file=fos)
-                                        print(f"    ```", file=fos)
+                                        _print_example(ex, fos, [method_full, overload.name], printed_example_pairs=printed_example_pairs)
                             except Exception:
                                 pass
 
