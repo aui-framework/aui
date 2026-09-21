@@ -890,7 +890,25 @@ TEST_F(UILayoutTest, ATextCorrectlyCenteredMultiLine) {
     EXPECT_NEAR(center.y, 50, 2);
 
     // Alex2772 (20 Sep 2026): @Nelonn do these should fit perfectly (0, 100) or with a small gap (3, 97)?
-    // because you never be able to perfectly pick a text which will consume exactly 100px in with
+    // because you never be able to perfectly pick a text which will consume exactly 100px in width
+    EXPECT_EQ(text->getPosition().x, 0); // the AText should grow
+    EXPECT_EQ(text->getSize().x, 100);    // to fit the Centered container
+}
+
+TEST_F(UILayoutTest, ATextCorrectlyCenteredMultiLineWithNotEnoughSpace) {
+    // case: Center the AText via Centered container. Using a long string that wouldn't fit in a single line.
+    // using longer text so it does not fit.
+
+    auto text = AText::fromString("Weapons operational. Grapple primed. Hamster pumped. Weapons operational. Grapple primed. Hamster pumped.") AUI_OVERRIDE_STYLE { Border { 1_px, AColor::BLACK } };
+    inflate(Centered { text } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } }); // fits in one line
+    settleLayout();
+    const auto center = text->getPosition() + text->getSize() / 2;
+
+    EXPECT_NEAR(center.x, 50, 2);
+    EXPECT_NEAR(center.y, 50, 2);
+
+    // Alex2772 (20 Sep 2026): @Nelonn do these should fit perfectly (0, 100) or with a small gap (3, 97)?
+    // because you never be able to perfectly pick a text which will consume exactly 100px in width
     EXPECT_EQ(text->getPosition().x, 0); // the AText should grow
     EXPECT_EQ(text->getSize().x, 100);    // to fit the Centered container
 }
