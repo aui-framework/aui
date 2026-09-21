@@ -299,7 +299,9 @@ void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
   const int textHeight =
       this->onIntrinsicMeasure(AConstraints::fixedInline(getContentWidth())).y;
   if (mVerticalAlign == VerticalAlign::MIDDLE) {
-    ascender += (getContentHeight() - textHeight) / 2;
+    // vertical align is vertical only; ascender is a vector, so a bare += would shift the text horizontally as well.
+    // Text that does not fit is aligned to the top instead of being clipped on both ends.
+    ascender.y += glm::max(0, getContentHeight() - textHeight) / 2;
   }
   for (auto& wordEntry: mWordEntries) {
     canvas->addString(wordEntry.getPosition() + ascender, wordEntry.getWord());
@@ -319,7 +321,8 @@ void AText::onLayout(glm::ivec2 size) {
   int y = 0;
   const int textHeight = mEngine.height().valueOr(0) + getFontStyle().getDescenderHeight();
   if (mVerticalAlign == VerticalAlign::MIDDLE) {
-    y += (getContentHeight() - textHeight) / 2;
+    // kept in sync with fillStringCanvas, so that embedded views stay on the same baselines as the text.
+    y += glm::max(0, getContentHeight() - textHeight) / 2;
   }
   mViewsContainer->layout(0, y, size.x, textHeight);
 }
