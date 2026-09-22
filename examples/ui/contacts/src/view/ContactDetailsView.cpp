@@ -110,7 +110,7 @@ void ContactDetailsView::drop() {
     }
 
     // discard
-    if (AMessageBox::show(dynamic_cast<AWindow*>(AWindow::current()), "Do you really want to discard?", "This action is irreversible!", AMessageBox::Icon::NONE, AMessageBox::Button::YES_NO) != AMessageBox::ResultButton::YES) {
+    if (AMessageBox::show(dynamic_cast<AWindow*>(ASurface::current()), "Do you really want to discard?", "This action is irreversible!", AMessageBox::Icon::NONE, AMessageBox::Button::YES_NO) != AMessageBox::ResultButton::YES) {
         return;
     }
     mContact = mOriginalContact;

@@ -64,7 +64,6 @@ AStylesheet::AStylesheet() {
             FontSize {10_pt},
             FontRendering::SUBPIXEL,
             ImageRendering::SMOOTH,
-            MaxSize { 9999999_dp, 9999999_dp },
         },
 
         // AWindow
@@ -96,7 +95,15 @@ AStylesheet::AStylesheet() {
 
         // AText
         {
-            { t<AText>(), t<ATextArea>() },
+            { t<AText>() },
+            LineHeight { 1.f },
+            VerticalAlign::MIDDLE,
+            LineHeight::NORMAL,
+        },
+
+        // ATextArea
+        {
+            { t<ATextArea>() },
             LineHeight { 1.f },
             VerticalAlign::MIDDLE,
             Expanding { 1, 0 },
@@ -194,6 +201,10 @@ AStylesheet::AStylesheet() {
         },
         {
             class_of(".input-field"),
+            VerticalAlign::MIDDLE,
+        },
+        {
+            class_of(".input-field"),
             Padding { 3_dp, 6_dp },
             TextColor { 0_rgb },
             BackgroundSolid { 0xffffff_rgb },
@@ -201,6 +212,10 @@ AStylesheet::AStylesheet() {
             BorderRadius { 4_dp },
             MinSize { 100_dp, 22_dp },
             AOverflow::HIDDEN,
+        },
+        {
+            c(".number-picker") >> t<AAbstractTypeable>(),
+            VerticalAlign::DEFAULT,
         },
         {
             class_of::hover(".input-field"),

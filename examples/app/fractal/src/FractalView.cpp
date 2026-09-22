@@ -91,8 +91,8 @@ void FractalView::render(ARenderContext context) {
     context.render.rectangle(ACustomShaderBrush {}, { 0, 0 }, getSize());
 }
 
-void FractalView::setSize(glm::ivec2 size) {
-    AView::setSize(size);
+void FractalView::onLayout(glm::ivec2 size) {
+    AView::onLayout(size);
     mShader.use();
     mShader.set(UNIFORM_RATIO, mAspectRatio = float(size.x) / float(size.y));
 }

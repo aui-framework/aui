@@ -41,6 +41,8 @@ enum class AOverflow {
     HIDDEN_FROM_THIS,
 };
 
+AUI_ENUM_VALUES(AOverflow, AOverflow::VISIBLE, AOverflow::HIDDEN, AOverflow::HIDDEN_FROM_THIS)
+
 /**
  * @brief Controls behavior of the overflowed text. Relevant to AAbstractLabel and its derivatives only.
  * @ingroup ass_properties

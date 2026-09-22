@@ -18,6 +18,15 @@
 
 #include <AUI/Util/AAngleRadians.h>
 #include "IProperty.h"
+#include "AUI/Common/IStringable.h"
+
+#if defined(FMT_VERSION)
+template <> struct fmt::formatter<AAngleRadians> : fmt::formatter<float> {
+    auto format(const AAngleRadians& v, fmt::format_context& ctx) const {
+        return fmt::formatter<float>::format(v.degrees(), ctx);
+    }
+};
+#endif
 
 namespace ass {
 
@@ -32,7 +41,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<TransformRotate>: IPropertyBase {
+        struct API_AUI_VIEWS Property<TransformRotate>: IPropertyBase, IStringable {
         private:
             TransformRotate mInfo;
 
@@ -45,6 +54,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "TransformRotate({})"_format(mInfo.angle);
             }
         };
     }

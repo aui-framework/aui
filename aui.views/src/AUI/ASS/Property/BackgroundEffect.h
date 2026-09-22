@@ -12,6 +12,7 @@
 #pragma once
 
 #include "IProperty.h"
+#include "AUI/Common/IStringable.h"
 
 namespace ass {
 
@@ -31,7 +32,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<BackgroundEffect>: IPropertyBase {
+        struct API_AUI_VIEWS Property<BackgroundEffect>: IPropertyBase, IStringable {
         private:
             BackgroundEffect mInfo;
 
@@ -49,6 +50,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "BackgroundEffect(effects={})"_format(mInfo.mEffects.size());
             }
         };
 

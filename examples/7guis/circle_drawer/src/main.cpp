@@ -136,7 +136,7 @@ protected:
               .onAction =
                   [this, circle] {
                       auto radiusPopup = _new<AWindow>(
-                          "", 200_dp, 50_dp, dynamic_cast<AWindow*>(AWindow::current()), WindowStyle::MODAL);
+                          "", 200_dp, 50_dp, dynamic_cast<AWindow*>(ASurface::current()), WindowStyle::MODAL);
                       radiusPopup->setContents(Vertical {
                         Label { "Adjust diameter of circle at {}."_format(circle->position) },
                         Slider {

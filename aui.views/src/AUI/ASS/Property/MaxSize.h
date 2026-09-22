@@ -53,7 +53,7 @@ namespace ass {
             }
 
             AString toString() const override {
-                return "MaxSize({}, {})"_format(mInfo.width, mInfo.height);
+                return "MaxSize(w={}, h={})"_format(mInfo.width, mInfo.height);
             }
         };
     }

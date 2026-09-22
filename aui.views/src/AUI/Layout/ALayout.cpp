@@ -11,6 +11,53 @@
 
 #include "ALinearLayout.h"
 
+#include <limits>
+
+void ALayout::requestLayout() {
+  mMeasureCache.clear();
+  mMinMaxSizesCache.clear();
+}
+
+AMinMaxAxis ALayout::computeMinMaxAxis(int height) {
+  if (auto cached = mMinMaxSizesCache.get(height)) {
+    return *cached;
+  }
+  return mMinMaxSizesCache.put(height, onComputeIntrinsicMinMaxAxis(height));
+}
+
+glm::ivec2 ALayout::measure(AConstraints constraints) {
+  if (auto cached = mMeasureCache.get(constraints)) {
+    return *cached;
+  }
+
+  AConstraints effectiveConstraints = constraints;
+  const bool unlimitedInline = effectiveConstraints.maxInline == -1;
+  const bool unlimitedBlock = effectiveConstraints.maxBlock == -1;
+  const int effectiveMaxInline =
+      unlimitedInline
+          ? std::numeric_limits<int>::max()
+          : std::max(effectiveConstraints.minInline, effectiveConstraints.maxInline);
+  const int effectiveMaxBlock =
+      unlimitedBlock
+          ? std::numeric_limits<int>::max()
+          : std::max(effectiveConstraints.minBlock, effectiveConstraints.maxBlock);
+
+  effectiveConstraints.maxInline = unlimitedInline ? -1 : effectiveMaxInline;
+  effectiveConstraints.maxBlock = unlimitedBlock ? -1 : effectiveMaxBlock;
+
+  auto measuredSize = onIntrinsicMeasure(effectiveConstraints);
+  //measuredSize.x = std::clamp(measuredSize.x, effectiveConstraints.minInline, effectiveMaxInline);
+  //measuredSize.y = std::clamp(measuredSize.y, effectiveConstraints.minBlock, effectiveMaxBlock);
+  measuredSize.x = std::max(measuredSize.x, effectiveConstraints.minInline);
+  measuredSize.y = std::max(measuredSize.y, effectiveConstraints.minBlock);
+
+  return mMeasureCache.put(constraints, measuredSize);
+}
+
+int ALayout::getMinimumWidth() { return computeMinMaxAxis(-1).min; }
+
+int ALayout::getMinimumHeight() { return measure(AConstraints::fixedInline(getMinimumWidth())).y; }
+
 void ALayout::setSpacing(int spacing) {}
 
 ALayoutDirection ALayout::getLayoutDirection() { return ALayoutDirection::NONE; }

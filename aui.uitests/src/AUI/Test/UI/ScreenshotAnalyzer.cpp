@@ -17,6 +17,6 @@
 #include "AUI/Platform/AWindow.h"
 
 ScreenshotAnalyzer ScreenshotAnalyzer::makeScreenshot() {
-    return AWindow::current()->getRenderingContext()->makeScreenshot();
+    return ASurface::current()->getRenderingContext()->makeScreenshot();
 }
 
