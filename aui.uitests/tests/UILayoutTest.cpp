@@ -870,7 +870,7 @@ TEST_F(UILayoutTest, ChangesInsideAGoneViewDoNotRelayoutTheWindow) {
 TEST_F(UILayoutTest, ATextCorrectlyCenteredOneLine) {
     // case: Center the AText via Centered container. Use a small single line string.
 
-    auto text = AText::fromString("kawai") AUI_OVERRIDE_STYLE { Border { 1_px, AColor::BLACK } };
+    auto text = AText::fromString("kawaii") AUI_OVERRIDE_STYLE { Border { 1_px, AColor::BLACK } };
     inflate(Centered { text } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } }); // fits in one line
     settleLayout();
     const auto center = text->getPosition() + text->getSize() / 2;
