@@ -116,6 +116,10 @@ JNI_OnLoad(JavaVM* vm, void* reserved) { \
 #endif
 
 namespace aui {
+    namespace detail {
+        API_AUI_CORE void initUtf8Locale() noexcept;
+    }
+
     /**
      * @ingroup core
      * @return Arguments passed to program.

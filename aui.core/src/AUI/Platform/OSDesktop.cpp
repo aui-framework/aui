@@ -10,6 +10,11 @@
  */
 
 #include <chrono>
+#include <clocale>
+#include <cstring>
+#if !AUI_PLATFORM_WIN
+#include <langinfo.h>
+#endif
 #if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
 #include <AUI/api.h>
 #include <AUI/Common/AStringVector.h>
@@ -108,9 +113,37 @@ const ACommandLineArgs& aui::args() noexcept {
 namespace aui::detail {
     int argc;
     char** argv;
+
+    void initUtf8Locale() noexcept {
+        const char* loc = std::setlocale(LC_ALL, "");
+        bool isUtf8 = false;
+#if !AUI_PLATFORM_WIN
+        if (loc != nullptr) {
+            const char* codeset = nl_langinfo(CODESET);
+            if (codeset != nullptr && (std::strcmp(codeset, "UTF-8") == 0 || std::strcmp(codeset, "utf8") == 0 || std::strcmp(codeset, "UTF8") == 0)) {
+                isUtf8 = true;
+            }
+        }
+#endif
+        if (!isUtf8) {
+#if AUI_PLATFORM_WIN
+            if (std::setlocale(LC_ALL, ".UTF-8") == nullptr && std::setlocale(LC_ALL, ".UTF8") == nullptr) {
+                ALogger::warn("AUI") << "Failed to select a UTF-8 locale; falling back to C";
+                std::setlocale(LC_ALL, "C");
+            }
+#else
+            if (std::setlocale(LC_ALL, "C.UTF-8") == nullptr && std::setlocale(LC_ALL, "en_US.UTF-8") == nullptr && std::setlocale(LC_ALL, "UTF-8") == nullptr) {
+                ALogger::warn("AUI") << "Failed to select a UTF-8 locale; falling back to C";
+                std::setlocale(LC_ALL, "C");
+            }
+#endif
+        }
+        std::setlocale(LC_NUMERIC, "C");
+    }
 }
 
 AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVector&)) {
+    aui::detail::initUtf8Locale();
     aui::detail::argc = argc;
     aui::detail::argv = argv;
     setupUIThread();
