@@ -123,6 +123,7 @@ void PlatformAbstractionGtk::windowShow(AWindow &window) {
     gtk_window_present(nativeHandle(window));
 }
 
+void PlatformAbstractionGtk::setTaskbarProgress(AWindow &window, aui::float_within_0_1 p) {}
 void PlatformAbstractionGtk::windowSetSize(AWindow &window, glm::ivec2 size) {}
 void PlatformAbstractionGtk::windowSetGeometry(AWindow &window, int x, int y, int width, int height) {}
 void PlatformAbstractionGtk::windowSetIcon(AWindow &window, const AImage &image) {}

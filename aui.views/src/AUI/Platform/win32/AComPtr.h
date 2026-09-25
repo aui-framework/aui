@@ -12,7 +12,7 @@
 #pragma once
 
 
-#include <cassert>
+#include <AUI/Util/Assert.h>
 
 /**
  * @brief Takes care of AddRef and Release() reference counting mechanism of COM objects.
