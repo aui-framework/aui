@@ -33,6 +33,22 @@
  * Expanding is enabled by default. It can be disabled with ass::Expanding(0) property.
  *
  * Behaviour of vertical and horizontal axes are independent from each other. This behaviour is similar to Text.
+ *
+ * ### Expanding contents fill the viewport
+ *
+ * A child of AScrollArea that has `ass::Expanding` set will always occupy **at least the full viewport size** on the
+ * expanding axis, even when the scrollable surface is smaller than the viewport. This matches the intuitive
+ * expectation: an expanding widget "fills" the scroll area rather than collapsing to its minimum size.
+ *
+ * ```cpp
+ * AScrollArea::Builder()
+ *     .withContents(
+ *         _new<AView>() AUI_OVERRIDE_STYLE { Expanding {}, BackgroundSolid { AColor::GREEN } }
+ *     ).build();
+ * // The green view will always cover the entire visible area of the scroll area.
+ * ```
+ *
+ * Non-expanding children are sized to their measured preferred size as usual (and may be smaller than the viewport).
  */
 class API_AUI_VIEWS AScrollArea: public AViewContainerBase {
 public:

@@ -31,6 +31,9 @@
  * otherwise it would require large minimum width to fit all its children in a single row. By default AText's Expanding
  * is (1, 0) (grow in width, keep minimum height). This behaviour is similar to AScrollArea.
  *
+ * When placed inside an AScrollArea, an AText with `Expanding` set will fill the full viewport width and word-wrap
+ * within it, as the scroll area guarantees the content is given at least the viewport size on the expanding axis.
+ *
  * <!-- aui:snippet aui.views/src/AUI/Devtools/DevtoolsProfilingOptions.cpp fromItems -->
  */
 class API_AUI_VIEWS AText : public ATextBase<AWordWrappingEngine<>> {

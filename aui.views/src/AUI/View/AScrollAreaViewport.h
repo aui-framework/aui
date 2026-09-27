@@ -24,6 +24,15 @@
  * This view is intended to store only one single view with setContents()/contents() methods.
  *
  * This view does not handle scroll events and touch events related to scroll. Use AScrollArea for such case.
+ *
+ * ### Expanding contents fill the viewport
+ *
+ * A child set via setContents() that has `ass::Expanding` will always occupy **at least the full viewport size**
+ * on the expanding axis. The scrollable surface size (`setScrollSurfaceSize`) acts as a lower bound; the viewport's
+ * own size acts as another lower bound — the child receives `max(scrollSurfaceSize, viewportSize)`. This means an
+ * expanding widget fills the visible area instead of collapsing to its minimum content size.
+ *
+ * Prefer [AScrollArea] over using this class directly.
  */
 class API_AUI_VIEWS AScrollAreaViewport: public AViewContainerBase {
 public:

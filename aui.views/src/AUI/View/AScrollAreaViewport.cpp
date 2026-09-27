@@ -66,7 +66,11 @@ AMinMaxAxis AScrollAreaViewport::onComputeIntrinsicMinMaxAxis(int height) {
 
 void AScrollAreaViewport::onLayout(glm::ivec2 size) {
   mInner->setSkipUntilLayoutUpdate(false);
-  mInner->layout(-glm::ivec2(mScroll), mScrollSurfaceSize);
+  // mScrollSurfaceSize is set by AScrollArea::onLayout; fall back to the viewport's own size so that expanding
+  // children fill the viewport when the content is smaller than it (matches the old applyGeometryToChildren
+  // behaviour: setSize(max(mInner->getMinimumSize(), getSize()))).
+  const glm::ivec2 innerSize = glm::max(mScrollSurfaceSize, size);
+  mInner->layout(-glm::ivec2(mScroll), innerSize);
   if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
     if (!IRenderViewToTexture::isEnabledForView(*mInner)) {
       auto w = ASurface::current();

@@ -71,6 +71,9 @@ int AScrollArea::measureVerticalScrollbarWidth(int availableHeight) const {
     if (!hasInternalVerticalScrollbar()) {
         return 0;
     }
+    if (!bool(mVerticalScrollbar->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+        return 0;
+    }
     const int margin = mVerticalScrollbar->getMargin().horizontal();
     if (availableHeight == -1) {
         return mVerticalScrollbar->measure(AConstraints {}).x + margin;
@@ -81,6 +84,9 @@ int AScrollArea::measureVerticalScrollbarWidth(int availableHeight) const {
 
 int AScrollArea::measureHorizontalScrollbarHeight(int availableWidth) const {
     if (!hasInternalHorizontalScrollbar()) {
+        return 0;
+    }
+    if (!bool(mHorizontalScrollbar->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
         return 0;
     }
     const int margin = mHorizontalScrollbar->getMargin().vertical();
