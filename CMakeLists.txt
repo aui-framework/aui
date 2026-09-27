@@ -249,10 +249,19 @@ install(FILES
         DESTINATION ".")
 # [configure_file_example]
 
+install(FILES aui.boot.cmake AGENTS.md
+        DESTINATION ".")
+
 install(DIRECTORY cmake/
         DESTINATION cmake)
 
 install(DIRECTORY platform/
         DESTINATION platform)
+
+install(DIRECTORY docs/
+        DESTINATION docs)
+
+install(DIRECTORY examples/
+        DESTINATION examples)
 
 enable_testing()
