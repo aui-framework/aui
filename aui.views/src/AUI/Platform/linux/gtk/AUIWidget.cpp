@@ -68,7 +68,7 @@ static void aui_widget_init(AUIWidget* myWidget) {
     myWidget->imContext = gtk_im_multicontext_new();
     g_signal_connect(
         myWidget->imContext, "commit", G_CALLBACK(+[](GtkIMContext* im, const char* str, AUIWidget* widget) {
-            for (auto c : AString(str)) {
+            for (auto c : AUtf8View(str)) {
                 widget->renderingContext->window().onCharEntered(c);
             }
         }),

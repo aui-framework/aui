@@ -19,13 +19,30 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Platform/macos/MessageBox.h>
 
+#import <Cocoa/Cocoa.h>
+
 namespace aui {
 
 void PlatformMacOS::setClipboardText(const AString& text) {
+    @autoreleasepool {
+        NSString* string = [NSString stringWithUTF8String:text.c_str()];
+        if (string == nil) {   // text is not valid UTF-8
+            return;
+        }
+        NSPasteboard* pasteboard = [NSPasteboard generalPasteboard];
+        [pasteboard clearContents];
+        [pasteboard setString:string forType:NSPasteboardTypeString];
+    }
 }
 
 AString PlatformMacOS::getClipboardText() {
-    return {};
+    @autoreleasepool {
+        NSString* string = [[NSPasteboard generalPasteboard] stringForType:NSPasteboardTypeString];
+        if (string == nil) {   // pasteboard holds no text
+            return {};
+        }
+        return [string UTF8String];
+    }
 }
 
 AMessageBox::ResultButton PlatformMacOS::messageBoxShow(
