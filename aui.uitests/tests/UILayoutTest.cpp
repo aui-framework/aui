@@ -23,6 +23,7 @@
 #include "AUI/Test/UI/By.h"
 #include "AUI/Util/ALayoutInflater.h"
 #include "AUI/View/AGroupBox.h"
+#include "AUI/View/AScrollArea.h"
 #include "AUI/View/ASpacerFixed.h"
 #include <cstdlib>
 
@@ -898,7 +899,7 @@ TEST_F(UILayoutTest, ATextCorrectlyCenteredMultiLineWithNotEnoughSpace) {
     // using longer text so it does not fit.
 
     auto text = AText::fromString("Weapons operational. Grapple primed. Hamster pumped. Weapons operational. Grapple primed. Hamster pumped.") AUI_OVERRIDE_STYLE { Border { 1_px, AColor::BLACK } };
-    inflate(Centered { text } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } }); // fits in one line
+    inflate(Centered { text } AUI_OVERRIDE_STYLE { FixedSize { 100_dp } });
     settleLayout();
     const auto center = text->getPosition() + text->getSize() / 2;
 
@@ -907,4 +908,38 @@ TEST_F(UILayoutTest, ATextCorrectlyCenteredMultiLineWithNotEnoughSpace) {
 
     EXPECT_NEAR(text->getPosition().x, 5, 5);    // the AText should grow
     EXPECT_NEAR(text->getSize().x, 100 - 5, 5);  // to (almost) fit the Centered container
+}
+
+TEST_F(UILayoutTest, AdvancedGridLayoutMarginTest) {
+    auto container = _new<AViewContainer>();
+    container->setLayout(std::make_unique<AAdvancedGridLayout>(2, 2));
+    auto makeBox = [] {
+        return _new<AView>() AUI_OVERRIDE_STYLE {
+            FixedSize { 16_px },
+            BackgroundSolid { AColor::GREEN },
+            Margin { 16_px },
+        };
+    };
+    auto tl = makeBox();
+    auto tr = makeBox();
+    auto bl = makeBox();
+    auto br = makeBox();
+    container->addView(tl);
+    container->addView(tr);
+    container->addView(bl);
+    container->addView(br);
+    inflate(container);
+    settleLayout();
+
+    EXPECT_EQ(tl->getPosition().x, 16);
+    EXPECT_EQ(tl->getPosition().y, 16);
+
+    EXPECT_EQ(tr->getPosition().x, 16 * 4);
+    EXPECT_EQ(tr->getPosition().y, 16);
+
+    EXPECT_EQ(bl->getPosition().x, 16);
+    EXPECT_EQ(bl->getPosition().y, 16 * 4);
+
+    EXPECT_EQ(br->getPosition().x, 16 * 4);
+    EXPECT_EQ(br->getPosition().y, 16 * 4);
 }
