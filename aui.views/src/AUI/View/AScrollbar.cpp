@@ -290,13 +290,14 @@ int AScrollbar::getMeasuredHandleOccupiedSpace() const {
 int AScrollbar::chromeThickness() const {
     const auto backward = mBackwardButton->measure(AConstraints {});
     const auto forward = mForwardButton->measure(AConstraints {});
+    const auto handle = mHandle->measure(AConstraints {});
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
-            return std::max(backward.y, forward.y);
+            return std::max({ backward.y, forward.y, handle.y + mHandle->getMargin().vertical() });
 
         case ALayoutDirection::VERTICAL:
-            return std::max(backward.x, forward.x);
+            return std::max({ backward.x, forward.x, handle.x + mHandle->getMargin().horizontal() });
 
         case ALayoutDirection::NONE:
             break;
@@ -307,13 +308,14 @@ int AScrollbar::chromeThickness() const {
 int AScrollbar::minimumChromeLength() const {
     const auto backward = mBackwardButton->measure(AConstraints {});
     const auto forward = mForwardButton->measure(AConstraints {});
+    const auto handle = mHandle->measure(AConstraints {});
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
-            return backward.x + forward.x;
+            return backward.x + forward.x + handle.x + mHandle->getMargin().horizontal();
 
         case ALayoutDirection::VERTICAL:
-            return backward.y + forward.y;
+            return backward.y + forward.y + handle.y + mHandle->getMargin().vertical();
 
         case ALayoutDirection::NONE:
             break;
