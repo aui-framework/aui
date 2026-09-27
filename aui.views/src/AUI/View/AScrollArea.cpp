@@ -71,26 +71,24 @@ int AScrollArea::measureVerticalScrollbarWidth(int availableHeight) const {
     if (!hasInternalVerticalScrollbar()) {
         return 0;
     }
-    const auto margins = mVerticalScrollbar->getMargin();
-    const int marginsH = margins.horizontal();
+    const int margin = mVerticalScrollbar->getMargin().horizontal();
     if (availableHeight == -1) {
-        return mVerticalScrollbar->measure(AConstraints {}).x + marginsH;
+        return mVerticalScrollbar->measure(AConstraints {}).x + margin;
     }
-    const int availableForScrollbar = std::max(0, availableHeight - margins.vertical());
-    return mVerticalScrollbar->measure(AConstraints::fixedBlock(availableForScrollbar)).x + marginsH;
+    const int effectiveHeight = std::max(0, availableHeight - mVerticalScrollbar->getMargin().vertical());
+    return mVerticalScrollbar->measure(AConstraints::fixedBlock(effectiveHeight)).x + margin;
 }
 
 int AScrollArea::measureHorizontalScrollbarHeight(int availableWidth) const {
     if (!hasInternalHorizontalScrollbar()) {
         return 0;
     }
-    const auto margins = mHorizontalScrollbar->getMargin();
-    const int marginsV = margins.vertical();
+    const int margin = mHorizontalScrollbar->getMargin().vertical();
     if (availableWidth == -1) {
-        return mHorizontalScrollbar->measure(AConstraints {}).y + marginsV;
+        return mHorizontalScrollbar->measure(AConstraints {}).y + margin;
     }
-    const int availableForScrollbar = std::max(0, availableWidth - margins.horizontal());
-    return mHorizontalScrollbar->measure(AConstraints::fixedInline(availableForScrollbar)).y + marginsV;
+    const int effectiveWidth = std::max(0, availableWidth - mHorizontalScrollbar->getMargin().horizontal());
+    return mHorizontalScrollbar->measure(AConstraints::fixedInline(effectiveWidth)).y + margin;
 }
 
 AScrollArea::LayoutGeometry AScrollArea::calculateLayout(glm::ivec2 availableSize, bool widthBounded, bool heightBounded) const {
@@ -232,25 +230,20 @@ void AScrollArea::onLayout(glm::ivec2 size) {
   auto layout = calculateLayout(paddedSize, true, true);
 
   mInner->setScrollSurfaceSize(layout.contentSize);
-  {
-    const auto m = mInner->getMargin();
-    mInner->layout(paddedPosition.x + m.left, paddedPosition.y + m.top,
-                   layout.viewportSize.x - m.horizontal(),
-                   layout.viewportSize.y - m.vertical());
-  }
+  mInner->layout(paddedPosition, layout.viewportSize);
 
   AUI_NULLSAFE(mVerticalScrollbar)->setScrollDimensions(layout.viewportSize.y, layout.contentSize.y);
   AUI_NULLSAFE(mHorizontalScrollbar)->setScrollDimensions(layout.viewportSize.x, layout.contentSize.x);
 
   if (hasInternalVerticalScrollbar()) {
     if (layout.hasVerticalScrollbar) {
+      const auto margins = mVerticalScrollbar->getMargin();
       mVerticalScrollbar->setVisibility(Visibility::VISIBLE);
-      const auto m = mVerticalScrollbar->getMargin();
       mVerticalScrollbar->layout(
-          paddedPosition.x + layout.viewportSize.x + m.left,
-          paddedPosition.y + m.top,
-          layout.verticalScrollbarWidth - m.horizontal(),
-          layout.viewportSize.y - m.vertical());
+          paddedPosition.x + layout.viewportSize.x + margins.left,
+          paddedPosition.y + margins.top,
+          glm::max(0, layout.verticalScrollbarWidth - margins.horizontal()),
+          glm::max(0, layout.viewportSize.y - margins.vertical()));
     } else {
       mVerticalScrollbar->setVisibility(Visibility::GONE);
     }
@@ -258,13 +251,13 @@ void AScrollArea::onLayout(glm::ivec2 size) {
 
   if (hasInternalHorizontalScrollbar()) {
     if (layout.hasHorizontalScrollbar) {
+      const auto margins = mHorizontalScrollbar->getMargin();
       mHorizontalScrollbar->setVisibility(Visibility::VISIBLE);
-      const auto m = mHorizontalScrollbar->getMargin();
       mHorizontalScrollbar->layout(
-          paddedPosition.x + m.left,
-          paddedPosition.y + layout.viewportSize.y + m.top,
-          layout.viewportSize.x - m.horizontal(),
-          layout.horizontalScrollbarHeight - m.vertical());
+          paddedPosition.x + margins.left,
+          paddedPosition.y + layout.viewportSize.y + margins.top,
+          glm::max(0, layout.viewportSize.x - margins.horizontal()),
+          glm::max(0, layout.horizontalScrollbarHeight - margins.vertical()));
     } else {
       mHorizontalScrollbar->setVisibility(Visibility::GONE);
     }
