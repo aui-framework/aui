@@ -69,6 +69,7 @@ guint gtk_get_minor_version(void);
 guint gtk_get_micro_version(void);
 void gtk_window_present(GtkWindow* window);
 void gtk_window_present_with_time(GtkWindow* window, guint32 timestamp);
+void gtk_window_set_startup_id(GtkWindow* window, const char* startup_id);
 GType gtk_box_get_type(void);
 GType gtk_button_get_type(void);
 GType gtk_cell_view_get_type(void);

@@ -73,6 +73,7 @@ public:
     virtual glm::ivec2 windowGetPosition(AWindow& window) const = 0;
     virtual void windowFlagRedraw(AWindow& window) = 0;
     virtual void windowShow(AWindow& window) = 0;
+    virtual void windowActivate(AWindow& window, const AString& activationToken) = 0;
     virtual void windowSetSize(AWindow& window, glm::ivec2 size) = 0;
     virtual void windowSetGeometry(AWindow& window, int x, int y, int width, int height) = 0;
     virtual void windowSetIcon(AWindow& window, const AImage& image) = 0;

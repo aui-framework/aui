@@ -55,7 +55,7 @@ void AWindow::quit() {
     });
     [static_cast<NSWindow*>(mHandle) close];
     mHandle = nullptr;
-    if (getWindowManager().mWindows.empty()) {
+    if (!getWindowManager().shouldKeepRunning()) {
         MacosApp::inst().quit();
     }
 }
@@ -156,18 +156,39 @@ void AWindow::setIcon(const AImage& image) {
 void AWindow::hide() {
 }
 
+void AWindow::activate(const AString&) {
+    show();
+    if (auto ns = static_cast<NSWindow*>(mHandle)) {
+        if ([ns isMiniaturized]) {
+            [ns deminiaturize:nil];
+        }
+        [ns makeKeyAndOrderFront:nil];
+    }
+    MacosApp::inst().activateIgnoringOtherApps();
+}
+
 void AWindow::blockUserInput(bool blockUserInput) {
 
 }
 
 void AWindowManager::notifyProcessMessages() {
+    auto self = this;
     dispatch_async(dispatch_get_main_queue(), ^{
         AThread::processMessages();
+        // holds released / quit() requested
+        if (self->mLoopRunning && !self->shouldKeepRunning()) {
+            MacosApp::inst().quit();
+        }
     });
 }
 
 void AWindowManager::loop() {
+    mLoopRunning = true;
+    if (!shouldKeepRunning()) {
+        return;
+    }
     MacosApp::inst().run();
+    mLoopRunning = false;
 }
 
 void AWindow::allowDragNDrop() {

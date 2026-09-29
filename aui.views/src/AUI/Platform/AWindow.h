@@ -164,6 +164,17 @@ public:
     void close();
     void hide();
 
+    /**
+     * @brief Shows the window, restores it if minimized and brings it to foreground.
+     * @param activationToken platform-specific focus stealing permission token (see AActivation::activationToken).
+     * @details
+     * Typical usage is handling AApplication::activated:
+     * ```cpp
+     * connect(AApplication::inst().activated, [window](const AActivation& a) { window->activate(a.activationToken); });
+     * ```
+     */
+    void activate(const AString& activationToken = {});
+
     [[nodiscard]]
     bool isClosed() const noexcept;
 

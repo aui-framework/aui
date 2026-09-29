@@ -123,6 +123,14 @@ void PlatformAbstractionGtk::windowShow(AWindow &window) {
     gtk_window_present(nativeHandle(window));
 }
 
+void PlatformAbstractionGtk::windowActivate(AWindow &window, const AString& activationToken) {
+    if (!activationToken.empty()) {
+        // xdg-activation token (Wayland) / startup notification id (X11) of the launched instance
+        gtk_window_set_startup_id(nativeHandle(window), activationToken.toStdString().c_str());
+    }
+    gtk_window_present(nativeHandle(window));
+}
+
 void PlatformAbstractionGtk::windowSetSize(AWindow &window, glm::ivec2 size) {}
 void PlatformAbstractionGtk::windowSetGeometry(AWindow &window, int x, int y, int width, int height) {}
 void PlatformAbstractionGtk::windowSetIcon(AWindow &window, const AImage &image) {}

@@ -117,6 +117,10 @@ void AWindow::setIcon(const AImage& image) {
 void AWindow::hide() {
 }
 
+void AWindow::activate(const AString&) {
+    show();
+}
+
 void AWindowManager::notifyProcessMessages() {
 }
 

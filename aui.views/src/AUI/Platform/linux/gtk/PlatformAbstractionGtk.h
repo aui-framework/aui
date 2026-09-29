@@ -45,8 +45,7 @@ public:
     void windowMaximize(AWindow &window) override;
     glm::ivec2 windowGetPosition(AWindow &window) const override;
     void windowFlagRedraw(AWindow &window) override;
-    void windowShow(AWindow &window) override;
-    void windowSetSize(AWindow &window, glm::ivec2 size) override;
+    void windowShow(AWindow &window) override;    void windowActivate(AWindow& window, const AString& activationToken) override;    void windowSetSize(AWindow &window, glm::ivec2 size) override;
     void windowSetGeometry(AWindow &window, int x, int y, int width, int height) override;
     void windowSetIcon(AWindow &window, const AImage &image) override;
     void windowHide(AWindow &window) override;
