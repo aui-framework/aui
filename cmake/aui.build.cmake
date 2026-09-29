@@ -1338,6 +1338,7 @@ macro(aui_app)
             # common
             TARGET
             NAME
+            ID
             COPYRIGHT
             VERSION
             ICON
@@ -1574,6 +1575,7 @@ macro(aui_app)
                 DESTINATION $<TARGET_PROPERTY:${APP_TARGET},AUI_INSTALL_RUNTIME_DIR>)
         get_target_property(_executable ${APP_TARGET} OUTPUT_NAME)
         # Setup icon for x11
+        set(_linux_icon_files "")
         if (APP_ICON)
             set(_ico "${_current_app_build_files}/app")
             if (TARGET aui.toolbox)
@@ -1585,34 +1587,60 @@ macro(aui_app)
                 ARGS svg2png ${_icon_absolute} -r=512 -o=${_ico} -p=icon
             )
             aui_compile_assets_add(${APP_TARGET} "${_ico}/icon_512x512.png" "__aui/icon_512x512.png")
+
+            # freedesktop-compatible icon theme (hicolor): <icons>/hicolor/<size>x<size>/apps/<APP_ID>.png and
+            # <icons>/hicolor/scalable/apps/<APP_ID>.svg. The icon name is APP_ID.
+            set(_hicolor "${_current_app_build_files}/hicolor")
+            set(_hicolor_tmp "${_current_app_build_files}/hicolor-tmp")
+            set(_hicolor_svg "${_hicolor}/scalable/apps/${APP_ID}.svg")
+            configure_file(${_icon_absolute} "${_hicolor_svg}" COPYONLY)
+            set(_linux_icon_files "${_hicolor_svg}")
+            install(FILES "${_hicolor_svg}" DESTINATION share/icons/hicolor/scalable/apps)
+
+            set(_hicolor_sizes 16 32 48 64 128 256 512)
+            list(JOIN _hicolor_sizes , _hicolor_sizes_comma)
+            set(_hicolor_outputs "")
+            set(_hicolor_commands "")
+            foreach (_size ${_hicolor_sizes})
+                set(_png "${_hicolor}/${_size}x${_size}/apps/${APP_ID}.png")
+                list(APPEND _hicolor_outputs "${_png}")
+                list(APPEND _hicolor_commands
+                        COMMAND ${CMAKE_COMMAND} -E make_directory "${_hicolor}/${_size}x${_size}/apps"
+                        COMMAND ${CMAKE_COMMAND} -E copy "${_hicolor_tmp}/icon_${_size}x${_size}.png" "${_png}")
+                list(APPEND _linux_icon_files "${_png}")
+                install(FILES "${_png}" DESTINATION share/icons/hicolor/${_size}x${_size}/apps)
+            endforeach ()
+            add_custom_command(
+                OUTPUT ${_hicolor_outputs}
+                COMMAND ${AUI_TOOLBOX_EXE} svg2png ${_icon_absolute} -r=${_hicolor_sizes_comma} -o=${_hicolor_tmp} -p=icon
+                ${_hicolor_commands}
+                DEPENDS ${_icon_absolute}
+            )
+            target_sources(${APP_TARGET} PRIVATE ${_hicolor_outputs})
         endif()
         if (NOT APP_LINUX_DESKTOP)
             # generate desktop file
             set(_desktop "[Desktop Entry]\nName=${APP_NAME}\nExec=${_executable}\nType=Application\nTerminal=false\nCategories=Utility")
             if (APP_ICON)
-                set(_icon "${_current_app_build_files}/app.icon.svg")
-                configure_file(${APP_ICON} "${_icon}" COPYONLY)
-                set(APP_ICON ${_icon})
-                set(_desktop "${_desktop}\nIcon=app.icon")
+                set(_desktop "${_desktop}\nIcon=${APP_ID}")
             endif()
             file(GENERATE
-                    OUTPUT "${_current_app_build_files}/app.desktop"
+                    OUTPUT "${_current_app_build_files}/${APP_ID}.desktop"
                     CONTENT ${_desktop})
-            set(APP_LINUX_DESKTOP ${_current_app_build_files}/app.desktop)
+            set(APP_LINUX_DESKTOP ${_current_app_build_files}/${APP_ID}.desktop)
         endif()
-#        file(GENERATE
-#                OUTPUT ${_current_app_build_files}/appimage-generate.cmake
-#                INPUT ${AUI_BUILD_AUI_ROOT}/cmake/appimage-generate.cmake.in)
-#
-#        file(GENERATE
-#                OUTPUT ${_current_app_build_files}/appimage-generate-vars.cmake
-#                CONTENT "set(EXECUTABLE $<TARGET_FILE:${APP_TARGET}>)\nset(DESKTOP_FILE ${APP_LINUX_DESKTOP})\nset(ICON_FILE ${APP_ICON})")
-#        set(APP_LINUX_DESKTOP ${_current_app_build_files}/appimage-generate.cmake)
-#
-#        list(APPEND CPACK_GENERATOR External)
-#
-#        set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${_current_app_build_files}/appimage-generate.cmake")
-#        set(CPACK_EXTERNAL_ENABLE_STAGING YES)
+        install(FILES "${APP_LINUX_DESKTOP}" DESTINATION share/applications)
+        if (AUI_APPIMAGE_ENABLED)
+            # AUI_APP_PACKAGING=AUI_APPIMAGE
+            set(_appimage_icons "${_linux_icon_files}")
+            configure_file(${AUI_BUILD_AUI_ROOT}/cmake/appimage-generate.cmake.in
+                    ${_current_app_build_files}/appimage-generate.cmake.in.configured @ONLY)
+            # file(GENERATE) evaluates generator expressions ($<TARGET_FILE:...>)
+            file(GENERATE
+                    OUTPUT ${_current_app_build_files}/appimage-generate.cmake
+                    INPUT ${_current_app_build_files}/appimage-generate.cmake.in.configured)
+            set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${_current_app_build_files}/appimage-generate.cmake")
+        endif ()
     endif()
 
     # IOS AND MACOS ====================================================================================================
@@ -1874,8 +1902,14 @@ macro(aui_app)
                 fi\"
         )
     endif()
-    string(TOLOWER "${_aui_package_file_name}" _aui_package_file_name)
-    string(REPLACE " " "_" _aui_package_file_name "${_aui_package_file_name}")
+    if (AUI_APPIMAGE_ENABLED)
+        # AppImage is launched directly by the user, so (like macOS DragNDrop) it is named after the app's
+        # human-readable name, without version and platform.
+        set(_aui_package_file_name "${APP_NAME}")
+    else()
+        string(TOLOWER "${_aui_package_file_name}" _aui_package_file_name)
+        string(REPLACE " " "_" _aui_package_file_name "${_aui_package_file_name}")
+    endif()
     _auib_weak_set(CPACK_PACKAGE_FILE_NAME "${_aui_package_file_name}")
     if (NOT APP_NO_INCLUDE_CPACK AND NOT CPack_CMake_INCLUDED)
         include(CPack)
