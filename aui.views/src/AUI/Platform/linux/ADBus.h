@@ -261,9 +261,9 @@ struct converter<AMap<K, V>> {
             if (!dbus_message_iter_next(&item)) {
                 throw AException("bad dict");
             }
-            if (k == "current_filter") {   // TODO dirty hack of OpenFile
-                continue;
-            }
+            // if (k == "current_filter") {   // TODO dirty hack of OpenFile
+            //     continue;
+            // }
             auto v = aui::dbus::iter_get<V>(&item);
             result[k] = v;
         } while (dbus_message_iter_next(&sub));
