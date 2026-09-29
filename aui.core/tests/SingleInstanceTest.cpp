@@ -93,6 +93,49 @@ TEST(SingleInstance, LockIsReleasedOnDestruction) {
 }
 #endif
 
+#if AUI_PLATFORM_LINUX
+#include "AUI/Platform/linux/ASingleInstanceDBus.h"
+TEST(SingleInstance, DBusBusNameValidation) {
+    using aui::detail::single_instance::dbus::isValidBusName;
+    EXPECT_TRUE(isValidBusName("ru.alex2772.auiwarden"));
+    EXPECT_TRUE(isValidBusName("com.example.my-app"));
+    EXPECT_FALSE(isValidBusName("auiwarden"));
+    EXPECT_FALSE(isValidBusName("com.example.1app"));
+    EXPECT_FALSE(isValidBusName("com..example"));
+    EXPECT_FALSE(isValidBusName("com.example."));
+    EXPECT_FALSE(isValidBusName(""));
+    EXPECT_FALSE(isValidBusName("com.exa mple.app"));
+}
+
+// skipped if there's no session bus (i.e., some CI containers); the flock fallback is covered by other tests.
+TEST(SingleInstance, DBusSecondAcquireForwardsActivation) {
+    const auto key = "aui.test.dbus.i{}"_format(ARandom().nextInt() & 0xffffff);
+    std::atomic<int> received = 0;
+    AString token;
+    auto outcome = aui::detail::single_instance::dbus::tryAcquire(key, [&](AActivation a) {
+        token = a.activationToken;
+        ++received;
+    });
+    if (!outcome.available) {
+        GTEST_SKIP() << "session bus is not available";
+    }
+    ASSERT_TRUE(outcome.primary);
+
+    auto second = aui::detail::single_instance::dbus::tryAcquire(key, {});
+    EXPECT_TRUE(second.available);
+    EXPECT_FALSE(second.primary);
+    for (int i = 0; i < 100 && received == 0; ++i) {
+        std::this_thread::sleep_for(10ms);
+    }
+    EXPECT_EQ(received, 1);
+
+    // released with the primary
+    outcome.primary.reset();
+    auto again = aui::detail::single_instance::dbus::tryAcquire(key, {});
+    EXPECT_TRUE(again.primary);
+}
+#endif
+
 TEST(Application, HoldCount) {
     auto& app = AApplication::inst();
     const auto base = app.holdCount();

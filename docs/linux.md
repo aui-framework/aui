@@ -79,10 +79,15 @@ AUI_ENTRY {
 
 ## AUI implementation specifics
 
-- Single instance ([app-lifetime]): `AApplication::requestSingleInstanceLock` takes an exclusive `flock` on
-  `$XDG_RUNTIME_DIR/aui-<key>-<uid>.lock` and listens on a unix socket next to it. Under Flatpak, the files are placed
-  in `$XDG_RUNTIME_DIR/app/$FLATPAK_ID/`. The secondary instance sends its command line, working directory and
-  `XDG_ACTIVATION_TOKEN` (or `DESKTOP_STARTUP_ID`) to the primary and waits for acknowledgement.
+- Single instance ([app-lifetime]): `AApplication::requestSingleInstanceLock` owns the session D-Bus name equal to
+  the application id and exports `org.freedesktop.Application` (the same interface GApplication uses). The secondary
+  instance calls `Activate` passing its command line, working directory and `XDG_ACTIVATION_TOKEN` (or
+  `DESKTOP_STARTUP_ID`). This works across Flatpak/Snap sandboxes.
+- If the session bus is unavailable (i.e., ssh session without D-Bus, some containers), GIO can't be loaded or the
+  application id is not a valid D-Bus name, AUI falls back to an exclusive `flock` on
+  `$XDG_RUNTIME_DIR/aui-<key>-<uid>.lock` plus a unix socket next to it (`$XDG_RUNTIME_DIR/app/$FLATPAK_ID/` under
+  Flatpak; `/tmp` if `$XDG_RUNTIME_DIR` is not set). The fallback does not see instances across sandboxes; a mix of
+  D-Bus and fallback instances of the same application (i.e., one with a bus and one without) is not detected.
 - `AWindow::activate` uses `_NET_ACTIVE_WINDOW` on X11 and `gtk_window_set_startup_id` + `gtk_window_present` on GTK
   (Wayland). Wayland compositors may refuse to focus the window without a valid activation token; in this case the
   window is typically highlighted as "needs attention" instead.

@@ -215,7 +215,12 @@ AUI_ENTRY {
 | Platform | Lock | Activation channel |
 |-|-|-|
 | Windows | named mutex `Local\aui.<key>.<session id>` | named pipe `\\.\pipe\aui.<key>.<session id>` |
-| Linux, macOS | `flock` on `$XDG_RUNTIME_DIR/aui-<key>-<uid>.lock` (`$XDG_RUNTIME_DIR/app/$FLATPAK_ID` in Flatpak) | unix domain socket next to the lock file |
+| Linux (preferred) | session D-Bus well-known name equal to the key | `org.freedesktop.Application.Activate` |
+| Linux (fallback), macOS | `flock` on `$XDG_RUNTIME_DIR/aui-<key>-<uid>.lock` (`$XDG_RUNTIME_DIR/app/$FLATPAK_ID` in Flatpak) | unix domain socket next to the lock file |
+
+On Linux, the D-Bus backend is used when the key is a valid D-Bus name (at least two dot-separated elements, i.e.
+`com.example.app`), `libgio-2.0.so.0` can be loaded and the session bus is reachable. Otherwise, AUI silently falls back
+to `flock` + unix socket. The backend can be forced off with `AUI_SINGLE_INSTANCE_BACKEND=flock`.
 
 - The scope is the current user session: different users (or Windows sessions) have independent instances.
 - On Linux, `AActivation::activationToken` is `XDG_ACTIVATION_TOKEN` (Wayland) or `DESKTOP_STARTUP_ID` (X11) of the

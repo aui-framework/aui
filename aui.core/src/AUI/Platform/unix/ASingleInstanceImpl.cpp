@@ -13,6 +13,10 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Util/kAUI.h>
 
+#if AUI_PLATFORM_LINUX
+#include "../linux/ASingleInstanceDBus.h"
+#endif
+
 #include <atomic>
 #include <cerrno>
 #include <cstdlib>
@@ -142,6 +146,9 @@ bool forwardActivation(const APath& socketPath) {
 }   // namespace
 
 struct ASingleInstance::Impl {
+#if AUI_PLATFORM_LINUX
+    _unique<aui::detail::single_instance::dbus::Handle> dbusPrimary;
+#endif
     Fd lockFd;
     Fd listenFd;
     Fd wakeRead, wakeWrite;
@@ -215,6 +222,21 @@ _unique<ASingleInstance> ASingleInstance::acquire(const AString& key, Callback o
     const auto lockPath = dir / (name + ".lock");
     auto impl = _new<Impl>();
     impl->socketPath = dir / (name + ".sock");
+
+#if AUI_PLATFORM_LINUX
+    // prefer org.freedesktop.Application over the session bus: works across sandboxes (Flatpak, Snap) and is
+    // understood by desktop environments. Fall back to flock + unix socket when the bus (or GIO) is unavailable.
+    {
+        auto outcome = aui::detail::single_instance::dbus::tryAcquire(key, onActivation);
+        if (outcome.available) {
+            if (!outcome.primary) {
+                return nullptr;
+            }
+            impl->dbusPrimary = std::move(outcome.primary);
+            return std::make_unique<ASingleInstance>(std::move(impl));
+        }
+    }
+#endif
     impl->callback = std::move(onActivation);
 
     impl->lockFd = Fd(::open(lockPath.toStdString().c_str(), O_RDWR | O_CREAT | O_CLOEXEC, 0600));

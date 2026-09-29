@@ -59,7 +59,8 @@ API_AUI_CORE AString sanitizeKey(const AString& key);
  * | Platform | Implementation                                                             |
  * |----------|----------------------------------------------------------------------------|
  * | Windows  | Named mutex `Local\aui.<key>.<session>` + named pipe                       |
- * | Unix     | `flock` on `$XDG_RUNTIME_DIR/aui-<key>-<uid>.lock` + unix domain socket     |
+ * | Linux    | session D-Bus name `<key>` + `org.freedesktop.Application.Activate`, if available |
+ * | Unix     | `flock` on `$XDG_RUNTIME_DIR/aui-<key>-<uid>.lock` + unix domain socket (fallback) |
  * | Other    | Always primary                                                             |
  *
  * The lock is released automatically by the OS if the process dies, so a crashed primary instance never blocks new
