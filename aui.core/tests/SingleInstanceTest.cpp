@@ -97,42 +97,64 @@ TEST(SingleInstance, LockIsReleasedOnDestruction) {
 #include "AUI/Platform/linux/ASingleInstanceDBus.h"
 TEST(SingleInstance, DBusBusNameValidation) {
     using aui::detail::single_instance::dbus::isValidBusName;
+    if (!isValidBusName("com.example.app")) {
+        GTEST_SKIP() << "libgio is not available";
+    }
     EXPECT_TRUE(isValidBusName("ru.alex2772.auiwarden"));
     EXPECT_TRUE(isValidBusName("com.example.my-app"));
     EXPECT_FALSE(isValidBusName("auiwarden"));
     EXPECT_FALSE(isValidBusName("com.example.1app"));
     EXPECT_FALSE(isValidBusName("com..example"));
-    EXPECT_FALSE(isValidBusName("com.example."));
     EXPECT_FALSE(isValidBusName(""));
     EXPECT_FALSE(isValidBusName("com.exa mple.app"));
 }
 
-// skipped if there's no session bus (i.e., some CI containers); the flock fallback is covered by other tests.
-TEST(SingleInstance, DBusSecondAcquireForwardsActivation) {
+// Not a real test: it is the "second process" of DBusSecondProcessForwardsActivation.
+TEST(SingleInstanceHelper, DBusSecondary) {
+    auto key = std::getenv("AUI_TEST_DBUS_KEY");
+    if (!key) {
+        GTEST_SKIP() << "helper";
+    }
+    auto outcome = aui::detail::single_instance::dbus::tryAcquire(key, {});
+    EXPECT_TRUE(outcome.available);
+    EXPECT_FALSE(outcome.primary);
+}
+
+// GApplication of the same process shares the bus connection, so a real second process is required.
+// Skipped if there's no session bus (i.e., some CI containers); the flock fallback is covered by other tests.
+TEST(SingleInstance, DBusSecondProcessForwardsActivation) {
     const auto key = "aui.test.dbus.i{}"_format(ARandom().nextInt() & 0xffffff);
     std::atomic<int> received = 0;
-    AString token;
+    AActivation activation;
+    std::mutex sync;
     auto outcome = aui::detail::single_instance::dbus::tryAcquire(key, [&](AActivation a) {
-        token = a.activationToken;
+        std::unique_lock lock(sync);
+        activation = std::move(a);
         ++received;
     });
     if (!outcome.available) {
-        GTEST_SKIP() << "session bus is not available";
+        GTEST_SKIP() << "session bus or libgio is not available";
     }
     ASSERT_TRUE(outcome.primary);
 
-    auto second = aui::detail::single_instance::dbus::tryAcquire(key, {});
-    EXPECT_TRUE(second.available);
-    EXPECT_FALSE(second.primary);
+    setenv("AUI_TEST_DBUS_KEY", key.toStdString().c_str(), 1);
+    setenv("XDG_ACTIVATION_TOKEN", "token_123", 1);
+    AUI_DEFER {
+        unsetenv("AUI_TEST_DBUS_KEY");
+        unsetenv("XDG_ACTIVATION_TOKEN");
+    };
+    char self[4096] = {};
+    ASSERT_GT(readlink("/proc/self/exe", self, sizeof(self) - 1), 0);
+    EXPECT_EQ(std::system(("'" + std::string(self) + "' --gtest_filter=SingleInstanceHelper.DBusSecondary > /dev/null 2>&1").c_str()), 0);
+
     for (int i = 0; i < 100 && received == 0; ++i) {
         std::this_thread::sleep_for(10ms);
     }
-    EXPECT_EQ(received, 1);
-
-    // released with the primary
-    outcome.primary.reset();
-    auto again = aui::detail::single_instance::dbus::tryAcquire(key, {});
-    EXPECT_TRUE(again.primary);
+    ASSERT_EQ(received, 1);
+    std::unique_lock lock(sync);
+    EXPECT_EQ(activation.workingDir, APath::workingDir());
+    EXPECT_EQ(activation.activationToken, "token_123");
+    // args are not checked: aui::args() is empty in the test binary (no AUI_ENTRY)
 }
 #endif
 

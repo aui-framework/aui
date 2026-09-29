@@ -59,7 +59,7 @@ API_AUI_CORE AString sanitizeKey(const AString& key);
  * | Platform | Implementation                                                             |
  * |----------|----------------------------------------------------------------------------|
  * | Windows  | Named mutex `Local\aui.<key>.<session>` + named pipe                       |
- * | Linux    | session D-Bus name `<key>` + `org.freedesktop.Application.Activate`, if available |
+ * | Linux    | `GApplication` (session D-Bus), if available |
  * | Unix     | `flock` on `$XDG_RUNTIME_DIR/aui-<key>-<uid>.lock` + unix domain socket (fallback) |
  * | Other    | Always primary                                                             |
  *

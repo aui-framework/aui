@@ -16,15 +16,15 @@
 #include <optional>
 
 /**
- * @brief D-Bus (`org.freedesktop.Application`) backend of ASingleInstance for Linux.
+ * @brief GApplication (D-Bus, `org.freedesktop.Application`) backend of ASingleInstance for Linux.
  * @details
- * The primary instance owns the session bus name equal to the application id and exports
- * `org.freedesktop.Application` on the object path derived from it (the same way as GApplication does). Secondary
- * instances call `Activate` on it. This works across sandboxes (Flatpak, Snap) and is understood by desktop
- * environments (`DBusActivatable=true`).
+ * Thin wrapper over GApplication (`HANDLES_COMMAND_LINE | SEND_ENVIRONMENT`) loaded dynamically from `libgio-2.0.so.0`.
+ * GApplication owns the session bus name equal to the application id, exports `org.freedesktop.Application` and
+ * forwards command line, working directory and environment (`XDG_ACTIVATION_TOKEN`) of secondary instances to the
+ * primary one. Works across sandboxes (Flatpak, Snap). GTK is not required.
  *
- * The backend is dynamically loaded (`libgio-2.0.so.0`) and is considered unavailable if the library, the session bus
- * or the ownership of the bus name is not accessible. In this case ASingleInstance falls back to flock + unix socket.
+ * Unavailable (Outcome::available == false) if GIO can't be loaded, the key is not a valid application id or the
+ * session bus is not reachable. In this case ASingleInstance falls back to flock + unix socket.
  */
 namespace aui::detail::single_instance::dbus {
 

@@ -51,7 +51,9 @@ void PlatformAbstractionGtk::init() {
         // This will be used as the WM_CLASS on X11 and app-id on Wayland
         mApplication = G_APPLICATION(gtk_application_new(
             aui::app_info::app_id.toStdString().c_str(),
-            static_cast<GApplicationFlags>(0)));
+            // single instance is handled by AApplication::requestSingleInstanceLock (which is GApplication itself
+            // when the session bus is available); this one must not compete for the same bus name.
+            G_APPLICATION_NON_UNIQUE));
     }
     g_signal_connect(
         mApplication, "activate",
