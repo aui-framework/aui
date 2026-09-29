@@ -168,6 +168,8 @@ public:
      * @details
      * A hidden window is still alive: it is counted as an open window, so it keeps the application running
      * (see AApplication::quitOnLastWindowClosed). Use AWindow::close to destroy it.
+     *
+     * A hidden window is not visible anywhere, including the taskbar.
      */
     void hide();
 
