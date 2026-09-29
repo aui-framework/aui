@@ -32,3 +32,11 @@ development for all supported platforms at once:
 - Apple laptops include high quality touchpads with high resolution scroll and possibility for multitouch gestures
 
 ## AUI implementation specifics
+
+- macOS launches only one instance of a bundle by itself (unless started with `open -n` or the executable is run
+  directly). Clicking the Dock icon while the application is running without windows emits
+  `AApplication::activated` ([app-lifetime]).
+- `Cmd+Q` does not call `exit()`: the main loop is stopped and control returns to `aui_main`, so destructors and
+  cleanup of your `AUI_ENTRY` run normally.
+- The app does not terminate when the last window is closed if it is held with `AApplication::hold` or
+  `AApplication::quitOnLastWindowClosed` is disabled.

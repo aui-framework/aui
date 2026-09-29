@@ -78,3 +78,11 @@ AUI_ENTRY {
 ```
 
 ## AUI implementation specifics
+
+- Single instance ([app-lifetime]): `AApplication::requestSingleInstanceLock` takes an exclusive `flock` on
+  `$XDG_RUNTIME_DIR/aui-<key>-<uid>.lock` and listens on a unix socket next to it. Under Flatpak, the files are placed
+  in `$XDG_RUNTIME_DIR/app/$FLATPAK_ID/`. The secondary instance sends its command line, working directory and
+  `XDG_ACTIVATION_TOKEN` (or `DESKTOP_STARTUP_ID`) to the primary and waits for acknowledgement.
+- `AWindow::activate` uses `_NET_ACTIVE_WINDOW` on X11 and `gtk_window_set_startup_id` + `gtk_window_present` on GTK
+  (Wayland). Wayland compositors may refuse to focus the window without a valid activation token; in this case the
+  window is typically highlighted as "needs attention" instead.

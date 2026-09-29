@@ -40,6 +40,7 @@ aui_app(
     [COPYRIGHT <copyright-string>]
     [VERSION <version>]
         
+    [ID <application-id>]
     [NO_INCLUDE_CPACK]
 
     # android only
@@ -71,6 +72,15 @@ Specify main executable of the application which will be executed when your appl
 |macOS|+||
 |Android|+||
 |iOS|+||
+
+### ID
+
+Specify reverse-DNS application identifier (i.e., `com.example.myapp`). Defaults to `com.unknown.aui-application`.
+
+This value is available in C++ as `aui::app_info::app_id`. It is used as the icon name and `.desktop` file name on
+Linux and as the default key of the single instance lock (`AApplication::requestSingleInstanceLock`), see
+[app-lifetime]. Applications with the default `ID` can't request single instance lock, as they would conflict with
+each other.
 
 ### NAME
 

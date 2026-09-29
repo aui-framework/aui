@@ -32,3 +32,6 @@ Android shares its kernel with [linux], but is not treated by AUI exactly as Lin
 
 
 ## AUI implementation specifics
+
+- `AApplication::activated` ([app-lifetime]) is not wired to `onNewIntent` yet, so it is never emitted on Android.
+  `AApplication::requestSingleInstanceLock` always succeeds: the system manages the activity lifecycle.
