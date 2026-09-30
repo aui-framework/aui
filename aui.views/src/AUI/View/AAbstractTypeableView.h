@@ -59,7 +59,7 @@ public:
     void onKeyDown(AInput::Key key) override {
         Super::onKeyDown(key);
         if (key == AInput::ESCAPE) {
-            AWindow::current()->setFocusedView(nullptr);
+            ASurface::current()->setFocusedView(nullptr);
         }
         AAbstractTypeable::handleKey(key);
         if (key == AInput::Key::RETURN && !AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT)) {

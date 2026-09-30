@@ -16,6 +16,8 @@
 
 #pragma once
 
+#include <AUI/Reflect/AEnumerate.h>
+
 /**
  * @brief Controls the text transform of AView.
  * @ingroup ass_properties
@@ -25,3 +27,5 @@ enum class TextTransform {
     UPPERCASE,
     LOWERCASE
 };
+
+AUI_ENUM_VALUES(TextTransform, TextTransform::NONE, TextTransform::UPPERCASE, TextTransform::LOWERCASE)

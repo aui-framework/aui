@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -36,14 +36,14 @@
  */
 class API_AUI_VIEWS AStackedLayout : public ALinearLayout<> {
 public:
-    AStackedLayout() {
-    }
+  AStackedLayout() {
+  }
 
-    virtual ~AStackedLayout() = default;
+  ~AStackedLayout() override = default;
 
-    void onResize(int x, int y, int width, int height) override;
+  void layout(int x, int y, int width, int height) override;
 
-    int getMinimumWidth() override;
+  glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
 
-    int getMinimumHeight() override;
+  AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 };

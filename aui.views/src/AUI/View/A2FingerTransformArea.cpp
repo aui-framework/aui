@@ -13,6 +13,7 @@
 #include "AUI/Layout/AStackedLayout.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Util/AAngleRadians.h"
+#include <limits>
 
 A2FingerTransformArea::A2FingerTransformArea() {
     setExpanding();
@@ -60,7 +61,7 @@ void A2FingerTransformArea::onPointerMove(glm::vec2 pos, const APointerMoveEvent
             if (scale != scale) { // nan
                 scale = 1.f;
             } else {
-                scale = glm::clamp(scale, 0.000001f, 1000000.f);
+                scale = glm::clamp(scale, 0.000001f, std::numeric_limits<float>::max());
             }
             emit transformed(A2DTransform{ .offset = delta / 2.f, .rotation = prevAngle - newAngle, .scale = scale });
             break;   

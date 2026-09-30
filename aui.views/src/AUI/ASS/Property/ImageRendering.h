@@ -18,12 +18,13 @@
 #include <AUI/Util/ALayoutDirection.h>
 #include "IProperty.h"
 #include <AUI/Enum/ImageRendering.h> // defined here
+#include "AUI/Common/IStringable.h"
 
 namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<ImageRendering>: IPropertyBase {
+        struct API_AUI_VIEWS Property<ImageRendering>: IPropertyBase, IStringable {
         private:
             ImageRendering mInfo;
 
@@ -39,6 +40,8 @@ namespace ass {
             const auto& value() const noexcept {
                 return mInfo;
             }
+
+            AString toString() const override { return "ImageRendering({})"_format(mInfo); }
         };
 
     }

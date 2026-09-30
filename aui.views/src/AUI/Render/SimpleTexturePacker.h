@@ -28,7 +28,7 @@ namespace Util {
             return mImage;
         }
     protected:
-        void onResize(AImage& data, dim side) override;
+        void layout(AImage& data, dim side) override;
         void onInsert(AImage& data, const dim& x, const dim& y) override;
     };
 }

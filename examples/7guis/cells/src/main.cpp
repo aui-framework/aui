@@ -36,8 +36,6 @@ static _<AView> labelTitle(AString s) {
 class CellView : public AViewContainer {
 public:
     CellView(_<State> state, Cell& cell) : mState(std::move(state)), mCell(cell) { inflateLabel(); }
-    int getContentMinimumWidth() override { return 0; }
-    int getContentMinimumHeight() override { return 0; }
 
 private:
     _<State> mState;

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -77,7 +77,7 @@ AGridLayout::AGridLayout(int cellsX, int cellsY): mCellsX(cellsX), mCellsY(cells
 	mIndices.resize(cellsX * cellsY, -1);
 }
 
-void AGridLayout::onResize(int x, int y, int width, int height)
+void AGridLayout::layout(int x, int y, int width, int height)
 {
 	float cellWidth = static_cast<float>(width) / mCellsX;
 	float cellHeight = static_cast<float>(height) / mCellsY;
@@ -100,7 +100,7 @@ void AGridLayout::onResize(int x, int y, int width, int height)
 		posX2 = glm::round(posX2);
 		posY2 = glm::round(posY2);
 		
-		v.view->setGeometry(posX1 + margins.left, posY1 + margins.top,
+		v.view->layout(posX1 + margins.left, posY1 + margins.top,
 			posX2 - posX1 - margins.horizontal(), posY2 - posY1 - margins.vertical());
 	}
 }
@@ -122,6 +122,7 @@ void AGridLayout::addView(const _<AView>& view, int x, int y)
 	}
 	index = mCells.size();
 	mCells << GridCell{view, x, y};
+    requestLayout();
 }
 
 void AGridLayout::removeView(aui::no_escape<AView> view, size_t index) {
@@ -133,36 +134,49 @@ void AGridLayout::removeView(aui::no_escape<AView> view, size_t index) {
         }
     }
 	mCells.removeAt(index);
+    requestLayout();
 }
 
-int AGridLayout::getMinimumWidth()
+glm::ivec2 AGridLayout::onIntrinsicMeasure(AConstraints constraints)
 {
-	int min = 0;
-	for (int y = 0; y < mCellsY; ++y)
+    const int childWidth = mCellsX == 0 ? 0 : constraints.maxInline / mCellsX;
+    const int childHeight = mCellsY == 0 ? 0 : constraints.maxBlock / mCellsY;
+    glm::ivec2 result = {};
+    for (int y = 0; y < mCellsY; ++y)
 	{
-		int minForRow = 0;
+		int rowWidth = 0;
+        int rowHeight = 0;
 		for (auto& view : getRow(y))
 		{
-			minForRow = glm::max(int(view->getMinimumWidth() + view->getMargin().horizontal()), minForRow);
+            auto margins = view->getMargin().occupiedSize();
+            auto measured = view->measure({
+                .minInline = 0,
+                .maxInline = std::max(0, childWidth - margins.x),
+                .minBlock = 0,
+                .maxBlock = std::max(0, childHeight - margins.y),
+            });
+			rowWidth = glm::max(rowWidth, measured.x + margins.x);
+            rowHeight = glm::max(rowHeight, measured.y + margins.y);
 		}
-		min = glm::max(minForRow * mCellsX, min);
+		result.x = glm::max(result.x, rowWidth * mCellsX);
+        result.y += rowHeight;
 	}
-	return min;
+	return result;
 }
 
-int AGridLayout::getMinimumHeight()
-{
-	int min = 0;
-	for (int x = 0; x < mCellsX; ++x)
-	{
-		int minForColumn = 0;
-		for (auto& view : getColumn(x))
-		{
-			minForColumn = glm::max(int(view->getMinimumHeight() + view->getMargin().vertical()), minForColumn);
-		}
-		min = glm::max(minForColumn * mCellsY, min);
-	}
-	return min;
+AMinMaxAxis AGridLayout::onComputeIntrinsicMinMaxAxis(int) {
+    AMinMaxAxis result;
+    for (const auto& cell : mCells) {
+        if (!(cell.view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+            continue;
+        }
+        const auto minMax = cell.view->computeMinMaxAxis();
+        result.min = glm::max(result.min, minMax.min + cell.view->getMargin().horizontal());
+        result.max = glm::max(result.max, minMax.max + cell.view->getMargin().horizontal());
+    }
+    result.min *= mCellsX;
+    result.max *= mCellsX;
+    return result;
 }
 
 AVector<_<AView>> AGridLayout::getAllViews() {

@@ -175,7 +175,7 @@ TEST_F(UIRepaintTest, ContainerRepaint5) {
         testing::InSequence s;
         // random layout update request should not trigger repaint event
         EXPECT_CALL(*container, markPixelDataInvalid).Times(0);
-        label->markMinContentSizeInvalid();
+        label->requestLayout();
         AUI_REPEAT(10) { uitest::frame(); }
     }
 }

@@ -15,7 +15,7 @@ std::string gClipboardText;
 }
 
 void PlatformAbstractionX11::setClipboardText(const AString& text) {
-    auto basicWindow = AWindow::current();
+    auto basicWindow = ASurface::current();
     auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
     if (!auiWindow)
         return;
@@ -31,7 +31,7 @@ AString PlatformAbstractionX11::getClipboardText() {
     {
         return {};
     }
-    auto basicWindow = AWindow::current();
+    auto basicWindow = ASurface::current();
     auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
     if (!auiWindow)
         return {};

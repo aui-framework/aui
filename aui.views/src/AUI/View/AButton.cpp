@@ -23,7 +23,7 @@ void AButton::setText(AString text) {
 
 void AButton::setDefault(bool isDefault) {
     mDefault.set(this, isDefault);
-    connect(AWindow::current()->keyDown, this, [&](AInput::Key k) {
+    connect(ASurface::current()->keyDown, this, [&](AInput::Key k) {
         if (!mDefault) {
             AObject::disconnect();
         } else {

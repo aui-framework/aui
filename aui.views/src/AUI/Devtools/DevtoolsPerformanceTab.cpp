@@ -88,13 +88,14 @@ namespace {
             }
         }
 
-        void setSize(glm::ivec2 size) override {
-            if (getSize() == size) {
+        void onLayout(glm::ivec2 size) override {
+            AView::onLayout(size);
+
+            const auto imageSize = glm::uvec2{size} / plotScale();
+            if (mImage.size() == imageSize) {
                 return;
             }
-            AView::setSize(size);
-
-            mImage = glm::uvec2{size} / plotScale();
+            mImage = imageSize;
             mImage.fill({0, 0, 0, 0});
             mFrames.resize(mImage.width());
         }

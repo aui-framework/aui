@@ -10,9 +10,10 @@
  */
 
 #pragma once
-#include "AObject.h"
-#include "ASignal.h"
-#include "AUI/Util/AScheduler.h"
+
+#include <AUI/Common/AObject.h>
+#include <AUI/Common/ASignal.h>
+#include <AUI/Util/AScheduler.h>
 
 /**
  * @brief Async timer.
@@ -20,31 +21,31 @@
  */
 class API_AUI_CORE ATimer : public AObject {
 private:
-    std::chrono::milliseconds mPeriod;
+  std::chrono::milliseconds mPeriod;
 
-    AOptional<AScheduler::TimerHandle> mTimer;
+  AOptional<AScheduler::TimerHandle> mTimer;
 
-    static _<AThread>& timerThread();
+  static _<AThread>& timerThread();
 
 public:
-    explicit ATimer(std::chrono::milliseconds period);
-    ~ATimer();
+  explicit ATimer(std::chrono::milliseconds period);
+  ~ATimer() override;
 
-    void restart();
+  void restart();
 
-    void start();
-    void stop();
-    bool isStarted();
-    void setRunning(bool isStart) {
-      if (isStart) {
-        start();
-      } else {
-        stop();
-      }
+  void start();
+  void stop();
+  bool isStarted();
+  void setRunning(bool isStart) {
+    if (isStart) {
+      start();
+    } else {
+      stop();
     }
+  }
 
-    static AScheduler& scheduler();
+  static AScheduler& scheduler();
 
 signals:
-    emits<> fired;
+  emits<> fired;
 };

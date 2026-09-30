@@ -14,12 +14,13 @@
 #include <AUI/Platform/ACursor.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/Enum/AOverflow.h>   // defined here
+#include "AUI/Common/IStringable.h"
 #include "IProperty.h"
 
 namespace ass {
 namespace prop {
 template <>
-struct API_AUI_VIEWS Property<AOverflow> : IPropertyBase {
+struct API_AUI_VIEWS Property<AOverflow> : IPropertyBase, IStringable {
 private:
     AOverflow mInfo;
 
@@ -32,10 +33,14 @@ public:
     const auto& value() const noexcept {
         return mInfo;
     }
+
+    AString toString() const override {
+        return "AOverflow({})"_format(mInfo);
+    }
 };
 
 template <>
-struct API_AUI_VIEWS Property<AOverflowMask> : IPropertyBase {
+struct API_AUI_VIEWS Property<AOverflowMask> : IPropertyBase, IStringable {
 private:
     AOverflowMask mInfo;
 
@@ -47,6 +52,10 @@ public:
     [[nodiscard]]
     const auto& value() const noexcept {
         return mInfo;
+    }
+
+    AString toString() const override {
+        return "AOverflowMask({})"_format(mInfo);
     }
 };
 }   // namespace prop

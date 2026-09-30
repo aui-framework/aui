@@ -45,11 +45,11 @@ void ARadioGroup::setModel(const _<IListModel<AString>>& model) {
                 mGroup->addRadioButton(r);
                 addView(r);
             }
-            applyGeometryToChildrenIfNecessary();
+            requestLayout();
         });
     }
 
-    markMinContentSizeInvalid();
+    requestLayout();
 }
 
 void ARadioGroup::setSelectedId(int id) const {

@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -52,11 +52,11 @@ public:
     AVerticalLayout(int spacing) : mSpacing(spacing) {
     }
 
-    void onResize(int x, int y, int width, int height) override;
+    void layout(int x, int y, int width, int height) override;
 
-    int getMinimumWidth() override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
 
-    int getMinimumHeight() override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
     /**
      * @see [LayoutSpacing](ass::LayoutSpacing)

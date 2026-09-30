@@ -13,12 +13,13 @@
 
 #include <AUI/Platform/ACursor.h> // defined here
 #include <AUI/Util/AMetric.h>
+#include "AUI/Common/IStringable.h"
 #include "IProperty.h"
 
 namespace ass {
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<ACursor>: IPropertyBase {
+        struct API_AUI_VIEWS Property<ACursor>: IPropertyBase, IStringable {
         private:
             ACursor mInfo;
 
@@ -32,6 +33,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "Cursor()"_format();
             }
         };
         template<>

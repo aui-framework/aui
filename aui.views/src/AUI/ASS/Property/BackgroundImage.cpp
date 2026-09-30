@@ -246,7 +246,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             glm::vec2 imageSize = drawable->getSizeHint();
 
             if (drawable->isDpiDependent())
-                imageSize *= AWindow::current()->getDpiRatio();
+                imageSize *= ASurface::current()->getDpiRatio();
 
             ctx.render.setTransform(
                 glm::translate(glm::mat4(1.f), glm::vec3 { glm::vec2(viewSize - imageSize) / 2.f, 0.f }));
@@ -265,7 +265,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             glm::vec2 imageSize = glm::vec2(drawable->getSizeHint());
 
             if (drawable->isDpiDependent())
-                imageSize *= AWindow::current()->getDpiRatio();
+                imageSize *= ASurface::current()->getDpiRatio();
             drawableDrawWrapper(imageSize);
             break;
         }

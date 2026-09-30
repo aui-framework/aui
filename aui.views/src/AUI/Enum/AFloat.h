@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <AUI/Reflect/AEnumerate.h>
 
 /**
  * @brief Specifies text floating in text wrapping views, i.e, ATextArea, AText.
@@ -34,3 +35,6 @@ enum class AFloat {
      */
     RIGHT
 };
+
+
+AUI_ENUM_VALUES(AFloat, AFloat::NONE, AFloat::LEFT, AFloat::RIGHT)

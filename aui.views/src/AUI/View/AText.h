@@ -31,6 +31,9 @@
  * otherwise it would require large minimum width to fit all its children in a single row. By default AText's Expanding
  * is (1, 0) (grow in width, keep minimum height). This behaviour is similar to AScrollArea.
  *
+ * When placed inside an AScrollArea, an AText with `Expanding` set will fill the full viewport width and word-wrap
+ * within it, as the scroll area guarantees the content is given at least the viewport size on the expanding axis.
+ *
  * <!-- aui:snippet aui.views/src/AUI/Devtools/DevtoolsProfilingOptions.cpp fromItems -->
  */
 class API_AUI_VIEWS AText : public ATextBase<AWordWrappingEngine<>> {
@@ -89,7 +92,8 @@ public:
 
 protected:
     void fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) override;
-    void applyGeometryToChildren() override;
+    void onLayout(glm::ivec2 size) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
 private:
     class WordEntry final : public aui::detail::WordEntry {
@@ -115,6 +119,6 @@ private:
 
     static ParsedFlags parseFlags(const Flags& flags);
 
-    void processString(const AString& string, const ParsedFlags& parsedFlags,
+    void processString(AStringView string, const ParsedFlags& parsedFlags,
                        Entries& entries);
 };

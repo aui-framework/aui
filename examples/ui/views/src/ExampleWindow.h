@@ -18,7 +18,7 @@ class API_AUI_AUDIO IAudioPlayer;
 
 class ExampleWindow: public AWindow {
 public:
-	ExampleWindow();
+    ExampleWindow();
 
     void onDragDrop(const ADragNDrop::DropEvent& event) override;
 

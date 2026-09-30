@@ -77,3 +77,10 @@ private:
 inline AUrl operator""_url(const char* input, size_t s) {
     return AUrl(AString(input, s));
 }
+
+template <> struct fmt::formatter<AUrl>: fmt::formatter<std::string> {
+    auto format(const AUrl& s, fmt::format_context& ctx) const {
+        return fmt::formatter<std::string>::format(s.full(), ctx);
+    }
+};
+

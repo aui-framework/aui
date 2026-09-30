@@ -17,6 +17,7 @@
 
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include "AUI/Common/IStringable.h"
 
 namespace ass {
 
@@ -32,7 +33,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<TextShadow>: IPropertyBase {
+        struct API_AUI_VIEWS Property<TextShadow>: IPropertyBase, IStringable {
         private:
             TextShadow mInfo;
 
@@ -48,6 +49,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "TextShadow(color={}, offsetX={}, offsetY={})"_format(mInfo.shadowColor, mInfo.offsetX, mInfo.offsetY);
             }
         };
     }

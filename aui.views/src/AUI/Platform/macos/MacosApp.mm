@@ -64,7 +64,7 @@ void MacosApp::run() {
 void MacosApp::activateIgnoringOtherApps() {
     auto app = (__bridge AUINSApplication*)mNsApp;
     [app activateIgnoringOtherApps:YES];
-    if (auto w = dynamic_cast<AWindow*>(AWindow::current())) {
+    if (auto w = dynamic_cast<AWindow*>(ASurface::current())) {
         [static_cast<NSWindow*>(w->nativeHandle()) makeKeyAndOrderFront:app];
     }
 }

@@ -33,7 +33,7 @@ void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
         auto velocity = glm::max(glm::length(s->prevPrevVelocity),
                                  glm::length(s->prevVelocity),
                                  glm::length(s->currentVelocity));
-        auto fps = static_cast<float>(AWindow::current()->getFps());
+        auto fps = static_cast<float>(ASurface::current()->getFps());
         mState = KineticScrollingState{
             .pointer = e.pointerIndex,
             .origin = s->origin,
@@ -111,8 +111,8 @@ AOptional<glm::ivec2> ATouchScroller::gatherKineticScrollValue() {
 
 float ATouchScroller::deceleration() {
     float scale;
-    if (AWindow::current()) {
-        scale = AWindow::current()->getDpiRatio();
+    if (ASurface::current()) {
+        scale = ASurface::current()->getDpiRatio();
     } else {
         scale = 1.0f;
     }
