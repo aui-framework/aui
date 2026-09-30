@@ -25,7 +25,7 @@
  */
 struct AActivation {
     /**
-     * @brief Command line arguments of the launched instance (including argv[0]).
+     * @brief Command line arguments of the launched instance (including `argv[0]`).
      */
     AStringVector args;
 

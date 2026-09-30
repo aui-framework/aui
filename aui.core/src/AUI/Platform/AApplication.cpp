@@ -10,6 +10,7 @@
  */
 
 #include "AApplication.h"
+#include <cstdlib>
 #include <AUI/AppInfo.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Thread/AEventLoop.h>
@@ -49,6 +50,31 @@ AApplication::Hold::~Hold() {
 }
 
 _<AApplication::Hold> AApplication::hold() { return _new<Hold>(); }
+
+APath AApplication::dataDir() const {
+    APath base;
+#if AUI_PLATFORM_LINUX
+    if (auto xdg = getenv("XDG_DATA_HOME"); xdg && *xdg == '/') {
+        base = xdg;
+    } else {
+        base = APath::getDefaultPath(APath::APPDATA);
+    }
+#else
+    base = APath::getDefaultPath(APath::APPDATA);
+#endif
+    AString id = aui::app_info::app_id;
+    if (id == "com.unknown.aui-application") {
+        id = aui::app_info::name;
+    }
+    if (id.empty() || id == "unknown") {
+        throw AException(
+            "AApplication::dataDir: app id is not set. Specify ID or NAME in aui_app(), otherwise unrelated AUI "
+            "applications would share the same data directory.");
+    }
+    auto dir = base / id;
+    dir.makeDirs();
+    return dir;
+}
 
 void AApplication::onHoldReleased() {
     // wake up the main loop so it can re-evaluate isHeld().

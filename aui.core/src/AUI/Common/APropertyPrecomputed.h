@@ -62,6 +62,37 @@ Expression<F> makeExpression(F&& f) {
  * `APropertyPrecomputed` is a readonly property, hence you can't update its value with assignment. You can get its
  * value with `value()` method or implicit conversion `operator T()` as with other properties.
  *
+ * ## Global state example
+ *
+ * `APropertyPrecomputed` can cache a value that depends on the outside world (filesystem, registry, etc.) and does not
+ * track any AUI property. Declare it as a global variable, define it in a cpp file and call `invalidate()` whenever
+ * the underlying state is changed:
+ *
+ * ```cpp
+ * // platform/Autostart.h
+ * namespace platform {
+ * extern APropertyPrecomputed<bool> isAutostartEnabled;
+ * void setAutostartEnabled(bool enabled);
+ * }
+ * ```
+ * ```cpp
+ * // platform/win32/Autostart.cpp, platform/linux/Autostart.cpp
+ * APropertyPrecomputed<bool> platform::isAutostartEnabled = [] {
+ *     return startupEntryExists(); // queried lazily, then cached
+ * };
+ *
+ * void platform::setAutostartEnabled(bool enabled) {
+ *     AUI_DEFER { isAutostartEnabled.invalidate(); }; // next access re-evaluates the expression
+ *     if (enabled) { createStartupEntry(); } else { removeStartupEntry(); }
+ * }
+ * ```
+ * ```cpp
+ * CheckBox {
+ *   .checked = AUI_REACT(*platform::isAutostartEnabled),
+ *   .onCheckedChange = [](bool v) { platform::setAutostartEnabled(v); },
+ * }
+ * ```
+ *
  * <!-- aui:parse_tests aui.core/tests/PropertyPrecomputed.cpp -->
  */
 template <typename T>

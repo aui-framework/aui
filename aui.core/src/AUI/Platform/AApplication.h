@@ -15,6 +15,7 @@
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/Common/AOptional.h>
+#include <AUI/IO/APath.h>
 #include <AUI/Platform/ASingleInstance.h>
 
 class IEventLoop;
@@ -33,15 +34,25 @@ API_AUI_CORE int runMainLoopIfHeld(int entryExitCode);
  * applications exit after `AUI_ENTRY`, UI applications exit after the last window is closed, embedded applications run
  * their own loop).
  *
- * # Lifetime
+ * ## Lifetime
  *
  * After `AUI_ENTRY` returns, AUI runs the main event loop as long as the application is *held*. Each shown `AWindow`
  * holds the application (unless @ref quitOnLastWindowClosed is `false`). You can hold the application explicitly with
  * hold().
  *
- * # Single instance
+ * ## Single instance
  *
  * See requestSingleInstanceLock().
+ *
+ * ## Data directory
+ *
+ * Application's own persistent data (settings, databases, etc.) should be stored in the per-application folder
+ * returned by dataDir(). Unlike `APath::APPDATA`, which is shared between all applications of the user, it is derived
+ * from the application id specified in `aui_app(ID ...)`.
+ *
+ * ```cpp
+ * APath settings = AApplication::inst().dataDir() / "settings.json";
+ * ```
  */
 class API_AUI_CORE AApplication : public AObject {
 public:
@@ -138,6 +149,35 @@ public:
      * Not emitted for the first launch: handle it in `AUI_ENTRY`.
      */
     emits<AActivation> activated;
+
+    /**
+     * @brief Per-application folder for persistent data (settings, databases, etc.).
+     * @return absolute path to an existing (created on demand) folder.
+     * @details
+     * The folder name is derived from `aui::app_info::app_id` (set by `aui_app(ID ...)`). If the id is not set, the
+     * `aui::app_info::name` is used instead. Different applications never share the same folder as long as their
+     * ids (or names) differ.
+     *
+     * ```cpp
+     * APath settings = AApplication::inst().dataDir() / "settings.json";
+     * ```
+     *
+     * @specificto{linux}
+     * `$XDG_DATA_HOME/<app-id>` if `XDG_DATA_HOME` is set (flatpak, snap), otherwise `$HOME/.local/share/<app-id>`.
+     *
+     * @specificto{windows}
+     * `%APPDATA%/<app-id>`.
+     *
+     * @specificto{android}
+     * `<internal_storage_path>/__aui_appdata/<app-id>`.
+     *
+     * @specificto{ios}
+     * `<internal_storage_path>/__aui_appdata/<app-id>`.
+     *
+     * See also [APath::getDefaultPath].
+     */
+    [[nodiscard]]
+    APath dataDir() const;
 
     /**
      * @brief Whether a shown AWindow holds the application.

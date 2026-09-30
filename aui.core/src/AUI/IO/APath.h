@@ -452,6 +452,12 @@ public:
      * @return absolute path to default folder.
      * @details
      * See [APath::DefaultPath] definition.
+     *
+     * !!! note
+     *
+     *     `APPDATA` is a folder shared between all applications of the user. To store your application's own data
+     *     (settings, databases, etc.), use [AApplication::dataDir()] instead: it returns a per-application folder
+     *     derived from the application id.
      */
     static APath getDefaultPath(DefaultPath path);
 

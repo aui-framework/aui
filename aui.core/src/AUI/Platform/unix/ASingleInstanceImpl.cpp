@@ -65,6 +65,30 @@ struct Fd : aui::noncopyable {
     }
 };
 
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0   // macOS: SIGPIPE is suppressed with SO_NOSIGPIPE, see prepareSocket
+#endif
+
+/**
+ * Sets FD_CLOEXEC (and SO_NOSIGPIPE where MSG_NOSIGNAL is unavailable). Used instead of SOCK_CLOEXEC / accept4, which
+ * are not portable (macOS).
+ */
+int prepareSocket(int fd) {
+    if (fd < 0) {
+        return fd;
+    }
+    ::fcntl(fd, F_SETFD, FD_CLOEXEC);
+#ifdef SO_NOSIGPIPE
+    int one = 1;
+    setsockopt(fd, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(one));
+#endif
+    return fd;
+}
+
+int createStreamSocket() {
+    return prepareSocket(::socket(AF_UNIX, SOCK_STREAM, 0));
+}
+
 bool writeAll(int fd, const void* data, size_t size) {
     auto ptr = static_cast<const char*>(data);
     while (size > 0) {
@@ -125,7 +149,7 @@ bool forwardActivation(const APath& socketPath) {
 
     // the primary instance may have acquired the lock but not started listening yet; retry for a while.
     for (int attempt = 0; attempt < 40; ++attempt) {
-        Fd sock(::socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0));
+        Fd sock(createStreamSocket());
         if (sock.fd < 0) {
             return false;
         }
@@ -173,7 +197,7 @@ struct ASingleInstance::Impl {
             if (!(fds[0].revents & POLLIN)) {
                 continue;
             }
-            Fd client(::accept4(listenFd.fd, nullptr, nullptr, SOCK_CLOEXEC));
+            Fd client(prepareSocket(::accept(listenFd.fd, nullptr, nullptr)));
             if (client.fd < 0) {
                 continue;
             }
@@ -262,7 +286,7 @@ _unique<ASingleInstance> ASingleInstance::acquire(const AString& key, Callback o
 
     // we are the primary instance. stale socket (if any) belongs to a dead process since we own the lock.
     ::unlink(impl->socketPath.toStdString().c_str());
-    impl->listenFd = Fd(::socket(AF_UNIX, SOCK_STREAM | SOCK_CLOEXEC, 0));
+    impl->listenFd = Fd(createStreamSocket());
     const auto addr = makeAddress(impl->socketPath);
     if (impl->listenFd.fd < 0 ||
         ::bind(impl->listenFd.fd, reinterpret_cast<const sockaddr*>(&addr), sizeof(addr)) != 0 ||

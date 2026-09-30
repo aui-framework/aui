@@ -82,6 +82,9 @@ Linux and as the default key of the single instance lock (`AApplication::request
 [app-lifetime]. Applications with the default `ID` can't request single instance lock, as they would conflict with
 each other.
 
+The `ID` is also used as the name of the per-application data folder returned by `AApplication::dataDir()`, see
+[app-lifetime].
+
 ### NAME
 
 Specify application display name that would appear in system's UIs (i.e., start menu, launchpad, desktop, control panel).
