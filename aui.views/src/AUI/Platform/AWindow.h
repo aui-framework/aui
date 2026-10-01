@@ -162,7 +162,27 @@ public:
      */
     void show();
     void close();
+
+    /**
+     * @brief Hides the window without closing it.
+     * @details
+     * A hidden window is still alive: it is counted as an open window, so it keeps the application running
+     * (see AApplication::quitOnLastWindowClosed). Use AWindow::close to destroy it.
+     *
+     * A hidden window is not visible anywhere, including the taskbar.
+     */
     void hide();
+
+    /**
+     * @brief Shows the window, restores it if minimized and brings it to foreground.
+     * @param activationToken platform-specific focus stealing permission token (see AActivation::activationToken).
+     * @details
+     * Typical usage is handling AApplication::activated:
+     * ```cpp
+     * connect(AApplication::inst().activated, [window](const AActivation& a) { window->activate(a.activationToken); });
+     * ```
+     */
+    void activate(const AString& activationToken = {});
 
     [[nodiscard]]
     bool isClosed() const noexcept;

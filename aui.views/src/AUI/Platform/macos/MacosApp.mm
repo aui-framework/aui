@@ -15,6 +15,7 @@
 #import <AUI/Platform/AWindow.h>
 #import <Cocoa/Cocoa.h>
 #include "MacosApp.h"
+#include <AUI/Platform/AApplication.h>
 
 MacosApp& MacosApp::inst() {
     static MacosApp app;
@@ -34,6 +35,35 @@ MacosApp& MacosApp::inst() {
 }
 @end
 
+@interface AUIAppDelegate : NSObject <NSApplicationDelegate>
+@end
+
+@implementation AUIAppDelegate
+- (BOOL)applicationShouldTerminateAfterLastWindowClosed:(NSApplication*)sender {
+    // lifetime is controlled by AApplication (see AWindow::quit)
+    return NO;
+}
+
+- (NSApplicationTerminateReply)applicationShouldTerminate:(NSApplication*)sender {
+    // Cmd+Q / Dock "Quit": never let Cocoa call exit() - return to aui_main so cleanup and destructors are performed.
+    AApplication::inst().quit();
+    [sender stop:nil];
+    // post a dummy event so [NSApp run] notices the stop request
+    NSEvent* event = [NSEvent otherEventWithType:NSEventTypeApplicationDefined location:NSZeroPoint modifierFlags:0
+                                       timestamp:0 windowNumber:0 context:nil subtype:0 data1:0 data2:0];
+    [sender postEvent:event atStart:YES];
+    return NSTerminateCancel;
+}
+
+- (BOOL)applicationShouldHandleReopen:(NSApplication*)sender hasVisibleWindows:(BOOL)flag {
+    // click on Dock icon
+    AActivation activation = aui::detail::single_instance::makeCurrentActivation();
+    auto* application = &AApplication::inst();
+    AUI_EMIT_FOREIGN(application, activated, std::move(activation));
+    return YES;
+}
+@end
+
 MacosApp::MacosApp() {
     AUI_ASSERTX([NSThread isMainThread], "MacosApp should be used only in main thread");
     @autoreleasepool {
@@ -48,6 +78,8 @@ MacosApp::MacosApp() {
         [appMenu addItem: [NSMenuItem separatorItem]];
         // [appMenu addItemWithTitle: @"Preferences…" action:@selector(orderFrontStandardAboutPanel:) keyEquivalent:@","];
         [appMenu addItemWithTitle: @"Quit" action:@selector(terminate:) keyEquivalent:@"q"];
+        static AUIAppDelegate* delegate = [AUIAppDelegate new];
+        [nsApp setDelegate:delegate];
         [appMenuItem setSubmenu:appMenu];
         [mainMenu addItem:appMenuItem];
 
@@ -70,6 +102,12 @@ void MacosApp::activateIgnoringOtherApps() {
 }
 
 void MacosApp::quit() {
-    [static_cast<AUINSApplication*>(mNsApp) stop:nil];
-    [static_cast<AUINSApplication*>(mNsApp) terminate:nil];
+    // don't call terminate: here, it calls exit() skipping AUI cleanup. stopping the run loop returns control to
+    // aui_main.
+    auto app = (__bridge AUINSApplication*)mNsApp;
+    [app stop:nil];
+    // post a dummy event so [NSApp run] notices the stop request
+    NSEvent* event = [NSEvent otherEventWithType:NSEventTypeApplicationDefined location:NSZeroPoint modifierFlags:0
+                                       timestamp:0 windowNumber:0 context:nil subtype:0 data1:0 data2:0];
+    [app postEvent:event atStart:YES];
 }

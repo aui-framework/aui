@@ -460,6 +460,17 @@ void AWindow::show() {
 
     emit shown();
 }
+void AWindow::activate(const AString&) {
+    show();
+    if (!mHandle) return;
+    if (IsIconic(mHandle)) {
+        ShowWindow(mHandle, SW_RESTORE);
+    }
+    // the launching process called AllowSetForegroundWindow(ASFW_ANY) before forwarding activation to us
+    SetForegroundWindow(mHandle);
+    BringWindowToTop(mHandle);
+}
+
 void AWindow::setIcon(const AImage& image) {
     if (!mHandle) return;
     AUI_ASSERT(image.format() & APixelFormat::BYTE);
@@ -487,6 +498,8 @@ void AWindow::hide() {
 }
 
 
+static std::atomic<DWORD> gLoopThreadId = 0;
+
 void AWindowManager::notifyProcessMessages() {
     if (!mWindows.empty()) {
         auto& lastWindow = mWindows.back();
@@ -495,13 +508,27 @@ void AWindowManager::notifyProcessMessages() {
         if (lastWindow->getThread() != AThread::current()) {
             PostMessage(lastWindow->mHandle, WM_USER, 0, 0);
         }
+        return;
+    }
+    // no windows (i.e., app is held by AApplication::hold()); wake up the thread message queue directly.
+    if (auto tid = gLoopThreadId.load(); tid != 0 && tid != GetCurrentThreadId()) {
+        PostThreadMessage(tid, WM_USER, 0, 0);
     }
 }
 
 
 void AWindowManager::loop() {
     MSG msg;
-    for (mLoopRunning = true; mLoopRunning && !mWindows.empty();) {
+    // ensure the thread has a message queue before publishing its id
+    PeekMessage(&msg, nullptr, WM_USER, WM_USER, PM_NOREMOVE);
+    gLoopThreadId = GetCurrentThreadId();
+    AUI_DEFER { gLoopThreadId = 0; };
+    for (mLoopRunning = true; shouldKeepRunning();) {
+        // the queue might have been filled before gLoopThreadId was published
+        AThread::processMessages();
+        if (!shouldKeepRunning()) {
+            break;
+        }
         if (GetMessage(&msg, nullptr, 0, 0) == 0) {
             break;
         }

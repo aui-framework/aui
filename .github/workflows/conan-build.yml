@@ -365,8 +365,10 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          brew update
-          brew install ninja git python3 conan
+          brew install ninja git
+          # `brew install conan` pulls openssl@3 and builds it from source, which fails to link over openssl@1.1
+          pipx install conan
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Setup Conan
         run: |
@@ -453,8 +455,10 @@ jobs:
 
       - name: Install system dependencies
         run: |
-          brew update
-          brew install ninja git python3 conan
+          brew install ninja git
+          # `brew install conan` pulls openssl@3 and builds it from source, which fails to link over openssl@1.1
+          pipx install conan
+          echo "$HOME/.local/bin" >> $GITHUB_PATH
 
       - name: Setup Conan
         run: |

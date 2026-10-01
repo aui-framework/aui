@@ -451,6 +451,17 @@ void PlatformAbstractionX11::windowShow(AWindow& window) {
     }
 }
 
+void PlatformAbstractionX11::windowActivate(AWindow& window, const AString& activationToken) {
+    if (!bool(PlatformAbstractionX11::ourDisplay) || !nativeHandle(window)) {
+        return;
+    }
+    XMapRaised(PlatformAbstractionX11::ourDisplay, nativeHandle(window));
+    // EWMH: source indication 1 = normal application. The WM restores minimized windows on _NET_ACTIVE_WINDOW.
+    static Atom netActiveWindow = XInternAtom(PlatformAbstractionX11::ourDisplay, "_NET_ACTIVE_WINDOW", False);
+    xSendEventToWM(window, netActiveWindow, 1, CurrentTime, 0, 0, 0);
+    XFlush(PlatformAbstractionX11::ourDisplay);
+}
+
 void PlatformAbstractionX11::windowSetSize(AWindow& window, glm::ivec2 size) {
     if (!nativeHandle(window))
         return;
@@ -564,7 +575,7 @@ void PlatformAbstractionX11::windowManagerLoop() {
     XEvent ev;
     auto& wm = AWindow::getWindowManager();
     wm.start();
-    while (wm.isLoopRunning() && !wm.getWindows().empty()) {
+    while (wm.shouldKeepRunning()) {
         try {
             xProcessEvent(ev);
         } catch (const AException& e) {

@@ -62,3 +62,33 @@
    fun:do_dlopen
    ...
 }
+
+{
+   glib thread stack from g_application_register (ASingleInstance D-Bus)
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   ...
+   fun:pthread_create*
+   ...
+   fun:g_thread_new
+   ...
+   fun:g_application_register
+   ...
+}
+
+{
+   thread stack TLS of a std::thread that is never joined (coroutine test)
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate_tls
+   fun:allocate_stack
+   fun:pthread_create*
+   fun:_ZNSt6thread15_M_start_threadESt10unique_ptrINS_6_StateESt14default_deleteIS1_EEPFvvE
+   ...
+   fun:_ZN35Coroutines_CoAwait3rdPartyCoro_Test8TestBodyEv
+   ...
+}
