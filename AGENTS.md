@@ -197,3 +197,18 @@ Edit AUI's code **there** (that path), not in the consumer's `src/`. To contribu
 upstream, follow the fork/branch workflow in `docs/contributing.md` (`feat/<feature-name>` → PR to
 `master`). See `docs/aui-configure-flags.md` and `aui.boot.cmake` (`AUIB_<PackageName>_AS`) for the
 full flag reference.
+
+## Documentation
+
+AUI documentation is built by MkDocs (`mkdocs build --strict --use-directory-urls`) with custom Python generators in
+`docs/python/` (see "Documentation" in `docs/contributing.md`). Doxygen itself is **not** used: C++ comments are parsed
+by our own Doxygen-like parser (`docs/python/generators/doxygen.py`), so Doxygen-only commands are not supported.
+
+- Use `@`-style tags (`@brief`, `@details`, `@param`, `@return`, `@specificto{...}`), not `\`-style.
+- Do **not** use `@ref`, `@sa`, `@see`, `@link`. They are not processed and would be printed as is.
+- To link to another documentation page or code entity, use the autoref syntax in square brackets, the same as in `md`
+  files: `[AApplication::requestSingleInstanceLock]`, `[AString::first()]`, `[app-lifetime]`. Unrecognized links produce
+  a warning (an error under `--strict`).
+- Inside backticks, links are not resolved; use plain `` `code` `` there.
+- To refer to a member of the same class in prose, either use the bracket link or just mention it in backticks.
+
