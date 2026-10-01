@@ -75,6 +75,10 @@ public:
 
     virtual ~ARadioButton();
 
+    void onKeyDown(AInput::Key key) override;
+    bool handlesNonMouseNavigation() override;
+    bool capturesFocus() override;
+
     [[nodiscard]]
     [[deprecated("use checked() instead.")]]
     bool isChecked() const { return mCircle->checked; }

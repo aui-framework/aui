@@ -46,7 +46,7 @@ namespace ass {
 
         using hover = ass::hovered<detail::Type<T>>;
         using active = ass::activated<detail::Type<T>>;
-        using focus = ass::activated<detail::Type<T>>;
+        using focus = ass::focused<detail::Type<T>>;
         using disabled = ass::disabled<detail::Type<T>>;
     };
 

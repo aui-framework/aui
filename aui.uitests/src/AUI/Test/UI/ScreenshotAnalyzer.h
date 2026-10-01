@@ -14,6 +14,7 @@
 #include <AUI/Image/AImage.h>
 #include "AUI/Common/AColor.h"
 #include "AUI/View/AView.h"
+#include "AUI/Platform/AWindow.h"
 
 class API_AUI_UITESTS ScreenshotAnalyzer {
 public:
@@ -25,7 +26,12 @@ public:
     }
 
     ScreenshotAnalyzer clip(const _<AView>& view) const {
-        return clip(view->getPositionInWindow(), view->getSize());
+        const auto windowSize = AWindow::current()->getSize();
+        const glm::dvec2 scale = (windowSize.x == 0 || windowSize.y == 0)
+                ? glm::dvec2(1.0)
+                : glm::dvec2(mImage.size()) / glm::dvec2(windowSize);
+        return clip(glm::uvec2(glm::dvec2(view->getPositionInWindow()) * scale),
+                    glm::uvec2(glm::round(glm::dvec2(view->getSize()) * scale)));
     }
     ScreenshotAnalyzer clip(glm::uvec2 position, glm::uvec2 size) const {
         position = glm::max(position, {0, 0});

@@ -142,6 +142,10 @@ public:
 
     bool consumesClick(const glm::ivec2& pos) override;
 
+    void onKeyDown(AInput::Key key) override;
+    bool handlesNonMouseNavigation() override;
+    bool capturesFocus() override;
+
 signals:
     emits<bool> defaultState;
     emits<> becameDefault;
