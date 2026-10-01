@@ -37,7 +37,7 @@ API_AUI_CORE int runMainLoopIfHeld(int entryExitCode);
  * ## Lifetime
  *
  * After `AUI_ENTRY` returns, AUI runs the main event loop as long as the application is *held*. Each shown `AWindow`
- * holds the application (unless @ref quitOnLastWindowClosed is `false`). You can hold the application explicitly with
+ * holds the application (unless `quitOnLastWindowClosed` is `false`). You can hold the application explicitly with
  * hold().
  *
  * ## Single instance
@@ -48,7 +48,7 @@ API_AUI_CORE int runMainLoopIfHeld(int entryExitCode);
  *
  * Application's own persistent data (settings, databases, etc.) should be stored in the per-application folder
  * returned by dataDir(). Unlike `APath::APPDATA`, which is shared between all applications of the user, it is derived
- * from the application id specified in `aui_app(ID ...)`.
+ * from the application id specified in `aui_app(ID ...)`. The folder is created by `dataDir()` on first call.
  *
  * ```cpp
  * APath settings = AApplication::inst().dataDir() / "settings.json";
@@ -72,8 +72,17 @@ public:
     /**
      * @brief Creates a new application hold.
      * @details
-     * Store the result in a long-living object (a controller, a tracker, a tray icon, etc.). `AUI_ENTRY` returns
-     * before the main loop starts, so a local variable inside `AUI_ENTRY` is not enough.
+     * Store the result in a long-living object (a controller, a tracker, a tray icon, the application state, etc.).
+     * `AUI_ENTRY` returns before the main loop starts, so a local variable inside `AUI_ENTRY` is not enough.
+     *
+     * To stop holding (i.e., a window is closed and the user didn't allow background work), reset the pointer:
+     * when the last hold is released, the application exits.
+     *
+     * ```cpp
+     * state->lifetimeHold = AApplication::inst().hold();
+     * ...
+     * state->lifetimeHold.reset(); // allow the application to exit
+     * ```
      */
     [[nodiscard]]
     _<Hold> hold();
@@ -109,21 +118,31 @@ public:
      * latter case, the activation (args, working dir, activation token) of the current process has already been
      * delivered to the primary instance and you should return from `AUI_ENTRY` immediately.
      * @details
-     * Should be called at the very beginning of `AUI_ENTRY`, before any window is created.
+     * Should be called at the very beginning of `AUI_ENTRY`, before any window is created. Code that may relaunch the
+     * executable (i.e., an updater) should run before the lock.
      *
-     * When another instance is launched, the primary instance receives @ref activated signal on the main thread.
+     * When another instance is launched, the primary instance receives activated signal on the main thread. For
+     * applications working in background, create the window lazily in the handler and keep the application alive with
+     * hold().
      *
      * ```cpp
      * AUI_ENTRY {
      *     if (!AApplication::inst().requestSingleInstanceLock()) {
      *         return 0;
      *     }
-     *     AObject::connect(AApplication::inst().activated, [](const AActivation& a) {
-     *         // show/focus your window
+     *     auto state = _new<State>();
+     *     state->lifetimeHold = AApplication::inst().hold();
+     *     AObject::connect(AApplication::inst().activated, AObject::GENERIC_OBSERVER, [=](const AActivation& a) {
+     *         if (!gMainWindow) {
+     *             gMainWindow = _new<MainWindow>(state);
+     *         }
+     *         gMainWindow->activate(a.activationToken);
      *     });
      *     ...
      * }
      * ```
+     *
+     * See [app-lifetime] for the complete example.
      *
      * @specificto{android}
      * Always returns true.
@@ -157,6 +176,14 @@ public:
      * The folder name is derived from `aui::app_info::app_id` (set by `aui_app(ID ...)`). If the id is not set, the
      * `aui::app_info::name` is used instead. Different applications never share the same folder as long as their
      * ids (or names) differ.
+     *
+     * The folder is created by AUI: every call makes sure that it exists (including missing parent folders), so you
+     * don't need to call `APath::makeDirs()` on it yourself. If the folder is removed while the application is
+     * running (i.e., by the user), the next call to dataDir() creates it again; hence, don't cache the folder's
+     * existence, call dataDir() when you need the path. Files and subfolders inside it are up to you.
+     *
+     * Throws AException if the application id (or name) is not set, or if the folder can't be created (i.e., no
+     * permissions).
      *
      * ```cpp
      * APath settings = AApplication::inst().dataDir() / "settings.json";

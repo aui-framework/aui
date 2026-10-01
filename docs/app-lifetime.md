@@ -72,7 +72,10 @@ public:
 !!! warning
 
     `AUI_ENTRY` returns before the main loop starts. A `Hold` stored in a local variable of `AUI_ENTRY` is released
-    right away. Store it in a long-living object.
+    right away. Store it in a long-living object (i.e., the application state shared with the window).
+
+To stop holding, destroy the `Hold` (`hold.reset()`). When the last hold is released, the main loop exits and the
+process terminates with the exit code returned from `AUI_ENTRY`.
 
 !!! warning
 
@@ -107,6 +110,7 @@ activation token) has already been delivered to the running instance, and you sh
 #include <AUI/Platform/AApplication.h>
 
 AUI_ENTRY {
+    // anything that may relaunch the executable (i.e., an updater) should be handled before the lock
     if (!AApplication::inst().requestSingleInstanceLock()) {
         // another instance is running and has been notified
         return 0;
@@ -161,54 +165,85 @@ A typical pattern for trackers, messengers, sync clients, etc.:
 - closing the window just hides it and the application keeps working;
 - launching the application again shows the existing window instead of starting a new process.
 
+This is how [AUIwarden](https://github.com/aui-framework/auiwarden) (a screen time tracker) does it. The background
+work is kept alive by an explicit `AApplication::Hold` stored in the application state; the window is created lazily
+and merely hidden when the user closes it:
+
 ```cpp
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AApplication.h>
 
-class App: public AObject {
-public:
-    App() {
-        // keep working when there are no windows. For a user-initiated exit, call AApplication::inst().quit()
-        // (e.g. from a "Quit" button or tray menu).
-        AApplication::inst().quitOnLastWindowClosed = false;
-
-        connect(AApplication::inst().activated, me::onActivated);
-    }
-
-    void showWindow(const AString& activationToken = {}) {
-        if (!mWindow) {
-            mWindow = _new<MainWindow>();
-            // the window is closed by the user: drop it, the application keeps running in background
-            connect(mWindow->closed, [this] { mWindow = nullptr; });
-        }
-        mWindow->activate(activationToken);
-    }
-
-private:
-    _<MainWindow> mWindow;
-    BackgroundWorker mWorker;
-
-    void onActivated(const AActivation& activation) {
-        showWindow(activation.activationToken);
-    }
+struct State {
+    // keeps the application running even when there are no (visible) windows
+    _<AApplication::Hold> lifetimeHold;
+    // ... settings, database, timers, etc.
 };
 
+static AArc<MainWindow> gMainWindow;
+
 AUI_ENTRY {
+    // 1. things that may relaunch the executable (i.e., updater) go BEFORE the lock
+    // 2. lock: if another instance is running, it has been notified and will show its window
     if (!AApplication::inst().requestSingleInstanceLock()) {
         return 0;
     }
-    static auto app = _new<App>();
-    if (!args.contains("--background")) {
-        app->showWindow();
+
+    // 3. the Hold lives in long-living state, not in a local variable of AUI_ENTRY
+    auto state = _new<State>();
+    state->lifetimeHold = AApplication::inst().hold();
+
+    // 4. second launch: create the window if it was destroyed/never created, and bring it to front
+    AObject::connect(AApplication::inst().activated, AObject::GENERIC_OBSERVER, [=](const AActivation& activation) {
+        if (!gMainWindow) {
+            gMainWindow = _new<MainWindow>(state);
+        }
+        gMainWindow->activate(activation.activationToken);
+    });
+
+    // 5. autorun: stay in background without showing the window
+    if (args.contains("--startup") && !state->settings.showProgramWindowOnStartup) {
+        return 0;
     }
+
+    gMainWindow = _new<MainWindow>(state);
+    gMainWindow->show();
     return 0;
 }
 ```
 
+The window decides whether closing it exits the application by releasing the hold:
+
+```cpp
+void MainWindow::onCloseButtonClicked() {
+    hide(); // instead of AWindow::onCloseButtonClicked(), which calls close()
+
+    if (!mState->settings.allowBackgroundWork) {
+        // nothing keeps the application alive anymore: it exits
+        mState->lifetimeHold.reset();
+    }
+}
+
+void MainWindow::onKeyDown(AInput::Key key) {
+    AWindow::onKeyDown(key);
+    if (AInput::isKeyDown(AInput::LCONTROL) && key == AInput::Key::Q) {
+        // explicit quit regardless of the background mode
+        close();
+        mState->lifetimeHold.reset();
+    }
+}
+```
+
+- Make background work optional (a user setting) and always provide an explicit way to quit (a shortcut, a button or
+  a tray menu entry): releasing the `Hold` (or `AApplication::quit()`) ends the process.
+- Pass `AObject::GENERIC_OBSERVER` as the receiver for the `activated` connection in `AUI_ENTRY`: it needs no
+  receiver object, since `AApplication::inst()` outlives everything.
+- Code that may relaunch the executable (an updater, an elevation helper, etc.) should run before
+  `requestSingleInstanceLock()`; otherwise the relaunched process would be treated as a second instance.
+
 !!! tip
 
-    Recreating the window on activation (as above) frees its UI resources while the application is in background.
-    If you prefer to keep the window, override `AWindow::onCloseButtonClicked()` with `hide()` instead.
+    Creating the window lazily in the `activated` handler frees UI resources while the application is in background.
+    Hiding the window (as above) is cheaper to restore; destroying it is lighter on memory.
 
 ## Implementation details
 
