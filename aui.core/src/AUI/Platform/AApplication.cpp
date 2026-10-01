@@ -28,6 +28,14 @@ public:
     void loop() override {
         while (AApplication::inst().isHeld()) {
             iteration();
+            // a windowing event loop (i.e., aui.views' AWindowManager) might have been registered while we were
+            // running (i.e., the first window was created in response to AApplication::activated). Hand over the
+            // thread to it, otherwise the windows would never be processed.
+            auto current = AThread::current()->getCurrentEventLoop();
+            if (current != nullptr && current != this) {
+                current->loop();
+                return;
+            }
         }
     }
 };
