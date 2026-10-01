@@ -21,6 +21,7 @@
 #include <chrono>
 #include <random>
 #include <ctime>
+#include <atomic>
 #include "AUI/Common/ATimer.h"
 #include "AUI/Thread/AThread.h"
 #include "AUI/Traits/parallel.h"
@@ -192,14 +193,14 @@ TEST(Threading, PararellWithResult) {
 
 TEST(Threading, FutureCancellationBeforeExecution) {
     AThreadPool localThreadPool(1);
-    size_t foreignLambdaCallCount = 0;
+    std::atomic<size_t> foreignLambdaCallCount = 0;
     auto foreignLambda = [&] {
         try {
             AThread::sleep(500ms);
         } catch (const AThread::Interrupted& e) {
             ADD_FAILURE() << "interrupted exception thrown in a foreign lambda";
         }
-        foreignLambdaCallCount += 1;
+        foreignLambdaCallCount.fetch_add(1);
     };
     auto exec = localThreadPool * foreignLambda;
     {
@@ -214,7 +215,7 @@ TEST(Threading, FutureCancellationBeforeExecution) {
         AThread::sleep(250ms);
     }
     AThread::sleep(500ms);
-    ASSERT_EQ(foreignLambdaCallCount, 2);
+    ASSERT_EQ(foreignLambdaCallCount.load(), 2);
     exec.wait();
 }
 
