@@ -58,7 +58,8 @@ MacosApp& MacosApp::inst() {
 - (BOOL)applicationShouldHandleReopen:(NSApplication*)sender hasVisibleWindows:(BOOL)flag {
     // click on Dock icon
     AActivation activation = aui::detail::single_instance::makeCurrentActivation();
-    AUI_EMIT_FOREIGN(&AApplication::inst(), activated, std::move(activation));
+    auto* application = &AApplication::inst();
+    AUI_EMIT_FOREIGN(application, activated, std::move(activation));
     return YES;
 }
 @end
@@ -99,13 +100,14 @@ void MacosApp::activateIgnoringOtherApps() {
         [static_cast<NSWindow*>(w->nativeHandle()) makeKeyAndOrderFront:app];
     }
 }
-// don't call terminate: here, it calls exit() skipping AUI cleanup. stopping the run loop returns control to
+
+void MacosApp::quit() {
+    // don't call terminate: here, it calls exit() skipping AUI cleanup. stopping the run loop returns control to
     // aui_main.
-    auto app = static_cast<AUINSApplication*>(mNsApp);
+    auto app = (__bridge AUINSApplication*)mNsApp;
     [app stop:nil];
+    // post a dummy event so [NSApp run] notices the stop request
     NSEvent* event = [NSEvent otherEventWithType:NSEventTypeApplicationDefined location:NSZeroPoint modifierFlags:0
                                        timestamp:0 windowNumber:0 context:nil subtype:0 data1:0 data2:0];
-    [app postEvent:event atStart:YES
-    [static_cast<AUINSApplication*>(mNsApp) stop:nil];
-    [static_cast<AUINSApplication*>(mNsApp) terminate:nil];
+    [app postEvent:event atStart:YES];
 }
