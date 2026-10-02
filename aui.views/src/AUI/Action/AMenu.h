@@ -22,6 +22,7 @@
 #include "AShortcut.h"
 
 class IMenuProvider;
+class IDrawable;
 struct AMenuItem;
 
 using AMenuModel = AVector<AMenuItem>;
@@ -33,6 +34,27 @@ public:
     static void show(const AMenuModel& model);
     static void close();
     static bool isOpen();
+
+    /**
+     * @brief Switches context menu rendering to the platform-native provider.
+     * @details
+     * By default AUI draws its own menus for cross-platform theme consistency. Calling
+     * `setUseSystemMenus(true)` opts in to native `NSMenu` on macOS and `HMENU`
+     * (`TrackPopupMenuEx`) on Windows — giving native appearance, VoiceOver/Narrator
+     * integration, and system-level animations. On Linux/X11 there is no system-wide
+     * native context menu API; this flag is a no-op and the AUI-drawn provider is kept.
+     * Call from the UI thread; the cached provider is swapped without synchronization.
+     */
+    static void setUseSystemMenus(bool enabled = true);
+
+    /**
+     * @brief Install a custom provider (overrides both the default and the system setting).
+     * @details
+     * Useful for testing, embedded renderers, or apps that want a fully custom menu look
+     * and feel. Pass `nullptr` to reset to the default factory behaviour.
+     * Call from the UI thread; the cached provider is swapped without synchronization.
+     */
+    static void setGlobalProvider(_<IMenuProvider> provider);
 
     enum Type {
         SINGLE,
@@ -49,5 +71,5 @@ struct AMenuItem {
     std::function<void()> onAction;
     AVector<AMenuItem> subItems;
     bool enabled = true;
+    _<IDrawable> icon;
 };
-

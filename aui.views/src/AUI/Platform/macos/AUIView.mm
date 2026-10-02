@@ -107,6 +107,14 @@ AOptional<NSEventModifierFlags> modifierFlagOf(AInput::Key key) {
     return YES;
 }
 
+- (BOOL)acceptsFirstMouse:(NSEvent*)event {
+    // Deliver the first click on a background window to the view instead of just
+    // activating the window. Without this, clicking the parent window while a popup
+    // (e.g. context menu) is open only activates the parent; the click is swallowed,
+    // so AWindowBase::onPointerPressed never fires and the popup stays open.
+    return YES;
+}
+
 - (BOOL)becomeFirstResponder {
     ALOG_DEBUG(LOG_TAG) << "becomeFirstResponder";
     return YES;
