@@ -13,43 +13,45 @@
 
 #include <AUI/ASS/Property/IProperty.h>
 #include <AUI/Util/AMetric.h>
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
+/**
+ * @brief Represents right border.
+ * @ingroup ass_properties
+ */
+struct BorderRight {
+    AMetric width;
+    AColor color;
 
-    /**
-     * @brief Represents right border.
-     * @ingroup ass_properties
-     */
-    struct BorderRight {
-        AMetric width;
-        AColor color;
+    BorderRight(std::nullptr_t): width(0) {}
+    BorderRight(const AMetric &width, const AColor &color) : width(width), color(color) {}
+};
 
-        BorderRight(std::nullptr_t): width(0) {}
-        BorderRight(const AMetric &width, const AColor &color) : width(width), color(color) {}
-    };
+namespace legacy {
 
-    namespace prop {
+template<>
+struct API_AUI_VIEWS Property<BorderRight> : IPropertyBase {
+private:
+    BorderRight mInfo;
 
-        template<>
-        struct API_AUI_VIEWS Property<BorderRight> : IPropertyBase {
-        private:
-            BorderRight mInfo;
+public:
+    Property(const BorderRight& info) : mInfo(info) {
 
-        public:
-            Property(const BorderRight& info) : mInfo(info) {
-
-            }
-
-            void renderFor(AView* view, const ARenderContext& ctx) override;
-
-            bool isNone() override;
-
-            PropertySlot getPropertySlot() const override;
-
-            [[nodiscard]]
-            const auto& value() const noexcept {
-                return mInfo;
-            }
-        };
     }
+
+    void renderFor(AView* view, const ARenderContext& ctx) override;
+
+    bool isNone() override;
+
+    PropertySlot getPropertySlot() const override;
+
+    [[nodiscard]]
+    const auto& value() const noexcept {
+        return mInfo;
+    }
+};
+}
+
+API_AUI_VIEWS Modifier operator|(Modifier thiz, BorderRight value);
 }

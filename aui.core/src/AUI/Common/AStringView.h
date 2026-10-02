@@ -42,30 +42,30 @@ class API_AUI_CORE AStringVector;
  *
  * `AStringView` eliminates both problems. It constructs implicitly from `const char*`, `std::string_view`,
  * `AString`, and `char8_t*` with zero overhead, so callers pass whatever they already have:
- * @code{.cpp}
+ * ```cpp
  * void log(AStringView message); // one signature, every string type accepted
  *
  * log("literal");            // const char*  - no allocation
  * log(some_astring);         // AString      - no copy
  * log(some_std_string_view); // string_view  - no copy
- * @endcode
+ * ```
  *
  * ## Lifetime responsibility
  * `AStringView` does **not** own its data. It is only valid as long as the underlying string is alive.
  * Never store an `AStringView` that outlives its source, and never return one that points into a local:
- * @code{.cpp}
+ * ```cpp
  * AStringView bad() {
  *     AString local = "hello";
  *     return local.trim();    // dangling - local is destroyed on return
  * }
- * @endcode
+ * ```
  * When ownership is needed, convert to @ref AString explicitly:
- * @code{.cpp}
+ * ```cpp
  * AString owned = AString(view);
- * @endcode
+ * ```
  *
  * ## Typical usage
- * @code{.cpp}
+ * ```cpp
  * AStringView s = "  Hello, World!  ";
  *
  * s = s.trim()                     // "Hello, World!"  (returns a new view, no allocation)
@@ -74,14 +74,14 @@ class API_AUI_CORE AStringVector;
  * AString upper = s.uppercase();   // "  HELLO, WORLD!  "  (allocates only here)
  *
  * auto parts = s.trim().split(", "); // AStringVector{"Hello", "World!"}
- * @endcode
+ * ```
  *
  * ## Numeric parsing
- * @code{.cpp}
+ * ```cpp
  * AStringView("42").toInt()        // AOptional<int32_t>{42}
  * AStringView("0xFF").toInt()      // AOptional<int32_t>{255}  (hex prefix auto-detected)
  * AStringView("bad").toInt()       // AOptional<int32_t>{nullopt}
- * @endcode
+ * ```
  *
  * @note Methods that must produce a new string - `uppercase()`, `lowercase()`, `replacedAll()`,
  * `split()`, `encode()` - return an @ref AString or @ref AStringVector and allocate only at that point.

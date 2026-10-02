@@ -16,9 +16,20 @@
 #include "FixedSize.h"
 
 
-void ass::prop::Property<ass::FixedSize>::applyFor(AView* view) {
+void ass::legacy::Property<ass::FixedSize>::applyFor(AView* view) {
     view->setFixedSize({
                                mInfo.width ? mInfo.width->getValuePx() : view->getFixedSize().x,
                                mInfo.height ? mInfo.height->getValuePx() : view->getFixedSize().y
     });
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, FixedSize value) {
+    return thiz.then([value](AView& view) {
+        view.setFixedSize({
+            value.width ? value.width->getValuePx() : view.getFixedSize().x,
+            value.height ? value.height->getValuePx() : view.getFixedSize().y
+        });
+    });
+}
+}   // namespace ass

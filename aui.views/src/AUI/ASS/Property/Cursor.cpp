@@ -17,7 +17,15 @@
 #include "IProperty.h"
 
 
-void ass::prop::Property<ACursor>::applyFor(AView* view) {
+void ass::legacy::Property<ACursor>::applyFor(AView* view) {
     view->setCursor(mInfo);
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, ACursor value) {
+    return thiz.then([value](AView& view) {
+        view.setCursor(value);
+    });
+}
+}   // namespace ass
 

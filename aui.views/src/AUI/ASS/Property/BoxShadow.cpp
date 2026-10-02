@@ -17,7 +17,7 @@
 #include "AUI/Render/IRenderer.h"
 
 
-void ass::prop::Property<ass::BoxShadow>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ass::BoxShadow>::renderFor(AView* view, const ARenderContext& ctx) {
     ctx.render.boxShadow({mInfo.offsetX.getValuePx() - mInfo.spreadRadius.getValuePx(),
                        mInfo.offsetY.getValuePx() - mInfo.spreadRadius.getValuePx()},
                       glm::vec2(view->getSize()) + mInfo.spreadRadius.getValuePx() * 2.f,
@@ -25,17 +25,28 @@ void ass::prop::Property<ass::BoxShadow>::renderFor(AView* view, const ARenderCo
                        mInfo.color);
 }
 
-ass::prop::PropertySlot ass::prop::Property<ass::BoxShadow>::getPropertySlot() const {
-    return ass::prop::PropertySlot::SHADOW;
+ass::legacy::PropertySlot ass::legacy::Property<ass::BoxShadow>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::SHADOW;
 }
 
-bool ass::prop::Property<ass::BoxShadow>::isNone() {
+bool ass::legacy::Property<ass::BoxShadow>::isNone() {
     return mInfo.color.isFullyTransparent();
 }
 
-void ass::prop::Property<ass::BoxShadow>::updateInvalidPixelRect(ARect<int>& invalidRect) const {
+void ass::legacy::Property<ass::BoxShadow>::updateInvalidPixelRect(ARect<int>& invalidRect) const {
     auto shadowRect = ARect<int>::fromCenterPositionAndSize(invalidRect.center(), glm::vec2(invalidRect.size()) * float(mInfo.spreadRadius));
     shadowRect.translate({mInfo.offsetX, mInfo.offsetY});
     invalidRect.p1 = glm::min(invalidRect.p1, shadowRect.p1);
     invalidRect.p2 = glm::max(invalidRect.p2, shadowRect.p2);
 }
+namespace ass {
+Modifier operator|(Modifier thiz, BoxShadow value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        ctx.render.boxShadow({value.offsetX.getValuePx() - value.spreadRadius.getValuePx(),
+                           value.offsetY.getValuePx() - value.spreadRadius.getValuePx()},
+                          glm::vec2(ctx.size) + value.spreadRadius.getValuePx() * 2.f,
+                           value.blurRadius,
+                           value.color);
+    });
+}
+}   // namespace ass

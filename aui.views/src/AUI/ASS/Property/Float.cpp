@@ -16,6 +16,14 @@
 #include "Float.h"
 
 
-void ass::prop::Property<AFloat>::applyFor(AView* view) {
+void ass::legacy::Property<AFloat>::applyFor(AView* view) {
     view->setFloating(mInfo);
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, AFloat value) {
+    return thiz.then([value](AView& view) {
+        view.setFloating(value);
+    });
+}
+}   // namespace ass

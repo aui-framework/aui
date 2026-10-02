@@ -18,9 +18,10 @@
 #include <AUI/Util/AMetric.h>
 #include <AUI/Enum/ATextAlign.h> // defined here
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<ATextAlign>: IPropertyBase {
         private:
@@ -39,4 +40,6 @@ namespace ass {
             }
         };
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, ATextAlign value);
 }

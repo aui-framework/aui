@@ -88,7 +88,7 @@ namespace ass {
             mProperties = std::move(t.mProperties);
             mConditionalPropertyLists = std::move(t.mConditionalPropertyLists);
         } else {
-            using declaration_t = ass::prop::Property<std::decay_t<T>>;
+            using declaration_t = ass::legacy::Property<std::decay_t<T>>;
             static_assert(aui::is_complete<declaration_t>,
                           "ass::prop::Property template specialization is not defined for this property");
 

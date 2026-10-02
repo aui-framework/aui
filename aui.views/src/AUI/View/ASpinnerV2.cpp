@@ -42,7 +42,7 @@ void ASpinnerV2::setConfiguration(ASpinnerV2::Configuration configuration) {
     mTimer->start();
 }
 
-void ass::prop::Property<ASpinnerV2::Configuration>::applyFor(AView *view) {
+void ass::legacy::Property<ASpinnerV2::Configuration>::applyFor(AView *view) {
     if (auto s = dynamic_cast<ASpinnerV2 *>(view)) {
         s->setConfiguration(mConfiguration);
     }

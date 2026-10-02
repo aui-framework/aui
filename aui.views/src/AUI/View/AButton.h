@@ -67,14 +67,6 @@
  *
  * ![](imgs/Screenshot_20250715_091801.png)
  *
- * ## Button with a signal-slot handler
- *
- * This button executes the member function upon click.
- *
- * <!-- aui:snippet examples/ui/button2/src/main.cpp AButton_example -->
- *
- * ![](imgs/Screenshot_20250715_091801.png)
- *
  * ## Default button
  *
  * Button can be made default. In such case, it is colored to user's accent color, making it stand out. Also, when the
@@ -171,7 +163,7 @@ struct Button {
      * @details
      * Called when user activates the button.
      */
-    contract::Slot<> onClick;
+    std::function<void()> onClick;
 
     /**
      * @brief Determines if the button is default.
@@ -180,13 +172,18 @@ struct Button {
      */
     bool isDefault = false;
 
+    contract::In<Modifier> modifier = Modifier{};
+
     _<AButton> operator()() {
         auto button = _new<AButton>();
-        onClick.bindTo(button->clicked);
+        if (onClick) {
+            AObject::connect(button->clicked, AObject::GENERIC_OBSERVER, std::move(onClick));
+        }
         if (isDefault) {
             button->setDefault();
         }
         button->setContents(Centered { std::move(content) });
+        modifier.bindTo(AUI_SLOT(button)::setModifier);
         return button;
     }
 };

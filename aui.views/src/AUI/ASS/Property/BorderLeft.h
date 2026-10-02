@@ -17,6 +17,7 @@
 
 #include <AUI/ASS/Property/IProperty.h>
 #include <AUI/Util/AMetric.h>
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -32,7 +33,7 @@ namespace ass {
         BorderLeft(const AMetric &width, const AColor &color) : width(width), color(color) {}
     };
 
-    namespace prop {
+    namespace legacy {
 
         template<>
         struct API_AUI_VIEWS Property<BorderLeft> : IPropertyBase {
@@ -56,4 +57,6 @@ namespace ass {
             }
         };
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, BorderLeft value);
 }

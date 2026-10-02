@@ -150,6 +150,17 @@ struct AProperty: AObjectBase {
         return *this;
     }
 
+    void setValue(T value) noexcept {
+        static constexpr auto IS_COMPARABLE = requires { this->raw == value; };
+        if constexpr (IS_COMPARABLE) {
+            if (this->raw == value) [[unlikely]] {
+                return;
+            }
+        }
+        this->raw = std::move(value);
+        notify();
+    }
+
     template <ASignalInvokable SignalInvokable>
     void operator^(SignalInvokable&& t) {
         t.invokeSignal(nullptr);
@@ -204,14 +215,6 @@ struct AProperty: AObjectBase {
     }
     auto operator!=(const AProperty& rhs) const {
         return raw != rhs.raw;
-    }
-
-    /**
-     * @brief Makes ASlotDef that assigns value to this property.
-     */
-    [[nodiscard]]
-    auto assignment() noexcept {
-        return aui::detail::property::makeAssignment(*this);
     }
 
 private:

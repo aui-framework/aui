@@ -12,7 +12,6 @@
 #pragma once
 
 #include <cstddef>
-#include <functional>
 
 #include "ADynamicVector.h"
 #include "AStaticVector.h"
@@ -51,16 +50,50 @@ public:
 
     ASmallVector(ASmallVector&& rhs) noexcept {
         if (rhs.isInplaceAllocated()) {
+            // move the static vector (copy is fine for small objects)
+            new (&mBase.inplace) StaticVector(std::move(*rhs.inplace()));
+        } else {
+            // move the dynamic vector, transferring ownership of the buffer
+            new (&mBase.dynamic) DynamicVector(std::move(*rhs.dynamic()));
+        }
+        // reset rhs to an empty inplace state
+        new (&rhs.mBase.inplace) StaticVector();
+    }
+
+    ASmallVector(const ASmallVector& rhs) noexcept {
+        if (rhs.isInplaceAllocated()) {
             new (&mBase.inplace) StaticVector(*rhs.inplace());
         } else {
             new (&mBase.dynamic) DynamicVector(*rhs.dynamic());
         }
-
-        new (&rhs.mBase.inplace) StaticVector();
     }
 
     ~ASmallVector() noexcept {
         deallocate();
+    }
+
+    ASmallVector& operator=(const ASmallVector& rhs) noexcept {
+        if (this == &rhs) return *this;
+        deallocate();
+        if (rhs.isInplaceAllocated()) {
+            new (&mBase.inplace) StaticVector(*rhs.inplace());
+        } else {
+            new (&mBase.dynamic) DynamicVector(*rhs.dynamic());
+        }
+        return *this;
+    }
+
+    ASmallVector& operator=(ASmallVector&& rhs) noexcept {
+        if (this == &rhs) return *this;
+        deallocate();
+        if (rhs.isInplaceAllocated()) {
+            new (&mBase.inplace) StaticVector(std::move(*rhs.inplace()));
+        } else {
+            new (&mBase.dynamic) DynamicVector(std::move(*rhs.dynamic()));
+        }
+        // reset rhs to empty inplace state
+        new (&rhs.mBase.inplace) StaticVector();
+        return *this;
     }
 
     [[nodiscard]]
@@ -587,13 +620,22 @@ private:
         std::aligned_storage_t<sizeof(DynamicVector), alignof(DynamicVector)> dynamic;
     } mBase;
 
+    const StaticVector* inplace() const {
+        AUI_ASSERT(isInplaceAllocated());
+        return reinterpret_cast<const StaticVector*>(&mBase.inplace);
+    }
+
+    const DynamicVector* dynamic() const {
+        AUI_ASSERT(!isInplaceAllocated());
+        return reinterpret_cast<const DynamicVector*>(&mBase.dynamic);
+    }
 
     StaticVector* inplace() {
         AUI_ASSERT(isInplaceAllocated());
         return reinterpret_cast<StaticVector*>(&mBase.inplace);
     }
 
-    DynamicVector * dynamic() {
+    DynamicVector* dynamic() {
         AUI_ASSERT(!isInplaceAllocated());
         return reinterpret_cast<DynamicVector*>(&mBase.dynamic);
     }

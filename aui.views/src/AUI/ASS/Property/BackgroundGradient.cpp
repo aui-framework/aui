@@ -17,22 +17,32 @@
 #include "BackgroundGradient.h"
 #include "IProperty.h"
 
-
-
-void ass::prop::Property<ass::BackgroundGradient>::renderFor(AView* view, const ARenderContext& ctx) {
-    if (!mInfo.gradient) { return; }
+void ass::legacy::Property<ass::BackgroundGradient>::renderFor(AView* view, const ARenderContext& ctx) {
+    if (!mInfo.gradient) {
+        return;
+    }
     RenderHints::PushColor x(ctx.render);
 
     if (view->getBorderRadius() > 0) {
-        ctx.render.roundedRectangle(ABrush(*mInfo.gradient), {0, 0}, view->getSize(), view->getBorderRadius());
-    } else  {
-        ctx.render.rectangle(ABrush(*mInfo.gradient), {0, 0}, view->getSize());
+        ctx.render.roundedRectangle(ABrush(*mInfo.gradient), { 0, 0 }, view->getSize(), view->getBorderRadius());
+    } else {
+        ctx.render.rectangle(ABrush(*mInfo.gradient), { 0, 0 }, view->getSize());
     }
     IPropertyBase::renderFor(view, ctx);
 }
 
-ass::prop::PropertySlot ass::prop::Property<ass::BackgroundGradient>::getPropertySlot() const {
-    return ass::prop::PropertySlot::BACKGROUND_SOLID;
+ass::legacy::PropertySlot ass::legacy::Property<ass::BackgroundGradient>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::BACKGROUND_SOLID;
 }
+namespace ass {
+Modifier operator|(Modifier thiz, BackgroundGradient value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        if (!value.gradient) {
+            return;
+        }
+        RenderHints::PushColor x(ctx.render);
 
-
+        ctx.render.rectangle(ABrush(*value.gradient), { 0, 0 }, glm::vec2(ctx.size));
+    });
+}
+}   // namespace ass

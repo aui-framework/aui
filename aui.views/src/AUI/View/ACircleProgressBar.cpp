@@ -44,6 +44,6 @@ void ACircleProgressBar::render(ARenderContext context) {
 
 _<AView> declarative::CircleProgressBar::operator()() {
     auto view = _new<ACircleProgressBar>();
-    progress.bindTo(view->value().assignment());
+    progress.bindTo(AUI_SLOT(view)::setValue);
     return view;
 }

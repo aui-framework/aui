@@ -17,6 +17,7 @@
 
 #include "AUI/Render/IRenderer.h"
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -39,7 +40,7 @@ namespace ass {
         static const BackgroundCropping H4_4;
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<BackgroundCropping>: IPropertyBase {
         private:
@@ -59,6 +60,8 @@ namespace ass {
         };
 
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, BackgroundCropping value);
 }
 
 inline const ass::BackgroundCropping ass::BackgroundCropping::H4_1 = { glm::vec2{0.f / 4.f, 0.f}, glm::vec2{1.f / 4.f, 1.f} };

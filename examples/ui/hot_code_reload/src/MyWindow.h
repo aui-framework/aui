@@ -12,6 +12,11 @@
 #pragma once
 
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Common/AProperty.h>
+
+struct MyWindowState {
+    AProperty<bool> checked = false;
+};
 
 class MyWindow: public AWindow {
 public:
@@ -19,5 +24,5 @@ public:
     void inflate();
 
 private:
-    AProperty<bool> mChecked = false;
+    _<MyWindowState> mState = _new<MyWindowState>();
 };

@@ -115,7 +115,7 @@ public:
 
         void uncheckAll() {
             for (auto& b : mButtons) {
-                b.second->setChecked(false);
+                b.second->checked() = false;
             }
             mSelectedId = -1;
         }
@@ -160,7 +160,7 @@ struct RadioButton {
      * @details
      * Called when user activates the button.
      */
-    contract::Slot<> onClick;
+    std::function<void()> onClick;
 
     /**
      * @brief View associated with the radio button.

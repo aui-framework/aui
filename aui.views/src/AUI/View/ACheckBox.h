@@ -172,7 +172,7 @@ struct CheckBox {
      * @details
      * Called when user checks/unchecks the check box.
      */
-    contract::Slot<bool /* checked */> onCheckedChange;
+    std::function<void(bool /* checked */)> onCheckedChange;
 
     /**
      * @brief View associated with the check box.

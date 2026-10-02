@@ -18,8 +18,9 @@
 
 #include <AUI/Enum/VerticalAlign.h> // defined here
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
-namespace ass::prop {
+namespace ass::legacy {
     template<>
     struct API_AUI_VIEWS Property<VerticalAlign>: IPropertyBase {
     private:
@@ -37,4 +38,6 @@ namespace ass::prop {
             return mInfo;
         }
     };
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, VerticalAlign value);
 }

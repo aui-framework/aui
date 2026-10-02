@@ -18,7 +18,7 @@ class API_AUI_VIEWS AView;
 class API_AUI_VIEWS AAssHelper;
 struct ARenderContext;
 
-namespace ass::prop {
+namespace ass::legacy {
     /**
      * @brief Defines the types of renderable properties and order of their rendering.
      */

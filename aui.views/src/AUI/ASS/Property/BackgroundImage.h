@@ -18,6 +18,7 @@
 #include <AUI/Render/IRenderer.h>
 #include <AUI/Common/IStringable.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 /**
@@ -140,7 +141,7 @@ struct BackgroundImage {
       : image(url), overlayColor(overlayColor), rep(rep), sizing(sizing), scale(scale), dpiMargin(dpiMargin) {}
 };
 
-namespace prop {
+namespace legacy {
 template <>
 struct API_AUI_VIEWS Property<BackgroundImage> : IPropertyBase, IStringable {
 private:
@@ -166,6 +167,7 @@ public:
 };
 
 }   // namespace prop
+
 }   // namespace ass
 
 AUI_ENUM_VALUES(

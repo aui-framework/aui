@@ -15,9 +15,20 @@
 
 #include "MaxSize.h"
 
-void ass::prop::Property<ass::MaxSize>::applyFor(AView* view) {
+void ass::legacy::Property<ass::MaxSize>::applyFor(AView* view) {
     view->setMaxSize({
                                mInfo.width ? mInfo.width->getValuePx() : view->getMaxSize().x,
                                mInfo.height ? mInfo.height->getValuePx() : view->getMaxSize().y
                        });
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, MaxSize value) {
+    return thiz.then([value](AView& view) {
+        view.setMaxSize({
+            value.width ? value.width->getValuePx() : view.getMaxSize().x,
+            value.height ? value.height->getValuePx() : view.getMaxSize().y
+        });
+    });
+}
+}   // namespace ass

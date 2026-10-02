@@ -65,7 +65,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     if (!targetView)
         return;
 
-    ADeque<ass::prop::IPropertyBase*> applicableDeclarations;
+    ADeque<ass::legacy::IPropertyBase*> applicableDeclarations;
 
     auto addressStr = "{}"_format((void*) targetView.get());
     _<AViewContainer> dst = Vertical {
@@ -146,7 +146,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
 }
 
 void ViewPropertiesView::displayApplicableRule(
-    const _<AViewContainer>& dst, ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
+    const _<AViewContainer>& dst, ADeque<ass::legacy::IPropertyBase*>& applicableDeclarations,
     const ass::PropertyList* rule) {
     for (const auto& decl : rule->declarations()) {
         applicableDeclarations.push_front(decl.get());
