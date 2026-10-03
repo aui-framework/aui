@@ -17,6 +17,7 @@
 #include <optional>
 #include <fstream>
 #include <stdexcept>
+#include <fmt/format.h>
 #include "AUI/Traits/concepts.h"
 #include <AUI/Core.h>
 
@@ -592,3 +593,11 @@ inline std::ostream& operator<<(std::ostream& o, const AOptional<T>& v) {
     return o;
 }
 
+template <typename T> struct fmt::formatter<AOptional<T>> : formatter<T> {
+    auto format(const AOptional<T>& v, fmt::format_context& ctx) const {
+        if (!v) {
+            return fmt::format_to(ctx.out(), "[empty]");
+        }
+        return fmt::formatter<T>::format(*v, ctx);
+    }
+};
