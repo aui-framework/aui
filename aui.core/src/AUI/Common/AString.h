@@ -312,19 +312,40 @@ public:
         return view().substr(pos, count);
     }
 
+    /// @copydoc AStringView::trimLeft(AChar) const
     [[nodiscard]]
     AStringView trimLeft(AChar symbol = ' ') const {
         return view().trimLeft(symbol);
     }
 
+    /// @copydoc AStringView::trimLeft(AStringView) const
+    [[nodiscard]]
+    AStringView trimLeft(AStringView symbols) const {
+        return view().trimLeft(symbols);
+    }
+
+    /// @copydoc AStringView::trimRight(AChar) const
     [[nodiscard]]
     AStringView trimRight(AChar symbol = ' ') const {
         return view().trimRight(symbol);
     }
 
+    /// @copydoc AStringView::trimRight(AStringView) const
+    [[nodiscard]]
+    AStringView trimRight(AStringView symbols) const {
+        return view().trimRight(symbols);
+    }
+
+    /// @copydoc AStringView::trim(AChar) const
     [[nodiscard]]
     AStringView trim(AChar symbol = ' ') const {
         return view().trim(symbol);
+    }
+
+    /// @copydoc AStringView::trim(AStringView) const
+    [[nodiscard]]
+    AStringView trim(AStringView symbols) const {
+        return view().trim(symbols);
     }
 
     AString restrictLength(size_t s, const AString& stringAtEnd) const;
