@@ -60,78 +60,6 @@ AMinMaxAxis AAbstractLabel::onComputeIntrinsicMinMaxAxis(int height) {
     };
 }
 
-// Normally, text will be rendered as this:
-    //
-    //
-    //      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //      ^                          *@@@@@                                                 ^
-    //      |                          #@@@@@                                                 |
-    //    A |                          #@@@@@                                                 |
-    //    S |                          #@@@@@                                                 |
-    //    C |                          #@@@@@                                                 |
-    //    E |        .:-=+******+=-.   #@@@@@     :+++++=                   .++++++.          |
-    //    N |     .-*@@@@@@@@@@@@@@@#-.+@@@@@      +@@@@@+.                .#@@@@@-           |
-    //    D |   .+@@@@@@%*-:...::=*%@@@%@@@@@       =@@@@@+.              .#@@@@@-            |
-    //    E |  .%@@@@@#.            .#@@@@@@@        =@@@@@+              #@@@@@-             |
-    //    R |  #@@@@@=.              .+@@@@@@        .-@@@@@+            *@@@@@-              | S
-    //      | :@@@@@#.                .@@@@@@          -@@@@@+          +@@@@@-               | I
-    //      | +@@@@@+                  #@@@@@           -@@@@@+        +@@@@@-                | Z
-    //      | +@@@@@=                  *@@@@@            -@@@@@+.     =@@@@@=                 | E
-    //      | -@@@@@*                  #@@@@@             :@@@@@+.   =@@@@@=                  |
-    //      | .@@@@@@:                :@@@@@@              :@@@@@=  -@@@@@=                   |
-    //      |  :@@@@@@-              :@@@@@@@               .@@@@@-.@@@@@=.                   |
-    //      |   :#@@@@@%+-..   ...-+%@@@@@@@@                .%@@@%%@@@@=                     |
-    //      |    .-*@@@@@@@@@@@@@@@@@*-:@@@@@                 .%@@@@@@@=                      |
-    // -----+------ .:=**#%%%%%##*+-. - +#### ---------------- .%@@@@@= ----------------------------> baseline
-    //    D |                                                 .=@@@@@=                        |
-    //    E |                                                .+@@@@@=                         |
-    //    S |                                               .%@@@@@-.                         |
-    //    C |                                      --:::-=*%@@@@@*.                           |
-    //    E |                                      %@@@@@@@@@@%+:.                            |
-    //    N v                                      =**####*+-:.                               V
-    //    D - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //    E
-    //    R
-    //
-    // However, it feels like it stuck to the top of the border. So, we'll just add the height of descender, so it
-    // basically mirrors the descender at the bottom. This way, CAPITALS are centered, and text feels natural.
-    //
-    //      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //      ^
-    //      |
-    //      |   <-------- added height
-    //      |
-    //      |
-    //      | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //      ^                          *@@@@@                                                 ^
-    //      |                          #@@@@@                                                 |
-    //    A |                          #@@@@@                                                 |
-    //    S |                          #@@@@@                                                 |
-    //    C |                          #@@@@@                                                 |
-    //    E |        .:-=+******+=-.   #@@@@@     :+++++=                   .++++++.          |
-    //    N |     .-*@@@@@@@@@@@@@@@#-.+@@@@@      +@@@@@+.                .#@@@@@-           |
-    //    D |   .+@@@@@@%*-:...::=*%@@@%@@@@@       =@@@@@+.              .#@@@@@-            |
-    //    E |  .%@@@@@#.            .#@@@@@@@        =@@@@@+              #@@@@@-             |
-    //    R |  #@@@@@=.              .+@@@@@@        .-@@@@@+            *@@@@@-              | S
-    //      | :@@@@@#.                .@@@@@@          -@@@@@+          +@@@@@-               | I
-    //      | +@@@@@+                  #@@@@@           -@@@@@+        +@@@@@-                | Z
-    //      | +@@@@@=                  *@@@@@            -@@@@@+.     =@@@@@=                 | E
-    //      | -@@@@@*                  #@@@@@             :@@@@@+.   =@@@@@=                  |
-    //      | .@@@@@@:                :@@@@@@              :@@@@@=  -@@@@@=                   |
-    //      |  :@@@@@@-              :@@@@@@@               .@@@@@-.@@@@@=.                   |
-    //      |   :#@@@@@%+-..   ...-+%@@@@@@@@                .%@@@%%@@@@=                     |
-    //      |    .-*@@@@@@@@@@@@@@@@@*-:@@@@@                 .%@@@@@@@=                      |
-    // -----+------ .:=**#%%%%%##*+-. - +#### ---------------- .%@@@@@= ----------------------------> baseline
-    //    D |                                                 .=@@@@@=                        |
-    //    E |                                                .+@@@@@=                         |
-    //    S |                                               .%@@@@@-.                         |
-    //    C |                                      --:::-=*%@@@@@*.                           |
-    //    E |                                      %@@@@@@@@@@%+:.                            |
-    //    N v                                      =**####*+-:.                               V
-    //    D - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //    E
-    //    R
-
 void AAbstractLabel::onLayout(glm::ivec2 size) {
     AView::onLayout(size);
     if (mTextOverflow != ATextOverflow::NONE) {
@@ -259,15 +187,7 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
         }
 
         if (mPrerendered) {
-            int y = mPadding.top + getFontStyle().getAscenderHeight();
-
-            // adding height of descender we established in intrinsic height, see explanation there.
-            y += getFontStyle().font->getDescenderHeight(getFontStyle().size);
-
-            if (mVerticalAlign == VerticalAlign::MIDDLE) {
-                y = (glm::max)(y,
-                               y + int(glm::ceil((getContentHeight() - int(getFontStyle().getLineHeight()))) / 2.0));
-            }
+            const int y = getFontStyle().getBaselineY(mPadding.top, getContentHeight(), mVerticalAlign);
             RenderHints::PushMatrix m(render);
             render.translate({mTextLeftOffset + mPadding.left, y});
             render.setColor(textColor());

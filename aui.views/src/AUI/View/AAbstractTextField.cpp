@@ -309,16 +309,5 @@ glm::ivec2 AAbstractTextField::getCursorPosition() {
 }
 
 int AAbstractTextField::getVerticalAlignmentOffset() noexcept {
-    int y = getPadding().top + getFontStyle().getAscenderHeight();
-    const int textHeight =
-        measure(AConstraints::fixedInline(getContentWidth() + getPadding().horizontal())).y - getPadding().vertical();
-
-    // adding height of descender we established in intrinsic height, see explanation there.
-    y += getFontStyle().font->getDescenderHeight(getFontStyle().size);
-
-    if (mVerticalAlign == VerticalAlign::MIDDLE) {
-        y = (glm::max)(y,
-                       y + int(glm::ceil((getContentHeight() - textHeight) / 2.0)));
-    }
-    return y;
+    return getFontStyle().getBaselineY(getPadding().top, getContentHeight(), mVerticalAlign);
 }

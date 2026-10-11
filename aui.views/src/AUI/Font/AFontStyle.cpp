@@ -26,3 +26,91 @@ size_t AFontStyle::getWidth(std::u32string_view text) const
 size_t AFontStyle::getLineHeight() const {
     return font->getAscenderHeight(size) * (1.f + lineSpacing);
 }
+
+// Normally, text will be rendered as this:
+    //
+    //
+    //      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //      ^                          *@@@@@                                                 ^
+    //      |                          #@@@@@                                                 |
+    //    A |                          #@@@@@                                                 |
+    //    S |                          #@@@@@                                                 |
+    //    C |                          #@@@@@                                                 |
+    //    E |        .:-=+******+=-.   #@@@@@     :+++++=                   .++++++.          |
+    //    N |     .-*@@@@@@@@@@@@@@@#-.+@@@@@      +@@@@@+.                .#@@@@@-           |
+    //    D |   .+@@@@@@%*-:...::=*%@@@%@@@@@       =@@@@@+.              .#@@@@@-            |
+    //    E |  .%@@@@@#.            .#@@@@@@@        =@@@@@+              #@@@@@-             |
+    //    R |  #@@@@@=.              .+@@@@@@        .-@@@@@+            *@@@@@-              | S
+    //      | :@@@@@#.                .@@@@@@          -@@@@@+          +@@@@@-               | I
+    //      | +@@@@@+                  #@@@@@           -@@@@@+        +@@@@@-                | Z
+    //      | +@@@@@=                  *@@@@@            -@@@@@+.     =@@@@@=                 | E
+    //      | -@@@@@*                  #@@@@@             :@@@@@+.   =@@@@@=                  |
+    //      | .@@@@@@:                :@@@@@@              :@@@@@=  -@@@@@=                   |
+    //      |  :@@@@@@-              :@@@@@@@               .@@@@@-.@@@@@=.                   |
+    //      |   :#@@@@@%+-..   ...-+%@@@@@@@@                .%@@@%%@@@@=                     |
+    //      |    .-*@@@@@@@@@@@@@@@@@*-:@@@@@                 .%@@@@@@@=                      |
+    // -----+------ .:=**#%%%%%##*+-. - +#### ---------------- .%@@@@@= ----------------------------> baseline
+    //    D |                                                 .=@@@@@=                        |
+    //    E |                                                .+@@@@@=                         |
+    //    S |                                               .%@@@@@-.                         |
+    //    C |                                      --:::-=*%@@@@@*.                           |
+    //    E |                                      %@@@@@@@@@@%+:.                            |
+    //    N v                                      =**####*+-:.                               V
+    //    D - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //    E
+    //    R
+    //
+    // However, it feels like it stuck to the top of the border. So, we'll just add the height of descender, so it
+    // basically mirrors the descender at the bottom. This way, CAPITALS are centered, and text feels natural.
+    //
+    //      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //      ^
+    //      |
+    //      |   <-------- added height
+    //      |
+    //      |
+    //      | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //      ^                          *@@@@@                                                 ^
+    //      |                          #@@@@@                                                 |
+    //    A |                          #@@@@@                                                 |
+    //    S |                          #@@@@@                                                 |
+    //    C |                          #@@@@@                                                 |
+    //    E |        .:-=+******+=-.   #@@@@@     :+++++=                   .++++++.          |
+    //    N |     .-*@@@@@@@@@@@@@@@#-.+@@@@@      +@@@@@+.                .#@@@@@-           |
+    //    D |   .+@@@@@@%*-:...::=*%@@@%@@@@@       =@@@@@+.              .#@@@@@-            |
+    //    E |  .%@@@@@#.            .#@@@@@@@        =@@@@@+              #@@@@@-             |
+    //    R |  #@@@@@=.              .+@@@@@@        .-@@@@@+            *@@@@@-              | S
+    //      | :@@@@@#.                .@@@@@@          -@@@@@+          +@@@@@-               | I
+    //      | +@@@@@+                  #@@@@@           -@@@@@+        +@@@@@-                | Z
+    //      | +@@@@@=                  *@@@@@            -@@@@@+.     =@@@@@=                 | E
+    //      | -@@@@@*                  #@@@@@             :@@@@@+.   =@@@@@=                  |
+    //      | .@@@@@@:                :@@@@@@              :@@@@@=  -@@@@@=                   |
+    //      |  :@@@@@@-              :@@@@@@@               .@@@@@-.@@@@@=.                   |
+    //      |   :#@@@@@%+-..   ...-+%@@@@@@@@                .%@@@%%@@@@=                     |
+    //      |    .-*@@@@@@@@@@@@@@@@@*-:@@@@@                 .%@@@@@@@=                      |
+    // -----+------ .:=**#%%%%%##*+-. - +#### ---------------- .%@@@@@= ----------------------------> baseline
+    //    D |                                                 .=@@@@@=                        |
+    //    E |                                                .+@@@@@=                         |
+    //    S |                                               .%@@@@@-.                         |
+    //    C |                                      --:::-=*%@@@@@*.                           |
+    //    E |                                      %@@@@@@@@@@%+:.                            |
+    //    N v                                      =**####*+-:.                               V
+    //    D - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
+    //    E
+    //    R
+
+int AFontStyle::getTextBlockHeight() const {
+    return getAscenderHeight() + 2 * getDescenderHeight();
+}
+
+int AFontStyle::getBaselineY(int top, int height, VerticalAlign verticalAlign) const {
+    // adding height of descender, see the explanation above.
+    int y = top + getAscenderHeight() + getDescenderHeight();
+
+    if (verticalAlign == VerticalAlign::MIDDLE) {
+        // the glyphs with the mirrored descender above them occupy getTextBlockHeight() pixels regardless of the line
+        // spacing; center exactly this block within the area.
+        y += (height - getTextBlockHeight()) / 2;
+    }
+    return y;
+}

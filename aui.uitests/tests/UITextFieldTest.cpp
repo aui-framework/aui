@@ -12,6 +12,7 @@
 #include <AUI/UITest.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/ATextField.h>
+#include "InkGaps.h"
 
 using namespace ass;
 using namespace declarative;
@@ -154,4 +155,46 @@ TEST_F(UITextField, CtrlShiftLeftRight) {
             .perform(keyDownAndUp(AInput::LCONTROL + AInput::LSHIFT + AInput::LEFT))
             .check(selectionMatches(0))
             ;
+}
+
+/**
+ * Checks that text field places the text in the same way as label does (see AFontStyle::getBaselineY).
+ */
+TEST_F(UITextField, VerticalAlignMiddleCentersText) {
+    constexpr int TALL_FIELD_HEIGHT = 300;
+    auto measure = [](float lineSpacing, VerticalAlign verticalAlign, bool tight) {
+        auto field = _new<ATextField>() AUI_OVERRIDE_STYLE {
+            FontSize { 80_pt },
+            TextColor { 0x000000_rgb },
+            BackgroundSolid { 0xffffff_rgb },
+            Border { nullptr },
+            LineHeight { lineSpacing },
+            verticalAlign,
+            Padding { 0 },
+            Margin { 0 },
+        };
+        field->setText("HHHH");
+
+        class TestWindow : public AWindow {
+        public:
+            explicit TestWindow(_<AView> v) {
+                setContents(Vertical { std::move(v) } AUI_OVERRIDE_STYLE { BackgroundSolid { 0xffffff_rgb } });
+                setSize({ 600, 800 });
+            }
+        };
+        _new<TestWindow>(field)->show();
+        uitest::frame();
+
+        auto& fs = field->getFontStyle();
+        field->setFixedSize({ 400, tight ? fs.getTextBlockHeight() : TALL_FIELD_HEIGHT });
+        return uitest_util::measureInkGaps(field);
+    };
+
+    // tight field: text is centered thanks to the mirrored descender
+    const auto reference = measure(0.f, VerticalAlign::DEFAULT, true);
+    for (float lineSpacing : { 0.f, 0.5f, 1.f, 1.2f }) {
+        const auto gaps = measure(lineSpacing, VerticalAlign::MIDDLE, false);
+        EXPECT_NEAR(gaps.difference(), reference.difference(), 2)
+            << "lineSpacing=" << lineSpacing << " top=" << gaps.top << " bottom=" << gaps.bottom;
+    }
 }
