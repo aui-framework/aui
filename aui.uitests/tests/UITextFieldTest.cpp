@@ -157,44 +157,71 @@ TEST_F(UITextField, CtrlShiftLeftRight) {
             ;
 }
 
+namespace {
+enum class FieldHeight {
+    /// Exactly AFontStyle::getTextBlockHeight().
+    TIGHT,
+    /// Much taller than the text.
+    TALL,
+};
+
+/**
+ * Shows a text field with "HHHH" and measures empty space above and below dark pixels (text or selection) in it.
+ */
+uitest_util::InkGaps measureTextField(float lineSpacing, VerticalAlign verticalAlign, FieldHeight height, bool selected) {
+    constexpr int TALL_FIELD_HEIGHT = 300;
+    auto field = _new<ATextField>() AUI_OVERRIDE_STYLE {
+        FontSize { 80_pt },
+        TextColor { 0x000000_rgb },
+        BackgroundSolid { 0xffffff_rgb },
+        Border { nullptr },
+        LineHeight { lineSpacing },
+        verticalAlign,
+        Padding { 0 },
+        Margin { 0 },
+    };
+    field->setText("HHHH");
+
+    class TestWindow : public AWindow {
+    public:
+        explicit TestWindow(_<AView> v) {
+            setContents(Vertical { std::move(v) } AUI_OVERRIDE_STYLE { BackgroundSolid { 0xffffff_rgb } });
+            setSize({ 600, 800 });
+        }
+    };
+    _new<TestWindow>(field)->show();
+    uitest::frame();
+
+    auto& fs = field->getFontStyle();
+    field->setFixedSize({ 400, height == FieldHeight::TIGHT ? fs.getTextBlockHeight() : TALL_FIELD_HEIGHT });
+    if (selected) {
+        field->selectAll();
+    }
+    return uitest_util::measureInkGaps(field);
+}
+}   // namespace
+
 /**
  * Checks that text field places the text in the same way as label does (see AFontStyle::getBaselineY).
  */
 TEST_F(UITextField, VerticalAlignMiddleCentersText) {
-    constexpr int TALL_FIELD_HEIGHT = 300;
-    auto measure = [](float lineSpacing, VerticalAlign verticalAlign, bool tight) {
-        auto field = _new<ATextField>() AUI_OVERRIDE_STYLE {
-            FontSize { 80_pt },
-            TextColor { 0x000000_rgb },
-            BackgroundSolid { 0xffffff_rgb },
-            Border { nullptr },
-            LineHeight { lineSpacing },
-            verticalAlign,
-            Padding { 0 },
-            Margin { 0 },
-        };
-        field->setText("HHHH");
-
-        class TestWindow : public AWindow {
-        public:
-            explicit TestWindow(_<AView> v) {
-                setContents(Vertical { std::move(v) } AUI_OVERRIDE_STYLE { BackgroundSolid { 0xffffff_rgb } });
-                setSize({ 600, 800 });
-            }
-        };
-        _new<TestWindow>(field)->show();
-        uitest::frame();
-
-        auto& fs = field->getFontStyle();
-        field->setFixedSize({ 400, tight ? fs.getTextBlockHeight() : TALL_FIELD_HEIGHT });
-        return uitest_util::measureInkGaps(field);
-    };
-
     // tight field: text is centered thanks to the mirrored descender
-    const auto reference = measure(0.f, VerticalAlign::DEFAULT, true);
+    const auto reference = measureTextField(0.f, VerticalAlign::DEFAULT, FieldHeight::TIGHT, false);
     for (float lineSpacing : { 0.f, 0.5f, 1.f, 1.2f }) {
-        const auto gaps = measure(lineSpacing, VerticalAlign::MIDDLE, false);
+        const auto gaps = measureTextField(lineSpacing, VerticalAlign::MIDDLE, FieldHeight::TALL, false);
         EXPECT_NEAR(gaps.difference(), reference.difference(), 2)
+            << "lineSpacing=" << lineSpacing << " top=" << gaps.top << " bottom=" << gaps.bottom;
+    }
+}
+
+/**
+ * Selection rectangle covers the same area as text does (capitals, descender and the descender mirrored above), thus
+ * it must be centered in the field as well.
+ */
+TEST_F(UITextField, SelectionIsCenteredWithVerticalAlignMiddle) {
+    for (float lineSpacing : { 0.f, 1.f }) {
+        const auto gaps = measureTextField(lineSpacing, VerticalAlign::MIDDLE, FieldHeight::TALL, true);
+        EXPECT_NEAR(gaps.difference(), 0, 2)
             << "lineSpacing=" << lineSpacing << " top=" << gaps.top << " bottom=" << gaps.bottom;
     }
 }

@@ -48,8 +48,10 @@ void AAbstractTextField::render(ARenderContext ctx) {
 
     AStaticVector<ARect<int>, 1> selectionRects;
     const int baselineY = getVerticalAlignmentOffset();
-    const int lineTop = baselineY - getFontStyle().getAscenderHeight();
-    const int lineHeight = int(getFontStyle().size) + getFontStyle().getDescenderHeight();
+    // selection and cursor cover the same area as text does: ascender, descender and the descender mirrored above the
+    // ascender, see AFontStyle::getBaselineY.
+    const int lineTop = baselineY - getFontStyle().getAscenderHeight() - getFontStyle().getDescenderHeight();
+    const int lineHeight = getFontStyle().getTextBlockHeight() + 1;
     if (hasSelection()) {
         auto s = selection();
         auto beginPos = getPosByIndex(s.begin).x;
@@ -64,7 +66,7 @@ void AAbstractTextField::render(ARenderContext ctx) {
     if (!mIsEditable) {
         return;
     }
-    drawCursor(ctx.render, { mAbsoluteCursorPos + mPadding.left, lineTop });
+    drawCursor(ctx.render, { mAbsoluteCursorPos + mPadding.left, lineTop }, lineHeight);
 }
 
 void AAbstractTextField::doDrawString(IRenderer& render) {

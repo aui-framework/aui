@@ -132,10 +132,14 @@ public:
     }
 
     void drawCursor(IRenderer& renderer, glm::ivec2 position) {
+        drawCursor(renderer, position, this->getFontStyle().size + this->getFontStyle().getDescenderHeight());
+    }
+
+    void drawCursor(IRenderer& renderer, glm::ivec2 position, unsigned height) {
         if (!this->hasFocus()) {
             return;
         }
-        drawCursorImpl(renderer, position, this->getFontStyle().size + this->getFontStyle().getDescenderHeight());
+        drawCursorImpl(renderer, position, height);
     }
 
 protected:
