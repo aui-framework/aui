@@ -545,12 +545,16 @@ public:
   /**
    * @brief Returns cached min/max width for the given height.
    * @details Includes padding and fixed/min/max size constraints; @p height is outer height, or -1 for unconstrained.
+   * Does not check visibility: the caller must skip children without `Visibility::FLAG_CONSUME_SPACE`
+   * (`Visibility::GONE`) before accounting for the result.
    */
   AMinMaxAxis computeMinMaxAxis(int height = -1);
 
   /**
    * @brief Returns cached preferred outer size under constraints.
    * @details Applies padding and fixed/min/max size constraints around onIntrinsicMeasure().
+   * Does not check visibility: the caller must skip children without `Visibility::FLAG_CONSUME_SPACE`
+   * (`Visibility::GONE`) before accounting for the result.
    */
   glm::ivec2 measure(AConstraints constraints);
 
@@ -1050,12 +1054,21 @@ protected:
    * @brief Computes content size under content constraints.
    * @details Override for intrinsic measurement;
    * padding and view-level size limits are handled by measure().
+   *
+   * If this view measures its children, it **must** skip the children that do not have
+   * `Visibility::FLAG_CONSUME_SPACE` (i.e. `Visibility::GONE`) before taking them into account (including their
+   * margins and spacing). AView::measure() of such a child still returns its regular size, it's the caller's
+   * responsibility to ignore it. See [ALayout](ALayout.h) "Visibility and space consumption".
    */
   virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints);
 
   /**
    * @brief Computes intrinsic content min/max width for a content height.
    * @details Override for width-for-height logic; @p height is content height, or -1 for unconstrained.
+   *
+   * If this view accounts for its children, it **must** skip the children that do not have
+   * `Visibility::FLAG_CONSUME_SPACE` (i.e. `Visibility::GONE`): AView::computeMinMaxAxis() of such a child still
+   * returns its regular range, it's the caller's responsibility to ignore it.
    */
   virtual AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height);
 

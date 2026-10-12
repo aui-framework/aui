@@ -98,6 +98,77 @@ class AViewContainer;
  *    [AViewContainer]. When we say "Vertical", we imply a [AViewContainer] with [AVerticalLayout] as the
  *    layout manager.
  *
+ * 8. **Visibility** - a layout manager (or any container that measures/positions its children by hand, i.e. in
+ *    `onIntrinsicMeasure`, `onComputeIntrinsicMinMaxAxis`, `onLayout`) **MUST** check
+ *    `view->getVisibility() & Visibility::FLAG_CONSUME_SPACE` before taking a child into account, see
+ *    [VISIBILITY_AND_SPACE].
+ *
+ * 9. **Margins in hand-written containers** - [AView::measure()] and [AView::layout()] work with the view without its
+ *    margin; a container that doesn't use a layout manager must add/subtract margins itself, see
+ *    [MARGINS_AND_MANUAL_LAYOUT].
+ *
+ * ---
+ *
+ * ## Margins and manual layout { #MARGINS_AND_MANUAL_LAYOUT }
+ *
+ * `AView::measure()` returns the size of the view **without** its margin, and `AView::layout(pos, size)` expects the
+ * position and size of the view **without** its margin as well. Margin is the parent's business: a container that
+ * measures or positions its children by hand (i.e. [AScrollArea], [AScrollbar]) must handle it itself:
+ *
+ * - **Measuring:** add the child's margin to the measured size: `child->measure(...).x + margin.horizontal()`,
+ *   `child->measure(...).y + margin.vertical()`.
+ * - **Constraints:** when passing the available space of one axis to the child, subtract the child's margin on that
+ *   axis first, i.e. `AConstraints::fixedBlock(max(0, availableHeight - margin.vertical()))`.
+ * - **Positioning:** shift the position by the leading margin: `layout(slotPos + {margin.left, margin.top}, ...)`.
+ * - **Sizing:** subtract the margin from the slot size you give to the child: `slotSize - {margin.horizontal(),
+ *   margin.vertical()}`.
+ * - **Never negative:** the slot can be smaller than the margin; clamp the result with `glm::max(0, ...)`.
+ *
+ * ```cpp
+ * const auto margin = child->getMargin();
+ * child->layout(
+ *     slotPos + glm::ivec2(margin.left, margin.top),
+ *     glm::max(glm::ivec2(0), slotSize - margin.occupiedSize()));
+ * ```
+ *
+ * !!! warning
+ *
+ *     Forgetting margins in a hand-written container leads to children that overlap their neighbours or ignore
+ *     `ass::Margin` altogether. Layout managers ([AHorizontalLayout], [AVerticalLayout], ...) do it for you.
+ *
+ * ---
+ *
+ * ## Visibility and space consumption { #VISIBILITY_AND_SPACE }
+ *
+ * Whether a child occupies space in its parent is determined by the `Visibility::FLAG_CONSUME_SPACE` flag of
+ * [AView::getVisibility()]:
+ *
+ * | Visibility | `FLAG_CONSUME_SPACE` | Occupies space |
+ * |------------|----------------------|----------------|
+ * | `VISIBLE`, `INVISIBLE`, `UNREACHABLE`, `CONSUME_SPACE_ONLY` | set | yes |
+ * | `GONE` | not set | **no** |
+ *
+ * A child without `FLAG_CONSUME_SPACE` (`Visibility::GONE`) must be treated as if it did not exist: it contributes
+ * neither its size, nor its margins, nor spacing to the parent. Note that `AView::measure()` and
+ * `AView::computeMinMaxAxis()` do **not** check visibility on their own and happily return the size of a `GONE` view
+ * (i.e. its `ass::FixedSize`). Checking is the caller's responsibility.
+ *
+ * !!! warning
+ *
+ *     Forgetting this check is a classic source of "phantom" sizes: a hidden child with `ass::FixedSize` or
+ *     `ass::MinSize` silently inflates its parent. Example: a scrollbar that took the height of its `GONE` arrow
+ *     buttons and became 19px thick instead of 7px. When you iterate over children (or over a fixed set of child
+ *     views you own) in any measuring or layout code, filter them:
+ *
+ *     ```cpp
+ *     for (const auto& child : getViews()) {
+ *         if (!(child->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+ *             continue; // GONE: does not exist as far as layout is concerned
+ *         }
+ *         // ... measure / position child ...
+ *     }
+ *     ```
+ *
  * ---
  *
  * ## Terminology { #TERMINOLOGY }
@@ -150,6 +221,13 @@ class AViewContainer;
  * | `onIntrinsicMeasure(AConstraints)` | Returns preferred **content** size under given constraints | **Usually** |
  * | `onComputeIntrinsicMinMaxAxis(int height)` | Returns min/max **content** width for a given height | **Sometimes** |
  * | `onLayout(glm::ivec2 size)` | Called when position/size are finalized; use to position children | Only for containers |
+ *
+ * !!! warning "Containers must skip children without `FLAG_CONSUME_SPACE`"
+ *
+ *     If your view measures or lays out child views (in `onIntrinsicMeasure`, `onComputeIntrinsicMinMaxAxis` or
+ *     `onLayout`), you **must** check `child->getVisibility() & Visibility::FLAG_CONSUME_SPACE` before taking the
+ *     child into account (size, margins, spacing). `measure()` and `computeMinMaxAxis()` of a `GONE` view return its
+ *     normal size, they do not return zero. See [VISIBILITY_AND_SPACE].
  *
  * !!! note "What does 'intrinsic' mean?"
  *

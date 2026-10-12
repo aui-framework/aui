@@ -252,6 +252,10 @@ void AScrollbar::handleScrollbar(float delta, int baseScroll) {
 }
 
 int AScrollbar::getMeasuredButtonOccupiedSpace(const _<AView>& view) const {
+    // visibility must be accounted for: a GONE button occupies no space (see ALayout "Visibility and space consumption").
+    if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+        return 0;
+    }
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL: {
             const auto measured = view->measure(AConstraints::fixedBlock(getHeight()));
@@ -270,6 +274,10 @@ int AScrollbar::getMeasuredButtonOccupiedSpace(const _<AView>& view) const {
 }
 
 int AScrollbar::getMeasuredHandleOccupiedSpace() const {
+    // visibility must be accounted for: a GONE handle occupies no space (see ALayout "Visibility and space consumption").
+    if (!(mHandle->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+        return 0;
+    }
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL: {
             const auto measured = mHandle->measure(AConstraints::fixedBlock(getHeight()));
@@ -287,17 +295,29 @@ int AScrollbar::getMeasuredHandleOccupiedSpace() const {
     return 0;
 }
 
+// IMPORTANT: visibility MUST be taken into account here. Views that don't have Visibility::FLAG_CONSUME_SPACE (i.e.
+// Visibility::GONE, like the scrollbar buttons on mobile or the handle when there's nothing to scroll) must not
+// contribute to the scrollbar's size; otherwise a hidden button with FixedSize(15_dp) makes the whole scrollbar thick.
+static glm::ivec2 measureConsumingSpace(const _<AView>& view) {
+    if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+        return {0, 0};
+    }
+    return view->measure(AConstraints {});
+}
+
 int AScrollbar::chromeThickness() const {
-    const auto backward = mBackwardButton->measure(AConstraints {});
-    const auto forward = mForwardButton->measure(AConstraints {});
-    const auto handle = mHandle->measure(AConstraints {});
+    // see measureConsumingSpace: visibility must be accounted for.
+    const auto backward = measureConsumingSpace(mBackwardButton);
+    const auto forward = measureConsumingSpace(mForwardButton);
+    const auto handle = measureConsumingSpace(mHandle);
+    const auto handleMargin = !!(mHandle->getVisibility() & Visibility::FLAG_CONSUME_SPACE) ? mHandle->getMargin() : ABoxFields {};
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
-            return std::max({ backward.y, forward.y, handle.y + mHandle->getMargin().vertical() });
+            return std::max({ backward.y, forward.y, handle.y + handleMargin.vertical() });
 
         case ALayoutDirection::VERTICAL:
-            return std::max({ backward.x, forward.x, handle.x + mHandle->getMargin().horizontal() });
+            return std::max({ backward.x, forward.x, handle.x + handleMargin.horizontal() });
 
         case ALayoutDirection::NONE:
             break;
@@ -306,16 +326,18 @@ int AScrollbar::chromeThickness() const {
 }
 
 int AScrollbar::minimumChromeLength() const {
-    const auto backward = mBackwardButton->measure(AConstraints {});
-    const auto forward = mForwardButton->measure(AConstraints {});
-    const auto handle = mHandle->measure(AConstraints {});
+    // see measureConsumingSpace: visibility must be accounted for.
+    const auto backward = measureConsumingSpace(mBackwardButton);
+    const auto forward = measureConsumingSpace(mForwardButton);
+    const auto handle = measureConsumingSpace(mHandle);
+    const auto handleMargin = !!(mHandle->getVisibility() & Visibility::FLAG_CONSUME_SPACE) ? mHandle->getMargin() : ABoxFields {};
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
-            return backward.x + forward.x + handle.x + mHandle->getMargin().horizontal();
+            return backward.x + forward.x + handle.x + handleMargin.horizontal();
 
         case ALayoutDirection::VERTICAL:
-            return backward.y + forward.y + handle.y + mHandle->getMargin().vertical();
+            return backward.y + forward.y + handle.y + handleMargin.vertical();
 
         case ALayoutDirection::NONE:
             break;
@@ -326,6 +348,9 @@ int AScrollbar::minimumChromeLength() const {
 glm::ivec2 AScrollbar::onIntrinsicMeasure(AConstraints constraints) {
     const int thickness = chromeThickness();
     const int minimumLength = minimumChromeLength();
+    if (getAssNames().contains("DevtoolsTest")) {
+        printf("\n");
+    }
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL: {
@@ -490,24 +515,23 @@ void AScrollbarHandle::onLayout(glm::ivec2 size) {
 }
 
 void AScrollbar::onLayout(glm::ivec2 size) {
+  // NOTE: do NOT write the cross-axis size of the buttons and the handle into their fixed size here. The thickness of
+  // this scrollbar is computed by chromeThickness() from the children's measurements, and AView::measure() returns the
+  // fixed size as is; writing "size - margin" back would make the scrollbar remember its own previous thickness
+  // forever (it can grow but never shrink until a style invalidation resets the fixed size). The cross-axis size is
+  // applied in AScrollbarButton::onLayout / AScrollbarHandle::onLayout instead.
+  //
+  // The only thing we do is dropping the main-axis fixed size of the handle (i.e. ass::FixedSize { 40_dp, 4_dp }
+  // for the horizontal scrollbar), because the handle length is dictated by mOverridenSize.
+  const auto handleFixedSize = mHandle->getFixedSize();
   switch (mDirection) {
-    case ALayoutDirection::HORIZONTAL: {
-      auto backwardFixedSize = mBackwardButton->getFixedSize();
-      mBackwardButton->setFixedSize({ backwardFixedSize.x, glm::max(0, size.y - mBackwardButton->getMargin().vertical()) });
-      auto forwardFixedSize = mForwardButton->getFixedSize();
-      mForwardButton->setFixedSize({ forwardFixedSize.x, glm::max(0, size.y - mForwardButton->getMargin().vertical()) });
-      mHandle->setFixedSize({ 0, glm::max(0, size.y - mHandle->getMargin().vertical()) });
+    case ALayoutDirection::HORIZONTAL:
+      mHandle->setFixedSize({ 0, handleFixedSize.y });
       break;
-    }
 
-    case ALayoutDirection::VERTICAL: {
-      auto backwardFixedSize = mBackwardButton->getFixedSize();
-      mBackwardButton->setFixedSize({ glm::max(0, size.x - mBackwardButton->getMargin().horizontal()), backwardFixedSize.y });
-      auto forwardFixedSize = mForwardButton->getFixedSize();
-      mForwardButton->setFixedSize({ glm::max(0, size.x - mForwardButton->getMargin().horizontal()), forwardFixedSize.y });
-      mHandle->setFixedSize({ glm::max(0, size.x - mHandle->getMargin().horizontal()), 0 });
+    case ALayoutDirection::VERTICAL:
+      mHandle->setFixedSize({ handleFixedSize.x, 0 });
       break;
-    }
 
     case ALayoutDirection::NONE:
       break;
