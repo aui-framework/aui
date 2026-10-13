@@ -266,7 +266,7 @@ public:
   /**
    * @brief Marks this view it requires a layout update.
    * @details
-   * See [layout-managers] for more info.
+   * See [ALayout] and [layout-managers] for more info.
    */
   virtual void requestLayout();
 
@@ -544,24 +544,60 @@ public:
 
   /**
    * @brief Returns cached min/max width for the given height.
-   * @details Includes padding and fixed/min/max size constraints; @p height is outer height, or -1 for unconstrained.
-   * Does not check visibility: the caller must skip children without `Visibility::FLAG_CONSUME_SPACE`
-   * (`Visibility::GONE`) before accounting for the result.
+   * @param height outer height (including padding), or -1 for unconstrained.
+   * @return Outer (including padding) min/max width.
+   * @details
+   * Applies padding and fixed/min/max size around onComputeIntrinsicMinMaxAxis(). Does not require a preceding layout
+   * pass. The result is cached until AView::requestLayout.
+   *
+   * Override AView::onComputeIntrinsicMinMaxAxis, not this function.
    */
   AMinMaxAxis computeMinMaxAxis(int height = -1);
 
   /**
-   * @brief Returns cached preferred outer size under constraints.
-   * @details Applies padding and fixed/min/max size constraints around onIntrinsicMeasure().
-   * Does not check visibility: the caller must skip children without `Visibility::FLAG_CONSUME_SPACE`
-   * (`Visibility::GONE`) before accounting for the result.
+   * @brief Returns the preferred **outer** size of this view under the given constraints.
+   * @param constraints inline (width) / block (height) limits; -1 as a maximum means "unlimited".
+   * @return Outer size, including padding (but not margin), in pixels.
+   * @details
+   * Applies padding and fixed/min/max size (ass::FixedSize, ass::MinSize, ass::MaxSize) around
+   * AView::onIntrinsicMeasure(). If both axes of the fixed size are set, it is returned right away.
+   *
+   * Does **not** require a preceding layout pass, unlike AView::getSize() which is `{0, 0}` until the first
+   * AView::layout. It is therefore safe to call right after AView::addView or on a view that is not attached to any
+   * container at all. The result is cached until AView::requestLayout.
+   *
+   * Override AView::onIntrinsicMeasure, not this function. See [ALayout] for the measure/layout pipeline.
+   *
+   * ```cpp
+   * auto size = view->measure(AConstraints {});                         // unconstrained
+   * auto wrapped = view->measure({ .maxInline = 200 });                 // at most 200px wide
+   * auto exactWidth = view->measure(AConstraints::fixedInline(200));    // exactly 200px wide
+   * ```
+   *
+   * !!! note
+   *
+   *     Measurement must have no side effects on the geometry (see AView::onIntrinsicMeasure).
    */
   glm::ivec2 measure(AConstraints constraints);
 
   /**
    * @brief Performs layout with a position and size of the view.
+   * @param x,y position relative to the parent.
+   * @param w,h size, subject to fixed/max size restrictions (@see AView::setSize).
    * @details
-   * See [layout-managers] for more info.
+   * Sets position and size, then calls AView::onLayout (which positions children of containers), and finally clears
+   * AView::mSkipUntilLayoutUpdate. Does nothing if neither position, size nor layout request changed.
+   *
+   * This is the **only** place that clears AView::mSkipUntilLayoutUpdate; AView::setPosition and AView::setSize do
+   * not. A view which is positioned by hand (i.e., not by a layout manager of its parent), e.g., rendered manually or
+   * attached to something outside the regular view hierarchy, must be placed with layout() otherwise it (and all its
+   * children, as AView::setSize does not lay them out) stays hidden:
+   * ```cpp
+   * auto size = view->measure(AConstraints {});
+   * view->layout(pos, size);
+   * ```
+   *
+   * See [ALayout] and [layout-managers] for more info.
    */
   void layout(int x, int y, int w, int h);
   void layout(const glm::ivec2& pos, const glm::ivec2& size) { layout(pos.x, pos.y, size.x, size.y); }
@@ -1047,31 +1083,82 @@ protected:
    * @details
    * This flag addresses the issue when some container is filled with views by addView during several frames, causing
    * to draw them in wrong place (then their layout is not processed yet).
+   *
+   * !!! note
+   *
+   *     Cleared **only** by AView::layout. AView::setSize and AView::setPosition do not clear it. While it is set,
+   *     the view is neither drawn nor does it consume clicks, without any error or warning.
    */
   bool mSkipUntilLayoutUpdate = true;
 
   /**
-   * @brief Computes content size under content constraints.
-   * @details Override for intrinsic measurement;
-   * padding and view-level size limits are handled by measure().
+   * @brief Computes the preferred size of the **content area** under the given constraints.
+   * @param constraints constraints of the content area: padding is already subtracted, fixed/min/max size are already
+   * applied. A maximum of -1 means "unlimited" (@see AConstraints::isUnlimitedInline).
+   * @return Size of the content area, excluding padding, in pixels.
+   * @details
+   * Override this function to tell the layout system how much space the view wants, e.g., a label reports the size
+   * of its text, wrapping it to constraints.maxInline when limited. Called from AView::measure, whose result is
+   * cached, so it is not called on every frame.
    *
-   * If this view measures its children, it **must** skip the children that do not have
-   * `Visibility::FLAG_CONSUME_SPACE` (i.e. `Visibility::GONE`) before taking them into account (including their
-   * margins and spacing). AView::measure() of such a child still returns its regular size, it's the caller's
-   * responsibility to ignore it. See [ALayout](ALayout.h) "Visibility and space consumption".
+   * The default implementation takes the maximum width reported by AView::onComputeIntrinsicMinMaxAxis clamped to
+   * the constraints, and the minimum height. AViewContainerBase delegates to its layout manager.
+   *
+   * The returned value is not required to respect the constraints; AView::measure clamps it.
+   *
+   * See [ALayout] for when and how to override this function, the meaning of constraints and the measure/layout
+   * pipeline in general.
+   *
+   * !!! warning
+   *
+   *     Must not change the layout (AView::setPosition, AView::setSize, AView::layout, AView::requestLayout, adding
+   *     or removing views) — measurement is a pure function of the view state and the constraints. Otherwise layout
+   *     may recurse infinitely. If the view state that affects the result changes, call AView::requestLayout to drop
+   *     the cached measurements.
+   *
+   * ```cpp
+   * glm::ivec2 MyView::onIntrinsicMeasure(AConstraints constraints) {
+   *   int width = constraints.isUnlimitedInline() ? 100 : constraints.maxInline;
+   *   return { width, 50 };
+   * }
+   * ```
+   *
+   * @see AView::onComputeIntrinsicMinMaxAxis
+   * @see AView::onLayout
    */
   virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints);
 
   /**
-   * @brief Computes intrinsic content min/max width for a content height.
-   * @details Override for width-for-height logic; @p height is content height, or -1 for unconstrained.
+   * @brief Computes intrinsic min/max width of the **content area** for a content height.
+   * @param height height of the content area (padding is subtracted), or -1 for unconstrained.
+   * @return AMinMaxAxis::min is the narrowest width the content can be squeezed to without being cut off (e.g.,
+   * the longest word of a wrapped text); AMinMaxAxis::max is the width the content takes if nothing limits it (e.g.,
+   * the whole text on one line). Excludes padding.
+   * @details
+   * Override for width-for-height logic. Used by layout managers to distribute space among views. Called from
+   * AView::computeMinMaxAxis whose result is cached. The same restrictions as for AView::onIntrinsicMeasure apply
+   * (no side effects on the layout).
    *
-   * If this view accounts for its children, it **must** skip the children that do not have
-   * `Visibility::FLAG_CONSUME_SPACE` (i.e. `Visibility::GONE`): AView::computeMinMaxAxis() of such a child still
-   * returns its regular range, it's the caller's responsibility to ignore it.
+   * Default implementation returns {0, 0}. See [ALayout] for details.
+   *
+   * @see AView::onIntrinsicMeasure
    */
   virtual AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height);
 
+  /**
+   * @brief Called by AView::layout after the view has received its final position and size.
+   * @param size final size of the view; equals AView::getSize() at the moment of the call.
+   * @details
+   * Override to react to the size change or to position children by hand. AViewContainerBase positions its children
+   * here by its layout manager, so overriding views that are containers must call the base implementation.
+   *
+   * Calling AView::requestLayout is ignored while onLayout is in progress.
+   *
+   * See [ALayout] for when and how to override this function.
+   *
+   * @see AView::layout
+   * @see AView::onIntrinsicMeasure
+   */
   virtual void onLayout(glm::ivec2 size);
 
   /**
