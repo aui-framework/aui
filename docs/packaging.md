@@ -155,6 +155,41 @@ of [aui_app] (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
 
 ![](imgs/wix_logo.png)
 
+## Linux
+
+### AUI_APPIMAGE { #APPIMAGE }
+
+!!! note
+
+    This packaging method is AUI-specific and provided by `aui_app` via `AUI_APP_PACKAGING`.
+
+[AppImage](https://appimage.org/) is a distro-independent single-file format: the user downloads the file, makes it
+executable and runs it. AUI uses [linuxdeploy](https://github.com/linuxdeploy/linuxdeploy) to bundle your executable,
+its shared library dependencies, the `.desktop` file and the icon (see [aui_app]).
+
+```bash
+# standard CMake build process
+mkdir build
+cd build
+cmake .. -DCMAKE_BUILD_TYPE=Release -DAUI_APP_PACKAGING=AUI_APPIMAGE
+cmake --build .
+
+# packaging
+cpack . -B artifacts
+
+# publishing
+gh release upload ${{ github.ref }} artifacts/*.*
+```
+
+The script above produces a file `artifacts/<APP_NAME>.AppImage`, where `<APP_NAME>` is the `NAME`
+arg of [aui_app] (unless not overridden by `CPACK_PACKAGE_FILE_NAME`).
+
+`linuxdeploy` is downloaded automatically on first use unless it is found in `PATH`; internet access is required in
+this case. The tool is executed with `APPIMAGE_EXTRACT_AND_RUN=1`, so FUSE is not required on the build machine (i.e.,
+inside a container).
+
+One can provide their own `*.desktop` file with `LINUX_DESKTOP` argument of [aui_app].
+
 ## macOS
 
 !!! note

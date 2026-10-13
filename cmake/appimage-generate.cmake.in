@@ -4,47 +4,67 @@
 # License, v. 2.0. If a copy of the MPL was not distributed with this
 # file, You can obtain one at http://mozilla.org/MPL/2.0/.
 
-include(appimage-generate-vars.cmake)
-include(CMakePrintHelpers)
-cmake_print_variables(CPACK_TEMPORARY_DIRECTORY)
-cmake_print_variables(CPACK_TOPLEVEL_DIRECTORY)
-cmake_print_variables(CPACK_PACKAGE_DIRECTORY)
-cmake_print_variables(CPACK_PACKAGE_FILE_NAME)
+# This script is run by CPack (External generator) when AUI_APP_PACKAGING=AUI_APPIMAGE.
+# Configured by aui_app.
+
+set(EXECUTABLE "$<TARGET_FILE:@APP_TARGET@>")
+set(DESKTOP_FILE "@APP_LINUX_DESKTOP@")
+set(ICON_FILES "@_appimage_icons@")
+set(APPIMAGE_ARCH "@CMAKE_SYSTEM_PROCESSOR@")
+
+set(_tools_dir "${CPACK_PACKAGE_DIRECTORY}/linuxdeploy")
+file(MAKE_DIRECTORY "${_tools_dir}")
 
 find_program(LINUXDEPLOY_EXECUTABLE
-        NAMES linuxdeploy linuxdeploy-x86_64.AppImage
-        PATHS ${CPACK_PACKAGE_DIRECTORY}/linuxdeploy)
+        NAMES linuxdeploy linuxdeploy-${APPIMAGE_ARCH}.AppImage
+        PATHS "${_tools_dir}")
 
 if (NOT LINUXDEPLOY_EXECUTABLE)
     message(STATUS "Downloading linuxdeploy")
-    set(LINUXDEPLOY_EXECUTABLE ${CPACK_PACKAGE_DIRECTORY}/linuxdeploy/linuxdeploy)
+    set(LINUXDEPLOY_EXECUTABLE "${_tools_dir}/linuxdeploy")
     file(DOWNLOAD
-            https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-x86_64.AppImage
-            ${LINUXDEPLOY_EXECUTABLE}
-            INACTIVITY_TIMEOUT 10
-            LOG ${CPACK_PACKAGE_DIRECTORY}/linuxdeploy/download.log
-            STATUS LINUXDEPLOY_DOWNLOAD)
-    execute_process(COMMAND chmod +x ${LINUXDEPLOY_EXECUTABLE} COMMAND_ECHO STDOUT)
-endif()
+            https://github.com/linuxdeploy/linuxdeploy/releases/download/continuous/linuxdeploy-${APPIMAGE_ARCH}.AppImage
+            "${LINUXDEPLOY_EXECUTABLE}"
+            INACTIVITY_TIMEOUT 30
+            SHOW_PROGRESS
+            STATUS _download_status)
+    list(GET _download_status 0 _download_code)
+    if (NOT _download_code EQUAL 0)
+        file(REMOVE "${LINUXDEPLOY_EXECUTABLE}")
+        message(FATAL_ERROR "Unable to download linuxdeploy: ${_download_status}")
+    endif ()
+    execute_process(COMMAND chmod +x "${LINUXDEPLOY_EXECUTABLE}")
+endif ()
+
+set(_appdir "${CPACK_TOPLEVEL_DIRECTORY}/AppDir")
+file(REMOVE_RECURSE "${_appdir}")
+
+set(_output "${CPACK_PACKAGE_FILE_NAME}.AppImage")
+file(REMOVE "${CPACK_PACKAGE_DIRECTORY}/${_output}")
+
+set(_icon_args)
+foreach (_icon ${ICON_FILES})
+    list(APPEND _icon_args --icon-file=${_icon})
+endforeach ()
 
 execute_process(
         COMMAND
         ${CMAKE_COMMAND} -E env
-        OUTPUT=${CPACK_PACKAGE_FILE_NAME}.appimage
-        VERSION=$<IF:$<BOOL:${CPACK_PACKAGE_VERSION}>,${CPACK_PACKAGE_VERSION},0.1.0>
-        ${LINUXDEPLOY_EXECUTABLE}
-        --appdir=${CPACK_TEMPORARY_DIRECTORY}
+        APPIMAGE_EXTRACT_AND_RUN=1 # works without FUSE (containers, CI)
+        LDAI_OUTPUT=${_output}
+        OUTPUT=${_output}
+        VERSION=${CPACK_PACKAGE_VERSION}
+        "${LINUXDEPLOY_EXECUTABLE}"
+        --appdir=${_appdir}
         --desktop-file=${DESKTOP_FILE}
         --executable=${EXECUTABLE}
+        ${_icon_args}
         --output=appimage
-        --icon-file=${ICON_FILE}
-        #    --verbosity=2
-)
+        WORKING_DIRECTORY "${CPACK_PACKAGE_DIRECTORY}"
+        RESULT_VARIABLE _result)
 
+if (NOT _result EQUAL 0)
+    message(FATAL_ERROR "linuxdeploy failed: ${_result}")
+endif ()
 
-list(APPEND CPACK_GENERATOR External)
-
-set(CPACK_EXTERNAL_PACKAGE_SCRIPT "${PROJECT_BINARY_DIR}/appimage-generate.cmake")
-set(CPACK_EXTERNAL_ENABLE_STAGING YES)
-set(CPACK_PACKAGE_FILE_NAME ${PROJECT_NAME}-${PROJECT_VERSION})
-include(CPack)
+set(CPACK_EXTERNAL_BUILT_PACKAGES "${CPACK_PACKAGE_DIRECTORY}/${_output}")

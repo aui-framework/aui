@@ -120,6 +120,7 @@ nav:
   - examples.md
 
   - Introduction:
+    - app-lifetime.md
     - aui-assets.md
     - writing-tests.md
     - code-style.md

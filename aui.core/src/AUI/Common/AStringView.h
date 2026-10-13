@@ -199,6 +199,11 @@ public:
         return *this;
     }
 
+    /**
+     * @brief Removes leading occurrences of `symbol`.
+     * @param symbol symbol to remove.
+     * @return view without leading `symbol`s.
+     */
     constexpr AStringView trimLeft(AChar symbol = ' ') const {
         for (auto i = begin(); i != end(); ++i) {
             if (*i != symbol) {
@@ -208,6 +213,26 @@ public:
         return {};
     }
 
+    /**
+     * @brief Removes leading symbols that belong to the set `symbols` (like `str.lstrip(chars)` in Python).
+     * @param symbols set of symbols to remove. Not a prefix: any symbol of this string is removed in any order and
+     * quantity. Empty set removes nothing.
+     * @return view without leading `symbols`.
+     */
+    constexpr AStringView trimLeft(AStringView symbols) const {
+        for (auto i = begin(); i != end(); ++i) {
+            if (!containsSymbol(symbols, *i)) {
+                return AStringView(&*i, static_cast<size_t>(end() - i));
+            }
+        }
+        return {};
+    }
+
+    /**
+     * @brief Removes trailing occurrences of `symbol`.
+     * @param symbol symbol to remove.
+     * @return view without trailing `symbol`s.
+     */
     constexpr AStringView trimRight(AChar symbol = ' ') const {
         for (auto i = rbegin(); i != rend(); ++i) {
             if (*i != symbol) {
@@ -217,8 +242,45 @@ public:
         return {};
     }
 
+    /**
+     * @brief Removes trailing symbols that belong to the set `symbols` (like `str.rstrip(chars)` in Python).
+     * @param symbols set of symbols to remove. Not a suffix: any symbol of this string is removed in any order and
+     * quantity. Empty set removes nothing.
+     * @return view without trailing `symbols`.
+     */
+    constexpr AStringView trimRight(AStringView symbols) const {
+        for (auto i = rbegin(); i != rend(); ++i) {
+            if (!containsSymbol(symbols, *i)) {
+                return AStringView(data(), static_cast<size_t>(i.base() - begin()));
+            }
+        }
+        return {};
+    }
+
+    /**
+     * @brief Removes leading and trailing occurrences of `symbol`.
+     * @param symbol symbol to remove.
+     * @return trimmed view.
+     * @details
+     * Removes only the single symbol. To remove several symbols at once, use trim(AStringView).
+     */
     constexpr AStringView trim(AChar symbol = ' ') const {
         return trimLeft(symbol).trimRight(symbol);
+    }
+
+    /**
+     * @brief Removes leading and trailing symbols that belong to the set `symbols` (like `str.strip(chars)` in
+     * Python).
+     * @param symbols set of symbols to remove. Any symbol of this string is removed in any order and quantity.
+     * @return trimmed view.
+     *
+     * ```cpp
+     * AStringView(" \t a b \r\n").trim(" \t\r\n"); // "a b"
+     * AStringView("xyhixyx").trim("xy");           // "hi"
+     * ```
+     */
+    constexpr AStringView trim(AStringView symbols) const {
+        return trimLeft(symbols).trimRight(symbols);
     }
 
     AString uppercase() const;
@@ -354,6 +416,16 @@ public:
         return AUtf8View(bytes());
     }
 
+
+private:
+    static constexpr bool containsSymbol(AStringView set, AChar symbol) {
+        for (auto i = set.begin(); i != set.end(); ++i) {
+            if (*i == symbol) {
+                return true;
+            }
+        }
+        return false;
+    }
 };
 
 template<>

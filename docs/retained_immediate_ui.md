@@ -165,3 +165,76 @@ suggest using declarative mode only.
 
 A good example for preferring retained mode to declarative is a simple text editor, where everything goes around of a
 single view.
+
+## Why not a purely functional model (Jetpack Compose / immediate mode)? { #why_not_fp }
+
+A frequently asked design question is whether AUI should have gone the "a view is just a function call, and the tree is
+rebuilt on every change" route, like Jetpack Compose (functional recomposition) or Dear ImGui (immediate mode), instead
+of the current SwiftUI-like model based on persistent view objects and declarative contracts.
+
+The short answer: the current model is a deliberate fit for a C++ framework targeting desktop, mobile and embedded
+platforms. Adopting a pure "rebuild the tree" model would trade away AUI's core performance guarantees for little
+practical gain.
+
+### What AUI actually is
+
+AUI is a **retained-mode** framework:
+
+- The UI is a persistent tree of reference-counted view objects (`_<AView>`), whose children are stored in a plain
+  container (`AVector<_<AView>>`).
+- The declarative `Vertical { a, b }` syntax is C++20 aggregate initialization over lightweight factory types. It runs
+  **once** to build that tree.
+- Reactivity (`AProperty` / `APropertyPrecomputed` / `AUI_REACT` + signal/slot
+  `connect`) **mutates the existing views in place** through setters. It does not re-run the building lambda.
+- Layout is recomputed **lazily, only when invalidated** (a dirty flag propagated by `markMinContentSizeInvalid` (in older versions) / `requestLayout` (in newer versions)), never unconditionally per frame.
+
+In other words, AUI already provides the immediate-mode-like *developer experience* while keeping retained-mode
+*performance*.
+
+### Why the "everything is a function, rebuild on change" model does not fit
+
+1. **Recomposition needs a heavy runtime that C++ neither has nor wants.** Compose's "call a function, the runtime
+   figures out what to redraw" magic relies on a compiler plugin, a slot table and positional memoization
+   (`remember`). Emulating that in C++ would mean shipping a large runtime and giving up the zero-overhead,
+   predictable behavior C++ developers expect. AUI gets the equivalent result cheaply: dependencies are tracked
+   automatically inside `AUI_REACT` via a `DependencyObserverScope`, with no global recomposition runtime.
+
+2. **Rebuilding subtrees defeats the main advantage of retained mode — targeted mutation.** Today, changing an
+   `AProperty` invokes a **single setter on an existing object**. A pure functional model would either
+   rebuild subtrees (heap allocations plus relayout) or diff them anyway — effectively reinventing a retained tree under
+   the hood, but behind a more expensive front end.
+
+3. **AUI is intentionally not immediate mode, precisely because of resource usage.** As noted above, immediate mode is
+   impractical for most applications, especially on mobile, because it re-evaluates layout and redraws everything every
+   frame.
+
+### AUI already takes the best of the functional approach - locally
+
+Importantly, AUI does not have to choose between "everything is a function" and "everything is an object". It is a
+hybrid, and it applies functional decomposition *surgically*, exactly where structural dynamism is needed:
+
+- `AUI_REACT(expr)` is effectively "a function returning a value", lazily recomputed only when its dependencies change
+  (see `APropertyPrecomputed`).
+- `aui::experimental::Dynamic { AUI_REACT(...) }` is "a function returning a view"; it swaps a **single** subtree via
+  `ALayoutInflater` when its input changes. This is functional style, but localized.
+- `AUI_DECLARATIVE_FOR` / `AForEachUI` is "a function that builds a row from an item", but with a key-based view cache
+  and virtualization inside an `AScrollArea` — conceptually Compose's `LazyColumn`, implemented on top of a retained
+  tree.
+
+So functional expressiveness is **available as an opt-in** where it is justified, while the default path stays a cheap
+in-place mutation.
+
+### Takeaway on ergonomics
+
+The right lesson to borrow from Compose is **decomposition into small component functions**, not the recomposition
+model. Prefer writing UI as a set of small factories that return a view:
+
+```cpp
+_<AView> notePreview(const _<Note>& note);
+_<AView> noteEditor(const _<Note>& note);
+```
+
+Each such function is a "component" that is invoked once; dynamism is then expressed through `AProperty`,
+`AUI_REACT` and `Dynamic`. This keeps the code readable (and avoids pushing a single, enormous expression through the
+compiler) without giving up retained-mode performance.
+

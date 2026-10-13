@@ -126,7 +126,7 @@ void AAbstractTypeable::handleKey(AInput::Key key)
             break;
 
         default:
-            if (AInput::isKeyDown(AInput::LCONTROL) || AInput::isKeyDown(AInput::RCONTROL)) {
+            if (AInput::isKeyDown(AInput::CMD_CTRL) || AInput::isKeyDown(AInput::RCMD_CTRL)) {
                 switch (key) {
                     case AInput::A: // select all
                         selectAll();
@@ -181,6 +181,9 @@ void AAbstractTypeable::eraseSelection() {
 }
 
 void AAbstractTypeable::paste(AString content) {
+    // The cursor may sit past the end if the text was replaced from the outside; typeableInsert
+    // would then throw out_of_range.
+    mCursorIndex = std::min(mCursorIndex, static_cast<unsigned>(length()));
     auto pastePos = mCursorIndex;
     AOptional<AString> prevContents;
     if (mCursorSelection) {
@@ -196,7 +199,9 @@ void AAbstractTypeable::paste(AString content) {
         content = content.replacedAll("\n", "");
     }
     if (typeableInsert(pastePos, content)) {
-        mCursorIndex = pastePos + content.length();
+        // AString holds UTF-8 bytes while the contents are code points, so the cursor must advance
+        // by the number of characters inserted, not by the byte count.
+        mCursorIndex = pastePos + content.utf8().length();
         mCursorSelection.reset();
 
         typeableInvalidateFont();
@@ -282,11 +287,11 @@ void AAbstractTypeable::enterChar(AChar c)
 }
 
 AMenuModel AAbstractTypeable::composeContextMenuImpl() {
-    return { { .name = "aui.cut"_i18n, .shortcut = AInput::LCONTROL + AInput::X, .onAction = [&]{cutToClipboard();}, .enabled = hasSelection(), },
-             { .name = "aui.copy"_i18n, .shortcut = AInput::LCONTROL + AInput::C, .onAction = [&]{copyToClipboard();}, .enabled = hasSelection() },
-             { .name = "aui.paste"_i18n, .shortcut = AInput::LCONTROL + AInput::V, .onAction = [&]{pasteFromClipboard();}, .enabled = !AClipboard::isEmpty() },
+    return { { .name = "aui.cut"_i18n, .shortcut = AInput::CMD_CTRL + AInput::X, .onAction = [&]{cutToClipboard();}, .enabled = hasSelection(), },
+             { .name = "aui.copy"_i18n, .shortcut = AInput::CMD_CTRL + AInput::C, .onAction = [&]{copyToClipboard();}, .enabled = hasSelection() },
+             { .name = "aui.paste"_i18n, .shortcut = AInput::CMD_CTRL + AInput::V, .onAction = [&]{pasteFromClipboard();}, .enabled = !AClipboard::isEmpty() },
              { .type = AMenu::SEPARATOR, },
-             { .name = "aui.select_all"_i18n, .shortcut = AInput::LCONTROL + AInput::A, .onAction = [&]{selectAll();}, .enabled = !getText().empty() } };
+             { .name = "aui.select_all"_i18n, .shortcut = AInput::CMD_CTRL + AInput::A, .onAction = [&]{selectAll();}, .enabled = !getText().empty() } };
 }
 
 void AAbstractTypeable::setText(const AString& t)

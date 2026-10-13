@@ -14,6 +14,7 @@
 //
 
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Common/AOptional.h>
 #include "AUIView.h"
 
 static constexpr auto LOG_TAG = "AUIView";
@@ -43,6 +44,28 @@ void onMouseButtonUp(AWindow* window, NSEvent* event, AInput::Key key) {
 
 bool isEventReserved(NSEvent* event) {
     return false; // stub
+}
+
+/**
+ * @return the NSEvent modifier flag that corresponds to key, if key is a modifier.
+ */
+AOptional<NSEventModifierFlags> modifierFlagOf(AInput::Key key) {
+    switch (key) {
+        case AInput::LSHIFT:
+        case AInput::RSHIFT:
+            return NSEventModifierFlagShift;
+        case AInput::LCONTROL:
+        case AInput::RCONTROL:
+            return NSEventModifierFlagControl;
+        case AInput::LALT:
+        case AInput::RALT:
+            return NSEventModifierFlagOption;
+        case AInput::LSYSTEM:
+        case AInput::RSYSTEM:
+            return NSEventModifierFlagCommand;
+        default:
+            return std::nullopt;
+    }
 }
 }
 
@@ -118,15 +141,11 @@ bool isEventReserved(NSEvent* event) {
     ALOG_DEBUG(LOG_TAG) << "insertText";
     // Could be NSString or NSAttributedString, so we have
     // to test and convert.
-    AString str = [&]{
-        if ([string isKindOfClass:[NSAttributedString class]]) {
-            return [[string string] UTF8String];
-        } else {
-            return [string UTF8String];
-        }
-    }();
-    
-    for (const auto c : str) {
+    NSString* text = [string isKindOfClass:[NSAttributedString class]] ? [string string] : string;
+
+    // AUtf8View decodes UTF-8 into code points; iterating the bytes directly would
+    // feed each byte to onCharEntered as a Latin-1 char.
+    for (const auto c : AUtf8View([text UTF8String])) {
         mAWindow->onCharEntered(c);
     }
 }
@@ -211,6 +230,20 @@ bool isEventReserved(NSEvent* event) {
       // and KanaMode from JIS PC keyboard.
       if (!keyCode || keyCode == 10 || keyCode == 63 || keyCode == 255)
         return;
+
+      // A flags-changed event reports the new modifier state rather than a
+      // press or a release, so derive the state from the flags themselves.
+      const auto key = AInput::fromNative(keyCode);
+      if (auto flag = modifierFlagOf(key)) {
+          const bool down = (modifierFlags & *flag) != 0;
+          gKeyStates[key] = down;
+          if (down) {
+              mAWindow->onKeyDown(key);
+          } else {
+              mAWindow->onKeyUp(key);
+          }
+      }
+      return;
     }
 
     // Don't cancel child popups; the key events are probably what's triggering
@@ -274,6 +307,10 @@ bool isEventReserved(NSEvent* event) {
     mAWindow->onKeyDown(AInput::fromNative(keyCode));
 }
 
+
+- (void)flagsChanged:(NSEvent*)event {
+    [self keyEvent:event wasKeyEquivalent:NO];
+}
 
 - (void)mouseMoved:(NSEvent *)event {
     onMouseMoved(mAWindow, event);

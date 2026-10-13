@@ -93,6 +93,11 @@ void AWindow::show() {
     emit shown();
 }
 
+void AWindow::activate(const AString& activationToken) {
+    show();
+    IPlatformAbstraction::current().windowActivate(*this, activationToken);
+}
+
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({ x, y });
     AViewContainer::setSize({ width, height });
@@ -117,13 +122,19 @@ void AWindow::hide() {
 }
 
 void AWindowManager::notifyProcessMessages() {
-    if (mWindows.empty()) {
+    if (mWindows.empty() && !mLoopRunning) {
+        // nothing to wake up; also avoids initializing platform abstraction by embedded (i.e., SDL) applications.
         return;
     }
     IPlatformAbstraction::current().windowManagerNotifyProcessMessages();
 }
 
 void AWindowManager::loop() {
+    mLoopRunning = true;
+    if (!shouldKeepRunning()) {
+        // nothing holds the application (CLI or embedded app); don't even touch the platform.
+        return;
+    }
     IPlatformAbstraction::current().windowManagerLoop();
 }
 
