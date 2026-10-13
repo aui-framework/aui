@@ -180,6 +180,16 @@ protected:
 
     void handleScrollbar(float delta, int baseScroll);
 
+    /**
+     * @brief Shrinks the child so that it does not stick out of our cross axis.
+     * @details
+     * ass::FixedSize is law for AView::setSize, so a scrollbar that was laid out thinner than its chrome (i.e. an
+     * ass::FixedSize on the scrollbar itself) would have its arrows and handle sticking out. Writing the cross axis
+     * into the child's own fixed size instead would feed back into AScrollbar::chromeThickness, making this scrollbar
+     * remember its previous thickness, see AScrollbar::onLayout.
+     */
+    void squeezeIntoCrossAxis(AView& child) const noexcept;
+
 
 private:
     struct StickToEnd {

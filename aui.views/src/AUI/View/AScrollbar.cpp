@@ -414,6 +414,27 @@ float AScrollbar::getAvailableSpaceForSpacer() {
     return 0;
 }
 
+void AScrollbar::squeezeIntoCrossAxis(AView& child) const noexcept {
+    auto size = child.getSize();
+    const auto margin = child.getMargin();
+    switch (mDirection) {
+        case ALayoutDirection::HORIZONTAL:
+            size.y = glm::min(size.y, glm::max(0, getHeight() - margin.vertical()));
+            break;
+
+        case ALayoutDirection::VERTICAL:
+            size.x = glm::min(size.x, glm::max(0, getWidth() - margin.horizontal()));
+            break;
+
+        case ALayoutDirection::NONE:
+            return;
+    }
+    if (size == child.getSize()) {
+        return;
+    }
+    child.setSizeForced(size);   // see declaration: our cross axis wins over the child's ass::FixedSize.
+}
+
 void AScrollbarButton::onLayout(glm::ivec2 size) {
   const auto margins = getMargin().occupiedSize();
   switch (mScrollbar.mDirection) {
@@ -430,6 +451,7 @@ void AScrollbarButton::onLayout(glm::ivec2 size) {
   }
 
   AView::setSize(size);
+  mScrollbar.squeezeIntoCrossAxis(*this);
   AView::onLayout(getSize());
 }
 
@@ -508,6 +530,7 @@ void AScrollbarHandle::onLayout(glm::ivec2 size) {
   }
 
   AView::setSize(size);
+  mScrollbar.squeezeIntoCrossAxis(*this);
   AView::onLayout(getSize());
 }
 
