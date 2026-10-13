@@ -348,9 +348,6 @@ int AScrollbar::minimumChromeLength() const {
 glm::ivec2 AScrollbar::onIntrinsicMeasure(AConstraints constraints) {
     const int thickness = chromeThickness();
     const int minimumLength = minimumChromeLength();
-    if (getAssNames().contains("DevtoolsTest")) {
-        printf("\n");
-    }
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL: {

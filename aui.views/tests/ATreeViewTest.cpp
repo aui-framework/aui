@@ -55,12 +55,41 @@ TEST(ATreeView, ShowsHorizontalScrollbarForWideRows) {
         return _new<FixedWidthTreeItemView>(150, 20);
     });
     treeView.setModel(model);
-    treeView.layout({ 0, 0 }, { 100, 40 });
+
+    // the rows are 25px tall in total, so this height leaves room for the horizontal scrollbar; see
+    // ShowsBothScrollbarsWhenHorizontalScrollbarEatsRemainingHeight for the tight case.
+    treeView.layout({ 0, 0 }, { 100, 80 });
 
     EXPECT_TRUE(static_cast<bool>(horizontalScrollbar(treeView)->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
     EXPECT_FALSE(static_cast<bool>(verticalScrollbar(treeView)->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
-    EXPECT_EQ(horizontalScrollbar(treeView)->getPosition().y, 25);
-    EXPECT_EQ(horizontalScrollbar(treeView)->getWidth(), 100);
+
+    // the scrollbar's margin box occupies the bottom of the content box and spans its whole width.
+    const auto scrollbar = horizontalScrollbar(treeView);
+    const auto margin = scrollbar->getMargin();
+    EXPECT_EQ(
+        scrollbar->getPosition().y,
+        treeView.getHeight() - treeView.getPadding().bottom - scrollbar->getHeight() - margin.bottom);
+    EXPECT_EQ(
+        scrollbar->getWidth() + margin.horizontal() + treeView.getPadding().horizontal(), treeView.getWidth());
+}
+
+TEST(ATreeView, ShowsBothScrollbarsWhenHorizontalScrollbarEatsRemainingHeight) {
+    auto model = _new<ATreeModel<AString>>(AVector<ATreeModel<AString>::Item> {
+        { .value = "row" },
+    });
+
+    ATreeView treeView;
+    treeView.setViewFactory([](const _<ITreeModel<AString>>&, const ATreeModelIndex&) {
+        return _new<FixedWidthTreeItemView>(150, 20);
+    });
+    treeView.setModel(model);
+
+    // the single 25px tall row fits in 40px, but not in what's left of it once the horizontal scrollbar is there.
+    // overflow: auto behaves the same way: one scrollbar may bring up the other one.
+    treeView.layout({ 0, 0 }, { 100, 40 });
+
+    EXPECT_TRUE(static_cast<bool>(horizontalScrollbar(treeView)->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
+    EXPECT_TRUE(static_cast<bool>(verticalScrollbar(treeView)->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
 }
 
 TEST(ATreeView, SelectScrollsHorizontallyToRevealWideRows) {
