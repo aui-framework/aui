@@ -116,6 +116,16 @@ private:
     glm::ivec2 mSize;
 };
 
+/**
+ * @brief Size the view occupies in its parent: its measured size plus its margin.
+ * @details
+ * measure() applies the view's ASS, hence getMargin() is queried afterwards.
+ */
+glm::ivec2 marginBoxSize(const _<AView>& view) {
+    const auto measured = view->measure(AConstraints {});
+    return measured + view->getMargin().occupiedSize();
+}
+
 }   // namespace
 
 TEST(AScrollArea, MeasureGrowsToAvoidVerticalScrollbarWhenHeightIsUnbounded) {
@@ -175,10 +185,10 @@ TEST(AScrollArea, MeasureWithZeroSizedViewportProbeReturnsMinimumChromeSizePlusP
     scrollArea.setPadding({ .left = 3, .right = 5, .top = 7, .bottom = 11 });
     scrollArea.setContents(content);
 
-    const int expectedWidth =
-        scrollArea.verticalScrollbar()->measure(AConstraints {}).x * 2 + scrollArea.getPadding().horizontal();
+    // a scrollbar occupies its measured size plus its margin, see ALayout.h "Margins and manual layout".
+    const int expectedWidth = marginBoxSize(scrollArea.verticalScrollbar()).x * 2 + scrollArea.getPadding().horizontal();
     const int expectedHeight =
-        scrollArea.horizontalScrollbar()->measure(AConstraints {}).y * 2 + scrollArea.getPadding().vertical();
+        marginBoxSize(scrollArea.horizontalScrollbar()).y * 2 + scrollArea.getPadding().vertical();
 
     const auto measured = scrollArea.measure({
         .maxInline = 0,
@@ -251,10 +261,13 @@ TEST(AScrollArea, VerticalOverflowRespectsPadding) {
     EXPECT_FALSE(bool(scrollArea.horizontalScrollbar()->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
 
     const glm::ivec2 contentBoxSize = glm::ivec2(100, 30) - scrollArea.getPadding().occupiedSize();
-    const int viewportWidth = contentBoxSize.x - scrollArea.verticalScrollbar()->getWidth();
+    const auto scrollbarMargin = scrollArea.verticalScrollbar()->getMargin();
+    const int viewportWidth = contentBoxSize.x - scrollArea.verticalScrollbar()->getWidth() - scrollbarMargin.horizontal();
     EXPECT_EQ(content->lastMeasuredWidth(), viewportWidth);
-    EXPECT_EQ(scrollArea.verticalScrollbar()->getPosition(), glm::ivec2(3 + viewportWidth, 7));
-    EXPECT_EQ(scrollArea.verticalScrollbar()->getHeight(), contentBoxSize.y);
+    EXPECT_EQ(
+        scrollArea.verticalScrollbar()->getPosition(),
+        glm::ivec2(3 + viewportWidth + scrollbarMargin.left, 7 + scrollbarMargin.top));
+    EXPECT_EQ(scrollArea.verticalScrollbar()->getHeight(), contentBoxSize.y - scrollbarMargin.vertical());
 }
 
 TEST(AScrollAreaViewport, MeasureUsesContentSize) {
@@ -293,9 +306,17 @@ TEST(AScrollArea, VerticalOverflowReducesViewportWidthWithoutHorizontalScroll) {
     EXPECT_TRUE(bool(scrollArea.verticalScrollbar()->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
     EXPECT_FALSE(bool(scrollArea.horizontalScrollbar()->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
 
-    const int viewportWidth = scrollArea.getWidth() - scrollArea.verticalScrollbar()->getWidth();
+    const auto scrollbarMargin = scrollArea.verticalScrollbar()->getMargin();
+    const int viewportWidth =
+        scrollArea.getWidth() - scrollArea.verticalScrollbar()->getWidth() - scrollbarMargin.horizontal();
     EXPECT_EQ(content->lastMeasuredWidth(), viewportWidth);
-    EXPECT_EQ(scrollArea.verticalScrollbar()->getPosition().x, viewportWidth);
+    EXPECT_EQ(scrollArea.verticalScrollbar()->getPosition().x, viewportWidth + scrollbarMargin.left);
+
+    // the scrollbar gets exactly the thickness it was measured with; anything less squeezes its handle below
+    // ass::MinSize.
+    EXPECT_EQ(
+        scrollArea.verticalScrollbar()->getWidth(),
+        scrollArea.verticalScrollbar()->measure(AConstraints::fixedBlock(scrollArea.verticalScrollbar()->getHeight())).x);
 }
 
 TEST(AScrollArea, MinimumWidthContentUsesHorizontalScrollbar) {
@@ -310,9 +331,14 @@ TEST(AScrollArea, MinimumWidthContentUsesHorizontalScrollbar) {
 
     EXPECT_TRUE(static_cast<bool>(scrollArea.horizontalScrollbar()->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
     EXPECT_FALSE(static_cast<bool>(scrollArea.verticalScrollbar()->getVisibility() & Visibility::FLAG_RENDER_NEEDED));
-    EXPECT_EQ(scrollArea.horizontalScrollbar()->getPosition().y,
-              scrollArea.getHeight() - scrollArea.horizontalScrollbar()->getHeight());
-    EXPECT_EQ(scrollArea.horizontalScrollbar()->getWidth(), 100);
+    const auto scrollbarMargin = scrollArea.horizontalScrollbar()->getMargin();
+    EXPECT_EQ(
+        scrollArea.horizontalScrollbar()->getPosition().y,
+        scrollArea.getHeight() - scrollArea.horizontalScrollbar()->getHeight() - scrollbarMargin.bottom);
+
+    // the scrollbar's margin box spans the whole width of the scroll area.
+    EXPECT_EQ(scrollArea.horizontalScrollbar()->getWidth() + scrollbarMargin.horizontal(), scrollArea.getWidth());
+    EXPECT_EQ(scrollArea.horizontalScrollbar()->getPosition().x, scrollbarMargin.left);
 }
 
 TEST(AScrollArea, MaxSizeIsLargerThanMinSize) {
