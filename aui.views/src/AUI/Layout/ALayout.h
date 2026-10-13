@@ -141,7 +141,7 @@ class AViewContainer;
  * ## Visibility and space consumption { #VISIBILITY_AND_SPACE }
  *
  * Whether a child occupies space in its parent is determined by the `Visibility::FLAG_CONSUME_SPACE` flag of
- * [AView::getVisibility()]:
+ * `AView::getVisibility()`:
  *
  * | Visibility | `FLAG_CONSUME_SPACE` | Occupies space |
  * |------------|----------------------|----------------|
@@ -601,7 +601,7 @@ class AViewContainer;
  * - [AView::redraw] - triggers surface redraw. Surface applies layout before rendering.
  * - [AView::layout] - the single entry point for positioning and sizing a view. Replaces the old
  *   `applyGeometryToChildrenIfNecessary()`. Skips work if position, size and `mWantsLayoutUpdate` flag are all
- *   unchanged; otherwise sets position/size and calls [AView::onLayout(glm::ivec2)]. Always called by the parent layout
+ *   unchanged; otherwise sets position/size and calls `AView::onLayout(glm::ivec2)`. Always called by the parent layout
  *   manager — **do not call directly**.
  *
  * ### Layout boundaries { #LAYOUT_BOUNDARIES }
@@ -627,8 +627,8 @@ class AViewContainer;
  *
  * See [MEASURE_PIPELINE] for the full pipeline. In brief:
  * - [AView::computeMinMaxAxis] — returns min/max inline (width) range for a given block (height). Wraps
- *   [AView::onComputeIntrinsicMinMaxAxis] and adds padding, fixed/min/max constraints.
- * - [AView::measure] — returns preferred outer size under [AConstraints]. Wraps [AView::onIntrinsicMeasure]
+ *   `AView::onComputeIntrinsicMinMaxAxis` and adds padding, fixed/min/max constraints.
+ * - [AView::measure] — returns preferred outer size under `AConstraints`. Wraps `AView::onIntrinsicMeasure`
  *   and adds padding, fixed/min/max constraints. Result is cached per-constraints set.
  * - After measured sizes of children are determined, the layout manager distributes remaining **free space** among
  *   children that have a non-zero [EXPANDING] value, proportionally to that value.
@@ -663,7 +663,7 @@ public:
      * !!! note
      *
      *     You rarely need to call this manually. It is called automatically when ASS properties change,
-     *     when a view is resized, or when [addView]/[removeView] is called. Override this in a custom layout
+     *     when a view is resized, or when `addView`/`removeView` is called. Override this in a custom layout
      *     manager only if you maintain extra internal caches that also need clearing.
      */
     virtual void requestLayout();
@@ -702,23 +702,23 @@ public:
     /**
      * @brief Returns min/max preferred inline (width) size of the layout for a given block (height).
      * @param height Content height in px, or -1 for unconstrained.
-     * @return [AMinMaxAxis] with `min` and `max` outer widths.
+     * @return `AMinMaxAxis` with `min` and `max` outer widths.
      * @details
-     * Wraps [onComputeIntrinsicMinMaxAxis] and applies padding, `ass::FixedSize`, `ass::MinSize`, `ass::MaxSize`.
+     * Wraps `onComputeIntrinsicMinMaxAxis` and applies padding, `ass::FixedSize`, `ass::MinSize`, `ass::MaxSize`.
      * Result is cached; invalidated by `requestLayout()`.
-     * Do **not** override this method — override [onComputeIntrinsicMinMaxAxis] instead.
+     * Do **not** override this method — override `onComputeIntrinsicMinMaxAxis` instead.
      * See [MEASURE_PIPELINE] for the full pipeline.
      */
     AMinMaxAxis computeMinMaxAxis(int height = -1);
 
     /**
      * @brief Returns the preferred outer size of the layout under given constraints.
-     * @param constraints Constraints describing the available space (see [AConstraints]).
+     * @param constraints Constraints describing the available space (see `AConstraints`).
      * @return Preferred outer `{width, height}` in px.
      * @details
-     * Wraps [onIntrinsicMeasure] and applies padding, `ass::FixedSize`, `ass::MinSize`, `ass::MaxSize`.
+     * Wraps `onIntrinsicMeasure` and applies padding, `ass::FixedSize`, `ass::MinSize`, `ass::MaxSize`.
      * Result is cached per `AConstraints` key; invalidated by `requestLayout()`.
-     * Do **not** override this method — override [onIntrinsicMeasure] instead.
+     * Do **not** override this method — override `onIntrinsicMeasure` instead.
      * See [MEASURE_PIPELINE] for the full pipeline.
      */
     glm::ivec2 measure(AConstraints constraints);
@@ -733,10 +733,10 @@ public:
      * @return Preferred content `{width, height}` in px.
      * @details
      * Override this in a layout manager to report how much space the managed children need.
-     * The public [measure] wraps this method and handles padding, `ass::FixedSize`, `ass::MinSize`, `ass::MaxSize`
+     * The public `measure` wraps this method and handles padding, `ass::FixedSize`, `ass::MinSize`, `ass::MaxSize`
      * automatically — **never call** `onIntrinsicMeasure` directly.
      *
-     * The default implementation delegates to [onComputeIntrinsicMinMaxAxis] and clamps to constraints.
+     * The default implementation delegates to `onComputeIntrinsicMinMaxAxis` and clamps to constraints.
      * See [MEASURE_PIPELINE] for the full pipeline.
      */
     virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints) {
@@ -751,10 +751,10 @@ public:
     /**
      * @brief Computes the min/max preferred **content** inline (width) size for a given content height.
      * @param height Content height in px, or -1 for unconstrained.
-     * @return [AMinMaxAxis] with `min` and `max` content widths.
+     * @return `AMinMaxAxis` with `min` and `max` content widths.
      * @details
      * Override this in a layout manager to report the range of widths the managed children need.
-     * The public [computeMinMaxAxis] wraps this method and handles padding, `ass::FixedSize`, etc.
+     * The public `computeMinMaxAxis` wraps this method and handles padding, `ass::FixedSize`, etc.
      * automatically — **never call** `onComputeIntrinsicMinMaxAxis` directly.
      * See [MEASURE_PIPELINE] for the full pipeline.
      */
