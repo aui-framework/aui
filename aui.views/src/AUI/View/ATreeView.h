@@ -13,9 +13,7 @@
 // Created by alex2 on 7/1/2021.
 //
 
-
 #pragma once
-
 
 #include "AUI/Model/ATreeModelIndex.h"
 #include "AScrollArea.h"
@@ -31,44 +29,45 @@
  * @details
  * ATreeView provides view of string-capable ITreeModel objects.
  */
-class API_AUI_VIEWS ATreeView: public AScrollArea {
+class API_AUI_VIEWS ATreeView : public AScrollArea {
 private:
-  class ItemView;
+    class ItemView;
 
 public:
-  ATreeView();
-  ATreeView(const _<ITreeModel<AString>>& model);
-  void setModel(const _<ITreeModel<AString>>& model);
-  glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
-  AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
-  void onLayout(glm::ivec2 size) override;
-  void onScroll(const AScrollEvent& event) override;
-  void handleMouseMove(ItemView* pView);
+    ATreeView();
+    ATreeView(const _<ITreeModel<AString>>& model);
+    void setModel(const _<ITreeModel<AString>>& model);
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
+    void onLayout(glm::ivec2 size) override;
+    void onScroll(const AScrollEvent& event) override;
+    void handleMouseMove(ItemView* pView);
 
-  void setViewFactory(const std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeModelIndex&)>& viewFactory) {
-    mViewFactory = viewFactory;
-  }
+    void
+    setViewFactory(const std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeModelIndex&)>& viewFactory) {
+        mViewFactory = viewFactory;
+    }
 
-  void select(const ATreeModelIndex& indexToSelect);
+    void select(const ATreeModelIndex& indexToSelect);
 
 signals:
-  emits<ATreeModelIndex> itemSelected;
-  emits<ATreeModelIndex> itemMouseClicked;
-  emits<ATreeModelIndex> itemMouseDoubleClicked;
-  emits<ATreeModelIndex> itemMouseHover;
+    emits<ATreeModelIndex> itemSelected;
+    emits<ATreeModelIndex> itemMouseClicked;
+    emits<ATreeModelIndex> itemMouseDoubleClicked;
+    emits<ATreeModelIndex> itemMouseHover;
 
 private:
-  _<ITreeModel<AString>> mModel;
-  _<AViewContainer> mContent;
-  _weak<ItemView> mPrevSelection;
+    _<ITreeModel<AString>> mModel;
+    _<AViewContainer> mContent;
+    _weak<ItemView> mPrevSelection;
 
-  std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeModelIndex& index)> mViewFactory;
+    std::function<_<AView>(const _<ITreeModel<AString>>&, const ATreeModelIndex& index)> mViewFactory;
 
-  void handleMousePressed(ItemView* v);
-  void handleMouseDoubleClicked(ItemView* v);
-  void handleSelected(ItemView* v);
+    void handleMousePressed(ItemView* v);
+    void handleMouseDoubleClicked(ItemView* v);
+    void handleSelected(ItemView* v);
 
-  void rebuildContents();
-  void fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndexOrRoot& index);
-  _<ItemView> indexToView(const ATreeModelIndex& target);
+    void rebuildContents();
+    void fillViewsRecursively(const _<AViewContainer>& content, const ATreeModelIndexOrRoot& index);
+    _<ItemView> indexToView(const ATreeModelIndex& target);
 };

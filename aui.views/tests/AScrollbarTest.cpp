@@ -17,49 +17,49 @@
 #include <AUI/View/AScrollbar.h>
 
 TEST(AScrollbar, MeasureIsStableForZeroMainAxisConstraint) {
-  AScrollbar horizontal(ALayoutDirection::HORIZONTAL);
-  AScrollbar vertical(ALayoutDirection::VERTICAL);
+    AScrollbar horizontal(ALayoutDirection::HORIZONTAL);
+    AScrollbar vertical(ALayoutDirection::VERTICAL);
 
-  const auto horizontalMeasured = horizontal.measure(AConstraints::fixedInline(0));
-  const auto verticalMeasured = vertical.measure(AConstraints::fixedBlock(0));
+    const auto horizontalMeasured = horizontal.measure(AConstraints::fixedInline(0));
+    const auto verticalMeasured = vertical.measure(AConstraints::fixedBlock(0));
 
-  EXPECT_EQ(horizontalMeasured.x, 0);
-  EXPECT_GT(horizontalMeasured.y, 0);
-  EXPECT_EQ(verticalMeasured.y, 0);
-  EXPECT_GT(verticalMeasured.x, 0);
+    EXPECT_EQ(horizontalMeasured.x, 0);
+    EXPECT_GT(horizontalMeasured.y, 0);
+    EXPECT_EQ(verticalMeasured.y, 0);
+    EXPECT_GT(verticalMeasured.x, 0);
 }
 
 TEST(AScrollbar, VerticalChildrenStayWithinCrossAxisBounds) {
-  AScrollbar vertical(ALayoutDirection::VERTICAL);
-  vertical.setScrollDimensions(50, 100);
-  vertical.layout({ 0, 0 }, { 13, 100 });
+    AScrollbar vertical(ALayoutDirection::VERTICAL);
+    vertical.setScrollDimensions(50, 100);
+    vertical.layout({ 0, 0 }, { 13, 100 });
 
-  for (const auto& child : vertical.getViews()) {
-    if (!(child->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
-      continue;
+    for (const auto& child : vertical.getViews()) {
+        if (!(child->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+            continue;
+        }
+        EXPECT_GE(child->getPosition().x, 0);
+        EXPECT_LE(child->getPosition().x + child->getWidth(), vertical.getWidth());
     }
-    EXPECT_GE(child->getPosition().x, 0);
-    EXPECT_LE(child->getPosition().x + child->getWidth(), vertical.getWidth());
-  }
 }
 
 TEST(AScrollbar, HorizontalChildrenStayWithinCrossAxisBounds) {
-  AScrollbar horizontal(ALayoutDirection::HORIZONTAL);
-  horizontal.setScrollDimensions(50, 100);
-  horizontal.layout({ 0, 0 }, { 100, 13 });
+    AScrollbar horizontal(ALayoutDirection::HORIZONTAL);
+    horizontal.setScrollDimensions(50, 100);
+    horizontal.layout({ 0, 0 }, { 100, 13 });
 
-  for (const auto& child : horizontal.getViews()) {
-    if (!(child->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
-      continue;
+    for (const auto& child : horizontal.getViews()) {
+        if (!(child->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+            continue;
+        }
+        EXPECT_GE(child->getPosition().y, 0);
+        EXPECT_LE(child->getPosition().y + child->getHeight(), horizontal.getHeight());
     }
-    EXPECT_GE(child->getPosition().y, 0);
-    EXPECT_LE(child->getPosition().y + child->getHeight(), horizontal.getHeight());
-  }
 }
 
 TEST(AScrollbar, DraggingIsStable) {
     AScrollbar vertical(ALayoutDirection::VERTICAL);
-    vertical.setScrollDimensions(100, 1000); // max scroll 900
+    vertical.setScrollDimensions(100, 1000);   // max scroll 900
     vertical.setSize({ 20, 100 });
     vertical.layout({ 0, 0 }, { 20, 100 });
 
