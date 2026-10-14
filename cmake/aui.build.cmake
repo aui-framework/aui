@@ -310,6 +310,9 @@ macro(aui_enable_tests AUI_MODULE_NAME)
             target_sources(Tests PRIVATE ${TESTS_SRCS}) # append sources
         endif()
 
+        # add compile definition to the module when building with tests
+        target_compile_definitions(${AUI_MODULE_NAME} PUBLIC AUI_BUILD_TESTS=1)
+
         if (TARGET Tests)
             # if the specified target is an executable, we should add it's srcs to the Tests target, otherwise just link it.
             get_property(_type TARGET ${AUI_MODULE_NAME} PROPERTY TYPE)
