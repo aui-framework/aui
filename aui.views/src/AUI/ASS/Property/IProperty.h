@@ -14,7 +14,7 @@
 #include "IPropertyBase.h"
 
 
-namespace ass::prop {
+namespace ass::legacy {
     template<typename PropertyStruct>
     struct Property; // ignore ass_properties
 }

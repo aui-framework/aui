@@ -31,6 +31,8 @@
 #include "AUI/Util/AFieldSignalEmitter.h"
 #include "AUI/Render/ARenderContext.h"
 #include "AUI/Util/IBackgroundEffect.h"
+#include "AUI/Util/Declarative/Modifier.h"
+
 #include <AUI/ASS/PropertyListRecursive.h>
 #include <AUI/Enum/AOverflow.h>
 #include <AUI/Enum/Visibility.h>
@@ -933,6 +935,14 @@ public:
         return mFloating;
     }
 
+    /**
+     * @brief Apply a modifier to this view.
+     * @param modifier modifier to apply
+     * @details
+     * Stores the modifier and re-applies it after style updates to ensure it takes precedence over ASS styles.
+     */
+    void setModifier(ass::Modifier modifier);
+
 signals:
     /**
      * @see onViewGraphSubtreeChanged()
@@ -1019,7 +1029,7 @@ protected:
     /**
      * @brief Drawing list, or baking drawing commands so that you don't have to parse the ASS every time.
      */
-    std::array<ass::prop::IPropertyBase*, int(ass::prop::PropertySlot::COUNT)> mAss;
+    std::array<ass::legacy::IPropertyBase*, int(ass::legacy::PropertySlot::COUNT)> mAss;
 
     /**
      * @brief Custom ASS Rules
@@ -1209,6 +1219,13 @@ private:
      * Extra stylesheet overrides the global stylesheet on conflicts.
      */
     _<AStylesheet> mExtraStylesheet;
+
+    /**
+     * @brief Applied modifier that takes precedence over ASS styles.
+     * @details
+     * Stored and re-applied after style updates to ensure it always takes effect.
+     */
+    ass::Modifier mAppliedModifier;
 
     /**
      * @brief Called when parent's enable state is changed. Overridden in AViewContainer.

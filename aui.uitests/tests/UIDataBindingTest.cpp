@@ -194,7 +194,9 @@ TEST_F(UIDataBindingTest, Label_via_let) { // HEADER_H3
                   // Data goes from left to right:
                   // current value (pre fire) or changed event
                   // goes to assignment operation of it->text()
-                  AObject::connect(user->name, it->text());
+                  AObject::connect(user->name, [&it = *it](const AString& value) {
+                      it.text() = value;
+                  });
                   //                ->  ->  ->  ->  ->
                   // in other words, this connection is essentially the
                   // same as
@@ -256,7 +258,9 @@ TEST_F(UIDataBindingTest, Label_via_let_projection) { // HEADER_H3
                   // goes through projection (&AString::uppercase) first
                   // then it goes to assignment operation of it->text()
                   // property.
-                  AObject::connect(AUI_REACT(user->name->uppercase()), it->text());
+                  AObject::connect(AUI_REACT(user->name->uppercase()), it, [&it = *it](const AString& value) {
+                      it.text() = value;
+                  });
               },
               // AUI_DOCS_CODE_END
             });
@@ -428,171 +432,6 @@ TEST_F(UIDataBindingTest, Label_via_declarative) { // HEADER_H3
 
     // In this example, we've achieved the same intuitive behaviour of data binding of `user->name` (like in
     // [UIDataBindingTest_Label_via_let] example) but using declarative syntax.
-
-    {
-        auto l = Label {} & user->name > &ALabel::text;
-        EXPECT_EQ(l->text(), "World");
-    }
-}
-
-TEST_F(UIDataBindingTest, ADataBindingDefault_for_omitting_view_property) { // HEADER_H3
-    //
-    // !!! failure "Deprecated"
-    //
-    //     Use [declarative contracts](retained_immediate_ui.md) instead.
-    //
-    // In the previous example we have explicitly specified ALabel's property to connect with.
-    //
-    // One of notable features of declarative way (in comparison to procedural `AUI_LET` way) is that we can omit the view's
-    // property to connect with if such `ADataBindingDefault` specialization exist for the target view and the property
-    // type. Some views have already predefined such specialization for their underlying types. For instance, ALabel has
-    // such specialization:
-    //
-    // ```cpp
-    // /* PREDEFINED! You don't need to define it! This listing is an example */
-    // template<>
-    // struct ADataBindingDefault<ALabel, AString> {
-    // public:
-    //     static auto property(const _<ALabel>& view) { return view->text(); }
-    // };
-    // ```
-    //
-    // We can use this predefined specialization to omit the destination property:
-    using namespace declarative;
-    struct User {
-        AProperty<AString> name;
-    };
-
-    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
-
-    class MyWindow: public AWindow {
-    public:
-        MyWindow(const _<User>& user) {
-            setContents(Centered {
-                // AUI_DOCS_CODE_BEGIN
-                _new<ALabel>() & user->name
-                // AUI_DOCS_CODE_END
-            });
-        }
-    };
-    auto window = _new<MyWindow>(user);
-    window->show();
-
-    auto label = _cast<ALabel>(By::type<ALabel>().one());
-
-    EXPECT_EQ(user->name, "Roza");
-    EXPECT_EQ(label->text(), "Roza");
-
-    //
-    // Behaviour of such connection is equal to [UIDataBindingTest_Label_via_declarative]:
-    //
-    // ![](imgs/UIDataBindingTest.Label_via_declarative_1.png)
-    //
-
-    // Note that the label already displays the value stored in User.
-    //
-    // Let's change the name:
-    // AUI_DOCS_CODE_BEGIN
-    user->name = "Vasil";
-    // AUI_DOCS_CODE_END
-
-    EXPECT_EQ(user->name, "Vasil");
-    EXPECT_EQ(label->text(), "Vasil");
-    //
-    // ![](imgs/UIDataBindingTest.Label_via_declarative_2.png)
-    //
-
-    user->name = "World";
-    EXPECT_EQ(label->text(), "World");
-
-    // In this example, we've omitted the destination property of the connection while maintaining the same behaviour
-    // as in [UIDataBindingTest_Label_via_declarative].
-
-    {
-        auto l = Label {} & user->name;
-        EXPECT_EQ(l->text(), "World");
-    }
-}
-
-TEST_F(UIDataBindingTest, ADataBindingDefault_strong_type_propagation) { // HEADER_H3
-    using namespace declarative;
-
-    //
-    // !!! failure "Deprecated"
-    //
-    //     Use [declarative contracts](retained_immediate_ui.md) instead.
-    //
-    // Think of `ADataBindingDefault` as we're not only connecting properties to properties, but also creating a
-    // "property to view" relationship. This philosophy covers the following scenario.
-    //
-    // In AUI, there's aui::ranged_number template which stores valid value range right inside the type:
-    // AUI_DOCS_CODE_BEGIN
-    struct User {
-        AProperty<aui::ranged_number<int, 1, 99>> age;
-    };
-    // AUI_DOCS_CODE_END
-
-    //
-    // These strong types can be used to propagate their traits on views, i.e., ANumberPicker. When using declarative
-    // syntax, the property system calls `ADataBindingDefault::setup` to apply some extra traits of the bound value on
-    // the view. Here's an abstract on how `ANumberPicker` defines specialization of `ADataBingingDefault` with
-    // `aui::ranged_number`:
-    // ```cpp
-    // /* PREDEFINED! You don't need to define it! This listing is an example */
-    // template <aui::arithmetic UnderlyingType, auto min, auto max>
-    // struct ADataBindingDefault<ANumberPicker, aui::ranged_number<UnderlyingType, min, max>> {
-    // public:
-    //     static auto property(const _<ANumberPicker>& view) {
-    //         return view->value();
-    //     }
-    //     static void setup(const _<ANumberPicker>& view) {
-    //         view->setMin(aui::ranged_number<UnderlyingType, min, max>::MIN);
-    //         view->setMax(aui::ranged_number<UnderlyingType, min, max>::MAX);
-    //     }
-    //     // ...
-    // };
-    // ```
-    //
-    // As you can see, this specialization pulls the min and max values from `aui::ranged_number` type and sets them
-    // to `ANumberPicker`. This way `ANumberPicker` finds out the valid range of values by simply being bound to value
-    // that has constraints encoded inside its type.
-
-
-    auto user = aui::ptr::manage_shared(new User { .age = 18 });
-
-    class MyWindow: public AWindow {
-    public:
-        MyWindow(const _<User>& user) {
-            static constexpr auto& GENDERS = aui::enumerate::ALL_VALUES<Gender>;
-            setContents(Centered {
-              // AUI_DOCS_CODE_BEGIN
-              _new<ANumberPicker>() && user->age,
-              // AUI_DOCS_CODE_END
-              // !!! note
-              //
-              //     We're using `operator&&` here to set up bidirectional connection. For more info, go to
-              //     [UIDataBindingTest_Declarative_bidirectional_connection].
-              //
-            });
-        }
-    };
-    _new<MyWindow>(user)->show();
-    auto single = _new<ANumberPicker>() & user->age;
-    auto numberPicker = _cast<ANumberPicker>(By::type<ANumberPicker>().one());
-
-    //
-    // By creating this connection, we've done a little bit more. We've set ANumberPicker::setMin and
-    // ANumberPicker::setMax as well:
-    // AUI_DOCS_CODE_BEGIN
-    EXPECT_EQ(numberPicker->getMin(), 1);
-    EXPECT_EQ(numberPicker->getMax(), 99);
-    // AUI_DOCS_CODE_END
-
-    EXPECT_EQ(single->getMin(), 1);
-    EXPECT_EQ(single->getMax(), 99);
-    //
-    // This example demonstrates how to use declarative binding to propagate strong types. `aui::ranged_number`
-    // propagates its constraints on `ANumberPicker` thanks to `ADataBindingDefault` specialization.
 }
 
 TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER_H3
@@ -635,66 +474,6 @@ TEST_F(UIDataBindingTest, Label_via_declarative_projection) { // HEADER_H3
 
     user->name = "World";
     EXPECT_EQ(label->text(), "WORLD");
-}
-
-TEST_F(UIDataBindingTest, Declarative_custom_slot1) {
-    using namespace declarative;
-    struct User {
-        AProperty<AString> name;
-    };
-
-    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
-
-    class MyWindow: public AWindow {
-    public:
-        MyWindow(const _<User>& user) {
-            _<ALabel> label;
-            setContents(Centered {
-                _new<ALabel>() & user->name > [](ALabel& label, const AString& s) {
-                  label.setText("custom slot! {}"_format(s));
-                }
-            });
-        }
-    };
-    auto window = _new<MyWindow>(user);
-    window->show();
-    window->setScalingParams({ .scalingFactor = 2.f });
-    auto label = _cast<ALabel>(By::type<ALabel>().one());
-    user->name = "Vasil";
-
-    EXPECT_EQ(user->name, "Vasil");
-    EXPECT_EQ(label->text(), "custom slot! Vasil");
-    user->name = "World";
-    EXPECT_EQ(label->text(), "custom slot! World");
-}
-
-TEST_F(UIDataBindingTest, Declarative_custom_slot2) {
-    using namespace declarative;
-    struct User {
-        AProperty<AString> name;
-    };
-
-    auto user = aui::ptr::manage_shared(new User { .name = "Roza" });
-
-    class MyWindow: public AWindow {
-    public:
-        MyWindow(const _<User>& user) {
-            _<ALabel> label;
-            setContents(Centered {
-                _new<ALabel>() & user->name > &ALabel::setText
-            });
-        }
-    };
-    auto window = _new<MyWindow>(user);
-    window->show();
-    window->setScalingParams({ .scalingFactor = 2.f });
-    auto label = _cast<ALabel>(By::type<ALabel>().one());
-    user->name = "Vasil";
-
-    EXPECT_EQ(user->name, "Vasil");
-    EXPECT_EQ(label->text(), "Vasil");
-    user->name = "World";
-    EXPECT_EQ(label->text(), "World");
 }
 
 TEST_F(UIDataBindingTest, Declarative_custom_slot3) {

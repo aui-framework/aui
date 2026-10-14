@@ -204,30 +204,24 @@ private:
 class CircleDrawerWindow : public AWindow {
 public:
     CircleDrawerWindow() : AWindow("AUI - 7GUIs - Circle Drawer", 300_dp, 250_dp) {
+        auto state = _new<State>();
         setContents(
             Vertical {
               Centered {
                 Horizontal {
-                  Button { Label { "Undo" }, { me::undo } } AUI_LET {
+                  Button { .content = Label { "Undo" }, .onClick = [state] { state->history.undo(); } } AUI_LET {
                           connect(
-                              AUI_REACT(mState.history.nextAction != mState.history.begin()), AUI_SLOT(it)::setEnabled);
+                              AUI_REACT(state->history.nextAction != state->history.begin()), AUI_SLOT(it)::setEnabled);
                       },
-                  Button { Label { "Redo" }, { me::redo } } AUI_LET {
+                  Button { .content = Label { "Redo" }, .onClick = [state] { state->history.redo(); } } AUI_LET {
                           connect(
-                              AUI_REACT(mState.history.nextAction != mState.history.end()), AUI_SLOT(it)::setEnabled);
+                              AUI_REACT(state->history.nextAction != state->history.end()), AUI_SLOT(it)::setEnabled);
                       },
                 },
               },
-              _new<CircleDrawArea>(aui::ptr::fake_shared(&mState)),
+              _new<CircleDrawArea>(state),
             } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
     }
-
-private:
-    State mState;
-
-    void undo() { mState.history.undo(); }
-
-    void redo() { mState.history.redo(); }
 };
 
 AUI_ENTRY {

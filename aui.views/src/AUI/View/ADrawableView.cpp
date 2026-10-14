@@ -30,7 +30,7 @@ void ADrawableView::render(ARenderContext context) {
         return;
     }
 
-    ass::prop::Property<ass::BackgroundImage>::draw(context, this, mDrawable, getAssHelper()->state.backgroundUrl);
+    ass::legacy::Property<ass::BackgroundImage>::draw(context, this, mDrawable, getAssHelper()->state.backgroundUrl);
 }
 
 ADrawableView::ADrawableView(const AUrl& url): ADrawableView(IDrawable::fromUrl(url)) {

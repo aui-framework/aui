@@ -168,7 +168,9 @@ TEST(PropertyCommonTest, Property2PropertySetOnly) {
     auto r = _new<CustomSetter>();
 
     EXPECT_CALL(*r, setName(AString("initial"))).Times(1);
-    AObject::connect(u->name, r->name());
+    AObject::connect(u->name, r, [&r = *r](const AString& value) {
+        r.name() = value;
+    });
 
     EXPECT_CALL(*r, setName(AString("New Name1"))).Times(1);
     u->name = "New Name1";

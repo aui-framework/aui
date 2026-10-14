@@ -18,6 +18,7 @@
 
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -57,7 +58,7 @@ namespace ass {
         BoxShadow(std::nullptr_t): color(0.f) {}
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<BoxShadow>: IPropertyBase {
         private:
@@ -82,4 +83,6 @@ namespace ass {
             }
         };
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, BoxShadow value);
 }

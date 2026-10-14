@@ -21,6 +21,7 @@
 #include <AUI/Util/AArrayView.h>
 #include "AUI/Font/AFontStyle.h"
 #include "AUI/Render/ABorderStyle.h"
+#include "AUI/ASS/Property/IProperty.h"
 #include "AUI/ASS/Property/Backdrop.h"
 #include "AUI/Util/AMetric.h"
 #include "ITexture.h"

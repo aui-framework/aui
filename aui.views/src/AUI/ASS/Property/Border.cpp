@@ -18,7 +18,7 @@
 #include <AUI/Render/RenderHints.h>
 
 
-void ass::prop::Property<ass::Border>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ass::Border>::renderFor(AView* view, const ARenderContext& ctx) {
     /*
     if (view->getBorderRadius() < 0.1f) {
         ctx.render.drawRectBorder(ASolidBrush{mInfo.color},
@@ -35,10 +35,10 @@ void ass::prop::Property<ass::Border>::renderFor(AView* view, const ARenderConte
     //}
 }
 
-bool ass::prop::Property<ass::Border>::isNone() {
+bool ass::legacy::Property<ass::Border>::isNone() {
     return mInfo.width <= 0.001f;
 }
 
-ass::prop::PropertySlot ass::prop::Property<ass::Border>::getPropertySlot() const {
-    return ass::prop::PropertySlot::BORDER;
+ass::legacy::PropertySlot ass::legacy::Property<ass::Border>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::BORDER;
 }

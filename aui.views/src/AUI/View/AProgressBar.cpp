@@ -47,7 +47,7 @@ _<AView> declarative::ProgressBar::defaultInner() {
 
 _<AView> declarative::ProgressBar::operator()() {
     auto view = _new<AProgressBar>();
-    progress.bindTo(view->value().assignment());
+    progress.bindTo(AUI_SLOT(view)::setValue);
     if (inner) {
         view->setInnerView(std::move(inner));
     }

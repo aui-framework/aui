@@ -20,7 +20,15 @@
 
 
 
-void ass::prop::Property<ass::BackgroundCropping>::applyFor(AView* view) {
+void ass::legacy::Property<ass::BackgroundCropping>::applyFor(AView* view) {
     view->getAssHelper()->state.backgroundCropping = mInfo;
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, BackgroundCropping value) {
+    return thiz.then([value](AView& view) {
+        view.getAssHelper()->state.backgroundCropping = value;
+    });
+}
+}   // namespace ass
 

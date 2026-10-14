@@ -57,6 +57,7 @@ MyWindow::MyWindow() : AWindow("Hot code reload", 600_dp, 300_dp) {
 
 void MyWindow::inflate() {
     // you can update any things here because inflate is connected to AHotCodeReload::inst().patchEnd.
+    auto state = mState;
     setContents(
         Vertical {
           _new<TestRender>(),
@@ -67,8 +68,8 @@ void MyWindow::inflate() {
                   });
               },
           CheckBox {
-            .checked = AUI_REACT(mChecked),
-            .onCheckedChange = [this](bool v) { mChecked = v; },
+            .checked = AUI_REACT(state->checked),
+            .onCheckedChange = [state](bool v) { state->checked = v; },
             .content = Label { "Try check me" },
           },
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });

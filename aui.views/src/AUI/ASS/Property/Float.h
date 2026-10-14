@@ -14,9 +14,10 @@
 #include <AUI/Util/AMetric.h>
 #include <AUI/Enum/AFloat.h> // defined here
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<AFloat>: IPropertyBase {
         private:
@@ -35,4 +36,6 @@ namespace ass {
             }
         };
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, AFloat value);
 }

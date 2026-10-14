@@ -28,22 +28,22 @@ public:
             [&]() -> _<AView> {
                 switch (b) {
                     case AMessageBox::Button::OK:
-                        return Button { .content = Label { "OK"_i18n }, .onClick = { me::onOk } };
+                        return Button { .content = Label { "OK"_i18n }, .onClick = [this]{ onOk(); } };
                     case AMessageBox::Button::OK_CANCEL:
                         return Horizontal {
-                            Button { .content = Label { "OK"_i18n }, .onClick = { me::onOk } },
-                            Button { .content = Label { "Cancel"_i18n }, .onClick = { me::onCancel } },
+                            Button { .content = Label { "OK"_i18n }, .onClick = [this] { onOk(); } },
+                            Button { .content = Label { "Cancel"_i18n }, .onClick = [this]{ onCancel(); } },
                         };
                     case AMessageBox::Button::YES_NO:
                         return Horizontal {
-                            Button { .content = Label { "Yes"_i18n }, .onClick = { me::onYes } },
-                            Button { .content = Label { "No"_i18n }, .onClick = { me::onNo } },
+                            Button { .content = Label { "Yes"_i18n }, .onClick = [this]{ onYes(); } },
+                            Button { .content = Label { "No"_i18n }, .onClick = [this]{ onNo(); } },
                         };
                     case AMessageBox::Button::YES_NO_CANCEL:
                         return Horizontal {
-                            Button { .content = Label { "Yes"_i18n }, .onClick = { me::onYes } },
-                            Button { .content = Label { "No"_i18n }, .onClick = { me::onNo } },
-                            Button { .content = Label { "Cancel"_i18n }, .onClick = { me::onCancel } },
+                            Button { .content = Label { "Yes"_i18n }, .onClick = [this]{ onYes(); } },
+                            Button { .content = Label { "No"_i18n }, .onClick = [this]{ onNo(); } },
+                            Button { .content = Label { "Cancel"_i18n }, .onClick = [this]{ onCancel(); } },
                         };
                     default:
                         throw AException("invalid AMessageBox::Button");

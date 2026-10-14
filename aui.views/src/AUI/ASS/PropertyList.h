@@ -23,7 +23,7 @@
 namespace ass {
 
     template<typename T>
-    concept ValidDeclaration = aui::is_complete<ass::prop::Property<std::decay_t<T>>>;
+    concept ValidDeclaration = aui::is_complete<ass::legacy::Property<std::decay_t<T>>>;
 
     struct PropertyList {
     public:
@@ -36,11 +36,11 @@ namespace ass {
 
         }
 
-        [[nodiscard]] const AVector<_<ass::prop::IPropertyBase>>& declarations() const noexcept {
+        [[nodiscard]] const AVector<_<ass::legacy::IPropertyBase>>& declarations() const noexcept {
             return mProperties;
         }
 
-        void addDeclaration(_<ass::prop::IPropertyBase> declaration) {
+        void addDeclaration(_<ass::legacy::IPropertyBase> declaration) {
             mProperties << std::move(declaration);
         }
 
@@ -58,7 +58,7 @@ namespace ass {
             if constexpr (std::is_same_v<T, PropertyList>) {
                 mProperties = std::move(t.mProperties);
             } else {
-                using declaration_t = ass::prop::Property<std::decay_t<T>>;
+                using declaration_t = ass::legacy::Property<std::decay_t<T>>;
                 static_assert(aui::is_complete<declaration_t>,
                               "ass::prop::Property template specialization is not defined for this declaration");
 
@@ -66,6 +66,6 @@ namespace ass {
             }
         }
 
-        AVector<_<ass::prop::IPropertyBase>> mProperties;
+        AVector<_<ass::legacy::IPropertyBase>> mProperties;
     };
 }

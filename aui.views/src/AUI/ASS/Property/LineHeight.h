@@ -17,6 +17,7 @@
 
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
     /**
@@ -34,7 +35,9 @@ namespace ass {
         static LineHeight NORMAL;
     };
 
-    namespace prop {
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, LineHeight value);
+
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<LineHeight>: IPropertyBase {
         private:

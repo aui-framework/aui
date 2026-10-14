@@ -17,6 +17,7 @@
 
 #include <AUI/ASS/Property/IProperty.h>
 #include <AUI/Util/AMetric.h>
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -33,7 +34,7 @@ namespace ass {
     };
 
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<BorderBottom> : IPropertyBase {
         private:
@@ -56,4 +57,6 @@ namespace ass {
             }
         };
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, BorderBottom value);
 }

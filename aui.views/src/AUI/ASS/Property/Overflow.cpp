@@ -16,11 +16,27 @@
 #include "Overflow.h"
 
 
-void ass::prop::Property<AOverflow>::applyFor(AView* view) {
+void ass::legacy::Property<AOverflow>::applyFor(AView* view) {
     view->setOverflow(mInfo);
 }
 
 
-void ass::prop::Property<AOverflowMask>::applyFor(AView* view) {
+void ass::legacy::Property<AOverflowMask>::applyFor(AView* view) {
     view->setOverflowMask(mInfo);
 }
+
+namespace ass {
+Modifier operator|(Modifier thiz, AOverflow value) {
+    return thiz.then([value](AView& view) {
+        view.setOverflow(value);
+    });
+}
+}   // namespace ass
+
+namespace ass {
+Modifier operator|(Modifier thiz, AOverflowMask value) {
+    return thiz.then([value](AView& view) {
+        view.setOverflowMask(value);
+    });
+}
+}   // namespace ass

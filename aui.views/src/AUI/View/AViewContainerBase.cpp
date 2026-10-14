@@ -430,8 +430,8 @@ bool AViewContainerBase::consumesClick(const glm::ivec2& pos) {
     };
 
     // has layout check
-    if (mAss[int(ass::prop::PropertySlot::BACKGROUND_SOLID)] ||
-        mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
+    if (mAss[int(ass::legacy::PropertySlot::BACKGROUND_SOLID)] ||
+        mAss[int(ass::legacy::PropertySlot::BACKGROUND_IMAGE)]) {
         return result = true;
     }
     if (auto p = getViewAt(pos, AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {

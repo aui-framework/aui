@@ -14,9 +14,10 @@
 #include <AUI/Platform/ACursor.h> // defined here
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<ACursor>: IPropertyBase {
         private:
@@ -39,4 +40,6 @@ namespace ass {
             using Property<ACursor>::Property;
         };
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, ACursor value);
 }

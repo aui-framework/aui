@@ -20,12 +20,20 @@
 
 
 
-void ass::prop::Property<ImageRendering>::renderFor(AView* view, const ARenderContext& ctx) {
+void ass::legacy::Property<ImageRendering>::renderFor(AView* view, const ARenderContext& ctx) {
     view->getAssHelper()->state.imageRendering = mInfo;
 }
 
-ass::prop::PropertySlot ass::prop::Property<ImageRendering>::getPropertySlot() const {
-    return ass::prop::PropertySlot::IMAGE_RENDERING;
+ass::legacy::PropertySlot ass::legacy::Property<ImageRendering>::getPropertySlot() const {
+    return ass::legacy::PropertySlot::IMAGE_RENDERING;
 }
 
 
+
+namespace ass {
+Modifier operator|(Modifier thiz, ImageRendering value) {
+    return thiz.renderBehind([value = std::move(value)](ass::Modifier::RenderCtx ctx) {
+        if (ctx.view) { ctx.view->getAssHelper()->state.imageRendering = value; }
+    });
+}
+}   // namespace ass

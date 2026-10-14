@@ -18,6 +18,7 @@
 #include <AUI/Util/AMetric.h>
 #include "AUI/Common/IStringable.h"
 #include "IProperty.h"
+#include <AUI/Util/Declarative/Modifier.h>
 
 namespace ass {
 
@@ -34,7 +35,7 @@ namespace ass {
         explicit MinSize(const AMetric& side) : width(side), height(side) {}
     };
 
-    namespace prop {
+    namespace legacy {
         template<>
         struct API_AUI_VIEWS Property<MinSize>: IPropertyBase, IStringable {
         private:
@@ -56,4 +57,6 @@ namespace ass {
             }
         };
     }
+
+    API_AUI_VIEWS Modifier operator|(Modifier thiz, MinSize value);
 }
