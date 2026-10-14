@@ -44,73 +44,70 @@
  *
  * ASplitter is constructed by builder. Use `ASplitter::Horizontal()` and `ASplitter::Vertical()`.
  */
-class API_AUI_VIEWS ASplitter: public AViewContainerBase {
+class API_AUI_VIEWS ASplitter : public AViewContainerBase {
 public:
-  ~ASplitter() override = default;
+    ~ASplitter() override = default;
 
-  void onPointerPressed(const APointerPressedEvent& event) override;
+    void onPointerPressed(const APointerPressedEvent& event) override;
 
-  void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
-  void onPointerReleased(const APointerReleasedEvent& event) override;
+    void onPointerReleased(const APointerReleasedEvent& event) override;
 
-  void onClickPrevented() override;
+    void onClickPrevented() override;
 
-  template<typename Layout>
-  class Builder;
-  using Vertical = Builder<AVerticalLayout>;
-  using Horizontal = Builder<AHorizontalLayout>;
+    template <typename Layout>
+    class Builder;
+    using Vertical = Builder<AVerticalLayout>;
+    using Horizontal = Builder<AHorizontalLayout>;
 
 private:
-  template<typename Layout>
-  friend class Builder;
-  template<ALayoutDirection Direction>
-  friend class ASplitterLayout;
+    template <typename Layout>
+    friend class Builder;
+    template <ALayoutDirection Direction>
+    friend class ASplitterLayout;
 
-  ASplitterHelper mHelper;
-  AVector<float> mRelativeSizes;
-  size_t mDraggingDividerIndex = size_t(-1);
-  int mDragOffset = 0;
-  int mDragContentSize = 0;
+    ASplitterHelper mHelper;
+    AVector<float> mRelativeSizes;
+    size_t mDraggingDividerIndex = size_t(-1);
+    int mDragOffset = 0;
+    int mDragContentSize = 0;
 
-  ASplitter();
+    ASplitter();
 
-  [[nodiscard]]
-  bool isDraggingDivider() const {
-    return mDraggingDividerIndex != size_t(-1);
-  }
+    [[nodiscard]]
+    bool isDraggingDivider() const {
+        return mDraggingDividerIndex != size_t(-1);
+    }
 
-  void endDragDivider() {
-    mDraggingDividerIndex = size_t(-1);
-  }
+    void endDragDivider() { mDraggingDividerIndex = size_t(-1); }
 
-  void resetRelativeSizes();
-  void syncRelativeSizesFromCurrentLayout();
-  void normalizeRelativeSizes();
-  bool dragDivider(glm::ivec2 mousePos);
+    void resetRelativeSizes();
+    void syncRelativeSizesFromCurrentLayout();
+    void normalizeRelativeSizes();
+    bool dragDivider(glm::ivec2 mousePos);
 };
 
-template<typename Layout>
+template <typename Layout>
 class ASplitter::Builder {
-  friend class ASplitter;
+    friend class ASplitter;
+
 private:
-  AVector<_<AView>> mItems;
-  AOptional<glm::ivec2> mExpanding;
+    AVector<_<AView>> mItems;
+    AOptional<glm::ivec2> mExpanding;
 
 public:
-  Builder& withItems(AVector<_<AView>> items) {
-    mItems = std::move(items);
-    return *this;
-  }
+    Builder& withItems(AVector<_<AView>> items) {
+        mItems = std::move(items);
+        return *this;
+    }
 
-  Builder& withExpanding(glm::ivec2 expanding = { 2, 2 }) {
-    mExpanding = expanding;
-    return *this;
-  }
+    Builder& withExpanding(glm::ivec2 expanding = { 2, 2 }) {
+        mExpanding = expanding;
+        return *this;
+    }
 
-  API_AUI_VIEWS _<AView> build();
+    API_AUI_VIEWS _<AView> build();
 
-  operator _<AView>() {
-    return build();
-  }
+    operator _<AView>() { return build(); }
 };

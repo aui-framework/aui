@@ -21,95 +21,89 @@
 #include <stack>
 
 AText::AText() {
-  addView(mViewsContainer = _new<AViewContainer>());
+    addView(mViewsContainer = _new<AViewContainer>());
 }
 
 AMinMaxAxis AText::onComputeIntrinsicMinMaxAxis(int height) {
-  auto minMax = ATextBase::onComputeIntrinsicMinMaxAxis(height);
+    auto minMax = ATextBase::onComputeIntrinsicMinMaxAxis(height);
 
-  int minContentWidth = 0;
-  for (const auto& entry : mEngine.entries()) {
-    if (entry->forcesNextLine() || entry->escapesEdges()) {
-      continue;
+    int minContentWidth = 0;
+    for (const auto& entry : mEngine.entries()) {
+        if (entry->forcesNextLine() || entry->escapesEdges()) {
+            continue;
+        }
+        minContentWidth = glm::max(minContentWidth, entry->getSize().x);
     }
-    minContentWidth = glm::max(minContentWidth, entry->getSize().x);
-  }
 
-  minMax.min = minContentWidth;
-  return minMax;
+    minMax.min = minContentWidth;
+    return minMax;
 }
 
-void AText::pushWord(Entries& entries,
-                     AString word,
-                     const ParsedFlags& flags) {
-  if (flags.wordBreak == WordBreak::NORMAL) {
-    mWordEntries.emplace_back(this, std::move(word));
-    entries << aui::ptr::fake_shared(&mWordEntries.last());
-  } else {
-    for (const auto& c: word) {
-      mCharEntries.emplace_back(this, c);
-      entries << aui::ptr::fake_shared(&mCharEntries.last());
+void AText::pushWord(Entries& entries, AString word, const ParsedFlags& flags) {
+    if (flags.wordBreak == WordBreak::NORMAL) {
+        mWordEntries.emplace_back(this, std::move(word));
+        entries << aui::ptr::fake_shared(&mWordEntries.last());
+    } else {
+        for (const auto& c : word) {
+            mCharEntries.emplace_back(this, c);
+            entries << aui::ptr::fake_shared(&mCharEntries.last());
+        }
     }
-  }
 }
 
 AText::ParsedFlags AText::parseFlags(const AText::Flags& flags) {
-  ParsedFlags pf;
-  for (auto& flag: flags) {
-    std::visit(aui::lambda_overloaded{
-      [&](WordBreak w) { pf.wordBreak = w; }
-    }, flag);
-  }
-  return pf;
+    ParsedFlags pf;
+    for (auto& flag : flags) {
+        std::visit(aui::lambda_overloaded { [&](WordBreak w) { pf.wordBreak = w; } }, flag);
+    }
+    return pf;
 }
 
 void AText::clearContent() {
-  mWordEntries.clear();
-  mCharEntries.clear();
-  mViewsContainer->removeAllViews();
-  ATextBase::clearContent();
+    mWordEntries.clear();
+    mCharEntries.clear();
+    mViewsContainer->removeAllViews();
+    ATextBase::clearContent();
 }
 
 void AText::setString(const AString& string, const Flags& flags) {
-  clearContent();
-  auto parsedFlags = parseFlags(flags);
-  mParsedFlags = parsedFlags;
-  Entries entries;
-  entries.reserve(string.length());
-  processString(string, parsedFlags, entries);
+    clearContent();
+    auto parsedFlags = parseFlags(flags);
+    mParsedFlags = parsedFlags;
+    Entries entries;
+    entries.reserve(string.length());
+    processString(string, parsedFlags, entries);
 
-  mEngine.setEntries(std::move(entries));
+    mEngine.setEntries(std::move(entries));
 }
 
-void AText::processString(AStringView string, const AText::ParsedFlags& parsedFlags,
-                          Entries& entries) {
-  AString currentWord;
-  auto commitWord = [&] {
-    if (!currentWord.empty()) {
-      pushWord(entries, std::move(currentWord), parsedFlags);
-    }
-  };
-  for (auto c: string) {
-    switch (c) {
-      case '\r':
-        break;
-      case ' ':
-        commitWord();
-        entries << aui::ptr::fake_shared(&mWhitespaceEntry);
-        break;
-      case '\n':
-        commitWord();
-        entries << aui::ptr::fake_shared(&mNextLineEntry);
-        break;
+void AText::processString(AStringView string, const AText::ParsedFlags& parsedFlags, Entries& entries) {
+    AString currentWord;
+    auto commitWord = [&] {
+        if (!currentWord.empty()) {
+            pushWord(entries, std::move(currentWord), parsedFlags);
+        }
+    };
+    for (auto c : string) {
+        switch (c) {
+            case '\r':
+                break;
+            case ' ':
+                commitWord();
+                entries << aui::ptr::fake_shared(&mWhitespaceEntry);
+                break;
+            case '\n':
+                commitWord();
+                entries << aui::ptr::fake_shared(&mNextLineEntry);
+                break;
 
-      default:
-        currentWord += c;
-        continue;
+            default:
+                currentWord += c;
+                continue;
+        }
     }
-  }
-  commitWord();
+    commitWord();
 }
-
 
 void AText::setItems(const AVector<std::variant<AString, _<AView>>>& init, const Flags& flags) {
     clearContent();
@@ -117,16 +111,16 @@ void AText::setItems(const AVector<std::variant<AString, _<AView>>>& init, const
     mParsedFlags = parsedFlags;
     Entries entries;
     entries.reserve(init.size());
-    for (auto& item: init) {
-        std::visit(aui::lambda_overloaded{
-                [&](const AString& string) {
-                    processString(string, parsedFlags, entries);
-                },
+    for (auto& item : init) {
+        std::visit(
+            aui::lambda_overloaded {
+                [&](const AString& string) { processString(string, parsedFlags, entries); },
                 [&](const _<AView>& view) {
                     mViewsContainer->addView(view);
                     entries << _new<AViewEntry>(view);
                 },
-        }, item);
+            },
+            item);
     }
 
     mEngine.setEntries(std::move(entries));
@@ -153,7 +147,6 @@ void AText::setHtml(const AString& html, const Flags& flags) {
         void visitAttribute(const AString& name, AString value) override {};
 
         _<IXmlEntityVisitor> visitEntity(AString entityName) override {
-
             struct ViewEntityVisitor : IXmlEntityVisitor {
                 CommonEntityVisitor& parent;
                 AString name;
@@ -165,23 +158,18 @@ void AText::setHtml(const AString& html, const Flags& flags) {
                     attrs[attributeName] = std::move(value);
                 }
 
-                _<IXmlEntityVisitor> visitEntity(AString entityName) override {
-                    return nullptr;
-                }
+                _<IXmlEntityVisitor> visitEntity(AString entityName) override { return nullptr; }
 
-                void visitTextEntity(const AString& entity) override {
-                    IXmlEntityVisitor::visitTextEntity(entity);
-                }
+                void visitTextEntity(const AString& entity) override { IXmlEntityVisitor::visitTextEntity(entity); }
 
-                ~ViewEntityVisitor() override {
-                }
+                ~ViewEntityVisitor() override {}
             };
 
             return _new<ViewEntityVisitor>(*this, std::move(entityName));
         };
 
         void visitTextEntity(const AString& entity) override {
-            for (auto& w: entity.split(' ')) {
+            for (auto& w : entity.split(' ')) {
                 text.pushWord(entries, w, parsedFlags);
             }
         };
@@ -212,31 +200,31 @@ void AText::setMarkdown(const AString& md, const Flags& flags) {
         label->getFontStyle().italic = italic;
         label->getFontStyle().bold = bold;
         label->setCustomStyle({
-          ass::FontSize { [&] {
-              // TODO: hardcoded: need to provide a way to adjust these
-              switch (headerLevel) {
-                  default:
-                  case 0:
-                      return 10_pt;
-                  case 1:
-                      return 24_pt;
-                  case 2:
-                      return 18_pt;
-                  case 3:
-                      return 16_pt;
-                  case 4:
-                      return 14_pt;
-                  case 5:
-                      return 12_pt;
-              }
-          }() },
+            ass::FontSize { [&] {
+                // TODO: hardcoded: need to provide a way to adjust these
+                switch (headerLevel) {
+                    default:
+                    case 0:
+                        return 10_pt;
+                    case 1:
+                        return 24_pt;
+                    case 2:
+                        return 18_pt;
+                    case 3:
+                        return 16_pt;
+                    case 4:
+                        return 14_pt;
+                    case 5:
+                        return 12_pt;
+                }
+            }() },
         });
         mViewsContainer->addView(label);
         entries << _new<AViewEntry>(std::move(label));
     };
     try {
         for (;;) {
-            std::function<void()> doAfterWord; // lol dirty
+            std::function<void()> doAfterWord;   // lol dirty
             switch (auto c = tokenizer.readChar()) {
                 case '*':
                     doAfterWord = [&] {
@@ -252,7 +240,7 @@ void AText::setMarkdown(const AString& md, const Flags& flags) {
                 case ' ':
                 case '\t':
                     if (rightAfterNewLine) {
-                        continue; // skip dangling whitespaces
+                        continue;   // skip dangling whitespaces
                     }
                     doAfterWord = [&] {
                         entries << aui::ptr::fake_shared(&mWhitespaceEntry);
@@ -272,9 +260,7 @@ void AText::setMarkdown(const AString& md, const Flags& flags) {
                 case '#':
                     if (rightAfterNewLine) {
                         // treat this as header only if we have started from a fresh line.
-                        doAfterWord = [&] {
-                            headerLevel++;
-                        };
+                        doAfterWord = [&] { headerLevel++; };
                         break;
                     }
                     [[fallthrough]];
@@ -288,41 +274,41 @@ void AText::setMarkdown(const AString& md, const Flags& flags) {
             handleWord();
             AUI_NULLSAFE(doAfterWord)();
         }
-    } catch (const AEOFException& e) {}
+    } catch (const AEOFException& e) {
+    }
     handleWord();
     mEngine.setEntries(std::move(entries));
     mParsedFlags = parsedFlags;
 }
 
 void AText::fillStringCanvas(const _<IRenderer::IMultiStringCanvas>& canvas) {
-  auto ascender = glm::ivec2 {0, getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight()};
-  const int textHeight =
-      this->onIntrinsicMeasure(AConstraints::fixedInline(getContentWidth())).y;
-  if (mVerticalAlign == VerticalAlign::MIDDLE) {
-    // vertical align is vertical only; ascender is a vector, so a bare += would shift the text horizontally as well.
-    // Text that does not fit is aligned to the top instead of being clipped on both ends.
-    ascender.y += glm::max(0, getContentHeight() - textHeight) / 2;
-  }
-  for (auto& wordEntry: mWordEntries) {
-    canvas->addString(wordEntry.getPosition() + ascender, wordEntry.getWord());
-  }
-  for (auto& charEntry: mCharEntries) {
-    auto c = charEntry.getChar();
-    if (c != ' ') {
-      AString str(1, c);
-      canvas->addString(charEntry.getPosition() + ascender, str);
+    auto ascender = glm::ivec2 { 0, getFontStyle().getAscenderHeight() + getFontStyle().getDescenderHeight() };
+    const int textHeight = this->onIntrinsicMeasure(AConstraints::fixedInline(getContentWidth())).y;
+    if (mVerticalAlign == VerticalAlign::MIDDLE) {
+        // vertical align is vertical only; ascender is a vector, so a bare += would shift the text horizontally as
+        // well. Text that does not fit is aligned to the top instead of being clipped on both ends.
+        ascender.y += glm::max(0, getContentHeight() - textHeight) / 2;
     }
-  }
+    for (auto& wordEntry : mWordEntries) {
+        canvas->addString(wordEntry.getPosition() + ascender, wordEntry.getWord());
+    }
+    for (auto& charEntry : mCharEntries) {
+        auto c = charEntry.getChar();
+        if (c != ' ') {
+            AString str(1, c);
+            canvas->addString(charEntry.getPosition() + ascender, str);
+        }
+    }
 }
 void AText::onLayout(glm::ivec2 size) {
-  ATextBase::onLayout(size);
-  performLayout();
+    ATextBase::onLayout(size);
+    performLayout();
 
-  int y = 0;
-  const int textHeight = mEngine.height().valueOr(0) + getFontStyle().getDescenderHeight();
-  if (mVerticalAlign == VerticalAlign::MIDDLE) {
-    // kept in sync with fillStringCanvas, so that embedded views stay on the same baselines as the text.
-    y += glm::max(0, getContentHeight() - textHeight) / 2;
-  }
-  mViewsContainer->layout(0, y, size.x, textHeight);
+    int y = 0;
+    const int textHeight = mEngine.height().valueOr(0) + getFontStyle().getDescenderHeight();
+    if (mVerticalAlign == VerticalAlign::MIDDLE) {
+        // kept in sync with fillStringCanvas, so that embedded views stay on the same baselines as the text.
+        y += glm::max(0, getContentHeight() - textHeight) / 2;
+    }
+    mViewsContainer->layout(0, y, size.x, textHeight);
 }

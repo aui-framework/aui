@@ -33,23 +33,24 @@
  *
  * Title is done by hacking the vertical layout and forcing the frame top side to the center of the title view.
  */
-class API_AUI_VIEWS AGroupBox: public AViewContainerBase {
+class API_AUI_VIEWS AGroupBox : public AViewContainerBase {
 public:
-  AGroupBox(_<AView> titleView, _<AView> contentView);
+    AGroupBox(_<AView> titleView, _<AView> contentView);
 
 private:
-  _<AView> mTitle;
-  _<AView> mContent;
-  _<AView> mFrame;
+    _<AView> mTitle;
+    _<AView> mContent;
+    _<AView> mFrame;
 
-  void updateCheckboxState(bool checked);
+    void updateCheckboxState(bool checked);
 };
 
 namespace declarative {
 /**
  * @declarativeformof{AGroupBox}
  */
-struct GroupBox: aui::ui_building::view<AGroupBox> {
-    GroupBox(_<AView> titleView, _<AView> contentView): aui::ui_building::view<AGroupBox>(std::move(titleView), std::move(contentView)) {}
+struct GroupBox : aui::ui_building::view<AGroupBox> {
+    GroupBox(_<AView> titleView, _<AView> contentView)
+        : aui::ui_building::view<AGroupBox>(std::move(titleView), std::move(contentView)) {}
 };
-}
+}   // namespace declarative

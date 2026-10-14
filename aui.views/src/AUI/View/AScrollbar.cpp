@@ -23,7 +23,6 @@
 #include "ASpacerExpanding.h"
 #include <algorithm>
 
-
 using namespace std::chrono_literals;
 
 const _<ATimer>& AScrollbar::buttonTimer() {
@@ -31,9 +30,7 @@ const _<ATimer>& AScrollbar::buttonTimer() {
     return timer;
 }
 
-AScrollbar::AScrollbar(ALayoutDirection direction) :
-    mDirection(direction) {
-
+AScrollbar::AScrollbar(ALayoutDirection direction) : mDirection(direction) {
     mForwardButton = _new<AScrollbarButton>(*this);
     mBackwardButton = _new<AScrollbarButton>(*this);
 
@@ -69,10 +66,10 @@ AScrollbar::AScrollbar(ALayoutDirection direction) :
 void AScrollbar::setOffset(size_t o) {
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
-            mOffsetSpacer->setSize({o, 0});
+            mOffsetSpacer->setSize({ o, 0 });
             break;
         case ALayoutDirection::VERTICAL:
-            mOffsetSpacer->setSize({0, o});
+            mOffsetSpacer->setSize({ 0, o });
             break;
         case ALayoutDirection::NONE:
             break;
@@ -93,7 +90,7 @@ void AScrollbar::setScrollDimensions(size_t viewportSize, size_t fullSize) {
 
     updateScrollHandleSize();
     bool shouldScrollToEnd = mStickToEnd && mStickToEnd->locked;
-    setScroll(mCurrentScroll); // validates mCurrentScroll since mViewportSize and mFullSize are updated
+    setScroll(mCurrentScroll);   // validates mCurrentScroll since mViewportSize and mFullSize are updated
 
     if (shouldScrollToEnd) {
         scrollToEnd();
@@ -172,18 +169,16 @@ void AScrollbar::setScroll(int scroll) {
 void AScrollbar::updateScrollHandleOffset(int max) {
     float availableSpace = getAvailableSpaceForSpacer();
 
-
-    int handlePos = max > 0 ? float(mCurrentScroll) / max * availableSpace
-                            : 0;
+    int handlePos = max > 0 ? float(mCurrentScroll) / max * availableSpace : 0;
 
     handlePos = glm::max(handlePos, 0);
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
-            mOffsetSpacer->setFixedSize(glm::ivec2{handlePos, 0});
+            mOffsetSpacer->setFixedSize(glm::ivec2 { handlePos, 0 });
             break;
         case ALayoutDirection::VERTICAL:
-            mOffsetSpacer->setFixedSize(glm::ivec2{0, handlePos});
+            mOffsetSpacer->setFixedSize(glm::ivec2 { 0, handlePos });
             break;
         case ALayoutDirection::NONE:
             break;
@@ -202,9 +197,11 @@ void AScrollbar::onScroll(float& delta) {
 }
 
 static int getButtonScrollSpeed() noexcept {
-    if (AInput::isKeyDown(AInput::LSHIFT)) return 100;
+    if (AInput::isKeyDown(AInput::LSHIFT))
+        return 100;
 
-    if (AInput::isKeyDown(AInput::LCONTROL)) return 1;
+    if (AInput::isKeyDown(AInput::LCONTROL))
+        return 1;
 
     return 10;
 }
@@ -239,9 +236,7 @@ void AScrollbar::scrollBackward() {
     emit triggeredManually;
 }
 
-void AScrollbar::onPointerPressed(const APointerPressedEvent& event) {
-    AViewContainerBase::onPointerPressed(event);
-}
+void AScrollbar::onPointerPressed(const APointerPressedEvent& event) { AViewContainerBase::onPointerPressed(event); }
 
 void AScrollbar::handleScrollbar(float delta, int baseScroll) {
     auto availableSpace = getAvailableSpaceForSpacer();
@@ -252,7 +247,8 @@ void AScrollbar::handleScrollbar(float delta, int baseScroll) {
 }
 
 int AScrollbar::getMeasuredButtonOccupiedSpace(const _<AView>& view) const {
-    // visibility must be accounted for: a GONE button occupies no space (see ALayout "Visibility and space consumption").
+    // visibility must be accounted for: a GONE button occupies no space (see ALayout "Visibility and space
+    // consumption").
     if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
         return 0;
     }
@@ -274,7 +270,8 @@ int AScrollbar::getMeasuredButtonOccupiedSpace(const _<AView>& view) const {
 }
 
 int AScrollbar::getMeasuredHandleOccupiedSpace() const {
-    // visibility must be accounted for: a GONE handle occupies no space (see ALayout "Visibility and space consumption").
+    // visibility must be accounted for: a GONE handle occupies no space (see ALayout "Visibility and space
+    // consumption").
     if (!(mHandle->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
         return 0;
     }
@@ -300,7 +297,7 @@ int AScrollbar::getMeasuredHandleOccupiedSpace() const {
 // contribute to the scrollbar's size; otherwise a hidden button with FixedSize(15_dp) makes the whole scrollbar thick.
 static glm::ivec2 measureConsumingSpace(const _<AView>& view) {
     if (!(view->getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
-        return {0, 0};
+        return { 0, 0 };
     }
     return view->measure(AConstraints {});
 }
@@ -310,7 +307,8 @@ int AScrollbar::chromeThickness() const {
     const auto backward = measureConsumingSpace(mBackwardButton);
     const auto forward = measureConsumingSpace(mForwardButton);
     const auto handle = measureConsumingSpace(mHandle);
-    const auto handleMargin = !!(mHandle->getVisibility() & Visibility::FLAG_CONSUME_SPACE) ? mHandle->getMargin() : ABoxFields {};
+    const auto handleMargin =
+        !!(mHandle->getVisibility() & Visibility::FLAG_CONSUME_SPACE) ? mHandle->getMargin() : ABoxFields {};
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
@@ -330,7 +328,8 @@ int AScrollbar::minimumChromeLength() const {
     const auto backward = measureConsumingSpace(mBackwardButton);
     const auto forward = measureConsumingSpace(mForwardButton);
     const auto handle = measureConsumingSpace(mHandle);
-    const auto handleMargin = !!(mHandle->getVisibility() & Visibility::FLAG_CONSUME_SPACE) ? mHandle->getMargin() : ABoxFields {};
+    const auto handleMargin =
+        !!(mHandle->getVisibility() & Visibility::FLAG_CONSUME_SPACE) ? mHandle->getMargin() : ABoxFields {};
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
@@ -351,16 +350,18 @@ glm::ivec2 AScrollbar::onIntrinsicMeasure(AConstraints constraints) {
 
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL: {
-            const int width = constraints.isUnlimitedInline()
-                ? std::max(minimumLength, constraints.minInline)
-                : std::clamp(minimumLength, constraints.minInline, constraints.maxInline);
+            const int width =
+                constraints.isUnlimitedInline()
+                    ? std::max(minimumLength, constraints.minInline)
+                    : std::clamp(minimumLength, constraints.minInline, constraints.maxInline);
             return { width, thickness };
         }
 
         case ALayoutDirection::VERTICAL: {
-            const int height = constraints.isUnlimitedBlock()
-                ? std::max(minimumLength, constraints.minBlock)
-                : std::clamp(minimumLength, constraints.minBlock, constraints.maxBlock);
+            const int height =
+                constraints.isUnlimitedBlock()
+                    ? std::max(minimumLength, constraints.minBlock)
+                    : std::clamp(minimumLength, constraints.minBlock, constraints.maxBlock);
             return { thickness, height };
         }
 
@@ -398,15 +399,11 @@ float AScrollbar::getAvailableSpaceForSpacer() {
     switch (mDirection) {
         case ALayoutDirection::HORIZONTAL:
             return glm::max(
-                0,
-                getWidth() -
-                    (backwardButtonOccupiedSpace + forwardButtonOccupiedSpace + handleOccupiedSpace));
+                0, getWidth() - (backwardButtonOccupiedSpace + forwardButtonOccupiedSpace + handleOccupiedSpace));
 
         case ALayoutDirection::VERTICAL:
             return glm::max(
-                0,
-                getHeight() -
-                    (backwardButtonOccupiedSpace + forwardButtonOccupiedSpace + handleOccupiedSpace));
+                0, getHeight() - (backwardButtonOccupiedSpace + forwardButtonOccupiedSpace + handleOccupiedSpace));
 
         case ALayoutDirection::NONE:
             break;
@@ -436,137 +433,135 @@ void AScrollbar::squeezeIntoCrossAxis(AView& child) const noexcept {
 }
 
 void AScrollbarButton::onLayout(glm::ivec2 size) {
-  const auto margins = getMargin().occupiedSize();
-  switch (mScrollbar.mDirection) {
-    case ALayoutDirection::HORIZONTAL:
-      size.y = glm::max(0, mScrollbar.getHeight() - margins.y);
-      break;
+    const auto margins = getMargin().occupiedSize();
+    switch (mScrollbar.mDirection) {
+        case ALayoutDirection::HORIZONTAL:
+            size.y = glm::max(0, mScrollbar.getHeight() - margins.y);
+            break;
 
-    case ALayoutDirection::VERTICAL:
-      size.x = glm::max(0, mScrollbar.getWidth() - margins.x);
-      break;
+        case ALayoutDirection::VERTICAL:
+            size.x = glm::max(0, mScrollbar.getWidth() - margins.x);
+            break;
 
-    case ALayoutDirection::NONE:
-      break;
-  }
+        case ALayoutDirection::NONE:
+            break;
+    }
 
-  AView::setSize(size);
-  mScrollbar.squeezeIntoCrossAxis(*this);
-  AView::onLayout(getSize());
+    AView::setSize(size);
+    mScrollbar.squeezeIntoCrossAxis(*this);
+    AView::onLayout(getSize());
 }
 
 void AScrollbarHandle::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
-  AView::onPointerMove(pos, event);
-  if (mDragging) {
-    auto currentMousePos = glm::vec2(getPositionInWindow()) + pos;
-    auto delta = currentMousePos - mInitialMousePos;
-    switch (mScrollbar.mDirection) {
-      case ALayoutDirection::HORIZONTAL:
-        mScrollbar.handleScrollbar(delta.x, mInitialScroll);
-        break;
-      case ALayoutDirection::VERTICAL:
-        mScrollbar.handleScrollbar(delta.y, mInitialScroll);
-        break;
-      case ALayoutDirection::NONE:
-        break;
+    AView::onPointerMove(pos, event);
+    if (mDragging) {
+        auto currentMousePos = glm::vec2(getPositionInWindow()) + pos;
+        auto delta = currentMousePos - mInitialMousePos;
+        switch (mScrollbar.mDirection) {
+            case ALayoutDirection::HORIZONTAL:
+                mScrollbar.handleScrollbar(delta.x, mInitialScroll);
+                break;
+            case ALayoutDirection::VERTICAL:
+                mScrollbar.handleScrollbar(delta.y, mInitialScroll);
+                break;
+            case ALayoutDirection::NONE:
+                break;
+        }
     }
-  }
 }
 
 void AScrollbarHandle::onPointerPressed(const APointerPressedEvent& event) {
-  AView::onPointerPressed(event);
-  mInitialMousePos = glm::vec2(getPositionInWindow()) + event.position;
-  mInitialScroll = mScrollbar.mCurrentScroll;
+    AView::onPointerPressed(event);
+    mInitialMousePos = glm::vec2(getPositionInWindow()) + event.position;
+    mInitialScroll = mScrollbar.mCurrentScroll;
 
-  mDragging = true;
-  emit mScrollbar.triggeredManually;
+    mDragging = true;
+    emit mScrollbar.triggeredManually;
 }
 
 void AScrollbarHandle::onPointerReleased(const APointerReleasedEvent& event) {
-  AView::onPointerReleased(event);
-  mDragging = false;
+    AView::onPointerReleased(event);
+    mDragging = false;
 }
 
 AMinMaxAxis AScrollbarHandle::onComputeIntrinsicMinMaxAxis(int height) {
-  switch (mScrollbar.mDirection) {
-    case ALayoutDirection::VERTICAL:
-      return { .min = static_cast<int>((15_dp).getValuePx()), .max = static_cast<int>((15_dp).getValuePx()) };
+    switch (mScrollbar.mDirection) {
+        case ALayoutDirection::VERTICAL:
+            return { .min = static_cast<int>((15_dp).getValuePx()), .max = static_cast<int>((15_dp).getValuePx()) };
 
-    case ALayoutDirection::HORIZONTAL:
-      return { .min = mOverridenSize, .max = mOverridenSize };
+        case ALayoutDirection::HORIZONTAL:
+            return { .min = mOverridenSize, .max = mOverridenSize };
 
-    case ALayoutDirection::NONE:
-      break;
-  }
-  return {};
+        case ALayoutDirection::NONE:
+            break;
+    }
+    return {};
 }
 
 glm::ivec2 AScrollbarHandle::onIntrinsicMeasure(AConstraints constraints) {
-  switch (mScrollbar.mDirection) {
-    case ALayoutDirection::VERTICAL:
-      return { static_cast<int>((15_dp).getValuePx()), mOverridenSize };
+    switch (mScrollbar.mDirection) {
+        case ALayoutDirection::VERTICAL:
+            return { static_cast<int>((15_dp).getValuePx()), mOverridenSize };
 
-    case ALayoutDirection::HORIZONTAL:
-      return { mOverridenSize, static_cast<int>((15_dp).getValuePx()) };
+        case ALayoutDirection::HORIZONTAL:
+            return { mOverridenSize, static_cast<int>((15_dp).getValuePx()) };
 
-    case ALayoutDirection::NONE:
-      break;
-  }
-  return {};
+        case ALayoutDirection::NONE:
+            break;
+    }
+    return {};
 }
 
 void AScrollbarHandle::onLayout(glm::ivec2 size) {
-  const auto margins = getMargin().occupiedSize();
-  switch (mScrollbar.mDirection) {
-    case ALayoutDirection::VERTICAL:
-      size = {glm::max(0, mScrollbar.getWidth() - margins.x), mOverridenSize};
-      break;
+    const auto margins = getMargin().occupiedSize();
+    switch (mScrollbar.mDirection) {
+        case ALayoutDirection::VERTICAL:
+            size = { glm::max(0, mScrollbar.getWidth() - margins.x), mOverridenSize };
+            break;
 
-    case ALayoutDirection::HORIZONTAL:
-      size = {mOverridenSize, glm::max(0, mScrollbar.getHeight() - margins.y)};
-      break;
-    case ALayoutDirection::NONE:
-      break;
-  }
+        case ALayoutDirection::HORIZONTAL:
+            size = { mOverridenSize, glm::max(0, mScrollbar.getHeight() - margins.y) };
+            break;
+        case ALayoutDirection::NONE:
+            break;
+    }
 
-  AView::setSize(size);
-  mScrollbar.squeezeIntoCrossAxis(*this);
-  AView::onLayout(getSize());
+    AView::setSize(size);
+    mScrollbar.squeezeIntoCrossAxis(*this);
+    AView::onLayout(getSize());
 }
 
 void AScrollbar::onLayout(glm::ivec2 size) {
-  // NOTE: do NOT write the cross-axis size of the buttons and the handle into their fixed size here. The thickness of
-  // this scrollbar is computed by chromeThickness() from the children's measurements, and AView::measure() returns the
-  // fixed size as is; writing "size - margin" back would make the scrollbar remember its own previous thickness
-  // forever (it can grow but never shrink until a style invalidation resets the fixed size). The cross-axis size is
-  // applied in AScrollbarButton::onLayout / AScrollbarHandle::onLayout instead.
-  //
-  // The only thing we do is dropping the main-axis fixed size of the handle (i.e. ass::FixedSize { 40_dp, 4_dp }
-  // for the horizontal scrollbar), because the handle length is dictated by mOverridenSize.
-  const auto handleFixedSize = mHandle->getFixedSize();
-  switch (mDirection) {
-    case ALayoutDirection::HORIZONTAL:
-      mHandle->setFixedSize({ 0, handleFixedSize.y });
-      break;
+    // NOTE: do NOT write the cross-axis size of the buttons and the handle into their fixed size here. The thickness of
+    // this scrollbar is computed by chromeThickness() from the children's measurements, and AView::measure() returns
+    // the fixed size as is; writing "size - margin" back would make the scrollbar remember its own previous thickness
+    // forever (it can grow but never shrink until a style invalidation resets the fixed size). The cross-axis size is
+    // applied in AScrollbarButton::onLayout / AScrollbarHandle::onLayout instead.
+    //
+    // The only thing we do is dropping the main-axis fixed size of the handle (i.e. ass::FixedSize { 40_dp, 4_dp }
+    // for the horizontal scrollbar), because the handle length is dictated by mOverridenSize.
+    const auto handleFixedSize = mHandle->getFixedSize();
+    switch (mDirection) {
+        case ALayoutDirection::HORIZONTAL:
+            mHandle->setFixedSize({ 0, handleFixedSize.y });
+            break;
 
-    case ALayoutDirection::VERTICAL:
-      mHandle->setFixedSize({ handleFixedSize.x, 0 });
-      break;
+        case ALayoutDirection::VERTICAL:
+            mHandle->setFixedSize({ handleFixedSize.x, 0 });
+            break;
 
-    case ALayoutDirection::NONE:
-      break;
-  }
+        case ALayoutDirection::NONE:
+            break;
+    }
 
-  updateScrollHandleSize();
-  AViewContainerBase::onLayout(size);
-  AViewContainerBase::onLayout(size); // TODO(Nelonn): remove this shit
+    updateScrollHandleSize();
+    AViewContainerBase::onLayout(size);
+    AViewContainerBase::onLayout(size);   // TODO(Nelonn): remove this shit
 }
 
 void AScrollbar::scrollToEnd() {
-  setScroll(getMaxScroll());
-  AUI_ASSERT(mCurrentScroll == getMaxScroll());
+    setScroll(getMaxScroll());
+    AUI_ASSERT(mCurrentScroll == getMaxScroll());
 }
 
-void AScrollbar::onScroll(const AScrollEvent& event) {
-  AViewContainerBase::onScroll(event);
-}
+void AScrollbar::onScroll(const AScrollEvent& event) { AViewContainerBase::onScroll(event); }

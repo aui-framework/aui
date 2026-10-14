@@ -28,7 +28,6 @@ bool ANumberPicker::ANumberPickerField::isValidText(std::u32string_view text) {
 }
 
 void ANumberPicker::ANumberPickerField::onKeyRepeat(AInput::Key key) {
-
     switch (key) {
         case AInput::DOWN:
             mPicker.decrease();
@@ -41,16 +40,13 @@ void ANumberPicker::ANumberPickerField::onKeyRepeat(AInput::Key key) {
     }
 }
 
-
 ANumberPicker::ANumberPicker() {
-
-
     setLayout(std::make_unique<AHorizontalLayout>());
     addView(mTextField = _new<ANumberPickerField>(*this));
     addAssName(".input-field");
     addAssName(".number-picker");
 
-    mTextField->setExpanding({1, 1});
+    mTextField->setExpanding({ 1, 1 });
     connect(mTextField->focusState, this, [&](bool c) {
         if (c)
             onFocusAcquired();
@@ -69,7 +65,7 @@ ANumberPicker::ANumberPicker() {
         it << ".down";
     };
     c->setLayout(std::make_unique<AVerticalLayout>());
-    c->setExpanding({0, 0});
+    c->setExpanding({ 0, 0 });
     c->addView(up);
     c->addView(down);
 
@@ -94,9 +90,7 @@ ANumberPicker::ANumberPicker() {
         emit valueChanged(v);
     });
 
-    connect(mTextField->textChanging, this, [&]() {
-        emit valueChanging(getValue());
-    });
+    connect(mTextField->textChanging, this, [&]() { emit valueChanging(getValue()); });
 
     addView(c);
 }
@@ -128,14 +122,9 @@ void ANumberPicker::setMax(int64_t max) {
         setValue(max);
 }
 
+void ANumberPicker::increase() { changeBy(AInput::isKeyDown(AInput::LCONTROL) ? 10 : 1); }
 
-void ANumberPicker::increase() {
-    changeBy(AInput::isKeyDown(AInput::LCONTROL) ? 10 : 1);
-}
-
-void ANumberPicker::decrease() {
-    changeBy(AInput::isKeyDown(AInput::LCONTROL) ? -10 : -1);
-}
+void ANumberPicker::decrease() { changeBy(AInput::isKeyDown(AInput::LCONTROL) ? -10 : -1); }
 
 void ANumberPicker::changeBy(int64_t v) {
     auto wtf = getValue();
