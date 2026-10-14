@@ -221,10 +221,6 @@ public:
     void onKeyDown(AInput::Key key) override;
     void onKeyRepeat(AInput::Key key) override;
 
-    void setFocusNextViewOnTab(bool value) {
-        mFocusNextViewOnTab = value;
-    }
-
     /**
      * @brief Wraps your AView to window.
      * @param view view to wrap
@@ -347,11 +343,6 @@ protected:
     void createDevtoolsWindow() override;
 
     float fetchDpiFromSystem() const override;
-
-    /**
-     * @brief defines if the next view must be focused on tab button pressed
-     */
-    bool mFocusNextViewOnTab = false;
 
 private:
 #if AUI_PLATFORM_WIN

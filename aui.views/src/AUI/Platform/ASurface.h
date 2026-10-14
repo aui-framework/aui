@@ -211,6 +211,7 @@ public:
 #endif
 
     virtual void focusNextView();
+    virtual void focusPrevView();
     virtual void flagRedraw();
 
     void makeCurrent() {

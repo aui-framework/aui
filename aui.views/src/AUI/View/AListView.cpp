@@ -16,6 +16,7 @@
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/Layout/AVerticalLayout.h>
+#include <AUI/Platform/AInput.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 
@@ -84,14 +85,46 @@ class AListItem : public ALabel, public ass::ISelectable {
    public:
     void onPointerPressed(const APointerPressedEvent& event) override {
         AView::onPointerPressed(event);
-
-        dynamic_cast<AListView*>(getParent()->getParent()->getParent()->getParent())->handleMousePressed(this);
+        focus();
+        if (auto* listView = this->listView()) {
+            listView->handleMousePressed(this);
+        }
     }
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override {
         AView::onPointerDoubleClicked(event);
 
-        dynamic_cast<AListView*>(getParent()->getParent()->getParent()->getParent())->handleMouseDoubleClicked(this);
+        if (auto* listView = this->listView()) {
+            listView->handleMouseDoubleClicked(this);
+        }
+    }
+
+    void onFocusAcquired() override {
+        ALabel::onFocusAcquired();
+        if (auto* listView = this->listView()) {
+            listView->onItemFocusAcquired(this);
+        }
+    }
+
+    void onKeyDown(AInput::Key key) override {
+        ALabel::onKeyDown(key);
+        if (auto* listView = this->listView()) {
+            listView->onItemKeyDown(this, key);
+        }
+    }
+
+    bool handlesNonMouseNavigation() override { return true; }
+
+    bool capturesFocus() override { return true; }
+
+   private:
+    [[nodiscard]] AListView* listView() const {
+        for (auto* parent = getParent(); parent != nullptr; parent = parent->getParent()) {
+            if (auto* listView = dynamic_cast<AListView*>(parent)) {
+                return listView;
+            }
+        }
+        return nullptr;
     }
 };
 
@@ -196,4 +229,51 @@ void AListView::setAllowMultipleSelection(bool allowMultipleSelection) {
 void AListView::clearSelection() {
     clearSelectionInternal();
     emit selectionChanged(getSelectionModel());
+}
+
+std::size_t AListView::indexOfItem(AListItem* item) const {
+    const auto& views = mContent->getViews();
+    for (std::size_t i = 0; i < views.size(); ++i) {
+        if (views[i].get() == item) {
+            return i;
+        }
+    }
+    return 0;
+}
+
+void AListView::onItemFocusAcquired(AListItem* item) {
+    // show the focused item
+    const auto index = indexOfItem(item);
+    const auto& views = mContent->getViews();
+    if (index < views.size()) {
+        scrollTo(views[index]);
+    }
+}
+
+void AListView::onItemKeyDown(AListItem* item, AInput::Key key) {
+    auto model = mObserver ? mObserver->getModel() : nullptr;
+    if (!model) {
+        return;
+    }
+
+    switch (key) {
+        case AInput::UP:
+        case AInput::DOWN: {
+            const size_t count = model->listSize();
+            if (count == 0) {
+                return;
+            }
+
+            const size_t current = indexOfItem(item);
+            const size_t target = key == AInput::UP ? (current > 0 ? current - 1 : current)
+                                                    : (current + 1 < count ? current + 1 : current);
+            if (target != current) {
+                updateSelectionOnItem(target, SelectAction::SET);
+                _cast<AListItem>(mContent->getViews()[target])->focus();
+            }
+            break;
+        }
+        default:
+            break;
+    }
 }
