@@ -23,8 +23,9 @@
 #include <AUI/GL/OpenGLRenderer.h>
 #include <AUI/Util/ALayoutInflater.h>
 
-class AEmbedContext::EmbedWindow: public ASurface {
+class AEmbedContext::EmbedWindow : public ASurface {
     friend class AEmbedContext;
+
 private:
     AEmbedContext* mTheWrap;
     bool mRequiresRedraw = false;
@@ -33,28 +34,18 @@ private:
     unsigned mFrameMillis = 1;
 
 public:
-    EmbedWindow(AEmbedContext* theWrap): mTheWrap(theWrap) {
-        currentWindowStorage() = this;
-    }
+    EmbedWindow(AEmbedContext* theWrap) : mTheWrap(theWrap) { currentWindowStorage() = this; }
 
-    unsigned int frameMillis() const noexcept override {
-        return mFrameMillis;
-    }
+    unsigned int frameMillis() const noexcept override { return mFrameMillis; }
 
-    void setFrameMillis(unsigned int frameMillis) {
-        mFrameMillis = frameMillis;
-    }
+    void setFrameMillis(unsigned int frameMillis) { mFrameMillis = frameMillis; }
 
     _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override {
-        class MyOverlappingSurface: public AOverlappingSurface {
+        class MyOverlappingSurface : public AOverlappingSurface {
         public:
-            void setOverlappingSurfacePosition(glm::ivec2 position) override {
-                emit positionSet(position);
-            }
+            void setOverlappingSurfacePosition(glm::ivec2 position) override { emit positionSet(position); }
 
-            void setOverlappingSurfaceSize(glm::ivec2 size) override {
-                emit sizeSet(size);
-            }
+            void setOverlappingSurfaceSize(glm::ivec2 size) override { emit sizeSet(size); }
 
         signals:
             emits<glm::ivec2> positionSet;
@@ -62,12 +53,8 @@ public:
         };
 
         auto container = _new<MyOverlappingSurface>();
-        connect(container->positionSet, [container = container.get()](glm::ivec2 p) {
-            container->setPosition(p);
-        });
-        connect(container->sizeSet, [container = container.get()](glm::ivec2 p) {
-            container->setSize(p);
-        });
+        connect(container->positionSet, [container = container.get()](glm::ivec2 p) { container->setPosition(p); });
+        connect(container->sizeSet, [container = container.get()](glm::ivec2 p) { container->setSize(p); });
         addViewCustomLayout(container);
 
         auto windowSize = getSize();
@@ -76,9 +63,7 @@ public:
         return container;
     }
 
-    void closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) override {
-        removeView(surface);
-    }
+    void closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) override { removeView(surface); }
 
     void requestLayout() override {
         flagRedraw();
@@ -106,52 +91,48 @@ void AEmbedContext::onScroll(int mouseX, int mouseY, int scrollX, int scrollY) {
     });
 }
 
-AEmbedContext::AEmbedContext():
-        mEventLoopHandle(this), mSize()
-{
-}
+AEmbedContext::AEmbedContext() : mEventLoopHandle(this), mSize() {}
 
-void AEmbedContext::windowMakeCurrent() {
-  mContainer->makeCurrent();
-}
+void AEmbedContext::windowMakeCurrent() { mContainer->makeCurrent(); }
 
 void AEmbedContext::windowRender() {
-  AThread::processMessages();
-  auto& render = mContainer->getRenderingContext()->renderer();
-  render.setWindow(mContainer.get());
-  if (mContainer->mRequiresLayoutUpdate) {
-    mContainer->layout(0, 0, mSize.x, mSize.y);
-    mContainer->mRequiresLayoutUpdate = false;
-  }
-  AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
-  mContainer->mRequiresRedraw = false;
-  mContainer->render({.clippingRects = { ARect<int>{ .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .render = render });
-  AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
+    AThread::processMessages();
+    auto& render = mContainer->getRenderingContext()->renderer();
+    render.setWindow(mContainer.get());
+    if (mContainer->mRequiresLayoutUpdate) {
+        mContainer->layout(0, 0, mSize.x, mSize.y);
+        mContainer->mRequiresLayoutUpdate = false;
+    }
+    AUI_NULLSAFE(mContainer->getRenderingContext())->beginPaint(*mContainer);
+    mContainer->mRequiresRedraw = false;
+    mContainer->render(
+        { .clippingRects = { ARect<int> { .p1 = glm::ivec2(0), .p2 = mContainer->getSize() } }, .render = render });
+    AUI_NULLSAFE(mContainer->getRenderingContext())->endPaint(*mContainer);
 }
 
 void AEmbedContext::setContainer(const _<AViewContainer>& container) {
-  ALayoutInflater::inflate(mContainer, container);
-  mContainer->setPosition({0, 0});
-  container->setPosition({0, 0});
-  mContainer->makeCurrent();
-  mContainer->requestLayout();
-  mContainer->flagRedraw();
+    ALayoutInflater::inflate(mContainer, container);
+    mContainer->setPosition({ 0, 0 });
+    container->setPosition({ 0, 0 });
+    mContainer->makeCurrent();
+    mContainer->requestLayout();
+    mContainer->flagRedraw();
 }
 
 void AEmbedContext::setViewportSize(int width, int height) {
-  mContainer->makeCurrent();
-  mSize = { width, height };
-  AUI_NULLSAFE(mContainer->getRenderingContext())->beginResize(*mContainer);
-  mContainer->onResize(width, height);
-  AUI_NULLSAFE(mContainer->getRenderingContext())->endResize(*mContainer);
-  mContainer->mRequiresRedraw = true;
+    mContainer->makeCurrent();
+    mSize = { width, height };
+    AUI_NULLSAFE(mContainer->getRenderingContext())->beginResize(*mContainer);
+    mContainer->onResize(width, height);
+    AUI_NULLSAFE(mContainer->getRenderingContext())->endResize(*mContainer);
+    mContainer->mRequiresRedraw = true;
 }
 
 void AEmbedContext::onPointerPressed(int x, int y, APointerIndex pointerIndex) {
     mContainer->makeCurrent();
     AThread::processMessages();
     mContainer->onPointerPressed({
-        .position = glm::ivec2{x, y},
+        .position = glm::ivec2 { x, y },
         .pointerIndex = pointerIndex,
     });
 }
@@ -159,20 +140,17 @@ void AEmbedContext::onPointerPressed(int x, int y, APointerIndex pointerIndex) {
 void AEmbedContext::onPointerReleased(int x, int y, APointerIndex pointerIndex) {
     mContainer->makeCurrent();
     mContainer->onPointerReleased({
-        .position = glm::ivec2{x, y},
+        .position = glm::ivec2 { x, y },
         .pointerIndex = pointerIndex,
     });
 }
 
-bool AEmbedContext::isUIConsumesMouseAt(int x, int y) {
-    return mContainer->consumesClick(glm::ivec2{ x, y });
-}
+bool AEmbedContext::isUIConsumesMouseAt(int x, int y) { return mContainer->consumesClick(glm::ivec2 { x, y }); }
 
 void AEmbedContext::onPointerMove(int x, int y) {
     mContainer->makeCurrent();
-    mContainer->onPointerMove(glm::ivec2{ x, y }, {APointerIndex::button(AInput::LBUTTON)});
+    mContainer->onPointerMove(glm::ivec2 { x, y }, { APointerIndex::button(AInput::LBUTTON) });
 }
-
 
 void AEmbedContext::onCharEntered(AChar c) {
     mContainer->makeCurrent();
@@ -193,13 +171,9 @@ void AEmbedContext::loop() {
     // stub
 }
 
-void AEmbedContext::clearFocus() {
-    mContainer->setFocusedView(nullptr);
-}
+void AEmbedContext::clearFocus() { mContainer->setFocusedView(nullptr); }
 
-ASurface* AEmbedContext::getWindow() {
-    return mContainer.get();
-}
+ASurface* AEmbedContext::getWindow() { return mContainer.get(); }
 
 void AEmbedContext::windowInit(_unique<IRenderingContext> context) {
     mContainer = _new<EmbedWindow>(this);
@@ -216,10 +190,7 @@ void AEmbedContext::setCustomDpiRatio(float r) {
     mCustomDpiRatio = r;
     mContainer->updateDpi();
 }
-bool AEmbedContext::requiresRedraw() {
-    return mContainer->mRequiresRedraw;
-}
 
-void AEmbedContext::notifyProcessMessages() {
-    onNotifyProcessMessages();
-}
+bool AEmbedContext::requiresRedraw() { return mContainer->mRequiresRedraw; }
+
+void AEmbedContext::notifyProcessMessages() { onNotifyProcessMessages(); }

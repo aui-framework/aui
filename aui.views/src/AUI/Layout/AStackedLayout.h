@@ -13,7 +13,6 @@
 
 #include "ALinearLayout.h"
 
-
 /**
  * @brief Places views in a stack (along z axis).
  * @ingroup layout-managers
@@ -36,14 +35,13 @@
  */
 class API_AUI_VIEWS AStackedLayout : public ALinearLayout<> {
 public:
-  AStackedLayout() {
-  }
+    AStackedLayout() {}
 
-  ~AStackedLayout() override = default;
+    ~AStackedLayout() override = default;
 
-  void layout(int x, int y, int width, int height) override;
+    void layout(int x, int y, int width, int height) override;
 
-  glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
 
-  AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 };
