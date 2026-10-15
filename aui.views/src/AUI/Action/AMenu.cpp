@@ -25,7 +25,7 @@
 #endif
 
 namespace {
-bool gUseSystemMenus = false;
+bool gUseSystemMenus = true;
 _<IMenuProvider> gOverrideProvider;
 _<IMenuProvider> gCachedProvider;
 
