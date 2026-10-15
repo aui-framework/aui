@@ -26,52 +26,51 @@
 
 namespace {
 bool gUseSystemMenus = true;
-_<IMenuProvider> gOverrideProvider;
-_<IMenuProvider> gCachedProvider;
+std::unique_ptr<IMenuProvider> gOverrideProvider;
+std::unique_ptr<IMenuProvider> gCachedProvider;
 
 void resetCache() { gCachedProvider.reset(); }
 }
 
 void AMenu::show(const AMenuModel& model) {
-    provider()->createMenu(model);
+    provider().createMenu(model);
 }
 
-_<IMenuProvider>& AMenu::provider() {
-    if (gCachedProvider) {
-        return gCachedProvider;
+IMenuProvider& AMenu::provider() {
+    if (gOverrideProvider) {
+        return *gOverrideProvider;
     }
 
-    if (gOverrideProvider) {
-        gCachedProvider = gOverrideProvider;
-        return gCachedProvider;
+    if (gCachedProvider) {
+        return *gCachedProvider;
     }
 
     if (!dynamic_cast<AWindow*>(ASurface::current())) {
-        gCachedProvider = _new<AEmbedMenuProvider>();
-        return gCachedProvider;
+        gCachedProvider = std::make_unique<AEmbedMenuProvider>();
+        return *gCachedProvider;
     }
 
     if (gUseSystemMenus) {
 #if AUI_PLATFORM_MACOS
-        gCachedProvider = _new<MacOSMenuProvider>();
-        return gCachedProvider;
+        gCachedProvider = std::make_unique<MacOSMenuProvider>();
+        return *gCachedProvider;
 #elif AUI_PLATFORM_WIN
-        gCachedProvider = _new<Win32MenuProvider>();
-        return gCachedProvider;
+        gCachedProvider = std::make_unique<Win32MenuProvider>();
+        return *gCachedProvider;
 #endif
         // No system-menu implementation on this platform — fall through to AUI-drawn.
     }
 
-    gCachedProvider = _new<AWindowMenuProvider>();
-    return gCachedProvider;
+    gCachedProvider = std::make_unique<AWindowMenuProvider>();
+    return *gCachedProvider;
 }
 
 void AMenu::close() {
-    provider()->closeMenu();
+    provider().closeMenu();
 }
 
 bool AMenu::isOpen() {
-    return provider()->isOpen();
+    return provider().isOpen();
 }
 
 bool AMenu::usingSystemMenus() noexcept { return gUseSystemMenus; }
@@ -87,7 +86,10 @@ void AMenu::setUseSystemMenus(bool enabled) {
     resetCache();
 }
 
-void AMenu::setGlobalProvider(_<IMenuProvider> provider) {
+void AMenu::setGlobalProvider(std::unique_ptr<IMenuProvider> provider) {
+    if (gOverrideProvider && gOverrideProvider->isOpen()) {
+        gOverrideProvider->closeMenu();
+    }
     if (gCachedProvider && gCachedProvider->isOpen()) {
         gCachedProvider->closeMenu();
     }

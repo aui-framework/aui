@@ -17,6 +17,7 @@
 #pragma once
 
 
+#include <memory>
 #include <AUI/Common/AString.h>
 #include <AUI/Common/AVector.h>
 #include "AShortcut.h"
@@ -29,7 +30,7 @@ using AMenuModel = AVector<AMenuItem>;
 
 class API_AUI_VIEWS AMenu {
 private:
-    static _<IMenuProvider>& provider();
+    static IMenuProvider& provider();
 public:
     static void show(const AMenuModel& model);
     static void close();
@@ -59,7 +60,7 @@ public:
      * and feel. Pass `nullptr` to reset to the default factory behaviour.
      * Call from the UI thread; the cached provider is swapped without synchronization.
      */
-    static void setGlobalProvider(_<IMenuProvider> provider);
+    static void setGlobalProvider(std::unique_ptr<IMenuProvider> provider);
 
     enum Type {
         SINGLE,
