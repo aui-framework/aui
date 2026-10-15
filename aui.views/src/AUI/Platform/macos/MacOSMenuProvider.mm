@@ -54,8 +54,8 @@ NSString* toNs(const AString& s) {
 }
 
 // Convert an AShortcut into an NSMenuItem keyEquivalent + modifierMask pair.
-// Modifiers are taken from the key list itself (not from the display string, which names
-// LSYSTEM "Win"). AUI's Ctrl is mapped to ⌘ as well, as it is the idiomatic menu modifier.
+// Modifiers are taken from the key list itself (not from the display string).
+// Keys map 1:1 to their macOS modifiers; use AInput::CMD_CTRL for the idiomatic ⌘ (Ctrl elsewhere).
 // This is best-effort — more exotic keys fall through as no key equivalent (the menu still
 // works via the stored onAction callback).
 void applyShortcut(NSMenuItem* item, const AShortcut& shortcut) {
@@ -66,6 +66,8 @@ void applyShortcut(NSMenuItem* item, const AShortcut& shortcut) {
     for (const auto key : shortcut.getKeys()) {
         switch (key) {
             case AInput::LCONTROL: case AInput::RCONTROL:
+                mods |= NSEventModifierFlagControl;
+                break;
             case AInput::LSYSTEM: case AInput::RSYSTEM:
                 mods |= NSEventModifierFlagCommand;
                 break;
