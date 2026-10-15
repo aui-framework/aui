@@ -34,7 +34,13 @@
     return frameSize;
 }
 */
+- (void)windowDidMove:(NSNotification *)notification {
+    mWindow->AViewContainer::setPosition(mWindow->getWindowPosition());
+}
+
 - (void)windowDidResize:(NSNotification *)notification {
+    // keep AUI's idea of the position in sync, otherwise setSize() below would move the window back.
+    mWindow->AViewContainer::setPosition(mWindow->getWindowPosition());
     float s = mWindow->getDpiRatio();
     const NSRect contentFrame = [[static_cast<NSWindow*>(mWindow->nativeHandle()) contentView] frame];
     mWindow->getRenderingContext()->beginResize(*mWindow);

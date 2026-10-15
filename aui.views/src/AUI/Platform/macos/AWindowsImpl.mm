@@ -175,16 +175,19 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     if (!primary) return;
     const CGFloat primaryH = [primary frame].size.height;
     const float dpi = getDpiRatio();
-    // Flip AUI top-left origin back to AppKit bottom-left for setFrame.
-    const NSRect frame = NSMakeRect(
-        x / dpi,
-        primaryH - (y + height) / dpi,
-        width / dpi,
-        height / dpi);
     const auto minSize = getMinimumSize();
-    [s setMinSize:NSSizeFromCGSize({minSize.x / dpi, minSize.y / dpi})];
-    [s setMaxSize:NSSizeFromCGSize({getMaxSize().x / dpi, getMaxSize().y / dpi})];
-    [s setFrame:frame display:YES];
+    const auto maxSize = getMaxSize();
+    [s setContentMinSize:NSMakeSize(minSize.x / dpi, minSize.y / dpi)];
+    [s setContentMaxSize:NSMakeSize(maxSize.x < 0 ? CGFLOAT_MAX : maxSize.x / dpi,
+                                    maxSize.y < 0 ? CGFLOAT_MAX : maxSize.y / dpi)];
+
+    // width/height describe the content area; x/y is the top-left corner of the whole window frame.
+    const NSSize frameSize = [s frameRectForContentRect:NSMakeRect(0, 0, width / dpi, height / dpi)].size;
+    // Flip AUI top-left origin back to AppKit bottom-left for setFrame.
+    const NSRect frame = NSMakeRect(x / dpi, primaryH - y / dpi - frameSize.height, frameSize.width, frameSize.height);
+    if (!NSEqualRects(frame, [s frame])) {
+        [s setFrame:frame display:YES];
+    }
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
