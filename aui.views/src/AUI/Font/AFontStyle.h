@@ -100,7 +100,9 @@ struct API_AUI_VIEWS AFontStyle {
         outAdvanceY = (glm::max)(outAdvanceY, advanceY + lineHeight);
     }
 
+    // constrained to actual containers so that string literals (e.g. U"text") pick the u32string_view overload
     template <class Container>
+    requires requires(const Container& c) { c.begin(); c.end(); }
     int getWidth(const Container& container) const {
         return getWidth(container.begin(), container.end());
     }
