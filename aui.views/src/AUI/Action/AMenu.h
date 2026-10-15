@@ -48,6 +48,11 @@ public:
     static void setUseSystemMenus(bool enabled = true);
 
     /**
+     * @brief Returns the value last passed to setUseSystemMenus (`true` by default).
+     */
+    [[nodiscard]] static bool usingSystemMenus() noexcept;
+
+    /**
      * @brief Install a custom provider (overrides both the default and the system setting).
      * @details
      * Useful for testing, embedded renderers, or apps that want a fully custom menu look

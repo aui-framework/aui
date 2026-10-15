@@ -74,6 +74,8 @@ bool AMenu::isOpen() {
     return provider()->isOpen();
 }
 
+bool AMenu::usingSystemMenus() noexcept { return gUseSystemMenus; }
+
 void AMenu::setUseSystemMenus(bool enabled) {
     if (gUseSystemMenus == enabled) {
         return;
