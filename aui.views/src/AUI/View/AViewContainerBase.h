@@ -24,7 +24,6 @@
 #include "AUI/Render/ARenderContext.h"
 #include "glm/fwd.hpp"
 
-
 AUI_ENUM_FLAG(AViewLookupFlags) {
     NONE = 0,
 
@@ -34,7 +33,8 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
     IGNORE_VISIBILITY = 0b1,
 
     /**
-     * @brief On AViewContainerBase::getViewAt* with callbacks, only the first view in the container is passed to callback.
+     * @brief On AViewContainerBase::getViewAt* with callbacks, only the first view in the container is passed to
+     * callback.
      * @details
      * Basically this flag allows to replicate mouse click handling behaviour, which is useful in creating custom events
      * (i.e. drag&drop).
@@ -58,8 +58,8 @@ AUI_ENUM_FLAG(AViewLookupFlags) {
  * AViewContainerBase does not control the position and size of the child views by itself; instead, it delegates that
  * responsibility to it's [layout manager](layout-managers.md).
  *
- * Since AViewContainerBase is an instance of AView, AViewContainerBase can handle AViewContainerBases recursively, thus, making
- * possible complex UI by nested AViewContainerBases with different layout managers.
+ * Since AViewContainerBase is an instance of AView, AViewContainerBase can handle AViewContainerBases recursively,
+ * thus, making possible complex UI by nested AViewContainerBases with different layout managers.
  *
  * This class is abstract. The methods for modifying it's views are protected. You can use AViewContainer which exposes
  * these methods to public or extend AViewContainerBase to make your own container-like view.
@@ -79,10 +79,8 @@ public:
     };
 
     AViewContainerBase();
-    ~AViewContainerBase() override = 0; // this class is intended to be derived; use AViewContainer for trivial
-                                        // container
-
-
+    ~AViewContainerBase() override = 0;   // this class is intended to be derived; use AViewContainer for trivial
+                                          // container
 
     void render(ARenderContext context) override;
 
@@ -96,10 +94,6 @@ public:
 
     void onClickPrevented() override;
 
-    int getContentMinimumWidth() override;
-
-    int getContentMinimumHeight() override;
-
     void onPointerPressed(const APointerPressedEvent& event) override;
 
     void onPointerDoubleClicked(const APointerPressedEvent& event) override;
@@ -112,25 +106,18 @@ public:
 
     bool consumesClick(const glm::ivec2& pos) override;
 
-    void setSize(glm::ivec2 size) override;
+    void requestLayout() override;
 
     void setEnabled(bool enabled = true) override;
 
-    auto begin() const {
-        return mViews.cbegin();
-    }
+    auto begin() const { return mViews.cbegin(); }
 
-    auto end() const {
-        return mViews.cend();
-    }
+    auto end() const { return mViews.cend(); }
 
     /**
      * @brief Get all views of the container.
      */
-    const AVector<_<AView>>& getViews() const {
-        return mViews;
-    }
-
+    const AVector<_<AView>>& getViews() const { return mViews; }
 
     /**
      * @brief Get layout manager of the container.
@@ -149,7 +136,8 @@ public:
      * Some containers may implement getViewAt by it's own (i.e. AListView for performance reasons).
      */
     [[nodiscard]]
-    virtual _<AView> getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
+    virtual _<AView>
+    getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
 
     /**
      * @brief Acts as AViewContainerBase::getViewAt but recursively (may include non-direct child).
@@ -158,7 +146,8 @@ public:
      * @return found view or nullptr
      */
     [[nodiscard]]
-    _<AView> getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
+    _<AView>
+    getViewAtRecursive(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) const noexcept;
 
     /**
      * @brief Acts as AViewContainerBase::getViewAtRecursive but calls a callback instead of returning value.
@@ -170,9 +159,10 @@ public:
      * The passed callback is a predicate. If predicate returns true, the execution of lookup is stopped and getViewAt
      * returns true. If predicate returns false, the lookup continues.
      */
-    template<aui::predicate<_<AView>> Callback>
-    bool getViewAtRecursive(glm::ivec2 pos, const Callback& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
-        _<AView> possibleOutput; // for case if anyone does not consumesClick
+    template <aui::predicate<_<AView>> Callback>
+    bool getViewAtRecursive(
+        glm::ivec2 pos, const Callback& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
+        _<AView> possibleOutput;   // for case if anyone does not consumesClick
         auto process = [&](const _<AView>& view) {
             if (callback(view))
                 return true;
@@ -187,15 +177,18 @@ public:
         for (const auto& view : aui::reverse_iterator_wrap(mViews)) {
             auto targetPos = pos - view->getPosition();
 
-            if (targetPos.x < 0 || targetPos.y < 0 || targetPos.x >= view->getSize().x || targetPos.y >= view->getSize().y) {
+            if (targetPos.x < 0 || targetPos.y < 0 || targetPos.x >= view->getSize().x ||
+                targetPos.y >= view->getSize().y) {
                 continue;
             }
-            if (!flags.test(AViewLookupFlags::IGNORE_VISIBILITY) && !(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
+            if (!flags.test(AViewLookupFlags::IGNORE_VISIBILITY) &&
+                !(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
                 continue;
             }
 
             if (view->consumesClick(targetPos)) {
-                if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
+                if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) ||
+                    !!(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
                     if (process(view)) {
                         return true;
                     }
@@ -223,11 +216,12 @@ public:
      * @param flags see AViewLookupFlags
      * @return true if there's at least one view for which callback returned true, false otherwise.
      */
-    template<aui::predicate<_<AView>> Callback>
+    template <aui::predicate<_<AView>> Callback>
     bool visitsViewRecursive(Callback&& callback, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
         for (auto it = mViews.rbegin(); it != mViews.rend(); ++it) {
             auto view = *it;
-            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
+            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) ||
+                !!(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
                 if (callback(view))
                     return true;
                 if (auto container = _cast<AViewContainerBase>(view)) {
@@ -243,17 +237,16 @@ public:
         return false;
     }
 
-
     /**
      * @brief Acts as AViewContainerBase::getViewAtRecursive but finds a view castable to specified template type.
      * @param pos position relative to this container
      * @param flags see AViewLookupFlags
      * @return found view or nullptr
      */
-    template<typename T>
+    template <typename T>
     _<T> getViewAtRecursiveOfType(glm::ivec2 pos, ABitField<AViewLookupFlags> flags = AViewLookupFlags::NONE) {
         _<T> result;
-        getViewAtRecursive(pos, [&] (const _<AView>& v) { return bool(result = _cast<T>(v)); }, flags);
+        getViewAtRecursive(pos, [&](const _<AView>& v) { return bool(result = _cast<T>(v)); }, flags);
         return result;
     }
 
@@ -285,14 +278,6 @@ public:
         return nullptr;
     }
 
-
-    /**
-     * @brief Applies geometry to all children if needed.
-     * @details
-     * See [layout-managers] for more info.
-     */
-    void applyGeometryToChildrenIfNecessary();
-
     void onKeyDown(AInput::Key key) override;
 
     void onKeyRepeat(AInput::Key key) override;
@@ -306,22 +291,21 @@ public:
     /**
      * @see mPointerEventsMapping
      */
-    const ASmallVector<PointerEventsMapping, 1>& pointerEventsMapping() const noexcept {
-        return mPointerEventsMapping;
-    }
+    const ASmallVector<PointerEventsMapping, 1>& pointerEventsMapping() const noexcept { return mPointerEventsMapping; }
 
     void forceUpdateLayoutRecursively() override;
 
-    void markMinContentSizeInvalid() override;
     void markPixelDataInvalid(ARect<int> invalidArea) override;
 
 protected:
-    bool mWantsLayoutUpdate = true;
-    glm::ivec2 mLastLayoutUpdateSize{0, 0};
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
+
+    void onLayout(glm::ivec2 size) override;
 
     void drawView(const _<AView>& view, ARenderContext contextOfTheContainer);
 
-    template<typename Iterator>
+    template <typename Iterator>
     void drawViews(Iterator begin, Iterator end, ARenderContext contextPassedToContainer) {
         std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
         if (!lock) {
@@ -332,7 +316,6 @@ protected:
         }
     }
 
-    void invalidateAllStyles() override;
     void onViewGraphSubtreeChanged() override;
     void invalidateAssHelper() override;
 
@@ -344,7 +327,7 @@ protected:
     /**
      * @brief Adds view to container without exposing it to the layout manager.
      * @details
-     * User is obligated to manage view's layout by themselves. Implement applyGeometryToChildren() to do so.
+     * User is obligated to manage view's layout by themselves.
      *
      * View is not visible until it's layout is determined. @see AView::mSkipUntilLayoutUpdate
      */
@@ -400,13 +383,6 @@ protected:
         drawViews(mViews.begin(), mViews.end(), contextPassedToContainer);
     }
 
-    /**
-     * @brief Applies geometry to all children with no preconditions.
-     * @details
-     * See [layout-managers] for more info.
-     */
-    virtual void applyGeometryToChildren();
-
 signals:
     /**
      * @brief Emitted when addView(s)/removeView/setLayout was called.
@@ -418,6 +394,11 @@ private:
     ASpinlockMutex mViewsSafeIteration;
     AVector<_<AView>> mViews;
     bool mSizeSet = false;
+
+    struct RepaintTrap {
+        bool triggered = false;
+    };
+    AOptional<RepaintTrap> mRepaintTrap;
 
     struct ConsumesClickCache {
         glm::ivec2 position;

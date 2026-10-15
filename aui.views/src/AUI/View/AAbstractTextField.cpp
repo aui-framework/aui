@@ -33,8 +33,11 @@ bool AAbstractTextField::handlesNonMouseNavigation() {
 }
 
 
-int AAbstractTextField::getContentMinimumHeight() {
-    return getFontStyle().size + getFontStyle().font->getDescenderHeight(getFontStyle().size);
+AMinMaxAxis AAbstractTextField::onComputeIntrinsicMinMaxAxis(int height) {
+    return {
+        .min = 100,
+        .max = 100,
+    };
 }
 
 
@@ -44,13 +47,18 @@ void AAbstractTextField::render(ARenderContext ctx) {
     prerenderStringIfNeeded(ctx.canvas);
 
     AStaticVector<ARect<int>, 1> selectionRects;
-    int y = mPadding.top + getVerticalAlignmentOffset() - getFontStyle().getAscenderHeight() - getFontStyle().getDescenderHeight() * 2;
+    const int baselineY = getVerticalAlignmentOffset();
+    // selection and cursor cover the same area as text does: ascender, descender and the descender mirrored above the
+    // ascender, see AFontStyle::getBaselineY.
+    const int lineTop = baselineY - getFontStyle().getAscenderHeight() - getFontStyle().getDescenderHeight();
+    const int lineHeight = getFontStyle().getTextBlockHeight() + 1;
     if (hasSelection()) {
         auto s = selection();
         auto beginPos = getPosByIndex(s.begin).x;
         auto endPos = getPosByIndex(s.end).x;
-        selectionRects.push_back(ARect<int>::fromTopLeftPositionAndSize({mPadding.left + beginPos, y},
-                                                                        {endPos - beginPos, getFontStyle().size + getFontStyle().getAscenderHeight()}));
+        selectionRects.push_back(ARect<int>::fromTopLeftPositionAndSize(
+            { mPadding.left + beginPos, lineTop },
+            { endPos - beginPos, lineHeight }));
     }
     drawSelectionBeforeAndAfter(ctx.canvas, selectionRects, [&] {
         doDrawString(ctx.canvas);
@@ -58,7 +66,7 @@ void AAbstractTextField::render(ARenderContext ctx) {
     if (!mIsEditable) {
         return;
     }
-    drawCursor(ctx.canvas, {mAbsoluteCursorPos + mPadding.left, y});
+    drawCursor(ctx.canvas, { mAbsoluteCursorPos + mPadding.left, lineTop }, lineHeight);
 }
 
 void AAbstractTextField::doDrawString(ACanvas& render) {
@@ -249,8 +257,8 @@ AString AAbstractTextField::toString() const {
     return AString(mContents);
 }
 
-void AAbstractTextField::setSize(glm::ivec2 size) {
-    AView::setSize(size);
+void AAbstractTextField::onLayout(glm::ivec2 size) {
+    AView::onLayout(size);
     onCursorIndexChanged(); // cursor and horizontal scroll should respond to size changes.
 }
 
@@ -302,12 +310,5 @@ glm::ivec2 AAbstractTextField::getCursorPosition() {
 }
 
 int AAbstractTextField::getVerticalAlignmentOffset() noexcept {
-    int y = getPadding().top + getFontStyle().getAscenderHeight();
-
-    // adding height of descender we established in getContentMinimumHeight, see explanation there.
-    y += getFontStyle().font->getDescenderHeight(getFontStyle().size);
-
-    y = (glm::max)(y,
-                   y + int(glm::ceil((getContentHeight() - getContentMinimumHeight())) / 2.0));
-    return y;
+    return getFontStyle().getBaselineY(getPadding().top, getContentHeight(), mVerticalAlign);
 }

@@ -151,9 +151,9 @@ public:
         updateTexture();
     }
 
-    int getContentMinimumWidth() override { return mCells->size().x * SCALE; }
-
-    int getContentMinimumHeight() override { return mCells->size().y * SCALE; }
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
+      return mCells->size() * int(SCALE);
+    }
 
 private:
     _<Cells> mCells;
@@ -161,7 +161,7 @@ private:
 
     void updateTexture() {
         if (!mTexture) {
-            auto& backend = AWindow::current()->getRenderingContext()->backend();
+            auto& backend = ASurface::current()->getRenderingContext()->backend();
             mTexture = backend.createTexture(mCells->size(), APixelFormat::R8G8B8A8_UNORM);
         }
 

@@ -115,19 +115,23 @@ public:
 DevtoolsLayoutTab::DevtoolsLayoutTab(ASurface* targetWindow) : mTargetWindow(targetWindow) {
     using namespace declarative;
 
-    setContents(Vertical {
-      Horizontal {
-        Button { Label { "Force layout update" },  {me::forceLayoutUpdate} },
-        SpacerExpanding {},
-        Label { "Use CTRL to hit test views" },
-      },
-      ASplitter::Horizontal()
-          .withItems({
-            mViewHierarchyTree = _new<ATreeView>() AUI_OVERRIDE_STYLE { MinSize { 300_dp }, Expanding {} },
-            Centered { mViewPropertiesView = _new<ViewPropertiesView>(nullptr) },
-          })
-          .withExpanding().build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
+    setContents(
+        Vertical {
+            Horizontal {
+                Button { Label { "Force layout update" }, { me::forceLayoutUpdate } },
+                SpacerExpanding {},
+                Label { "Use CTRL to hit test views" },
+            } AUI_OVERRIDE_STYLE { Expanding { 1, 0 } },
+            ASplitter::Horizontal()
+                    .withItems({
+                        mViewHierarchyTree = _new<ATreeView>() AUI_OVERRIDE_STYLE { MinSize { 300_dp }, Expanding {} },
+                        Centered { mViewPropertiesView = _new<ViewPropertiesView>(nullptr) } AUI_OVERRIDE_STYLE { Expanding { 0, 1 } },
+                    })
+                    .withExpanding()
+                    .build() AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
+
+    // mViewPropertiesView = _new<ViewPropertiesView>(nullptr);
 
     auto model = _new<ViewHierarchyTreeModel>(aui::ptr::fake_shared(targetWindow));
     mViewHierarchyTree->setModel(model);

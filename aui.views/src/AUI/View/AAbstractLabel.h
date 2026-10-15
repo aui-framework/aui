@@ -46,8 +46,9 @@ public:
 
     void render(ARenderContext context) override;
     void doRenderText(ARenderContext render);
-    int getContentMinimumWidth() override;
-    int getContentMinimumHeight() override;
+
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
     const _<IDrawable>& getIcon() const {
         return mIcon;
@@ -66,7 +67,7 @@ public:
         mIconColor = iconColor;
     }
 
-    void doPrerender(ACanvas& render);
+    void doPrerender(ACanvas& render, int maxWidth);
 
     void onDpiChanged() override;
 
@@ -92,7 +93,7 @@ public:
             return;
         }
         mTextOverflow = textOverflow;
-        markMinContentSizeInvalid();
+        requestLayout();
     }
 
     void setTextTransform(TextTransform textTransform) {
@@ -103,9 +104,11 @@ public:
         invalidateFont();
     }
 
-    void setSize(glm::ivec2 size) override;
+    void onLayout(glm::ivec2 size) override;
 
     void invalidateAllStyles() override;
+
+    DebugInspectorInfo debugInspectorInfo() override;
 
 protected:
     _<IRenderer::IPrerenderedString> mPrerendered;
@@ -140,8 +143,7 @@ private:
 
     AString getTransformedText();
 
-    void processTextOverflow(AString& text);
-
+    bool processTextOverflow(AString& text, int maxWidth);
 };
 
 
@@ -162,4 +164,3 @@ public:
         return &AAbstractLabel::setText;
     }
 };
-

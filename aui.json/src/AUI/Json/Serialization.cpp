@@ -92,7 +92,6 @@ static AJson read(ATokenizer& t) {
 
                 case '\"': {
                     AString result = t.readStringUntilUnescaped('\"');
-                    result.replaceAll("\\\\", "\\");
                     return result;
                 }
 

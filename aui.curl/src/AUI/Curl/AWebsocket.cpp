@@ -47,7 +47,12 @@ namespace {
 AWebsocket::AWebsocket(const AString& url, AString key):
 ACurl(ACurl::Builder(url.replacedAll("wss://", "https://").replacedAll("ws://", "http://"))
     .withHeaders({
-        "Expect: 101",
+        // Alex2772 (Jul 22 2026):
+        // "Expect: 101" was here.
+        // despite 101 Switching Protocols is always expected and always sent by the server, some servers respond with
+        // 417 Expectation Failed. To address this, let's pass "Expect:" to curl. This essentially says to curl: do not
+        // pass the "Expect" header.
+        "Expect:",
         "Transfer-Encoding:",
         "Connection: Upgrade",
         "Upgrade: websocket",
@@ -185,8 +190,12 @@ void AWebsocket::writeRawMasked(const std::uint8_t* mask, AByteBufferView messag
     writeRaw(temporaryBuffer.data(), temporaryBuffer.size());
 }
 
-void AWebsocket::write(const char* src, size_t size) {
-    writeMessage(Opcode::TEXT, { src, size });
+void AWebsocket::writeText(AStringView text) {
+    writeMessage(Opcode::TEXT, { text.data(), text.size() });
+}
+
+void AWebsocket::writeBinary(AByteBufferView data) {
+    writeMessage(Opcode::BINARY, { data.data(), data.size() });
 }
 
 void AWebsocket::close() {
@@ -211,21 +220,40 @@ std::size_t AWebsocket::decodeOnePacket(AByteBufferView data) {
 
     it += sizeof(Header);
 
-    uint16_t payloadLength;
+    std::uint64_t payloadLength;
 
     switch (h.payload_len) {
-        case 126:
-        case 127: {
-            if (it + sizeof(payloadLength) > data.end()) {
+        case 126: {
+            std::uint16_t len16;
+            if (it + sizeof(len16) > data.end()) {
                 return 0; // not enough
             }
-            payloadLength = *reinterpret_cast<const std::uint64_t*>(it);
-            myHton(reinterpret_cast<uint8_t*>(&payloadLength), sizeof(payloadLength));
-            it += sizeof(payloadLength);
+            len16 = *reinterpret_cast<const std::uint16_t*>(it);
+            myHton(reinterpret_cast<uint8_t*>(&len16), sizeof(len16));
+            it += sizeof(len16);
+            payloadLength = len16;
+            break;
+        }
+        case 127: {
+            std::uint64_t len64;
+            if (it + sizeof(len64) > data.end()) {
+                return 0; // not enough
+            }
+            len64 = *reinterpret_cast<const std::uint64_t*>(it);
+            myHton(reinterpret_cast<uint8_t*>(&len64), sizeof(len64));
+            it += sizeof(len64);
+            payloadLength = len64;
             break;
         }
         default:
             payloadLength = h.payload_len;
+    }
+
+    // We need the full payload in the buffer before we can safely inspect it (e.g. for CLOSE/PING
+    // reason/data), so bail out early if the frame is not fully received yet.
+    if (static_cast<std::uint64_t>(std::distance(it, data.end())) < payloadLength) {
+        // not enough
+        return 0;
     }
 
     switch (h.opcode) {
@@ -235,13 +263,16 @@ std::size_t AWebsocket::decodeOnePacket(AByteBufferView data) {
             break;
 
         case int(Opcode::CLOSE): {
-            emit websocketClosed(std::string_view(it + 2, h.payload_len - 2));
+            auto reasonLength = payloadLength > 2 ? payloadLength - 2 : 0;
+            emit websocketClosed(std::string_view(it + 2, reasonLength));
             close();
             return 0;
         }
 
         case int(Opcode::PING):
-            writeMessage(Opcode::PONG, {});
+            // RFC 6455 5.5.3: a Pong frame sent in response to a Ping frame must have identical
+            // application data as found in the message body of the Ping frame being replied to.
+            writeMessage(Opcode::PONG, { it, static_cast<std::size_t>(payloadLength) });
             break;
 
         case int(Opcode::PONG):
@@ -251,11 +282,6 @@ std::size_t AWebsocket::decodeOnePacket(AByteBufferView data) {
             ALogger::err("AWebsocket") << "Unknown opcode: " << AString::numberHex(h.opcode) << ", closing connection";
             close();
             return 0;
-    }
-
-    if (std::distance(it, data.end()) < payloadLength) {
-        // not enough
-        return 0;
     }
 
     emit received(AByteBuffer(it, payloadLength));

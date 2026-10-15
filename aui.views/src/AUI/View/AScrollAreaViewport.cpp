@@ -21,11 +21,9 @@
 
 static constexpr auto RENDER_TO_TEXTURE_THRESHOLD_AREA = 128 * 128;
 
-class AScrollAreaViewport::Inner: public AViewContainer {
+class AScrollAreaViewport::Inner : public AViewContainer {
 public:
-    Inner() {
-        addAssName("AScrollAreaViewportInner");
-    }
+    Inner() { addAssName("AScrollAreaViewportInner"); }
 };
 
 AScrollAreaViewport::AScrollAreaViewport() {
@@ -33,20 +31,42 @@ AScrollAreaViewport::AScrollAreaViewport() {
     addView(mInner = _new<Inner>());
 }
 
-AScrollAreaViewport::~AScrollAreaViewport() {
-
-}
+AScrollAreaViewport::~AScrollAreaViewport() {}
 
 void AScrollAreaViewport::setContents(_<AView> content) {
-    mInner->setPosition({0, 0});
     ALayoutInflater::inflate(mInner, content);
     mContents = std::move(content);
-    updateContentsScroll();
+    mInner->setSkipUntilLayoutUpdate(false);
+    mInner->setPosition(-glm::ivec2(mScroll));
+    requestLayout();
+    redraw();
 }
 
-void AScrollAreaViewport::applyGeometryToChildren() {
-    AViewContainerBase::applyGeometryToChildren();
-    mInner->setSize(glm::max(mInner->getMinimumSize(), getSize()));
+void AScrollAreaViewport::setScrollSurfaceSize(glm::ivec2 size) {
+    size = glm::max(size, glm::ivec2(0));
+    if (mScrollSurfaceSize == size) {
+        return;
+    }
+    mScrollSurfaceSize = size;
+    requestLayout();
+    redraw();
+}
+
+glm::ivec2 AScrollAreaViewport::onIntrinsicMeasure(AConstraints constraints) {
+    if (constraints.isInlineTight() && constraints.maxInline == 0) {
+        return { 0, constraints.minBlock };
+    }
+    return mInner->measure(constraints);
+}
+
+AMinMaxAxis AScrollAreaViewport::onComputeIntrinsicMinMaxAxis(int height) { return mInner->computeMinMaxAxis(height); }
+
+void AScrollAreaViewport::onLayout(glm::ivec2 size) {
+    mInner->setSkipUntilLayoutUpdate(false);
+    // mScrollSurfaceSize is set by AScrollArea::onLayout; fall back to the viewport's own size so that expanding
+    // children fill the viewport when the content is smaller than it.
+    const glm::ivec2 innerSize = glm::max(mScrollSurfaceSize, size);
+    mInner->layout(-glm::ivec2(mScroll), innerSize);
 
     if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
         if (!mRenderToTexture) {
@@ -167,6 +187,7 @@ void AScrollAreaViewport::drawOffscreen(ARenderContext rc) {
 }
 
 void AScrollAreaViewport::updateContentsScroll() {
+    mInner->setSkipUntilLayoutUpdate(false);
     mInner->setPosition(-glm::ivec2(mScroll));
     emit mScrollChanged(mScroll);
     redraw();

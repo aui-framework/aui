@@ -11,6 +11,21 @@
 
 #include "AUI/Platform/AWindowManager.h"
 #include "AUI/Platform/AWindow.h"
+#include <AUI/Platform/AApplication.h>
+
+bool AWindowManager::shouldKeepRunning() const {
+    auto& app = AApplication::inst();
+    if (!mLoopRunning || app.isQuitRequested()) {
+        return false;
+    }
+    if (app.holdCount() > 0) {
+        return true;
+    }
+    if (!app.quitOnLastWindowClosed) {
+        return true;
+    }
+    return !mWindows.empty();
+}
 
 void AWindowManager::closeAllWindows() {
     auto windows = std::move(mWindows); // keeping it safe

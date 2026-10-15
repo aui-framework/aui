@@ -86,18 +86,18 @@ public:
         drawView(view, ctx);
     }
 
-    int getContentMinimumWidth() override {
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
         if (auto view = mView.lock()) {
-            return view->getContentMinimumWidth();
+            return view->measure(constraints);
         }
-        return AViewContainerBase::getContentMinimumWidth();
+        return AViewContainerBase::onIntrinsicMeasure(constraints);
     }
 
-    int getContentMinimumHeight() override {
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override {
         if (auto view = mView.lock()) {
-            return view->getContentMinimumHeight();
+            return view->computeMinMaxAxis(height);
         }
-        return AViewContainerBase::getContentMinimumHeight();
+        return AViewContainerBase::onComputeIntrinsicMinMaxAxis(height);
     }
 
     [[nodiscard]]
@@ -107,7 +107,7 @@ public:
 
     void setView(_weak<AView> view) {
         mView = std::move(view);
-        markMinContentSizeInvalid();
+        requestLayout();
     }
 
 private:
@@ -195,5 +195,5 @@ void DevtoolsPointerInspect::inspect(AView* ptr) {
     });
     mResultView->addView(parentHelper);
     mResultView->addView(std::move(fake));
-    markMinContentSizeInvalid();
+    requestLayout();
 }

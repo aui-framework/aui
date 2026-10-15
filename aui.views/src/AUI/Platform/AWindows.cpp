@@ -9,7 +9,6 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-
 #include "AUI/Common/AObject.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Performance/APerformanceFrame.h"
@@ -40,12 +39,9 @@
 #include <AUI/Platform/linux/IPlatformAbstraction.h>
 #endif
 
-
 using namespace declarative;
 
-bool AWindow::consumesClick(const glm::ivec2& pos) {
-    return AViewContainer::consumesClick(pos);
-}
+bool AWindow::consumesClick(const glm::ivec2& pos) { return AViewContainer::consumesClick(pos); }
 
 void AWindow::onClosed() {
     emit closed();
@@ -96,9 +92,9 @@ void AWindow::doDrawWindow() {
 }
 
 void AWindow::createDevtoolsWindow() {
-    class DevtoolsWindow: public AWindow {
+    class DevtoolsWindow : public AWindow {
     public:
-        DevtoolsWindow(): AWindow("Devtools", 500_dp, 400_dp) {}
+        DevtoolsWindow() : AWindow("Devtools", 500_dp, 400_dp) {}
 
     protected:
         void createDevtoolsWindow() override {
@@ -112,11 +108,8 @@ void AWindow::createDevtoolsWindow() {
     window->show();
 }
 
-
-
 using namespace std::chrono;
 using namespace std::chrono_literals;
-
 
 static auto _gLastFrameTime = 0ms;
 
@@ -125,18 +118,62 @@ bool AWindow::isRedrawWillBeEfficient() {
     auto delta = now - _gLastFrameTime;
     return 8ms < delta;
 }
+
 void AWindow::redraw() {
 #if AUI_PROFILING
-    APerformanceFrame frame([&](APerformanceSection::Datas sections) {
-        emit performanceFrameComplete(sections);
-    });
-    APerformanceSection s("AWindow::redraw", std::nullopt, fmt::format("frame {}", [] { static uint64_t frameIndex = 0; return frameIndex++; }()));
+    APerformanceFrame frame([&](APerformanceSection::Datas sections) { emit performanceFrameComplete(sections); });
+    APerformanceSection s(
+        "AWindow::redraw", std::nullopt, fmt::format("frame {}", [] {
+            static uint64_t frameIndex = 0;
+            return frameIndex++;
+        }()));
 #endif
 
     {
         if (isClosed()) {
             return;
         }
+
+        if (mWantsLayoutUpdate) {
+            ensureAssUpdated();
+            // laying our contents out in less space than they need produces garbage, so we never do: whatever the
+            // window manager makes of the minimum size we announce it (see
+            // IPlatformAbstraction::windowAnnounceMinMaxSize), contents that still don't fit overflow the window
+            // instead of being squeezed into it.
+            auto size = getSize();
+            const auto maxSize = getMaxSize();
+            if (maxSize.x != -1)
+                size.x = glm::min(size.x, maxSize.x);
+            if (maxSize.y != -1)
+                size.y = glm::min(size.y, maxSize.y);
+            size = glm::max(size, getMinimumSize());
+            AView::setSize(size);
+#if AUI_PLATFORM_WIN
+            // win32 lets us resize the native window right here, keeping it in sync with the layout. on the other
+            // platforms this would mean arguing with the window manager from inside a paint, so we don't.
+            setSize(size);
+#endif
+            auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+            layout(getPosition(), getSize());
+            auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
+            unsigned millis = mFrameMillis = static_cast<unsigned>((after - before).count());
+            if (millis > 20) {
+                static auto lastNotification = 0ms;
+                if (after - lastNotification > 5min) {
+                    lastNotification = after;
+                    if (millis > 40) {
+                        ALogger::warn("Performance") << "Layout took {}ms! Unacceptably bad performance"_format(millis);
+                    } else {
+                        ALogger::warn("Performance") << "Layout took {}ms! Bad performance"_format(millis);
+                    }
+                }
+            }
+#if AUI_PLATFORM_LINUX
+            IPlatformAbstraction::current().windowAnnounceMinMaxSize(*this);
+#endif
+        }
+        applyPendingLayoutRoots();
+
         auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         {
             APerformanceSection s("IRenderingContext::beginPaint");
@@ -147,33 +184,24 @@ void AWindow::redraw() {
             mRenderingContext->endPaint(*this);
         };
 
-        if (mMarkedMinContentSizeInvalid) {
-            ensureAssUpdated();
-#if AUI_PLATFORM_WIN
-            setSize(glm::clamp(getSize(), getMinimumSize(), getMaxSize()));
-#endif
-            applyGeometryToChildrenIfNecessary();
-            mMarkedMinContentSizeInvalid = false;
-#if AUI_PLATFORM_LINUX
-            IPlatformAbstraction::current().windowAnnounceMinMaxSize(*this);
-#endif
-        }
 #if AUI_PLATFORM_WIN
         mRedrawFlag = true;
 #elif AUI_PLATFORM_MACOS
         mRedrawFlag = false;
 #endif
+
         doDrawWindow();
 
         // measure frame time
         auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
-        unsigned millis = mFrameMillis = unsigned((after - before).count());
+        unsigned millis = mFrameMillis = static_cast<unsigned>((after - before).count());
         if (millis > 20) {
             static auto lastNotification = 0ms;
             if (after - lastNotification > 5min) {
                 lastNotification = after;
                 if (millis > 40) {
-                    ALogger::warn("Performance") << "Frame render took {}ms! Unacceptably bad performance"_format(millis);
+                    ALogger::warn("Performance")
+                        << "Frame render took {}ms! Unacceptably bad performance"_format(millis);
                 } else {
                     ALogger::warn("Performance") << "Frame render took {}ms! Bad performance"_format(millis);
                 }
@@ -186,20 +214,16 @@ void AWindow::redraw() {
     }
 }
 
-_<AWindow> AWindow::wrapViewToWindow(const _<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {
+_<AWindow> AWindow::wrapViewToWindow(
+    const _<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {
     view->setExpanding();
 
     auto window = _new<AWindow>(title, width, height, parent, ws);
-    window->setContents(Stacked {
-            view
-    });
+    window->setContents(Stacked { view });
     return window;
 }
 
-void AWindow::close() {
-    onClosed();
-}
-
+void AWindow::close() { onClosed(); }
 
 void AWindow::onFocusAcquired() {
     mIsFocused = true;
@@ -234,26 +258,27 @@ void AWindow::onKeyRepeat(AInput::Key key) {
         v->onKeyRepeat(key);
 }
 
-ASurface* AWindow::current() {
-    return currentWindowStorage();
+void AWindow::onCloseButtonClicked() { close(); }
+
+void AWindow::setPosition(glm::ivec2 position) { setGeometry(position.x, position.y, getWidth(), getHeight()); }
+
+void AWindow::setSize(glm::ivec2 size) { setGeometry(getPosition().x, getPosition().y, size.x, size.y); }
+
+glm::ivec2 AWindow::getMinimumSize() {
+    static constexpr int MAX_MIN_SIZE = 1000;
+
+    const auto styled = getMinSize();
+    // the narrowest our contents can be laid out at, and the height they need at exactly that width.
+    const int width = glm::max(styled.x, computeMinMaxAxis().min);
+    const int height = glm::max(styled.y, measure(AConstraints::fixedInline(width)).y);
+    return glm::min(glm::ivec2(width, height), glm::ivec2(MAX_MIN_SIZE));
 }
-
-void AWindow::onCloseButtonClicked() {
-    close();
-}
-
-
-void AWindow::setPosition(glm::ivec2 position) {
-    setGeometry(position.x, position.y, getWidth(), getHeight());
-}
-
 
 glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) {
     return other->mapPosition(unmapPosition(position));
 }
 
-
-AWindowManager::AWindowManager(): mHandle(this) {
+AWindowManager::AWindowManager() : mHandle(this) {
     mHangTimer = _new<ATimer>(10s);
     return;
     AObject::connect(mHangTimer->fired, mHangTimer, [&, thread = AThread::current()] {
@@ -267,25 +292,25 @@ AWindowManager::AWindowManager(): mHandle(this) {
 #endif
 }
 
-
-AWindowManager::~AWindowManager() {
-
-}
-
-
+AWindowManager::~AWindowManager() {}
 
 void AWindow::windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) {
     mWindowTitle = name;
     mParentWindow = parent;
-    mSize = (glm::max)(glm::ivec2{ width, height }, getMinimumSize());
+    mSize = (glm::max) (glm::ivec2 { width, height }, getMinSize());
 
     currentWindowStorage() = this;
 
     getWindowManager().initNativeWindow({ *this, name, width, height, ws, parent });
 
+    moveToCenter();
+
     setWindowStyle(ws);
 
-    AUI_UI_THREAD {
+    AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken)] {
+        if (alive.expired()) {
+            return;
+        }
         emit mSizeChanged(getSize());
     };
 
@@ -293,16 +318,15 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
     // on linux, we have to manually provide an icon for the system.
     // __aui/icon_512x512.png is provided by aui_app cmake command.
     if (auto _icon = AImage::fromUrl(":__aui/icon_512x512.png")) {
-        IPlatformAbstraction::current().windowSetIcon(*this,*_icon);
+        IPlatformAbstraction::current().windowSetIcon(*this, *_icon);
     }
 #endif
 }
 
 _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
-    class AOverlappingWindow: public AWindow {
+    class AOverlappingWindow : public AWindow {
     public:
-        AOverlappingWindow(AWindow* parent):
-        AWindow("MENU", 100, 100, parent, WindowStyle::SYS) {
+        AOverlappingWindow(AWindow* parent) : AWindow("MENU", 100_dp, 100_dp, parent, WindowStyle::SYS) {
             setCustomStyle({ ass::Padding { 0 } });
         }
     };
@@ -310,19 +334,13 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     auto finalPos = unmapPosition(position);
     window->setGeometry(finalPos.x, finalPos.y, size.x, size.y);
     // show later
-    AUI_UI_THREAD {
-        window->show();
-    };
+    AUI_UI_THREAD { window->show(); };
 
-    class MyOverlappingSurface: public AOverlappingSurface {
+    class MyOverlappingSurface : public AOverlappingSurface {
     public:
-        void setOverlappingSurfacePosition(glm::ivec2 position) override {
-            emit positionSet(position);
-        }
+        void setOverlappingSurfacePosition(glm::ivec2 position) override { emit positionSet(position); }
 
-        void setOverlappingSurfaceSize(glm::ivec2 size) override {
-            emit sizeSet(size);
-        }
+        void setOverlappingSurfaceSize(glm::ivec2 size) override { emit sizeSet(size); }
 
     signals:
         emits<glm::ivec2> positionSet;
@@ -334,9 +352,7 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     connect(surface->positionSet, window, [this, window = window.get()](const glm::ivec2& newPos) {
         window->setPosition(unmapPosition(newPos));
     });
-    connect(surface->sizeSet, window, [this, window = window.get()](const glm::ivec2& size) {
-        window->setSize(size);
-    });
+    connect(surface->sizeSet, window, [this, window = window.get()](const glm::ivec2& size) { window->setSize(size); });
 
     return surface;
 }
@@ -367,10 +383,9 @@ void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
 #else
     for (const auto& graphicsApi : ARenderingContextOptions::get().initializationOrder) {
         try {
-            std::visit(aui::lambda_overloaded{
-                    [](const ARenderingContextOptions::DirectX11&) {
-                        throw AException("DirectX is not supported");
-                    },
+            std::visit(
+                aui::lambda_overloaded {
+                    [](const ARenderingContextOptions::DirectX11&) { throw AException("DirectX is not supported"); },
                     [&](const ARenderingContextOptions::OpenGL& config) {
                         auto context = std::make_unique<OpenGLRenderingContext>(config);
                         context->init(init);
@@ -381,7 +396,8 @@ void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
                         context->init(init);
                         init.setRenderingContext(std::move(context));
                     },
-            }, graphicsApi);
+                },
+                graphicsApi);
             return;
         } catch (const AException& e) {
             ALogger::warn("AWindowManager") << "Unable to initialize graphics API:" << e;
@@ -391,6 +407,4 @@ void AWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
 #endif
 }
 
-bool AWindow::isClosed() const noexcept {
-    return mSelfHolder == nullptr;
-}
+bool AWindow::isClosed() const noexcept { return mSelfHolder == nullptr; }

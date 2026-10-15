@@ -206,7 +206,7 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                         glm::ivec2 size = { ev.xconfigure.width, ev.xconfigure.height };
                         if (size.x >= 10 && size.y >= 10 && size != window->getSize()) {
                             AUI_NULLSAFE(window->getRenderingContext())->beginResize(*window);
-                            window->AViewContainer::setSize(size);
+                            window->onResize(size.x, size.y);
                             AUI_NULLSAFE(window->getRenderingContext())->endResize(*window);
                         }
                         if (auto w = _cast<ACustomWindow>(window)) {
@@ -451,6 +451,17 @@ void PlatformAbstractionX11::windowShow(AWindow& window) {
     }
 }
 
+void PlatformAbstractionX11::windowActivate(AWindow& window, const AString& activationToken) {
+    if (!bool(PlatformAbstractionX11::ourDisplay) || !nativeHandle(window)) {
+        return;
+    }
+    XMapRaised(PlatformAbstractionX11::ourDisplay, nativeHandle(window));
+    // EWMH: source indication 1 = normal application. The WM restores minimized windows on _NET_ACTIVE_WINDOW.
+    static Atom netActiveWindow = XInternAtom(PlatformAbstractionX11::ourDisplay, "_NET_ACTIVE_WINDOW", False);
+    xSendEventToWM(window, netActiveWindow, 1, CurrentTime, 0, 0, 0);
+    XFlush(PlatformAbstractionX11::ourDisplay);
+}
+
 void PlatformAbstractionX11::windowSetSize(AWindow& window, glm::ivec2 size) {
     if (!nativeHandle(window))
         return;
@@ -474,8 +485,9 @@ void PlatformAbstractionX11::windowSetSize(AWindow& window, glm::ivec2 size) {
 
         XGetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizehints, &userhints);
 
-        sizehints->min_width = window.getMinimumWidth();
-        sizehints->min_height = window.getMinimumHeight();
+        const auto minSize = window.getMinimumSize();
+        sizehints->min_width = minSize.x;
+        sizehints->min_height = minSize.y;
         sizehints->flags |= PMinSize;
 
         XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizehints);
@@ -564,7 +576,7 @@ void PlatformAbstractionX11::windowManagerLoop() {
     XEvent ev;
     auto& wm = AWindow::getWindowManager();
     wm.start();
-    while (wm.isLoopRunning() && !wm.getWindows().empty()) {
+    while (wm.shouldKeepRunning()) {
         try {
             xProcessEvent(ev);
         } catch (const AException& e) {
@@ -652,10 +664,11 @@ void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
     if (PlatformAbstractionX11::ourDisplay != nullptr) {
         auto sizeHints = aui::ptr::manage_unique(XAllocSizeHints(), XFree);
         sizeHints->flags = PMinSize | PMaxSize;
-        sizeHints->min_width = window.getMinimumWidth();
-        sizeHints->min_height = window.getMinimumHeight();
-        sizeHints->max_width = window.getMaxSize().x;
-        sizeHints->max_height = window.getMaxSize().y;
+        const auto minSize = window.getMinimumSize();
+        sizeHints->min_width = minSize.x;
+        sizeHints->min_height = minSize.y;
+        sizeHints->max_width = window.getMaxSize().x == -1 ? 100000 : window.getMaxSize().x;
+        sizeHints->max_height = window.getMaxSize().y == -1 ? 100000 : window.getMaxSize().y;
         XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizeHints.get());
     }
 }

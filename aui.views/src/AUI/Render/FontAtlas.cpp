@@ -60,56 +60,23 @@ MultiStringCanvas::MultiStringCanvas(
 
 template <class UnicodeString>
 void MultiStringCanvas::addStringT(const glm::ivec2& position, UnicodeString text) noexcept {
-    auto& font = mFontStyle.font;
-    auto fe = mFontStyle.getFontEntry();
-
-    const bool hasKerning = font->isHasKerning();
-
-    int advanceX = position.x;
-    int advanceY = position.y;
-    float advance = (float) advanceX;
-    for (auto i = text.begin(); i != text.end(); ++i) {
-        AChar c = *i;
-        if (c == ' ') {
-            notifySymbolAdded({ glm::ivec2{ advance, advanceY } });
-            advance += mFontStyle.getSpaceWidth();
-        } else if (c == '\n') {
-            notifySymbolAdded({ glm::ivec2{ advance, advanceY } });
-            advanceX = (glm::max) (advanceX, int(glm::ceil(advance)));
-            advance = (float) position.x;
-            advanceY += mFontStyle.getLineHeight();
-            nextLine();
-        } else {
-            auto data = mFontAtlas->getCharacter(c, font, fe);
+    struct Cb {
+        MultiStringCanvas* self;
+        void onSymbolAdded(glm::ivec2 p) { self->notifySymbolAdded({ p }); }
+        void onNextLine() { self->nextLine(); }
+        void onGlyph(glm::ivec2 pos, AFont::Character& ch, const AFont::FontEntry& fe, AChar c) {
+            auto data = self->mFontAtlas->getCharacter(c, self->mFontStyle.font, fe);
             if (!data) {
-                advance += mFontStyle.getSpaceWidth();
-                continue;
+                return;
             }
-
-            AFont::Character& ch = font->getCharacter(fe, c);
-            float posX = advance + ch.horizontal.bearing.x;
-            float posY = advanceY - ch.horizontal.bearing.y;
-            float width = ch.image->width();
-            float height = ch.image->height();
-
-            notifySymbolAdded({ glm::ivec2{ posX, posY } });
-            mGlyphs.push_back(
-                { glm::vec2(posX, posY), glm::vec2(width, height), glm::vec2(data->uv.x, data->uv.y),
-                  glm::vec2(data->uv.z, data->uv.w), mFontStyle.color, data->texture });
-
-            if (hasKerning) {
-                auto next = std::next(i);
-                if (next != text.end()) {
-                    auto kerning = font->getKerning(c, *next);
-                    advance += (float) kerning.x;
-                }
-            }
-            advance += ch.horizontal.advance;
+            self->mGlyphs.push_back(
+                { glm::vec2(pos), glm::vec2(ch.image->width(), ch.image->height()),
+                  glm::vec2(data->uv.x, data->uv.y), glm::vec2(data->uv.z, data->uv.w), self->mFontStyle.color,
+                  data->texture });
         }
-    }
-    notifySymbolAdded({ glm::ivec2{ advance, advanceY } });
-    mAdvanceX = (glm::max) (mAdvanceX, (glm::max) (advanceX, int(glm::ceil(advance))));
-    mAdvanceY = advanceY + mFontStyle.getLineHeight();
+    } cb { this };
+
+    mFontStyle.walkString(position, text, mAdvanceX, mAdvanceY, cb);
 }
 
 void MultiStringCanvas::addString(const glm::ivec2& position, AStringView text) noexcept {

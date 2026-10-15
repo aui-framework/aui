@@ -14,6 +14,11 @@
 #include "AUI/Common/SharedPtr.h"
 #include "AUI/Util/Manager.h"
 #include "AUI/Font/AFontFamily.h"
+#include <AUI/Common/AVector.h>
+#include <AUI/Common/AByteBuffer.h>
+#include <cstddef>
+#include <cstdint>
+#include <memory>
 #include "AUI/Font/AFont.h"
 
 class IRendererBackend;
@@ -47,6 +52,15 @@ public:
         }
         return mLoadedFont[url] = loadFont(url);
     }
+public:
+    /**
+     * A candidate font path with an optional face index (for TTC collections).
+     */
+    struct FallbackCandidate {
+        AString path;
+        int faceIndex = 0;
+        AByteBuffer data;
+    };
 
 private:
     AMap<AUrl, _<AFont>> mLoadedFont;
@@ -54,6 +68,47 @@ private:
     _<FreeType> mFreeType;
     _<AFontFamily> mDefaultFamily;
     _<AFont> mDefaultFont;
+
+    /**
+     * A loaded fallback face. data keeps the font file bytes alive:
+     * FT_New_Memory_Face does not copy the buffer, so it must outlive the face.
+     */
+    struct FallbackFace {
+        FT_FaceRec_* face = nullptr;
+        AByteBuffer data;
+    };
+
+    AVector<FallbackFace> mFallbackFaces;
+    AVector<FallbackCandidate> mDeferredCandidates;
+    bool mFallbackAttempted = false;
+
+    /**
+     * @brief Loads a single fallback face from the given candidate.
+     * @return true if the face was loaded successfully.
+     */
+    bool loadOneFallback(FallbackCandidate candidate);
+
+    /**
+     * @brief Returns the platform's CJK fallback candidates, best first.
+     *        Implemented per platform in
+     *        AUI/Platform/<platform>/AFontManagerImpl.cpp. May log the
+     *        reason and return an empty list when no candidates are available.
+     */
+    static AVector<FallbackCandidate> fallbackCandidates();
+
+    void ensureFallbackFaceLoaded();
+
+    /**
+     * @brief Pre-warms the primary fallback face (eagerly loaded on startup).
+     */
+    void initFallback();
+
+    /**
+     * @brief Returns the first fallback face that contains the given codepoint,
+     *        lazily loading deferred candidates if necessary.
+     */
+    [[nodiscard]]
+    FT_FaceRec_* getFallbackFace(char32_t codepoint);
 
     AString getPathToFont(const AString& family);
 

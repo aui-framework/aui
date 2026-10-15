@@ -28,8 +28,8 @@ public:
     MyListener() noexcept = default;
 
     static APath saveScreenshot(const AString& testFilePath, const AString& name) noexcept {
-        if (!AWindow::current()) return {};
-        auto image = AWindow::current()->getRenderingContext()->makeScreenshot();
+        if (!ASurface::current()) return {};
+        auto image = ASurface::current()->getRenderingContext()->makeScreenshot();
         if (image.buffer().empty()) return {};
         auto p = APath("reports") / APath(testFilePath).filenameWithoutExtension();
         p.makeDirs();

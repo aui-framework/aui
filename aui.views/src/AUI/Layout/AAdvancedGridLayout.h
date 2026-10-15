@@ -27,16 +27,16 @@ public:
 
     void setViewAt(size_t index, _<AView> view) { mCells.at(index).view = view; }
 
-    void onResize(int x, int y, int width, int height) override;
+    void layout(int x, int y, int width, int height) override;
     void addView(const _<AView>& view, int x, int y);
 
     void addView(const _<AView>& view, AOptional<size_t> index) override;
 
     void removeView(aui::no_escape<AView> view, size_t index) override;
 
-    int getMinimumWidth() override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
 
-    int getMinimumHeight() override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
     int indexOf(_<AView> view);
 

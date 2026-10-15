@@ -73,10 +73,6 @@ AGroupBox::AGroupBox(_<AView> titleView, _<AView> contentView) :
     }
 }
 
-void AGroupBox::applyGeometryToChildren() {
-    AViewContainerBase::applyGeometryToChildren();
-}
-
 void AGroupBox::updateCheckboxState(bool checked) {
     mFrame->setEnabled(checked);
 }

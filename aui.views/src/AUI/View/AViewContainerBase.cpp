@@ -23,7 +23,6 @@
 #include "glm/gtc/quaternion.hpp"
 #include <AUI/Traits/iterators.h>
 
-
 static constexpr auto LOG_TAG = "AViewContainerBase";
 
 namespace aui::view::impl {
@@ -40,6 +39,26 @@ bool isDefinitelyInvisible(AView& view) {
 
     return false;
 }
+}   // namespace aui::view::impl
+
+void AViewContainerBase::onLayout(glm::ivec2 size) {
+    AView::onLayout(size);
+    AUI_ASSERT(!mRepaintTrap.hasValue());
+    mRepaintTrap.emplace();
+    AUI_DEFER { mRepaintTrap.reset(); };
+    if (mLayout) {
+        std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
+        if (!lock) {
+            throw AException("onLayout: can't ensure safe iteration");
+        }
+        mLayout->layout(mPadding.left, mPadding.top, size.x - mPadding.horizontal(), size.y - mPadding.vertical());
+    }
+    if (mRepaintTrap->triggered) {
+        // if the trap is triggered during resize, it means at least one view has changed its position or size hence
+        // we would like to repaint whole container
+        redraw();
+    }
+    mConsumesClickCache.reset();
 }
 
 void AViewContainerBase::drawView(const _<AView>& view, ARenderContext ctx) {
@@ -51,7 +70,8 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext ctx) {
         return;
     }
 
-    if (!ctx.clipRect.isIntersects(ARect<float>::fromTopLeftPositionAndSize(view->getPosition() - 8, view->getSize() + 16))) {
+    if (!ctx.clipRect.isIntersects(
+            ARect<float>::fromTopLeftPositionAndSize(view->getPosition() - 8, view->getSize() + 16))) {
         return;
     }
 
@@ -70,17 +90,14 @@ void AViewContainerBase::drawView(const _<AView>& view, ARenderContext ctx) {
     ctx.canvas.restore(saved);
 }
 
-
-AViewContainerBase::AViewContainerBase() {
-
-}
+AViewContainerBase::AViewContainerBase() {}
 
 AViewContainerBase::~AViewContainerBase() {
     mLayout = nullptr;
-    for (auto& view: mViews) {
+    for (auto& view : mViews) {
         view->mParent = nullptr;
     }
-    //Stylesheet::inst().invalidateCache();
+    // Stylesheet::inst().invalidateCache();
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     AUI_ASSERTX(bool(lock), "destroying container while it's rendering?");
 }
@@ -88,9 +105,9 @@ AViewContainerBase::~AViewContainerBase() {
 void AViewContainerBase::addViews(AVector<_<AView>> views) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use addViews when render/layout is in progress; please enqueue such operation");
     }
-    for (const auto& view: views) {
+    for (const auto& view : views) {
         view->mParent = this;
         view->mSkipUntilLayoutUpdate = true;
         AUI_NULLSAFE(mLayout)->addView(view);
@@ -109,7 +126,7 @@ void AViewContainerBase::addViews(AVector<_<AView>> views) {
 void AViewContainerBase::addView(const _<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use addView when render/layout is in progress; please enqueue such operation");
     }
     AUI_NULLSAFE(view->mParent)->removeViewImpl(view, lock);
     view->mSkipUntilLayoutUpdate = true;
@@ -124,11 +141,12 @@ void AViewContainerBase::addView(const _<AView>& view) {
 void AViewContainerBase::addViewCustomLayout(const _<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addViewCustomLayout when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException(
+            "can't use addViewCustomLayout when render/layout is in progress; please enqueue such operation");
     }
     mViews << view;
     view->mParent = this;
-    view->setSize(view->getMinimumSize());
+    view->setSize(view->measure(AConstraints {}));
     view->mSkipUntilLayoutUpdate = true;
     AUI_NULLSAFE(mLayout)->addView(view);
     view->onViewGraphSubtreeChanged();
@@ -139,7 +157,7 @@ void AViewContainerBase::addViewCustomLayout(const _<AView>& view) {
 void AViewContainerBase::addView(size_t index, const _<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use addView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use addView when render/layout is in progress; please enqueue such operation");
     }
     view->mSkipUntilLayoutUpdate = true;
     mViews.insert(mViews.begin() + index, view);
@@ -153,7 +171,7 @@ void AViewContainerBase::addView(size_t index, const _<AView>& view) {
 void AViewContainerBase::setLayout(_unique<ALayout> layout) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use setLayout when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use setLayout when render/layout is in progress; please enqueue such operation");
     }
     setLayoutImpl(std::move(layout), lock);
 }
@@ -181,7 +199,7 @@ void AViewContainerBase::setLayoutImpl(_unique<ALayout> layout, std::unique_lock
 void AViewContainerBase::removeView(const _<AView>& view) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use removeView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use removeView when render/layout is in progress; please enqueue such operation");
     }
     removeViewImpl(view, lock);
 }
@@ -194,7 +212,8 @@ void AViewContainerBase::removeViewImpl(const _<AView>& view, std::unique_lock<A
         view->mParent = nullptr;
     }
     auto index = mViews.removeFirst(view);
-    if (!index) return;
+    if (!index)
+        return;
     AUI_NULLSAFE(mLayout)->removeView(view, *index);
     view->onViewGraphSubtreeChanged();
     invalidateCaches();
@@ -204,13 +223,13 @@ void AViewContainerBase::removeViewImpl(const _<AView>& view, std::unique_lock<A
 void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::const_iterator> views) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use removeViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use removeViews when render/layout is in progress; please enqueue such operation");
     }
     if (views.empty()) {
         return;
     }
     auto idx = std::distance(mViews.cbegin(), views.begin());
-    for (const auto& view: views) {
+    for (const auto& view : views) {
         view->mParent = nullptr;
         AUI_NULLSAFE(mLayout)->removeView(view, idx);
         view->onViewGraphSubtreeChanged();
@@ -223,7 +242,7 @@ void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::const_iterato
 void AViewContainerBase::removeView(size_t index) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use removeView when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use removeView when render/layout is in progress; please enqueue such operation");
     }
     auto view = std::move(mViews[index]);
     view->mParent = nullptr;
@@ -243,9 +262,7 @@ void AViewContainerBase::render(ARenderContext context) {
     renderChildren(context);
 }
 
-void AViewContainerBase::onMouseEnter() {
-    AView::onMouseEnter();
-}
+void AViewContainerBase::onMouseEnter() { AView::onMouseEnter(); }
 
 void AViewContainerBase::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     AView::onPointerMove(pos, event);
@@ -262,7 +279,7 @@ void AViewContainerBase::onPointerMove(glm::vec2 pos, const APointerMoveEvent& e
         targetView->onPointerMove(mousePos, event);
     }
 
-    for (auto& v: mViews) {
+    for (auto& v : mViews) {
         if (v->isMouseEntered() && v != viewUnderPointer) {
             v->onMouseLeave();
         }
@@ -271,42 +288,30 @@ void AViewContainerBase::onPointerMove(glm::vec2 pos, const APointerMoveEvent& e
 
 void AViewContainerBase::onMouseLeave() {
     AView::onMouseLeave();
-    for (auto& view: mViews) {
+    for (auto& view : mViews) {
         if (view->isMouseEntered()) {
             view->onMouseLeave();
         }
     }
 }
 
-int AViewContainerBase::getContentMinimumWidth() {
-    if (mLayout) {
-        return (glm::max)(mLayout->getMinimumWidth(), AView::getContentMinimumWidth());
-    }
-    return AView::getContentMinimumWidth();
-}
-
-int AViewContainerBase::getContentMinimumHeight() {
-    if (mLayout) {
-        return (glm::max)(mLayout->getMinimumHeight(), AView::getContentMinimumHeight());
-    }
-    return AView::getContentMinimumHeight();
-}
-
 void AViewContainerBase::onPointerPressed(const APointerPressedEvent& event) {
     AView::onPointerPressed(event);
 
-    //discard focus chain target for proper updating of focus chain targets when moving from child to parent
+    // discard focus chain target for proper updating of focus chain targets when moving from child to parent
     mFocusChainTarget.reset();
 
     auto p = getViewAt(event.position);
     if (p && p->enabled()) {
-        mPointerEventsMapping.push_back({event.pointerIndex, p, isBlockClicksWhenPressed() && p->isBlockClicksWhenPressed()});
+        mPointerEventsMapping.push_back(
+            { event.pointerIndex, p, isBlockClicksWhenPressed() && p->isBlockClicksWhenPressed() });
         auto& pointerEvent = mPointerEventsMapping.back();
         pointerEvent.isBlockClicksWhenPressed &= isBlockClicksWhenPressed();
         if (p->capturesFocus()) {
             p->focus(false);
 
-            //updating focus chain targets for views between p and first (maybe indirect) parent view of p that captures focus
+            // updating focus chain targets for views between p and first (maybe indirect) parent view of p that
+            // captures focus
             auto childView = p;
             for (auto view = p->getParent(); view; view = view->getParent()) {
                 if (view->focusChainTarget() == childView) {
@@ -321,10 +326,11 @@ void AViewContainerBase::onPointerPressed(const APointerPressedEvent& event) {
         p->onPointerPressed(copy);
         pointerEvent.isBlockClicksWhenPressed &= p->isBlockClicksWhenPressed();
         if (auto parent = getParent(); parent && !pointerEvent.isBlockClicksWhenPressed) {
-            auto it = std::find_if(parent->mPointerEventsMapping.begin(), parent->mPointerEventsMapping.end(),
-                                   [&](const auto &parentPointerEvent) {
-                                     return parentPointerEvent.pointerIndex == pointerEvent.pointerIndex;
-                                   });
+            auto it = std::find_if(
+                parent->mPointerEventsMapping.begin(), parent->mPointerEventsMapping.end(),
+                [&](const auto& parentPointerEvent) {
+                    return parentPointerEvent.pointerIndex == pointerEvent.pointerIndex;
+                });
             if (it != parent->mPointerEventsMapping.end()) {
                 it->isBlockClicksWhenPressed = false;
             }
@@ -348,9 +354,11 @@ void AViewContainerBase::onPointerReleased(const APointerReleasedEvent& event) {
         targetView->onPointerReleased(copy);
     }
 
-    mPointerEventsMapping.erase(std::remove_if(mPointerEventsMapping.begin(), mPointerEventsMapping.end(), [&](const PointerEventsMapping& v) {
-      return v.pointerIndex == event.pointerIndex;
-    }), mPointerEventsMapping.end());
+    mPointerEventsMapping.erase(
+        std::remove_if(
+            mPointerEventsMapping.begin(), mPointerEventsMapping.end(),
+            [&](const PointerEventsMapping& v) { return v.pointerIndex == event.pointerIndex; }),
+        mPointerEventsMapping.end());
 }
 
 void AViewContainerBase::onPointerDoubleClicked(const APointerPressedEvent& event) {
@@ -385,15 +393,14 @@ bool AViewContainerBase::consumesClick(const glm::ivec2& pos) {
 
     bool result = false;
     ARaiiHelper onExit = [&] {
-      mConsumesClickCache = ConsumesClickCache{
-          .position = pos,
-          .value = result,
-      };
+        mConsumesClickCache = ConsumesClickCache {
+            .position = pos,
+            .value = result,
+        };
     };
 
     // has layout check
-    if (mAss[int(ass::prop::PropertySlot::BACKGROUND_SOLID)] ||
-        mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
+    if (mAss[int(ass::prop::PropertySlot::BACKGROUND_SOLID)] || mAss[int(ass::prop::PropertySlot::BACKGROUND_IMAGE)]) {
         return result = true;
     }
     if (auto p = getViewAt(pos, AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {
@@ -402,32 +409,31 @@ bool AViewContainerBase::consumesClick(const glm::ivec2& pos) {
     return false;
 }
 
-
 _<AView> AViewContainerBase::getViewAt(glm::ivec2 pos, ABitField<AViewLookupFlags> flags) const noexcept {
     _<AView> possibleOutput = nullptr;
 
-    for (auto view: aui::reverse_iterator_wrap(mViews)) {
+    for (auto view : aui::reverse_iterator_wrap(mViews)) {
         auto targetPos = pos - view->getPosition();
 
         bool hitTest;
         switch (view->getMouseCollisionPolicy()) {
             case MouseCollisionPolicy::DEFAULT:
-                hitTest = targetPos.x >= 0 &&
-                          targetPos.y >= 0 &&
-                          targetPos.x < view->getSize().x &&
-                          targetPos.y < view->getSize().y;
+                hitTest =
+                    targetPos.x >= 0 && targetPos.y >= 0 && targetPos.x < view->getSize().x &&
+                    targetPos.y < view->getSize().y;
                 break;
 
             case MouseCollisionPolicy::MARGIN:
-                hitTest = targetPos.x >= -view->getMargin().left &&
-                          targetPos.y >= -view->getMargin().top &&
-                          targetPos.x < (view->getSize().x + view->getMargin().horizontal()) &&
-                          targetPos.y < (view->getSize().y + view->getMargin().vertical());
+                hitTest =
+                    targetPos.x >= -view->getMargin().left && targetPos.y >= -view->getMargin().top &&
+                    targetPos.x < (view->getSize().x + view->getMargin().horizontal()) &&
+                    targetPos.y < (view->getSize().y + view->getMargin().vertical());
                 break;
         }
 
         if (hitTest) {
-            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) || !!(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
+            if (flags.test(AViewLookupFlags::IGNORE_VISIBILITY) ||
+                !!(view->getVisibility() & Visibility::FLAG_CONSUME_CLICKS)) {
                 if (!possibleOutput && !flags.test(AViewLookupFlags::ONLY_THAT_CONSUMES_CLICK)) {
                     possibleOutput = view;
                 }
@@ -454,50 +460,10 @@ _<AView> AViewContainerBase::getViewAtRecursive(glm::ivec2 pos, ABitField<AViewL
     return target;
 }
 
-void AViewContainerBase::setSize(glm::ivec2 size) {
-    mSizeSet = true;
-    AView::setSize(size);
-    applyGeometryToChildrenIfNecessary();
-}
-
-void AViewContainerBase::invalidateAllStyles() {
-    AView::invalidateAllStyles();
-    if (mSizeSet)
-        applyGeometryToChildrenIfNecessary();
-}
-
-void AViewContainerBase::applyGeometryToChildren() {
-    if (!mLayout) {
-        // no layout = no update.
-        return;
-    }
-
-    std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
-    if (!lock) {
-        throw AException("applyGeometryToChildren: can't ensure safe iteration");
-    }
-    mLayout->onResize(mPadding.left, mPadding.top,
-                      getSize().x - mPadding.horizontal(), getSize().y - mPadding.vertical());
-}
-
-void AViewContainerBase::applyGeometryToChildrenIfNecessary() {
-    if (!mWantsLayoutUpdate) { // check if this container is part of invalidated min content size chain
-        if (mLastLayoutUpdateSize == getSize()) {
-            // no need to go deeper.
-            return;
-        }
-    }
-    mWantsLayoutUpdate = false;
-    mLastLayoutUpdateSize = getSize();
-    applyGeometryToChildren();
-    redraw();
-    mConsumesClickCache.reset();
-}
-
 void AViewContainerBase::removeAllViews() {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use removeAllViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use removeAllViews when render/layout is in progress; please enqueue such operation");
     }
     removeAllViewsImpl(lock);
 }
@@ -509,7 +475,7 @@ void AViewContainerBase::removeAllViewsImpl(std::unique_lock<ASpinlockMutex>& lo
     if (mLayout) {
         // using reverse iterator wrap here as vector is not efficient in removing first elements
         std::size_t i = getViews().size();
-        for (auto& x: aui::reverse_iterator_wrap(getViews())) {
+        for (auto& x : aui::reverse_iterator_wrap(getViews())) {
             mLayout->removeView(x, --i);
             x->mParent = nullptr;
         }
@@ -524,7 +490,7 @@ void AViewContainerBase::removeAllViewsImpl(std::unique_lock<ASpinlockMutex>& lo
 void AViewContainerBase::onDpiChanged() {
     AView::onDpiChanged();
     mWantsLayoutUpdate = true;
-    for (auto& v: mViews) {
+    for (auto& v : mViews) {
         v->onDpiChanged();
     }
 }
@@ -532,15 +498,17 @@ void AViewContainerBase::onDpiChanged() {
 void AViewContainerBase::setContents(const _<AViewContainer>& container) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use setLayout when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use setLayout when render/layout is in progress; please enqueue such operation");
     }
     // NOLINTBEGIN(clang-diagnostic-potentially-evaluated-expression)
-    AUI_ASSERTX(typeid(*container.get()) == typeid(AViewContainer),
-                "Container passed to setContents should be exact AViewContainer (not derived from). See docs of AViewContainer::setContents");
+    AUI_ASSERTX(
+        typeid(*container.get()) == typeid(AViewContainer),
+        "Container passed to setContents should be exact AViewContainer (not derived from). See docs of "
+        "AViewContainer::setContents");
     // NOLINTEND(clang-diagnostic-potentially-evaluated-expression)
     setLayoutImpl(std::move(container->mLayout), lock);
     mViews = std::move(container->mViews);
-    for (auto& v: mViews) {
+    for (auto& v : mViews) {
         v->mParent = this;
     }
     mCustomStyleRule = std::move(container->mCustomStyleRule);
@@ -560,13 +528,13 @@ void AViewContainerBase::setEnabled(bool enabled) {
 void AViewContainerBase::notifyParentEnabledStateChanged(bool enabled) {
     enabled &= mDirectlyEnabled;
     AView::notifyParentEnabledStateChanged(enabled);
-    for (auto& v: mViews) {
+    for (auto& v : mViews) {
         v->notifyParentEnabledStateChanged(enabled);
     }
 }
 
 bool AViewContainerBase::capturesFocus() {
-    return false; // we don't want every single container to catch focus.
+    return false;   // we don't want every single container to catch focus.
 }
 
 bool AViewContainerBase::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
@@ -577,9 +545,14 @@ bool AViewContainerBase::onGesture(const glm::ivec2& origin, const AGestureEvent
     return false;
 }
 
+void AViewContainerBase::requestLayout() {
+    AView::requestLayout();
+    AUI_NULLSAFE(mLayout)->requestLayout();
+}
+
 void AViewContainerBase::invalidateAssHelper() {
     AView::invalidateAssHelper();
-    for (const auto& v: mViews) {
+    for (const auto& v : mViews) {
         v->invalidateAssHelper();
     }
 }
@@ -616,7 +589,7 @@ void AViewContainerBase::onClickPrevented() {
 
 void AViewContainerBase::invalidateCaches() {
     mConsumesClickCache.reset();
-    markMinContentSizeInvalid();
+    requestLayout();
     redraw();
 }
 
@@ -628,9 +601,9 @@ void AViewContainerBase::onViewGraphSubtreeChanged() {
 }
 
 _<AView> AViewContainerBase::pointerEventsMapping(APointerIndex index) {
-    auto it = std::find_if(mPointerEventsMapping.begin(), mPointerEventsMapping.end(), [&](const PointerEventsMapping& v) {
-      return v.pointerIndex == index;
-    });
+    auto it = std::find_if(
+        mPointerEventsMapping.begin(), mPointerEventsMapping.end(),
+        [&](const PointerEventsMapping& v) { return v.pointerIndex == index; });
     if (it == mPointerEventsMapping.end()) {
         return nullptr;
     }
@@ -640,7 +613,7 @@ _<AView> AViewContainerBase::pointerEventsMapping(APointerIndex index) {
 void AViewContainerBase::setViews(AVector<_<AView>> views) {
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
     if (!lock) {
-        throw AException("can't use setViews when render/applyGeometryToChildren is in progress; please enqueue such operation");
+        throw AException("can't use setViews when render/layout is in progress; please enqueue such operation");
     }
     removeAllViewsImpl(lock);
     views.removeIf([](const _<AView>& v) { return v == nullptr; });
@@ -654,18 +627,25 @@ void AViewContainerBase::setViews(AVector<_<AView>> views) {
     }
 }
 
-void AViewContainerBase::markMinContentSizeInvalid() {
-    AView::markMinContentSizeInvalid();
-    mWantsLayoutUpdate = true;
+glm::ivec2 AViewContainerBase::onIntrinsicMeasure(AConstraints constraints) {
+    if (mLayout)
+        return mLayout->measure(constraints);
+    return AView::onIntrinsicMeasure(constraints);
+}
+
+AMinMaxAxis AViewContainerBase::onComputeIntrinsicMinMaxAxis(int height) {
+    if (mLayout)
+        return mLayout->computeMinMaxAxis(height);
+    return AView::onComputeIntrinsicMinMaxAxis(height);
 }
 
 void AViewContainerBase::forceUpdateLayoutRecursively() {
     AView::forceUpdateLayoutRecursively();
     mWantsLayoutUpdate = true;
-    for (const auto& view: mViews) {
+    for (const auto& view : mViews) {
         view->forceUpdateLayoutRecursively();
     }
-    applyGeometryToChildrenIfNecessary();
+    onLayout(getSize());
 }
 
 void AViewContainerBase::markPixelDataInvalid(ARect<int> invalidArea) {

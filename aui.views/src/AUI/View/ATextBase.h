@@ -11,203 +11,161 @@
 
 #pragma once
 
-
 #include <AUI/Util/AWordWrappingEngine.h>
-#include "AViewContainer.h"
-#include "AUI/Font/IFontView.h"
+#include <AUI/View/AViewContainer.h>
+#include <AUI/Font/IFontView.h>
 #include <initializer_list>
+#include <limits>
 #include <variant>
 #include <AUI/Enum/WordBreak.h>
 #include <AUI/Enum/VerticalAlign.h>
 
 namespace aui::detail {
-    class TextBaseEntry: public AWordWrappingEngineBase::Entry {
-    public:
-        virtual size_t getCharacterCount() = 0;
-        virtual glm::ivec2 getPosByIndex(size_t characterIndex) = 0;
-        virtual void appendTo(std::u32string& dst) = 0;
-        virtual void erase(size_t begin, AOptional<size_t> end) {}
+class TextBaseEntry : public AWordWrappingEngineBase::Entry {
+public:
+    virtual size_t getCharacterCount() = 0;
+    virtual glm::ivec2 getPosByIndex(size_t characterIndex) = 0;
+    virtual void appendTo(std::u32string& dst) = 0;
+    virtual void erase(size_t begin, AOptional<size_t> end) {}
 
-        struct StopLineScanningHint{};
-        using HitTestResult = std::variant<std::nullopt_t, size_t, StopLineScanningHint>;
-        virtual HitTestResult hitTest(glm::ivec2 position) {
-            return std::nullopt;
-        }
-    };
+    struct StopLineScanningHint {};
+    using HitTestResult = std::variant<std::nullopt_t, size_t, StopLineScanningHint>;
+    virtual HitTestResult hitTest(glm::ivec2 position) { return std::nullopt; }
+};
 
-    class CharEntry: public TextBaseEntry {
-    private:
-        IFontView* mText;
-        char32_t mChar;
-        glm::ivec2 mPosition;
+class CharEntry : public TextBaseEntry {
+private:
+    IFontView* mText;
+    char32_t mChar;
+    glm::ivec2 mPosition;
 
-    public:
-        CharEntry(IFontView* text, char32_t ch)
-                : mText(text), mChar(ch) {}
+public:
+    CharEntry(IFontView* text, char32_t ch) : mText(text), mChar(ch) {}
 
-        glm::ivec2 getSize() override {
-            return { mText->getFontStyle().getCharacter(mChar).horizontal.advance, mText->getFontStyle().size };
-        }
+    glm::ivec2 getSize() override {
+        return { mText->getFontStyle().getCharacter(mChar).horizontal.advance, mText->getFontStyle().size };
+    }
 
-        void setPosition(glm::ivec2 position) override {
-            mPosition = position;
-        }
+    void setPosition(glm::ivec2 position) override { mPosition = position; }
 
-        const glm::ivec2& getPosition() const {
-            return mPosition;
-        }
+    const glm::ivec2& getPosition() const { return mPosition; }
 
-        char32_t getChar() const {
-            return mChar;
-        }
+    char32_t getChar() const { return mChar; }
 
-        size_t getCharacterCount() override {
-            return 1;
-        }
+    size_t getCharacterCount() override { return 1; }
 
-        glm::ivec2 getPosByIndex(size_t characterIndex) override {
-            return mPosition + glm::ivec2{characterIndex * mText->getFontStyle().getCharacter(mChar).horizontal.advance, 0};
-        }
+    glm::ivec2 getPosByIndex(size_t characterIndex) override {
+        return mPosition + glm::ivec2 {
+            characterIndex * mText->getFontStyle().getCharacter(mChar).horizontal.advance, 0
+        };
+    }
 
-        void appendTo(std::u32string& dst) override {
-            dst += mChar;
-        }
-    };
-    class WordEntry: public TextBaseEntry {
-    protected:
-        IFontView* mText;
-        std::u32string mWord;
-        glm::ivec2 mPosition{};
+    void appendTo(std::u32string& dst) override { dst += mChar; }
+};
+class WordEntry : public TextBaseEntry {
+protected:
+    IFontView* mText;
+    std::u32string mWord;
+    glm::ivec2 mPosition {};
 
-    public:
-        WordEntry(IFontView* text, std::u32string word)
-                : mText(text), mWord(std::move(word)) {}
+public:
+    WordEntry(IFontView* text, std::u32string word) : mText(text), mWord(std::move(word)) {}
 
-        WordEntry(IFontView* text, AString word)
-                : mText(text), mWord() {
-            mWord = word.toUtf32();
-        }
+    WordEntry(IFontView* text, AString word) : mText(text), mWord() { mWord = word.toUtf32(); }
 
-        glm::ivec2 getSize() override {
-            return { mText->getFontStyle().getWidth(mWord), mText->getFontStyle().size };
-        }
+    glm::ivec2 getSize() override { return { mText->getFontStyle().getWidth(mWord), mText->getFontStyle().size }; }
 
-        const std::u32string& getWord() const {
-            return mWord;
-        }
+    const std::u32string& getWord() const { return mWord; }
 
-        std::u32string& getWord() {
-            return mWord;
-        }
+    std::u32string& getWord() { return mWord; }
 
-        [[nodiscard]]
-        glm::ivec2 getPosition() const {
-            return mPosition;
-        }
+    [[nodiscard]]
+    glm::ivec2 getPosition() const {
+        return mPosition;
+    }
 
-        void setPosition(glm::ivec2 position) override {
-            TextBaseEntry::setPosition(position);
-            mPosition = position;
-        }
+    void setPosition(glm::ivec2 position) override {
+        TextBaseEntry::setPosition(position);
+        mPosition = position;
+    }
 
-        size_t getCharacterCount() override {
-            return mWord.size();
-        }
+    size_t getCharacterCount() override { return mWord.size(); }
 
-        glm::ivec2 getPosByIndex(size_t characterIndex) override {
-            return mPosition + glm::ivec2{mText->getFontStyle().getWidth(mWord.begin(), mWord.begin() + characterIndex), 0};
-        }
+    glm::ivec2 getPosByIndex(size_t characterIndex) override {
+        return mPosition + glm::ivec2 {
+            mText->getFontStyle().getWidth(mWord.begin(), mWord.begin() + characterIndex), 0
+        };
+    }
 
-        void appendTo(std::u32string& dst) override {
-            dst += mWord;
-        }
+    void appendTo(std::u32string& dst) override { dst += mWord; }
 
-        void erase(size_t begin, AOptional<size_t> end) override {
-            mWord.erase(mWord.begin() + begin, mWord.begin() + end.valueOr(mWord.length()));
-        }
-    };
+    void erase(size_t begin, AOptional<size_t> end) override {
+        mWord.erase(mWord.begin() + begin, mWord.begin() + end.valueOr(mWord.length()));
+    }
+};
 
-    class WhitespaceEntry: public TextBaseEntry {
-    private:
-        IFontView* mText;
-        glm::ivec2 mPosition;
+class WhitespaceEntry : public TextBaseEntry {
+private:
+    IFontView* mText;
+    glm::ivec2 mPosition;
 
-    public:
-        WhitespaceEntry(IFontView* text) : mText(text) {}
+public:
+    WhitespaceEntry(IFontView* text) : mText(text) {}
 
-        glm::ivec2 getSize() override {
-            return { mText->getFontStyle().getSpaceWidth(), mText->getFontStyle().size };
-        }
+    glm::ivec2 getSize() override { return { mText->getFontStyle().getSpaceWidth(), mText->getFontStyle().size }; }
 
-        void setPosition(glm::ivec2 position) override {
-            mPosition = position;
-        }
+    void setPosition(glm::ivec2 position) override { mPosition = position; }
 
-        bool escapesEdges() override {
-            return true;
-        }
+    bool escapesEdges() override { return true; }
 
-        ~WhitespaceEntry() override = default;
+    ~WhitespaceEntry() override = default;
 
-        size_t getCharacterCount() override {
-            return 1;
-        }
+    size_t getCharacterCount() override { return 1; }
 
-        glm::ivec2 getPosByIndex(size_t characterIndex) override {
-            return mPosition + glm::ivec2{int(characterIndex) * mText->getFontStyle().getSpaceWidth(), 0};
-        }
+    glm::ivec2 getPosByIndex(size_t characterIndex) override {
+        return mPosition + glm::ivec2 { int(characterIndex) * mText->getFontStyle().getSpaceWidth(), 0 };
+    }
 
-        void appendTo(std::u32string& dst) override {
-            dst += U' ';
-        }
-    };
+    void appendTo(std::u32string& dst) override { dst += U' '; }
+};
 
-    class NextLineEntry: public TextBaseEntry {
-    private:
-        IFontView* mText;
-        glm::ivec2 mPosition;
+class NextLineEntry : public TextBaseEntry {
+private:
+    IFontView* mText;
+    glm::ivec2 mPosition;
 
-    public:
-        NextLineEntry(IFontView* text) : mText(text) {}
+public:
+    NextLineEntry(IFontView* text) : mText(text) {}
 
-        bool forcesNextLine() const override {
-            return true;
-        }
+    bool forcesNextLine() const override { return true; }
 
-        glm::ivec2 getSize() override {
-            return {0, mText->getFontStyle().size};
-        }
+    glm::ivec2 getSize() override { return { 0, mText->getFontStyle().size }; }
 
-        void setPosition(glm::ivec2 position) override {
-            mPosition = position;
-        }
+    void setPosition(glm::ivec2 position) override { mPosition = position; }
 
-        ~NextLineEntry() override = default;
+    ~NextLineEntry() override = default;
 
-        size_t getCharacterCount() override {
-            return 1;
-        }
+    size_t getCharacterCount() override { return 1; }
 
-        glm::ivec2 getPosByIndex(size_t characterIndex) override {
-            return mPosition + glm::ivec2{int(characterIndex) * mText->getFontStyle().getSpaceWidth(), 0};
-        }
+    glm::ivec2 getPosByIndex(size_t characterIndex) override {
+        return mPosition + glm::ivec2 { int(characterIndex) * mText->getFontStyle().getSpaceWidth(), 0 };
+    }
 
-        void appendTo(std::u32string& dst) override {
-            dst += U'\n';
-        }
-    };
-}
+    void appendTo(std::u32string& dst) override { dst += U'\n'; }
+};
+}   // namespace aui::detail
 
 /**
  * @brief Base class for AText without public APIs.
  */
-template<typename WordWrappingEngine = AWordWrappingEngine<>>
-class API_AUI_VIEWS ATextBase: public AViewContainerBase, public IFontView {
+template <typename WordWrappingEngine = AWordWrappingEngine<>>
+class API_AUI_VIEWS ATextBase : public AViewContainerBase, public IFontView {
 public:
     using Entries = typename WordWrappingEngine::Entries;
 
     ATextBase() = default;
     ~ATextBase() override = default;
+
     void render(ARenderContext context) override {
         AViewContainerBase::render(context);
 
@@ -231,59 +189,57 @@ public:
         }
     }
 
-    void setSize(glm::ivec2 size) override {
-        bool widthDiffers = size.x != getWidth();
-        AViewContainerBase::setSize(size);
-        if (widthDiffers) {
-            mPrerenderedString = nullptr;
-            markMinContentSizeInvalid();
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override {
+        const auto minMax = onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedBlock() ? -1 : constraints.maxBlock);
+        int width = minMax.max;
+        if (!constraints.isUnlimitedInline()) {
+            width = std::min(width, constraints.maxInline);
         }
+        width = std::max({ width, minMax.min, constraints.minInline });
+
+        int height = 0;
+        int occupiedWidth = width;
+        if (auto measured = measureLayoutForWidth(width)) {
+            height = measured->y + getFontStyle().getDescenderHeight();
+            if (shrinksToOccupiedWidth()) {
+                occupiedWidth = std::min(std::max(measured->x, minMax.min), width);
+            }
+        }
+        return { occupiedWidth, glm::max(height, constraints.minBlock) };
     }
 
-    int getContentMinimumWidth() override {
-        if (expanding()->x != 0 || mFixedSize.x != 0) {
-            // there's no need to calculate min size because width is defined.
-            return 0;
-        }
+    /**
+     * @brief Whether this view may report less than the width it was offered, when the text does not fill it.
+     * @details
+     * Editable views want to keep the whole width: clicking to the right of the last character must still hit them.
+     */
+    virtual bool shrinksToOccupiedWidth() const { return true; }
 
-        // if width is not defined, when we try to occupy as much space as possible, only restricted by max size.
-        // basically, it is drastically simplified version of perform layout.
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override {
+        int preferredWidth = getPreferredWidth();
+        return {
+            .min = preferredWidth,
+            .max = preferredWidth,
+        };
+    }
+
+    int getPreferredWidth() {
         int max = 0;
         int accumulator = 0;
-        const auto paddedMaxSize = mMaxSize.x - mPadding.horizontal();
         for (const auto& e : mEngine.entries()) {
             if (e->forcesNextLine()) {
                 max = glm::max(max, accumulator);
                 accumulator = 0;
                 continue;
             }
-            if (accumulator + e->getSize().x > paddedMaxSize) {
-                if (accumulator == 0) {
-                    return mMaxSize.x;
-                }
-                // there's no need to calculate min size further.
-                goto ret;
-            }
             accumulator += e->getSize().x;
         }
-        ret:
         return glm::max(max, accumulator);
-    }
-    int getContentMinimumHeight() override {
-        if (!mPrerenderedString) {
-            performLayout();
-        }
-
-        if (auto engineHeight = mEngine.height()) {
-            return *engineHeight + getFontStyle().getDescenderHeight();
-        }
-
-        return 0;
     }
 
     void invalidateFont() override {
         mPrerenderedString.reset();
-        markMinContentSizeInvalid();
+        requestLayout();
     }
 
 protected:
@@ -304,18 +260,19 @@ protected:
         {
             auto multiStringCanvas = ctx.canvas.newMultiStringCanvas(getFontStyle());
             fillStringCanvas(multiStringCanvas);
-            /*
-            */
             mPrerenderedString = multiStringCanvas->finalize();
         }
     }
 
-    virtual void clearContent() {
-        mPrerenderedString = nullptr;
+    virtual void clearContent() { mPrerenderedString = nullptr; }
+
+    void requestLayout() override {
+        mPrerenderedString.reset();
+        AViewContainerBase::requestLayout();
     }
 
-    void markMinContentSizeInvalid() override {
-        AViewContainerBase::markMinContentSizeInvalid();
+    void onLayout(glm::ivec2 size) override {
+        AViewContainerBase::onLayout(size);
         mPrerenderedString = nullptr;
     }
 
@@ -325,11 +282,28 @@ protected:
 
     _<IRenderer::IPrerenderedString> mPrerenderedString;
 
+    void performLayout() { performLayoutForWidth(getSize().x - mPadding.horizontal()); }
 
-    void performLayout() {
+    /**
+     * @brief Lays the text out for the given width without writing positions, reporting the space it occupies.
+     */
+    AOptional<glm::ivec2> measureLayoutForWidth(int width) {
+        APerformanceSection s("ATextBase::measureLayoutForWidth");
+        mEngine.setTextAlign(getFontStyle().align);
+        mEngine.setLineHeight(getFontStyle().lineSpacing);
+        mEngine.performLayout({ 0, 0 }, { std::max(0, width), std::numeric_limits<int>::max() / 4 }, false);
+        auto height = mEngine.height();
+        if (!height) {
+            return std::nullopt;
+        }
+        return glm::ivec2 { mEngine.width().valueOr(0), *height };
+    }
+
+    void performLayoutForWidth(int width) {
         APerformanceSection s("ATextBase::performLayout");
         mEngine.setTextAlign(getFontStyle().align);
         mEngine.setLineHeight(getFontStyle().lineSpacing);
-        mEngine.performLayout({mPadding.left, mPadding.top }, getSize() - glm::ivec2{mPadding.horizontal(), mPadding.vertical()});
+        mEngine.performLayout(
+            { mPadding.left, mPadding.top }, { std::max(0, width), std::numeric_limits<int>::max() / 4 });
     }
 };

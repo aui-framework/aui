@@ -23,7 +23,10 @@
 class API_AUI_CRYPT ARsa : public aui::noncopyable {
 private:
     class ARsaPrivate;
-    aui::fast_pimpl<ARsaPrivate, 1192> mPrivate;
+    // Sized for mbedtls_pk_context + mbedtls_entropy_context + mbedtls_ctr_drbg_context.
+    // With MBEDTLS_THREADING_C the latter two each carry a mutex, so this needs headroom
+    // over the raw context sizes.
+    aui::fast_pimpl<ARsaPrivate, 1536> mPrivate;
 
     ARsa();
 

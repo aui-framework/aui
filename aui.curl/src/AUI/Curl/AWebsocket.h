@@ -31,7 +31,11 @@ class API_AUI_CURL AWebsocket: public ACurl, public IOutputStream {
     friend class WebsocketTest_Receive2_Test;
 public:
     AWebsocket(const AString& url, AString key = generateKeyString());
-    void write(const char* src, size_t size) override;
+    void write(const char* src, size_t size) override {
+        writeText(AStringView(src, size));
+    }
+    void writeText(AStringView text);
+    void writeBinary(AByteBufferView data);
 
     void close() override;
 

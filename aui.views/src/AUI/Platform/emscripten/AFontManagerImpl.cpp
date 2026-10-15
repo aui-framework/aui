@@ -11,12 +11,18 @@
 
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/Font/FreeType.h>
+#include <AUI/Logging/ALogger.h>
 
 AFontManager::AFontManager():
     mFreeType(_new<FreeType>()),
     mDefaultFont(loadFont(":uni/font/Roboto.ttf"))
 {
+}
 
+AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
+    // Emscripten has no CJK-capable system font; keep the fallback pool empty.
+    ALogger::warn("Font") << "CJK fallback discovery is not implemented on this platform";
+    return {};
 }
 
 AString AFontManager::getPathToFont(const AString &font) {

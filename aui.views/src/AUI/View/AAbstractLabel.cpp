@@ -34,105 +34,34 @@ void AAbstractLabel::render(ARenderContext context) {
     doRenderText(context);
 }
 
-int AAbstractLabel::getContentMinimumWidth() {
-    switch (mTextOverflow) {
-        case ATextOverflow::ELLIPSIS:
-            return getFontStyle().getWidth(AString::fromUtf32(std::u32string_view(&ELLIPSIS, 1)));
-        case ATextOverflow::CLIP:
-            return 0;
-        case ATextOverflow::NONE:
-            break;
+glm::ivec2 AAbstractLabel::onIntrinsicMeasure(AConstraints constraints) {
+    AString text = getTransformedText();
+    AFontStyle& style = getFontStyle();
+    int measuredWidth = style.getWidth(text);
+    if (mTextOverflow != ATextOverflow::NONE && !constraints.isUnlimitedInline() && measuredWidth > constraints.maxInline) {
+        const int availableWidth = constraints.maxInline;
+        measuredWidth = availableWidth;
+        processTextOverflow(text, availableWidth);
     }
+    return {
+        measuredWidth,
+        style.getLineHeight(),
+    };
+}
 
-    int acc = mPrerendered ? mPrerendered->getWidth() : getFontStyle().getWidth(mText);
+AMinMaxAxis AAbstractLabel::onComputeIntrinsicMinMaxAxis(int height) {
+    int width = mPrerendered ? mPrerendered->getWidth() : getFontStyle().getWidth(mText);
     if (mIcon) {
-        acc += getIconSize().x * 2;
+        width += getIconSize().x * 2;
     }
-    return acc;
+    return {
+        .min = width,
+        .max = width,
+    };
 }
 
-int AAbstractLabel::getContentMinimumHeight() {
-    if (mText.empty())
-        return 0;
-
-    // Normally, text will be rendered as this:
-    //
-    //
-    //      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //      ^                          *@@@@@                                                 ^
-    //      |                          #@@@@@                                                 |
-    //    A |                          #@@@@@                                                 |
-    //    S |                          #@@@@@                                                 |
-    //    C |                          #@@@@@                                                 |
-    //    E |        .:-=+******+=-.   #@@@@@     :+++++=                   .++++++.          |
-    //    N |     .-*@@@@@@@@@@@@@@@#-.+@@@@@      +@@@@@+.                .#@@@@@-           |
-    //    D |   .+@@@@@@%*-:...::=*%@@@%@@@@@       =@@@@@+.              .#@@@@@-            |
-    //    E |  .%@@@@@#.            .#@@@@@@@        =@@@@@+              #@@@@@-             |
-    //    R |  #@@@@@=.              .+@@@@@@        .-@@@@@+            *@@@@@-              | S
-    //      | :@@@@@#.                .@@@@@@          -@@@@@+          +@@@@@-               | I
-    //      | +@@@@@+                  #@@@@@           -@@@@@+        +@@@@@-                | Z
-    //      | +@@@@@=                  *@@@@@            -@@@@@+.     =@@@@@=                 | E
-    //      | -@@@@@*                  #@@@@@             :@@@@@+.   =@@@@@=                  |
-    //      | .@@@@@@:                :@@@@@@              :@@@@@=  -@@@@@=                   |
-    //      |  :@@@@@@-              :@@@@@@@               .@@@@@-.@@@@@=.                   |
-    //      |   :#@@@@@%+-..   ...-+%@@@@@@@@                .%@@@%%@@@@=                     |
-    //      |    .-*@@@@@@@@@@@@@@@@@*-:@@@@@                 .%@@@@@@@=                      |
-    // -----+------ .:=**#%%%%%##*+-. - +#### ---------------- .%@@@@@= ----------------------------> baseline
-    //    D |                                                 .=@@@@@=                        |
-    //    E |                                                .+@@@@@=                         |
-    //    S |                                               .%@@@@@-.                         |
-    //    C |                                      --:::-=*%@@@@@*.                           |
-    //    E |                                      %@@@@@@@@@@%+:.                            |
-    //    N v                                      =**####*+-:.                               V
-    //    D - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //    E
-    //    R
-    //
-    // However, it feels like it stuck to the top of the border. So, we'll just add the height of descender, so it
-    // basically mirrors the descender at the bottom. This way, CAPITALS are centered, and text feels natural.
-    //
-    //      - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //      ^
-    //      |
-    //      |   <-------- added height
-    //      |
-    //      |
-    //      | - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //      ^                          *@@@@@                                                 ^
-    //      |                          #@@@@@                                                 |
-    //    A |                          #@@@@@                                                 |
-    //    S |                          #@@@@@                                                 |
-    //    C |                          #@@@@@                                                 |
-    //    E |        .:-=+******+=-.   #@@@@@     :+++++=                   .++++++.          |
-    //    N |     .-*@@@@@@@@@@@@@@@#-.+@@@@@      +@@@@@+.                .#@@@@@-           |
-    //    D |   .+@@@@@@%*-:...::=*%@@@%@@@@@       =@@@@@+.              .#@@@@@-            |
-    //    E |  .%@@@@@#.            .#@@@@@@@        =@@@@@+              #@@@@@-             |
-    //    R |  #@@@@@=.              .+@@@@@@        .-@@@@@+            *@@@@@-              | S
-    //      | :@@@@@#.                .@@@@@@          -@@@@@+          +@@@@@-               | I
-    //      | +@@@@@+                  #@@@@@           -@@@@@+        +@@@@@-                | Z
-    //      | +@@@@@=                  *@@@@@            -@@@@@+.     =@@@@@=                 | E
-    //      | -@@@@@*                  #@@@@@             :@@@@@+.   =@@@@@=                  |
-    //      | .@@@@@@:                :@@@@@@              :@@@@@=  -@@@@@=                   |
-    //      |  :@@@@@@-              :@@@@@@@               .@@@@@-.@@@@@=.                   |
-    //      |   :#@@@@@%+-..   ...-+%@@@@@@@@                .%@@@%%@@@@=                     |
-    //      |    .-*@@@@@@@@@@@@@@@@@*-:@@@@@                 .%@@@@@@@=                      |
-    // -----+------ .:=**#%%%%%##*+-. - +#### ---------------- .%@@@@@= ----------------------------> baseline
-    //    D |                                                 .=@@@@@=                        |
-    //    E |                                                .+@@@@@=                         |
-    //    S |                                               .%@@@@@-.                         |
-    //    C |                                      --:::-=*%@@@@@*.                           |
-    //    E |                                      %@@@@@@@@@@%+:.                            |
-    //    N v                                      =**####*+-:.                               V
-    //    D - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - -
-    //    E
-    //    R
-
-    return getFontStyle().size * (1 + ranges::count(mText.toStdString(), '\n')) + getFontStyle().font->getDescenderHeight(getFontStyle().size);
-}
-
-
-void AAbstractLabel::setSize(glm::ivec2 size) {
-    AView::setSize(size);
+void AAbstractLabel::onLayout(glm::ivec2 size) {
+    AView::onLayout(size);
     if (mTextOverflow != ATextOverflow::NONE) {
         mPrerendered = nullptr;
         redraw();
@@ -160,35 +89,28 @@ Iterator findTruncationPoint(Iterator begin, Iterator end, int maxWidth, ATextOv
     return findFirstOverflowedIndex(begin, end, availableWidth, fontStyle);
 }
 
-void AAbstractLabel::processTextOverflow(AString& text) {
-    if (mTextOverflow == ATextOverflow::NONE) return;
+bool AAbstractLabel::processTextOverflow(AString& text, int maxWidth) {
+    if (mTextOverflow == ATextOverflow::NONE) return false;
 
-    int overflowingWidth;
-    if (getFixedSize().x == 0) {
-        overflowingWidth = getMaxSize().x;
-    } else {
-        overflowingWidth = std::min(getMaxSize().x, getFixedSize().x);
-    }
+    bool isTextTooLarge = getFontStyle().getWidth(text) > maxWidth;
+    if (!isTextTooLarge) return false;
 
-    overflowingWidth = std::min(overflowingWidth, mSize.x);
-
-    mIsTextTooLarge = getFontStyle().getWidth(text) > overflowingWidth;
-    if (!mIsTextTooLarge) return;
-
-    auto truncation_point = findTruncationPoint(text.begin(), text.end(), overflowingWidth, mTextOverflow, getFontStyle());
-    text.erase(truncation_point, text.end());
+    auto utf8_view = text.utf8();
+    auto truncation_point = findTruncationPoint(utf8_view.begin(), utf8_view.end(), maxWidth, mTextOverflow, getFontStyle());
+    text.erase(truncation_point.data() - text.data());
 
     if (mTextOverflow == ATextOverflow::ELLIPSIS) {
         auto ending = AChar(ELLIPSIS).toUtf8();
         text.append(AStringView(ending.begin(), ending.end()));
     }
+    return true;
 }
 
-void AAbstractLabel::doPrerender(ACanvas& render) {
+void AAbstractLabel::doPrerender(ACanvas& render, int maxWidth) {
     auto fs = getFontStyle();
     if (!mText.empty()) {
         AString transformedText = getTransformedText();
-        processTextOverflow(transformedText);
+        mIsTextTooLarge = processTextOverflow(transformedText, maxWidth);
         mPrerendered = render.prerenderString({0, 0}, transformedText, fs);
     }
 }
@@ -196,7 +118,7 @@ void AAbstractLabel::doPrerender(ACanvas& render) {
 void AAbstractLabel::doRenderText(ARenderContext ctx) {
     auto& render = ctx.canvas;
     if (!mPrerendered) {
-        doPrerender(render);
+        doPrerender(render, getSize().x);
     }
 
 
@@ -263,15 +185,7 @@ void AAbstractLabel::doRenderText(ARenderContext ctx) {
         }
 
         if (mPrerendered) {
-            int y = mPadding.top + getFontStyle().getAscenderHeight();
-
-            // adding height of descender we established in getContentMinimumHeight, see explanation there.
-            y += getFontStyle().font->getDescenderHeight(getFontStyle().size);
-
-            if (mVerticalAlign == VerticalAlign::MIDDLE) {
-                y = (glm::max)(y,
-                               y + int(glm::ceil((getContentHeight() - getContentMinimumHeight())) / 2.0));
-            }
+            const int y = getFontStyle().getBaselineY(mPadding.top, getContentHeight(), mVerticalAlign);
             RenderHints::PushMatrix m(render);
             render.translate({mTextLeftOffset + mPadding.left, y});
             mPrerendered->draw(render);
@@ -303,7 +217,7 @@ void AAbstractLabel::onDpiChanged() {
 
 void AAbstractLabel::invalidateFont() {
     mPrerendered = nullptr;
-    markMinContentSizeInvalid();
+    requestLayout();
     redraw();
 }
 
@@ -326,7 +240,7 @@ void AAbstractLabel::setText(AString newText) {
     mText = std::move(newText);
     mPrerendered = nullptr;
 
-    markMinContentSizeInvalid();
+    requestLayout();
     redraw();
 
     emit mTextChanged(mText);
@@ -341,4 +255,10 @@ void AAbstractLabel::commitStyle() {
     AView::commitStyle();
     getFontStyle().color = textColor();
     commitStyleFont();
+}
+
+IInspectable::DebugInspectorInfo AAbstractLabel::debugInspectorInfo() {
+    auto info = AView::debugInspectorInfo();
+    info.push_back({ "text", mText });
+    return info;
 }

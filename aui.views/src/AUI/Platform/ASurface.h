@@ -16,23 +16,23 @@
 #pragma once
 
 #include <AUI/View/AViewContainer.h>
-#include "AUI/Performance/APerformanceFrame.h"
-#include "AUI/Performance/APerformanceSection.h"
-#include "AWindowManager.h"
-#include "AOverlappingSurface.h"
-#include "ADragNDrop.h"
-#include "AUI/Util/ATouchScroller.h"
-#include "ATouchscreenKeyboardPolicy.h"
+#include <AUI/Performance/APerformanceFrame.h>
+#include <AUI/Performance/APerformanceSection.h>
+#include <AUI/Platform/AWindowManager.h>
+#include <AUI/Platform/AOverlappingSurface.h>
+#include <AUI/Platform/ADragNDrop.h>
+#include <AUI/Platform/ATouchscreenKeyboardPolicy.h>
+#include <AUI/Util/ATouchScroller.h>
 #include <chrono>
 #include <optional>
 
 namespace testing {
-    class UITest;
+class UITest;
 }
 
 struct ARenderContext;
 
-class API_AUI_VIEWS ASurface: public AViewContainer {
+class API_AUI_VIEWS ASurface : public AViewContainer {
     friend class SoftwareRenderer;
     friend class IPlatformAbstraction;
     friend class testing::UITest;
@@ -40,6 +40,11 @@ class API_AUI_VIEWS ASurface: public AViewContainer {
 
 public:
     using BeforeFrameQueue = AMessageQueue<AFakeMutex, ARenderContext>;
+
+    /**
+     * @return Current surface for current thread.
+     */
+    static ASurface* current();
 
     ASurface();
 
@@ -68,7 +73,7 @@ public:
         AProperty<bool> renderToTextureDecay = false;
 
         /**
-         * @brief When set to true, the next time window's markMinContentSizeInvalid, debugger is invoked. Value is
+         * @brief When set to true, the next time window's requestLayout, debugger is invoked. Value is
          * reset to false.
          */
         AProperty<bool> breakpointOnMarkMinContentSizeInvalid = false;
@@ -78,7 +83,6 @@ public:
          */
         AProperty<bool> showBaseline = false;
     };
-
 
     /**
      * @brief Enables or disables user input for this window.
@@ -94,7 +98,6 @@ public:
      * before the modal dialog destroyed, otherwise, another window will receive the keyboard focus and be activated.
      */
     virtual void blockUserInput(bool blockUserInput = true);
-
 
     /**
      * @brief Prevents click action on upcoming pointer release.
@@ -118,13 +121,14 @@ public:
     /**
      * @brief Iterates over focus chain, from parent to child.
      */
-    template<aui::invocable<const _<AView>&> Callback>
+    template <aui::invocable<const _<AView>&> Callback>
     void iterateOverFocusChain(Callback&& callback) {
         for (auto view = mFocusedView.lock(); view;) {
             callback(view);
 
             auto container = _cast<AViewContainer>(view);
-            if (!container) return;
+            if (!container)
+                return;
             view = container->focusChainTarget();
         }
     }
@@ -140,27 +144,36 @@ public:
     [[nodiscard]]
     virtual unsigned frameMillis() const noexcept = 0;
 
-    static AWindowManager& getWindowManager() {
-        return *getWindowManagerImpl();
-    }
-    template<typename WindowManager, typename... Args>
+    static AWindowManager& getWindowManager() { return *getWindowManagerImpl(); }
+
+    template <typename WindowManager, typename... Args>
     static void setWindowManager(Args&&... args) {
-        destroyWindowManager(); // destroys previous window manager so IEventLoop::Handle sets window manager to the
-                                // previous one BEFORE the new window manager is set
+        destroyWindowManager();   // destroys previous window manager so IEventLoop::Handle sets window manager to the
+                                  // previous one BEFORE the new window manager is set
         getWindowManagerImpl() = std::make_unique<WindowManager>(std::forward<Args>(args)...);
     }
-    static void destroyWindowManager() {
-        getWindowManagerImpl() = nullptr;
-    }
 
-    const _unique<IRenderingContext>& getRenderingContext() const {
-        return mRenderingContext;
-    }
+    static void destroyWindowManager() { getWindowManagerImpl() = nullptr; }
+
+    const _unique<IRenderingContext>& getRenderingContext() const { return mRenderingContext; }
 
     [[nodiscard]]
     BeforeFrameQueue& beforeFrameQueue() noexcept {
         return mBeforeFrameQueue;
     }
+
+    void onResize(int width, int height);
+
+    /**
+     * @brief Schedules view to be laid out on its own, without laying out the rest of the surface.
+     * @details
+     * Called by AView::requestLayout of a view that is a layout boundary, i.e. a view whose geometry can't be
+     * affected by whatever happens inside it. Such a view is laid out by ASurface::applyPendingLayoutRoots before
+     * the next frame is drawn, instead of dragging the whole view hierarchy through a layout update.
+     *
+     * @see AView::isLayoutBoundary
+     */
+    void enqueueLayoutRoot(AView& view);
 
     void updateDpi();
 
@@ -170,15 +183,9 @@ public:
      * @details
      * dpi ratio value is rounded to 0.25
      */
-    float getDpiRatio()
-    {
-        return mDpiRatio;
-    }
+    float getDpiRatio() { return mDpiRatio; }
 
-    _<AView> getFocusedView() const
-    {
-        return mFocusedView.lock();
-    }
+    _<AView> getFocusedView() const { return mFocusedView.lock(); }
 
     void setFocusedView(const _<AView>& view);
     void updateFocusChain();
@@ -188,9 +195,7 @@ public:
 
     void closeOverlappingSurfacesOnClick();
 
-    bool isFocused() const {
-        return mIsFocused;
-    }
+    bool isFocused() const { return mIsFocused; }
 
     [[nodiscard]]
     const glm::ivec2& getMousePos() const {
@@ -205,9 +210,7 @@ public:
 #if defined(__CLION_IDE__) || defined(__CLION_IDE_)
 #pragma ide diagnostic ignored "HidingNonVirtualFunction"
 #endif
-    virtual void redraw() {
-        AView::redraw();
-    }
+    virtual void redraw() { AView::redraw(); }
 #if defined(__clang__)
 #pragma clang diagnostic pop
 #endif
@@ -215,22 +218,20 @@ public:
     virtual void focusNextView();
     virtual void flagRedraw();
 
-    void makeCurrent() {
-        currentWindowStorage() = this;
-    }
+    void makeCurrent() { currentWindowStorage() = this; }
 
     /**
-     * Creates a surface used for context menus and combo boxes. Closure of the surface is controlled by <code>closeOnClick</code> param but can be
-     * closed manually by calling closeOverlappingSurface.
+     * Creates a surface used for context menus and combo boxes. Closure of the surface is controlled by
+     * <code>closeOnClick</code> param but can be closed manually by calling closeOverlappingSurface.
      * @param position position where does the surface should be created. It's not exact the top left corner of the
      *        surface but a hint (i.e. if the surface does not fit)
      * @param size size
-     * @param closeOnClick when true, overlapped surface is automatically closed when mouse clicked anywhere. It's usable for tooltips.
-     * Do not use that for context menus or other.
+     * @param closeOnClick when true, overlapped surface is automatically closed when mouse clicked anywhere. It's
+     * usable for tooltips. Do not use that for context menus or other.
      * @return a new surface.
      * @details
      * ```cpp
-     * auto surfaceContainer = AWindow::current()->createOverlappingSurface({0, 0}, {100, 100});
+     * auto surfaceContainer = ASurface::current()->createOverlappingSurface({0, 0}, {100, 100});
      *
      * ALayoutInflater::inflate(surfaceContainer, Vertical {
      *     Button { Label { "Item1" } },
@@ -243,24 +244,29 @@ public:
      *
      * To create overlapping surface below some `view`, use AView::getPositionInWindow:
      * ```cpp
-     * auto surfaceContainer = AWindow::current()->createOverlappingSurface(view->getPositionInWindow() + view->getSize(), {100, 100});
+     * auto surfaceContainer = ASurface::current()->createOverlappingSurface(view->getPositionInWindow() +
+     * view->getSize(), {100, 100});
      * ```
      */
-    _<AOverlappingSurface> createOverlappingSurface(const glm::ivec2& position,
-                                                    const glm::ivec2& size,
-                                                    bool closeOnClick = false) {
-        return createOverlappingSurface([&](unsigned attempt) -> AOptional<glm::ivec2> {
-            switch (attempt) {
-                case 0: return position;
-                case 1: return glm::clamp(position, {0, 0}, {getSize() - size});
-                default: return std::nullopt;
-            }
-        }, size, closeOnClick);
+    _<AOverlappingSurface>
+    createOverlappingSurface(const glm::ivec2& position, const glm::ivec2& size, bool closeOnClick = false) {
+        return createOverlappingSurface(
+            [&](unsigned attempt) -> AOptional<glm::ivec2> {
+                switch (attempt) {
+                    case 0:
+                        return position;
+                    case 1:
+                        return glm::clamp(position, { 0, 0 }, { getSize() - size });
+                    default:
+                        return std::nullopt;
+                }
+            },
+            size, closeOnClick);
     }
 
     /**
-     * Create a surface used for context menus and combo boxes. Closure of the surface is controlled by <code>closeOnClick</code> param but can be
-     * closed manually by calling closeOverlappingSurface.
+     * Create a surface used for context menus and combo boxes. Closure of the surface is controlled by
+     * <code>closeOnClick</code> param but can be closed manually by calling closeOverlappingSurface.
      * @param positionFactory a function that return position where does the surface should be created. If the surface
      *        does not fit, the function is called again with previous arg+1.
      * @param size size
@@ -268,12 +274,12 @@ public:
      *        dropdown and context menus.
      * @return a new surface.
      */
-    _<AOverlappingSurface> createOverlappingSurface(const std::function<AOptional<glm::ivec2>(unsigned)>& positionFactory,
-                                                    const glm::ivec2& size,
-                                                    bool closeOnClick = true) {
-        glm::ivec2 position = {0, 0};
+    _<AOverlappingSurface> createOverlappingSurface(
+        const std::function<AOptional<glm::ivec2>(unsigned)>& positionFactory, const glm::ivec2& size,
+        bool closeOnClick = true) {
+        glm::ivec2 position = { 0, 0 };
         auto maxPos = getSize() - size;
-        for (unsigned index = 0; ; ++index) {
+        for (unsigned index = 0;; ++index) {
             auto optionalPosition = positionFactory(index);
             if (optionalPosition) {
                 position = *optionalPosition;
@@ -292,6 +298,7 @@ public:
         mOverlappingSurfaces << tmp;
         return tmp;
     }
+
     void closeOverlappingSurface(const _<AOverlappingSurface>& surface) {
         if (mOverlappingSurfaces.erase(surface) > 0) {
             closeOverlappingSurfaceImpl(surface);
@@ -300,7 +307,6 @@ public:
 
     void onFocusLost() override;
     void render(ARenderContext context) override;
-    void applyGeometryToChildren() override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
     /**
@@ -345,7 +351,8 @@ public:
     bool onGesture(const glm::ivec2& origin, const AGestureEvent& event) override;
 
     /**
-     * @brief double click will be captured only if time elapsed since the previous click is less than DOUBLECLICK_MAX_DURATION
+     * @brief double click will be captured only if time elapsed since the previous click is less than
+     * DOUBLECLICK_MAX_DURATION
      */
     static constexpr std::chrono::milliseconds DOUBLECLICK_MAX_DURATION = std::chrono::milliseconds(500);
 
@@ -354,13 +361,9 @@ public:
      * @details
      * FPS is captured every second
      */
-    size_t getFps() {
-        return mLastCapturedFps;
-    }
+    size_t getFps() { return mLastCapturedFps; }
 
-    void setTouchscreenKeyboardPolicy(ATouchscreenKeyboardPolicy policy) noexcept {
-        mKeyboardPolicy = policy;
-    }
+    void setTouchscreenKeyboardPolicy(ATouchscreenKeyboardPolicy policy) noexcept { mKeyboardPolicy = policy; }
 
     struct ScalingParams {
         /**
@@ -384,26 +387,23 @@ public:
     /**
      * @brief Get profiling settings (mutable).
      */
-    aui::lazy<Profiling>& profiling() {
-        return mProfiling;
-    }
+    aui::lazy<Profiling>& profiling() { return mProfiling; }
 
-    void markMinContentSizeInvalid() override;
+    void requestLayout() override;
     void onKeyRepeat(AInput::Key key) override;
     void onKeyUp(AInput::Key key) override;
 
 signals:
-    emits<>            dpiChanged;
-    emits<glm::ivec2>  mouseMove;
+    emits<> dpiChanged;
+    emits<glm::ivec2> mouseMove;
     emits<AInput::Key> keyDown;
-    emits<>            redrawn;
-    emits<>            layoutUpdateComplete;
+    emits<> redrawn;
+    emits<> layoutUpdateComplete;
 
     /**
      * @brief On touch screen keyboard show.
      */
     emits<> touchscreenKeyboardShown;
-
 
     /**
      * @brief On touch screen keyboard hide.
@@ -431,7 +431,7 @@ protected:
 
     std::chrono::milliseconds mLastButtonPressedTime = std::chrono::milliseconds::zero();
     AOptional<APointerIndex> mLastButtonPressed;
-    glm::vec2 mLastPosition = {0, 0};
+    glm::vec2 mLastPosition = { 0, 0 };
 
     _unique<IRenderingContext> mRenderingContext;
 
@@ -452,6 +452,16 @@ protected:
     virtual void showTouchscreenKeyboardImpl();
     virtual void hideTouchscreenKeyboardImpl();
 
+    void onLayout(glm::ivec2 size) override;
+
+    /**
+     * @brief Lays out the views enqueued by ASurface::enqueueLayoutRoot.
+     * @details
+     * To be called by the surface implementation before rendering, after the surface's own layout update (if any).
+     * Views that were laid out in the meantime are skipped.
+     */
+    void applyPendingLayoutRoots();
+
     void markPixelDataInvalid(ARect<int> invalidArea) override;
 
     [[nodiscard]]
@@ -467,7 +477,12 @@ private:
     void processTouchscreenKeyboardRequest();
 
     _weak<AView> mFocusedView;
-    aui::lazy<Profiling> mProfiling = [] { return Profiling{}; };
+
+    /**
+     * @see ASurface::enqueueLayoutRoot
+     */
+    AVector<_weak<AView>> mPendingLayoutRoots;
+    aui::lazy<Profiling> mProfiling = [] { return Profiling {}; };
     AOptional<ARect<int>> mInvalidArea;
     float mDpiRatio = 1.f;
     ScalingParams mScalingParams;
@@ -479,12 +494,12 @@ private:
     enum class KeyboardRequest {
         NO_OP,
         SHOW,
-        HIDE
+        HIDE,
     };
 
     KeyboardRequest mKeyboardRequestedState = KeyboardRequest::NO_OP;
 
-    glm::ivec2 mMousePos = {0, 0};
+    glm::ivec2 mMousePos = { 0, 0 };
     ASet<_<AOverlappingSurface>> mOverlappingSurfaces;
 
     struct Scroll {
@@ -497,7 +512,8 @@ private:
      */
     ASmallVector<Scroll, 10 /* typical max number of fingers */> mScrolls;
 
-    std::chrono::time_point<std::chrono::high_resolution_clock> mLastTimeFpsCaptured = std::chrono::high_resolution_clock::now();
+    std::chrono::time_point<std::chrono::high_resolution_clock> mLastTimeFpsCaptured =
+        std::chrono::high_resolution_clock::now();
     size_t mFpsCounter = 0;
     size_t mLastCapturedFps = 0;
 
@@ -511,14 +527,13 @@ private:
 #endif
 };
 
-
 /**
  * @brief Asserts that the macro invocation has been performed in the UI thread.
  * @ingroup useful_macros
  * @details
  *
  */
-#define AUI_ASSERT_UI_THREAD_ONLY() { AUI_ASSERTX(AWindow::current() == nullptr || AThread::current() == AWindow::current()->getThread(), "this method should be used in ui thread only."); }
+#define AUI_ASSERT_UI_THREAD_ONLY() { AUI_ASSERTX(ASurface::current() == nullptr || AThread::current() == ASurface::current()->getThread(), "this method should be used in ui thread only."); }
 
 /**
  * @brief Asserts that the macro invocation has not been performed in the UI thread.
@@ -526,5 +541,5 @@ private:
  * @details
  *
  */
-#define AUI_ASSERT_WORKER_THREAD_ONLY() { AUI_ASSERTX(AWindow::current() == nullptr || AThread::current() != AWindow::current()->getThread(), "this method should be used in worker thread only."); }
+#define AUI_ASSERT_WORKER_THREAD_ONLY() { AUI_ASSERTX(ASurface::current() == nullptr || AThread::current() != ASurface::current()->getThread(), "this method should be used in worker thread only."); }
 

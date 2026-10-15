@@ -89,16 +89,11 @@ float AWindow::fetchDpiFromSystem() const {
     return com::github::aui::android::Platform::getDpiRatio();
 }
 
-
-void AWindow::setSize(glm::ivec2 size) {
-    AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
-    AViewContainer::setSize(size);
-    AUI_NULLSAFE(mRenderingContext)->endResize(*this);
-}
-
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
+    AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
     AViewContainer::setSize({width, height});
+    AUI_NULLSAFE(mRenderingContext)->endResize(*this);
 
 }
 
@@ -114,6 +109,10 @@ void AWindow::setIcon(const AImage& image) {
 }
 
 void AWindow::hide() {
+}
+
+void AWindow::activate(const AString&) {
+    show();
 }
 
 void AWindowManager::notifyProcessMessages() {

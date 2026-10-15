@@ -19,3 +19,14 @@ import mkdocs_gen_files
 
 examples_page.gen_pages()
 doxygen.gen_pages()
+
+# Generate aui.boot.md from the #[==[DOCUMENTATION...]==] block in aui.boot.cmake
+_aui_boot_cmake = Path.cwd() / "aui.boot.cmake"
+_aui_boot_text = _aui_boot_cmake.read_text()
+import re as _re
+_m = _re.search(r'#\[==\[DOCUMENTATION\n(.*?)\n\]==\]', _aui_boot_text, _re.DOTALL)
+if _m:
+    with mkdocs_gen_files.open("aui.boot.md", "w") as _fos:
+        _fos.write(_m.group(1))
+else:
+    raise RuntimeError("Could not find #[==[DOCUMENTATION ... ]==] block in aui.boot.cmake")

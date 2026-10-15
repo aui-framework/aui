@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -69,8 +69,6 @@ public:
      * @brief Acts on the item at index i as if the user were left-clicked without keyboard modifiers on it.
      */
     void selectItem(size_t i) { updateSelectionOnItem(i, SelectAction::CLEAR_SELECTION_AND_SET); }
-
-    int getContentFullHeight() { return getLayout()->getMinimumHeight() + 8; }
 
     void setAllowMultipleSelection(bool allowMultipleSelection);
 

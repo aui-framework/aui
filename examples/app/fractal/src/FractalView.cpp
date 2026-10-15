@@ -126,8 +126,8 @@ void FractalView::render(ARenderContext context) {
     }
 }
 
-void FractalView::setSize(glm::ivec2 size) {
-    AView::setSize(size);
+void FractalView::onLayout(glm::ivec2 size) {
+    AView::onLayout(size);
     mAspectRatio = float(size.x) / float(size.y);
 }
 

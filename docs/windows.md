@@ -27,3 +27,8 @@ and tablets is Windows 11, while certain older versions are still supported and 
   launching your executables a lot harder
 
 ## AUI implementation specifics
+
+- Single instance ([app-lifetime]): `AApplication::requestSingleInstanceLock` creates a session-local mutex
+  `Local\aui.<key>.<sessionId>` and listens on the named pipe `\\.\pipe\aui.<key>.<sessionId>`. The secondary instance
+  calls `AllowSetForegroundWindow(ASFW_ANY)` before forwarding its activation, so the primary is allowed to call
+  `SetForegroundWindow` (see `AWindow::activate`).

@@ -40,6 +40,17 @@ public:
 
     bool isLoopRunning() const { return mLoopRunning; }
 
+    /**
+     * @brief Whether the main loop should continue.
+     * @details
+     * The loop continues while it's not stopped and the application is held (see AApplication):
+     * - by an explicit AApplication::hold(), or
+     * - by at least one registered window if AApplication::quitOnLastWindowClosed is true, or
+     * - unconditionally (until AApplication::quit()) if AApplication::quitOnLastWindowClosed is false.
+     */
+    [[nodiscard]]
+    bool shouldKeepRunning() const;
+
     void removeAllWindows() {
         auto windows = std::move(mWindows); // keeping it safe
         windows.clear();

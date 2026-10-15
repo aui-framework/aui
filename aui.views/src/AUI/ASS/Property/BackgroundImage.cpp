@@ -147,7 +147,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             break;
         }
         case Sizing::SPLIT_2X2: {
-            auto ratio = ctx.render.getRenderScale() / info.dpiMargin.orDefault(1.f);
+            auto ratio = AWindow::current()->getDpiRatio() / info.dpiMargin.orDefault(1.f);
             auto textureSize = glm::vec2(drawable->getSizeHint()) * ratio;
             auto textureWidth = textureSize.x;
             auto textureHeight = textureSize.y;
@@ -248,7 +248,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             glm::vec2 imageSize = drawable->getSizeHint();
 
             if (drawable->isDpiDependent())
-                imageSize *= AWindow::current()->getDpiRatio();
+                imageSize *= ASurface::current()->getDpiRatio();
 
             ctx.canvas.setTransform(
                 glm::translate(glm::mat4(1.f), glm::vec3 { glm::vec2(viewSize - imageSize) / 2.f, 0.f }));
@@ -261,7 +261,7 @@ void ass::prop::Property<ass::BackgroundImage>::draw(
             glm::vec2 imageSize = glm::vec2(drawable->getSizeHint());
 
             if (drawable->isDpiDependent())
-                imageSize *= AWindow::current()->getDpiRatio();
+                imageSize *= ASurface::current()->getDpiRatio();
             drawableDrawWrapper(imageSize);
             break;
         }

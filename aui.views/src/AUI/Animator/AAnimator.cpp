@@ -15,7 +15,7 @@
 
 void AAnimator::animate(AView* view, ACanvas& render) {
     if (mIsPlaying) {
-        AWindow::current()->flagRedraw();
+        ASurface::current()->flagRedraw();
         auto now = std::chrono::duration_cast<std::chrono::milliseconds>(
                 std::chrono::high_resolution_clock::now().time_since_epoch());
 
