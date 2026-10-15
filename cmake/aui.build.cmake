@@ -854,13 +854,24 @@ _aui_check_toolbox()
                   AUIB_FORCE_PRECOMPILED)
         list(APPEND _forwarded_args "-D${_name}=${${_name}}")
     endforeach()
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=ON ${_forwarded_args}
-                    WORKING_DIRECTORY ${_workdir}/b
-                    RESULT_VARIABLE _r
-                    OUTPUT_FILE ${_build_log}
-                    ERROR_FILE ${_build_log})
+    set(_command ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=ON ${_forwarded_args})
+    if (COMMAND _auib_execute_logged)
+        _auib_execute_logged(PREFIX "[aui.toolbox_provider]"
+                             LOG_FILE ${_build_log}
+                             RESULT_VARIABLE _r
+                             WORKING_DIRECTORY ${_workdir}/b
+                             MERGE_STDERR
+                             COMMAND ${_command})
+    else()
+        # older aui.boot.cmake
+        execute_process(COMMAND ${_command}
+                        WORKING_DIRECTORY ${_workdir}/b
+                        RESULT_VARIABLE _r
+                        OUTPUT_FILE ${_build_log}
+                        ERROR_FILE ${_build_log})
 
-    _auib_dump_with_prefix("[aui.toolbox_provider]" ${_build_log})
+        _auib_dump_with_prefix("[aui.toolbox_provider]" ${_build_log})
+    endif()
 
     set(ENV{CC} ${_old_CC})
     set(ENV{CXX} ${_old_CXX})
