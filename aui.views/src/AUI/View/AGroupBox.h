@@ -11,8 +11,7 @@
 
 #pragma once
 
-
-#include "AViewContainer.h"
+#include <AUI/View/AViewContainer.h>
 #include <AUI/Util/Declarative/Containers.h>
 
 /**
@@ -34,11 +33,9 @@
  *
  * Title is done by hacking the vertical layout and forcing the frame top side to the center of the title view.
  */
-class API_AUI_VIEWS AGroupBox: public AViewContainerBase {
+class API_AUI_VIEWS AGroupBox : public AViewContainerBase {
 public:
     AGroupBox(_<AView> titleView, _<AView> contentView);
-
-    void applyGeometryToChildren() override;
 
 private:
     _<AView> mTitle;
@@ -48,13 +45,12 @@ private:
     void updateCheckboxState(bool checked);
 };
 
-
-
 namespace declarative {
-    /**
-     * @declarativeformof{AGroupBox}
-     */
-    struct GroupBox: aui::ui_building::view<AGroupBox> {
-        GroupBox(_<AView> titleView, _<AView> contentView): aui::ui_building::view<AGroupBox>(std::move(titleView), std::move(contentView)) {}
-    };
-}
+/**
+ * @declarativeformof{AGroupBox}
+ */
+struct GroupBox : aui::ui_building::view<AGroupBox> {
+    GroupBox(_<AView> titleView, _<AView> contentView)
+        : aui::ui_building::view<AGroupBox>(std::move(titleView), std::move(contentView)) {}
+};
+}   // namespace declarative

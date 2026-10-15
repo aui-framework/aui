@@ -18,6 +18,7 @@
 
 
 #include "IProperty.h"
+#include "AUI/Common/IStringable.h"
 
 namespace ass {
 
@@ -35,7 +36,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<TransformScale>: IPropertyBase {
+        struct API_AUI_VIEWS Property<TransformScale>: IPropertyBase, IStringable {
         private:
             TransformScale mInfo;
 
@@ -51,6 +52,10 @@ namespace ass {
             }
 
             void updateInvalidPixelRect(ARect<int>& invalidRect) const override;
+
+            AString toString() const override {
+                return "TransformScale(x={}, y={})"_format(mInfo.scale.x, mInfo.scale.y);
+            }
         };
     }
 }

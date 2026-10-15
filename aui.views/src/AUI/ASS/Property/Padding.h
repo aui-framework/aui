@@ -16,6 +16,7 @@
 #pragma once
 
 #include <AUI/Util/AMetric.h>
+#include "AUI/Common/IStringable.h"
 #include "IProperty.h"
 
 namespace ass {
@@ -64,7 +65,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<Padding>: IPropertyBase {
+        struct API_AUI_VIEWS Property<Padding>: IPropertyBase, IStringable {
         private:
             Padding mInfo;
 
@@ -78,6 +79,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "Padding(t={}, r={}, b={}, l={})"_format(mInfo.top, mInfo.right, mInfo.bottom, mInfo.left);
             }
         };
     }

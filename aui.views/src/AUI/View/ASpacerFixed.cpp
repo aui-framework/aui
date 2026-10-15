@@ -11,28 +11,40 @@
 
 #include "ASpacerFixed.h"
 
-int ASpacerFixed::getContentMinimumWidth() {
-    if (auto parent = getParent()) {
-        if (const auto& layout = parent->getLayout()) {
-            if (layout->getLayoutDirection() == ALayoutDirection::HORIZONTAL) {
-                return int(mSpace.getValuePx());
-            }
-        }
-    }
-    return 0;
-}
-
-int ASpacerFixed::getContentMinimumHeight() {
-    if (auto parent = getParent()) {
-        if (const auto& layout = parent->getLayout()) {
-            if (layout->getLayoutDirection() == ALayoutDirection::VERTICAL) {
-                return int(mSpace.getValuePx());
-            }
-        }
-    }
-    return 0;
-}
-
 bool ASpacerFixed::consumesClick(const glm::ivec2& pos) {
     return false;
+}
+
+IInspectable::DebugInspectorInfo ASpacerFixed::debugInspectorInfo() {
+    auto info = AView::debugInspectorInfo();
+    info.push_back({"space", mSpace});
+    auto parent = getParent();
+    if (!parent) {
+        info.push_back({"direction", "<no parent>"});
+        return info;
+    }
+    const auto& layout = parent->getLayout();
+    if (!layout) {
+        info.push_back({"direction", "<no layout>"});
+        return info;
+    }
+    info.push_back({"direction", layout->getLayoutDirection()});
+    return info;
+}
+
+glm::ivec2 ASpacerFixed::onIntrinsicMeasure(AConstraints constraints) {
+    if (auto parent = getParent()) {
+        if (const auto& layout = parent->getLayout()) {
+            switch (layout->getLayoutDirection()) {
+            case ALayoutDirection::HORIZONTAL:
+                return glm::ivec2(mSpace.getValuePx(), 0);
+            case ALayoutDirection::VERTICAL:
+                return glm::ivec2(0, mSpace.getValuePx());
+
+            case ALayoutDirection::NONE:
+                break;
+            }
+        }
+    }
+    return AView::onIntrinsicMeasure(constraints);
 }

@@ -17,6 +17,7 @@
 
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include "AUI/Common/IStringable.h"
 
 namespace ass {
 
@@ -30,7 +31,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<Font>: IPropertyBase {
+        struct API_AUI_VIEWS Property<Font>: IPropertyBase, IStringable {
         private:
             Font mInfo;
 
@@ -44,6 +45,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "Font({})"_format(mInfo.url);
             }
         };
     }

@@ -11,20 +11,19 @@
 
 #pragma once
 
-
 #include <AUI/View/AScrollArea.h>
 
-class ViewPropertiesView: public AScrollArea {
+class ViewPropertiesView : public AScrollArea {
 private:
     _weak<AView> mTargetView;
 
     void requestTargetUpdate();
+
 public:
     explicit ViewPropertiesView(const _<AView>& targetView);
-    void displayApplicableRule(const _<AViewContainer>& dst,
-                               ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
-                               const ass::PropertyList* rule);
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    void displayApplicableRule(
+        const _<AViewContainer>& dst, ADeque<ass::prop::IPropertyBase*>& applicableDeclarations,
+        const ass::PropertyList* rule);
     void setTargetView(const _<AView>& targetView);
 };
-
-

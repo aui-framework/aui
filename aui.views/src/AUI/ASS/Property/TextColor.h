@@ -16,6 +16,7 @@
 #pragma once
 
 #include "IProperty.h"
+#include "AUI/Common/IStringable.h"
 
 namespace ass {
 
@@ -30,7 +31,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<TextColor>: IPropertyBase {
+        struct API_AUI_VIEWS Property<TextColor>: IPropertyBase, IStringable {
         private:
             TextColor mInfo;
 
@@ -44,6 +45,13 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                if (auto c = std::get_if<AColor>(&mInfo.color)) {
+                    return "TextColor({})"_format(*c);
+                }
+                return "TextColor(inherit)";
             }
         };
     }

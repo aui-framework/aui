@@ -98,11 +98,6 @@ void AWindow::activate(const AString& activationToken) {
     IPlatformAbstraction::current().windowActivate(*this, activationToken);
 }
 
-void AWindow::setSize(glm::ivec2 size) {
-    setGeometry(getWindowPosition().x, getWindowPosition().y, size.x, size.y);
-    IPlatformAbstraction::current().windowSetSize(*this, size);
-}
-
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({ x, y });
     AViewContainer::setSize({ width, height });
@@ -165,7 +160,4 @@ void AWindow::moveToCenter() {
 
 void AWindow::setMobileScreenOrientation(AScreenOrientation screenOrientation) {
 
-}
-void AWindow::applyGeometryToChildren() {
-    ASurface::applyGeometryToChildren();
 }
