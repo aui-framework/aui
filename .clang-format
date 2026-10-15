@@ -28,9 +28,8 @@ SortIncludes: Never
 
 ################################################# UI BUILDING ##########################################################
 
-# use shorter indentation for UI building stuff (like in Dart/Flutter)
-BracedInitializerIndentWidth: 2
-ConstructorInitializerIndentWidth: 2
+BracedInitializerIndentWidth: 4
+ConstructorInitializerIndentWidth: 4
 
 # better spacing around AUI_OVERRIDE_STYLE and AUI_LET.
 # before:

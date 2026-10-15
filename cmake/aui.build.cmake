@@ -267,7 +267,10 @@ macro(aui_enable_tests AUI_MODULE_NAME)
         if (NOT EXISTS ${_source_dir}/tests)
             message(FATAL_ERROR "aui_enable_tests expects ${_source_dir}/tests to exist")
         endif()
-        file(GLOB_RECURSE TESTS_SRCS ${_source_dir}/tests/*.cpp)
+        file(GLOB_RECURSE TESTS_SRCS
+                ${_source_dir}/src/*.test.cpp
+                ${_source_dir}/tests/*.cpp
+        )
 
         if (NOT TARGET Tests)
             set(TESTS_MODULE_NAME Tests)
@@ -358,7 +361,7 @@ macro(_aui_import_google_benchmark)
 endmacro()
 
 macro(aui_enable_benchmarks AUI_MODULE_NAME)
-    if (NOT CMAKE_CROSSCOMPILING)
+    if (NOT CMAKE_CROSSCOMPILING AND NOT AUI_DISABLE_BENCHMARKS)
         _aui_import_gtest()
         _aui_import_google_benchmark()
         if (NOT TARGET benchmark::benchmark)
@@ -851,13 +854,24 @@ _aui_check_toolbox()
                   AUIB_FORCE_PRECOMPILED)
         list(APPEND _forwarded_args "-D${_name}=${${_name}}")
     endforeach()
-    execute_process(COMMAND ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=ON ${_forwarded_args}
-                    WORKING_DIRECTORY ${_workdir}/b
-                    RESULT_VARIABLE _r
-                    OUTPUT_FILE ${_build_log}
-                    ERROR_FILE ${_build_log})
+    set(_command ${CMAKE_COMMAND} .. -G${_generator} -DAUIB_CACHE_DIR=${AUIB_CACHE_DIR} -DAUIB_SKIP_REPOSITORY_WAIT=ON ${_forwarded_args})
+    if (COMMAND _auib_execute_logged)
+        _auib_execute_logged(PREFIX "[aui.toolbox_provider]"
+                             LOG_FILE ${_build_log}
+                             RESULT_VARIABLE _r
+                             WORKING_DIRECTORY ${_workdir}/b
+                             MERGE_STDERR
+                             COMMAND ${_command})
+    else()
+        # older aui.boot.cmake
+        execute_process(COMMAND ${_command}
+                        WORKING_DIRECTORY ${_workdir}/b
+                        RESULT_VARIABLE _r
+                        OUTPUT_FILE ${_build_log}
+                        ERROR_FILE ${_build_log})
 
-    _auib_dump_with_prefix("[aui.toolbox_provider]" ${_build_log})
+        _auib_dump_with_prefix("[aui.toolbox_provider]" ${_build_log})
+    endif()
 
     set(ENV{CC} ${_old_CC})
     set(ENV{CXX} ${_old_CXX})

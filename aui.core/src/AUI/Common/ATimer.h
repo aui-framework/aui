@@ -10,9 +10,10 @@
  */
 
 #pragma once
-#include "AObject.h"
-#include "ASignal.h"
-#include "AUI/Util/AScheduler.h"
+
+#include <AUI/Common/AObject.h>
+#include <AUI/Common/ASignal.h>
+#include <AUI/Util/AScheduler.h>
 
 /**
  * @brief Async timer.
@@ -28,7 +29,7 @@ private:
 
 public:
     explicit ATimer(std::chrono::milliseconds period);
-    ~ATimer();
+    ~ATimer() override;
 
     void restart();
 
@@ -36,11 +37,11 @@ public:
     void stop();
     bool isStarted();
     void setRunning(bool isStart) {
-      if (isStart) {
-        start();
-      } else {
-        stop();
-      }
+        if (isStart) {
+            start();
+        } else {
+            stop();
+        }
     }
 
     static AScheduler& scheduler();

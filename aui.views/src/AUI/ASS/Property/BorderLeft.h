@@ -17,6 +17,7 @@
 
 #include <AUI/ASS/Property/IProperty.h>
 #include <AUI/Util/AMetric.h>
+#include "AUI/Common/IStringable.h"
 
 namespace ass {
 
@@ -35,7 +36,7 @@ namespace ass {
     namespace prop {
 
         template<>
-        struct API_AUI_VIEWS Property<BorderLeft> : IPropertyBase {
+        struct API_AUI_VIEWS Property<BorderLeft> : IPropertyBase, IStringable {
         private:
             BorderLeft mInfo;
 
@@ -53,6 +54,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "BorderLeft(width={}, color={})"_format(mInfo.width, mInfo.color);
             }
         };
     }

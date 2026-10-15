@@ -1,6 +1,6 @@
 /*
  * AUI Framework - Declarative UI toolkit for modern C++20
- * Copyright (C) 2020-2025 Alex2772 and Contributors
+ * Copyright (C) 2020-2026 Alex2772 and Contributors
  *
  * SPDX-License-Identifier: MPL-2.0
  *
@@ -44,42 +44,57 @@
  *
  * ASplitter is constructed by builder. Use `ASplitter::Horizontal()` and `ASplitter::Vertical()`.
  */
-class API_AUI_VIEWS ASplitter: public AViewContainerBase
-{
+class API_AUI_VIEWS ASplitter : public AViewContainerBase {
 public:
-    virtual ~ASplitter() = default;
+    ~ASplitter() override = default;
 
     void onPointerPressed(const APointerPressedEvent& event) override;
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
 
-    void setSize(glm::ivec2 size) override;
-
     void onPointerReleased(const APointerReleasedEvent& event) override;
 
     void onClickPrevented() override;
 
-    template<typename Layout>
+    template <typename Layout>
     class Builder;
     using Vertical = Builder<AVerticalLayout>;
     using Horizontal = Builder<AHorizontalLayout>;
 
 private:
-    template<typename Layout>
+    template <typename Layout>
     friend class Builder;
+    template <ALayoutDirection Direction>
+    friend class ASplitterLayout;
 
     ASplitterHelper mHelper;
+    AVector<float> mRelativeSizes;
+    size_t mDraggingDividerIndex = size_t(-1);
+    int mDragOffset = 0;
+    int mDragContentSize = 0;
 
     ASplitter();
 
+    [[nodiscard]]
+    bool isDraggingDivider() const {
+        return mDraggingDividerIndex != size_t(-1);
+    }
+
+    void endDragDivider() { mDraggingDividerIndex = size_t(-1); }
+
+    void resetRelativeSizes();
+    void syncRelativeSizesFromCurrentLayout();
+    void normalizeRelativeSizes();
+    bool dragDivider(glm::ivec2 mousePos);
 };
 
-template<typename Layout>
+template <typename Layout>
 class ASplitter::Builder {
     friend class ASplitter;
+
 private:
     AVector<_<AView>> mItems;
-    glm::ivec2 mExpanding{};
+    AOptional<glm::ivec2> mExpanding;
 
 public:
     Builder& withItems(AVector<_<AView>> items) {
@@ -94,7 +109,5 @@ public:
 
     API_AUI_VIEWS _<AView> build();
 
-    operator _<AView>() {
-        return build();
-    }
+    operator _<AView>() { return build(); }
 };

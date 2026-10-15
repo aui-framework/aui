@@ -52,6 +52,7 @@ protected:
     float mLineHeight = 1.f;
     ATextAlign mTextAlign = ATextAlign::LEFT;
     AOptional<int> mHeight;
+    AOptional<int> mWidth;
 
 public:
     void setLineHeight(float lineHeight) {
@@ -67,6 +68,18 @@ public:
     AOptional<int> height() const {
         return mHeight;
     }
+
+    /**
+     * @brief Width actually occupied by the laid out rows.
+     * @details
+     * Word wrapping almost never fills the last pixel of the width it was given, so this is typically smaller than
+     * that width. Trailing whitespaces are excluded, same as the CENTER and RIGHT alignments do. Can exceed the given
+     * width if a single entry (i.e. an unbreakable word) does not fit into it.
+     */
+    [[nodiscard]]
+    AOptional<int> width() const {
+        return mWidth;
+    }
 };
 
 template<typename Container = AVector<_<AWordWrappingEngineBase::Entry>>>
@@ -75,7 +88,7 @@ public:
     using Entries = Container;
 
     // include AWordWrappingEngineImpl.h for implementation
-    void performLayout(const glm::ivec2& offset, const glm::ivec2& size);
+    void performLayout(const glm::ivec2& offset, const glm::ivec2& size, bool writePositions = true);
 
     void setEntries(Container entries) {
         mEntries = std::move(entries);
@@ -95,5 +108,4 @@ public:
 private:
     Container mEntries;
 };
-
 

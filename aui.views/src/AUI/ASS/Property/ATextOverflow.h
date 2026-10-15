@@ -19,11 +19,12 @@
 #include <AUI/Util/AMetric.h>
 #include <AUI/Enum/AOverflow.h> // defined here
 #include "IProperty.h"
+#include "AUI/Common/IStringable.h"
 
 namespace ass {
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<ATextOverflow>: IPropertyBase {
+        struct API_AUI_VIEWS Property<ATextOverflow>: IPropertyBase, IStringable {
         private:
             ATextOverflow mInfo;
 
@@ -37,6 +38,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "ATextOverflow({})"_format(mInfo);
             }
         };
     }

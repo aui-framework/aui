@@ -31,16 +31,15 @@ namespace aui::detail {
  */
 class API_AUI_VIEWS AAbsoluteLayout: public ALinearLayout<aui::detail::AbsoluteLayoutCell> {
 public:
-    void onResize(int x, int y, int width, int height) override;
+    void layout(int x, int y, int width, int height) override;
 
     void add(aui::detail::AbsoluteLayoutCell cell);
 
     void addView(const _<AView>& view, AOptional<size_t> index) override;
 
-    int getMinimumWidth() override;
-    int getMinimumHeight() override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
 
 private:
     using ViewInfo = aui::detail::AbsoluteLayoutCell;
 };
-

@@ -542,8 +542,14 @@ struct ptr {
     template <typename T>
     static AWeakArc<T> weak_from_this(T* raw) {
         // std::weak_ptr not having an aliasing constructor is clearly intentional rather than oversight --
-        // although i dont understand reasons behind it
-        return AWeakArc<T>(shared_from_this(raw));
+        // although i dont understand reasons behind it.
+        // Use weak_from_this() (C++17, non-throwing) instead of shared_from_this() to avoid bad_weak_ptr when the
+        // object is not owned by a shared_ptr (e.g. AApplication which is a static local variable).
+        auto sharedBase = raw->weak_from_this().lock();
+        if (!sharedBase) {
+            return {};
+        }
+        return AWeakArc<T>(AArc<T>(std::move(sharedBase), raw));
     }
 
     /**
@@ -692,7 +698,7 @@ inline AArc<TO> _cast(std::shared_ptr<FROM>&& object)
  * and even combine multiple `AUI_NULLSAFE` statements:
  *
  * ```cpp
- * AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(AWindow::current())->flagRedraw();
+ * AUI_NULLSAFE(getWindow())->flagRedraw(); else AUI_NULLSAFE(ASurface::current())->flagRedraw();
  * ```
  */
 #define AUI_NULLSAFE(s) if(decltype(auto) _tmp = (s))_tmp

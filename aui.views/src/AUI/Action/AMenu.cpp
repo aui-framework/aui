@@ -46,7 +46,7 @@ _<IMenuProvider>& AMenu::provider() {
         return gCachedProvider;
     }
 
-    if (!dynamic_cast<AWindow*>(AWindow::current())) {
+    if (!dynamic_cast<AWindow*>(ASurface::current())) {
         gCachedProvider = _new<AEmbedMenuProvider>();
         return gCachedProvider;
     }

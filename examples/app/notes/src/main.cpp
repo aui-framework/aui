@@ -47,7 +47,7 @@ public:
     using ATextArea::ATextArea;
     void onCharEntered(AChar c) override {
         if (c == '\r') {
-            AWindow::current()->focusNextView();
+            ASurface::current()->focusNextView();
             return;
         }
         ATextArea::onCharEntered(c);

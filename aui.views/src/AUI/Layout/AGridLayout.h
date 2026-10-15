@@ -1,4 +1,4 @@
-﻿/*
+/*
  * AUI Framework - Declarative UI toolkit for modern C++20
  * Copyright (C) 2020-2025 Alex2772 and Contributors
  *
@@ -52,14 +52,13 @@ public:
 	    mCells.at(index).view = view;
 	}
 
-	void onResize(int x, int y, int width, int height) override;
+	void layout(int x, int y, int width, int height) override;
 	void addView(const _<AView>& view, int x, int y);
     void addView(const _<AView>& view, AOptional<size_t> index) override;
     void removeView(aui::no_escape<AView> view, size_t index) override;
-    int getMinimumWidth() override;
-	int getMinimumHeight() override;
+    glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
     AVector<_<AView>> getAllViews() override;
 
     int indexOf(_<AView> view);
 };
-

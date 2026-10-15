@@ -12,72 +12,64 @@
 
 #include "AMetric.h"
 
-#include "AUI/IO/AStringStream.h"
-#include "AUI/Util/ATokenizer.h"
-#include "AUI/Common/AMap.h"
-#include "AUI/Render/IRenderer.h"
-#include "AUI/Platform/AWindow.h"
-#include "AUI/Platform/APlatform.h"
+#include <AUI/IO/AStringStream.h>
+#include <AUI/Util/ATokenizer.h>
+#include <AUI/Common/AMap.h>
+#include <AUI/Render/IRenderer.h>
+#include <AUI/Platform/ASurface.h>
+#include <AUI/Platform/APlatform.h>
 
-AMetric::AMetric(const AString& text)
-{
+AMetric::AMetric(const AString& text) {
     ATokenizer p(_new<AStringStream>(text));
     mValue = p.readFloat();
 
     auto unitName = p.readString();
 
-    if (unitName.empty())
-    {
+    if (unitName.empty()) {
         mUnit = T_PX;
-    }
-    else {
+    } else {
         AMap<AString, Unit> unitMapping = {
             { "px", T_PX },
             { "em", T_DP },
             { "pt", T_PT },
         };
 
-        if (auto x = unitMapping.contains(unitName))
-        {
+        if (auto x = unitMapping.contains(unitName)) {
             mUnit = x->second;
         }
     }
-
 }
 
-float AMetric::getValuePx() const
-{
+float AMetric::getValuePx() const {
     float dpi;
-    if (AWindow::current()) {
-        dpi = AWindow::current()->getDpiRatio();
+    if (ASurface::current()) {
+        dpi = ASurface::current()->getDpiRatio();
     } else {
         dpi = 1.0f;
     }
 
-    switch (mUnit)
-    {
-    case T_PX:
-        return mValue;
-    case T_DP:
-        return mValue * dpi;
-    case T_PT:
-        return mValue * dpi / 3.f * 4.f;
+    switch (mUnit) {
+        case T_PX:
+            return mValue;
+        case T_DP:
+            return mValue * dpi;
+        case T_PT:
+            return mValue * dpi / 3.f * 4.f;
 
-    default:
-        return mValue;
+        default:
+            return mValue;
     }
 }
 
 float AMetric::fromPxToMetric(float value, AMetric::Unit unit) {
     float dpi;
-    if (AWindow::current()) {
-        dpi = AWindow::current()->getDpiRatio();
+    if (ASurface::current()) {
+        dpi = ASurface::current()->getDpiRatio();
     } else {
         dpi = 1.0f;
     }
 
-    switch (unit)
-    {
+    switch (unit) {
         case T_PX:
             return value;
         case T_DP:
@@ -92,14 +84,13 @@ float AMetric::fromPxToMetric(float value, AMetric::Unit unit) {
 
 float AMetric::getValueDp() const {
     float dpi;
-    if (AWindow::current()) {
-        dpi = AWindow::current()->getDpiRatio();
+    if (ASurface::current()) {
+        dpi = ASurface::current()->getDpiRatio();
     } else {
         dpi = 1.0f;
     }
 
-    switch (mUnit)
-    {
+    switch (mUnit) {
         case T_PX:
             return mValue / dpi;
         case T_DP:

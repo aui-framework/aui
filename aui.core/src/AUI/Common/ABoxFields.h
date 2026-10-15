@@ -11,55 +11,54 @@
 
 #pragma once
 
+#include <compare>
 #include <glm/glm.hpp>
 
 /**
  * @brief Represents a rectangle fields. Useful for margin and padding around AViews.
  * @ingroup core
  */
-struct ABoxFields
-{
-    int left = 0;
-    int right = 0;
-    int top = 0;
-    int bottom = 0;
+struct ABoxFields {
+  int left = 0;
+  int right = 0;
+  int top = 0;
+  int bottom = 0;
 
+  [[nodiscard]]
+  glm::ivec2 leftTop() const noexcept {
+    return { left, top };
+  }
 
-    [[nodiscard]]
-    glm::ivec2 leftTop() const noexcept {
-        return { left, top };
-    }
+  [[nodiscard]]
+  glm::ivec2 rightTop() const noexcept {
+    return { right, top };
+  }
 
-    [[nodiscard]]
-    glm::ivec2 rightTop() const noexcept {
-        return { right, top };
-    }
+  [[nodiscard]]
+  glm::ivec2 leftBottom() const noexcept {
+    return { left, bottom };
+  }
 
-    [[nodiscard]]
-    glm::ivec2 leftBottom() const noexcept {
-        return { left, bottom };
-    }
+  [[nodiscard]]
+  glm::ivec2 rightBottom() const noexcept {
+    return { right, bottom };
+  }
 
-    [[nodiscard]]
-    glm::ivec2 rightBottom() const noexcept {
-        return { right, bottom };
-    }
+  [[nodiscard]]
+  int horizontal() const noexcept {
+    return left + right;
+  }
 
-    [[nodiscard]]
-    int horizontal() const noexcept
-    {
-        return left + right;
-    }
+  [[nodiscard]]
+  int vertical() const noexcept {
+    return top + bottom;
+  }
 
-    [[nodiscard]]
-    int vertical() const noexcept
-    {
-        return top + bottom;
-    }
-    
-    [[nodiscard]]
-    glm::ivec2 occupiedSize() const noexcept {
-        return { horizontal(), vertical() };
-    }
+  [[nodiscard]]
+  glm::ivec2 occupiedSize() const noexcept {
+    return { horizontal(), vertical() };
+  }
 
+  constexpr auto operator<=>(const ABoxFields&) const = default;
+  constexpr bool operator==(const ABoxFields&) const = default;
 };

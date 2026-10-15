@@ -12,6 +12,7 @@
 #pragma once
 
 #include "AUI/Enum/ATextAlign.h"
+#include "AUI/Enum/VerticalAlign.h"
 #include "AFont.h"
 #include "AUI/Platform/AFontManager.h"
 #include "AUI/Render/FontRendering.h"
@@ -101,6 +102,24 @@ struct API_AUI_VIEWS AFontStyle {
     AFont::Character& getCharacter(char32_t c) {
         return font->getCharacter(getFontEntry(), c);
     }
+
+    /**
+     * @brief Height of the area occupied by a line of text *as it looks*: ascender, descender, and the descender height
+     * mirrored above the ascender (see getBaselineY for the explanation). Does not depend on lineSpacing.
+     */
+    [[nodiscard]]
+    int getTextBlockHeight() const;
+
+    /**
+     * @brief Computes Y coordinate of the text baseline within the area starting at `top` and `height` pixels tall.
+     * @param top Y coordinate of the area's top (i.e., view's top padding).
+     * @param height Height of the area (i.e., view's content height).
+     * @param verticalAlign DEFAULT puts the text at the top of the area; MIDDLE centers getTextBlockHeight() within.
+     * @details
+     * Text of a single line is placed using this function by label and text field to ensure that they look consistent.
+     */
+    [[nodiscard]]
+    int getBaselineY(int top, int height, VerticalAlign verticalAlign) const;
 
     auto getAscenderHeight() const {
         return font->getAscenderHeight(size);

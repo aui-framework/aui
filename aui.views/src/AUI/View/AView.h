@@ -14,28 +14,31 @@
 #include <chrono>
 #include <functional>
 #include <array>
-
 #include <glm/glm.hpp>
 
-#include "AUI/Common/ASmallVector.h"
+#include <AUI/Common/ASmallVector.h>
 #include <AUI/ASS/Property/IProperty.h>
 #include <AUI/ASS/Property/ScrollbarAppearance.h>
-#include "AUI/Common/ABoxFields.h"
-#include "AUI/Common/ADeque.h"
-#include "AUI/Common/AObject.h"
-#include "AUI/Common/SharedPtr.h"
-#include "AUI/Platform/ACursor.h"
-#include "AUI/Platform/AInput.h"
-#include "AUI/Reflect/AClass.h"
-#include "AUI/Font/AFontStyle.h"
-#include "AUI/Util/AFieldSignalEmitter.h"
-#include "AUI/Render/ARenderContext.h"
-#include "AUI/Util/IBackgroundEffect.h"
+#include <AUI/Common/ABoxFields.h>
+#include <AUI/Common/ADeque.h>
+#include <AUI/Common/AObject.h>
+#include <AUI/Common/SharedPtr.h>
+#include <AUI/Common/AFixedSizeCache.hpp>
+#include <AUI/Platform/ACursor.h>
+#include <AUI/Platform/AInput.h>
+#include <AUI/Reflect/AClass.h>
+#include <AUI/Font/AFontStyle.h>
+#include <AUI/Util/AFieldSignalEmitter.h>
+#include <AUI/Render/ARenderContext.h>
+#include <AUI/Util/IBackgroundEffect.h>
 #include <AUI/ASS/PropertyListRecursive.h>
 #include <AUI/Enum/AOverflow.h>
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Enum/MouseCollisionPolicy.h>
 #include <AUI/Util/ALayoutDirection.h>
+#include <AUI/Util/AConstraints.hpp>
+#include <AUI/Util/AMinMaxAxis.hpp>
+#include "../Util/IInspectable.h"
 #include <AUI/Action/AMenu.h>
 
 #include <AUI/Event/AScrollEvent.h>
@@ -48,21 +51,21 @@
 #include <AUI/Enum/AFloat.h>
 #include <AUI/Common/AProperty.h>
 
-
 class AWindow;
 class ASurface;
 class AViewContainerBase;
 class AAnimator;
 class AAssHelper;
 class AStylesheet;
+class ViewPropertiesView;
 
 /**
  * @brief Base class of all UI objects.
  *
  * @details
  * A class that describes the minimum unit that can be placed in a container (including a window) that takes up
-*  some space on the screen, responds to changes in size, position, moving the cursor, pressing / releasing
-*  keys and buttons, mouse wheel, etc...
+ *  some space on the screen, responds to changes in size, position, moving the cursor, pressing / releasing
+ *  keys and buttons, mouse wheel, etc...
  *
  * Analogue to Qt's QWidget, Android's View.
  *
@@ -87,15 +90,15 @@ class AStylesheet;
  *
  * @ingroup useful_views
  */
-class API_AUI_VIEWS AView: public AObject
-{
+class API_AUI_VIEWS AView : public AObject, public IInspectable {
     friend class AViewContainerBase;
     friend class AViewContainer;
+    friend class ASurface;
     friend class IRenderViewToTexture;
+
 public:
     AView();
     ~AView() override;
-
 
     /**
      * @brief Whether view is enabled (i.e., reacts to user).
@@ -204,8 +207,7 @@ public:
      * @brief Top left corner's position relative to top left corner's position of the parent AView.
      */
     [[nodiscard]]
-    glm::ivec2 getPosition() const noexcept
-    {
+    glm::ivec2 getPosition() const noexcept {
         return mPosition;
     }
 
@@ -218,8 +220,7 @@ public:
      * ```
      */
     [[nodiscard]]
-    glm::ivec2 getCenterPointInWindow() const noexcept
-    {
+    glm::ivec2 getCenterPointInWindow() const noexcept {
         return getPositionInWindow() + *size() / 2;
     }
 
@@ -227,28 +228,76 @@ public:
      * @brief Size, including content area, border and padding.
      */
     [[nodiscard]]
-    glm::ivec2 getSize() const noexcept
-    {
+    glm::ivec2 getSize() const noexcept {
         return mSize;
     }
 
     /**
      * @return minSize (ignoring fixedSize)
      */
-    glm::ivec2 getMinSize() const noexcept {
-        return mMinSize;
+    [[nodiscard]] const glm::ivec2& getMinSize() const noexcept { return mMinSize; }
+
+    void setMinSize(const glm::ivec2& minSize) {
+        ensureAssUpdated();
+        if (!mApplyingStyles) {
+            mExplicitMinSize = minSize;
+        }
+        if (mMinSize == minSize) [[unlikely]] {
+            return;
+        }
+        mMinSize = minSize;
+        markLayoutContributionChanged();
     }
 
-    void setMinSize(glm::ivec2 minSize) noexcept {
-        mMinSize = minSize;
+    /**
+     * @return maxSize (ignoring fixedSize)
+     */
+    [[nodiscard]] const glm::ivec2& getMaxSize() const { return mMaxSize; }
+
+    void setMaxSize(const glm::ivec2& maxSize) {
+        ensureAssUpdated();
+        if (mMaxSize == maxSize) [[unlikely]] {
+            return;
+        }
+        mMaxSize = maxSize;
+        markLayoutContributionChanged();
     }
 
     /**
      * @brief Marks this view it requires a layout update.
      * @details
-     * See [layout-managers] for more info.
+     * See [ALayout] and [layout-managers] for more info.
      */
-    virtual void markMinContentSizeInvalid();
+    virtual void requestLayout();
+
+    /**
+     * @brief Whether a layout request from inside this view can be resolved without laying out the parent.
+     * @details
+     * A view whose size is fixed on both axes occupies exactly the same space no matter what happens inside it, so
+     * everything above it in the view hierarchy keeps the geometry it already has. Such a view is a layout boundary:
+     * AView::requestLayout stops here instead of travelling up to the surface, and the surface lays this view out
+     * on its own (@see ASurface::enqueueLayoutRoot).
+     *
+     * Whenever something the parent's layout does depend on changes — fixed size, min/max size, margin, expanding,
+     * visibility — AView::markLayoutContributionChanged lifts the boundary for one request, so the parent finds out.
+     */
+    [[nodiscard]]
+    bool isLayoutBoundary() const noexcept {
+        return mFixedSize.x != 0 && mFixedSize.y != 0 && mFixedSize == mSize;
+    }
+
+    /**
+     * @brief Marks that the space this view occupies in its parent changed, so the parent has to lay out again.
+     * @details
+     * To be called instead of AView::requestLayout by anything that changes fixed size, min/max size, margin,
+     * expanding or visibility of this view — the values the parent's layout manager reads from us.
+     *
+     * @see AView::isLayoutBoundary
+     */
+    void markLayoutContributionChanged() {
+        mLayoutContributionChanged = true;
+        requestLayout();
+    }
 
     /**
      * @see mExtraStylesheet
@@ -274,72 +323,48 @@ public:
     /**
      * @brief Determines whether display graphics that go out of the bounds of this AView or not.
      */
-    AOverflow getOverflow() const
-    {
-        return mOverflow;
-    }
-    void setOverflow(AOverflow overflow)
-    {
-        mOverflow = overflow;
-    }
+    AOverflow getOverflow() const { return mOverflow; }
+    void setOverflow(AOverflow overflow) { mOverflow = overflow; }
 
     /**
      * @brief Controls how does the overflow (stencil) mask is produced.
      */
-    AOverflowMask getOverflowMask() const
-    {
-        return mOverflowMask;
-    }
-    void setOverflowMask(AOverflowMask overflow)
-    {
-        mOverflowMask = overflow;
-    }
+    AOverflowMask getOverflowMask() const { return mOverflowMask; }
+    void setOverflowMask(AOverflowMask overflow) { mOverflowMask = overflow; }
 
     /**
      * @brief border-radius, specified in ASS.
      */
-    float getBorderRadius() const {
-        return mBorderRadius;
-    }
-    void setBorderRadius(float radius) {
-        mBorderRadius = radius;
-    }
+    float getBorderRadius() const { return mBorderRadius; }
+    void setBorderRadius(float radius) { mBorderRadius = radius; }
 
-    int getWidth() const
-    {
-        return mSize.x;
-    }
+    int getWidth() const { return mSize.x; }
 
-    int getHeight() const
-    {
-        return mSize.y;
-    }
+    int getHeight() const { return mSize.y; }
 
     /**
      * @return pixel count which this AView acquired by width including content area, padding, border and margin.
      */
-    int getTotalOccupiedWidth() const
-    {
+    int getTotalOccupiedWidth() const {
         return !(mVisibility & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.x + getTotalFieldHorizontal();
     }
 
     /**
      * @return pixel count which this AView acquired by height including content area, padding, border and margin.
      */
-    int getTotalOccupiedHeight() const
-    {
+    int getTotalOccupiedHeight() const {
         return !(mVisibility & Visibility::FLAG_CONSUME_SPACE) ? 0 : mSize.y + getTotalFieldVertical();
     }
 
     /**
      * @return minimum content size plus margin.
      * @details
-     * This value is bare minimum space required for this view. It includes minimal content size + padding + margin which
-     * is exact space the view requires.
+     * This value is bare minimum space required for this view. It includes minimal content size + padding + margin
+     * which is exact space the view requires.
      */
     [[nodiscard]]
     glm::ivec2 getMinimumSizePlusMargin() {
-        return getMinimumSize() + mMargin.occupiedSize();
+        return getMinSize() + mMargin.occupiedSize();
     }
 
     /**
@@ -349,9 +374,7 @@ public:
      * @copydetails AView::mMargin
      */
     [[nodiscard]]
-    const ABoxFields& getMargin()
-    {
-        ensureAssUpdated();
+    const ABoxFields& getMargin() {
         return mMargin;
     }
 
@@ -362,7 +385,12 @@ public:
      * @copydetails AView::mMargin
      */
     void setMargin(const ABoxFields& margin) {
+        ensureAssUpdated();
+        if (mMargin == margin) [[unlikely]] {
+            return;
+        }
         mMargin = margin;
+        markLayoutContributionChanged();
     }
 
     /**
@@ -379,9 +407,7 @@ public:
      * @return padding
      */
     [[nodiscard]]
-    const ABoxFields& getPadding()
-    {
-        ensureAssUpdated();
+    const ABoxFields& getPadding() {
         return mPadding;
     }
 
@@ -392,13 +418,27 @@ public:
      * @copydetails AView::mPadding
      */
     void setPadding(const ABoxFields& padding) {
+        ensureAssUpdated();
+        if (mPadding == padding) [[unlikely]] {
+            return;
+        }
         mPadding = padding;
+        requestLayout();
     }
 
     /**
      * @brief String which helps to identify this object in debug string output (i.e., for logging)
      */
     virtual AString debugString() const;
+
+    /**
+     * @brief Produces debug inspector information for this view.
+     * @details
+     * Exposes view's state (position, size, visibility, etc.) to debugging/inspection tooling
+     * (e.g. devtools, ViewPropertiesView). Override in subclasses to expose additional properties; typically
+     * you should append to the result of AView::debugInspectorInfo().
+     */
+    DebugInspectorInfo debugInspectorInfo() override;
 
     /**
      * @return pixel count which this AView's margin and padding acquired by width.
@@ -427,100 +467,27 @@ public:
     /**
      * @brief Parent AView.
      */
-    AViewContainerBase* getParent() const
-    {
-        return mParent;
-    }
+    AViewContainerBase* getParent() const { return mParent; }
 
     /**
      * @brief Determines shape which should pointer take when it's above this AView.
      */
-    const AOptional<ACursor>& getCursor() const
-    {
-        return mCursor;
-    }
+    const AOptional<ACursor>& getCursor() const { return mCursor; }
     void setCursor(AOptional<ACursor> cursor);
 
-    /**
-     * @return minimal content-area width.
-     */
-    [[nodiscard]]
-    virtual int getContentMinimumWidth();
-
-    /**
-     * @return minimal content-area height.
-     */
-    [[nodiscard]]
-    virtual int getContentMinimumHeight();
-
-    /**
-     * @return minimal content-area size.
-     */
-    [[nodiscard]]
-    glm::ivec2 getContentMinimumSize() noexcept {
-        if (!mCachedMinContentSize) {
-            glm::ivec2 minContentSize = glm::ivec2(getContentMinimumWidth(), getContentMinimumHeight());
-            mCachedMinContentSize = minContentSize;
-            return minContentSize;
-        }
-        return *mCachedMinContentSize;
-    }
-
-    [[nodiscard]]
-    bool isContentMinimumSizeInvalidated() noexcept {
-        return !mCachedMinContentSize.hasValue();
-    }
-
     bool hasFocus() const;
-
-    virtual int getMinimumWidth();
-    virtual int getMinimumHeight();
-
-    /**
-     * @brief Returns the minimum size required for this view.
-     * @return Minimum size (width, height) this view requires in pixels, excluding margins.
-     * @details
-     * The minimum size includes:
-     * - Minimum content size
-     * - Padding
-     *
-     * This value represents the absolute minimum dimensions the view needs to properly display its content. It's used
-     * by layout managers to ensure views aren't sized smaller than what they require to be functional.
-     */
-    glm::ivec2 getMinimumSize() {
-        return { getMinimumWidth(), getMinimumHeight() };
-    }
-
-    void setMaxSize(const glm::ivec2& maxSize) {
-        mMaxSize = maxSize;
-    }
-
-    /**
-     * @return maxSize (ignoring fixedSize)
-     */
-    [[nodiscard]] const glm::ivec2& getMaxSize() const
-    {
-        return mMaxSize;
-    }
 
     /**
      * @return content size
      */
     glm::ivec2 getContentSize() const { return { getContentWidth(), getContentHeight() }; }
 
-    int getContentWidth() const
-    {
-        return static_cast<int>(mSize.x - mPadding.horizontal());
-    }
+    int getContentWidth() const { return static_cast<int>(mSize.x - mPadding.horizontal()); }
 
-    int getContentHeight() const
-    {
-        return static_cast<int>(mSize.y - mPadding.vertical());
-    }
+    int getContentHeight() const { return static_cast<int>(mSize.y - mPadding.vertical()); }
 
     [[nodiscard]]
-    const glm::ivec2& getExpanding() const
-    {
+    const glm::ivec2& getExpanding() const {
         return mExpanding;
     }
 
@@ -530,14 +497,13 @@ public:
      * @sa mExpanding
      * @sa ass::Expanding
      */
-    void setExpanding(glm::ivec2 expanding)
-    {
+    void setExpanding(glm::ivec2 expanding) {
         if (mExpanding == expanding) [[unlikely]] {
             return;
         }
         mExpanding = expanding;
         emit mExpandingChanged(expanding);
-        markMinContentSizeInvalid();
+        markLayoutContributionChanged();
     }
 
     /**
@@ -546,135 +512,146 @@ public:
      * @sa mExpanding
      * @sa ass::Expanding
      */
-    void setExpanding(int expanding)
-    {
-        setExpanding(glm::ivec2(expanding));
-    }
-    void setExpanding()
-    {
-        setExpanding(2);
-    }
+    void setExpanding(int expanding) { setExpanding(glm::ivec2(expanding)); }
+    void setExpanding() { setExpanding(2); }
 
-    const _<AAnimator>& getAnimator() const {
-        return mAnimator;
-    }
-
+    const _<AAnimator>& getAnimator() const { return mAnimator; }
 
     void setAnimator(const _<AAnimator>& animator);
     void getTransform(glm::mat4& transform) const;
 
     [[nodiscard]]
-    int getExpandingHorizontal() const
-    {
+    int getExpandingHorizontal() const {
         return mExpanding.x;
     }
 
     [[nodiscard]]
-    int getExpandingVertical() const
-    {
+    int getExpandingVertical() const {
         return mExpanding.y;
     }
 
-    [[nodiscard]] aui::float_within_0_1 getOpacity() const {
-        return mOpacity;
-    }
-    void setOpacity(aui::float_within_0_1 opacity) {
-        mOpacity = opacity;
-    }
+    [[nodiscard]] aui::float_within_0_1 getOpacity() const { return mOpacity; }
+    void setOpacity(aui::float_within_0_1 opacity) { mOpacity = opacity; }
 
-    virtual void setPosition(glm::ivec2 position);
+    void setPosition(glm::ivec2 position);
 
     /**
      * Set size ignoring all restrictions (i.e. min size, max size, fixed size, etc...). Used by AAnimator.
      * @param size
      */
-    void setSizeForced(glm::ivec2 size) {
-        mSize = size;
-    }
-    virtual void setSize(glm::ivec2 size);
+    void setSizeForced(glm::ivec2 size) { mSize = size; }
+    void setSize(glm::ivec2 size);
 
     /**
-     * @brief Sets position and size of the view.
+     * @brief Returns cached min/max width for the given height.
+     * @param height outer height (including padding), or -1 for unconstrained.
+     * @return Outer (including padding) min/max width.
      * @details
-     * See [layout-managers] for more info.
+     * Applies padding and fixed/min/max size around onComputeIntrinsicMinMaxAxis(). Does not require a preceding layout
+     * pass. The result is cached until AView::requestLayout.
+     *
+     * Override AView::onComputeIntrinsicMinMaxAxis, not this function.
      */
-    virtual void setGeometry(int x, int y, int width, int height);
-    void setGeometry(const glm::ivec2& position, const glm::ivec2& size) {
-        setGeometry(position.x, position.y, size.x, size.y);
-    }
+    AMinMaxAxis computeMinMaxAxis(int height = -1);
 
-    bool isBlockClicksWhenPressed() const noexcept {
-        return mBlockClicksWhenPressed;
-    }
+    /**
+     * @brief Returns the preferred **outer** size of this view under the given constraints.
+     * @param constraints inline (width) / block (height) limits; -1 as a maximum means "unlimited".
+     * @return Outer size, including padding (but not margin), in pixels.
+     * @details
+     * Applies padding and fixed/min/max size (ass::FixedSize, ass::MinSize, ass::MaxSize) around
+     * AView::onIntrinsicMeasure(). If both axes of the fixed size are set, it is returned right away.
+     *
+     * Does **not** require a preceding layout pass, unlike AView::getSize() which is `{0, 0}` until the first
+     * AView::layout. It is therefore safe to call right after AView::addView or on a view that is not attached to any
+     * container at all. The result is cached until AView::requestLayout.
+     *
+     * Override AView::onIntrinsicMeasure, not this function. See [ALayout] for the measure/layout pipeline.
+     *
+     * ```cpp
+     * auto size = view->measure(AConstraints {});                         // unconstrained
+     * auto wrapped = view->measure({ .maxInline = 200 });                 // at most 200px wide
+     * auto exactWidth = view->measure(AConstraints::fixedInline(200));    // exactly 200px wide
+     * ```
+     *
+     * !!! note
+     *
+     *     Measurement must have no side effects on the geometry (see AView::onIntrinsicMeasure).
+     */
+    glm::ivec2 measure(AConstraints constraints);
 
-    void setBlockClicksWhenPressed(bool value) noexcept {
-        mBlockClicksWhenPressed = value;
-    }
+    /**
+     * @brief Performs layout with a position and size of the view.
+     * @param x,y position relative to the parent.
+     * @param w,h size, subject to fixed/max size restrictions (@see AView::setSize).
+     * @details
+     * Sets position and size, then calls AView::onLayout (which positions children of containers), and finally clears
+     * AView::mSkipUntilLayoutUpdate. Does nothing if neither position, size nor layout request changed.
+     *
+     * This is the **only** place that clears AView::mSkipUntilLayoutUpdate; AView::setPosition and AView::setSize do
+     * not. A view which is positioned by hand (i.e., not by a layout manager of its parent), e.g., rendered manually or
+     * attached to something outside the regular view hierarchy, must be placed with layout() otherwise it (and all its
+     * children, as AView::setSize does not lay them out) stays hidden:
+     * ```cpp
+     * auto size = view->measure(AConstraints {});
+     * view->layout(pos, size);
+     * ```
+     *
+     * See [ALayout] and [layout-managers] for more info.
+     */
+    void layout(int x, int y, int w, int h);
+    void layout(const glm::ivec2& pos, const glm::ivec2& size) { layout(pos.x, pos.y, size.x, size.y); }
+
+    bool isBlockClicksWhenPressed() const noexcept { return mBlockClicksWhenPressed; }
+
+    void setBlockClicksWhenPressed(bool value) noexcept { mBlockClicksWhenPressed = value; }
 
     /**
      * @brief Fixed size.
      * @return Fixed size. {0, 0} if unspecified.
      */
-    const glm::ivec2& getFixedSize() {
-        return mFixedSize;
-    }
+    const glm::ivec2& getFixedSize() { return mFixedSize; }
     void setFixedSize(glm::ivec2 size) {
         AUI_ASSERTX(glm::all(glm::greaterThanEqual(size, glm::ivec2(-100000))), "abnormal fixed size");
         if (size == mFixedSize) [[unlikely]] {
             return;
         }
         mFixedSize = size;
-        markMinContentSizeInvalid();
+        markLayoutContributionChanged();
     }
 
     [[nodiscard]]
-    bool isMouseHover() const noexcept
-    {
+    bool isMouseHover() const noexcept {
         return mHovered;
     }
 
     [[nodiscard]]
-    bool isPressed() const noexcept
-    {
+    bool isPressed() const noexcept {
         return !mPressed.empty();
     }
 
     [[nodiscard]]
-    bool isPressed(APointerIndex index) const noexcept
-    {
+    bool isPressed(APointerIndex index) const noexcept {
         return mPressed.contains(index);
     }
 
-    bool isFocused() const {
-        return mHasFocus;
-    }
-    bool isMouseEntered() const {
-        return mMouseEntered;
-    }
+    bool isFocused() const { return mHasFocus; }
+    bool isMouseEntered() const { return mMouseEntered; }
 
-    Visibility getVisibility() const
-    {
-        return mVisibility;
-    }
+    Visibility getVisibility() const { return mVisibility; }
 
     Visibility getVisibilityRecursive() const;
 
     void setVisibility(Visibility visibility) noexcept;
 
-    void setVisible(bool visible) noexcept
-    {
-        setVisibility(visible ? Visibility::VISIBLE : Visibility::INVISIBLE);
-    }
-
+    void setVisible(bool visible) noexcept { setVisibility(visible ? Visibility::VISIBLE : Visibility::INVISIBLE); }
 
     [[nodiscard]]
     const AColor& textColor() const {
         return mTextColor;
     }
 
-    void setTextColor(AColor color) {
-        mTextColor = color;
-    }
+    void setTextColor(AColor color) { mTextColor = color; }
 
     [[nodiscard]]
     MouseCollisionPolicy getMouseCollisionPolicy() const {
@@ -704,14 +681,14 @@ public:
      * @details
      * If needFocusChainUpdate is false you need to control focus chain targets outside the focus function
      */
-     void focus(bool needFocusChainUpdate = true);
+    void focus(bool needFocusChainUpdate = true);
 
-     /**
-      * @return Can this view capture focus.
-      * @details
-      * For containers, capturing focus is redundant.
-      */
-     virtual bool capturesFocus();
+    /**
+     * @return Can this view capture focus.
+     * @details
+     * For containers, capturing focus is redundant.
+     */
+    virtual bool capturesFocus();
 
     /**
      * @brief Checks if the specified view is an indirect parent of this view.
@@ -764,13 +741,9 @@ public:
         return *this;
     }
 
-    const _<AAssHelper>& getAssHelper() const {
-        return mAssHelper;
-    }
+    const _<AAssHelper>& getAssHelper() const { return mAssHelper; }
 
-    const ass::PropertyListRecursive& getCustomAss() const {
-        return mCustomStyleRule;
-    }
+    const ass::PropertyListRecursive& getCustomAss() const { return mCustomStyleRule; }
 
     void setCustomStyle(ass::PropertyListRecursive rule);
 
@@ -840,27 +813,17 @@ public:
 
     virtual void setEnabled(bool enabled = true);
 
-    void setDisabled(bool disabled = true) {
-        setEnabled(!disabled);
-    }
+    void setDisabled(bool disabled = true) { setEnabled(!disabled); }
 
     void updateEnableState();
 
-    void enable()
-    {
-        setEnabled(true);
-    }
-    void disable()
-    {
-        setEnabled(false);
-    }
+    void enable() { setEnabled(true); }
+    void disable() { setEnabled(false); }
 
     /**
      * @brief Helper function for kAUI.h:AUI_OVERRIDE_STYLE
      */
-    void operator&(ass::PropertyListRecursive rule) {
-        setCustomStyle(std::move(rule));
-    }
+    void operator&(ass::PropertyListRecursive rule) { setCustomStyle(std::move(rule)); }
 
     /**
      * @brief Called on ASurface::preventClickOnPointerRelease.
@@ -894,9 +857,7 @@ public:
      *   <li>Changed state (hover, active, focus) of this view</li>
      * </ul>
      */
-    void invalidateStateStyles() {
-        invalidateStateStylesImpl(getMinimumSizePlusMargin());
-    }
+    void invalidateStateStyles() { invalidateStateStylesImpl(); }
 
     /**
      * @brief Resets mAssHelper.
@@ -912,24 +873,18 @@ public:
     /**
      * @see AView::mSkipUntilLayoutUpdate
      */
-    void setSkipUntilLayoutUpdate(bool skipUntilLayoutUpdate) {
-        mSkipUntilLayoutUpdate = skipUntilLayoutUpdate;
-    }
+    void setSkipUntilLayoutUpdate(bool skipUntilLayoutUpdate) { mSkipUntilLayoutUpdate = skipUntilLayoutUpdate; }
 
     /**
      * @brief Set floating value for AText.
      */
-    void setFloating(AFloat f) noexcept
-    {
-        mFloating = f;
-    }
+    void setFloating(AFloat f) noexcept { mFloating = f; }
 
     /**
      * @brief Floating value for AText.
      */
     [[nodiscard]]
-    AFloat getFloating() const noexcept
-    {
+    AFloat getFloating() const noexcept {
         return mFloating;
     }
 
@@ -1011,6 +966,8 @@ signals:
     emits<_<AView>> childFocused;
 
 protected:
+    friend class ViewPropertiesView;
+
     /**
      * @brief Parent AView.
      */
@@ -1051,32 +1008,53 @@ protected:
      */
     emits<glm::ivec2> mSizeChanged;
 
-    AOptional<glm::ivec2> mCachedMinContentSize;
-    bool mMarkedMinContentSizeInvalid = false;
+    bool mWantsLayoutUpdate = true;
+
+    /**
+     * @brief Set while this view waits to be laid out by the surface as a layout root.
+     * @see AView::isLayoutBoundary
+     */
+    bool mPendingLayoutRoot = false;
+
+    /**
+     * @brief Set when the space we occupy in our parent changed and the parent doesn't know about it yet.
+     * @details
+     * Reset by AView::requestLayout as soon as the request is handed over to the parent.
+     *
+     * @see AView::markLayoutContributionChanged
+     */
+    bool mLayoutContributionChanged = true;
+
+    glm::ivec2 mLastLayoutSize = { -1, -1 };
+    ASpinlockMutex mLayoutGuard;
+
+    AFixedSizeCache<AConstraints, glm::ivec2, 8> mMeasureCache;
+    AFixedSizeCache<int, AMinMaxAxis, 4> mMinMaxSizesCache;
 
     /**
      * @brief Redraw requested flag for this particular view/
      * @details
-     * This flag is set in redraw() method and reset in AView::render(ARenderContext context). redraw() method does not actually requests
-     * redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the view is not even
-     * drawn.
+     * This flag is set in redraw() method and reset in AView::render(ARenderContext context). redraw() method does not
+     * actually requests redraw of window if mRedrawRequested. This approach ignores sequential redraw() calls if the
+     * view is not even drawn.
      */
     bool mRedrawRequested = false;
 
     /**
      * @brief Minimal size.
      */
-    glm::ivec2 mMinSize = {0, 0};
+    glm::ivec2 mMinSize = { 0, 0 };
+    AOptional<glm::ivec2> mExplicitMinSize;
 
     /**
      * @brief Maximal size.
      */
-    glm::ivec2 mMaxSize = {0x7fffff, 0x7fffff};
+    glm::ivec2 mMaxSize = { -1, -1 };
 
     /**
      * @brief Fixed size.
      */
-    glm::ivec2 mFixedSize = {0, 0};
+    glm::ivec2 mFixedSize = { 0, 0 };
 
     /**
      * @brief Margin, which defines the spacing around this AView. Processed by the layout manager.
@@ -1101,12 +1079,87 @@ protected:
 
     /**
      * @brief If set to true, AViewContainer is obligated ignore this view. This value is set to false by
-     * AView::setGeometry.
+     * AView::layout.
      * @details
      * This flag addresses the issue when some container is filled with views by addView during several frames, causing
      * to draw them in wrong place (then their layout is not processed yet).
+     *
+     * !!! note
+     *
+     *     Cleared **only** by AView::layout. AView::setSize and AView::setPosition do not clear it. While it is set,
+     *     the view is neither drawn nor does it consume clicks, without any error or warning.
      */
     bool mSkipUntilLayoutUpdate = true;
+
+    /**
+     * @brief Computes the preferred size of the **content area** under the given constraints.
+     * @param constraints constraints of the content area: padding is already subtracted, fixed/min/max size are already
+     * applied. A maximum of -1 means "unlimited" (@see AConstraints::isUnlimitedInline).
+     * @return Size of the content area, excluding padding, in pixels.
+     * @details
+     * Override this function to tell the layout system how much space the view wants, e.g., a label reports the size
+     * of its text, wrapping it to constraints.maxInline when limited. Called from AView::measure, whose result is
+     * cached, so it is not called on every frame.
+     *
+     * The default implementation takes the maximum width reported by AView::onComputeIntrinsicMinMaxAxis clamped to
+     * the constraints, and the minimum height. AViewContainerBase delegates to its layout manager.
+     *
+     * The returned value is not required to respect the constraints; AView::measure clamps it.
+     *
+     * See [ALayout] for when and how to override this function, the meaning of constraints and the measure/layout
+     * pipeline in general.
+     *
+     * !!! warning
+     *
+     *     Must not change the layout (AView::setPosition, AView::setSize, AView::layout, AView::requestLayout, adding
+     *     or removing views) — measurement is a pure function of the view state and the constraints. Otherwise layout
+     *     may recurse infinitely. If the view state that affects the result changes, call AView::requestLayout to drop
+     *     the cached measurements.
+     *
+     * ```cpp
+     * glm::ivec2 MyView::onIntrinsicMeasure(AConstraints constraints) {
+     *   int width = constraints.isUnlimitedInline() ? 100 : constraints.maxInline;
+     *   return { width, 50 };
+     * }
+     * ```
+     *
+     * @see AView::onComputeIntrinsicMinMaxAxis
+     * @see AView::onLayout
+     */
+    virtual glm::ivec2 onIntrinsicMeasure(AConstraints constraints);
+
+    /**
+     * @brief Computes intrinsic min/max width of the **content area** for a content height.
+     * @param height height of the content area (padding is subtracted), or -1 for unconstrained.
+     * @return AMinMaxAxis::min is the narrowest width the content can be squeezed to without being cut off (e.g.,
+     * the longest word of a wrapped text); AMinMaxAxis::max is the width the content takes if nothing limits it (e.g.,
+     * the whole text on one line). Excludes padding.
+     * @details
+     * Override for width-for-height logic. Used by layout managers to distribute space among views. Called from
+     * AView::computeMinMaxAxis whose result is cached. The same restrictions as for AView::onIntrinsicMeasure apply
+     * (no side effects on the layout).
+     *
+     * Default implementation returns {0, 0}. See [ALayout] for details.
+     *
+     * @see AView::onIntrinsicMeasure
+     */
+    virtual AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height);
+
+    /**
+     * @brief Called by AView::layout after the view has received its final position and size.
+     * @param size final size of the view; equals AView::getSize() at the moment of the call.
+     * @details
+     * Override to react to the size change or to position children by hand. AViewContainerBase positions its children
+     * here by its layout manager, so overriding views that are containers must call the base implementation.
+     *
+     * Calling AView::requestLayout is ignored while onLayout is in progress.
+     *
+     * See [ALayout] for when and how to override this function.
+     *
+     * @see AView::layout
+     * @see AView::onIntrinsicMeasure
+     */
+    virtual void onLayout(glm::ivec2 size);
 
     /**
      * @brief Converts touch screen events to desktop.
@@ -1155,6 +1208,13 @@ protected:
     virtual void commitStyle();
 
 private:
+    /**
+     * @brief Asks our surface to lay this view out as a layout root.
+     * @return true if the surface accepted the request, i.e. the request doesn't have to travel up the hierarchy.
+     * @see AView::isLayoutBoundary
+     */
+    bool enqueueAsLayoutRoot();
+
     /**
      * @brief Animation.
      */
@@ -1248,7 +1308,7 @@ private:
     bool mParentEnabled = true;
     AFieldSignalEmitter<bool> mHasFocus = AFieldSignalEmitter<bool>(focusState, focusAcquired, focusLost, false);
 
-    glm::ivec2 mExpanding = glm::ivec2{0, 0};
+    glm::ivec2 mExpanding = glm::ivec2 { 0, 0 };
     emits<glm::ivec2> mExpandingChanged;
 
     /**
@@ -1272,7 +1332,9 @@ private:
     /**
      * @brief Applies state-dependent styles and invalidates pixel data, layout, repaint if needed.
      */
-    virtual void invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField);
+    virtual void invalidateStateStylesImpl();
+
+    bool mApplyingStyles = false;
 
     void notifyParentChildFocused(const _<AView>& view);
 };
@@ -1280,7 +1342,7 @@ private:
 API_AUI_VIEWS std::ostream& operator<<(std::ostream& os, const AView& view);
 
 template <typename Factory>
-requires aui::not_overloaded_lambda<Factory> && aui::factory<Factory, _<AView>>
+    requires aui::not_overloaded_lambda<Factory> && aui::factory<Factory, _<AView>>
 struct aui::implicit_shared_ptr_ctor<Factory> {
     auto operator()(Factory&& factory) {
         auto view = std::invoke(std::forward<Factory>(factory));

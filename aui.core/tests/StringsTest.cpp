@@ -190,3 +190,41 @@ TEST(Strings, Substr2) {
     EXPECT_EQ(str.utf8().substr(1), ", как твои дела?");
     EXPECT_EQ(str.utf8().substr(1, 3), ", к");
 }
+
+TEST(Strings, TrimSingleSymbol) {
+    EXPECT_EQ(AString("  a b  ").trim(), "a b");
+    EXPECT_EQ(AString("xxaxx").trim('x'), "a");
+    // only the given symbol is removed
+    EXPECT_EQ(AString("\t a \n").trim(), "\t a \n");
+}
+
+TEST(Strings, TrimSet) {
+    EXPECT_EQ(AString("\t a b \r\n").trim(" \t\r\n"), "a b");
+    EXPECT_EQ(AString("xyhixyx").trim("xy"), "hi");
+}
+
+TEST(Strings, TrimSetOrderDoesNotMatter) {
+    // the set is not a prefix/suffix: symbols are removed in any order and quantity
+    EXPECT_EQ(AString("\n \t a \t \n").trim("\t\n "), "a");
+    EXPECT_EQ(AString("\n \t a \t \n").trim(" \n\t"), "a");
+}
+
+TEST(Strings, TrimSetLeftRight) {
+    EXPECT_EQ(AString("\t\n a \t\n").trimLeft(" \t\n"), "a \t\n");
+    EXPECT_EQ(AString("\t\n a \t\n").trimRight(" \t\n"), "\t\n a");
+}
+
+TEST(Strings, TrimSetEdgeCases) {
+    EXPECT_EQ(AString("").trim(" \t"), "");
+    EXPECT_EQ(AString(" \t \t").trim(" \t"), "");
+    EXPECT_EQ(AString("abc").trim(" \t"), "abc");
+    // empty set removes nothing
+    EXPECT_EQ(AString("  a  ").trim(AStringView("")), "  a  ");
+    // inner symbols are untouched
+    EXPECT_EQ(AString(" a  b ").trim(" "), "a  b");
+}
+
+TEST(Strings, TrimSetUnicode) {
+    EXPECT_EQ(AString("🤡 привет 🤡").trim("🤡 "), "привет");
+    EXPECT_EQ(AString("ёёпривет!ё").trim("ё!"), "привет");
+}

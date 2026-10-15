@@ -16,6 +16,7 @@
 #pragma once
 
 #include "IProperty.h"
+#include "AUI/Common/IStringable.h"
 
 namespace ass {
 
@@ -32,7 +33,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<BackgroundSolid>: IPropertyBase {
+        struct API_AUI_VIEWS Property<BackgroundSolid>: IPropertyBase, IStringable {
         private:
             BackgroundSolid mInfo;
 
@@ -50,6 +51,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "BackgroundSolid({})"_format(mInfo.color);
             }
         };
 
