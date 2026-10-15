@@ -35,7 +35,7 @@ class AMenuContainer : public AViewContainerBase {
     glm::ivec2 mOriginPosition;
 
     void onShowSublistMenu(const _<AView>& view, const AVector<AMenuItem>& items) {
-        auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinSize().x, 0);
+        auto pos = mOriginPosition + view->getPosition() + glm::ivec2(measure({}).x, 0);
         mSubWindow = _new<AMenuContainer>(items, pos);
 
         ASurface* window = nullptr;
@@ -48,6 +48,8 @@ class AMenuContainer : public AViewContainerBase {
         surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
         surfaceContainer->addView(mSubWindow);
         mSubWindow->setSurface(surfaceContainer);
+        // measure only once the menu is in the view hierarchy (styles applied)
+        surfaceContainer->setOverlappingSurfaceSize(mSubWindow->measure({}));
 
         mSublistOnHoverDisplayDelay->stop();
     }
@@ -157,6 +159,8 @@ void AWindowMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
     surfaceContainer->addView(menu);
     menu->setSurface(surfaceContainer);
+    // measure only once the menu is in the view hierarchy (styles applied)
+    surfaceContainer->setOverlappingSurfaceSize(menu->measure({}));
     mMenuContainer = menu;
 }
 
