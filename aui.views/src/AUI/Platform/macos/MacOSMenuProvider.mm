@@ -54,34 +54,35 @@ NSString* toNs(const AString& s) {
 }
 
 // Convert an AShortcut into an NSMenuItem keyEquivalent + modifierMask pair.
-// AUI's shortcut uses Ctrl as the "command" modifier; on macOS we map Ctrl→⌘ for
-// idiomatic menu display. This is best-effort — more exotic keys fall through as
-// no key equivalent (the menu still works via the stored onAction callback).
+// Modifiers are taken from the key list itself (not from the display string, which names
+// LSYSTEM "Win"). AUI's Ctrl is mapped to ⌘ as well, as it is the idiomatic menu modifier.
+// This is best-effort — more exotic keys fall through as no key equivalent (the menu still
+// works via the stored onAction callback).
 void applyShortcut(NSMenuItem* item, const AShortcut& shortcut) {
     if (shortcut.empty()) return;
-    const AString display = static_cast<AString>(shortcut);
-    if (display.empty()) return;
 
-    // Parse the last character as the key (common pattern: "Ctrl+Shift+S" → 'S').
-    // The if/else avoids an AString/AStringView conversion ambiguity that fires when
-    // `display` and `display.substr(...)` are mixed in a ternary.
-    const auto plus = display.rfind('+');
+    NSEventModifierFlags mods = 0;
     AString keyPart;
-    if (plus == AString::NPOS) {
-        keyPart = display;
-    } else {
-        keyPart = display.substr(plus + 1);
+    for (const auto key : shortcut.getKeys()) {
+        switch (key) {
+            case AInput::LCONTROL: case AInput::RCONTROL:
+            case AInput::LSYSTEM: case AInput::RSYSTEM:
+                mods |= NSEventModifierFlagCommand;
+                break;
+            case AInput::LSHIFT: case AInput::RSHIFT:
+                mods |= NSEventModifierFlagShift;
+                break;
+            case AInput::LALT: case AInput::RALT:
+                mods |= NSEventModifierFlagOption;
+                break;
+            default:
+                keyPart = AInput::getName(key);
+                break;
+        }
     }
     if (keyPart.empty()) return;
 
-    NSString* keyNs = toNs(keyPart.lowercase());
-    [item setKeyEquivalent:keyNs];
-
-    NSEventModifierFlags mods = 0;
-    if (display.contains("Ctrl"))  mods |= NSEventModifierFlagCommand;
-    if (display.contains("Shift")) mods |= NSEventModifierFlagShift;
-    if (display.contains("Alt"))   mods |= NSEventModifierFlagOption;
-    if (display.contains("Meta"))  mods |= NSEventModifierFlagControl;
+    [item setKeyEquivalent:toNs(keyPart.lowercase())];
     [item setKeyEquivalentModifierMask:mods];
 }
 
