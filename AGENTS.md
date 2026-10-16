@@ -97,6 +97,8 @@ Read the relevant doc before making non-trivial changes:
 - Use `const`, `noexcept`, `[[nodiscard]]` wherever possible.
 - Prefer `#pragma once`. Doxygen comments use `@`-style, not `\`.
 - Avoid macros; when unavoidable, prefix with `AUI_` in `UPPER_SNAKE_CASE`.
+- Own native handles (HMENU, HBITMAP, HICON, ...) with RAII: `std::unique_ptr` with a custom deleter or a wrapper from
+  `aui::win32` (e.g. `Menu`, `Bitmap`). No manual `DestroyMenu`/`DeleteObject`/`DestroyIcon` in hand-written destructors.
 - Prefer concepts over SFINAE. Use assertion helpers `AUI_ASSERT` / `AUI_ASSERTX` (with a helpful tip
   message). Do NOT put algorithm-necessary logic inside asserts (they are stripped in release).
 - **Always use a trailing comma in AUI DSL initializer lists** so `clang-format` formats them nicely:

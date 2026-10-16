@@ -539,20 +539,9 @@ void AWindow::setIcon(const AImage& image) {
   if (!mHandle) return;
   AUI_ASSERT(image.format() & APixelFormat::BYTE);
 
-  if (mIcon) {
-    DestroyIcon(mIcon);
-  }
+  mIcon = aui::win32::imageToIcon(image);
 
-  auto bmpColor = aui::win32::imageRgbToBitmap(image);
-  auto bmpMask = aui::win32::imageRgbToBitmap(image, aui::win32::BitmapMode::A);
-
-  ICONINFO ii;
-  ii.fIcon = TRUE;
-  ii.hbmMask = bmpMask;
-  ii.hbmColor = bmpColor;
-  mIcon = CreateIconIndirect(&ii);
-
-  SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon);
+  SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon.get());
 }
 
 void AWindow::hide() {

@@ -18,34 +18,14 @@
 
 struct CursorCustomImpl: ACursor::Custom {
 public:
-    CursorCustomImpl(AImageView img) {
-        const auto color = aui::win32::imageRgbToBitmap(img, aui::win32::BitmapMode::RGB);
-
-        AImage white(img.size(), APixelFormat::RGBA | APixelFormat::BYTE);
-        white.fill(AColor::WHITE);
-
-        const auto mask = aui::win32::imageRgbToBitmap(white, aui::win32::BitmapMode::A);
-
-        ICONINFO iconinfo       = {0};
-        iconinfo.fIcon          = false;
-        iconinfo.xHotspot       = 0;
-        iconinfo.yHotspot       = 0;
-        iconinfo.hbmMask        = mask;
-        iconinfo.hbmColor       = color;
-
-        mCursor = ::CreateIconIndirect(&iconinfo);
-    }
-
-    ~CursorCustomImpl() {
-        DestroyIcon(mCursor);
-    }
+    CursorCustomImpl(AImageView img) : mCursor(aui::win32::imageToCursor(img)) {}
 
     HCURSOR cursor() const noexcept {
-        return mCursor;
+        return mCursor.get();
     }
 
 private:
-    HCURSOR mCursor;
+    aui::win32::Icon mCursor;
 };
 
 ACursor::ACursor(AImageView image, int size) : mValue(std::make_unique<CursorCustomImpl>(image)), mSize(size) {}
