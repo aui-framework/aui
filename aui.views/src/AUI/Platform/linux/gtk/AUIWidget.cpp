@@ -209,7 +209,21 @@ static void aui_widget_class_init(AUIWidgetClass* klass) {
         AUI_WIDGET_WIDGET(widget)->renderingContext->gtkSnapshot(widget, snapshot);
     };
 
+    GTK_WIDGET_CLASS(klass)->size_allocate = [](GtkWidget* widget, int width, int height, int baseline) {
+        GTK_WIDGET_CLASS(aui_widget_parent_class)->size_allocate(widget, width, height, baseline);
+        // popup windows are popovers attached to this widget; they must be re-positioned along with it.
+        for (auto child = gtk_widget_get_first_child(widget); child; child = gtk_widget_get_next_sibling(child)) {
+            if (g_object_get_data(G_OBJECT(child), "aui-popup") && gtk_widget_get_mapped(child)) {
+                gtk_popover_present(reinterpret_cast<GtkPopover*>(child));
+            }
+        }
+    };
+
     G_OBJECT_CLASS(klass)->dispose = [](GObject* object) {
+        // popups attached to this widget are still owned by their AWindows; just detach them.
+        while (auto child = gtk_widget_get_first_child(GTK_WIDGET(object))) {
+            gtk_widget_unparent(child);
+        }
         auto widget = AUI_WIDGET_WIDGET(object);
         widget->~AUIWidget();
         G_OBJECT_CLASS(aui_widget_parent_class)->dispose(object);

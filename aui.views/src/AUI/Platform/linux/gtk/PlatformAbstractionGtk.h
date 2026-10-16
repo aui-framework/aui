@@ -24,6 +24,26 @@ public:
         return reinterpret_cast<aui::gtk4_fake::GtkWindow*&>(IPlatformAbstraction::nativeHandle(window));
     }
 
+    /**
+     * @brief Native handle of the window as a widget. Either GtkWindow or, for popups, GtkPopover.
+     */
+    static aui::gtk4_fake::GtkWidget* gtkWidget(AWindow& window) {
+        return reinterpret_cast<aui::gtk4_fake::GtkWidget*>(IPlatformAbstraction::nativeHandle(window));
+    }
+
+    /**
+     * @brief GtkWindow of the window; nullptr if the window is a popup.
+     */
+    static aui::gtk4_fake::GtkWindow* nativeWindow(AWindow& window);
+
+    /**
+     * @brief Whether the window is displayed as GtkPopover.
+     * @details
+     * Wayland clients can't position toplevels, but can position popups (xdg_popup). GTK4 exposes them only as
+     * GtkPopover, so AUI windows with WindowStyle::SYS are hosted in a GtkPopover on Wayland.
+     */
+    static bool isPopup(AWindow& window);
+
     PlatformAbstractionGtk();
     ~PlatformAbstractionGtk() override;
     void init() override;
@@ -82,9 +102,16 @@ public:
     static AInput::Key inputFromNative2(unsigned key);
 
 protected:
+    static constexpr auto POPUP_KEY = "aui-popup";
     AGlibPtr<GApplication> mApplication;
     aui::gtk4_fake::GtkWidget* windowManagerInitGtkBox(const IRenderingContext::Init &init) const;
     void windowManagerInitCommon(const IRenderingContext::Init &init, aui::gtk4_fake::GtkWindow* window);
+
+    /**
+     * @brief Creates popover-hosted window if the window is a popup and the display server needs it.
+     * @return true if the window was created.
+     */
+    bool windowManagerInitPopup(const IRenderingContext::Init &init);
     void gtkSetWindowClassHint(RenderingContextGtk* context, aui::gtk4_fake::GtkWindow* gtkWindow);
 
     /**
@@ -98,6 +125,7 @@ protected:
 
 private:
     static constexpr auto TITLEBAR_KEY = "aui-titlebar";
+    void popupSetGeometry(AWindow &window, int x, int y, int width, int height);
     GMainContext* mMainContext;
     
     void setupDpiChangeMonitoring();

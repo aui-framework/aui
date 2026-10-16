@@ -13,6 +13,7 @@
 #include "AUI/Platform/ARenderingContextOptions.h"
 #include "OpenGLRenderingContextGtk.h"
 #include "AUIWidget.h"
+#include "GtkX11Interop.h"
 #include <AUI/Util/ARandom.h>
 #include <AUI/AppInfo.h>
 //#include <adwaita.h>
@@ -25,7 +26,53 @@ using namespace aui::gtk4_fake;
 #if defined(__CLION_IDE__) || defined(__CLION_IDE_)
 #pragma ide diagnostic ignored "LocalValueEscapesScope"
 #endif
+bool PlatformAbstractionGtk::windowManagerInitPopup(const IRenderingContext::Init& init) {
+    if (!(init.ws & WindowStyle::SYS) || init.parent == nullptr || aui::gtk4_x11::isActive()) {
+        // X11 can position and decorate-less toplevels itself.
+        return false;
+    }
+    auto parentContext = dynamic_cast<RenderingContextGtk*>(init.parent->getRenderingContext().get());
+    if (!parentContext || !parentContext->auiWidget()) {
+        return false;
+    }
+
+    static const auto cssOnce = [] {
+        // popover chrome (padding, background, shadow) is meant for standard menus; AUI draws everything itself.
+        auto provider = gtk_css_provider_new();
+        gtk_css_provider_load_from_string(
+            provider,
+            "popover.aui-popup, popover.aui-popup > contents {"
+            "  padding: 0; margin: 0; border: none; border-radius: 0; background: none; box-shadow: none;"
+            "}");
+        gtk_style_context_add_provider_for_display(
+            reinterpret_cast<GdkDisplay*>(gdk_display_get_default()), reinterpret_cast<GtkStyleProvider*>(provider),
+            800 /* GTK_STYLE_PROVIDER_PRIORITY_APPLICATION */);
+        return true;
+    }();
+    (void) cssOnce;
+
+    auto popover = gtk_popover_new();
+    // the window owns a reference so the popover outlives the parent widget disposal.
+    g_object_ref(popover);
+    g_object_set_data(G_OBJECT(popover), POPUP_KEY, reinterpret_cast<gpointer>(1));
+    gtk_widget_add_css_class(popover, "aui-popup");
+    auto popoverHandle = reinterpret_cast<GtkPopover*>(popover);
+    gtk_popover_set_has_arrow(popoverHandle, false);
+    gtk_popover_set_autohide(popoverHandle, false);
+    gtk_popover_set_position(popoverHandle, GTK_POS_BOTTOM);
+    nativeHandle(init.window) = reinterpret_cast<GtkWindow*>(popover);
+    gtk_popover_set_child(popoverHandle, windowManagerInitGtkBox(init));
+    gtk_widget_set_parent(popover, parentContext->auiWidget());
+    // the content is laid out right after the creation, i.e., before the popup gets realized; the scaling has to be
+    // known by that time, otherwise the popup is sized as if the scale was 100%.
+    init.window.updateDpi();
+    return true;
+}
+
 void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingContext::Init& init) {
+    if (windowManagerInitPopup(init)) {
+        return;
+    }
     auto window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(*mApplication)));
     if (!!(init.ws & WindowStyle::NO_TITLEBAR)) {
         // a custom titlebar enables client-side decorations; hiding it leaves the window frame (shadow, resize borders)

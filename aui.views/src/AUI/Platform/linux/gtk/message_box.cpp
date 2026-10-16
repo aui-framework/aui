@@ -93,7 +93,7 @@ AMessageBox::ResultButton PlatformAbstractionGtk::messageBoxShow(
     };
 
     gtk_alert_dialog_choose(
-        dialog, parent ? nativeHandle(*parent) : nullptr, nullptr,
+        dialog, parent ? nativeWindow(*parent) : nullptr, nullptr,
         (GAsyncReadyCallback) +
             [](GtkAlertDialog* source_object, GAsyncResult* res, State* data) {
                 // TODO data->button = gtk_alert_dialog_choose_finish (GTK_ALERT_DIALOG(data->dialog), res, nullptr);

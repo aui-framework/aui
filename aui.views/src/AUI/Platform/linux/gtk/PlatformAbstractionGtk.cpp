@@ -21,6 +21,8 @@
 #include <AUI/Util/ACleanup.h>
 #include <AUI/Util/kAUI.h>
 #include "GtkX11Interop.h"
+#include <algorithm>
+#include <cmath>
 #include <mutex>
 #include <unordered_set>
 
@@ -68,6 +70,23 @@ GdkSurface* surfaceOf(GtkWindow* window) {
     gtk_widget_realize(GTK_WIDGET(window));
     auto native = gtk_widget_get_native(GTK_WIDGET(window));
     return native ? gtk_native_get_surface(native) : nullptr;
+}
+
+/**
+ * @brief Surface which scale applies to the window. Popups take the scale from their parent until they get their own
+ * surface.
+ */
+GdkSurface* scaleSurfaceOf(AWindow& window) {
+    auto widget = PlatformAbstractionGtk::gtkWidget(window);
+    if (auto native = gtk_widget_get_native(widget)) {
+        if (auto surface = gtk_native_get_surface(native)) {
+            return surface;
+        }
+    }
+    if (auto parent = PlatformAbstractionGtk::parentWindow(window)) {
+        return scaleSurfaceOf(*parent);
+    }
+    return nullptr;
 }
 
 GdkDisplay* defaultDisplay() { return reinterpret_cast<GdkDisplay*>(gdk_display_get_default()); }
@@ -127,6 +146,15 @@ void setCursor(AWindow* window, GdkCursor* cursor) {
 }
 
 }   // namespace
+
+GtkWindow* PlatformAbstractionGtk::nativeWindow(AWindow& window) {
+    return isPopup(window) ? nullptr : nativeHandle(window);
+}
+
+bool PlatformAbstractionGtk::isPopup(AWindow& window) {
+    auto widget = gtkWidget(window);
+    return widget != nullptr && g_object_get_data(G_OBJECT(widget), POPUP_KEY) != nullptr;
+}
 
 PlatformAbstractionGtk::PlatformAbstractionGtk() : mMainContext(g_main_context_default()) {
     handle = dlopen("libgtk-4.so.1", RTLD_LAZY | RTLD_GLOBAL);
@@ -278,7 +306,11 @@ void PlatformAbstractionGtk::desktopSetMousePosition(glm::ivec2 pos) {
     }
 }
 void PlatformAbstractionGtk::windowSetStyle(AWindow &window, WindowStyle ws) {
-    auto handle = nativeHandle(window);
+    auto handle = nativeWindow(window);
+    if (!handle) {
+        // popups have neither decorations nor window management.
+        return;
+    }
     const bool isSys = bool(ws & WindowStyle::SYS);
     gtk_window_set_resizable(handle, !bool(ws & WindowStyle::NO_RESIZE));
     // GTK4 has no way to hide only minimize/maximize buttons; non-resizable windows have no maximize button.
@@ -312,18 +344,27 @@ void PlatformAbstractionGtk::gtkSetTitlebar(GtkWindow* window, GtkWidget* titleb
 }
 
 float PlatformAbstractionGtk::windowFetchDpiFromSystem(AWindow &window) {
-    auto surface = gtk_native_get_surface(gtk_widget_get_native(GTK_WIDGET(nativeHandle(window))));
+    auto surface = scaleSurfaceOf(window);
     if (surface == nullptr) {
         return 1.0f;
     }
     return float(gdk_surface_get_scale(surface));
 }
 void PlatformAbstractionGtk::windowRestore(AWindow &window) {
-    gtk_window_unminimize(nativeHandle(window));
-    gtk_window_unmaximize(nativeHandle(window));
+    if (auto handle = nativeWindow(window)) {
+        gtk_window_unminimize(handle);
+        gtk_window_unmaximize(handle);
+    }
 }
-void PlatformAbstractionGtk::windowMinimize(AWindow &window) { gtk_window_minimize(nativeHandle(window)); }
+void PlatformAbstractionGtk::windowMinimize(AWindow &window) {
+    if (auto handle = nativeWindow(window)) {
+        gtk_window_minimize(handle);
+    }
+}
 bool PlatformAbstractionGtk::windowIsMinimized(AWindow &window) const {
+    if (isPopup(window)) {
+        return false;
+    }
     if (!aui::gtk4_x11::isActive()) {
         // wayland does not tell clients whether they're minimized
         unsupportedOnWayland("windowIsMinimized");
@@ -338,10 +379,19 @@ bool PlatformAbstractionGtk::windowIsMinimized(AWindow &window) const {
     return bool(state & GDK_TOPLEVEL_STATE_MINIMIZED);
 }
 bool PlatformAbstractionGtk::windowIsMaximized(AWindow &window) const {
-    return gtk_window_is_maximized(nativeHandle(window));
+    auto handle = nativeWindow(window);
+    return handle && gtk_window_is_maximized(handle);
 }
-void PlatformAbstractionGtk::windowMaximize(AWindow &window) { gtk_window_maximize(nativeHandle(window)); }
+void PlatformAbstractionGtk::windowMaximize(AWindow &window) {
+    if (auto handle = nativeWindow(window)) {
+        gtk_window_maximize(handle);
+    }
+}
 glm::ivec2 PlatformAbstractionGtk::windowGetPosition(AWindow &window) const {
+    if (isPopup(window)) {
+        // popups are positioned relative to their parent
+        return glm::ivec2(0);
+    }
     if (auto p = aui::gtk4_x11::windowPosition(surfaceOf(nativeHandle(window)))) {
         return *p;
     }
@@ -357,10 +407,18 @@ void PlatformAbstractionGtk::windowFlagRedraw(AWindow &window) {
 }
 
 void PlatformAbstractionGtk::windowShow(AWindow &window) {
+    if (isPopup(window)) {
+        gtk_popover_popup(reinterpret_cast<GtkPopover*>(gtkWidget(window)));
+        return;
+    }
     gtk_window_present(nativeHandle(window));
 }
 
 void PlatformAbstractionGtk::windowActivate(AWindow &window, const AString& activationToken) {
+    if (isPopup(window)) {
+        windowShow(window);
+        return;
+    }
     if (!activationToken.empty()) {
         // xdg-activation token (Wayland) / startup notification id (X11) of the launched instance
         gtk_window_set_startup_id(nativeHandle(window), activationToken.toStdString().c_str());
@@ -369,9 +427,38 @@ void PlatformAbstractionGtk::windowActivate(AWindow &window, const AString& acti
 }
 
 void PlatformAbstractionGtk::windowSetSize(AWindow &window, glm::ivec2 size) {
+    if (isPopup(window)) {
+        const auto position = window.getPosition();
+        popupSetGeometry(window, position.x, position.y, size.x, size.y);
+        return;
+    }
     gtk_window_set_default_size(nativeHandle(window), size.x, size.y);
 }
+void PlatformAbstractionGtk::popupSetGeometry(AWindow &window, int x, int y, int width, int height) {
+    auto popover = gtkWidget(window);
+    auto context = dynamic_cast<RenderingContextGtk*>(window.getRenderingContext().get());
+    auto surface = scaleSurfaceOf(window);
+    // AUI works in physical pixels, GTK in logical ones.
+    const float scale = surface ? float(gdk_surface_get_scale(surface)) : 1.f;
+    auto logical = [&](int i) { return int(std::ceil(float(i) / scale)); };
+    if (context && context->auiWidget()) {
+        gtk_widget_set_size_request(context->auiWidget(), std::max(logical(width), 1), std::max(logical(height), 1));
+    }
+    // the popover is placed right below the zero-height rectangle, horizontally centered on it; so the rectangle
+    // is as wide as the popup and its top-left corner is the desired position.
+    GdkRectangle rect { .x = int(std::floor(float(x) / scale)), .y = int(std::floor(float(y) / scale)),
+                        .width = logical(width), .height = 0 };
+    gtk_popover_set_pointing_to(reinterpret_cast<GtkPopover*>(popover), &rect);
+    if (gtk_widget_get_mapped(popover)) {
+        gtk_popover_present(reinterpret_cast<GtkPopover*>(popover));
+    }
+}
+
 void PlatformAbstractionGtk::windowSetGeometry(AWindow &window, int x, int y, int width, int height) {
+    if (isPopup(window)) {
+        popupSetGeometry(window, x, y, width, height);
+        return;
+    }
     auto handle = nativeHandle(window);
     gtk_window_set_default_size(handle, width, height);
     const bool isPopup = (window.windowStyle() & WindowStyle::SYS) == WindowStyle::SYS;
@@ -382,12 +469,19 @@ void PlatformAbstractionGtk::windowSetGeometry(AWindow &window, int x, int y, in
 }
 
 void PlatformAbstractionGtk::windowSetIcon(AWindow &window, const AImage &image) {
+    if (isPopup(window)) {
+        return;
+    }
     // wayland takes the icon from the .desktop file matching the application id only.
     if (!aui::gtk4_x11::windowSetIcon(surfaceOf(nativeHandle(window)), image)) {
         unsupportedOnWayland("windowSetIcon");
     }
 }
 void PlatformAbstractionGtk::windowHide(AWindow &window) {
+    if (isPopup(window)) {
+        gtk_popover_popdown(reinterpret_cast<GtkPopover*>(gtkWidget(window)));
+        return;
+    }
     gtk_widget_set_visible(GTK_WIDGET(nativeHandle(window)), false);
 }
 void PlatformAbstractionGtk::windowBlockUserInput(AWindow &window, bool blockUserInput) {
@@ -397,6 +491,9 @@ void PlatformAbstractionGtk::windowAllowDragNDrop(AWindow &window) {}
 void PlatformAbstractionGtk::windowShowTouchscreenKeyboardImpl(AWindow &window) {}
 void PlatformAbstractionGtk::windowHideTouchscreenKeyboardImpl(AWindow &window) {}
 void PlatformAbstractionGtk::windowMoveToCenter(AWindow &window) {
+    if (isPopup(window)) {
+        return;
+    }
     auto parent = parentWindow(window);
     if (!aui::gtk4_x11::windowMoveToCenter(
             surfaceOf(nativeHandle(window)), parent ? surfaceOf(nativeHandle(*parent)) : nullptr)) {
@@ -404,9 +501,16 @@ void PlatformAbstractionGtk::windowMoveToCenter(AWindow &window) {
     }
 }
 void PlatformAbstractionGtk::windowQuit(AWindow &window) {
+    if (isPopup(window)) {
+        gtk_popover_popdown(reinterpret_cast<GtkPopover*>(gtkWidget(window)));
+        return;
+    }
     gtk_window_close(nativeHandle(window));
 }
 void PlatformAbstractionGtk::windowAnnounceMinMaxSize(AWindow &window) {
+    if (isPopup(window)) {
+        return;
+    }
     auto handle = nativeHandle(window);
     const auto minSize = window.getMinimumSize();
     gtk_widget_set_size_request(GTK_WIDGET(handle), minSize.x > 0 ? minSize.x : -1, minSize.y > 0 ? minSize.y : -1);
@@ -420,6 +524,9 @@ void PlatformAbstractionGtk::windowAnnounceMinMaxSize(AWindow &window) {
 }
 
 void PlatformAbstractionGtk::windowBeginMove(AWindow &window) {
+    if (isPopup(window)) {
+        return;
+    }
     auto surface = surfaceOf(nativeHandle(window));
     if (!surface || !lastButtonPress.device) {
         return;
@@ -431,6 +538,9 @@ void PlatformAbstractionGtk::windowBeginMove(AWindow &window) {
 }
 
 void PlatformAbstractionGtk::windowBeginResize(AWindow &window, ResizeEdge edge) {
+    if (isPopup(window)) {
+        return;
+    }
     auto surface = surfaceOf(nativeHandle(window));
     if (!surface || !lastButtonPress.device) {
         return;
@@ -454,14 +564,15 @@ void PlatformAbstractionGtk::windowBeginResize(AWindow &window, ResizeEdge edge)
 }
 
 bool PlatformAbstractionGtk::windowHasNativeResizeBorders(AWindow &window) {
-    return gtk_window_get_decorated(nativeHandle(window));
+    auto handle = nativeWindow(window);
+    return handle && gtk_window_get_decorated(handle);
 }
 
 float PlatformAbstractionGtk::windowGetDpiRatio(AWindow &window) {
     float scale = 1.0f;
     
     // Try to get surface scale first
-    auto surface = gtk_native_get_surface(gtk_widget_get_native(GTK_WIDGET(nativeHandle(window))));
+    auto surface = scaleSurfaceOf(window);
     if (surface != nullptr) {
         scale = gdk_surface_get_scale(surface);
     }

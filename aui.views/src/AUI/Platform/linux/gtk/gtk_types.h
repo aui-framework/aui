@@ -245,7 +245,16 @@ using GtkImage = struct _GtkImage;
 using GtkFileFilter = struct _GtkFileFilter;
 using GtkPrinter = struct _GtkPrinter;
 using GtkPrintBackend = struct _GtkPrintBackend;
-using GdkRectangle = struct _GdkRectangle;
+using GdkRectangle = struct _GdkRectangle {
+    int x;
+    int y;
+    int width;
+    int height;
+};
+using GtkPopover = struct _GtkPopover {
+    GtkWidget parent_instance;
+};
+typedef enum { GTK_POS_LEFT, GTK_POS_RIGHT, GTK_POS_TOP, GTK_POS_BOTTOM } GtkPositionType;
 using GtkIMMulticontext = struct _GtkIMMulticontext;
 using GtkPageSetup = struct _GtkPageSetup;
 using GtkPaperSize = struct _GtkPaperSize;
