@@ -22,6 +22,8 @@
 #include "AUI/Platform/macos/MacOSMenuProvider.h"
 #elif AUI_PLATFORM_WIN
 #include "AUI/Platform/win32/Win32MenuProvider.h"
+#elif AUI_PLATFORM_LINUX
+#include "AUI/Platform/linux/gtk/GtkMenuProvider.h"
 #endif
 
 namespace {
@@ -57,6 +59,12 @@ IMenuProvider& AMenu::provider() {
 #elif AUI_PLATFORM_WIN
         gCachedProvider = std::make_unique<Win32MenuProvider>();
         return *gCachedProvider;
+#elif AUI_PLATFORM_LINUX
+        // GTK4 / libadwaita; X11 and others have no native menu.
+        if (GtkMenuProvider::isSupported()) {
+            gCachedProvider = std::make_unique<GtkMenuProvider>();
+            return *gCachedProvider;
+        }
 #endif
         // No system-menu implementation on this platform — fall through to AUI-drawn.
     }

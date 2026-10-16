@@ -378,4 +378,8 @@ GtkWidget* gtk_widget_get_next_sibling(GtkWidget* widget);
 void gtk_widget_add_css_class(GtkWidget* widget, const char* css_class);
 void gtk_css_provider_load_from_string(GtkCssProvider* css_provider, const char* string);
 
+GtkWidget* gtk_popover_menu_new_from_model(GMenuModel* model);
+void gtk_widget_insert_action_group(GtkWidget* widget, const char* name, GActionGroup* group);
+void gtk_widget_set_halign(GtkWidget* widget, GtkAlign align);
+
 // aui.toolbox: }

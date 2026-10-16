@@ -39,11 +39,12 @@ public:
     /**
      * @brief Switches context menu rendering between the platform-native and AUI-drawn providers.
      * @details
-     * By default (opt out) AUI uses native `NSMenu` on macOS and `HMENU` (`TrackPopupMenuEx`) on
-     * Windows — giving native appearance, VoiceOver/Narrator integration, and system-level animations.
+     * By default (opt out) AUI uses native `NSMenu` on macOS, `HMENU` (`TrackPopupMenuEx`) on
+     * Windows and `GtkPopoverMenu` on Linux with GTK4/libadwaita — giving native appearance,
+     * screen reader integration, and system-level animations.
      * Calling `setUseSystemMenus(false)` opts out and makes AUI draw its own menus for cross-platform
-     * theme consistency. On Linux/X11 there is no system-wide native context menu API; this flag is
-     * a no-op and the AUI-drawn provider is always used.
+     * theme consistency. On Linux without GTK4 (i.e., plain X11) there is no native context menu API; this flag
+     * is a no-op and the AUI-drawn provider is always used.
      * Call from the UI thread; the cached provider is swapped without synchronization.
      */
     static void setUseSystemMenus(bool enabled = true);

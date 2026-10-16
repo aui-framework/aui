@@ -211,9 +211,10 @@ static void aui_widget_class_init(AUIWidgetClass* klass) {
 
     GTK_WIDGET_CLASS(klass)->size_allocate = [](GtkWidget* widget, int width, int height, int baseline) {
         GTK_WIDGET_CLASS(aui_widget_parent_class)->size_allocate(widget, width, height, baseline);
-        // popup windows are popovers attached to this widget; they must be re-positioned along with it.
+        // popovers attached to this widget (popup windows, native menus) must be re-positioned and re-sized along with
+        // it; GTK doesn't do that for custom widgets without a layout manager.
         for (auto child = gtk_widget_get_first_child(widget); child; child = gtk_widget_get_next_sibling(child)) {
-            if (g_object_get_data(G_OBJECT(child), "aui-popup") && gtk_widget_get_mapped(child)) {
+            if (gtk_widget_get_mapped(child)) {
                 gtk_popover_present(reinterpret_cast<GtkPopover*>(child));
             }
         }
