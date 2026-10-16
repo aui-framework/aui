@@ -11,6 +11,7 @@
 
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/CommonRenderingContext.h"
 #include "AUI/Thread/AThread.h"
 #include "AUI/GL/OpenGLRenderer.h"
@@ -37,6 +38,11 @@ void AWindow::quit() {
 }
 
 void AWindow::setWindowStyle(WindowStyle ws) {
+    if (dynamic_cast<ACustomWindow*>(this)) {
+        // custom windows (including ACustomCaptionWindow) draw the caption themselves; whatever style the user sets,
+        // the system one must stay hidden.
+        ws |= WindowStyle::NO_TITLEBAR;
+    }
     mWindowStyle = ws;
     if (!mHandle) return;
     IPlatformAbstraction::current().windowSetStyle(*this, ws);

@@ -121,6 +121,13 @@ static void aui_widget_init(AUIWidget* myWidget) {
                 }
 
                 case GDK_BUTTON_PRESS: {
+                    if (auto pa = dynamic_cast<PlatformAbstractionGtk*>(IPlatformAbstraction::currentSafe())) {
+                        auto& press = pa->lastButtonPress;
+                        press.device = gdk_event_get_device(event);
+                        press.button = gdk_button_event_get_button(event);
+                        press.time = gdk_event_get_time(event);
+                        gdk_event_get_position(event, &press.x, &press.y);
+                    }
                     auto position = getEventPosition(event, GTK_WIDGET(widget));
 
                     widget->renderingContext->window().onPointerPressed(APointerPressedEvent {

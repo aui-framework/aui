@@ -16,6 +16,13 @@
 #include <AUI/AppInfo.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Platform/ASurface.h>
+#include <AUI/Platform/AStacktrace.h>
+#include <AUI/Logging/ALogger.h>
+#include <AUI/Util/ACleanup.h>
+#include <AUI/Util/kAUI.h>
+#include "GtkX11Interop.h"
+#include <mutex>
+#include <unordered_set>
 
 // hack: we sort of implementing g_application_run here.
 // particularly:
@@ -31,6 +38,93 @@ extern void* handle;
 }
 
 using namespace aui::gtk4_fake;
+
+
+namespace {
+
+/**
+ * Wayland deliberately does not let clients do some things (positioning windows, warping pointer, etc). Report such
+ * attempts with a stacktrace (once per feature) so the caller can be fixed or made aware.
+ */
+void unsupportedOnWayland(const char* feature) {
+    static std::mutex mutex;
+    static std::unordered_set<std::string> reported;
+    {
+        std::lock_guard lock(mutex);
+        if (!reported.insert(feature).second) {
+            return;
+        }
+    }
+    ALogger::err("PlatformAbstractionGtk")
+        << feature << " is not supported by the current display server (Wayland) and is ignored\n"
+        << AStacktrace::capture(1);
+}
+
+GdkSurface* surfaceOf(GtkWindow* window) {
+    if (window == nullptr) {
+        return nullptr;
+    }
+    // surface exists only after the window is realized; realizing does not show the window.
+    gtk_widget_realize(GTK_WIDGET(window));
+    auto native = gtk_widget_get_native(GTK_WIDGET(window));
+    return native ? gtk_native_get_surface(native) : nullptr;
+}
+
+GdkDisplay* defaultDisplay() { return reinterpret_cast<GdkDisplay*>(gdk_display_get_default()); }
+
+class CursorGtk : public ACursor::Custom {
+public:
+    explicit CursorGtk(AGlibPtr<GdkCursor> cursor) : mCursor(std::move(cursor)) {}
+    [[nodiscard]] GdkCursor* handle() const noexcept { return mCursor.value(); }
+
+private:
+    AGlibPtr<GdkCursor> mCursor;
+};
+
+AGlibPtr<GdkCursor> createCursorFromImage(AImageView img) {
+    std::vector<uint8_t> pixels(size_t(img.width()) * img.height() * 4);
+    static constexpr auto FORMAT = APixelFormat::RGBA | APixelFormat::BYTE;
+    AFormattedImageView<FORMAT> destination(
+        AByteBufferView(reinterpret_cast<const char*>(pixels.data()), pixels.size()), img.size());
+    img.visit([&](const auto& source) {
+        using source_image_t = std::decay_t<decltype(source)>;
+        using destination_image_t = std::decay_t<decltype(destination)>;
+
+        static constexpr auto sourceFormat = (APixelFormat::Value) source_image_t::FORMAT;
+        static constexpr auto destinationFormat = (APixelFormat::Value) destination_image_t::FORMAT;
+
+        std::transform(
+            source.begin(), source.end(), const_cast<destination_image_t::Color*>(destination.begin()),
+            aui::pixel_format::convert<sourceFormat, destinationFormat>);
+    });
+    auto bytes = g_bytes_new(pixels.data(), pixels.size());
+    auto texture = AGlibPtr<GdkTexture>(
+        gdk_memory_texture_new(img.width(), img.height(), GDK_MEMORY_R8G8B8A8, bytes, size_t(img.width()) * 4));
+    g_bytes_unref(bytes);
+    return AGlibPtr<GdkCursor>(gdk_cursor_new_from_texture(texture.value(), 0, 0, nullptr));
+}
+
+AGlibPtr<GdkCursor> createSystemCursor(ACursor::System s) {
+    // https://www.w3.org/TR/css-ui-4/#cursor
+    const char* name = "default";
+    switch (s) {
+        case ACursor::POINTER: name = "pointer"; break;
+        case ACursor::TEXT: name = "text"; break;
+        case ACursor::EW_RESIZE: name = "ew-resize"; break;
+        case ACursor::NS_RESIZE: name = "ns-resize"; break;
+        case ACursor::MOVE: name = "move"; break;
+        default: break;
+    }
+    return AGlibPtr<GdkCursor>(gdk_cursor_new_from_name(name, nullptr));
+}
+
+void setCursor(AWindow* window, GdkCursor* cursor) {
+    if (auto handle = PlatformAbstractionGtk::nativeHandle(*window)) {
+        gtk_widget_set_cursor(GTK_WIDGET(handle), cursor);
+    }
+}
+
+}   // namespace
 
 PlatformAbstractionGtk::PlatformAbstractionGtk() : mMainContext(g_main_context_default()) {
     handle = dlopen("libgtk-4.so.1", RTLD_LAZY | RTLD_GLOBAL);
@@ -85,19 +179,118 @@ PlatformAbstractionGtk::~PlatformAbstractionGtk() {
     g_main_context_release(mMainContext);
 }
 
-_<ACursor::Custom> PlatformAbstractionGtk::createCustomCursor(AImageView image) { return _<ACursor::Custom>(); }
-void PlatformAbstractionGtk::applyNativeCursor(const ACursor &cursor, AWindow *pWindow) {}
-void PlatformAbstractionGtk::setClipboardText(const AString &text) {}
-AString PlatformAbstractionGtk::getClipboardText() { return AString(); }
-glm::ivec2 PlatformAbstractionGtk::desktopGetMousePosition() { return glm::ivec2(); }
-void PlatformAbstractionGtk::desktopSetMousePosition(glm::ivec2 pos) {}
+_<ACursor::Custom> PlatformAbstractionGtk::createCustomCursor(AImageView image) {
+    return _new<CursorGtk>(createCursorFromImage(image));
+}
+
+void PlatformAbstractionGtk::applyNativeCursor(const ACursor &cursor, AWindow *pWindow) {
+    std::visit(
+        aui::lambda_overloaded {
+          [&](ACursor::System s) { setCursor(pWindow, createSystemCursor(s).value()); },
+          [&](const _<ACursor::Custom>& custom) {
+              if (auto impl = _cast<CursorGtk>(custom)) {
+                  setCursor(pWindow, impl->handle());
+              }
+          },
+          [&](const _<IDrawable>& drawable) {
+              static AMap<_<IDrawable>, AMap<int, _<CursorGtk>>> cache;
+              AUI_DO_ONCE {
+                  ACleanup::afterEntry([&] { cache.clear(); });
+              }
+              auto custom = cache[drawable].getOrInsert(int(pWindow->getDpiRatio() * 10), [&] {
+                  return _new<CursorGtk>(createCursorFromImage(
+                      drawable->rasterize(glm::ivec2(cursor.size() * pWindow->getDpiRatio()))));
+              });
+              setCursor(pWindow, custom->handle());
+          },
+        },
+        cursor.value());
+}
+
+void PlatformAbstractionGtk::setClipboardText(const AString &text) {
+    if (auto display = defaultDisplay()) {
+        gdk_clipboard_set_text(gdk_display_get_clipboard(display), text.toStdString().c_str());
+    }
+}
+
+AString PlatformAbstractionGtk::getClipboardText() {
+    auto display = defaultDisplay();
+    if (!display) {
+        return {};
+    }
+    // gdk clipboard is asynchronous only; AUI expects a synchronous result. Spin the main loop until it's done.
+    struct State {
+        bool done = false;
+        bool abandoned = false;
+        std::string text;
+    };
+    auto state = new State;
+    auto clipboard = gdk_display_get_clipboard(display);
+    gdk_clipboard_read_text_async(
+        clipboard, nullptr,
+        +[](GObject* source, GAsyncResult* res, gpointer userData) {
+            auto state = static_cast<State*>(userData);
+            if (char* text = gdk_clipboard_read_text_finish(reinterpret_cast<GdkClipboard*>(source), res, nullptr)) {
+                state->text = text;
+                g_free(text);
+            }
+            if (state->abandoned) {
+                delete state;
+                return;
+            }
+            state->done = true;
+        },
+        state);
+
+    // the clipboard owner might be unresponsive.
+    struct Timeout { bool expired = false; } timeout;
+    auto timeoutSource = g_timeout_add(
+        2000, +[](gpointer data) -> gboolean { static_cast<Timeout*>(data)->expired = true; return false; }, &timeout);
+    while (!state->done && !timeout.expired) {
+        g_main_context_iteration(mMainContext, true);
+    }
+    if (!timeout.expired) {
+        g_source_remove(timeoutSource);
+    }
+    if (!state->done) {
+        state->abandoned = true; // callback frees the state
+        ALogger::warn("PlatformAbstractionGtk") << "Timed out waiting for clipboard contents";
+        return {};
+    }
+    AString result = AString::fromUtf8(state->text);
+    delete state;
+    return result;
+}
+
+glm::ivec2 PlatformAbstractionGtk::desktopGetMousePosition() {
+    if (auto p = aui::gtk4_x11::pointerPosition()) {
+        return *p;
+    }
+    unsupportedOnWayland("desktopGetMousePosition");
+    return glm::ivec2(0);
+}
+
+void PlatformAbstractionGtk::desktopSetMousePosition(glm::ivec2 pos) {
+    if (!aui::gtk4_x11::warpPointer(pos)) {
+        unsupportedOnWayland("desktopSetMousePosition");
+    }
+}
 void PlatformAbstractionGtk::windowSetStyle(AWindow &window, WindowStyle ws) {
-    gtk_window_set_resizable(nativeHandle(window), !bool(ws & WindowStyle::NO_RESIZE));
-    gtk_window_set_modal(nativeHandle(window), bool(ws & WindowStyle::NO_MINIMIZE_MAXIMIZE));
-    if (bool(ws & WindowStyle::MODAL) && parentWindow(window)) {
-        gtk_window_set_transient_for(nativeHandle(window), nativeHandle(*parentWindow(window)));
+    auto handle = nativeHandle(window);
+    const bool isSys = bool(ws & WindowStyle::SYS);
+    gtk_window_set_resizable(handle, !bool(ws & WindowStyle::NO_RESIZE));
+    // GTK4 has no way to hide only minimize/maximize buttons; non-resizable windows have no maximize button.
+    // NO_TITLEBAR: GTK has no "hide the title strip but keep system buttons"; falls back to client-side decorations
+    // of ACustomWindow, same as NO_DECORATORS.
+    gtk_window_set_decorated(handle, !(ws & (WindowStyle::NO_DECORATORS | WindowStyle::NO_TITLEBAR | WindowStyle::SYS)));
+    gtk_window_set_modal(handle, (ws & WindowStyle::MODAL) == WindowStyle::MODAL);
+    if (isSys) {
+        gtk_window_set_deletable(handle, false);
+    }
+    if ((bool(ws & WindowStyle::MODAL) || isSys) && parentWindow(window)) {
+        gtk_window_set_transient_for(handle, nativeHandle(*parentWindow(window)));
     } else {
-        gtk_window_set_transient_for(nativeHandle(window), nullptr);
+        gtk_window_set_transient_for(handle, nullptr);
     }
 }
 float PlatformAbstractionGtk::windowFetchDpiFromSystem(AWindow &window) {
@@ -107,12 +300,36 @@ float PlatformAbstractionGtk::windowFetchDpiFromSystem(AWindow &window) {
     }
     return float(gdk_surface_get_scale(surface));
 }
-void PlatformAbstractionGtk::windowRestore(AWindow &window) {}
-void PlatformAbstractionGtk::windowMinimize(AWindow &window) {}
-bool PlatformAbstractionGtk::windowIsMinimized(AWindow &window) const { return false; }
-bool PlatformAbstractionGtk::windowIsMaximized(AWindow &window) const { return false; }
-void PlatformAbstractionGtk::windowMaximize(AWindow &window) {}
-glm::ivec2 PlatformAbstractionGtk::windowGetPosition(AWindow &window) const { return glm::ivec2(); }
+void PlatformAbstractionGtk::windowRestore(AWindow &window) {
+    gtk_window_unminimize(nativeHandle(window));
+    gtk_window_unmaximize(nativeHandle(window));
+}
+void PlatformAbstractionGtk::windowMinimize(AWindow &window) { gtk_window_minimize(nativeHandle(window)); }
+bool PlatformAbstractionGtk::windowIsMinimized(AWindow &window) const {
+    if (!aui::gtk4_x11::isActive()) {
+        // wayland does not tell clients whether they're minimized
+        unsupportedOnWayland("windowIsMinimized");
+        return false;
+    }
+    auto surface = surfaceOf(nativeHandle(window));
+    if (!surface) {
+        return false;
+    }
+    unsigned state = 0;
+    g_object_get(surface, "state", &state, nullptr);
+    return bool(state & GDK_TOPLEVEL_STATE_MINIMIZED);
+}
+bool PlatformAbstractionGtk::windowIsMaximized(AWindow &window) const {
+    return gtk_window_is_maximized(nativeHandle(window));
+}
+void PlatformAbstractionGtk::windowMaximize(AWindow &window) { gtk_window_maximize(nativeHandle(window)); }
+glm::ivec2 PlatformAbstractionGtk::windowGetPosition(AWindow &window) const {
+    if (auto p = aui::gtk4_x11::windowPosition(surfaceOf(nativeHandle(window)))) {
+        return *p;
+    }
+    unsupportedOnWayland("windowGetPosition");
+    return glm::ivec2(0);
+}
 void PlatformAbstractionGtk::windowFlagRedraw(AWindow &window) {
     window.getThread()->enqueue([&window] {
       if (auto ctx = dynamic_cast<RenderingContextGtk*>(window.getRenderingContext().get())) {
@@ -133,19 +350,67 @@ void PlatformAbstractionGtk::windowActivate(AWindow &window, const AString& acti
     gtk_window_present(nativeHandle(window));
 }
 
-void PlatformAbstractionGtk::windowSetSize(AWindow &window, glm::ivec2 size) {}
-void PlatformAbstractionGtk::windowSetGeometry(AWindow &window, int x, int y, int width, int height) {}
-void PlatformAbstractionGtk::windowSetIcon(AWindow &window, const AImage &image) {}
-void PlatformAbstractionGtk::windowHide(AWindow &window) {}
-void PlatformAbstractionGtk::windowBlockUserInput(AWindow &window, bool blockUserInput) {}
+void PlatformAbstractionGtk::windowSetSize(AWindow &window, glm::ivec2 size) {
+    gtk_window_set_default_size(nativeHandle(window), size.x, size.y);
+}
+void PlatformAbstractionGtk::windowSetGeometry(AWindow &window, int x, int y, int width, int height) {
+    auto handle = nativeHandle(window);
+    gtk_window_set_default_size(handle, width, height);
+    const bool isPopup = (window.windowStyle() & WindowStyle::SYS) == WindowStyle::SYS;
+    if (!aui::gtk4_x11::windowMoveResize(
+            surfaceOf(handle), x, y, width, height, isPopup && !gtk_widget_get_mapped(GTK_WIDGET(handle)))) {
+        unsupportedOnWayland("windowSetGeometry (position)");
+    }
+}
+
+void PlatformAbstractionGtk::windowSetIcon(AWindow &window, const AImage &image) {
+    // wayland takes the icon from the .desktop file matching the application id only.
+    if (!aui::gtk4_x11::windowSetIcon(surfaceOf(nativeHandle(window)), image)) {
+        unsupportedOnWayland("windowSetIcon");
+    }
+}
+void PlatformAbstractionGtk::windowHide(AWindow &window) {
+    gtk_widget_set_visible(GTK_WIDGET(nativeHandle(window)), false);
+}
+void PlatformAbstractionGtk::windowBlockUserInput(AWindow &window, bool blockUserInput) {
+    gtk_widget_set_sensitive(GTK_WIDGET(nativeHandle(window)), !blockUserInput);
+}
 void PlatformAbstractionGtk::windowAllowDragNDrop(AWindow &window) {}
 void PlatformAbstractionGtk::windowShowTouchscreenKeyboardImpl(AWindow &window) {}
 void PlatformAbstractionGtk::windowHideTouchscreenKeyboardImpl(AWindow &window) {}
-void PlatformAbstractionGtk::windowMoveToCenter(AWindow &window) {}
+void PlatformAbstractionGtk::windowMoveToCenter(AWindow &window) {
+    auto parent = parentWindow(window);
+    if (!aui::gtk4_x11::windowMoveToCenter(
+            surfaceOf(nativeHandle(window)), parent ? surfaceOf(nativeHandle(*parent)) : nullptr)) {
+        unsupportedOnWayland("windowMoveToCenter");
+    }
+}
 void PlatformAbstractionGtk::windowQuit(AWindow &window) {
     gtk_window_close(nativeHandle(window));
 }
-void PlatformAbstractionGtk::windowAnnounceMinMaxSize(AWindow &window) {}
+void PlatformAbstractionGtk::windowAnnounceMinMaxSize(AWindow &window) {
+    auto handle = nativeHandle(window);
+    const auto minSize = window.getMinimumSize();
+    gtk_widget_set_size_request(GTK_WIDGET(handle), minSize.x > 0 ? minSize.x : -1, minSize.y > 0 ? minSize.y : -1);
+    const auto maxSize = window.getMaxSize();
+    if (maxSize.x == -1 && maxSize.y == -1) {
+        return;
+    }
+    if (!aui::gtk4_x11::windowSetMaxSize(surfaceOf(handle), maxSize)) {
+        unsupportedOnWayland("windowAnnounceMinMaxSize (maximum size)");
+    }
+}
+
+void PlatformAbstractionGtk::windowBeginMove(AWindow &window) {
+    auto surface = surfaceOf(nativeHandle(window));
+    if (!surface || !lastButtonPress.device) {
+        return;
+    }
+    // works on both X11 and Wayland: gdk finds the matching serial by device and timestamp.
+    gdk_toplevel_begin_move(
+        reinterpret_cast<GdkToplevel*>(surface), lastButtonPress.device, int(lastButtonPress.button),
+        lastButtonPress.x, lastButtonPress.y, lastButtonPress.time);
+}
 
 float PlatformAbstractionGtk::windowGetDpiRatio(AWindow &window) {
     float scale = 1.0f;

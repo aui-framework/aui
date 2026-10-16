@@ -59,6 +59,18 @@ public:
     void windowMoveToCenter(AWindow &window) override;
     void windowQuit(AWindow &window) override;
     void windowAnnounceMinMaxSize(AWindow &window) override;
+    void windowBeginMove(AWindow &window) override;
+
+    /**
+     * @brief The latest button press; required by the window manager to start interactive move.
+     */
+    struct LastButtonPress {
+        aui::gtk4_fake::GdkDevice* device = nullptr;
+        unsigned button = 0;
+        double x = 0;
+        double y = 0;
+        uint32_t time = 0;
+    } lastButtonPress;
     void windowManagerInitNativeWindow(const IRenderingContext::Init &init) override;
     float windowGetDpiRatio(AWindow &window) override;
     AMessageBox::ResultButton messageBoxShow(

@@ -87,6 +87,14 @@ public:
     virtual void windowMoveToCenter(AWindow& window) = 0;
     virtual void windowQuit(AWindow& window) = 0;
     virtual void windowAnnounceMinMaxSize(AWindow& window) = 0;
+
+    /**
+     * @brief Hands the window drag over to the window manager (used by custom captions).
+     * @details
+     * Must be called from the pointer pressed handler: the window manager needs the button press which started the
+     * drag.
+     */
+    virtual void windowBeginMove(AWindow& window) = 0;
     virtual void windowManagerInitNativeWindow(const IRenderingContext::Init& init) = 0;
     virtual float windowGetDpiRatio(AWindow& window);
 

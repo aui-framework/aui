@@ -220,6 +220,13 @@ using GdkSurface = struct _GdkSurface;
 using GtkFileChooser = struct _GtkFileChooser;
 using GtkIconTheme = struct _GtkIconTheme;
 using GdkDisplay = struct _GdkDisplay;
+using GdkClipboard = struct _GdkClipboard;
+using GdkCursor = struct _GdkCursor;
+using GdkMemoryTexture = struct _GdkMemoryTexture;
+enum GdkToplevelState : unsigned {
+    GDK_TOPLEVEL_STATE_MINIMIZED = 1 << 0,
+    GDK_TOPLEVEL_STATE_MAXIMIZED = 1 << 1,
+};
 using GdkPixbuf = struct _GdkPixbuf;
 using GtkTreeModel = struct _GtkTreeModel;
 using GtkCssProvider = struct _GtkCssProvider;
