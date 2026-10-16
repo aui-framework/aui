@@ -54,6 +54,18 @@ TEST_F(UIWindowLifecycle, SetTitle) {
     EXPECT_EQ(window->init().title, "Hello") << "init() is the initial state";
 }
 
+TEST_F(UIWindowLifecycle, SetResizable) {
+    auto window = _new<AWindow>();
+    EXPECT_TRUE(window->isResizable());
+    window->setResizable(false);
+    EXPECT_FALSE(window->isResizable());
+    window->setResizable(true);
+    EXPECT_TRUE(window->isResizable());
+
+    auto fixed = _new<AWindow>(AWindow::Init { .resizable = false });
+    EXPECT_FALSE(fixed->isResizable());
+}
+
 TEST_F(UIWindowLifecycle, CloseTwiceEmitsClosedOnce) {
     auto window = _new<AWindow>();
     int closedCount = 0;

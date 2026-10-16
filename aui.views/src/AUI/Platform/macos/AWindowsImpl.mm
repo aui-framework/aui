@@ -69,6 +69,7 @@ void AWindow::setTitleImpl(const AString& title) {
 }
 
 void AWindow::setResizable(bool resizable) {
+    mResizableCache = resizable;
     if (!mHandle || mClosed) return;
     auto s = static_cast<NSWindow*>(mHandle);
     NSWindowStyleMask mask = [s styleMask];
@@ -81,7 +82,7 @@ void AWindow::setResizable(bool resizable) {
 }
 
 bool AWindow::isResizable() const {
-    if (!mHandle) return false;
+    if (!mHandle) return mResizableCache && !mClosed;
     return ([static_cast<NSWindow*>(mHandle) styleMask] & NSWindowStyleMaskResizable) != 0;
 }
 

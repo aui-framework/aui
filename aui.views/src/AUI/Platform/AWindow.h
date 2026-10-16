@@ -561,6 +561,11 @@ private:
     ATitlebar* mTitlebar = nullptr;
 
     /**
+     * @brief Resizability reported when there's no native window to ask (i.e., under UI tests).
+     */
+    bool mResizableCache = true;
+
+    /**
      * @brief close() was called.
      */
     bool mClosed = false;
@@ -601,6 +606,7 @@ private:
     bool captionPressed(const APointerPressedEvent& event);
 #if AUI_PLATFORM_LINUX
     std::chrono::steady_clock::time_point mLastCaptionPress {};
+    ARect<int> mLastTitlebarRect {};
     void applyResizeEdgeCursor(glm::vec2 pos);
 #endif
 #if AUI_PLATFORM_MACOS

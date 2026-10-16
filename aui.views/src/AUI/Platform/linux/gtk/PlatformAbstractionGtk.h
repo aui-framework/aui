@@ -80,6 +80,8 @@ public:
     void windowHideTouchscreenKeyboardImpl(AWindow &window) override;
     void windowMoveToCenter(AWindow &window) override;
     void windowAnnounceMinMaxSize(AWindow &window) override;
+    void windowSetTitlebarRect(AWindow &window, ARect<int> rect) override;
+    bool windowHasNativeWindowControls(AWindow &window) override;
     void windowBeginMove(AWindow &window) override;
     void windowBeginResize(AWindow &window, ResizeEdge edge) override;
     bool windowHasNativeResizeBorders(AWindow &window) override;
@@ -105,8 +107,20 @@ public:
 
 protected:
     static constexpr auto POPUP_KEY = "aui-popup";
+    static constexpr auto CONTROLS_START_KEY = "aui-controls-start";
+    static constexpr auto CONTROLS_END_KEY = "aui-controls-end";
     AGlibPtr<GApplication> mApplication;
     aui::gtk4_fake::GtkWidget* windowManagerInitGtkBox(const IRenderingContext::Init &init) const;
+
+    /**
+     * @brief Builds the child widget of the window, according to AWindow::Init::decoration.
+     */
+    aui::gtk4_fake::GtkWidget* windowManagerInitContent(const IRenderingContext::Init &init, aui::gtk4_fake::GtkWindow* window) const;
+
+    /**
+     * @return system decoration layout filtered by the enabled buttons.
+     */
+    static AString gtkFilteredLayout(const AWindow::Init::Buttons& buttons);
     void windowManagerInitCommon(const IRenderingContext::Init &init, aui::gtk4_fake::GtkWindow* window);
 
     /**

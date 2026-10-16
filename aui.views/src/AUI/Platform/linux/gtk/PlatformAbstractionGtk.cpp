@@ -599,3 +599,41 @@ void PlatformAbstractionGtk::setupDpiChangeMonitoring() {
         }),
         nullptr);
 }
+
+bool PlatformAbstractionGtk::windowHasNativeWindowControls(AWindow &window) {
+    return !window.isPopup() && std::holds_alternative<AWindow::Init::DecorationExtended>(window.init().decoration);
+}
+
+void PlatformAbstractionGtk::windowSetTitlebarRect(AWindow &window, ARect<int> rect) {
+    auto handle = nativeWindow(window);
+    if (!handle) {
+        return;
+    }
+    auto start = static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(handle), CONTROLS_START_KEY));
+    auto end = static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(handle), CONTROLS_END_KEY));
+    if (!start || !end) {
+        return;
+    }
+    auto surface = scaleSurfaceOf(window);
+    const float scale = surface ? float(gdk_surface_get_scale(surface)) : 1.f;
+    const auto measure = [](GtkWidget* w, GtkOrientation orientation) {
+        int minimum = 0, natural = 0;
+        gtk_widget_measure(w, orientation, -1, &minimum, &natural, nullptr, nullptr);
+        return natural;
+    };
+    const int startWidth = measure(start, GTK_ORIENTATION_HORIZONTAL);
+    const int endWidth = measure(end, GTK_ORIENTATION_HORIZONTAL);
+    const int height = std::max(measure(start, GTK_ORIENTATION_VERTICAL), measure(end, GTK_ORIENTATION_VERTICAL));
+
+    // center the controls vertically in the titlebar. AUI works in physical pixels, GTK in logical ones.
+    const float titlebarCenter = float(rect.p1.y + rect.p2.y) / 2.f / scale;
+    const int marginTop = std::max(0, int(std::round(titlebarCenter - float(height) / 2.f)));
+    gtk_widget_set_margin_top(start, marginTop);
+    gtk_widget_set_margin_top(end, marginTop);
+
+    window.windowControlsInsets = AWindowControlsInsets {
+        .left = int(std::ceil(float(startWidth) * scale)),
+        .right = int(std::ceil(float(endWidth) * scale)),
+        .height = int(std::ceil(float(height) * scale)),
+    };
+}

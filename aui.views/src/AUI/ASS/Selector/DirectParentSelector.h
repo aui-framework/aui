@@ -59,11 +59,11 @@ namespace ass {
      * @ingroup ass_selectors
      * @details
      *
-     * In this example, we want to select all views that have direct parent matching ".window-title" ASS class and
+     * In this example, we want to select all views that have direct parent matching ATitlebar and
      * then select the hovered ".close" subselector within them.
      * ```cpp
      * {
-     *   class_of(".window-title") > class_of::hover(".close"),
+     *   t<ATitlebar>() > class_of::hover(".close"),
      *   BackgroundSolid { 0xe81123_rgb }
      * },
      * ```
