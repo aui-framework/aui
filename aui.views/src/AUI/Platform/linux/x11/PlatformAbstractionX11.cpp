@@ -19,7 +19,6 @@
 #include "AUI/Platform/APlatform.h"
 #include "AUI/UITestState.h"
 #include "RenderingContextX11.h"
-#include "AUI/Platform/ACustomWindow.h"
 #include <AUI/Action/AMenu.h>
 #include "AUI/Platform/AWindowManager.h"
 #include "AUI/Platform/ErrorToException.h"
@@ -131,6 +130,18 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                 XNextEvent(ourDisplay, &ev);
                 _<AWindow> window;
                 switch (ev.type) {
+                    case KeyPress:
+                    case KeyRelease:
+                    case ButtonPress:
+                    case ButtonRelease:
+                    case MotionNotify:
+                        // windows blocked by a modal child don't receive user input.
+                        if (auto blocked = locateWindow(ev.xany.window); inputBlocked(*blocked)) {
+                            return;
+                        }
+                        break;
+                }
+                switch (ev.type) {
                     case Expose: {
                         window = locateWindow(ev.xexpose.window);
                         window->flagRedraw();
@@ -211,11 +222,11 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                             window->onResize(size.x, size.y);
                             AUI_NULLSAFE(window->getRenderingContext())->endResize(*window);
                         }
-                        if (auto w = _cast<ACustomWindow>(window)) {
-                            AUI_EMIT_FOREIGN(w, dragEnd);
-
-                            // x11 does not send release button event
-                            w->AViewContainer::onPointerReleased({ { 0, 0 }, APointerIndex::button(AInput::LBUTTON) });
+                        if (std::exchange(windowManagerDragging(*window), false)) {
+                            // the window manager took over the pointer (move/resize started by AUI), and x11 does not
+                            // send release button event
+                            window->AViewContainer::onPointerReleased(
+                                { { 0, 0 }, APointerIndex::button(AInput::LBUTTON) });
                         }
                         redrawFlag(*window) = true;
 
@@ -261,7 +272,7 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
 
                         // popups grab the pointer (see windowShow), so a click outside of the application (window
                         // manager's titlebar, other apps, desktop) is reported to the popup with outside coordinates.
-                        if (!!(window->windowStyle() & WindowStyle::SYS) &&
+                        if (window->isPopup() &&
                             (ev.xbutton.x < 0 || ev.xbutton.y < 0 || ev.xbutton.x >= window->getWidth() ||
                              ev.xbutton.y >= window->getHeight())) {
                             AMenu::close();
@@ -330,12 +341,6 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
         }
 
     } catch (NotFound e) {
-    }
-}
-
-void PlatformAbstractionX11::windowQuit(AWindow& window) {
-    if (ourDisplay) {
-        XUnmapWindow(ourDisplay, nativeHandle(window));
     }
 }
 
@@ -476,7 +481,7 @@ void PlatformAbstractionX11::windowShow(AWindow& window) {
     if (bool(PlatformAbstractionX11::ourDisplay) && nativeHandle(window)) {
         AThread::current() << [&]() {
             XMapWindow(PlatformAbstractionX11::ourDisplay, nativeHandle(window));
-            if (!!(window.windowStyle() & WindowStyle::SYS)) {
+            if (window.isPopup()) {
                 // owner_events = True: clicks in our own windows are delivered as usual, clicks elsewhere (window
                 // manager's decorations, other apps) are redirected to this popup so it can dismiss itself.
                 XGrabPointer(
@@ -502,42 +507,36 @@ void PlatformAbstractionX11::windowActivate(AWindow& window, const AString& acti
 void PlatformAbstractionX11::windowSetSize(AWindow& window, glm::ivec2 size) {
     if (!nativeHandle(window))
         return;
-    if (!!(window.windowStyle() & WindowStyle::NO_RESIZE)) {
+    xApplySizeHints(window, size);
+}
+
+void PlatformAbstractionX11::xApplySizeHints(AWindow& window, glm::ivec2 size) {
+    XSizeHints* sizehints = XAllocSizeHints();
+    long userhints;
+
+    XGetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizehints, &userhints);
+
+    if (!windowIsResizable(window)) {
         // we should set min size and max size the same as current size
-        XSizeHints* sizehints = XAllocSizeHints();
-        long userhints;
-
-        XGetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizehints, &userhints);
-
-        sizehints->min_width = sizehints->min_width = sizehints->max_width = sizehints->base_width = size.x;
-        sizehints->min_height = sizehints->min_height = sizehints->max_height = sizehints->base_height = size.y;
+        sizehints->min_width = sizehints->max_width = sizehints->base_width = size.x;
+        sizehints->min_height = sizehints->max_height = sizehints->base_height = size.y;
         sizehints->flags |= PMinSize | PMaxSize;
-
-        XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizehints);
-
-        XFree(sizehints);
     } else {
-        XSizeHints* sizehints = XAllocSizeHints();
-        long userhints;
-
-        XGetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizehints, &userhints);
-
         const auto minSize = window.getMinimumSize();
         sizehints->min_width = minSize.x;
         sizehints->min_height = minSize.y;
         sizehints->flags |= PMinSize;
-
-        XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizehints);
-
-        XFree(sizehints);
     }
+
+    XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizehints);
+
+    XFree(sizehints);
 }
 
 void PlatformAbstractionX11::windowSetGeometry(AWindow& window, int x, int y, int width, int height) {
     if (!nativeHandle(window))
         return;
-    WindowStyle style = window.windowStyle();
-    bool isPopupMenu = (style & WindowStyle::SYS) == WindowStyle::SYS;
+    bool isPopupMenu = window.isPopup();
 
     XWindowChanges changes;
     changes.x = x;
@@ -556,6 +555,11 @@ void PlatformAbstractionX11::windowSetGeometry(AWindow& window, int x, int y, in
 
     XConfigureWindow(PlatformAbstractionX11::ourDisplay, nativeHandle(window),
                      CWX | CWY | CWWidth | CWHeight | CWStackMode, &changes);
+
+    if (!windowIsResizable(window)) {
+        // a non-resizable window should be exactly of the requested size
+        xApplySizeHints(window, { changes.width, changes.height });
+    }
 
     XSync(PlatformAbstractionX11::ourDisplay, False);
 }
@@ -670,6 +674,7 @@ void PlatformAbstractionX11::windowManagerInitNativeWindow(const IRenderingConte
                   init.setRenderingContext(std::move(context));
                 },
             }, graphicsApi);
+            xApplyInit(init.window);
             return;
         } catch (const AException& e) {
             ALogger::warn("AWindowManager") << "Unable to initialize graphics API:" << e;
@@ -682,6 +687,7 @@ float PlatformAbstractionX11::windowGetDpiRatio(AWindow& window) {
 }
 
 void PlatformAbstractionX11::windowBlockUserInput(AWindow& window, bool blockUserInput) {
+    inputBlocked(window) = blockUserInput;
 }
 
 void PlatformAbstractionX11::windowAllowDragNDrop(AWindow& window) {}
@@ -695,7 +701,7 @@ void PlatformAbstractionX11::windowHideTouchscreenKeyboardImpl(AWindow& window) 
 void PlatformAbstractionX11::windowMoveToCenter(AWindow& window) {}
 
 void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
-    if (PlatformAbstractionX11::ourDisplay != nullptr) {
+    if (PlatformAbstractionX11::ourDisplay != nullptr && nativeHandle(window) && windowIsResizable(window)) {
         auto sizeHints = aui::ptr::manage_unique(XAllocSizeHints(), XFree);
         sizeHints->flags = PMinSize | PMaxSize;
         const auto minSize = window.getMinimumSize();
@@ -749,8 +755,135 @@ void PlatformAbstractionX11::windowBeginResize(AWindow& window, ResizeEdge edge)
 }
 
 bool PlatformAbstractionX11::windowHasNativeResizeBorders(AWindow& window) {
-    // windowSetStyle removes all decorations (including resize borders) via Motif hints.
-    return !(window.windowStyle() & (WindowStyle::SYS | WindowStyle::NO_DECORATORS | WindowStyle::NO_TITLEBAR));
+    // everything except the default decoration is stripped of the window manager's frame (including resize borders)
+    // via Motif hints.
+    return !window.isPopup() && std::holds_alternative<AWindow::Init::DecorationDefault>(window.init().decoration);
+}
+
+namespace {
+// layout of _MOTIF_WM_HINTS, as in Motif's MwmUtil.h
+struct MotifHints {
+    unsigned long flags;
+    unsigned long functions;
+    unsigned long decorations;
+    long inputMode;
+    unsigned long status;
+};
+constexpr unsigned long MWM_HINTS_FUNCTIONS = 1 << 0;
+constexpr unsigned long MWM_HINTS_DECORATIONS = 1 << 1;
+constexpr unsigned long MWM_FUNC_RESIZE = 1 << 1;
+constexpr unsigned long MWM_FUNC_MOVE = 1 << 2;
+constexpr unsigned long MWM_FUNC_MINIMIZE = 1 << 3;
+constexpr unsigned long MWM_FUNC_MAXIMIZE = 1 << 4;
+constexpr unsigned long MWM_FUNC_CLOSE = 1 << 5;
+}   // namespace
+
+void PlatformAbstractionX11::xApplyMotifHints(AWindow& window) {
+    if (!bool(ourDisplay) || !nativeHandle(window) || !ourAtoms.wmHints) {
+        return;
+    }
+    const bool resizable = windowIsResizable(window);
+    MotifHints hints {};
+    hints.flags = MWM_HINTS_FUNCTIONS | MWM_HINTS_DECORATIONS;
+    std::visit(
+        aui::lambda_overloaded {
+          [&](const AWindow::Init::DecorationDefault& d) {
+              hints.decorations = 1;   // MWM_DECOR_ALL
+              hints.functions = MWM_FUNC_MOVE;
+              if (resizable) hints.functions |= MWM_FUNC_RESIZE;
+              if (d.buttons.minimize) hints.functions |= MWM_FUNC_MINIMIZE;
+              if (d.buttons.maximize && resizable) hints.functions |= MWM_FUNC_MAXIMIZE;
+              if (d.buttons.close) hints.functions |= MWM_FUNC_CLOSE;
+          },
+          [&](const auto&) {
+              // AUI draws the window chrome (ATitlebar) and the resize borders itself.
+              hints.decorations = 0;
+              hints.functions = MWM_FUNC_MOVE | MWM_FUNC_MINIMIZE | MWM_FUNC_CLOSE;
+              if (resizable) hints.functions |= MWM_FUNC_RESIZE | MWM_FUNC_MAXIMIZE;
+          },
+        },
+        window.init().decoration);
+    XChangeProperty(
+        ourDisplay, nativeHandle(window), ourAtoms.wmHints, ourAtoms.wmHints, 32, PropModeReplace,
+        reinterpret_cast<unsigned char*>(&hints), 5);
+}
+
+void PlatformAbstractionX11::xApplyInit(AWindow& window) {
+    const auto& init = window.init();
+    if (init.parent) {
+        if (init.parent->modal && !window.isPopup()) {
+            // the property is honored by window managers when set on a not yet mapped window.
+            static Atom netWmStateModal = XInternAtom(ourDisplay, "_NET_WM_STATE_MODAL", False);
+            XChangeProperty(
+                ourDisplay, nativeHandle(window), ourAtoms.netWmState, XA_ATOM, 32, PropModeAppend,
+                reinterpret_cast<unsigned char*>(&netWmStateModal), 1);
+        }
+    }
+    if (!init.resizable) {
+        const auto size = window.getSize();
+        xApplySizeHints(window, size);
+    }
+    xApplyMotifHints(window);
+}
+
+void PlatformAbstractionX11::windowSetTitle(AWindow& window, const AString& title) {
+    if (!bool(ourDisplay) || !nativeHandle(window)) {
+        return;
+    }
+    const auto utf8 = title.toStdString();
+    XStoreName(ourDisplay, nativeHandle(window), utf8.c_str());
+    static Atom netWmName = XInternAtom(ourDisplay, "_NET_WM_NAME", False);
+    XChangeProperty(
+        ourDisplay, nativeHandle(window), netWmName, ourAtoms.utf8String, 8, PropModeReplace,
+        reinterpret_cast<const unsigned char*>(utf8.c_str()), utf8.length());
+    XFlush(ourDisplay);
+}
+
+void PlatformAbstractionX11::windowSetResizable(AWindow& window, bool resizable) {
+    if (!bool(ourDisplay) || !nativeHandle(window)) {
+        return;
+    }
+    if (resizable) {
+        auto hints = aui::ptr::manage_unique(XAllocSizeHints(), XFree);
+        long userhints;
+        XGetWMNormalHints(ourDisplay, nativeHandle(window), hints.get(), &userhints);
+        // windowAnnounceMinMaxSize does the rest on the next layout.
+        const auto minSize = window.getMinimumSize();
+        hints->min_width = minSize.x;
+        hints->min_height = minSize.y;
+        hints->max_width = 100000;
+        hints->max_height = 100000;
+        hints->flags |= PMinSize | PMaxSize;
+        XSetWMNormalHints(ourDisplay, nativeHandle(window), hints.get());
+    } else {
+        // locks the window at its current size
+        auto hints = aui::ptr::manage_unique(XAllocSizeHints(), XFree);
+        long userhints;
+        XGetWMNormalHints(ourDisplay, nativeHandle(window), hints.get(), &userhints);
+        const auto size = window.getSize();
+        hints->min_width = hints->max_width = hints->base_width = size.x;
+        hints->min_height = hints->max_height = hints->base_height = size.y;
+        hints->flags |= PMinSize | PMaxSize;
+        XSetWMNormalHints(ourDisplay, nativeHandle(window), hints.get());
+    }
+    xApplyMotifHints(window);
+    XFlush(ourDisplay);
+}
+
+bool PlatformAbstractionX11::windowIsResizable(AWindow& window) const {
+    if (!bool(ourDisplay) || !nativeHandle(window)) {
+        return window.init().resizable;
+    }
+    auto hints = aui::ptr::manage_unique(XAllocSizeHints(), XFree);
+    long userhints;
+    if (!XGetWMNormalHints(ourDisplay, nativeHandle(window), hints.get(), &userhints)) {
+        return window.init().resizable;
+    }
+    if (!(hints->flags & PMinSize) || !(hints->flags & PMaxSize)) {
+        // no restrictions; but the window may have not been laid out yet.
+        return true;
+    }
+    return hints->min_width != hints->max_width || hints->min_height != hints->max_height;
 }
 
 void PlatformAbstractionX11::init() {}

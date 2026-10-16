@@ -40,7 +40,7 @@ public:
      * @brief Whether the window is displayed as GtkPopover.
      * @details
      * Wayland clients can't position toplevels, but can position popups (xdg_popup). GTK4 exposes them only as
-     * GtkPopover, so AUI windows with WindowStyle::SYS are hosted in a GtkPopover on Wayland.
+     * GtkPopover, so popup AUI windows (AWindow::isPopup) are hosted in a GtkPopover on Wayland.
      */
     static bool isPopup(AWindow& window);
 
@@ -56,7 +56,9 @@ public:
     AInput::Key inputFromNative(int k) override;
     int inputToNative(AInput::Key key) override;
     bool inputIsKeyDown(AInput::Key k) override;
-    void windowSetStyle(AWindow &window, WindowStyle ws) override;
+    void windowSetTitle(AWindow &window, const AString& title) override;
+    void windowSetResizable(AWindow &window, bool resizable) override;
+    bool windowIsResizable(AWindow &window) const override;
     float windowFetchDpiFromSystem(AWindow &window) override;
     void windowRestore(AWindow &window) override;
     void windowMinimize(AWindow &window) override;
@@ -77,11 +79,11 @@ public:
     void windowShowTouchscreenKeyboardImpl(AWindow &window) override;
     void windowHideTouchscreenKeyboardImpl(AWindow &window) override;
     void windowMoveToCenter(AWindow &window) override;
-    void windowQuit(AWindow &window) override;
     void windowAnnounceMinMaxSize(AWindow &window) override;
     void windowBeginMove(AWindow &window) override;
     void windowBeginResize(AWindow &window, ResizeEdge edge) override;
     bool windowHasNativeResizeBorders(AWindow &window) override;
+    bool windowHasNativeModality() const override { return true; }
 
     /**
      * @brief The latest button press; required by the window manager to start interactive move.
@@ -108,6 +110,11 @@ protected:
     void windowManagerInitCommon(const IRenderingContext::Init &init, aui::gtk4_fake::GtkWindow* window);
 
     /**
+     * @brief Hides disabled window buttons by adjusting titlebar's decoration layout.
+     */
+    static void gtkApplyButtons(aui::gtk4_fake::GtkWidget* titlebar, const AWindow::Init::Buttons& buttons);
+
+    /**
      * @brief Creates popover-hosted window if the window is a popup and the display server needs it.
      * @return true if the window was created.
      */
@@ -115,7 +122,7 @@ protected:
     void gtkSetWindowClassHint(RenderingContextGtk* context, aui::gtk4_fake::GtkWindow* gtkWindow);
 
     /**
-     * @brief Titlebar widget which visibility is controlled by WindowStyle::NO_TITLEBAR.
+     * @brief Titlebar widget which visibility is controlled by AWindow::Init::decoration.
      * @details
      * Present only if the window was created with client-side decorations (i.e., titlebar was installed before the
      * window got realized).

@@ -63,7 +63,9 @@ public:
     virtual bool inputIsKeyDown(AInput::Key k) = 0;
 
     // WINDOW
-    virtual void windowSetStyle(AWindow& window, WindowStyle ws) = 0;
+    virtual void windowSetTitle(AWindow& window, const AString& title) = 0;
+    virtual void windowSetResizable(AWindow& window, bool resizable) = 0;
+    virtual bool windowIsResizable(AWindow& window) const = 0;
     virtual float windowFetchDpiFromSystem(AWindow& window) = 0;
     virtual void windowRestore(AWindow& window) = 0;
     virtual void windowMinimize(AWindow& window) = 0;
@@ -85,7 +87,6 @@ public:
     virtual void windowShowTouchscreenKeyboardImpl(AWindow& window) = 0;
     virtual void windowHideTouchscreenKeyboardImpl(AWindow& window) = 0;
     virtual void windowMoveToCenter(AWindow& window) = 0;
-    virtual void windowQuit(AWindow& window) = 0;
     virtual void windowAnnounceMinMaxSize(AWindow& window) = 0;
 
     /**
@@ -122,6 +123,24 @@ public:
      * window has to handle resizing by its edges itself.
      */
     virtual bool windowHasNativeResizeBorders(AWindow& window) = 0;
+
+    /**
+     * @brief Reports the rect of ATitlebar (in window coordinates, pixels) to the platform after layout.
+     * @details
+     * Used to align native window controls with the titlebar contents.
+     */
+    virtual void windowSetTitlebarRect(AWindow& window, ARect<int> rect) {}
+
+    /**
+     * @return true if the toolkit draws window controls of the DecorationExtended window by itself and reports their
+     * size via AWindow::windowControlsInsets.
+     */
+    virtual bool windowHasNativeWindowControls(AWindow& window) { return false; }
+
+    /**
+     * @return true if the toolkit blocks the parent of a modal window by itself, so AUI doesn't have to.
+     */
+    virtual bool windowHasNativeModality() const { return false; }
     virtual void windowManagerInitNativeWindow(const IRenderingContext::Init& init) = 0;
     virtual float windowGetDpiRatio(AWindow& window);
 
@@ -136,8 +155,22 @@ public:
         return window.mHandle;
     }
 
-    static AWindow*& parentWindow(AWindow& window) {
-        return window.mParentWindow;
+    /**
+     * @brief Window input is blocked by a modal child window.
+     */
+    static bool& inputBlocked(AWindow& window) {
+        return window.mInputBlocked;
+    }
+
+    /**
+     * @brief Window manager is moving or resizing the window by the request of AUI (see AWindow::beginMove).
+     */
+    static bool& windowManagerDragging(AWindow& window) {
+        return window.mWindowManagerDragging;
+    }
+
+    static AWindow* parentWindow(AWindow& window) {
+        return window.parentWindow();
     }
 #if AUI_PLATFORM_LINUX
     static bool& wasMaximized(AWindow& window) {

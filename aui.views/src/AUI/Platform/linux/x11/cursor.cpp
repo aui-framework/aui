@@ -156,38 +156,3 @@ void PlatformAbstractionX11::applyNativeCursor(const ACursor& cursor, AWindow* p
           } },
         cursor.value());
 }
-
-void PlatformAbstractionX11::windowSetStyle(AWindow& window, WindowStyle ws) {
-    // TODO: WindowStyle::NO_TITLEBAR — X11 Motif hints don't reliably support
-    // "keep system buttons but hide the title strip" across compositors. Implementing
-    // this properly likely requires client-side decorations (drawing our own buttons),
-    // similar to ACustomWindow. For now, NO_TITLEBAR falls through the same path
-    // as NO_DECORATORS.
-    if (!!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS | WindowStyle::NO_TITLEBAR))) {
-        // note the struct is declared elsewhere, is here just for clarity.
-        // code is from [http://tonyobryan.com/index.php?article=9][1]
-        typedef struct Hints {
-            unsigned long flags;
-            unsigned long functions;
-            unsigned long decorations;
-            long inputMode;
-            unsigned long status;
-        } Hints;
-
-        /*
-         * flags:
-         * LS
-         *  0 - close disable
-         *  1 - decorations disable
-         * MS
-         */
-        Hints hints;
-
-        // code to remove decoration
-        hints.flags = 2;
-        hints.decorations = 0;
-        XChangeProperty(
-            PlatformAbstractionX11::ourDisplay, nativeHandle(window), PlatformAbstractionX11::ourAtoms.wmHints,
-            PlatformAbstractionX11::ourAtoms.wmHints, 32, PropModeReplace, (unsigned char*) &hints, 5);
-    }
-}

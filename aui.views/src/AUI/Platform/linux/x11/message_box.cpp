@@ -19,8 +19,14 @@ class MessageBox : public AWindow {
 public:
     MessageBox(
         AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon, AMessageBox::Button b)
-      : AWindow(title, 300_dp, 200_dp, parent,
-                WindowStyle::MODAL | WindowStyle::NO_MINIMIZE_MAXIMIZE | WindowStyle::NO_RESIZE) {
+      : AWindow(Init {
+          .title = title,
+          .width = 300_dp,
+          .height = 200_dp,
+          .parent = parent ? AOptional<Init::Parent>(Init::Parent { .window = *parent, .modal = true }) : std::nullopt,
+          .decoration = Init::DecorationDefault { .buttons = { .minimize = false, .maximize = false } },
+          .resizable = false,
+        }) {
         using namespace declarative;
         setContents(Vertical {
           AText::fromString(message),

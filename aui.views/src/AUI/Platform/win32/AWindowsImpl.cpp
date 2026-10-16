@@ -29,7 +29,7 @@
 #include <AUI/Platform/AWindowManager.h>
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Platform/ASurface.h>
-#include <AUI/Platform/ACustomWindow.h>
+#include <AUI/View/ATitlebar.h>
 
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
@@ -51,6 +51,16 @@
 #include <AUI/Platform/win32/AComBase.h>
 #include <AUI/Platform/win32/Theme.h>
 #include <dwmapi.h>
+
+namespace {
+/**
+ * @return true if AUI draws the titlebar and handles the window frame (see AWindow::Init::DecorationExtended and
+ *         AWindow::Init::DecorationBorderless).
+ */
+bool hasCustomFrame(const AWindow& window) {
+    return !window.isPopup() && !std::holds_alternative<AWindow::Init::DecorationDefault>(window.init().decoration);
+}
+}   // namespace
 
 LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 #define GET_X_LPARAM(lp)    ((int)(short)LOWORD(lp))
@@ -93,54 +103,127 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
             return true;
             */
 
-        case WM_CREATE: // used for ACustomWindow
+        case WM_CREATE:
             updateDpi();
             return 0;
 
         case WM_NCCALCSIZE: {
-            if (!(mWindowStyle & WindowStyle::NO_TITLEBAR) || wParam == FALSE) {
+            if (!hasCustomFrame(*this) || wParam == FALSE) {
                 break;
             }
-            // Collapse the caption strip into the client area while keeping DWM-drawn buttons.
-            auto* params = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
-            const int frameX = GetSystemMetrics(SM_CXFRAME);
-            const int frameY = GetSystemMetrics(SM_CYFRAME);
-            const int padding = GetSystemMetrics(SM_CXPADDEDBORDER);
-            RECT& rc = params->rgrc[0];
-            rc.right -= frameX + padding;
-            rc.left += frameX + padding;
-            rc.bottom -= frameY + padding;
+            // The client area covers the whole window: AUI draws the titlebar and the borders.
             if (IsZoomed(hwnd)) {
                 // Maximized windows would otherwise be clipped off-screen by the frame.
-                rc.top += padding;
+                auto* params = reinterpret_cast<NCCALCSIZE_PARAMS*>(lParam);
+                const int frameX = GetSystemMetrics(SM_CXFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+                const int frameY = GetSystemMetrics(SM_CYFRAME) + GetSystemMetrics(SM_CXPADDEDBORDER);
+                RECT& rc = params->rgrc[0];
+                rc.left += frameX;
+                rc.right -= frameX;
+                rc.top += frameY;
+                rc.bottom -= frameY;
             }
             return 0;
         }
 
         case WM_NCHITTEST: {
-            if (!(mWindowStyle & WindowStyle::NO_TITLEBAR)) {
+            if (!hasCustomFrame(*this)) {
                 break;
             }
-            // Let DWM claim hits on the min/max/close glyphs it rendered.
-            LRESULT dwmResult = 0;
-            if (DwmDefWindowProc(hwnd, uMsg, wParam, lParam, &dwmResult)) {
-                return dwmResult;
-            }
-            const LRESULT hit = DefWindowProc(hwnd, uMsg, wParam, lParam);
-            if (hit == HTCLIENT) {
-                // Inside the reclaimed caption strip: mark as draggable caption so
-                // the OS handles move/snap layouts. The application is responsible
-                // for reserving space above interactive views so this doesn't swallow
-                // input meant for them.
-                POINT pt { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
-                ScreenToClient(hwnd, &pt);
-                const int captionHeight = GetSystemMetrics(SM_CYCAPTION) +
-                                          GetSystemMetrics(SM_CXPADDEDBORDER);
-                if (pt.y >= 0 && pt.y < captionHeight) {
-                    return HTCAPTION;
+            POINT pt { GET_X_LPARAM(lParam), GET_Y_LPARAM(lParam) };
+            ScreenToClient(hwnd, &pt);
+            const glm::ivec2 local { pt.x, pt.y };
+
+            // Window buttons win over the top resize border: otherwise the top pixels of a min/max/close button
+            // would be treated as HTTOP and start a resize drag instead of registering a button click. Returning an
+            // HT button code enables Win11 snap-layout flyouts on hover of the maximize button and lets the OS
+            // dispatch SC_MINIMIZE/SC_MAXIMIZE/SC_CLOSE.
+            if (mTitlebar) {
+                if (auto button = mTitlebar->windowButtonAt(local)) {
+                    switch (*button) {
+                        case AWindowControls::Button::MINIMIZE: return HTMINBUTTON;
+                        case AWindowControls::Button::MAXIMIZE: return HTMAXBUTTON;
+                        case AWindowControls::Button::CLOSE: return HTCLOSE;
+                    }
                 }
             }
-            return hit;
+
+            if (isResizable() && !IsZoomed(hwnd)) {
+                const int border = int((6_dp).getValuePx());
+                const int corner = int((12_dp).getValuePx());
+                const auto size = getSize();
+                const bool left = local.x < border, right = local.x >= size.x - border;
+                const bool top = local.y < border, bottom = local.y >= size.y - border;
+                const bool nearLeft = local.x < corner, nearRight = local.x >= size.x - corner;
+                const bool nearTop = local.y < corner, nearBottom = local.y >= size.y - corner;
+                if ((top && nearLeft) || (left && nearTop)) return HTTOPLEFT;
+                if ((top && nearRight) || (right && nearTop)) return HTTOPRIGHT;
+                if ((bottom && nearLeft) || (left && nearBottom)) return HTBOTTOMLEFT;
+                if ((bottom && nearRight) || (right && nearBottom)) return HTBOTTOMRIGHT;
+                if (top) return HTTOP;
+                if (bottom) return HTBOTTOM;
+                if (left) return HTLEFT;
+                if (right) return HTRIGHT;
+            }
+
+            if (isCaptionAt(local)) {
+                return HTCAPTION;
+            }
+            return HTCLIENT;
+        }
+
+        case WM_NCMOUSEMOVE: {
+            if (mTitlebar) {
+                AOptional<AWindowControls::Button> button;
+                switch (wParam) {
+                    case HTMINBUTTON: button = AWindowControls::Button::MINIMIZE; break;
+                    case HTMAXBUTTON: button = AWindowControls::Button::MAXIMIZE; break;
+                    case HTCLOSE: button = AWindowControls::Button::CLOSE; break;
+                }
+                mTitlebar->setWindowButtonNativeHover(button);
+                // register for WM_NCMOUSELEAVE so we can clear hover when the cursor exits the non-client area.
+                TRACKMOUSEEVENT tme {};
+                tme.cbSize = sizeof(tme);
+                tme.hwndTrack = hwnd;
+                tme.dwFlags = TME_LEAVE | TME_NONCLIENT;
+                TrackMouseEvent(&tme);
+            }
+            break;
+        }
+
+        case WM_NCMOUSELEAVE: {
+            if (mTitlebar) {
+                mTitlebar->setWindowButtonNativeHover(std::nullopt);
+            }
+            break;
+        }
+
+        case WM_NCLBUTTONDOWN: {
+            if (hasCustomFrame(*this) && (wParam == HTMINBUTTON || wParam == HTMAXBUTTON || wParam == HTCLOSE)) {
+                return 0;
+            }
+            break;
+        }
+
+        case WM_NCLBUTTONUP: {
+            if (hasCustomFrame(*this)) {
+                switch (wParam) {
+                    case HTMINBUTTON:
+                        minimize();
+                        return 0;
+                    case HTMAXBUTTON:
+                        if (isMaximized()) {
+                            restore();
+                        } else {
+                            maximize();
+                        }
+                        return 0;
+                    case HTCLOSE:
+                        onCloseButtonClicked();
+                        return 0;
+                }
+            }
+            break;
         }
 
         case WM_USER:
@@ -311,7 +394,10 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 
             const auto minSize = getMinimumSize();
             RECT r = {0, 0, minSize.x, minSize.y};
-            AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
+            if (!hasCustomFrame(*this)) {
+                // windows with custom frame do not have non-client area
+                AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
+            }
             info->ptMinTrackSize.x = r.right - r.left;
             info->ptMinTrackSize.y = r.bottom - r.top;
         }
@@ -327,100 +413,49 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
 }
 
 
-void AWindow::quit() {
-    HWND parentHwnd = nullptr;
-
-    bool isModal = !!(mWindowStyle & WindowStyle::MODAL);
-
-    if (isModal && mParentWindow) {
-        parentHwnd = mParentWindow->mHandle;
-    }
-
-    if (mHandle) {
-        ShowWindow(mHandle, SW_HIDE);
-        DestroyWindow(mHandle);
-        mHandle = nullptr;
-    }
-
-    getWindowManager().mWindows.removeFirst(mSelfHolder);
-    setLayout(nullptr);
-
-    // Schedule object destruction
-    AThread::current()->enqueue([self = std::move(mSelfHolder), parentHwnd, isModal]() mutable noexcept {
-        self = nullptr;
-        if (parentHwnd && IsWindow(parentHwnd) && isModal) {
-            // Parent window should be activated BEFORE child is closed.
-            EnableWindow(parentHwnd, true);
-            SetActiveWindow(parentHwnd);
-            SetForegroundWindow(parentHwnd);
-        }
-    });
-}
-
-
 AWindow::~AWindow() {
-    ShowWindow(mHandle, SW_HIDE);
-    mRenderingContext->destroyNativeWindow(*this);
+    destroyNativeWindow();
 }
 
+bool AWindow::hasNativeWindowControls() const { return false; }
 
-void AWindow::setWindowStyle(WindowStyle ws) {
-    mWindowStyle = ws;
-    if (!mHandle) return;
-    if (!!(ws & WindowStyle::SYS)) {
-        SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) & ~(WS_CAPTION | WS_THICKFRAME
-            | WS_MINIMIZEBOX | WS_MAXIMIZEBOX | WS_SYSMENU) | WS_CHILD);
-        {
-            LONG lExStyle = GetWindowLong(mHandle, GWL_EXSTYLE);
-            lExStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
-            SetWindowLong(mHandle, GWL_EXSTYLE, lExStyle);
-        }
-        SetWindowPos(mHandle, NULL, 0, 0, 0, 0,
-                     SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
+bool AWindow::captionPressed(const APointerPressedEvent&) {
+    // handled by WM_NCHITTEST
+    return false;
+}
 
-        // small shadow
-        SetClassLong(mHandle, GCL_STYLE, GetClassLong(mHandle, GCL_STYLE) | CS_DROPSHADOW);
-    } else {
-        if (!!(ws & WindowStyle::NO_MINIMIZE_MAXIMIZE)) {
-            SetWindowLongPtr(mHandle, GWL_STYLE,
-                             GetWindowLong(mHandle, GWL_STYLE) & ~(WS_THICKFRAME |
-                                     WS_SYSMENU) | WS_CAPTION);
-        } else {
-            SetWindowLongPtr(mHandle, GWL_STYLE, GetWindowLong(mHandle, GWL_STYLE) | WS_THICKFRAME);
-        }
-
-        if (!!(ws & WindowStyle::NO_RESIZE)) {
-            SetWindowLongPtr(mHandle, GWL_STYLE,
-                             GetWindowLong(mHandle, GWL_STYLE) & ~WS_OVERLAPPEDWINDOW | WS_DLGFRAME |
-                                     WS_SYSMENU | WS_CAPTION);
-        }
-        if (!!(ws & WindowStyle::NO_DECORATORS)) {
-            LONG lExStyle = GetWindowLong(mHandle, GWL_EXSTYLE);
-            lExStyle &= ~(WS_EX_DLGMODALFRAME | WS_EX_CLIENTEDGE | WS_EX_STATICEDGE);
-            SetWindowLong(mHandle, GWL_EXSTYLE, lExStyle);
-            SetWindowPos(mHandle, NULL, 0, 0, 0, 0,
-                         SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
-        }
-        if (!!(ws & WindowStyle::NO_TITLEBAR)) {
-            // Keep WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX so DWM keeps
-            // rendering the caption buttons; our WM_NCCALCSIZE handler collapses the visible
-            // titlebar into the client area.
-            LONG style = GetWindowLong(mHandle, GWL_STYLE);
-            style |= WS_CAPTION | WS_SYSMENU | WS_MINIMIZEBOX | WS_MAXIMIZEBOX;
-            if (!(ws & WindowStyle::NO_RESIZE)) {
-                style |= WS_THICKFRAME;
-            }
-            SetWindowLongPtr(mHandle, GWL_STYLE, style);
-
-            const MARGINS extend = { 0, 0, 1, 0 };
-            DwmExtendFrameIntoClientArea(mHandle, &extend);
-
-            SetWindowPos(mHandle, NULL, 0, 0, 0, 0,
-                         SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER);
-        }
+void AWindow::setTitleImpl(const AString& title) {
+    if (!mHandle) {
+        return;
     }
+    SetWindowTextW(mHandle, aui::win32::toWchar(title).c_str());
 }
 
+void AWindow::setResizable(bool resizable) {
+    if (!mHandle || mClosed) {
+        return;
+    }
+    LONG_PTR style = GetWindowLongPtr(mHandle, GWL_STYLE);
+    if (resizable) {
+        style |= WS_THICKFRAME;
+        if (const auto* d = std::get_if<Init::DecorationDefault>(&mInit.decoration); !d || d->buttons.maximize) {
+            style |= WS_MAXIMIZEBOX;
+        }
+    } else {
+        style &= ~(LONG_PTR(WS_THICKFRAME) | LONG_PTR(WS_MAXIMIZEBOX));
+    }
+    SetWindowLongPtr(mHandle, GWL_STYLE, style);
+    SetWindowPos(
+        mHandle, nullptr, 0, 0, 0, 0,
+        SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE);
+}
+
+bool AWindow::isResizable() const {
+    if (!mHandle) {
+        return false;
+    }
+    return (GetWindowLongPtr(mHandle, GWL_STYLE) & WS_THICKFRAME) != 0;
+}
 
 float AWindow::fetchDpiFromSystem() const {
     if (mHandle) {
@@ -509,7 +544,7 @@ glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
   return {p.x, p.y};
 }
 
-void AWindow::show() {
+void AWindow::showImpl() {
   if (!getWindowManager().mWindows.contains(_cast<AWindow>(aui::ptr::shared_from_this(this)))) {
     getWindowManager().mWindows << _cast<AWindow>(aui::ptr::shared_from_this(this));
   }
@@ -531,7 +566,7 @@ void AWindow::show() {
 }
 void AWindow::activate(const AString&) {
     show();
-    if (!mHandle) return;
+    if (!mHandle || mClosed) return;
     if (IsIconic(mHandle)) {
         ShowWindow(mHandle, SW_RESTORE);
     }
@@ -549,7 +584,7 @@ void AWindow::setIcon(const AImage& image) {
   SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon.get());
 }
 
-void AWindow::hide() {
+void AWindow::hideImpl() {
   if (!mHandle) return;
   ShowWindow(mHandle, SW_HIDE);
 }
@@ -597,7 +632,16 @@ void AWindowManager::loop() {
 }
 
 void AWindow::blockUserInput(bool blockUserInput) {
+    if (!mHandle) {
+        return;
+    }
     EnableWindow(mHandle, !blockUserInput);
+    if (!blockUserInput) {
+        // the parent of a modal window has to be activated BEFORE the child is closed, otherwise Windows activates
+        // some other application.
+        SetActiveWindow(mHandle);
+        SetForegroundWindow(mHandle);
+    }
 }
 
 void AWindow::allowDragNDrop() {

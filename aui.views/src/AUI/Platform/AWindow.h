@@ -20,9 +20,11 @@
 #include "AUI/Platform/ASurface.h"
 #include "AUI/Thread/IEventLoop.h"
 #include "AUI/Util/AMetric.h"
+#include "AUI/Common/AOptional.h"
+#include "AUI/Common/AProperty.h"
 #include "AWindowNativePtr.h"
-#include <AUI/Enum/WindowStyle.h>
 #include <AUI/Enum/AScreenOrientation.h>
+#include <variant>
 
 #if AUI_PLATFORM_WIN
 #include <Windows.h>
@@ -37,6 +39,33 @@
 
 class ARender;
 class AWindowManager;
+class ATitlebar;
+
+/**
+ * @brief Space occupied by the native window controls (traffic lights, close/minimize/maximize buttons) inside the
+ *        window, in pixels.
+ * @details
+ * Relevant for AWindow::Init::DecorationExtended only: the window contents extend into the titlebar, and the native
+ * controls are drawn over them. ATitlebar uses this to keep its contents out of the controls' way.
+ */
+struct AWindowControlsInsets {
+    /**
+     * @brief Space occupied by native controls at the left edge of the window.
+     */
+    int left = 0;
+
+    /**
+     * @brief Space occupied by native controls at the right edge of the window.
+     */
+    int right = 0;
+
+    /**
+     * @brief Height of the native controls.
+     */
+    int height = 0;
+
+    bool operator==(const AWindowControlsInsets&) const noexcept = default;
+};
 
 /**
  * @brief Represents a window in the underlying windowing system.
@@ -88,15 +117,88 @@ class API_AUI_VIEWS AWindow: public ASurface
     friend class AWindowManager;
     friend struct painter;
 public:
-    //AWindow(const AString& name = "My window", int width = 854, int height = 500, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
-    //    windowNativePreInit(name, width, height, parent, ws);
-    //}
-    AWindow(const AString& name = "My window", AMetric width = 854_dp, AMetric height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT) {
-        windowNativePreInit(name, width.getRawValue(), height.getRawValue(), parent, ws);
-        setSize(glm::ivec2(
-            width.getUnit() == AMetric::T_DP ? width.getRawValue() * fetchDpiFromSystem() : width.getRawValue(),
-            height.getUnit() == AMetric::T_DP ? height.getRawValue() * fetchDpiFromSystem() : height.getRawValue()));
-    }
+    /**
+     * @brief Window creation parameters.
+     * @details
+     * Everything here except `title` and `resizable` is applied at window creation and can't be changed afterwards.
+     * `title` and `resizable` are the initial values; use AWindow::setTitle and AWindow::setResizable to change them
+     * at runtime.
+     *
+     * ```cpp
+     * _new<AWindow>(AWindow::Init {
+     *     .title = "Settings",
+     *     .width = 400_dp,
+     *     .height = 300_dp,
+     *     .parent = AWindow::Init::Parent { .window = *this, .modal = true },
+     *     .decoration = AWindow::Init::DecorationDefault { .buttons = { .minimize = false, .maximize = false } },
+     *     .resizable = false,
+     * });
+     * ```
+     *
+     * @specificto{desktop} `decoration`, `parent` and `resizable` are ignored on Android, iOS and web: the window is the
+     * surface of the application there.
+     */
+    struct Init {
+        /**
+         * @brief Which window controls (buttons) to show.
+         */
+        struct Buttons {
+            bool minimize = true;
+            bool maximize = true;
+            bool close = true;
+        };
+
+        /**
+         * @brief Ordinary OS-drawn titlebar and border.
+         */
+        struct DecorationDefault {
+            Buttons buttons;
+        };
+
+        /**
+         * @brief Window contents extend into the titlebar.
+         * @details
+         * Native window controls are kept where the platform has them (traffic lights on macOS, window controls on
+         * GTK) and reserve space via ATitlebar; on the other platforms AUI draws them. Use ATitlebar to fill the
+         * titlebar.
+         */
+        struct DecorationExtended {
+            Buttons buttons;
+        };
+
+        /**
+         * @brief No titlebar, no buttons.
+         * @details
+         * Native border, shadow and rounded corners are kept when `shadow` is true and the platform is able to. Good
+         * for splash screens.
+         */
+        struct DecorationBorderless {
+            bool shadow = true;
+        };
+
+        using Decoration = std::variant<DecorationDefault, DecorationExtended, DecorationBorderless>;
+
+        /**
+         * @brief Parent window.
+         * @details
+         * A modal window blocks user input of its parent until closed. Modality without a parent is not expressible.
+         */
+        struct Parent {
+            AWindow& window;
+            bool modal = false;
+        };
+
+        AString title = "My window";
+        AMetric width = 854_dp;
+        AMetric height = 500_dp;
+        AOptional<Parent> parent;
+        Decoration decoration = DecorationDefault {};
+        bool resizable = true;
+    };
+
+    AWindow();
+    explicit AWindow(Init init);
+    AWindow(AString title, AMetric width = 854_dp, AMetric height = 500_dp);
     ~AWindow() override;
 
     [[nodiscard]]
@@ -107,6 +209,12 @@ public:
     void redraw() override;
 
     void blockUserInput(bool blockUserInput = true) override;
+
+    /**
+     * @return true if the user input is blocked by AWindow::blockUserInput (i.e., a modal child window is open).
+     */
+    [[nodiscard]]
+    bool isUserInputBlocked() const noexcept { return mInputBlocked; }
 
     /**
      * @brief Checks whether last monitor frame is displayed and redraw will be efficient.
@@ -120,12 +228,81 @@ public:
     void setIcon(const AImage& image);
 
     /**
-     * @brief Removes window from AWindowManager.
+     * @return parameters this window was created with.
+     * @details
+     * Read only. `Init::title` and `Init::resizable` are the initial values only; see AWindow::title and
+     * AWindow::isResizable for actual ones.
      */
-    void quit();
+    [[nodiscard]]
+    const Init& init() const noexcept { return mInit; }
 
-    void setWindowStyle(WindowStyle ws);
-    WindowStyle windowStyle() const { return mWindowStyle; }
+    /**
+     * @return parent window, if any.
+     */
+    [[nodiscard]]
+    AWindow* parentWindow() const noexcept { return mInit.parent ? &mInit.parent->window : nullptr; }
+
+    /**
+     * @brief Popup windows are the ones that host dropdowns and context menus. They are created by AUI only.
+     */
+    [[nodiscard]]
+    bool isPopup() const noexcept { return mIsPopup; }
+
+    /**
+     * @brief Changes window title.
+     */
+    void setTitle(AString title);
+
+    /**
+     * @return current window title.
+     */
+    [[nodiscard]]
+    const AString& title() const noexcept { return mWindowTitle; }
+
+    /**
+     * @brief Allows or forbids the user to resize the window.
+     * @specificto{desktop}
+     */
+    void setResizable(bool resizable);
+
+    /**
+     * @return whether the user is able to resize the window. Reads the state of the native window.
+     */
+    [[nodiscard]]
+    bool isResizable() const;
+
+    /**
+     * @brief Space occupied by the native window controls, in pixels.
+     * @details
+     * Non-zero only for AWindow::Init::DecorationExtended on platforms which draw the window controls natively
+     * (macOS, GTK).
+     */
+    AProperty<AWindowControlsInsets> windowControlsInsets;
+
+    /**
+     * @return true if the platform draws the window controls (traffic lights, etc.) of AWindow::Init::DecorationExtended
+     * windows itself; they occupy AWindow::windowControlsInsets.
+     */
+    [[nodiscard]]
+    bool hasNativeWindowControls() const;
+
+    /**
+     * @brief Whether the specified point (in window coordinates) belongs to the titlebar, i.e., can be used to drag the
+     *        window.
+     * @details
+     * A point is a caption if the deepest view there is inside ATitlebar and is neither an [AButton] nor has
+     * `.override-title-dragging` ASS class.
+     */
+    [[nodiscard]]
+    bool isCaptionAt(const glm::ivec2& pos);
+
+    /**
+     * @brief Registers the titlebar of this window. Called by ATitlebar.
+     */
+    void setTitlebar(ATitlebar* titlebar) noexcept { mTitlebar = titlebar; }
+
+    [[nodiscard]]
+    ATitlebar* titlebar() const noexcept { return mTitlebar; }
 
     /**
      * @brief Minimizes window (hide window to the taskbar, iconifies)
@@ -162,6 +339,16 @@ public:
      * </dl>
      */
     void show();
+
+    /**
+     * @brief Closes the window.
+     * @details
+     * Closing is terminal and works the same on all platforms: `closed` is emitted exactly once, the modal parent is
+     * unblocked, the native window is destroyed and the window is removed from the AWindowManager. The window can't be
+     * shown again after that; create another one. Calling close() on a closed window does nothing.
+     *
+     * Use AWindow::hide to hide the window temporarily.
+     */
     void close();
 
     /**
@@ -201,11 +388,6 @@ public:
         return mHandle;
     }
 
-    const AString& getWindowTitle() const
-    {
-        return mWindowTitle;
-    }
-
     glm::ivec2 getWindowPosition() const;
 
     /**
@@ -235,14 +417,10 @@ public:
     /**
      * @brief Wraps your AView to window.
      * @param view view to wrap
-     * @param title window title
-     * @param width window width
-     * @param height window height
-     * @param parent parent window
-     * @param ws window style flags
+     * @param init window creation parameters
      * @return created window, AWindow::show() is not called
      */
-    static _<AWindow> wrapViewToWindow(const _<AView>& view, const AString& title, int width = 854_dp, int height = 500_dp, AWindow* parent = nullptr, WindowStyle ws = WindowStyle::DEFAULT);
+    static _<AWindow> wrapViewToWindow(const _<AView>& view, Init init);
 
     [[deprecated("Use ASurface::current()")]]
     static ASurface* current() {
@@ -274,6 +452,12 @@ public:
     _<AOverlappingSurface> createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) override;
 
     void closeOverlappingSurfaceImpl(_<AOverlappingSurface> surface) override;
+
+    /**
+     * @brief The user clicked the close button.
+     * @details
+     * Closes the window by default. Override to refuse closing.
+     */
     virtual void onCloseButtonClicked();
 
     void forceUpdateCursor() override;
@@ -323,6 +507,7 @@ signals:
     bool consumesClick(const glm::ivec2& pos) override;
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
+    void onPointerPressed(const APointerPressedEvent& event) override;
 
 protected:
 #if AUI_PLATFORM_WIN
@@ -332,24 +517,22 @@ protected:
 #elif AUI_PLATFORM_APPLE
 #endif
     AWindowNativePtr mHandle = 0; // on linux AWindowNativePtr is not a pointer type so using zero here
-    WindowStyle mWindowStyle = WindowStyle::DEFAULT;
 
     virtual void doDrawWindow();
-    virtual void onClosed();
 
-    void windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws);
+    struct PopupTag {};
+
+    /**
+     * @brief Constructs a popup window (dropdown, context menu).
+     */
+    AWindow(PopupTag, AWindow& parent);
+
+    void windowNativePreInit();
 
     /**
      * @brief Enables drag-n-drop for this window.
      */
     void allowDragNDrop();
-
-    /**
-     * @brief Constructor for custom initialization logic
-     * @details
-     * Please call windowNativePreInit
-     */
-    AWindow(std::nullptr_t) {}
 
     void createDevtoolsWindow() override;
 
@@ -373,7 +556,29 @@ private:
     bool mRedrawFlag = true;
 #endif
     AString mWindowClass;
-    AWindow* mParentWindow;
+    Init mInit;
+    bool mIsPopup = false;
+    ATitlebar* mTitlebar = nullptr;
+
+    /**
+     * @brief close() was called.
+     */
+    bool mClosed = false;
+
+    /**
+     * @brief User input is blocked (a modal child window is open).
+     */
+    bool mInputBlocked = false;
+
+    /**
+     * @brief Window manager moves or resizes the window by our request.
+     */
+    bool mWindowManagerDragging = false;
+
+    /**
+     * @brief The native window was destroyed.
+     */
+    bool mNativeDestroyed = false;
 
     unsigned mFrameMillis = 1;
 
@@ -385,6 +590,27 @@ private:
     _<void> mLifetimeToken = _new<char>();
 
     AString mWindowTitle;
+
+    // platform-specific parts
+
+    /**
+     * @brief Handles a pointer press on the titlebar or window edge by the means of the platform (window drag, resize,
+     *        maximize on double click).
+     * @return true if the event is consumed.
+     */
+    bool captionPressed(const APointerPressedEvent& event);
+#if AUI_PLATFORM_LINUX
+    std::chrono::steady_clock::time_point mLastCaptionPress {};
+    void applyResizeEdgeCursor(glm::vec2 pos);
+#endif
+#if AUI_PLATFORM_MACOS
+    void applyTitlebarRect();
+    void updateWindowControlsInsets();
+#endif
+    void showImpl();
+    void hideImpl();
+    void setTitleImpl(const AString& title);
+    void destroyNativeWindow();
 
 #if AUI_PLATFORM_WIN
     friend LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);

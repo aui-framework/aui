@@ -52,7 +52,7 @@ void PlatformAbstractionAdw::windowManagerInitNativeWindow(const IRenderingConte
         return;
     }
     auto window = GTK_WINDOW(adw_application_window_new(GTK_APPLICATION(*mApplication)));
-    // adw window always has client-side decorations; NO_TITLEBAR hides the header bar.
+    // adw window always has client-side decorations; the header bar is hidden for the decorations other than default.
     auto header = adw_header_bar_new();
     gtkSetTitlebar(window, header);
     windowManagerInitCommon(init, window);
