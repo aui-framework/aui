@@ -305,34 +305,23 @@ void PlatformAbstractionGtk::desktopSetMousePosition(glm::ivec2 pos) {
         unsupportedOnWayland("desktopSetMousePosition");
     }
 }
-void PlatformAbstractionGtk::windowSetStyle(AWindow &window, WindowStyle ws) {
-    auto handle = nativeWindow(window);
-    if (!handle) {
-        // popups have neither decorations nor window management.
-        return;
+void PlatformAbstractionGtk::windowSetTitle(AWindow &window, const AString& title) {
+    if (auto handle = nativeWindow(window)) {
+        gtk_window_set_title(handle, title.toStdString().c_str());
     }
-    const bool isSys = bool(ws & WindowStyle::SYS);
-    gtk_window_set_resizable(handle, !bool(ws & WindowStyle::NO_RESIZE));
-    // GTK4 has no way to hide only minimize/maximize buttons; non-resizable windows have no maximize button.
-    bool decorated = !(ws & (WindowStyle::NO_DECORATORS | WindowStyle::SYS));
-    if (auto titlebar = gtkTitlebar(handle)) {
-        // NO_TITLEBAR: keep client-side decorations (shadow, rounded corners, resize borders), hide the titlebar only.
-        // Popups and undecorated windows must not have a titlebar either (adw windows ignore gtk_window_set_decorated).
-        gtk_widget_set_visible(titlebar, !(ws & (WindowStyle::NO_TITLEBAR | WindowStyle::NO_DECORATORS | WindowStyle::SYS)));
-    } else if (!!(ws & WindowStyle::NO_TITLEBAR)) {
-        // the titlebar can't be installed on a realized window; the best we can do is to drop the decorations.
-        decorated = false;
+}
+
+void PlatformAbstractionGtk::windowSetResizable(AWindow &window, bool resizable) {
+    if (auto handle = nativeWindow(window)) {
+        gtk_window_set_resizable(handle, resizable);
     }
-    gtk_window_set_decorated(handle, decorated);
-    gtk_window_set_modal(handle, (ws & WindowStyle::MODAL) == WindowStyle::MODAL);
-    if (isSys) {
-        gtk_window_set_deletable(handle, false);
+}
+
+bool PlatformAbstractionGtk::windowIsResizable(AWindow &window) const {
+    if (auto handle = nativeWindow(window)) {
+        return gtk_window_get_resizable(handle);
     }
-    if ((bool(ws & WindowStyle::MODAL) || isSys) && parentWindow(window)) {
-        gtk_window_set_transient_for(handle, nativeHandle(*parentWindow(window)));
-    } else {
-        gtk_window_set_transient_for(handle, nullptr);
-    }
+    return false;
 }
 
 GtkWidget* PlatformAbstractionGtk::gtkTitlebar(GtkWindow* window) {
@@ -461,9 +450,8 @@ void PlatformAbstractionGtk::windowSetGeometry(AWindow &window, int x, int y, in
     }
     auto handle = nativeHandle(window);
     gtk_window_set_default_size(handle, width, height);
-    const bool isPopup = (window.windowStyle() & WindowStyle::SYS) == WindowStyle::SYS;
     if (!aui::gtk4_x11::windowMoveResize(
-            surfaceOf(handle), x, y, width, height, isPopup && !gtk_widget_get_mapped(GTK_WIDGET(handle)))) {
+            surfaceOf(handle), x, y, width, height, window.isPopup() && !gtk_widget_get_mapped(GTK_WIDGET(handle)))) {
         unsupportedOnWayland("windowSetGeometry (position)");
     }
 }
@@ -499,13 +487,6 @@ void PlatformAbstractionGtk::windowMoveToCenter(AWindow &window) {
             surfaceOf(nativeHandle(window)), parent ? surfaceOf(nativeHandle(*parent)) : nullptr)) {
         unsupportedOnWayland("windowMoveToCenter");
     }
-}
-void PlatformAbstractionGtk::windowQuit(AWindow &window) {
-    if (isPopup(window)) {
-        gtk_popover_popdown(reinterpret_cast<GtkPopover*>(gtkWidget(window)));
-        return;
-    }
-    gtk_window_close(nativeHandle(window));
 }
 void PlatformAbstractionGtk::windowAnnounceMinMaxSize(AWindow &window) {
     if (isPopup(window)) {

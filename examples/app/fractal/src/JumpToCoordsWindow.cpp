@@ -24,7 +24,11 @@
 using namespace declarative;
 
 JumpToCoordsWindow::JumpToCoordsWindow(_<FractalView> fractalView, AWindow* parent)
-  : AWindow("Jump to coords", 854_dp, 500_dp, parent, WindowStyle::NO_RESIZE) {
+  : AWindow(Init {
+      .title = "Jump to coords",
+      .parent = parent ? AOptional<Init::Parent>(Init::Parent { .window = *parent }) : std::nullopt,
+      .resizable = false,
+    }) {
     auto re = _new<ATextField>();
     auto im = _new<ATextField>();
     auto scale = _new<ATextField>();

@@ -135,8 +135,18 @@ protected:
               .name = "Adjust radius...",
               .onAction =
                   [this, circle] {
-                      auto radiusPopup = _new<AWindow>(
-                          "", 200_dp, 50_dp, dynamic_cast<AWindow*>(ASurface::current()), WindowStyle::MODAL);
+                      auto parent = dynamic_cast<AWindow*>(ASurface::current());
+                      auto radiusPopup = _new<AWindow>(AWindow::Init {
+                        .title = "",
+                        .width = 200_dp,
+                        .height = 50_dp,
+                        .parent = parent ? AOptional<AWindow::Init::Parent>(
+                                               AWindow::Init::Parent { .window = *parent, .modal = true })
+                                         : std::nullopt,
+                        .decoration =
+                            AWindow::Init::DecorationDefault { .buttons = { .minimize = false, .maximize = false } },
+                        .resizable = false,
+                      });
                       radiusPopup->setContents(Vertical {
                         Label { "Adjust diameter of circle at {}."_format(circle->position) },
                         Slider {

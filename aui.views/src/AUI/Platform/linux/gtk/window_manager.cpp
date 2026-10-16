@@ -27,7 +27,7 @@ using namespace aui::gtk4_fake;
 #pragma ide diagnostic ignored "LocalValueEscapesScope"
 #endif
 bool PlatformAbstractionGtk::windowManagerInitPopup(const IRenderingContext::Init& init) {
-    if (!(init.ws & WindowStyle::SYS) || init.parent == nullptr || aui::gtk4_x11::isActive()) {
+    if (!init.popup || init.parent == nullptr || aui::gtk4_x11::isActive()) {
         // X11 can position and decorate-less toplevels itself.
         return false;
     }
@@ -74,30 +74,114 @@ void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingConte
         return;
     }
     auto window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(*mApplication)));
-    if (!!(init.ws & WindowStyle::NO_TITLEBAR)) {
-        // a custom titlebar enables client-side decorations; hiding it leaves the window frame (shadow, resize borders)
-        // only. This must be done before the window is realized.
+    if (!init.popup) {
+        // a custom titlebar enables client-side decorations; it also lets us control the window buttons and hide the
+        // titlebar leaving the window frame (shadow, resize borders) only. This must be done before the window is
+        // realized.
         auto titlebar = gtk_header_bar_new();
         gtk_window_set_titlebar(window, titlebar);
         gtkSetTitlebar(window, titlebar);
     }
     windowManagerInitCommon(init, window);
     gtk_window_set_child(window, windowManagerInitGtkBox(init));
-    
+
     // Set WM_CLASS hint after the rendering context is initialized
     if (auto gtkContext = dynamic_cast<RenderingContextGtk*>(init.window.getRenderingContext().get())) {
         gtkSetWindowClassHint(gtkContext, window);
     }
 }
 
+void PlatformAbstractionGtk::gtkApplyButtons(aui::gtk4_fake::GtkWidget* titlebar, const AWindow::Init::Buttons& buttons) {
+    // the layout is system-wide ("close:minimize,maximize", "appmenu:close", ...); drop the disabled buttons from it.
+    char* systemLayout = nullptr;
+    if (auto settings = gtk_settings_get_default()) {
+        g_object_get(settings, "gtk-decoration-layout", &systemLayout, nullptr);
+    }
+    AString layout = systemLayout ? AString(systemLayout) : AString("appmenu:minimize,maximize,close");
+    g_free(systemLayout);
+
+    AString result;
+    AString token;
+    const auto flush = [&] {
+        if (token.empty()) {
+            return;
+        }
+        const bool enabled = (token != "minimize" || buttons.minimize) && (token != "maximize" || buttons.maximize) &&
+                             (token != "close" || buttons.close);
+        if (enabled) {
+            if (!result.empty() && result.back() != ':') {
+                result += ',';
+            }
+            result += token;
+        }
+        token.clear();
+    };
+    for (auto c : layout) {
+        if (c == ':' || c == ',') {
+            flush();
+            if (c == ':') {
+                result += ':';
+            }
+        } else {
+            token += c;
+        }
+    }
+    flush();
+    const auto utf8 = result.toStdString();
+    g_object_set(titlebar, "decoration-layout", utf8.c_str(), nullptr);
+}
+
 void PlatformAbstractionGtk::windowManagerInitCommon(const IRenderingContext::Init& init, GtkWindow* window) {
     nativeHandle(init.window) = window;
     gtk_window_set_default_size(window, init.width, init.height);
     gtk_window_set_title(window, init.name.toStdString().c_str());
-    windowSetStyle(init.window, init.ws);
+
+    const auto& windowInit = init.window.init();
+    gtk_window_set_resizable(window, windowInit.resizable);
+
+    // GTK4 has no way to hide only minimize/maximize buttons of a non-resizable window besides the layout; AWindow's
+    // Buttons are applied via decoration-layout of the titlebar.
+    bool decorated = true;
+    bool titlebarVisible = true;
+    std::visit(
+        aui::lambda_overloaded {
+          [&](const AWindow::Init::DecorationDefault& d) {
+              if (auto titlebar = gtkTitlebar(window)) {
+                  gtkApplyButtons(titlebar, d.buttons);
+              }
+          },
+          [&](const AWindow::Init::DecorationExtended&) {
+              // AUI draws its own titlebar contents (ATitlebar).
+              titlebarVisible = false;
+          },
+          [&](const AWindow::Init::DecorationBorderless& d) {
+              // CSD without a titlebar leaves us with the shadow, rounded corners and resize borders only.
+              titlebarVisible = false;
+              decorated = d.shadow;
+          },
+        },
+        windowInit.decoration);
+    if (init.popup) {
+        decorated = false;
+        titlebarVisible = false;
+        gtk_window_set_deletable(window, false);
+    }
+    if (auto titlebar = gtkTitlebar(window)) {
+        // adw windows ignore gtk_window_set_decorated, so the titlebar has to be hidden explicitly.
+        gtk_widget_set_visible(titlebar, titlebarVisible);
+    } else if (!titlebarVisible) {
+        decorated = false;
+    }
+    gtk_window_set_decorated(window, decorated);
+
+    if (windowInit.parent) {
+        gtk_window_set_transient_for(window, nativeHandle(windowInit.parent->window));
+        gtk_window_set_modal(window, windowInit.parent->modal);
+    }
 
     g_signal_connect(
         window, "close-request", G_CALLBACK(+[](GtkWindow* self, AWindow* window) -> gboolean {
+            // we destroy the window ourselves (AWindow::close)
             window->onCloseButtonClicked();
             return true;
         }),

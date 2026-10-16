@@ -69,7 +69,9 @@ public:
 
 
     // WINDOW
-    void windowSetStyle(AWindow& window, WindowStyle ws) override;
+    void windowSetTitle(AWindow& window, const AString& title) override;
+    void windowSetResizable(AWindow& window, bool resizable) override;
+    bool windowIsResizable(AWindow& window) const override;
     float windowFetchDpiFromSystem(AWindow& window) override;
     void windowRestore(AWindow& window) override;
     void windowMinimize(AWindow& window) override;
@@ -91,7 +93,6 @@ public:
     void windowShowTouchscreenKeyboardImpl(AWindow& window) override;
     void windowHideTouchscreenKeyboardImpl(AWindow& window) override;
     void windowMoveToCenter(AWindow& window) override;
-    void windowQuit(AWindow& window) override;
     void windowAnnounceMinMaxSize(AWindow& window) override;
     void windowBeginMove(AWindow& window) override;
     void windowBeginResize(AWindow& window, ResizeEdge edge) override;
@@ -103,6 +104,9 @@ public:
         AMessageBox::Button b) override;
 
 private:
+    void xApplyInit(AWindow& window);
+    void xApplyMotifHints(AWindow& window);
+    void xApplySizeHints(AWindow& window, glm::ivec2 size);
     void xProcessEvent(XEvent& ev);
     void xClipboardClear();
     void xHandleClipboard(const XEvent& ev);

@@ -25,7 +25,7 @@
 #include "AUI/View/A2FingerTransformArea.h"
 #include "AUI/View/AButton.h"
 #include "AUI/Layout/AHorizontalLayout.h"
-#include "AUI/Platform/ACustomCaptionWindow.h"
+#include <AUI/View/ATitlebar.h>
 #include "AUI/View/ACircleProgressBar.h"
 #include "AUI/View/ALabel.h"
 #include "AUI/Layout/AStackedLayout.h"
@@ -84,7 +84,7 @@ void fillWindow(_<AViewContainer> t) {
 
 class AllViewsWindow : public AWindow {
 public:
-    AllViewsWindow() : AWindow("All views", 300_dp, 500_dp, nullptr, WindowStyle::MODAL) {
+    AllViewsWindow() : AWindow("All views", 300_dp, 500_dp) {
         setContents(Centered {
           AScrollArea::Builder()
               .withContents(
@@ -293,7 +293,16 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<AButton>("Show window")
                         .connect(&AButton::clicked, this,
                                  [&] {
-                                     auto w = _new<AWindow>("Basic window", 400_dp, 300_dp, this, WindowStyle::MODAL);
+                                     auto w = _new<AWindow>(AWindow::Init {
+                                       .title = "Basic window",
+                                       .width = 400_dp,
+                                       .height = 300_dp,
+                                       .parent = AWindow::Init::Parent { .window = *this, .modal = true },
+                                       .decoration = AWindow::Init::DecorationDefault {
+                                         .buttons = { .minimize = false, .maximize = false },
+                                       },
+                                       .resizable = false,
+                                     });
                                      fillWindow(w);
                                      w->show();
                                      mWindows << w;
@@ -301,19 +310,38 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<AButton>("Show window without caption")
                         .connect(&AButton::clicked, this,
                                  [&] {
-                                     auto w = _new<ACustomWindow>("Custom window without caption", 400_dp, 300_dp);
-                                     fillWindow(w);
+                                     auto w = _new<AWindow>(AWindow::Init {
+                                       .title = "Custom window without caption",
+                                       .width = 400_dp,
+                                       .height = 300_dp,
+                                       .decoration = AWindow::Init::DecorationBorderless {},
+                                     });
+                                     w->setContents(Vertical {
+                                       _new<ATitlebar>(Label { "Drag me" } AUI_OVERRIDE_STYLE { Padding { 4_dp } }),
+                                       Centered { Label { "Window contents" } } AUI_LET { it->setExpanding(); },
+                                     });
                                      w->show();
                                      mWindows << w;
                                  }),
                     _new<AButton>("Show window custom caption")
                         .connect(&AButton::clicked, this,
                                  [&] {
-                                     auto w =
-                                         _new<ACustomCaptionWindow>("Custom window custom caption", 400_dp, 300_dp);
-                                     fillWindow(w->getContentContainer());
+                                     auto w = _new<AWindow>(AWindow::Init {
+                                       .title = "Custom window custom caption",
+                                       .width = 400_dp,
+                                       .height = 300_dp,
+                                       .decoration = AWindow::Init::DecorationExtended {},
+                                     });
+                                     w->setContents(Stacked {
+                                       Centered { Label { "Window contents" } },
+                                       Vertical {
+                                         _new<ATitlebar>(Horizontal {
+                                           Label { "Custom window custom caption" },
+                                         }),
+                                         SpacerExpanding {},
+                                       },
+                                     });
                                      w->show();
-                                     w->setWindowStyle(WindowStyle::MODAL);
                                      mWindows << w;
                                  }),
                     _new<AButton>("Close all windows")

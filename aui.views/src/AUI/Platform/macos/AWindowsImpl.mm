@@ -24,7 +24,7 @@
 #include "AUI/Thread/AThread.h"
 #include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Platform/APlatform.h"
-#include "AUI/Platform/ACustomWindow.h"
+#include <AUI/View/ATitlebar.h>
 #include "AUI/Platform/OpenGLRenderingContext.h"
 #import "MacosApp.h"
 
@@ -40,26 +40,10 @@
 
 
 AWindow::~AWindow() {
-    mRenderingContext->destroyNativeWindow(*this);
+    destroyNativeWindow();
 }
 
-
-void AWindow::quit() {
-    if (!mHandle) {
-        return;
-    }
-    getWindowManager().mWindows.removeFirst(mSelfHolder);
-
-    AThread::current()->enqueue([&]() {
-        mSelfHolder = nullptr;
-    });
-    [static_cast<NSWindow*>(mHandle) close];
-    mHandle = nullptr;
-    if (!getWindowManager().shouldKeepRunning()) {
-        MacosApp::inst().quit();
-    }
-}
-void AWindow::show() {
+void AWindow::showImpl() {
     if (!getWindowManager().mWindows.contains(_cast<AWindow>(aui::ptr::shared_from_this(this)))) {
         getWindowManager().mWindows << _cast<AWindow>(aui::ptr::shared_from_this(this));
     }
@@ -79,44 +63,91 @@ void AWindow::show() {
 
     emit shown();
 }
-void AWindow::setWindowStyle(WindowStyle ws) {
-    mWindowStyle = ws;
+void AWindow::setTitleImpl(const AString& title) {
     if (!mHandle) return;
+    [static_cast<NSWindow*>(mHandle) setTitle:[NSString stringWithUTF8String:title.toStdString().c_str()]];
+}
+
+void AWindow::setResizable(bool resizable) {
+    if (!mHandle || mClosed) return;
     auto s = static_cast<NSWindow*>(mHandle);
-
-    // SYS == popup (context menu, dropdown, tooltip)
-    if (!!(ws & WindowStyle::SYS)) {
-        [s setStyleMask:NSWindowStyleMaskBorderless];
-        [s setLevel:NSPopUpMenuWindowLevel];
-        [s setHidesOnDeactivate:YES];
-        [s setOpaque:NO];
-        [s setBackgroundColor:[NSColor clearColor]];
-        [s setHasShadow:YES];
-        return;
-    }
-
-    const bool hideChrome = !!(ws & WindowStyle::NO_DECORATORS);
-    const bool customTitlebar = !!(ws & WindowStyle::NO_TITLEBAR);
-    const bool hideMinMax = !!(ws & WindowStyle::NO_MINIMIZE_MAXIMIZE);
-    const bool noResize = !!(ws & WindowStyle::NO_RESIZE);
-    if (hideChrome || customTitlebar) {
-        [s setStyleMask:([s styleMask] | NSWindowStyleMaskFullSizeContentView)];
-        [s setTitlebarAppearsTransparent:YES];
-        [s setTitleVisibility:NSWindowTitleHidden];
-        [s setMovableByWindowBackground:YES];
-        const BOOL hideButtons = hideChrome ? YES : NO;
-        [[s standardWindowButton:NSWindowCloseButton] setHidden:hideButtons];
-        [[s standardWindowButton:NSWindowMiniaturizeButton] setHidden:(hideButtons || hideMinMax)];
-        [[s standardWindowButton:NSWindowZoomButton] setHidden:(hideButtons || hideMinMax)];
-    }
-
     NSWindowStyleMask mask = [s styleMask];
-    if (noResize) {
-        mask &= ~NSWindowStyleMaskResizable;
-    } else {
+    if (resizable) {
         mask |= NSWindowStyleMaskResizable;
+    } else {
+        mask &= ~NSWindowStyleMaskResizable;
     }
     [s setStyleMask:mask];
+}
+
+bool AWindow::isResizable() const {
+    if (!mHandle) return false;
+    return ([static_cast<NSWindow*>(mHandle) styleMask] & NSWindowStyleMaskResizable) != 0;
+}
+
+bool AWindow::hasNativeWindowControls() const { return true; }
+
+bool AWindow::captionPressed(const APointerPressedEvent& event) {
+    if (!mHandle || event.asButton != AInput::LBUTTON || !isCaptionAt(glm::ivec2(event.position))) {
+        return false;
+    }
+    auto* ns = static_cast<NSWindow*>(mHandle);
+    NSEvent* current = [NSApp currentEvent];
+    if (!current) {
+        return false;
+    }
+    if ([current clickCount] >= 2) {
+        if (isResizable()) {
+            [ns performZoom:nil];
+        }
+        return true;
+    }
+    [ns performWindowDragWithEvent:current];
+    return true;
+}
+
+void AWindow::applyTitlebarRect() {
+    // Aligns the traffic lights vertically with the ATitlebar; AppKit resets their position on resize and fullscreen
+    // transitions, and we layout on each of them.
+    if (!mHandle || !mTitlebar || !std::holds_alternative<Init::DecorationExtended>(mInit.decoration)) {
+        return;
+    }
+    auto* ns = static_cast<NSWindow*>(mHandle);
+    const float dpi = getDpiRatio();
+    const auto position = mTitlebar->getPositionInWindow();
+    const auto size = mTitlebar->getSize();
+    const CGFloat contentHeight = [[ns contentView] bounds].size.height;
+    // center of the titlebar in the window coordinates (points, origin at the bottom left)
+    const CGFloat centerY = contentHeight - (position.y + size.y / 2.f) / dpi;
+    for (auto type : { NSWindowCloseButton, NSWindowMiniaturizeButton, NSWindowZoomButton }) {
+        NSButton* button = [ns standardWindowButton:type];
+        if (!button || [button isHidden]) continue;
+        NSView* container = [button superview];
+        const NSPoint inContainer = [container convertPoint:NSMakePoint(0, centerY) fromView:nil];
+        [button setFrameOrigin:NSMakePoint([button frame].origin.x, inContainer.y - [button frame].size.height / 2)];
+    }
+    updateWindowControlsInsets();
+}
+
+void AWindow::updateWindowControlsInsets() {
+    if (!mHandle || !std::holds_alternative<Init::DecorationExtended>(mInit.decoration)) {
+        return;
+    }
+    auto* ns = static_cast<NSWindow*>(mHandle);
+    const float dpi = getDpiRatio();
+    CGFloat right = 0;
+    for (auto type : { NSWindowCloseButton, NSWindowMiniaturizeButton, NSWindowZoomButton }) {
+        NSButton* button = [ns standardWindowButton:type];
+        if (!button || [button isHidden]) continue;
+        const NSRect inWindow = [button convertRect:[button bounds] toView:nil];
+        right = std::max(right, NSMaxX(inWindow));
+    }
+    const CGFloat titlebarHeight = [ns frame].size.height - [ns contentLayoutRect].size.height;
+    windowControlsInsets = AWindowControlsInsets {
+        .left = right > 0 ? int(std::ceil((right + 8) * dpi)) : 0,
+        .right = 0,
+        .height = int(std::ceil(titlebarHeight * dpi)),
+    };
 }
 
 float AWindow::fetchDpiFromSystem() const {
@@ -201,11 +232,14 @@ glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
 void AWindow::setIcon(const AImage& image) {
 }
 
-void AWindow::hide() {
+void AWindow::hideImpl() {
+    if (!mHandle) return;
+    [static_cast<NSWindow*>(mHandle) orderOut:nil];
 }
 
 void AWindow::activate(const AString&) {
     show();
+    if (mClosed) return;
     if (auto ns = static_cast<NSWindow*>(mHandle)) {
         if ([ns isMiniaturized]) {
             [ns deminiaturize:nil];
@@ -216,7 +250,9 @@ void AWindow::activate(const AString&) {
 }
 
 void AWindow::blockUserInput(bool blockUserInput) {
-
+    // the modal child window is attached to this window (see CommonRenderingContext::init); AUIView ignores input of
+    // blocked windows.
+    mInputBlocked = blockUserInput;
 }
 
 void AWindowManager::notifyProcessMessages() {

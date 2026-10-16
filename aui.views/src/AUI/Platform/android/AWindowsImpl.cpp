@@ -25,7 +25,6 @@
 #include "AUI/Thread/AThread.h"
 #include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Platform/APlatform.h"
-#include "AUI/Platform/ACustomWindow.h"
 #include "AUI/Platform/OpenGLRenderingContext.h"
 
 #include <chrono>
@@ -40,21 +39,21 @@
 
 
 AWindow::~AWindow() {
-    mRenderingContext->destroyNativeWindow(*this);
+    destroyNativeWindow();
 }
 
 
-void AWindow::quit() {
-    getWindowManager().mWindows.removeFirst(_cast<AWindow>(aui::ptr::shared_from_this(this)));
-
-    AThread::current()->enqueue([&]() {
-        mSelfHolder = nullptr;
-    });
+void AWindow::setResizable(bool resizable) {
+    // the window is the surface of the application.
 }
 
-void AWindow::setWindowStyle(WindowStyle ws) {
-    mWindowStyle = ws;
-}
+bool AWindow::isResizable() const { return false; }
+
+bool AWindow::hasNativeWindowControls() const { return false; }
+
+bool AWindow::captionPressed(const APointerPressedEvent&) { return false; }
+
+void AWindow::setTitleImpl(const AString& title) {}
 
 void AWindow::restore() {
 
@@ -108,7 +107,7 @@ glm::ivec2 AWindow::unmapPosition(const glm::ivec2& position) {
 void AWindow::setIcon(const AImage& image) {
 }
 
-void AWindow::hide() {
+void AWindow::hideImpl() {
 }
 
 void AWindow::activate(const AString&) {
@@ -122,7 +121,7 @@ void AWindowManager::notifyProcessMessages() {
 void AWindowManager::loop() {
     AThread::processMessages();
 }
-void AWindow::show() {
+void AWindow::showImpl() {
     if (!getWindowManager().mWindows.contains(_cast<AWindow>(aui::ptr::shared_from_this(this)))) {
         getWindowManager().mWindows << _cast<AWindow>(aui::ptr::shared_from_this(this));
     }

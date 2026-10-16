@@ -30,7 +30,7 @@
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/AVDividerView.h>
 #include <AUI/View/ATabView.h>
-#include <AUI/Platform/ACustomCaptionWindow.h>
+#include <AUI/View/ATitlebar.h>
 #include <AUI/View/ARulerView.h>
 #include <AUI/View/ATreeView.h>
 #include <AUI/View/AText.h>
@@ -426,26 +426,21 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0x808080_rgb },
         },
 
-        // CUSTOM WINDOWS ===================================================
+        // ATITLEBAR ========================================================
         {
-            type_of<ACustomCaptionWindow>(),
-            Padding { 0 },
-            Border { 1_px, getOsThemeColor() },
-        },
-        {
-            class_of(".window-title"),
+            t<ATitlebar>(),
             BackgroundSolid { getOsThemeColor() },
-            FixedSize { {}, 30_dp }
+            Margin { 0 },
         },
         {
-            class_of(".window-title") >> class_of(".title"),
+            t<ATitlebar>() >> t<ALabel>(),
             Margin { 0 },
             Padding { 7_dp },
             TextColor { 0xffffff_rgb },
             FontSize { 9_pt },
         },
         {
-            class_of(".window-title") >> class_of(".default"),
+            t<ATitlebar>() >> class_of(".default"),
             BorderRadius{ 0 },
             BoxShadow { nullptr },
             Border { nullptr },
@@ -456,37 +451,37 @@ AStylesheet::AStylesheet() {
             BackgroundImage {{}, {}, {}, Sizing::CENTER }
         },
         {
-            class_of(".window-title") >> class_of(".minimize"),
+            t<ATitlebar>() >> class_of(".minimize"),
             BackgroundImage {":uni/caption/minimize.svg", {}, {}, Sizing::CENTER }
         },
         {
-            class_of(".window-title") >> class_of(".close"),
+            t<ATitlebar>() >> class_of(".close"),
             BackgroundImage {":uni/caption/close.svg", {}, {}, Sizing::CENTER }
         },
         {
-            class_of(".window-title") >> t<AButton>::hover(),
+            t<ATitlebar>() >> t<AButton>::hover(),
             BackgroundSolid { 0x20ffffff_argb },
         },
         {
-            class_of(".window-title") >> t<AButton>::active(),
+            t<ATitlebar>() >> t<AButton>::active(),
             BackgroundSolid { 0x30ffffff_argb },
         },
         {
-            class_of(".window-title") >> class_of::hover(".close"),
+            t<ATitlebar>() >> class_of::hover(".close"),
             BackgroundSolid { 0xe81123_rgb }
         },
         {
-            class_of(".window-title") >> class_of::active(".close"),
+            t<ATitlebar>() >> class_of::active(".close"),
             BackgroundSolid { 0x80e81123_argb }
         },
-        // win32 reports the caption buttons as non-client area, so views don't get pointer events there and
-        // ":hover" never matches; CustomCaptionWindowImplWin32 toggles these classes instead.
+        // win32 reports the window buttons as non-client area, so views don't get pointer events there and
+        // ":hover" never matches; AWindowControls toggles these classes instead.
         {
-            class_of(".window-title") >> class_of(".nc-hover"),
+            t<ATitlebar>() >> class_of(".nc-hover"),
             BackgroundSolid { 0x20ffffff_argb },
         },
         {
-            class_of(".window-title") >> class_of(".nc-hover-close"),
+            t<ATitlebar>() >> class_of(".nc-hover-close"),
             BackgroundSolid { 0xe81123_rgb }
         },
         {

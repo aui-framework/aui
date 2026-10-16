@@ -12,8 +12,10 @@
 #pragma once
 
 #include "FieldCell.h"
-#include "AUI/Platform/ACustomCaptionWindow.h"
 #include "CellView.h"
+#include <AUI/Platform/AWindow.h>
+#include <AUI/View/AViewContainer.h>
+#include <AUI/View/AButton.h>
 
 class MinesweeperWindow : public AWindow {
 public:

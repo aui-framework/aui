@@ -56,9 +56,15 @@ void NewGameWindow::updateDifficultyLabel() {
 }
 
 NewGameWindow::NewGameWindow(MinesweeperWindow* minesweeper)
-  : AWindow("New game", 100, 100, minesweeper), mMinesweeper(minesweeper) {
-    setWindowStyle(WindowStyle::MODAL);
-
+  : AWindow(Init {
+      .title = "New game",
+      .width = 100_px,
+      .height = 100_px,
+      .parent = AWindow::Init::Parent { .window = *minesweeper, .modal = true },
+      .decoration = Init::DecorationDefault { .buttons = { .minimize = false, .maximize = false } },
+      .resizable = false,
+    }),
+    mMinesweeper(minesweeper) {
     setLayout(std::make_unique<AVerticalLayout>());
     setContents(Vertical {
       _form({

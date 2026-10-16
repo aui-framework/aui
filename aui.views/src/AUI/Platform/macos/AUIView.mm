@@ -218,6 +218,7 @@ AOptional<NSEventModifierFlags> modifierFlagOf(AInput::Key key) {
 }
 
 - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
+    if (mAWindow->isUserInputBlocked()) return;
     ALOG_DEBUG(LOG_TAG) << "keyEvent";
     NSEventType eventType = [theEvent type];
     NSEventModifierFlags modifierFlags = [theEvent modifierFlags];
@@ -321,38 +322,47 @@ AOptional<NSEventModifierFlags> modifierFlagOf(AInput::Key key) {
 }
 
 - (void)mouseMoved:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseMoved(mAWindow, event);
 }
 
 - (void)mouseDragged:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseMoved(mAWindow, event);
 }
 
 - (void)rightMouseDragged:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseMoved(mAWindow, event);
 }
 
 - (void)otherMouseDragged:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseMoved(mAWindow, event);
 }
 
 - (void)mouseDown:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseButtonDown(mAWindow, event, AInput::LBUTTON);
 }
 
 - (void)mouseUp:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseButtonUp(mAWindow, event, AInput::LBUTTON);
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseButtonDown(mAWindow, event, AInput::RBUTTON);
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseButtonUp(mAWindow, event, AInput::RBUTTON);
 }
 
 - (void)scrollWheel:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     CGFloat deltaX;
     CGFloat deltaY;
     if ([event hasPreciseScrollingDeltas]) {
