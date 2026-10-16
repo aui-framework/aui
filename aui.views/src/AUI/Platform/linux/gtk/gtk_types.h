@@ -255,6 +255,7 @@ using GtkPopover = struct _GtkPopover {
     GtkWidget parent_instance;
 };
 typedef enum { GTK_POS_LEFT, GTK_POS_RIGHT, GTK_POS_TOP, GTK_POS_BOTTOM } GtkPositionType;
+typedef enum { GTK_ALIGN_FILL, GTK_ALIGN_START, GTK_ALIGN_END, GTK_ALIGN_CENTER, GTK_ALIGN_BASELINE } GtkAlign;
 using GtkIMMulticontext = struct _GtkIMMulticontext;
 using GtkPageSetup = struct _GtkPageSetup;
 using GtkPaperSize = struct _GtkPaperSize;
