@@ -285,7 +285,8 @@ void PlatformAbstractionGtk::windowSetStyle(AWindow &window, WindowStyle ws) {
     bool decorated = !(ws & (WindowStyle::NO_DECORATORS | WindowStyle::SYS));
     if (auto titlebar = gtkTitlebar(handle)) {
         // NO_TITLEBAR: keep client-side decorations (shadow, rounded corners, resize borders), hide the titlebar only.
-        gtk_widget_set_visible(titlebar, !(ws & WindowStyle::NO_TITLEBAR));
+        // Popups and undecorated windows must not have a titlebar either (adw windows ignore gtk_window_set_decorated).
+        gtk_widget_set_visible(titlebar, !(ws & (WindowStyle::NO_TITLEBAR | WindowStyle::NO_DECORATORS | WindowStyle::SYS)));
     } else if (!!(ws & WindowStyle::NO_TITLEBAR)) {
         // the titlebar can't be installed on a realized window; the best we can do is to drop the decorations.
         decorated = false;
