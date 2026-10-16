@@ -14,6 +14,9 @@
 
 ACustomCaptionWindow::ACustomCaptionWindow(const AString& name, AMetric width, AMetric height, bool stacked, AWindow* parent, WindowStyle ws)
   : ACustomWindow(name, width, height, parent), CustomCaptionWindowImplCurrent() {
+    // styles were already resolved while the base classes were constructing (when this was not yet an
+    // ACustomCaptionWindow), so type_of<ACustomCaptionWindow> rules were missed.
+    invalidateAssHelper();
     setWindowStyle(windowStyle() | ws);
     initCustomCaption(name, stacked, this);
 
