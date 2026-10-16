@@ -195,7 +195,10 @@ static void aui_widget_init(AUIWidget* myWidget) {
 static void aui_widget_class_init(AUIWidgetClass* klass) {
     GTK_WIDGET_CLASS(klass)->realize = [](GtkWidget* widget) {
         GTK_WIDGET_CLASS(aui_widget_parent_class)->realize(widget);
-        AUI_WIDGET_WIDGET(widget)->renderingContext->gtkRealize(widget);
+        auto& context = *AUI_WIDGET_WIDGET(widget)->renderingContext;
+        context.gtkRealize(widget);
+        // the initial scale never triggers scale-factor notification, so apply it explicitly (like X11 does).
+        context.gtkDoUnderContext([&] { context.window().updateDpi(); });
     };
     GTK_WIDGET_CLASS(klass)->unrealize = [](GtkWidget* widget) {
         GTK_WIDGET_CLASS(aui_widget_parent_class)->unrealize(widget);
