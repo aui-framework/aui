@@ -179,6 +179,7 @@ nav:
       - 'aui::views':
         - 'Overview': views.md
         - 'Window Management': awindow.md
+        - 'Menu': amenu.md
         - 'Rendering': irenderer.md
       - 'aui::crypt': crypt.md
       - 'aui::curl': curl.md
