@@ -485,9 +485,14 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
 
   if (!mHandle) return;
 
-  RECT r = {0, 0, width, height};
-  AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
-  MoveWindow(mHandle, x, y, r.right - r.left, r.bottom - r.top, false);
+  // the actual non-client area: unlike AdjustWindowRectEx, it is zero for custom caption windows, whose
+  // WM_NCCALCSIZE makes the client area cover the whole window.
+  RECT windowRect, clientRect;
+  GetWindowRect(mHandle, &windowRect);
+  GetClientRect(mHandle, &clientRect);
+  const int nonClientX = (windowRect.right - windowRect.left) - (clientRect.right - clientRect.left);
+  const int nonClientY = (windowRect.bottom - windowRect.top) - (clientRect.bottom - clientRect.top);
+  MoveWindow(mHandle, x, y, width + nonClientX, height + nonClientY, false);
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {

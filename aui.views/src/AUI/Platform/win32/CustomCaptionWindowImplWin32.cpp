@@ -34,6 +34,7 @@ bool containsPoint(const _<AButton>& button, int px, int py) {
 }
 
 constexpr auto kNcHoverClass = ".nc-hover";
+constexpr auto kNcHoverCloseClass = ".nc-hover-close";
 }
 
 void CustomCaptionWindowImplWin32::initCustomCaption(const AString& name, bool stacked, AViewContainer* to) {
@@ -112,18 +113,18 @@ AOptional<std::int32_t> CustomCaptionWindowImplWin32::hitTestCaptionButton(int c
 }
 
 void CustomCaptionWindowImplWin32::updateCaptionButtonNcHover(std::int32_t hitCode) {
-    auto applyHover = [&](const _<AButton>& button, bool active) {
+    auto applyHover = [&](const _<AButton>& button, bool active, const char* clazz) {
         if (!button) return;
         // Toggle the ASS class without disturbing other names the button already carries.
         const auto& names = button->getAssNames();
-        const bool hasClass = names.contains(kNcHoverClass);
+        const bool hasClass = names.contains(clazz);
         if (active && !hasClass) {
-            button->addAssName(kNcHoverClass);
+            button->addAssName(clazz);
         } else if (!active && hasClass) {
-            button->removeAssName(kNcHoverClass);
+            button->removeAssName(clazz);
         }
     };
-    applyHover(mMinimizeButton, hitCode == HTMINBUTTON);
-    applyHover(mMiddleButton,   hitCode == HTMAXBUTTON);
-    applyHover(mCloseButton,    hitCode == HTCLOSE);
+    applyHover(mMinimizeButton, hitCode == HTMINBUTTON, kNcHoverClass);
+    applyHover(mMiddleButton,   hitCode == HTMAXBUTTON, kNcHoverClass);
+    applyHover(mCloseButton,    hitCode == HTCLOSE,     kNcHoverCloseClass);
 }
