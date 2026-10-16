@@ -40,7 +40,6 @@ GskRenderNode* gtk_snapshot_free_to_node(GtkSnapshot* snapshot);
 void gtk_im_context_set_client_widget(GtkIMContext* context, GtkWidget* widget);
 GtkNative* gtk_widget_get_native(GtkWidget* widget);
 int gtk_widget_get_width(GtkWidget* widget);
-int gtk_widget_get_height(GtkWidget* widget);
 GdkSurface* gtk_native_get_surface(GtkNative* native);
 gboolean gtk_im_context_filter_key(GtkIMContext* context, gboolean press, GdkSurface* surface, GdkDevice* device, guint32 time, guint keycode, GdkModifierType state, int group);
 void gtk_im_context_set_client_window(GtkIMContext* context, GdkWindow* window);
@@ -381,5 +380,12 @@ void gtk_css_provider_load_from_string(GtkCssProvider* css_provider, const char*
 GtkWidget* gtk_popover_menu_new_from_model(GMenuModel* model);
 void gtk_widget_insert_action_group(GtkWidget* widget, const char* name, GActionGroup* group);
 void gtk_widget_set_halign(GtkWidget* widget, GtkAlign align);
+void gtk_widget_set_valign(GtkWidget* widget, GtkAlign align);
+void gtk_widget_set_overflow(GtkWidget* widget, GtkOverflow overflow);
+int gtk_widget_get_height(GtkWidget* widget);
+GtkWidget* gtk_overlay_new(void);
+void gtk_overlay_set_child(GtkWidget* overlay, GtkWidget* child);
+void gtk_overlay_add_overlay(GtkWidget* overlay, GtkWidget* widget);
+GtkWidget* gtk_window_controls_new(GtkPackType side);
 
 // aui.toolbox: }

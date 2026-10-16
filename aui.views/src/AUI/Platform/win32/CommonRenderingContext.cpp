@@ -17,6 +17,8 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/win32/Theme.h>
 #include <AUI/Platform/CommonRenderingContext.h>
+#include <AUI/Traits/callables.h>
+#include <variant>
 #include <AUI/Platform/ARenderingContextOptions.h>
 #include <AUI/AppInfo.h>
 #include <algorithm>

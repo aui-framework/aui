@@ -83,7 +83,7 @@ void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingConte
         gtkSetTitlebar(window, titlebar);
     }
     windowManagerInitCommon(init, window);
-    gtk_window_set_child(window, windowManagerInitGtkBox(init));
+    gtk_window_set_child(window, windowManagerInitContent(init, window));
 
     // Set WM_CLASS hint after the rendering context is initialized
     if (auto gtkContext = dynamic_cast<RenderingContextGtk*>(init.window.getRenderingContext().get())) {
@@ -91,7 +91,7 @@ void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingConte
     }
 }
 
-void PlatformAbstractionGtk::gtkApplyButtons(aui::gtk4_fake::GtkWidget* titlebar, const AWindow::Init::Buttons& buttons) {
+AString PlatformAbstractionGtk::gtkFilteredLayout(const AWindow::Init::Buttons& buttons) {
     // the layout is system-wide ("close:minimize,maximize", "appmenu:close", ...); drop the disabled buttons from it.
     char* systemLayout = nullptr;
     if (auto settings = gtk_settings_get_default()) {
@@ -127,7 +127,11 @@ void PlatformAbstractionGtk::gtkApplyButtons(aui::gtk4_fake::GtkWidget* titlebar
         }
     }
     flush();
-    const auto utf8 = result.toStdString();
+    return result;
+}
+
+void PlatformAbstractionGtk::gtkApplyButtons(aui::gtk4_fake::GtkWidget* titlebar, const AWindow::Init::Buttons& buttons) {
+    const auto utf8 = gtkFilteredLayout(buttons).toStdString();
     g_object_set(titlebar, "decoration-layout", utf8.c_str(), nullptr);
 }
 
@@ -235,6 +239,10 @@ GtkWidget* PlatformAbstractionGtk::windowManagerInitGtkBox(const IRenderingConte
             gtk_widget_set_hexpand(auiWidget, true);
             gtk_widget_set_vexpand(auiWidget, true);
             gtk_box_append(GTK_BOX(box), auiWidget);
+            gtk_widget_add_css_class(auiWidget, "aui-surface");
+            gtk_widget_set_overflow(auiWidget, GTK_OVERFLOW_HIDDEN);
+            gtk_widget_add_css_class(box, "aui-surface-host");
+            gtk_widget_set_overflow(box, GTK_OVERFLOW_HIDDEN);
             return box;
         } catch (const AException& e) {
             ALogger::warn("AWindowManager") << "Unable to initialize graphics API:" << e;
@@ -272,4 +280,61 @@ void PlatformAbstractionGtk::windowManagerLoop() {
     while (wm.shouldKeepRunning()) {
         windowManagerIteration();
     }
+}
+
+GtkWidget* PlatformAbstractionGtk::windowManagerInitContent(const IRenderingContext::Init& init, GtkWindow* window) const {
+    static const auto cssOnce = [] {
+        // The AUI surface is clipped by the rounded corners of the client-side decorated window. The radius is taken
+        // from the theme (Adwaita/adw), and becomes 0 on its own when the window is maximized or tiled.
+        auto provider = gtk_css_provider_new();
+        gtk_css_provider_load_from_string(
+            provider,
+            ".aui-round, .aui-round > .aui-surface-host, .aui-round .aui-surface {"
+            "  border-radius: inherit;"
+            "}"
+            ".aui-round-bottom, .aui-round-bottom > .aui-surface-host, .aui-round-bottom .aui-surface {"
+            "  border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;"
+            "}");
+        gtk_style_context_add_provider_for_display(
+            reinterpret_cast<GdkDisplay*>(gdk_display_get_default()), reinterpret_cast<GtkStyleProvider*>(provider),
+            800 /* GTK_STYLE_PROVIDER_PRIORITY_APPLICATION */);
+        return true;
+    }();
+    (void) cssOnce;
+
+    auto box = windowManagerInitGtkBox(init);
+    if (init.popup) {
+        return box;
+    }
+    const auto& decoration = init.window.init().decoration;
+    const bool extended = std::holds_alternative<AWindow::Init::DecorationExtended>(decoration);
+    // with the default decoration, the header bar is on the top; only the bottom corners are round.
+    const bool bottomOnly = std::holds_alternative<AWindow::Init::DecorationDefault>(decoration);
+    const char* roundClass = bottomOnly ? "aui-round-bottom" : "aui-round";
+
+    GtkWidget* result = box;
+    if (const auto* e = std::get_if<AWindow::Init::DecorationExtended>(&decoration)) {
+        // content extends into the titlebar; real GtkWindowControls are put over it, so the order and the side of
+        // the buttons match the desktop environment, and the hover/press states are native.
+        auto overlay = gtk_overlay_new();
+        gtk_widget_set_hexpand(overlay, true);
+        gtk_widget_set_vexpand(overlay, true);
+        gtk_overlay_set_child(overlay, box);
+        gtk_widget_set_overflow(overlay, GTK_OVERFLOW_HIDDEN);
+        const auto layout = gtkFilteredLayout(e->buttons).toStdString();
+        const auto add = [&](GtkPackType side, GtkAlign align, const char* key) {
+            auto controls = gtk_window_controls_new(side);
+            g_object_set(controls, "decoration-layout", layout.c_str(), nullptr);
+            gtk_widget_set_halign(controls, align);
+            gtk_widget_set_valign(controls, GTK_ALIGN_START);
+            gtk_overlay_add_overlay(overlay, controls);
+            g_object_set_data(G_OBJECT(window), key, controls);
+        };
+        add(GTK_PACK_START, GTK_ALIGN_START, CONTROLS_START_KEY);
+        add(GTK_PACK_END, GTK_ALIGN_END, CONTROLS_END_KEY);
+        result = overlay;
+    }
+    (void) extended;
+    gtk_widget_add_css_class(result, roundClass);
+    return result;
 }

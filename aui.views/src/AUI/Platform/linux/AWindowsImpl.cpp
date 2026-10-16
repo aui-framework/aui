@@ -25,15 +25,16 @@ AWindow::~AWindow() {
 }
 
 void AWindow::setResizable(bool resizable) {
-    if (mClosed) {
+    mResizableCache = resizable;
+    if (mClosed || !mHandle) {
         return;
     }
     IPlatformAbstraction::current().windowSetResizable(*this, resizable);
 }
 
 bool AWindow::isResizable() const {
-    if (mClosed) {
-        return false;
+    if (mClosed || !mHandle) {
+        return mResizableCache && !mClosed;
     }
     return IPlatformAbstraction::current().windowIsResizable(const_cast<AWindow&>(*this));
 }

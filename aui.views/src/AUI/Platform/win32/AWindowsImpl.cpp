@@ -432,6 +432,7 @@ void AWindow::setTitleImpl(const AString& title) {
 }
 
 void AWindow::setResizable(bool resizable) {
+    mResizableCache = resizable;
     if (!mHandle || mClosed) {
         return;
     }
@@ -452,7 +453,7 @@ void AWindow::setResizable(bool resizable) {
 
 bool AWindow::isResizable() const {
     if (!mHandle) {
-        return false;
+        return mResizableCache && !mClosed;
     }
     return (GetWindowLongPtr(mHandle, GWL_STYLE) & WS_THICKFRAME) != 0;
 }

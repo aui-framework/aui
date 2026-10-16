@@ -14,6 +14,8 @@
 //
 
 #include <AUI/Platform/CommonRenderingContext.h>
+#include <AUI/Traits/callables.h>
+#include <variant>
 #include "MacosApp.h"
 #import "WindowDelegate.h"
 #import "AUIView.h"

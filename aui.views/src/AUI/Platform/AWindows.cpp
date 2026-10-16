@@ -60,6 +60,7 @@ AWindow::AWindow(AString title, AMetric width, AMetric height)
 
 AWindow::AWindow(Init init) : mInit(std::move(init)) {
     mWindowTitle = mInit.title;
+    mResizableCache = mInit.resizable;
     windowNativePreInit();
     const auto dpi = fetchDpiFromSystem();
     const auto toPx = [&](AMetric m) {
@@ -79,6 +80,7 @@ AWindow::AWindow(PopupTag, AWindow& parent)
     }),
     mIsPopup(true) {
     mWindowTitle = mInit.title;
+    mResizableCache = false;
     windowNativePreInit();
     const auto dpi = fetchDpiFromSystem();
     setSize(glm::ivec2(int(100 * dpi), int(100 * dpi)));
@@ -160,8 +162,19 @@ void AWindow::redraw() {
 #if AUI_PLATFORM_MACOS
                 applyTitlebarRect();
 #elif AUI_PLATFORM_LINUX
-                IPlatformAbstraction::current().windowSetTitlebarRect(
-                    *this, ARect<int>::fromTopLeftPositionAndSize(mTitlebar->getPositionInWindow(), mTitlebar->getSize()));
+                const auto rect =
+                    ARect<int>::fromTopLeftPositionAndSize(mTitlebar->getPositionInWindow(), mTitlebar->getSize());
+                if (rect != mLastTitlebarRect) {
+                    mLastTitlebarRect = rect;
+                    // we are in the middle of painting; toolkits don't like when their widgets are changed under
+                    // painting.
+                    AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken), rect] {
+                        if (alive.expired() || mClosed) {
+                            return;
+                        }
+                        IPlatformAbstraction::current().windowSetTitlebarRect(*this, rect);
+                    };
+                }
 #endif
             }
             auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());

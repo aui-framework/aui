@@ -135,6 +135,8 @@ nav:
     - property-system.md
     - devtools.md
     - 'Handling HiDPI': ametric.md
+    - window-decorations.md
+    - migration-window-init.md
 
   - 'Views':
     - 'Overview': views-overview.md
