@@ -28,12 +28,77 @@ struct AMenuItem;
 
 using AMenuModel = AVector<AMenuItem>;
 
+/**
+ * @brief Context (popup) menu.
+ * @details
+ * Describes a menu with a model ([AMenuModel]) and shows it at the cursor position. By default, AUI shows the
+ * platform-native menu, see [AMenu::setUseSystemMenus].
+ *
+ * Text fields ([AAbstractTypeable]) use it to show Cut/Copy/Paste/Select All on right click:
+ *
+ * ```cpp
+ * AMenu::show({
+ *   {
+ *     .name = "aui.cut"_i18n,
+ *     .shortcut = AInput::CMD_CTRL + AInput::X,
+ *     .onAction = [&] { cutToClipboard(); },
+ *     .enabled = hasSelection(),
+ *   },
+ *   {
+ *     .name = "aui.copy"_i18n,
+ *     .shortcut = AInput::CMD_CTRL + AInput::C,
+ *     .onAction = [&] { copyToClipboard(); },
+ *     .enabled = hasSelection(),
+ *   },
+ *   {
+ *     .name = "aui.paste"_i18n,
+ *     .shortcut = AInput::CMD_CTRL + AInput::V,
+ *     .onAction = [&] { pasteFromClipboard(); },
+ *     .enabled = !AClipboard::isEmpty(),
+ *   },
+ *   { .type = AMenu::SEPARATOR },
+ *   {
+ *     .name = "aui.select_all"_i18n,
+ *     .shortcut = AInput::CMD_CTRL + AInput::A,
+ *     .onAction = [&] { selectAll(); },
+ *     .enabled = !getText().empty(),
+ *   },
+ * });
+ * ```
+ *
+ * ## Appearance
+ *
+ * Menus are rendered by the platform, so they look native.
+ *
+ * | Platform                          | Implementation                | Example                                |
+ * |-----------------------------------|-------------------------------|----------------------------------------|
+ * | Windows                           | `HMENU` (`TrackPopupMenuEx`)  | ![](imgs/amenu_win.png)                |
+ * | macOS                             | `NSMenu`                      | ![](imgs/amenu_macos.png)              |
+ * | Linux (GTK4, GNOME)               | `GtkPopoverMenu`              | ![](imgs/amenu_gnome.png)              |
+ * | `AMenu::setUseSystemMenus(false)` | AUI-drawn menu                | ![](imgs/amenu_fallback.png)           |
+ *
+ * !!! note
+ *
+ *     The final look of the menu depends on the OS version and, on Linux, on the desktop environment (and its theme).
+ *     The screenshots above are examples and may differ from what your users see.
+ */
 class API_AUI_VIEWS AMenu {
 private:
     static IMenuProvider& provider();
 public:
+    /**
+     * @brief Shows the menu described by `model`.
+     */
     static void show(const AMenuModel& model);
+
+    /**
+     * @brief Closes the currently open menu, if any.
+     */
     static void close();
+
+    /**
+     * @brief Returns true if a menu is currently open.
+     */
     static bool isOpen();
 
     /**
@@ -63,14 +128,28 @@ public:
      */
     static void setGlobalProvider(std::unique_ptr<IMenuProvider> provider);
 
+    /**
+     * @brief Menu item type.
+     */
     enum Type {
+        /// Regular clickable item.
         SINGLE,
+
+        /// Item that opens a nested menu from `AMenuItem::subItems`.
         SUBLIST,
+
+        /// Horizontal divider.
         SEPARATOR
     };
 };
 
 
+/**
+ * @brief An item of [AMenuModel].
+ * @details
+ * Fields not applicable to the item's `type` are ignored. Whether `shortcut` and `icon` are displayed depends on the
+ * platform; see [AMenu].
+ */
 struct AMenuItem {
     AMenu::Type type = AMenu::SINGLE;
     AString name;
