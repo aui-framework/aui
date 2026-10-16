@@ -363,5 +363,19 @@ GdkCursor* gdk_cursor_new_from_name(const char* name, GdkCursor* fallback);
 GdkCursor* gdk_cursor_new_from_texture(GdkTexture* texture, int hotspot_x, int hotspot_y, GdkCursor* fallback);
 void gtk_widget_set_cursor(GtkWidget* widget, GdkCursor* cursor);
 gboolean gtk_widget_get_mapped(GtkWidget* widget);
+GtkWidget* gtk_popover_new(void);
+void gtk_popover_set_child(GtkPopover* popover, GtkWidget* child);
+void gtk_popover_set_pointing_to(GtkPopover* popover, const GdkRectangle* rect);
+void gtk_popover_set_position(GtkPopover* popover, GtkPositionType position);
+void gtk_popover_set_has_arrow(GtkPopover* popover, gboolean has_arrow);
+void gtk_popover_set_autohide(GtkPopover* popover, gboolean autohide);
+void gtk_popover_popup(GtkPopover* popover);
+void gtk_popover_popdown(GtkPopover* popover);
+void gtk_popover_present(GtkPopover* popover);
+void gtk_widget_unparent(GtkWidget* widget);
+GtkWidget* gtk_widget_get_first_child(GtkWidget* widget);
+GtkWidget* gtk_widget_get_next_sibling(GtkWidget* widget);
+void gtk_widget_add_css_class(GtkWidget* widget, const char* css_class);
+void gtk_css_provider_load_from_string(GtkCssProvider* css_provider, const char* string);
 
 // aui.toolbox: }
