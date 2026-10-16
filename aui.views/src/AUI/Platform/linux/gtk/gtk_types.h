@@ -227,6 +227,16 @@ enum GdkToplevelState : unsigned {
     GDK_TOPLEVEL_STATE_MINIMIZED = 1 << 0,
     GDK_TOPLEVEL_STATE_MAXIMIZED = 1 << 1,
 };
+enum GdkSurfaceEdge {
+    GDK_SURFACE_EDGE_NORTH_WEST,
+    GDK_SURFACE_EDGE_NORTH,
+    GDK_SURFACE_EDGE_NORTH_EAST,
+    GDK_SURFACE_EDGE_WEST,
+    GDK_SURFACE_EDGE_EAST,
+    GDK_SURFACE_EDGE_SOUTH_WEST,
+    GDK_SURFACE_EDGE_SOUTH,
+    GDK_SURFACE_EDGE_SOUTH_EAST,
+};
 using GdkPixbuf = struct _GdkPixbuf;
 using GtkTreeModel = struct _GtkTreeModel;
 using GtkCssProvider = struct _GtkCssProvider;

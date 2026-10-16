@@ -707,16 +707,17 @@ void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
     }
 }
 
-void PlatformAbstractionX11::windowBeginMove(AWindow& window) {
+namespace {
+void sendMoveResize(AWindow& window, long direction) {
     // Hand the drag off to the window manager via the EWMH _NET_WM_MOVERESIZE client message. This gives us native
     // Aero-snap-like behaviour on KWin/Mutter (edge tiling, half-screen) while we stay in charge of the rest of the
     // window.
     Display* display = PlatformAbstractionX11::ourDisplay;
-    if (!display || !nativeHandle(window)) {
+    if (!display || !PlatformAbstractionX11::nativeHandle(window)) {
         return;
     }
     static Atom atomMoveResize = XInternAtom(display, "_NET_WM_MOVERESIZE", False);
-    const auto rootPos = desktopGetMousePosition();
+    const auto rootPos = IPlatformAbstraction::current().desktopGetMousePosition();
 
     XUngrabPointer(display, CurrentTime);
     XFlush(display);
@@ -724,17 +725,32 @@ void PlatformAbstractionX11::windowBeginMove(AWindow& window) {
     XClientMessageEvent xclient;
     std::memset(&xclient, 0, sizeof(xclient));
     xclient.type = ClientMessage;
-    xclient.window = static_cast<Window>(nativeHandle(window));
+    xclient.window = static_cast<Window>(PlatformAbstractionX11::nativeHandle(window));
     xclient.message_type = atomMoveResize;
     xclient.format = 32;
     xclient.data.l[0] = rootPos.x;
     xclient.data.l[1] = rootPos.y;
-    xclient.data.l[2] = 8;                       // _NET_WM_MOVERESIZE_MOVE
+    xclient.data.l[2] = direction;
     xclient.data.l[3] = Button1;                 // button that triggered the drag
     xclient.data.l[4] = 0;                       // source indication: normal app
     XSendEvent(
         display, XRootWindow(display, DefaultScreen(display)), False,
         SubstructureRedirectMask | SubstructureNotifyMask, reinterpret_cast<XEvent*>(&xclient));
+}
+}   // namespace
+
+void PlatformAbstractionX11::windowBeginMove(AWindow& window) {
+    sendMoveResize(window, 8);   // _NET_WM_MOVERESIZE_MOVE
+}
+
+void PlatformAbstractionX11::windowBeginResize(AWindow& window, ResizeEdge edge) {
+    // ResizeEdge values match _NET_WM_MOVERESIZE_SIZE_* directions.
+    sendMoveResize(window, long(edge));
+}
+
+bool PlatformAbstractionX11::windowHasNativeResizeBorders(AWindow& window) {
+    // windowSetStyle removes all decorations (including resize borders) via Motif hints.
+    return !(window.windowStyle() & (WindowStyle::SYS | WindowStyle::NO_DECORATORS | WindowStyle::NO_TITLEBAR));
 }
 
 void PlatformAbstractionX11::init() {}

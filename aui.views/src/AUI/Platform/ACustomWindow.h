@@ -32,6 +32,9 @@ public:
 
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
+#if AUI_PLATFORM_LINUX
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
+#endif
 
     virtual bool isCaptionAt(const glm::ivec2& pos);
 

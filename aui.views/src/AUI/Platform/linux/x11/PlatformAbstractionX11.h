@@ -94,6 +94,8 @@ public:
     void windowQuit(AWindow& window) override;
     void windowAnnounceMinMaxSize(AWindow& window) override;
     void windowBeginMove(AWindow& window) override;
+    void windowBeginResize(AWindow& window, ResizeEdge edge) override;
+    bool windowHasNativeResizeBorders(AWindow& window) override;
     void windowManagerInitNativeWindow(const IRenderingContext::Init& init) override;
     float windowGetDpiRatio(AWindow& window) override;
     AMessageBox::ResultButton messageBoxShow(

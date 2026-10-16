@@ -126,6 +126,14 @@ void PlatformAbstractionX11::applyNativeCursor(const ACursor& cursor, AWindow* p
                       setFontCursor(pWindow, XC_sb_v_double_arrow);
                       break;
                   }
+                  case ACursor::NWSE_RESIZE: {
+                      setFontCursor(pWindow, XC_bottom_right_corner);
+                      break;
+                  }
+                  case ACursor::NESW_RESIZE: {
+                      setFontCursor(pWindow, XC_bottom_left_corner);
+                      break;
+                  }
                   case ACursor::MOVE: {
                       setFontCursor(pWindow, XC_fleur);
                       break;

@@ -112,6 +112,8 @@ AGlibPtr<GdkCursor> createSystemCursor(ACursor::System s) {
         case ACursor::TEXT: name = "text"; break;
         case ACursor::EW_RESIZE: name = "ew-resize"; break;
         case ACursor::NS_RESIZE: name = "ns-resize"; break;
+        case ACursor::NWSE_RESIZE: name = "nwse-resize"; break;
+        case ACursor::NESW_RESIZE: name = "nesw-resize"; break;
         case ACursor::MOVE: name = "move"; break;
         default: break;
     }
@@ -280,9 +282,15 @@ void PlatformAbstractionGtk::windowSetStyle(AWindow &window, WindowStyle ws) {
     const bool isSys = bool(ws & WindowStyle::SYS);
     gtk_window_set_resizable(handle, !bool(ws & WindowStyle::NO_RESIZE));
     // GTK4 has no way to hide only minimize/maximize buttons; non-resizable windows have no maximize button.
-    // NO_TITLEBAR: GTK has no "hide the title strip but keep system buttons"; falls back to client-side decorations
-    // of ACustomWindow, same as NO_DECORATORS.
-    gtk_window_set_decorated(handle, !(ws & (WindowStyle::NO_DECORATORS | WindowStyle::NO_TITLEBAR | WindowStyle::SYS)));
+    bool decorated = !(ws & (WindowStyle::NO_DECORATORS | WindowStyle::SYS));
+    if (auto titlebar = gtkTitlebar(handle)) {
+        // NO_TITLEBAR: keep client-side decorations (shadow, rounded corners, resize borders), hide the titlebar only.
+        gtk_widget_set_visible(titlebar, !(ws & WindowStyle::NO_TITLEBAR));
+    } else if (!!(ws & WindowStyle::NO_TITLEBAR)) {
+        // the titlebar can't be installed on a realized window; the best we can do is to drop the decorations.
+        decorated = false;
+    }
+    gtk_window_set_decorated(handle, decorated);
     gtk_window_set_modal(handle, (ws & WindowStyle::MODAL) == WindowStyle::MODAL);
     if (isSys) {
         gtk_window_set_deletable(handle, false);
@@ -293,6 +301,15 @@ void PlatformAbstractionGtk::windowSetStyle(AWindow &window, WindowStyle ws) {
         gtk_window_set_transient_for(handle, nullptr);
     }
 }
+
+GtkWidget* PlatformAbstractionGtk::gtkTitlebar(GtkWindow* window) {
+    return static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(window), TITLEBAR_KEY));
+}
+
+void PlatformAbstractionGtk::gtkSetTitlebar(GtkWindow* window, GtkWidget* titlebar) {
+    g_object_set_data(G_OBJECT(window), TITLEBAR_KEY, titlebar);
+}
+
 float PlatformAbstractionGtk::windowFetchDpiFromSystem(AWindow &window) {
     auto surface = gtk_native_get_surface(gtk_widget_get_native(GTK_WIDGET(nativeHandle(window))));
     if (surface == nullptr) {
@@ -410,6 +427,33 @@ void PlatformAbstractionGtk::windowBeginMove(AWindow &window) {
     gdk_toplevel_begin_move(
         reinterpret_cast<GdkToplevel*>(surface), lastButtonPress.device, int(lastButtonPress.button),
         lastButtonPress.x, lastButtonPress.y, lastButtonPress.time);
+}
+
+void PlatformAbstractionGtk::windowBeginResize(AWindow &window, ResizeEdge edge) {
+    auto surface = surfaceOf(nativeHandle(window));
+    if (!surface || !lastButtonPress.device) {
+        return;
+    }
+    const auto gdkEdge = [&] {
+        switch (edge) {
+            case ResizeEdge::TOP_LEFT: return GDK_SURFACE_EDGE_NORTH_WEST;
+            case ResizeEdge::TOP: return GDK_SURFACE_EDGE_NORTH;
+            case ResizeEdge::TOP_RIGHT: return GDK_SURFACE_EDGE_NORTH_EAST;
+            case ResizeEdge::RIGHT: return GDK_SURFACE_EDGE_EAST;
+            case ResizeEdge::BOTTOM_RIGHT: return GDK_SURFACE_EDGE_SOUTH_EAST;
+            case ResizeEdge::BOTTOM: return GDK_SURFACE_EDGE_SOUTH;
+            case ResizeEdge::BOTTOM_LEFT: return GDK_SURFACE_EDGE_SOUTH_WEST;
+            case ResizeEdge::LEFT: return GDK_SURFACE_EDGE_WEST;
+        }
+        return GDK_SURFACE_EDGE_SOUTH_EAST;
+    }();
+    gdk_toplevel_begin_resize(
+        reinterpret_cast<GdkToplevel*>(surface), gdkEdge, lastButtonPress.device, int(lastButtonPress.button),
+        lastButtonPress.x, lastButtonPress.y, lastButtonPress.time);
+}
+
+bool PlatformAbstractionGtk::windowHasNativeResizeBorders(AWindow &window) {
+    return gtk_window_get_decorated(nativeHandle(window));
 }
 
 float PlatformAbstractionGtk::windowGetDpiRatio(AWindow &window) {
