@@ -604,14 +604,14 @@ bool PlatformAbstractionGtk::windowHasNativeWindowControls(AWindow &window) {
     return !window.isPopup() && std::holds_alternative<AWindow::Init::DecorationExtended>(window.init().decoration);
 }
 
-void PlatformAbstractionGtk::windowSetTitlebarRect(AWindow &window, ARect<int> rect) {
+bool PlatformAbstractionGtk::windowHasNativeWindowTitle(AWindow &window) {
+    return windowHasNativeWindowControls(window);
+}
+
+void PlatformAbstractionGtk::windowSetTitlebarRect(
+    AWindow &window, AOptional<ARect<int>> titlebar, AOptional<ARect<int>> title) {
     auto handle = nativeWindow(window);
     if (!handle) {
-        return;
-    }
-    auto start = static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(handle), CONTROLS_START_KEY));
-    auto end = static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(handle), CONTROLS_END_KEY));
-    if (!start || !end) {
         return;
     }
     auto surface = scaleSurfaceOf(window);
@@ -621,6 +621,38 @@ void PlatformAbstractionGtk::windowSetTitlebarRect(AWindow &window, ARect<int> r
         gtk_widget_measure(w, orientation, -1, &minimum, &natural, nullptr, nullptr);
         return natural;
     };
+
+    if (auto native = static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(handle), TITLE_KEY))) {
+        gtk_widget_set_visible(native, titlebar && title);
+        if (titlebar && title) {
+            // AUI works in physical pixels, GTK in logical ones. The header bar covers ATitlebar horizontally, and the
+            // spacers cover everything but AWindowTitle.
+            const auto toLogical = [&](int v) { return int(std::round(float(v) / scale)); };
+            const int windowWidth = toLogical(window.getSize().x);
+            gtk_widget_set_margin_start(native, toLogical(titlebar->p1.x));
+            gtk_widget_set_margin_end(native, std::max(0, windowWidth - toLogical(titlebar->p2.x)));
+            const auto setSpacer = [&](const char* key, int width) {
+                if (auto spacer = static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(handle), key))) {
+                    gtk_widget_set_size_request(spacer, std::max(0, width), -1);
+                }
+            };
+            setSpacer(TITLE_SPACER_START_KEY, toLogical(title->p1.x - titlebar->p1.x));
+            setSpacer(TITLE_SPACER_END_KEY, toLogical(titlebar->p2.x - title->p2.x));
+            const float center = float(title->p1.y + title->p2.y) / 2.f / scale;
+            const int height = measure(native, GTK_ORIENTATION_VERTICAL);
+            gtk_widget_set_margin_top(native, std::max(0, int(std::round(center - float(height) / 2.f))));
+        }
+    }
+
+    if (!titlebar) {
+        return;
+    }
+    const auto& rect = *titlebar;
+    auto start = static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(handle), CONTROLS_START_KEY));
+    auto end = static_cast<GtkWidget*>(g_object_get_data(G_OBJECT(handle), CONTROLS_END_KEY));
+    if (!start || !end) {
+        return;
+    }
     const int startWidth = measure(start, GTK_ORIENTATION_HORIZONTAL);
     const int endWidth = measure(end, GTK_ORIENTATION_HORIZONTAL);
     const int height = std::max(measure(start, GTK_ORIENTATION_VERTICAL), measure(end, GTK_ORIENTATION_VERTICAL));

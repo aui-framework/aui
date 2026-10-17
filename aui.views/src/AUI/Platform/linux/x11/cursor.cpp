@@ -78,7 +78,7 @@ void setCursor(AWindow* window, Cursor cursorHandle) {
         return;
     prevCursor = cursorHandle;
 
-    XDefineCursor(PlatformAbstractionX11::ourDisplay, window->getNativeHandle(), cursorHandle);
+    XDefineCursor(PlatformAbstractionX11::ourDisplay, window->nativeHandle(), cursorHandle);
 }
 
 void setFontCursor(AWindow* window, int cursor) {

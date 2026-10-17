@@ -419,6 +419,9 @@ AWindow::~AWindow() {
 
 bool AWindow::hasNativeWindowControls() const { return false; }
 
+// DWM does not draw the caption text when the client area is extended to the whole window.
+bool AWindow::hasNativeWindowTitle() const { return false; }
+
 bool AWindow::captionPressed(const APointerPressedEvent&) {
     // handled by WM_NCHITTEST
     return false;

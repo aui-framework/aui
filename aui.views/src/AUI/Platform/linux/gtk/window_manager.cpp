@@ -294,6 +294,14 @@ GtkWidget* PlatformAbstractionGtk::windowManagerInitContent(const IRenderingCont
             "}"
             ".aui-round-bottom, .aui-round-bottom > .aui-surface-host, .aui-round-bottom .aui-surface {"
             "  border-bottom-left-radius: inherit; border-bottom-right-radius: inherit;"
+            "}"
+            // header bars over the AUI contents of DecorationExtended windows (see windowManagerInitContent). They
+            // are there for the theme's title and window controls look; the background is AUI's.
+            ".aui-native-header {"
+            "  background: none; box-shadow: none; border: none;"
+            "}"
+            ".aui-native-title {"
+            "  min-height: 0; padding: 0;"
             "}");
         gtk_style_context_add_provider_for_display(
             reinterpret_cast<GdkDisplay*>(gdk_display_get_default()), reinterpret_cast<GtkStyleProvider*>(provider),
@@ -321,17 +329,46 @@ GtkWidget* PlatformAbstractionGtk::windowManagerInitContent(const IRenderingCont
         gtk_widget_set_vexpand(overlay, true);
         gtk_overlay_set_child(overlay, box);
         gtk_widget_set_overflow(overlay, GTK_OVERFLOW_HIDDEN);
-        const auto layout = gtkFilteredLayout(e->buttons).toStdString();
-        const auto add = [&](GtkPackType side, GtkAlign align, const char* key) {
-            auto controls = gtk_window_controls_new(side);
-            g_object_set(controls, "decoration-layout", layout.c_str(), nullptr);
+        // the native title: a header bar without buttons shows the title of the window with the theme's font and
+        // :backdrop look, and follows gtk_window_set_title. Positioned over ATitlebar by windowSetTitlebarRect; its
+        // start/end spacers take the space around AWindowTitle, so GTK centers the title over the window as long as
+        // it fits, like in a regular header bar. AUI handles the pointer, so the header bar does not receive input
+        // (otherwise it would drag the window).
+        auto title = gtk_header_bar_new();
+        gtk_header_bar_set_show_title_buttons(title, false);
+        gtk_widget_add_css_class(title, "aui-native-header");
+        gtk_widget_add_css_class(title, "aui-native-title");
+        gtk_widget_set_can_target(title, false);
+        gtk_widget_set_valign(title, GTK_ALIGN_START);
+        gtk_widget_set_visible(title, false);
+        const auto addSpacer = [&](void (*pack)(GtkWidget*, GtkWidget*), const char* key) {
+            auto spacer = gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0);
+            pack(title, spacer);
+            g_object_set_data(G_OBJECT(window), key, spacer);
+        };
+        addSpacer(gtk_header_bar_pack_start, TITLE_SPACER_START_KEY);
+        addSpacer(gtk_header_bar_pack_end, TITLE_SPACER_END_KEY);
+        gtk_overlay_add_overlay(overlay, title);
+        g_object_set_data(G_OBJECT(window), TITLE_KEY, title);
+
+        // window controls: each side is a header bar with the native buttons only, so the buttons get the paddings
+        // and the height of the theme's header bar (bare GtkWindowControls outside of a header bar don't).
+        const auto layout = gtkFilteredLayout(e->buttons);
+        const auto colon = layout.find(':');
+        const AString startLayout = AString(colon == AString::NPOS ? layout : AString(layout.substr(0, colon))) + ":";
+        const AString endLayout = AString(":") + (colon == AString::NPOS ? AString() : AString(layout.substr(colon + 1)));
+        const auto add = [&](const AString& sideLayout, GtkAlign align, const char* key) {
+            auto controls = gtk_header_bar_new();
+            gtk_widget_add_css_class(controls, "aui-native-header");
+            g_object_set(controls, "decoration-layout", sideLayout.toStdString().c_str(), nullptr);
+            gtk_header_bar_set_title_widget(controls, gtk_box_new(GTK_ORIENTATION_HORIZONTAL, 0));
             gtk_widget_set_halign(controls, align);
             gtk_widget_set_valign(controls, GTK_ALIGN_START);
             gtk_overlay_add_overlay(overlay, controls);
             g_object_set_data(G_OBJECT(window), key, controls);
         };
-        add(GTK_PACK_START, GTK_ALIGN_START, CONTROLS_START_KEY);
-        add(GTK_PACK_END, GTK_ALIGN_END, CONTROLS_END_KEY);
+        add(startLayout, GTK_ALIGN_START, CONTROLS_START_KEY);
+        add(endLayout, GTK_ALIGN_END, CONTROLS_END_KEY);
         result = overlay;
     }
     (void) extended;

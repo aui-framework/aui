@@ -317,7 +317,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                        .decoration = AWindow::Init::DecorationBorderless {},
                                      });
                                      w->setContents(Vertical {
-                                       _new<ATitlebar>(Label { "Drag me" } AUI_OVERRIDE_STYLE { Padding { 4_dp } }),
+                                       Titlebar { Label { "Drag me" } AUI_OVERRIDE_STYLE { Padding { 4_dp } } },
                                        Centered { Label { "Window contents" } } AUI_LET { it->setExpanding(); },
                                      });
                                      w->show();
@@ -334,10 +334,8 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                      });
                                      w->setContents(Stacked {
                                        Centered { Label { "Window contents" } },
-                                       Vertical {
-                                         _new<ATitlebar>(Horizontal {
-                                           Label { "Custom window custom caption" },
-                                         }),
+                                       Vertical::Expanding {
+                                         Titlebar {},   // shows the window title
                                          SpacerExpanding {},
                                        },
                                      });

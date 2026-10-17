@@ -20,7 +20,7 @@ public:
     void init() override;
 
     static Window nativeHandle(AWindow& window) {
-        return static_cast<Window>(window.getNativeHandle());
+        return static_cast<Window>(window.nativeHandle());
     }
 
     static void setNativeHandle(AWindow& window, Window x11Window) {

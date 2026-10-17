@@ -80,8 +80,9 @@ public:
     void windowHideTouchscreenKeyboardImpl(AWindow &window) override;
     void windowMoveToCenter(AWindow &window) override;
     void windowAnnounceMinMaxSize(AWindow &window) override;
-    void windowSetTitlebarRect(AWindow &window, ARect<int> rect) override;
+    void windowSetTitlebarRect(AWindow &window, AOptional<ARect<int>> titlebar, AOptional<ARect<int>> title) override;
     bool windowHasNativeWindowControls(AWindow &window) override;
+    bool windowHasNativeWindowTitle(AWindow &window) override;
     void windowBeginMove(AWindow &window) override;
     void windowBeginResize(AWindow &window, ResizeEdge edge) override;
     bool windowHasNativeResizeBorders(AWindow &window) override;
@@ -109,6 +110,9 @@ protected:
     static constexpr auto POPUP_KEY = "aui-popup";
     static constexpr auto CONTROLS_START_KEY = "aui-controls-start";
     static constexpr auto CONTROLS_END_KEY = "aui-controls-end";
+    static constexpr auto TITLE_KEY = "aui-title";
+    static constexpr auto TITLE_SPACER_START_KEY = "aui-title-spacer-start";
+    static constexpr auto TITLE_SPACER_END_KEY = "aui-title-spacer-end";
     AGlibPtr<GApplication> mApplication;
     aui::gtk4_fake::GtkWidget* windowManagerInitGtkBox(const IRenderingContext::Init &init) const;
 

@@ -1,8 +1,7 @@
 # Migration: WindowStyle to AWindow::Init
 
 `WindowStyle`, `ACustomWindow`, `ACustomCaptionWindow` and `AWindow::setWindowStyle` are removed without a
-deprecation period. This page maps the old API to the new one. See [window-decorations.md](window-decorations.md) for the overview of the new
-API.
+deprecation period. This page maps the old API to the new one. See [AWindow] for the overview of the new API.
 
 ## Summary
 
@@ -13,13 +12,13 @@ API.
 | `WindowStyle::NO_RESIZE` | `.resizable = false` |
 | `WindowStyle::MODAL` | `.parent = Parent { .window = *w, .modal = true }`, `.resizable = false`, buttons off if needed |
 | `WindowStyle::NO_DECORATORS` | `.decoration = DecorationBorderless {}` |
-| `WindowStyle::NO_TITLEBAR` | `.decoration = DecorationExtended {}` + `ATitlebar` |
+| `WindowStyle::NO_TITLEBAR` | `.decoration = DecorationExtended {}` + `Titlebar` |
 | `WindowStyle::SYS` | removed from the public API; popups are created by AUI only (`AWindow::isPopup`) |
-| `ACustomWindow` | `DecorationBorderless` + `ATitlebar` |
-| `ACustomCaptionWindow` | `DecorationExtended` + `ATitlebar` (+ `Stacked`) |
+| `ACustomWindow` | `DecorationBorderless` + `Titlebar` |
+| `ACustomCaptionWindow` | `DecorationExtended` + `Titlebar` (+ `Stacked`) |
 | `getCaptionContainer()`, `getContentContainer()` | your own layout |
 | `setWindowStyle(...)` at runtime | `Init` at creation, `setResizable` at runtime |
-| `getWindowTitle()` | `title()` (and `setTitle()` is new) |
+| `getWindowTitle()` | `title()` property (`setTitle()` and `titleChanged` are new) |
 | `quit()` | `close()` |
 | `.window-title` ASS class | `t<ATitlebar>()` |
 | `dragBegin` / `dragEnd` signals | removed |
@@ -90,7 +89,7 @@ public:
     MySplash() : AWindow(Init { .title = "Splash", .width = 400_dp, .height = 300_dp,
                                 .decoration = Init::DecorationBorderless {} }) {
         setContents(Vertical {
-            _new<ATitlebar>(),   // makes the window draggable
+            Titlebar {},   // makes the window draggable and shows the window title
             Centered { Label { "Loading..." } } AUI_LET { it->setExpanding(); },
         });
     }
@@ -116,15 +115,36 @@ auto w = _new<AWindow>(AWindow::Init {
 w->setContents(Stacked {
     content,
     Vertical {
-        _new<ATitlebar>(Label { "My caption" }),
+        Titlebar { Label { "My caption" } },
         SpacerExpanding {},
     },
 });
 ```
-For the non-stacked variant (contents below the caption) use `Vertical { _new<ATitlebar>(...), content }`.
+For the non-stacked variant (contents below the caption) use `Vertical { Titlebar { ... }, content }`.
 
-The titlebar does not have the title label or the hardcoded `30px` height anymore: its height is the height of its
-contents (at least the height of the window controls).
+A `DecorationExtended` window has `.window-extended` ASS class, which removes the default `8_dp` padding of
+[AWindow] (`ACustomCaptionWindow` did the same), so the contents reach the window edges.
+
+The titlebar does not have the hardcoded `30px` height anymore: its height is the height of its contents (at least
+the height of the window controls).
+
+## Window title in a custom titlebar
+
+`ACustomCaptionWindow` drew the window title with an AUI label. Now `Titlebar {}` without contents contains
+`WindowTitle {}`, which marks the place of the title: on macOS and GTK the OS draws the native title there, on Windows
+and X11 AUI draws a label (left-aligned on Windows, centered on Linux). Put `WindowTitle {}` explicitly to combine it
+with other views. Either way it shows `AWindow::title`, so `setTitle()` updates both the OS-visible title and the one
+in the window.
+
+Before:
+```cpp
+w->getCaptionContainer()->addView(Label { "My app" });   // duplicates the window title
+```
+After:
+```cpp
+Titlebar { Horizontal { Icon { ":img/logo.svg" }, WindowTitle {} } }
+```
+If a label differs from the title, bind it: `Label { .text = AUI_REACT("{} - Editor"_format(*w->title())) }`.
 
 ## close()
 

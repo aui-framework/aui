@@ -36,7 +36,7 @@ TEST_F(UIWindowLifecycle, InitDefaults) {
 
     auto window = _new<AWindow>();
     EXPECT_TRUE(window->init().resizable);
-    EXPECT_EQ(window->title(), "My window");
+    EXPECT_EQ(*window->title(), "My window");
     EXPECT_EQ(window->parentWindow(), nullptr);
     EXPECT_FALSE(window->isPopup());
 }
@@ -44,14 +44,74 @@ TEST_F(UIWindowLifecycle, InitDefaults) {
 TEST_F(UIWindowLifecycle, ConvenienceConstructorFillsInit) {
     auto window = _new<AWindow>("Hello", 300_dp, 200_dp);
     EXPECT_EQ(window->init().title, "Hello");
-    EXPECT_EQ(window->title(), "Hello");
+    EXPECT_EQ(*window->title(), "Hello");
 }
 
 TEST_F(UIWindowLifecycle, SetTitle) {
     auto window = _new<AWindow>("Hello");
     window->setTitle("World");
-    EXPECT_EQ(window->title(), "World");
+    EXPECT_EQ(*window->title(), "World");
     EXPECT_EQ(window->init().title, "Hello") << "init() is the initial state";
+}
+
+TEST_F(UIWindowLifecycle, TitleChangedEmittedOnlyOnChange) {
+    auto window = _new<AWindow>("Hello");
+    int count = 0;
+    AObject::connect(window->titleChanged, AObject::GENERIC_OBSERVER, [&](const AString&) { ++count; });
+    window->setTitle("Hello");
+    EXPECT_EQ(count, 0);
+    window->title() = "World";
+    EXPECT_EQ(count, 1);
+    EXPECT_EQ(*window->title(), "World");
+}
+
+TEST_F(UIWindowLifecycle, WindowTitleFollowsWindow) {
+    auto window = _new<AWindow>(AWindow::Init {
+      .title = "Hello",
+      .decoration = AWindow::Init::DecorationExtended {},
+    });
+    _<AWindowTitle> title = WindowTitle {}();
+    window->setContents(Vertical { Titlebar { title } });
+    EXPECT_EQ(*title->text(), "Hello");
+    window->setTitle("World");
+    EXPECT_EQ(*title->text(), "World");
+}
+
+TEST_F(UIWindowLifecycle, TitlebarWithoutContentsShowsTitle) {
+    auto window = _new<AWindow>(AWindow::Init {
+      .title = "Hello",
+      .decoration = AWindow::Init::DecorationExtended {},
+    });
+    window->setContents(Vertical { Titlebar {} });
+    window->show();
+    By::type<AWindowTitle>().check(text("Hello"));
+}
+
+TEST_F(UIWindowLifecycle, WindowTitleRegistersInTitlebar) {
+    auto window = _new<AWindow>(AWindow::Init {
+      .decoration = AWindow::Init::DecorationExtended {},
+    });
+    _<AWindowTitle> title = WindowTitle {}();
+    window->setContents(Vertical { Titlebar { Horizontal { title } } });
+    window->show();
+    auto titlebar = _cast<ATitlebar>(By::type<ATitlebar>().one());
+    ASSERT_TRUE(titlebar);
+    EXPECT_EQ(titlebar->windowTitle(), title.get());
+    EXPECT_EQ(title->isNative(), window->hasNativeWindowTitle());
+
+    title = nullptr;
+    window->setContents(Vertical { Titlebar { Label { "No title" } } });
+    titlebar = _cast<ATitlebar>(By::type<ATitlebar>().one());
+    EXPECT_EQ(titlebar->windowTitle(), nullptr);
+}
+
+TEST_F(UIWindowLifecycle, ExtendedWindowHasNoPadding) {
+    auto window = _new<AWindow>(AWindow::Init {
+      .decoration = AWindow::Init::DecorationExtended {},
+    });
+    window->setContents(Vertical { Titlebar {} });
+    window->show();
+    EXPECT_EQ(window->getPadding(), ABoxFields {}) << "contents must extend to the window edges";
 }
 
 TEST_F(UIWindowLifecycle, SetResizable) {
@@ -159,7 +219,7 @@ TEST_F(UIWindowLifecycle, TitlebarCaptionHitTest) {
     dragExcluded->addAssName(".override-title-dragging");
     auto outside = _new<ALabel>("Outside");
     window->setContents(Vertical {
-      _new<ATitlebar>(Horizontal { label, button, dragExcluded }),
+      Titlebar { Horizontal { label, button, dragExcluded } },
       outside,
     });
     window->show();
@@ -180,7 +240,7 @@ TEST_F(UIWindowLifecycle, TitlebarHeightIsMaxOfContentsAndControls) {
     });
     window->windowControlsInsets = AWindowControlsInsets { .left = 70, .right = 0, .height = 40 };
     auto content = _new<ALabel>("Title");
-    auto titlebar = _new<ATitlebar>(content);
+    _<AView> titlebar = Titlebar { content };
     window->setContents(Vertical { titlebar, SpacerExpanding {} });
     window->show();
     window->layout(glm::ivec2(0), glm::ivec2(400, 300));

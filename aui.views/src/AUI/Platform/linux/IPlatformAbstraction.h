@@ -125,17 +125,26 @@ public:
     virtual bool windowHasNativeResizeBorders(AWindow& window) = 0;
 
     /**
-     * @brief Reports the rect of ATitlebar (in window coordinates, pixels) to the platform after layout.
+     * @brief Reports the rects of ATitlebar and AWindowTitle inside it (in window coordinates, pixels) to the platform
+     * after layout.
+     * @param titlebar rect of ATitlebar; empty if the window has no titlebar.
+     * @param title rect of AWindowTitle; empty if the titlebar has no visible AWindowTitle, in this case the native
+     * title should be hidden.
      * @details
-     * Used to align native window controls with the titlebar contents.
+     * Used to align native window controls and the native title with the titlebar contents.
      */
-    virtual void windowSetTitlebarRect(AWindow& window, ARect<int> rect) {}
+    virtual void windowSetTitlebarRect(AWindow& window, AOptional<ARect<int>> titlebar, AOptional<ARect<int>> title) {}
 
     /**
      * @return true if the toolkit draws window controls of the DecorationExtended window by itself and reports their
      * size via AWindow::windowControlsInsets.
      */
     virtual bool windowHasNativeWindowControls(AWindow& window) { return false; }
+
+    /**
+     * @return true if the toolkit draws the title of the DecorationExtended window by itself, over AWindowTitle.
+     */
+    virtual bool windowHasNativeWindowTitle(AWindow& window) { return false; }
 
     /**
      * @return true if the toolkit blocks the parent of a modal window by itself, so AUI doesn't have to.

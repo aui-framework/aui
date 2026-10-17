@@ -128,7 +128,7 @@ void Win32MenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     HWND hwnd = nullptr;
     if (auto* base = AWindow::current()) {
         if (auto* win = dynamic_cast<AWindow*>(base)) {
-            hwnd = win->getNativeHandle();
+            hwnd = win->nativeHandle();
         }
     }
 
