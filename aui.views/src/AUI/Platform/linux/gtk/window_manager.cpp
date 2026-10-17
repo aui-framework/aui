@@ -27,6 +27,13 @@ using namespace aui::gtk4_fake;
 #endif
 void PlatformAbstractionGtk::windowManagerInitNativeWindow(const IRenderingContext::Init& init) {
     auto window = GTK_WINDOW(gtk_application_window_new(GTK_APPLICATION(*mApplication)));
+    if (!!(init.ws & WindowStyle::NO_TITLEBAR)) {
+        // a custom titlebar enables client-side decorations; hiding it leaves the window frame (shadow, resize borders)
+        // only. This must be done before the window is realized.
+        auto titlebar = gtk_header_bar_new();
+        gtk_window_set_titlebar(window, titlebar);
+        gtkSetTitlebar(window, titlebar);
+    }
     windowManagerInitCommon(init, window);
     gtk_window_set_child(window, windowManagerInitGtkBox(init));
     

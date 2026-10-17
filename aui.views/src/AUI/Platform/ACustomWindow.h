@@ -22,7 +22,7 @@ class API_AUI_VIEWS ACustomWindow: public AWindow
 {
     friend class AWindowManager;
 public:
-    ACustomWindow(const AString& name, int width, int height, AWindow* parent = nullptr);
+    ACustomWindow(const AString& name, AMetric width, AMetric height, AWindow* parent = nullptr);
     ACustomWindow() = default;
     ~ACustomWindow() override = default;
 
@@ -32,6 +32,9 @@ public:
 
     void onPointerPressed(const APointerPressedEvent& event) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
+#if AUI_PLATFORM_LINUX
+    void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override;
+#endif
 
     virtual bool isCaptionAt(const glm::ivec2& pos);
 

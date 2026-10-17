@@ -10,6 +10,7 @@
  */
 
 #include <unistd.h>
+#include <cstring>
 #include <poll.h>
 #include <fcntl.h>
 #include <vector>
@@ -19,6 +20,7 @@
 #include "AUI/UITestState.h"
 #include "RenderingContextX11.h"
 #include "AUI/Platform/ACustomWindow.h"
+#include <AUI/Action/AMenu.h>
 #include "AUI/Platform/AWindowManager.h"
 #include "AUI/Platform/ErrorToException.h"
 #include "AUI/Platform/ARenderingContextOptions.h"
@@ -228,6 +230,22 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                         break;
                     }
 
+                    case FocusIn:
+                    case FocusOut: {
+                        // pointer grabs (button press on a popup, etc.) produce synthetic focus changes
+                        if (ev.xfocus.mode == NotifyGrab || ev.xfocus.mode == NotifyUngrab ||
+                            ev.xfocus.detail == NotifyInferior) {
+                            break;
+                        }
+                        window = locateWindow(ev.xfocus.window);
+                        if (ev.type == FocusIn) {
+                            window->onFocusAcquired();
+                        } else {
+                            window->onFocusLost();
+                        }
+                        break;
+                    }
+
                     case MappingNotify:
                         XRefreshKeyboardMapping(&ev.xmapping);
                         break;
@@ -240,6 +258,15 @@ void PlatformAbstractionX11::xProcessEvent(XEvent& ev) {
                     }
                     case ButtonPress: {
                         window = locateWindow(ev.xbutton.window);
+
+                        // popups grab the pointer (see windowShow), so a click outside of the application (window
+                        // manager's titlebar, other apps, desktop) is reported to the popup with outside coordinates.
+                        if (!!(window->windowStyle() & WindowStyle::SYS) &&
+                            (ev.xbutton.x < 0 || ev.xbutton.y < 0 || ev.xbutton.x >= window->getWidth() ||
+                             ev.xbutton.y >= window->getHeight())) {
+                            AMenu::close();
+                            break;
+                        }
 
                         const auto SCROLL = 11_pt * 3.f;
 
@@ -447,7 +474,17 @@ glm::ivec2 PlatformAbstractionX11::windowGetPosition(AWindow& window) const {
 void PlatformAbstractionX11::windowFlagRedraw(AWindow& window) { redrawFlag(window) = true; }
 void PlatformAbstractionX11::windowShow(AWindow& window) {
     if (bool(PlatformAbstractionX11::ourDisplay) && nativeHandle(window)) {
-        AThread::current() << [&]() { XMapWindow(PlatformAbstractionX11::ourDisplay, nativeHandle(window)); };
+        AThread::current() << [&]() {
+            XMapWindow(PlatformAbstractionX11::ourDisplay, nativeHandle(window));
+            if (!!(window.windowStyle() & WindowStyle::SYS)) {
+                // owner_events = True: clicks in our own windows are delivered as usual, clicks elsewhere (window
+                // manager's decorations, other apps) are redirected to this popup so it can dismiss itself.
+                XGrabPointer(
+                    PlatformAbstractionX11::ourDisplay, nativeHandle(window), True,
+                    ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None,
+                    CurrentTime);
+            }
+        };
     }
 }
 
@@ -505,8 +542,9 @@ void PlatformAbstractionX11::windowSetGeometry(AWindow& window, int x, int y, in
     XWindowChanges changes;
     changes.x = x;
     changes.y = y;
-    changes.width = width;
-    changes.height = height;
+    // XConfigureWindow rejects zero sizes with BadValue, leaving the window where it was (0, 0 for fresh popups)
+    changes.width = glm::max(width, 1);
+    changes.height = glm::max(height, 1);
     changes.stack_mode = Above;
 
     if (isPopupMenu) {
@@ -667,6 +705,52 @@ void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
         sizeHints->max_height = window.getMaxSize().y == -1 ? 100000 : window.getMaxSize().y;
         XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizeHints.get());
     }
+}
+
+namespace {
+void sendMoveResize(AWindow& window, long direction) {
+    // Hand the drag off to the window manager via the EWMH _NET_WM_MOVERESIZE client message. This gives us native
+    // Aero-snap-like behaviour on KWin/Mutter (edge tiling, half-screen) while we stay in charge of the rest of the
+    // window.
+    Display* display = PlatformAbstractionX11::ourDisplay;
+    if (!display || !PlatformAbstractionX11::nativeHandle(window)) {
+        return;
+    }
+    static Atom atomMoveResize = XInternAtom(display, "_NET_WM_MOVERESIZE", False);
+    const auto rootPos = IPlatformAbstraction::current().desktopGetMousePosition();
+
+    XUngrabPointer(display, CurrentTime);
+    XFlush(display);
+
+    XClientMessageEvent xclient;
+    std::memset(&xclient, 0, sizeof(xclient));
+    xclient.type = ClientMessage;
+    xclient.window = static_cast<Window>(PlatformAbstractionX11::nativeHandle(window));
+    xclient.message_type = atomMoveResize;
+    xclient.format = 32;
+    xclient.data.l[0] = rootPos.x;
+    xclient.data.l[1] = rootPos.y;
+    xclient.data.l[2] = direction;
+    xclient.data.l[3] = Button1;                 // button that triggered the drag
+    xclient.data.l[4] = 0;                       // source indication: normal app
+    XSendEvent(
+        display, XRootWindow(display, DefaultScreen(display)), False,
+        SubstructureRedirectMask | SubstructureNotifyMask, reinterpret_cast<XEvent*>(&xclient));
+}
+}   // namespace
+
+void PlatformAbstractionX11::windowBeginMove(AWindow& window) {
+    sendMoveResize(window, 8);   // _NET_WM_MOVERESIZE_MOVE
+}
+
+void PlatformAbstractionX11::windowBeginResize(AWindow& window, ResizeEdge edge) {
+    // ResizeEdge values match _NET_WM_MOVERESIZE_SIZE_* directions.
+    sendMoveResize(window, long(edge));
+}
+
+bool PlatformAbstractionX11::windowHasNativeResizeBorders(AWindow& window) {
+    // windowSetStyle removes all decorations (including resize borders) via Motif hints.
+    return !(window.windowStyle() & (WindowStyle::SYS | WindowStyle::NO_DECORATORS | WindowStyle::NO_TITLEBAR));
 }
 
 void PlatformAbstractionX11::init() {}

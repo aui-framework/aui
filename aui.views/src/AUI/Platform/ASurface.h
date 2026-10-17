@@ -281,8 +281,7 @@ public:
             auto optionalPosition = positionFactory(index);
             if (optionalPosition) {
                 position = *optionalPosition;
-
-                if (position.x >= 0 && position.y >= 0 && glm::all(glm::lessThan(position, maxPos))) {
+                if (position.x >= 0 && position.y >= 0) {
                     break;
                 }
             } else {

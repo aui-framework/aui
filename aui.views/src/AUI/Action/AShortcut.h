@@ -35,7 +35,32 @@ public:
         return mKeys;
     }
 
+    /**
+     * @brief Human-readable shortcut. "Ctrl+C" style on most platforms; on macOS modifiers are written in the
+     * conventional ⌃⌥⇧⌘ order followed by the key without separators (e.g. "⇧⌘Z").
+     */
     operator AString() const {
+#if AUI_PLATFORM_MACOS
+        AString modifiers;
+        AString rest;
+        const auto rank = [](AInput::Key k) {
+            switch (k) {
+                case AInput::LCONTROL: case AInput::RCONTROL: return 0;
+                case AInput::LALT: case AInput::RALT: return 1;
+                case AInput::LSHIFT: case AInput::RSHIFT: return 2;
+                case AInput::LSYSTEM: case AInput::RSYSTEM: return 3;
+                default: return 4;
+            }
+        };
+        for (int r = 0; r <= 4; ++r) {
+            for (auto& k : mKeys) {
+                if (rank(k) == r) {
+                    (r == 4 ? rest : modifiers) += AInput::getName(k);
+                }
+            }
+        }
+        return modifiers + rest;
+#else
         AString s;
         for (auto& k : mKeys) {
             if (!s.empty()) {
@@ -44,6 +69,7 @@ public:
             s += AInput::getName(k);
         }
         return s;
+#endif
     }
     bool empty() const {
         return mKeys.empty();

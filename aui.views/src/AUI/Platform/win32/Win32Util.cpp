@@ -30,41 +30,70 @@ AImage aui::win32::iconToImage(HICON hIcon) {
     return bitmapToImage(hBitmap);
 }
 
-aui::win32::Bitmap aui::win32::imageRgbToBitmap(AImageView image, BitmapMode mode) {
-    aui::win32::DeviceContext hdcScreen = GetDC(nullptr);
-
-    aui::win32::DeviceContext hdcMemColor = CreateCompatibleDC(hdcScreen);
-
-
-    BITMAPINFO bmi;
+aui::win32::Bitmap aui::win32::imageToBitmap(AImageView image, BitmapAlpha alpha) {
+    BITMAPINFO bmi {};
     bmi.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
     bmi.bmiHeader.biWidth = image.width();
-    bmi.bmiHeader.biHeight = image.height();
+    bmi.bmiHeader.biHeight = -image.height(); // negative = top-down rows
     bmi.bmiHeader.biPlanes = 1;
     bmi.bmiHeader.biBitCount = 32;
     bmi.bmiHeader.biCompression = BI_RGB;
-    bmi.bmiHeader.biSizeImage = bmi.bmiHeader.biWidth * bmi.bmiHeader.biHeight * 4;
+    bmi.bmiHeader.biSizeImage = image.width() * image.height() * 4;
 
-    bmi.bmiHeader.biHeight = -bmi.bmiHeader.biHeight;
+    void* data = nullptr;
+    Bitmap bitmap(CreateDIBSection(nullptr, &bmi, DIB_RGB_COLORS, &data, nullptr, 0));
+    if (!bitmap || !data) {
+        return nullptr;
+    }
 
-    VOID* data;
-    auto hbmpColor = CreateDIBSection(hdcMemColor, &bmi, DIB_RGB_COLORS, &data, nullptr, 0x0);
-    auto hbmpOldColor = (HBITMAP)SelectObject(hdcMemColor, hbmpColor);
-
+    using Bgra = AFormattedColor<APixelFormat::BGRA | APixelFormat::BYTE>;
+    auto* dst = static_cast<Bgra*>(data);
     if (image.format() == (APixelFormat::BGRA | APixelFormat::BYTE)) {
         std::memcpy(data, image.buffer().data(), bmi.bmiHeader.biSizeImage);
     } else {
         for (int y = 0; y < image.height(); ++y) {
             for (int x = 0; x < image.width(); ++x) {
-                reinterpret_cast<AFormattedColor<APixelFormat::BGRA | APixelFormat::BYTE>*>(data)[y * image.width() + x] = AFormattedColorConverter(image.get({x, y}));
+                dst[y * image.width() + x] = AFormattedColorConverter(image.get({ x, y }));
             }
         }
     }
 
-    SelectObject(hdcMemColor, hbmpOldColor);
+    if (alpha == BitmapAlpha::PREMULTIPLIED) {
+        auto* bytes = static_cast<std::uint8_t*>(data);
+        for (std::size_t i = 0; i < std::size_t(image.width()) * image.height() * 4; i += 4) {
+            const int a = bytes[i + 3];
+            bytes[i + 0] = std::uint8_t((bytes[i + 0] * a + 127) / 255);
+            bytes[i + 1] = std::uint8_t((bytes[i + 1] * a + 127) / 255);
+            bytes[i + 2] = std::uint8_t((bytes[i + 2] * a + 127) / 255);
+        }
+    }
+    return bitmap;
+}
 
+namespace {
+aui::win32::Icon createIcon(AImageView image, bool isIcon, glm::ivec2 hotspot) {
+    const auto color = aui::win32::imageToBitmap(image);
 
-    return hbmpColor;
+    // the mask is ignored by the system when the color bitmap carries alpha; it still has to be a valid bitmap.
+    const std::vector<std::uint8_t> maskBits(((image.width() + 15) / 16) * 2 * image.height(), 0);
+    const aui::win32::Bitmap mask(CreateBitmap(image.width(), image.height(), 1, 1, maskBits.data()));
+
+    ICONINFO info {};
+    info.fIcon = isIcon;
+    info.xHotspot = hotspot.x;
+    info.yHotspot = hotspot.y;
+    info.hbmMask = mask.get();
+    info.hbmColor = color.get();
+    return aui::win32::Icon(CreateIconIndirect(&info));
+}
+}   // namespace
+
+aui::win32::Icon aui::win32::imageToIcon(AImageView image) {
+    return createIcon(image, true, {});
+}
+
+aui::win32::Icon aui::win32::imageToCursor(AImageView image, glm::ivec2 hotspot) {
+    return createIcon(image, false, hotspot);
 }
 
 AImage aui::win32::bitmapToImage(HBITMAP hbitmap) {
@@ -72,9 +101,9 @@ AImage aui::win32::bitmapToImage(HBITMAP hbitmap) {
     BITMAPINFO info = {0};
     AByteBuffer pixels;
 
-    aui::win32::DeviceContext compatDC = CreateCompatibleDC(nullptr);
+    const aui::win32::MemoryDc compatDC(CreateCompatibleDC(nullptr));
     std::memset(&info, 0, sizeof(BITMAPINFO));
-    auto oldBitmap = (HBITMAP)SelectObject(compatDC, hbitmap);
+    auto oldBitmap = (HBITMAP)SelectObject(compatDC.get(), hbitmap);
     GetObject(hbitmap, sizeof(bmp), &bmp);
 
     info.bmiHeader.biSize = sizeof(BITMAPINFOHEADER);
@@ -87,8 +116,8 @@ AImage aui::win32::bitmapToImage(HBITMAP hbitmap) {
     info.bmiHeader.biSizeImage = ((width * 32 + 31) / 32) * 4 * height;
 
     pixels.resize(info.bmiHeader.biSizeImage);
-    GetDIBits(compatDC, hbitmap, 0, height, pixels.data(), &info, DIB_RGB_COLORS);
-    SelectObject(compatDC, oldBitmap);
+    GetDIBits(compatDC.get(), hbitmap, 0, height, pixels.data(), &info, DIB_RGB_COLORS);
+    SelectObject(compatDC.get(), oldBitmap);
 
     height = std::abs(height);
     AImage image(std::move(pixels), {width, height}, APixelFormat::BGRA | APixelFormat::BYTE);

@@ -59,6 +59,20 @@ public:
     void windowMoveToCenter(AWindow &window) override;
     void windowQuit(AWindow &window) override;
     void windowAnnounceMinMaxSize(AWindow &window) override;
+    void windowBeginMove(AWindow &window) override;
+    void windowBeginResize(AWindow &window, ResizeEdge edge) override;
+    bool windowHasNativeResizeBorders(AWindow &window) override;
+
+    /**
+     * @brief The latest button press; required by the window manager to start interactive move.
+     */
+    struct LastButtonPress {
+        aui::gtk4_fake::GdkDevice* device = nullptr;
+        unsigned button = 0;
+        double x = 0;
+        double y = 0;
+        uint32_t time = 0;
+    } lastButtonPress;
     void windowManagerInitNativeWindow(const IRenderingContext::Init &init) override;
     float windowGetDpiRatio(AWindow &window) override;
     AMessageBox::ResultButton messageBoxShow(
@@ -73,7 +87,17 @@ protected:
     void windowManagerInitCommon(const IRenderingContext::Init &init, aui::gtk4_fake::GtkWindow* window);
     void gtkSetWindowClassHint(RenderingContextGtk* context, aui::gtk4_fake::GtkWindow* gtkWindow);
 
+    /**
+     * @brief Titlebar widget which visibility is controlled by WindowStyle::NO_TITLEBAR.
+     * @details
+     * Present only if the window was created with client-side decorations (i.e., titlebar was installed before the
+     * window got realized).
+     */
+    static aui::gtk4_fake::GtkWidget* gtkTitlebar(aui::gtk4_fake::GtkWindow* window);
+    static void gtkSetTitlebar(aui::gtk4_fake::GtkWindow* window, aui::gtk4_fake::GtkWidget* titlebar);
+
 private:
+    static constexpr auto TITLEBAR_KEY = "aui-titlebar";
     GMainContext* mMainContext;
     
     void setupDpiChangeMonitoring();

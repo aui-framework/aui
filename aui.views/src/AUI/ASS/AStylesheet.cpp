@@ -479,6 +479,16 @@ AStylesheet::AStylesheet() {
             class_of(".window-title") >> class_of::active(".close"),
             BackgroundSolid { 0x80e81123_argb }
         },
+        // win32 reports the caption buttons as non-client area, so views don't get pointer events there and
+        // ":hover" never matches; CustomCaptionWindowImplWin32 toggles these classes instead.
+        {
+            class_of(".window-title") >> class_of(".nc-hover"),
+            BackgroundSolid { 0x20ffffff_argb },
+        },
+        {
+            class_of(".window-title") >> class_of(".nc-hover-close"),
+            BackgroundSolid { 0xe81123_rgb }
+        },
         {
             class_of(".window-content"),
             BackgroundSolid { 0xffffff_rgb },
@@ -607,6 +617,11 @@ AStylesheet::AStylesheet() {
         {
             c(".menu-item-shortcut"),
             TextColor { 0x404040_rgb },
+        },
+        {
+            c(".menu-item-icon"),
+            FixedSize { 16_dp },
+            Margin { 0, 6_dp, 0, 0 },
         },
 
         {

@@ -55,11 +55,25 @@ AString AInput::getName(Key k)
         case AInput::NUM7: return "Num7";
         case AInput::NUM8: return "Num8";
         case AInput::NUM9: return "Num9";
+#if AUI_PLATFORM_MACOS
+        case AInput::ESCAPE: return "⎋";
+        case AInput::LCONTROL: case AInput::RCONTROL: return "⌃";
+        case AInput::LSHIFT: case AInput::RSHIFT: return "⇧";
+        case AInput::LALT: case AInput::RALT: return "⌥";
+#else
         case AInput::ESCAPE: return "Escape";
         case AInput::LCONTROL: case AInput::RCONTROL: return "Ctrl";
         case AInput::LSHIFT: case AInput::RSHIFT: return "Shift";
         case AInput::LALT: case AInput::RALT: return "Alt";
-        case AInput::LSYSTEM: case AInput::RSYSTEM: return "Win";
+#endif
+        case AInput::LSYSTEM: case AInput::RSYSTEM:
+#if AUI_PLATFORM_MACOS
+            return "⌘";
+#elif AUI_PLATFORM_WIN
+            return "Win";
+#else
+            return "Meta";
+#endif
         case AInput::MENU: return "Menu";
         case AInput::LBRACKET: return "LBracket";
         case AInput::RBRACKET: return "RBracket";
@@ -73,8 +87,13 @@ AString AInput::getName(Key k)
         case AInput::EQUAL: return "Equal";
         case AInput::DASH: return "Dash";
         case AInput::SPACE: return "Space";
+#if AUI_PLATFORM_MACOS
+        case AInput::RETURN: return "⏎";
+        case AInput::BACKSPACE: return "⌫";
+#else
         case AInput::RETURN: return "Return";
         case AInput::BACKSPACE: return "BackSpace";
+#endif
         case AInput::TAB: return "Tab";
         case AInput::PAGEUP: return "PageUp";
         case AInput::PAGEDOWN: return "PageDown";

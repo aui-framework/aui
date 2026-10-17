@@ -20,7 +20,7 @@ void ACustomWindow::handleXConfigureNotify() {
 }
 
 
-ACustomWindow::ACustomWindow(const AString& name, int width, int height, AWindow* parent) :
+ACustomWindow::ACustomWindow(const AString& name, AMetric width, AMetric height, AWindow* parent) :
     AWindow(name, width, height, parent) {
 }
 

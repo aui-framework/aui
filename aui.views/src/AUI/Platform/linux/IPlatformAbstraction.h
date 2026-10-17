@@ -87,6 +87,41 @@ public:
     virtual void windowMoveToCenter(AWindow& window) = 0;
     virtual void windowQuit(AWindow& window) = 0;
     virtual void windowAnnounceMinMaxSize(AWindow& window) = 0;
+
+    /**
+     * @brief Hands the window drag over to the window manager (used by custom captions).
+     * @details
+     * Must be called from the pointer pressed handler: the window manager needs the button press which started the
+     * drag.
+     */
+    virtual void windowBeginMove(AWindow& window) = 0;
+
+    /**
+     * @brief Window edge or corner, in order of `_NET_WM_MOVERESIZE` directions.
+     */
+    enum class ResizeEdge {
+        TOP_LEFT,
+        TOP,
+        TOP_RIGHT,
+        RIGHT,
+        BOTTOM_RIGHT,
+        BOTTOM,
+        BOTTOM_LEFT,
+        LEFT,
+    };
+
+    /**
+     * @brief Hands the window resize by the specified edge over to the window manager.
+     * @details
+     * Same requirements as windowBeginMove.
+     */
+    virtual void windowBeginResize(AWindow& window, ResizeEdge edge) = 0;
+
+    /**
+     * @return true if the window has resize borders provided by the window manager or the toolkit; otherwise, a custom
+     * window has to handle resizing by its edges itself.
+     */
+    virtual bool windowHasNativeResizeBorders(AWindow& window) = 0;
     virtual void windowManagerInitNativeWindow(const IRenderingContext::Init& init) = 0;
     virtual float windowGetDpiRatio(AWindow& window);
 

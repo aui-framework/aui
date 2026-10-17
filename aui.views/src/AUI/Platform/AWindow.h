@@ -26,6 +26,7 @@
 
 #if AUI_PLATFORM_WIN
 #include <Windows.h>
+#include <AUI/Platform/win32/Win32Util.h>
 
 #elif AUI_PLATFORM_ANDROID
 #include <jni.h>
@@ -325,7 +326,7 @@ signals:
 
 protected:
 #if AUI_PLATFORM_WIN
-    HICON mIcon = nullptr;
+    aui::win32::Icon mIcon;
     virtual LRESULT winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam);
 #elif AUI_PLATFORM_ANDROID
 #elif AUI_PLATFORM_APPLE

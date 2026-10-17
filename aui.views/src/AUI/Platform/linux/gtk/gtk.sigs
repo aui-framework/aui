@@ -283,6 +283,10 @@ void gtk_alert_dialog_choose(GtkAlertDialog* self, GtkWindow* parent, GCancellab
 
 void gtk_window_set_resizable(GtkWindow* window, gboolean resizable);
 gboolean gtk_window_get_resizable(GtkWindow* window);
+GdkDevice* gdk_event_get_device(GdkEvent* event);
+guint32 gdk_event_get_time(GdkEvent* event);
+void gdk_toplevel_begin_move(GdkToplevel* toplevel, GdkDevice* device, int button, double x, double y, guint32 timestamp);
+void gdk_toplevel_begin_resize(GdkToplevel* toplevel, GdkSurfaceEdge edge, GdkDevice* device, int button, double x, double y, guint32 timestamp);
 gboolean gdk_surface_is_destroyed(GdkSurface* surface);
 GtkNative* gtk_native_get_for_surface(GdkSurface* surface);
 gboolean gdk_event_get_position(GdkEvent* event, double* x, double* y);
@@ -340,5 +344,24 @@ void gdk_scroll_event_get_deltas(GdkEvent* event, double* delta_x, double* delta
 GdkScrollUnit gdk_scroll_event_get_unit(GdkEvent* event);
 GdkEventType gdk_event_get_event_type(GdkEvent* event);
 
+void gtk_window_set_decorated(GtkWindow* window, gboolean setting);
+gboolean gtk_window_get_decorated(GtkWindow* window);
+void gtk_window_set_titlebar(GtkWindow* window, GtkWidget* titlebar);
+GtkWidget* gtk_header_bar_new(void);
+void gtk_window_set_deletable(GtkWindow* window, gboolean setting);
+void gtk_window_minimize(GtkWindow* window);
+void gtk_window_unminimize(GtkWindow* window);
+void gtk_window_maximize(GtkWindow* window);
+void gtk_window_unmaximize(GtkWindow* window);
+gboolean gtk_window_is_maximized(GtkWindow* window);
+void gtk_widget_set_visible(GtkWidget* widget, gboolean visible);
+GdkClipboard* gdk_display_get_clipboard(GdkDisplay* display);
+void gdk_clipboard_set_text(GdkClipboard* clipboard, const char* text);
+void gdk_clipboard_read_text_async(GdkClipboard* clipboard, GCancellable* cancellable, GAsyncReadyCallback callback, gpointer user_data);
+char* gdk_clipboard_read_text_finish(GdkClipboard* clipboard, GAsyncResult* result, GError** error);
+GdkCursor* gdk_cursor_new_from_name(const char* name, GdkCursor* fallback);
+GdkCursor* gdk_cursor_new_from_texture(GdkTexture* texture, int hotspot_x, int hotspot_y, GdkCursor* fallback);
+void gtk_widget_set_cursor(GtkWidget* widget, GdkCursor* cursor);
+gboolean gtk_widget_get_mapped(GtkWidget* widget);
 
 // aui.toolbox: }

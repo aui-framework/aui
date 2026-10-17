@@ -107,9 +107,10 @@ void AWindow::redraw() {
                 size.y = glm::min(size.y, maxSize.y);
             size = glm::max(size, getMinimumSize());
             AView::setSize(size);
-#if AUI_PLATFORM_WIN
-            // win32 lets us resize the native window right here, keeping it in sync with the layout. on the other
-            // platforms this would mean arguing with the window manager from inside a paint, so we don't.
+#if AUI_PLATFORM_WIN || AUI_PLATFORM_MACOS
+            // win32 and macos let us resize the native window right here (on macos this also announces the min/max
+            // size to NSWindow), keeping it in sync with the layout. on the other platforms this would mean arguing
+            // with the window manager from inside a paint, so we don't.
             setSize(size);
 #endif
             auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
