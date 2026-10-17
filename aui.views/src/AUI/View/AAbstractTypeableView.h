@@ -18,6 +18,7 @@
 
 #include "AAbstractTypeable.h"
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Render/ACanvas.hpp>
 
 /**
  * @brief Basic implementation of type shortcuts and selection for editable text fields.
@@ -131,15 +132,15 @@ public:
         return this->isPressed();
     }
 
-    void drawCursor(IRenderer& renderer, glm::ivec2 position) {
-        drawCursor(renderer, position, this->getFontStyle().size + this->getFontStyle().getDescenderHeight());
+    void drawCursor(ACanvas& canvas, glm::ivec2 position) {
+        drawCursor(canvas, position, this->getFontStyle().size + this->getFontStyle().getDescenderHeight());
     }
 
-    void drawCursor(IRenderer& renderer, glm::ivec2 position, unsigned height) {
+    void drawCursor(ACanvas& canvas, glm::ivec2 position, unsigned height) {
         if (!this->hasFocus()) {
             return;
         }
-        drawCursorImpl(renderer, position, height);
+        drawCursorImpl(canvas, position, height);
     }
 
 protected:

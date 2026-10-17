@@ -11,6 +11,7 @@
 
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Render/ACanvas.hpp>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include "AUI/View/AProgressBar.h"
 #include "AUI/View/ASlider.h"
@@ -93,12 +94,12 @@ public:
 
         for (const auto& circle : *mState->circles) {
             if (&circle == mHoveredCircle) {
-                ctx.render.roundedRectangle(
-                    ASolidBrush { AColor::GRAY }, circle.position - *circle.radius, glm::vec2(circle.radius * 2.f),
+                ctx.canvas.roundedRectangle(
+                    APaint{ASolidBrush { AColor::GRAY }}, circle.position - *circle.radius, glm::vec2(circle.radius * 2.f),
                     circle.radius);
             }
-            ctx.render.roundedRectangleBorder(
-                ASolidBrush { AColor::BLACK }, circle.position - *circle.radius, glm::vec2(circle.radius * 2.f),
+            ctx.canvas.roundedRectangleBorder(
+                APaint{ASolidBrush { AColor::BLACK }}, circle.position - *circle.radius, glm::vec2(circle.radius * 2.f),
                 circle.radius, 1);
         }
     }

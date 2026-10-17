@@ -21,7 +21,7 @@ public:
     CursorCustomImpl(AImageView img) {
         const auto color = aui::win32::imageRgbToBitmap(img, aui::win32::BitmapMode::RGB);
 
-        AImage white(img.size(), APixelFormat::RGBA | APixelFormat::BYTE);
+        AImage white(img.size(), APixelFormat::B8G8R8A8_UNORM);
         white.fill(AColor::WHITE);
 
         const auto mask = aui::win32::imageRgbToBitmap(white, aui::win32::BitmapMode::A);

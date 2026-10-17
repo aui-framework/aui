@@ -171,7 +171,7 @@ void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
     xInitNativeWindow(init, swa, vi);
     glXMakeCurrent(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::nativeHandle(init.window), ourContext);
 
-    if (!OpenGLRenderer::loadGL((OpenGLRenderer::GLLoadProc)glXGetProcAddressARB)) {
+    if (!OpenGLBackend::loadGL((OpenGLBackend::GLLoadProc)glXGetProcAddressARB)) {
         throw AException("glad load failed");
     }
     ALogger::info("OpenGL context is ready");
@@ -195,6 +195,8 @@ void OpenGLRenderingContextX11::init(const IRenderingContext::Init& init) {
     }
 
     mRenderer = ourRenderer();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
 }
 
 void OpenGLRenderingContextX11::destroyNativeWindow(ASurface& window) { xDestroyNativeWindow(window); }

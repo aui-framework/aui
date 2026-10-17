@@ -22,9 +22,9 @@ public:
     void requestFrame();
 #endif
 
+    virtual void init(const Init& init) = 0;
 #if !AUI_PLATFORM_LINUX
     // to be implemented by IPlatformAbstraction
-    virtual void init(const Init& init);
     void destroyNativeWindow(ASurface& window) override;
 #endif
 

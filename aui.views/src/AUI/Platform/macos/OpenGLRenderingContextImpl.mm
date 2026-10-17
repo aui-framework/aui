@@ -13,15 +13,15 @@
 // Created by Alex2772 on 12/7/2021.
 //
 
-#include <AUI/GL/gl.h>
+#include <AUI/Render/ARender/GL/gl.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #import <Cocoa/Cocoa.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
-#include <AUI/GL/GLDebug.h>
+#include <AUI/Render/ARender/GL/GLDebug.h>
 
-#include <AUI/GL/OpenGLRenderer.h>
-#include <AUI/GL/State.h>
+#include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
+#include <AUI/Render/ARender/GL/State.h>
 #include <AUI/Platform/AWindow.h>
 
 
@@ -84,6 +84,8 @@ void OpenGLRenderingContext::init(const Init& init) {
     glGetIntegerv(GL_STENCIL_BITS, &stencilBits);
 
     mRenderer = ourRenderer();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
     ALogger::info("OpenGL context is ready");
 }
 
@@ -93,13 +95,13 @@ void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
 
 void OpenGLRenderingContext::beginPaint(ASurface& window) {
     CommonRenderingContext::beginPaint(window);
+    mDrawList.clear();
     if (auto nativeWindow = dynamic_cast<AWindow*>(&window)) {
         auto contentView  = [static_cast<NSWindow*>(nativeWindow->mHandle) contentView];
         [static_cast<NSOpenGLContext*>(ourContext) setView:contentView];
     }
 
     beginFramebuffer(window.getSize());
-    mRenderer->beginPaint(window.getSize());
 }
 
 void OpenGLRenderingContext::beginResize(ASurface& window) {
@@ -119,8 +121,10 @@ void OpenGLRenderingContext::endResize(ASurface& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ASurface& window) {
-    endFramebuffer();
-    mRenderer->endPaint();
+    mDrawList.optimize();
+    mDrawList.draw(*mRenderer, mWindowTarget);
+    mDrawList.clear();
+
     [static_cast<NSOpenGLContext*>(ourContext) flushBuffer];
     CommonRenderingContext::endPaint(window);
 }
@@ -128,6 +132,3 @@ void OpenGLRenderingContext::endPaint(ASurface& window) {
 OpenGLRenderingContext::~OpenGLRenderingContext() {
 }
 
-AImage OpenGLRenderingContext::makeScreenshot() {
-    return AImage();
-}

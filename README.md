@@ -192,7 +192,7 @@ Result:
 ## Used libraries
 - [libcurl](https://curl.se/) for http/https requests
 - [MbedTLS](https://github.com/Mbed-TLS/mbedtls) for encryption
-- `OpenGL` as graphics hardware acceleration backend
+- `OpenGL 2.0+` as graphics hardware acceleration backend
 - [glm](https://github.com/g-truc/glm) for linear algebra
 - [stbimage](https://github.com/nothings/stb) for image loading
 - [freetype2](https://github.com/freetype/freetype) for font rendering

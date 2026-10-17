@@ -11,36 +11,37 @@
 
 #pragma once
 
-#include "AUI/Enum/ATextAlign.h"
-#include "AUI/Enum/VerticalAlign.h"
-#include "AFont.h"
-#include "AUI/Platform/AFontManager.h"
-#include "AUI/Render/FontRendering.h"
-#include "AUI/Common/AColor.h"
-
+#include <AUI/Enum/ATextAlign.h>
+#include <AUI/Enum/VerticalAlign.h>
+#include <AUI/Font/AFont.h>
+#include <AUI/Font/FontRendering.hpp>
+#include <AUI/Platform/AFontManager.h>
+#include <AUI/Common/AColor.h>
 
 class AString;
 
-
+/**
+ * @brief Font style.
+ * @ingroup views
+ */
 struct API_AUI_VIEWS AFontStyle {
-    mutable _<AFont> font = AFontManager::inst().getDefaultFont();
+    _<AFont> font = AFontManager::inst().getDefaultFont();
     unsigned size = 12;
-    bool formatting = false;
-    ATextAlign align = ATextAlign::LEFT;
-    bool bold = false;
-    bool italic = false;
-
     FontRendering fontRendering = FontRendering::SUBPIXEL;
-    float lineSpacing = 0.5f;
+    AColor color = AColor::BLACK;
+    bool lineThrough = false;
+    bool overline = false;
+    bool underline = false;
+    bool italic = false;
+    bool bold = false;
+    ATextAlign align = ATextAlign::LEFT;
+    int lineSpacing = 0;
 
+    AFont::FontEntry getFontEntry() const { return font->getFontEntry({ .size = size, .fr = fontRendering }); }
 
-    size_t getWidth(AStringView text) const;
-
-    size_t getWidth(std::u32string_view text) const;
-
-    template<class Iterator>
-    size_t getWidth(Iterator begin, Iterator end) const {
-        return font->length(*this, std::move(begin), std::move(end));
+    template <class Iterator>
+    int getWidth(Iterator begin, Iterator end) const {
+        return font->length(getFontEntry(), std::move(begin), std::move(end));
     }
     template<class UnicodeString, class Callback>
     void walkString(const glm::ivec2& position, const UnicodeString& text, int& outAdvanceX, int& outAdvanceY, Callback& callback) const {
@@ -99,8 +100,46 @@ struct API_AUI_VIEWS AFontStyle {
         outAdvanceY = (glm::max)(outAdvanceY, advanceY + lineHeight);
     }
 
-    AFont::Character& getCharacter(char32_t c) {
-        return font->getCharacter(getFontEntry(), c);
+    // constrained to actual containers so that string literals (e.g. U"text") pick the u32string_view overload
+    template <class Container>
+    requires requires(const Container& c) { c.begin(); c.end(); }
+    int getWidth(const Container& container) const {
+        return getWidth(container.begin(), container.end());
+    }
+
+    int getWidth(AStringView text) const;
+    int getWidth(std::u32string_view text) const;
+
+    int getLineHeight() const { return size + lineSpacing; }
+
+    int getSpaceWidth() const { return font->getSpaceWidth(size); }
+
+    AFont::Character& getCharacter(AChar c) const { return font->getCharacter(getFontEntry(), c); }
+
+    int getAscenderHeight() const { return font->getAscenderHeight(size); }
+
+    int getDescenderHeight() const { return font->getDescenderHeight(size); }
+
+    void setFont(const _<AFont>& fontIn) { font = fontIn; }
+
+    void setSize(unsigned int sizeIn) { size = sizeIn; }
+
+    void setFontRendering(FontRendering fontRenderingIn) { fontRendering = fontRenderingIn; }
+
+    AFontStyle withSize(unsigned sizeIn) const {
+        return {
+            .font = font,
+            .size = sizeIn,
+            .fontRendering = fontRendering,
+            .color = color,
+            .lineThrough = lineThrough,
+            .overline = overline,
+            .underline = underline,
+            .italic = italic,
+            .bold = bold,
+            .align = align,
+            .lineSpacing = lineSpacing
+        };
     }
 
     /**
@@ -121,27 +160,8 @@ struct API_AUI_VIEWS AFontStyle {
     [[nodiscard]]
     int getBaselineY(int top, int height, VerticalAlign verticalAlign) const;
 
-    auto getAscenderHeight() const {
-        return font->getAscenderHeight(size);
-    }
-    auto getDescenderHeight() const {
-        return font->getDescenderHeight(size);
-    }
 
-    [[nodiscard]]
-    size_t getSpaceWidth() const {
-        return font->getSpaceWidth(size);
-    }
-
-    size_t getLineHeight() const;
-
-    AFont::FontEntry getFontEntry() const {
-        return font->getFontEntry({size, fontRendering});
-    }
-
-    operator AFont::FontEntry() const {
-        return getFontEntry();
-    }
+    operator AFont::FontEntry() const { return getFontEntry(); }
 
     bool operator==(const AFontStyle&) const noexcept = default;
     bool operator!=(const AFontStyle&) const noexcept = default;

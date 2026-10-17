@@ -34,6 +34,12 @@ public:
 
     bool hasAnimationFinished() override;
 
+    ARect<int> getDirtyRect() override;
+
+    void prepareNextFrame() override;
+
+    uint32_t getCurrentFrameLength() override;
+
     enum class FrameSkipMode {
         PAUSE,         // 0: pause, continue from the same frame
         SKIP_FRAMES,   // 1: skip frames and loops (fast forward)
@@ -61,7 +67,7 @@ private:
     FrameSkipMode mSkipMode = FrameSkipMode::PAUSE;
     std::chrono::milliseconds mTotalDuration = std::chrono::milliseconds(0);
 
-    static constexpr APixelFormat PIXEL_FORMAT = APixelFormat(APixelFormat::RGBA_BYTE);
+    static constexpr APixelFormat PIXEL_FORMAT = APixelFormat(APixelFormat::R8G8B8A8_UNORM);
 
     void loadNextFrame();
 

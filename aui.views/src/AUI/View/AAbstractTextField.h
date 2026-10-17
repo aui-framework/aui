@@ -87,7 +87,7 @@ protected:
 
     virtual bool isValidText(std::u32string_view text);
 
-    void prerenderStringIfNeeded(IRenderer& render);
+    void prerenderStringIfNeeded(ACanvas& render);
 
     void typeableErase(size_t begin, size_t end) override;
 
@@ -108,7 +108,7 @@ protected:
     unsigned cursorIndexByPos(glm::ivec2 pos) override;
     glm::ivec2 getPosByIndex(size_t index) override;
 
-    void doDrawString(IRenderer& render);
+    void doDrawString(ACanvas& render);
 
     void onCursorIndexChanged() override;
     void commitStyle() override;

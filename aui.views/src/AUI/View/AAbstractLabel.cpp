@@ -31,7 +31,7 @@ AAbstractLabel::AAbstractLabel() {
 void AAbstractLabel::render(ARenderContext context) {
     AView::render(context);
 
-    doRenderText(context.render);
+    doRenderText(context);
 }
 
 glm::ivec2 AAbstractLabel::onIntrinsicMeasure(AConstraints constraints) {
@@ -106,7 +106,7 @@ bool AAbstractLabel::processTextOverflow(AString& text, int maxWidth) {
     return true;
 }
 
-void AAbstractLabel::doPrerender(IRenderer& render, int maxWidth) {
+void AAbstractLabel::doPrerender(ACanvas& render, int maxWidth) {
     auto fs = getFontStyle();
     if (!mText.empty()) {
         AString transformedText = getTransformedText();
@@ -115,7 +115,8 @@ void AAbstractLabel::doPrerender(IRenderer& render, int maxWidth) {
     }
 }
 
-void AAbstractLabel::doRenderText(IRenderer& render) {
+void AAbstractLabel::doRenderText(ARenderContext ctx) {
+    auto& render = ctx.canvas;
     if (!mPrerendered) {
         doPrerender(render, getSize().x);
     }
@@ -129,12 +130,11 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
             if (mIcon) {
                 requiredSpace *= getHeight() / requiredSpace.y;
                 RenderHints::PushState s(render);
-                render.setColor(mIconColor);
                 render.setTransform(glm::translate(glm::mat4(1.f),
                                                    glm::vec3(mPadding.left + mTextLeftOffset, iconY, 0)));
                 IDrawable::Params p;
                 p.size = requiredSpace;
-                mIcon->draw(render, p);
+                mIcon->draw(ctx, p);
                 mTextLeftOffset += requiredSpace.x + 4_dp;
             }
         };
@@ -151,7 +151,6 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
                     if (mIcon) {
                         mTextLeftOffset += requiredSpace.x / 2;
                         RenderHints::PushState s(render);
-                        render.setColor(mIconColor);
                         render.setTransform(glm::translate(glm::mat4(1.f),
                                                            glm::vec3(mTextLeftOffset - (mPrerendered->getWidth()) / 2 -
                                                                      requiredSpace.x,
@@ -159,7 +158,7 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
 
                         IDrawable::Params p;
                         p.size = requiredSpace;
-                        mIcon->draw(render, p);
+                        mIcon->draw(ctx, p);
                     }
 
                     break;
@@ -168,7 +167,6 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
                     mTextLeftOffset += getContentWidth() - mPrerendered->getWidth();
                     if (mIcon) {
                         RenderHints::PushState s(render);
-                        render.setColor(mIconColor);
                         render.setTransform(glm::translate(glm::mat4(1.f),
                                                            glm::vec3(mPadding.left + mTextLeftOffset -
                                                                      (mPrerendered ? mPrerendered->getWidth() : 0) -
@@ -177,7 +175,7 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
 
                         IDrawable::Params p;
                         p.size = requiredSpace;
-                        mIcon->draw(render, p);
+                        mIcon->draw(ctx, p);
                     }
 
                     break;
@@ -190,8 +188,7 @@ void AAbstractLabel::doRenderText(IRenderer& render) {
             const int y = getFontStyle().getBaselineY(mPadding.top, getContentHeight(), mVerticalAlign);
             RenderHints::PushMatrix m(render);
             render.translate({mTextLeftOffset + mPadding.left, y});
-            render.setColor(textColor());
-            mPrerendered->draw();
+            mPrerendered->draw(render);
         }
     }
 }
@@ -256,6 +253,7 @@ void AAbstractLabel::invalidateAllStyles() {
 
 void AAbstractLabel::commitStyle() {
     AView::commitStyle();
+    getFontStyle().color = textColor();
     commitStyleFont();
 }
 

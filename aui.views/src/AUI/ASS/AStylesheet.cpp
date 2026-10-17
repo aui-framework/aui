@@ -621,6 +621,7 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0xd0d0d0_rgb },
             BorderRadius { 4_dp },
             MinSize { 40_dp, 8_dp },
+            AOverflow::HIDDEN,
         },
         {
             t<AProgressBar::Inner>(),

@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "AUI/GL/State.h"
+#include "AUI/Render/ARender/GL/State.h"
 #include "AUI/Platform/ARenderingContextOptions.h"
 
 #include <AUI/Platform/Entry.h>

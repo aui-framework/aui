@@ -11,6 +11,7 @@
 
 #include <AUI/Platform/AWindowManager.h>
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Render/ARender/GL/gl.h>
 #import "AUIView.h"
 #include <string>
 #include <OpenGLES/EAGLDrawable.h>

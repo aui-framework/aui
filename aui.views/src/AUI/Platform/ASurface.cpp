@@ -477,7 +477,7 @@ void ASurface::render(ARenderContext context) {
 #endif
         {
             APerformanceSection root("before frame");
-            std::exchange(mBeforeFrameQueue, {}).processMessages(context.render);
+            std::exchange(mBeforeFrameQueue, {}).processMessages(context);
         }
         processTouchscreenKeyboardRequest();
 
@@ -650,4 +650,12 @@ void ASurface::requestLayout() {
     flagRedraw();
 }
 
-void ASurface::markPixelDataInvalid(ARect<int> invalidArea) { flagRedraw(); }
+void ASurface::markPixelDataInvalid(ARect<int> invalidArea) {
+    if (mInvalidArea) {
+        mInvalidArea->p1 = glm::min(mInvalidArea->p1, invalidArea.p1);
+        mInvalidArea->p2 = glm::max(mInvalidArea->p2, invalidArea.p2);
+    } else {
+        mInvalidArea = invalidArea;
+    }
+    flagRedraw();
+}

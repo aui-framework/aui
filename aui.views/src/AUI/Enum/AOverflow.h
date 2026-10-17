@@ -18,7 +18,7 @@
 #include <AUI/Reflect/AEnumerate.h>
 
 /**
- * @brief Controls visibility of the overflowed contents of AView with AView::drawStencilMask.
+ * @brief Controls visibility of the overflowed contents of AView.
  * @ingroup ass_properties
  */
 enum class AOverflow {
@@ -58,7 +58,7 @@ AUI_ENUM_VALUES(ATextOverflow,
                 ATextOverflow::CLIP)
 
 /**
- * @brief Controls the behaviour of the default AView::drawStencilMask() implementation.
+ * @brief Controls how the overflow mask is produced.
  * @ingroup ass_properties
  * @details
  * Controls how does the overflow mask is produced.
@@ -72,6 +72,11 @@ enum class AOverflowMask {
     ROUNDED_RECT,
 
     /**
+     * @brief Simple rectangular clipping.
+     */
+    RECT,
+
+    /**
      * @brief Mask is produced from the alpha channel of the BackgroundImage.
      *
      * Helps in creating custom-shaped gradients, textures and effects.
@@ -81,4 +86,5 @@ enum class AOverflowMask {
 
 AUI_ENUM_VALUES(AOverflowMask,
                 AOverflowMask::ROUNDED_RECT,
+                AOverflowMask::RECT,
                 AOverflowMask::BACKGROUND_IMAGE_ALPHA)

@@ -16,8 +16,8 @@
 #pragma once
 
 #include "IProperty.h"
-#include "AUI/Common/IStringable.h"
-#include <AUI/Render/FontRendering.h> // defined here
+#include <AUI/Common/IStringable.h>
+#include <AUI/Font/FontRendering.hpp> // defined here
 
 namespace ass {
     namespace prop {

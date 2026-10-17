@@ -142,6 +142,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
     FontRendering fr = fs.first.fr;
 
     AByteBuffer data;
+    APixelFormat imageFormat = APixelFormat::UNKNOWN;
     glm::vec2 charSize{0.f};
     glm::vec2 hBearing{0.f};
     float hAdvance = 0.f;
@@ -201,6 +202,19 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
                                                                                                                : 0;
                 }
             }
+            imageFormat = APixelFormat::R8_UNORM;
+        } else if (fr == FontRendering::SUBPIXEL) {
+            data.reserve(g->bitmap.rows * width * 4);
+
+            for (unsigned r = 0; r < g->bitmap.rows; ++r) {
+                unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
+                for (unsigned c = 0; c < width; ++c) {
+                    data.write(reinterpret_cast<const char*>(bufPtr + c * 3), 3);
+                    std::uint8_t alpha = 255;
+                    data.write(reinterpret_cast<const char*>(&alpha), 1);
+                }
+            }
+            imageFormat = APixelFormat::R8G8B8A8_UNORM;
         } else {
             data.reserve(g->bitmap.rows * g->bitmap.pitch);
 
@@ -208,6 +222,7 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
                 unsigned char* bufPtr = g->bitmap.buffer + r * g->bitmap.pitch;
                 data.write(reinterpret_cast<const char*>(bufPtr), g->bitmap.width);
             }
+            imageFormat = APixelFormat::R8_UNORM;
         }
     }
 
@@ -231,12 +246,6 @@ AFont::Character AFont::renderGlyph(const FontEntry& fs, AChar glyph) {
             },
         };
     }
-
-    int imageFormat = APixelFormat::BYTE;
-    if (fr == FontRendering::SUBPIXEL)
-        imageFormat |= APixelFormat::RGB;
-    else
-        imageFormat |= APixelFormat::R;
 
     return Character{
         .image = _new<AImage>(data, glm::uvec2(width, height), imageFormat),

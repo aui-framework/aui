@@ -107,11 +107,14 @@ public:
 class WhitespaceEntry : public TextBaseEntry {
 private:
     IFontView* mText;
+    glm::ivec2 mPosition;
 
 public:
     WhitespaceEntry(IFontView* text) : mText(text) {}
 
     glm::ivec2 getSize() override { return { mText->getFontStyle().getSpaceWidth(), mText->getFontStyle().size }; }
+
+    void setPosition(glm::ivec2 position) override { mPosition = position; }
 
     bool escapesEdges() override { return true; }
 
@@ -119,7 +122,9 @@ public:
 
     size_t getCharacterCount() override { return 1; }
 
-    glm::ivec2 getPosByIndex(size_t characterIndex) override { throw AException("unimplemented"); }
+    glm::ivec2 getPosByIndex(size_t characterIndex) override {
+        return mPosition + glm::ivec2 { int(characterIndex) * mText->getFontStyle().getSpaceWidth(), 0 };
+    }
 
     void appendTo(std::u32string& dst) override { dst += U' '; }
 };
@@ -127,6 +132,7 @@ public:
 class NextLineEntry : public TextBaseEntry {
 private:
     IFontView* mText;
+    glm::ivec2 mPosition;
 
 public:
     NextLineEntry(IFontView* text) : mText(text) {}
@@ -135,11 +141,15 @@ public:
 
     glm::ivec2 getSize() override { return { 0, mText->getFontStyle().size }; }
 
+    void setPosition(glm::ivec2 position) override { mPosition = position; }
+
     ~NextLineEntry() override = default;
 
     size_t getCharacterCount() override { return 1; }
 
-    glm::ivec2 getPosByIndex(size_t characterIndex) override { throw AException("unimplemented"); }
+    glm::ivec2 getPosByIndex(size_t characterIndex) override {
+        return mPosition + glm::ivec2 { int(characterIndex) * mText->getFontStyle().getSpaceWidth(), 0 };
+    }
 
     void appendTo(std::u32string& dst) override { dst += U'\n'; }
 };
@@ -175,9 +185,7 @@ public:
             prerenderString(context);
         }
         if (mPrerenderedString) {
-            RenderHints::PushColor c(context.render);
-            context.render.setColor(textColor());
-            mPrerenderedString->draw();
+            mPrerenderedString->draw(context.canvas);
         }
     }
 
@@ -250,7 +258,7 @@ protected:
     void prerenderString(ARenderContext ctx) {
         performLayout();
         {
-            auto multiStringCanvas = ctx.render.newMultiStringCanvas(getFontStyle());
+            auto multiStringCanvas = ctx.canvas.newMultiStringCanvas(getFontStyle());
             fillStringCanvas(multiStringCanvas);
             mPrerenderedString = multiStringCanvas->finalize();
         }

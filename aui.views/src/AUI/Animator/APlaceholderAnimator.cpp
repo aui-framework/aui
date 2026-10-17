@@ -16,13 +16,13 @@
 #include "APlaceholderAnimator.h"
 #include <AUI/View/AView.h>
 #include <AUI/Util/AMetric.h>
-#include "AUI/Render/IRenderer.h"
+#include <AUI/Render/ACanvas.hpp>
 
 APlaceholderAnimator::APlaceholderAnimator() {
 
 }
 
-void APlaceholderAnimator::doPostRender(AView* view, float theta, IRenderer& render) {
+void APlaceholderAnimator::doPostRender(AView* view, float theta, ACanvas& render) {
     float width;
     if (auto cs = dynamic_cast<ICustomWidth*>(view)) {
         width = cs->getCustomWidthForPlaceholderAnimator();
@@ -36,21 +36,4 @@ void APlaceholderAnimator::doPostRender(AView* view, float theta, IRenderer& ren
 
     const float WIDTH = 200;
     float posX = theta * (view->getWidth() + WIDTH * 2.f) - WIDTH;
-
-    /*
-    ctx.render.rect(
-            ALinearGradientBrush{
-                    0x00ffffff_argb, BRIGHT_COLOR,
-                    0x00ffffff_argb, BRIGHT_COLOR
-            },
-            {posX, 0},
-            {WIDTH / 2, view->getHeight()});
-
-    ctx.render.rect(
-            ALinearGradientBrush{
-                    BRIGHT_COLOR, 0x00ffffff_argb,
-                    BRIGHT_COLOR, 0x00ffffff_argb
-            },
-            {posX + WIDTH / 2, 0},
-            {WIDTH / 2, view->getHeight()});*/
 }

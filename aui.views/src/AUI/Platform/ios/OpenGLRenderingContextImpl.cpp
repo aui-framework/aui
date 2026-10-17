@@ -14,15 +14,15 @@
 //
 
 #include <dlfcn.h>
-#include <AUI/GL/gl.h>
+#include <AUI/Render/ARender/GL/gl.h>
 #include <AUI/Platform/OpenGLRenderingContext.h>
 #include <AUI/Util/ARandom.h>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/AMessageBox.h>
-#include <AUI/GL/GLDebug.h>
+#include <AUI/Render/ARender/GL/GLDebug.h>
 
-#include <AUI/GL/OpenGLRenderer.h>
-#include <AUI/GL/State.h>
+#include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
+#include <AUI/Render/ARender/GL/State.h>
 
 static void* UIKit_GL_GetProcAddress(const char *proc)
 {
@@ -37,6 +37,8 @@ void OpenGLRenderingContext::init(const Init& init) {
     CommonRenderingContext::init(init);
     gladLoadGLES2Loader(reinterpret_cast<GLADloadproc>(UIKit_GL_GetProcAddress));
     mRenderer = ourRenderer();
+    mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
+    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
 }
 
 void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
@@ -44,8 +46,8 @@ void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {
 }
 
 void OpenGLRenderingContext::beginPaint(ASurface& window) {
+    mDrawList.clear();
     beginFramebuffer(window.getSize());
-    mRenderer->beginPaint(window.getSize());
 }
 
 void OpenGLRenderingContext::beginResize(ASurface& window) {
@@ -56,15 +58,13 @@ void OpenGLRenderingContext::endResize(ASurface& window) {
 }
 
 void OpenGLRenderingContext::endPaint(ASurface& window) {
-    endFramebuffer();
-    mRenderer->endPaint();
+    mDrawList.optimize();
+    mDrawList.draw(*mRenderer, mWindowTarget);
+    presentToBackbuffer();
+    mDrawList.clear();
+
     CommonRenderingContext::endPaint(window);
 }
 
 OpenGLRenderingContext::~OpenGLRenderingContext() {
-}
-
-AImage OpenGLRenderingContext::makeScreenshot() {
-    // stub
-    return AImage();
 }

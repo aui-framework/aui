@@ -15,8 +15,8 @@
 
 #include "AGLEmbedContext.h"
 
-#include <AUI/GL/State.h>
-#include <AUI/GL/OpenGLRenderer.h>
+#include <AUI/Render/ARender/GL/State.h>
+#include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
 
 AGLEmbedContext::AGLEmbedContext() {
 #if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
@@ -41,10 +41,9 @@ void AGLEmbedContext::render(const ARenderContext& context) {
     gl::State::bindVertexArray(0);
     gl::State::bindTexture(GL_TEXTURE_2D, 0);
     glEnable(GL_BLEND);
-    glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
 
-    context.render.setColorForced(1.f);
-    context.render.setTransformForced(glm::ortho(0.f,
+    context.canvas.setTransformForced(glm::ortho(0.f,
                                            static_cast<float>(mSize.x),
                                            static_cast<float>(mSize.y),
                                            0.f));

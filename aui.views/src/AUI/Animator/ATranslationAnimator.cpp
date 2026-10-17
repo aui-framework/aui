@@ -9,16 +9,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 27.08.2020.
-//
-
 #include "ATranslationAnimator.h"
-#include "AUI/Render/IRenderer.h"
+#include <AUI/Render/ACanvas.hpp>
 
 ATranslationAnimator::ATranslationAnimator(const glm::vec2& from, const glm::vec2& to) : mFrom(from), mTo(to) {}
 
-void ATranslationAnimator::doAnimation(AView* view, float theta, IRenderer& render) {
+void ATranslationAnimator::doAnimation(AView* view, float theta, ACanvas& render) {
     render.setTransform(glm::translate(glm::mat4(1.f),
                                          glm::vec3(glm::mix(mFrom, mTo, theta), 0.f)));
 }

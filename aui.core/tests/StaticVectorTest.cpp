@@ -183,3 +183,16 @@ TEST_F(StaticVector, RemoveIf) {
 
     EXPECT_EQ(aui::range(vector), aui::range(expected));
 }
+
+TEST_F(StaticVector, Equality) {
+    AStaticVector<int, 4> v1 { 1, 2, 3 };
+    AStaticVector<int, 4> v2 { 1, 2, 3 };
+    AStaticVector<int, 4> v3 { 1, 2 };
+    AStaticVector<int, 4> v4 { 1, 2, 4 };
+    AStaticVector<int, 8> v5 { 1, 2, 3 };
+
+    EXPECT_EQ(v1, v2);
+    EXPECT_NE(v1, v3);
+    EXPECT_NE(v1, v4);
+    EXPECT_EQ(v1, v5);
+}

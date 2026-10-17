@@ -14,10 +14,13 @@
 //
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include <AUI/Render/ARender/Software/SoftwareRenderer.h>
 #include "AStubWindowManager.h"
 
 static aui::lazy<AStubWindowManager::Config> gStubWindowManagerConfig = [] {
-    return AStubWindowManager::Config{};
+    return AStubWindowManager::Config{
+        .renderer = std::make_unique<SoftwareRenderer>()
+    };
 };
 
 class StubRenderingContext: public SoftwareRenderingContext {
@@ -30,6 +33,9 @@ public:
 #endif
     {
         reallocate(init.window);
+        mRenderer = std::static_pointer_cast<SoftwareRenderer>(gStubWindowManagerConfig->renderer);
+        mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *gStubWindowManagerConfig->renderer);
+        mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *gStubWindowManagerConfig->renderer);
     }
 
     ~StubRenderingContext() override = default;
@@ -39,13 +45,21 @@ public:
     }
 
     void beginPaint(ASurface& window) override {
-        std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
+        SoftwareRenderingContext::beginPaint(window);
     }
 
-    void endPaint(ASurface& window) override {}
+    void endPaint(ASurface& window) override {
+        mDrawList.optimize();
+        mDrawList.draw(backend(), mWindowTarget);
+        mDrawList.clear();
+    }
 
-    IRenderer& renderer() override {
+    IRendererBackend& backend() override {
         return *gStubWindowManagerConfig->renderer;
+    }
+
+    ACanvas& canvas() override {
+        return *mCanvas;
     }
 
 private:
@@ -58,12 +72,14 @@ void AStubWindowManager::initNativeWindow(const IRenderingContext::Init& init) {
     init.setRenderingContext(std::move(context));
 }
 
-void AStubWindowManager::drawFrame() {
+void AStubWindowManager::drawFrame(AWindow& window) {
     for (auto& w : AWindow::getWindowManager().getWindows()) {
         w->getRenderingContext()->beginResize(*w);
         w->pack();
         w->getRenderingContext()->endResize(*w);
+        w->getRenderingContext()->beginPaint(window);
         w->redraw();
+        w->getRenderingContext()->endPaint(window);
     }
 }
 
@@ -71,7 +87,7 @@ void AStubWindowManager::setConfig(Config config) {
     gStubWindowManagerConfig = std::move(config);
 }
 
-AImage AStubWindowManager::makeScreenshot(aui::no_escape<AWindow> window) {
-    drawFrame();
-    return window->getRenderingContext()->makeScreenshot();
+AImage AStubWindowManager::makeScreenshot(AWindow& window) {
+    drawFrame(window);
+    return window.getRenderingContext()->makeScreenshot();
 }
