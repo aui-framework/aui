@@ -76,6 +76,11 @@ AStylesheet::AStylesheet() {
             Padding { 8_dp },
 #endif
         },
+        {
+            // contents extend into the titlebar, up to the window edges.
+            class_of(".window-extended"),
+            Padding { 0 },
+        },
 
          // ASpinner
         {
@@ -438,6 +443,15 @@ AStylesheet::AStylesheet() {
             Padding { 7_dp },
             TextColor { 0xffffff_rgb },
             FontSize { 9_pt },
+        },
+        {
+            // applies where AUI draws the title (see AWindow::hasNativeWindowTitle).
+            t<AWindowTitle>(),
+#if AUI_PLATFORM_APPLE || AUI_PLATFORM_LINUX
+            ATextAlign::CENTER,
+#else
+            ATextAlign::LEFT,
+#endif
         },
         {
             t<ATitlebar>() >> class_of(".default"),

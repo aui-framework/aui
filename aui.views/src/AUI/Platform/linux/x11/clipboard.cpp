@@ -35,7 +35,7 @@ AString PlatformAbstractionX11::getClipboardText() {
     auto auiWindow = dynamic_cast<AWindow*>(basicWindow);
     if (!auiWindow)
         return {};
-    auto nativeHandle = auiWindow->getNativeHandle();
+    auto nativeHandle = auiWindow->nativeHandle();
     AUI_ASSERT(nativeHandle);
 
     XConvertSelection(PlatformAbstractionX11::ourDisplay, PlatformAbstractionX11::ourAtoms.clipboard, PlatformAbstractionX11::ourAtoms.utf8String, PlatformAbstractionX11::ourAtoms.auiClipboard, nativeHandle,

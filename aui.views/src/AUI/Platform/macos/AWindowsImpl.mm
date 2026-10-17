@@ -66,6 +66,8 @@ void AWindow::showImpl() {
 void AWindow::setTitleImpl(const AString& title) {
     if (!mHandle) return;
     [static_cast<NSWindow*>(mHandle) setTitle:[NSString stringWithUTF8String:title.toStdString().c_str()]];
+    // AppKit relayouts the title text field.
+    applyTitlebarRect();
 }
 
 void AWindow::setResizable(bool resizable) {
@@ -88,6 +90,10 @@ bool AWindow::isResizable() const {
 
 bool AWindow::hasNativeWindowControls() const { return true; }
 
+bool AWindow::hasNativeWindowTitle() const {
+    return !mIsPopup && std::holds_alternative<Init::DecorationExtended>(mInit.decoration);
+}
+
 bool AWindow::captionPressed(const APointerPressedEvent& event) {
     if (!mHandle || event.asButton != AInput::LBUTTON || !isCaptionAt(glm::ivec2(event.position))) {
         return false;
@@ -108,24 +114,50 @@ bool AWindow::captionPressed(const APointerPressedEvent& event) {
 }
 
 void AWindow::applyTitlebarRect() {
-    // Aligns the traffic lights vertically with the ATitlebar; AppKit resets their position on resize and fullscreen
-    // transitions, and we layout on each of them.
-    if (!mHandle || !mTitlebar || !std::holds_alternative<Init::DecorationExtended>(mInit.decoration)) {
+    // Aligns the traffic lights and the title vertically with the ATitlebar; AppKit resets their position on resize,
+    // title change and fullscreen transitions, and we layout on each of them.
+    if (!mHandle || !hasNativeWindowTitle()) {
         return;
     }
     auto* ns = static_cast<NSWindow*>(mHandle);
+
+    // the native title is shown only while there is AWindowTitle to show it over.
+    auto* title = mTitlebar ? mTitlebar->windowTitle() : nullptr;
+    const bool titleVisible = title && title->getVisibility() == Visibility::VISIBLE;
+    const auto visibility = titleVisible ? NSWindowTitleVisible : NSWindowTitleHidden;
+    if ([ns titleVisibility] != visibility) {
+        [ns setTitleVisibility:visibility];
+    }
+    if (!mTitlebar) {
+        return;
+    }
+
     const float dpi = getDpiRatio();
     const auto position = mTitlebar->getPositionInWindow();
     const auto size = mTitlebar->getSize();
     const CGFloat contentHeight = [[ns contentView] bounds].size.height;
     // center of the titlebar in the window coordinates (points, origin at the bottom left)
     const CGFloat centerY = contentHeight - (position.y + size.y / 2.f) / dpi;
+    const auto alignVertically = [&](NSView* view) {
+        NSView* container = [view superview];
+        const NSPoint inContainer = [container convertPoint:NSMakePoint(0, centerY) fromView:nil];
+        [view setFrameOrigin:NSMakePoint([view frame].origin.x, inContainer.y - [view frame].size.height / 2)];
+    };
+    NSView* titlebarView = nil;
     for (auto type : { NSWindowCloseButton, NSWindowMiniaturizeButton, NSWindowZoomButton }) {
         NSButton* button = [ns standardWindowButton:type];
-        if (!button || [button isHidden]) continue;
-        NSView* container = [button superview];
-        const NSPoint inContainer = [container convertPoint:NSMakePoint(0, centerY) fromView:nil];
-        [button setFrameOrigin:NSMakePoint([button frame].origin.x, inContainer.y - [button frame].size.height / 2)];
+        if (!button) continue;
+        titlebarView = [button superview];
+        if ([button isHidden]) continue;
+        alignVertically(button);
+    }
+    if (titleVisible && titlebarView) {
+        // the title text field is a sibling of the traffic lights. AppKit keeps centering it horizontally.
+        for (NSView* subview in [titlebarView subviews]) {
+            if ([subview isKindOfClass:[NSTextField class]]) {
+                alignVertically(subview);
+            }
+        }
     }
     updateWindowControlsInsets();
 }

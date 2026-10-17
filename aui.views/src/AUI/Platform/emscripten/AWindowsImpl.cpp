@@ -53,6 +53,8 @@ bool AWindow::isResizable() const { return false; }
 
 bool AWindow::hasNativeWindowControls() const { return false; }
 
+bool AWindow::hasNativeWindowTitle() const { return false; }
+
 bool AWindow::captionPressed(const APointerPressedEvent&) { return false; }
 
 void AWindow::setTitleImpl(const AString& title) {

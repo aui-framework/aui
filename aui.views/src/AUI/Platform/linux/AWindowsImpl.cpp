@@ -170,6 +170,10 @@ bool AWindow::hasNativeWindowControls() const {
     return IPlatformAbstraction::current().windowHasNativeWindowControls(const_cast<AWindow&>(*this));
 }
 
+bool AWindow::hasNativeWindowTitle() const {
+    return IPlatformAbstraction::current().windowHasNativeWindowTitle(const_cast<AWindow&>(*this));
+}
+
 namespace {
 using ResizeEdge = IPlatformAbstraction::ResizeEdge;
 

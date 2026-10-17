@@ -142,12 +142,8 @@ ATitlebar::ATitlebar(_<AView> contents) {
     mStart = _new<AWindowControls>(AWindowControls::Side::START);
     mEnd = _new<AWindowControls>(AWindowControls::Side::END);
     addView(mStart);
-    if (contents) {
-        contents->setExpanding({ 1, 0 });
-        addView(std::move(contents));
-    } else {
-        addView(_new<AView>() AUI_LET { it->setExpanding({ 1, 0 }); });
-    }
+    contents->setExpanding({ 1, 0 });
+    addView(std::move(contents));
     addView(mEnd);
     setExpanding({ 1, 0 });
 }
@@ -165,6 +161,9 @@ void ATitlebar::setWindowButtonNativeHover(AOptional<AWindowControls::Button> bu
 }
 
 ATitlebar::~ATitlebar() {
+    if (mWindowTitle) {
+        mWindowTitle->mTitlebar = nullptr;
+    }
     if (mWindow) {
         mWindow->setTitlebar(nullptr);
     }
@@ -183,4 +182,63 @@ void ATitlebar::onViewGraphSubtreeChanged() {
     if (mWindow) {
         mWindow->setTitlebar(this);
     }
+}
+
+AWindowTitle::AWindowTitle() {
+    setExpanding({ 1, 0 });
+}
+
+AWindowTitle::~AWindowTitle() {
+    if (mTitlebar && mTitlebar->mWindowTitle == this) {
+        mTitlebar->mWindowTitle = nullptr;
+    }
+}
+
+bool AWindowTitle::isNative() const noexcept {
+    return mTitlebar && mWindow && mWindow->hasNativeWindowTitle();
+}
+
+void AWindowTitle::render(ARenderContext context) {
+    if (isNative()) {
+        // the OS draws the text over us.
+        AView::render(context);
+        return;
+    }
+    ALabel::render(context);
+}
+
+void AWindowTitle::onViewGraphSubtreeChanged() {
+    ALabel::onViewGraphSubtreeChanged();
+    ATitlebar* titlebar = nullptr;
+    for (auto p = getParent(); p; p = p->getParent()) {
+        if (auto t = dynamic_cast<ATitlebar*>(p)) {
+            titlebar = t;
+            break;
+        }
+    }
+    if (titlebar != mTitlebar) {
+        if (mTitlebar && mTitlebar->mWindowTitle == this) {
+            mTitlebar->mWindowTitle = nullptr;
+        }
+        mTitlebar = titlebar;
+        if (mTitlebar) {
+            mTitlebar->mWindowTitle = this;
+        }
+    }
+
+    auto window = dynamic_cast<AWindow*>(getWindow());
+    if (window == mWindow) {
+        return;
+    }
+    mWindow = window;
+    if (!mWindow) {
+        return;
+    }
+    setText(*mWindow->title());
+    connect(mWindow->titleChanged, this, [this, window](const AString& title) {
+        // the connection to the previous window, if any, is still alive; the view might have been moved.
+        if (mWindow == window) {
+            setText(title);
+        }
+    });
 }

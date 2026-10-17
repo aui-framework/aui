@@ -57,7 +57,7 @@ AMessageBox::ResultButton PlatformWin32::messageBoxShow(
     AMessageBox::Button b) {
     using namespace AMessageBox;
 
-    HWND window = parent ? parent->getNativeHandle() : nullptr;
+    HWND window = parent ? parent->nativeHandle() : nullptr;
 
     long flags = 0;
 

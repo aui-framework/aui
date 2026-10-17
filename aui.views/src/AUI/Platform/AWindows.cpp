@@ -60,6 +60,9 @@ AWindow::AWindow(AString title, AMetric width, AMetric height)
 
 AWindow::AWindow(Init init) : mInit(std::move(init)) {
     mWindowTitle = mInit.title;
+    if (std::holds_alternative<Init::DecorationExtended>(mInit.decoration)) {
+        addAssName(".window-extended");
+    }
     mResizableCache = mInit.resizable;
     windowNativePreInit();
     const auto dpi = fetchDpiFromSystem();
@@ -158,25 +161,36 @@ void AWindow::redraw() {
 #endif
             auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
             layout(getPosition(), getSize());
-            if (mTitlebar) {
 #if AUI_PLATFORM_MACOS
-                applyTitlebarRect();
+            // also hides the native title when the titlebar is gone.
+            applyTitlebarRect();
 #elif AUI_PLATFORM_LINUX
-                const auto rect =
-                    ARect<int>::fromTopLeftPositionAndSize(mTitlebar->getPositionInWindow(), mTitlebar->getSize());
-                if (rect != mLastTitlebarRect) {
-                    mLastTitlebarRect = rect;
+            {
+                const auto rectOf = [](const AView& v) {
+                    return ARect<int>::fromTopLeftPositionAndSize(v.getPositionInWindow(), v.getSize());
+                };
+                AOptional<ARect<int>> titlebarRect;
+                AOptional<ARect<int>> titleRect;
+                if (mTitlebar) {
+                    titlebarRect = rectOf(*mTitlebar);
+                    if (auto title = mTitlebar->windowTitle(); title && title->getVisibility() == Visibility::VISIBLE) {
+                        titleRect = rectOf(*title);
+                    }
+                }
+                if (titlebarRect != mLastTitlebarRect || titleRect != mLastWindowTitleRect) {
+                    mLastTitlebarRect = titlebarRect;
+                    mLastWindowTitleRect = titleRect;
                     // we are in the middle of painting; toolkits don't like when their widgets are changed under
                     // painting.
-                    AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken), rect] {
+                    AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken), titlebarRect, titleRect] {
                         if (alive.expired() || mClosed) {
                             return;
                         }
-                        IPlatformAbstraction::current().windowSetTitlebarRect(*this, rect);
+                        IPlatformAbstraction::current().windowSetTitlebarRect(*this, titlebarRect, titleRect);
                     };
                 }
-#endif
             }
+#endif
             auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
             unsigned millis = mFrameMillis = static_cast<unsigned>((after - before).count());
             if (millis > 20) {
@@ -262,7 +276,11 @@ void AWindow::hide() {
 }
 
 void AWindow::setTitle(AString title) {
+    if (mWindowTitle == title) {
+        return;
+    }
     mWindowTitle = std::move(title);
+    emit titleChanged(mWindowTitle);
     if (mClosed) {
         return;
     }

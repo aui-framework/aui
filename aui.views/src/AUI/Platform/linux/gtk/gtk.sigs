@@ -200,7 +200,6 @@ void gtk_window_set_title(GtkWindow* window, const char* title);
 int gtk_widget_get_margin_start(GtkWidget* widget);
 void gtk_widget_set_margin_start(GtkWidget* widget, int margin);
 int gtk_widget_get_margin_end(GtkWidget* widget);
-void gtk_widget_set_margin_end(GtkWidget* widget, int margin);
 int gtk_widget_get_margin_top(GtkWidget* widget);
 void gtk_widget_set_margin_top(GtkWidget* widget, int margin);
 int gtk_widget_get_margin_bottom(GtkWidget* widget);
@@ -387,5 +386,11 @@ GtkWidget* gtk_overlay_new(void);
 void gtk_overlay_set_child(GtkWidget* overlay, GtkWidget* child);
 void gtk_overlay_add_overlay(GtkWidget* overlay, GtkWidget* widget);
 GtkWidget* gtk_window_controls_new(GtkPackType side);
+void gtk_header_bar_set_show_title_buttons(GtkWidget* bar, gboolean setting);
+void gtk_header_bar_set_title_widget(GtkWidget* bar, GtkWidget* title_widget);
+void gtk_header_bar_pack_start(GtkWidget* bar, GtkWidget* child);
+void gtk_header_bar_pack_end(GtkWidget* bar, GtkWidget* child);
+void gtk_widget_set_can_target(GtkWidget* widget, gboolean can_target);
+void gtk_widget_set_margin_end(GtkWidget* widget, int margin);
 
 // aui.toolbox: }
