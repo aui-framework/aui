@@ -148,11 +148,12 @@ def define_env(env):
         return output
 
 def example(category: str):
+    anchor = category.replace('_', '-').lower()
     return f"""
 !!! example "Example's page"
     
-    This page describes an example listed in [{category}](examples.md#{category}) category.
 
+    This page describes an example listed in the [{category}](examples.md#{anchor}) category.
 """
 
 def gen_pages():
