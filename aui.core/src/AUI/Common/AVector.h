@@ -33,6 +33,44 @@ namespace aui::impl {
 /**
  * @brief An std::vector with AUI extensions.
  * @ingroup core
+ * @details
+ * `AVector` inherits `std::vector`, so it can be used wherever `std::vector` is expected, and adds shortcuts for
+ * the operations that otherwise require the erase-remove idiom or an explicit loop.
+ *
+ * ## Adding elements
+ * `operator<<` appends a value or all elements of another container and can be chained:
+ * ```cpp
+ * AVector<int> v = { 1, 2 };
+ * v << 3 << 4;                  // { 1, 2, 3, 4 }
+ * v << AVector<int>{ 5, 6 };    // { 1, 2, 3, 4, 5, 6 }
+ * v.insertAll(otherContainer);  // same, with an optional position
+ * ```
+ *
+ * ## Searching and removing
+ * ```cpp
+ * AVector<AString> names = { "Alice", "Bob", "Carol", "Bob" };
+ * names.contains("Bob");                          // true
+ * AOptional<size_t> index = names.indexOf("Bob"); // 1
+ * names.removeFirst("Bob");                       // removes only the first one
+ * names.removeAll("Bob");                         // removes the rest
+ * names.removeIf([](const AString& s) { return s.startsWith("C"); });
+ * names.removeAt(0);
+ * ```
+ * `findIf` returns a pointer to the first element matching a predicate or `nullptr`.
+ *
+ * ## Transforming
+ * `map` produces a new vector of transformed elements, `filter` keeps the elements matching a predicate, `toMap`
+ * builds an [AMap] and `toSet` an [ASet]:
+ * ```cpp
+ * AVector<int> numbers = { 1, 2, 3, 4 };
+ * auto squares = numbers.map([](int i) { return i * i; });                      // { 1, 4, 9, 16 }
+ * auto even = numbers.filter([](int i) { return i % 2 == 0; });                 // { 2, 4 }
+ * auto strings = numbers.map([](int i) { return AString::number(i); });         // AVector<AString>
+ * ```
+ *
+ * ## Accessing
+ * `first()` and `last()` return references to the boundary elements (asserting that the vector is not empty), and
+ * `at()` throws an AUI exception instead of invoking undefined behaviour when the index is out of range.
  */
 template <class StoredType, class Allocator>
 class AVector: public std::vector<StoredType, Allocator>

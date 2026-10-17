@@ -78,10 +78,12 @@ protected:
     }
 };
 
+// [scroll]
 TEST_F(UIScrollTest, ContainedViewExpanded) {
     By::type<AScrollArea>().perform(scroll({0, 500}));
     (By::name(".container") | By::type<AScrollArea>()).check(areBottomAligned());
 }
+// [scroll]
 
 TEST_F(UIScrollTest, ScrollTo1) {
     mTestWindow->redraw();

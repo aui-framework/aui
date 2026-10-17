@@ -88,6 +88,7 @@ public:
         connect(mHoveredCircle.changed, me::redraw);
     }
 
+    /// [custom_render]
     void render(ARenderContext ctx) override {
         AView::render(ctx);
 
@@ -102,6 +103,7 @@ public:
                 circle.radius, 1);
         }
     }
+    /// [custom_render]
 
     void onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) override {
         AView::onPointerMove(pos, event);

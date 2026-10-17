@@ -24,7 +24,7 @@ void AXml::read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor
     auto throwUnexceptedCharacter = [&]() {
         throw AXmlParseError(
             std::string("Unexpected character '") + p.getLastCharacter() + "' at " + std::to_string(p.getRow()) + ":" +
-            std::to_string(p.getRow()));
+            std::to_string(p.getColumn()));
     };
     try {
         for (; (c = p.readChar());) {
@@ -35,13 +35,13 @@ void AXml::read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor
                 case ' ':
                     break;
                 case '<':
-                    // ����� ��������
+                    // start of a tag
                     switch (p.readChar()) {
                         case '?': {
-                            // ���������
+                            // header
                             auto headerVisitor = visitor->visitHeader();
 
-                            p.readString();   // ��������� "xml"
+                            p.readString();   // skip the "xml" word
 
                             for (; (c = p.readChar()) != '>';) {
                                 switch (c) {
@@ -94,15 +94,18 @@ void AXml::read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor
                             }
                         } break;
                         default:
-                            // ���������� ��������
+                            // regular element
                             {
                                 p.reverseByte();
                                 auto entityName = p.readString();
 
                                 std::function<void(_<IXmlEntityVisitor>)> handleEntity;
                                 handleEntity = [&](_<IXmlEntityVisitor> entityVisitor) {
-                                    if (!entityVisitor)
-                                        return;
+                                    if (!entityVisitor) {
+                                        // the visitor is not interested in this element, but it still has to be read
+                                        // through to its end; otherwise its contents would leak into the parent.
+                                        entityVisitor = _new<IXmlEntityVisitor>();
+                                    }
                                     bool endFlag = false;
                                     for (; (c = p.readChar()) != '>';) {
                                         switch (c) {
@@ -170,7 +173,7 @@ void AXml::read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor
                                                     case '<':
                                                         c = p.readChar();
                                                         if (c == '/') {
-                                                            // ����� ���� ��������.
+                                                            // end of the element
                                                             p.readString();
 
                                                             if (p.readChar() != '>')
@@ -178,19 +181,27 @@ void AXml::read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor
 
                                                             return;
                                                         }
-                                                        // ������ ����� ��������.
+                                                        // start of a child element
                                                         {
                                                             p.reverseByte();
                                                             auto entityName = p.readString();
                                                             handleEntity(
                                                                 entityVisitor->visitEntity(std::move(entityName)));
                                                         }
+                                                        // text following the child element
+                                                        {
+                                                            auto str = p.readStringUntilUnescaped('<');
+                                                            p.reverseByte();
+                                                            entityVisitor->visitTextEntity(str);
+                                                        }
+                                                        break;
 
                                                     default: {
+                                                        // c is the first character of the text; give it back
+                                                        p.reverseByte();
                                                         auto str = p.readStringUntilUnescaped('<');
                                                         p.reverseByte();
-                                                        if (entityVisitor)
-                                                            entityVisitor->visitTextEntity(str);
+                                                        entityVisitor->visitTextEntity(str);
                                                     }
                                                 }
                                             }

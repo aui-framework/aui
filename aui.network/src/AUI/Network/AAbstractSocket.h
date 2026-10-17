@@ -11,14 +11,30 @@
 
 #pragma once
 
+#include <chrono>
+
 #include <AUI/Network.h>
 
 #include "AInet4Address.h"
 #include "AUI/Common/AString.h"
 
 /**
+ * ---
+ * title: AAbstractSocket
+ * icon: material/connection
+ * ---
+ *
  * @brief Base class for all sockets.
  * @ingroup network
+ * @details
+ * Holds the native socket handle and the local address. The handle is released when the socket is destroyed, or earlier
+ * with `close()`. Sockets are not copyable.
+ *
+ * Failures are reported with exceptions derived from [AIOException]. A blocked thread that is interrupted (see
+ * `AThread::interrupt`) while waiting in a socket call gets `AThread::Interrupted`, which is the way to stop a thread
+ * blocked in [ATcpSocket] or [AUdpSocket] reads.
+ *
+ * Concrete sockets: [ATcpSocket], [ATcpServerSocket], [AUdpSocket].
  */
 class API_AUI_NETWORK AAbstractSocket {
 private:
@@ -57,7 +73,13 @@ public:
     virtual ~AAbstractSocket();
 
     void close();
-    void setTimeout(int secs);
+
+    /**
+     * @brief Sets the receive timeout.
+     * @details
+     * A blocked read that waits longer than `timeout` fails. Zero disables the timeout.
+     */
+    void setTimeout(std::chrono::milliseconds timeout);
 
     const AInet4Address& getAddress() const { return mSelfAddress; }
 };

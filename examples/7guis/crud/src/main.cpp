@@ -65,10 +65,12 @@ public:
               ).build() AUI_OVERRIDE_STYLE { BackgroundSolid { AColor::WHITE } },
             } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
             Centered::Expanding {
+              /// [crud_form]
               _form({
                 { "Name:", _new<ATextField>() && mEditedUser.name },
                 { "Surname:", _new<ATextField>() && mEditedUser.surname },
               }) AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+              /// [crud_form]
             },
           } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
           Horizontal {

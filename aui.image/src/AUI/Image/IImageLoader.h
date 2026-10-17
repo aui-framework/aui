@@ -19,8 +19,14 @@ class AByteBuffer;
 class IDrawable;
 
 /**
- * @brief Class-loader of abstract images that can be displayed on the screen.
+ * @brief Decoder of one image file format.
  * @ingroup image
+ * @details
+ * Implement this interface to teach AUI a new image format, then register the implementation in
+ * [AImageLoaderRegistry]. See [image-custom-loader] for a walkthrough.
+ *
+ * `matches` is asked first; it should sniff the magic bytes of the file, not the file name. If it returns true, the
+ * registry calls `getRasterImage` (raster loaders) or `getImageFactory` (vector and animated loaders).
  */
 class IImageLoader {
 public:

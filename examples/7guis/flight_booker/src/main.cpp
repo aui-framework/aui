@@ -59,6 +59,7 @@ struct std::common_type<ass::BackgroundSolid, std::nullptr_t> {
     using type = _<ass::prop::IPropertyBase>;
 };
 
+/// [date_field]
 auto dateTextField(_<DateTextFieldState> state) {
     return _new<ATextField>() AUI_LET {
         AObject::connect(
@@ -81,6 +82,7 @@ auto dateTextField(_<DateTextFieldState> state) {
             AUI_SLOT(it)::setCustomStyle);
     };
 }
+/// [date_field]
 
 struct State {
     DateTextFieldState departureDate { .parsed = system_clock::now() }, returnDate { .parsed = system_clock::now() };

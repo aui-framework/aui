@@ -20,12 +20,42 @@
 
 /**
  * @defgroup crypt aui::crypt
- * @brief Cryptography
+ * @brief Cryptography: hashing, HMAC and RSA.
+ * @details
+ * aui::crypt is a small module built on top of mbedTLS. It provides:
+ *
+ * - message digests (MD5, SHA-1, SHA-256, SHA-512) and HMAC-SHA256, see [crypt-hashing];
+ * - RSA key generation, PEM import/export and encryption, see [ARsa] and [crypt-rsa];
+ * - a weak helper for gathering random bytes, see [crypt-random].
+ *
+ * Results are returned as [AByteBuffer], which can be converted to hex or base64 text with `toHexString()` and
+ * `toBase64String()`.
+ *
+ * To use the module, link it to your target:
+ *
+ * ```cpp
+ * auib_import(aui https://github.com/aui-framework/aui COMPONENTS core crypt VERSION ${AUI_VERSION})
+ * aui_link(${PROJECT_NAME} PRIVATE aui::crypt)
+ * ```
+ *
+ * !!! note
+ *
+ *     The module does not cover symmetric ciphers (AES etc...), signatures or TLS. HTTPS requests are handled by
+ *     [curl].
  */
 
 /**
- * @brief Various hash functions
+ * @brief Message digests (MD5, SHA-1, SHA-256, SHA-512) and HMAC-SHA256.
  * @ingroup crypt
+ * @details
+ * Each digest has two overloads: one takes an in-memory buffer, the other consumes an input stream until its end, so
+ * large files can be hashed without loading them into memory. The result is the raw digest (16, 20, 32 and 64 bytes
+ * for md5, sha1, sha256 and sha512 respectively). See [crypt-hashing] for examples.
+ *
+ * !!! warning
+ *
+ *     MD5 and SHA-1 are provided for compatibility with existing formats and protocols. Do not rely on them for
+ *     security purposes. Plain digests are also not suitable for storing passwords.
  */
 namespace AHash {
     [[nodiscard]] API_AUI_CRYPT AByteBuffer sha512(AByteBufferView in);

@@ -13,10 +13,12 @@
 #include <AUI/Common/AByteBuffer.h>
 
 TEST(Base64, EncodeDecode) {
+    // [core_base64]
     std::string_view text = "Building beautiful programs in pure C++ without chromium embedded framework";
     AByteBuffer buffer(text.data(), text.size());
     auto base64 = buffer.toBase64String();
     EXPECT_EQ(base64, "QnVpbGRpbmcgYmVhdXRpZnVsIHByb2dyYW1zIGluIHB1cmUgQysrIHdpdGhvdXQgY2hyb21pdW0gZW1iZWRkZWQgZnJhbWV3b3Jr");
     auto decoded = AString::fromUtf8(AByteBuffer::fromBase64String(base64));
     EXPECT_EQ(decoded, text);
+    // [core_base64]
 }

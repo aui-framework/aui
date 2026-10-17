@@ -27,8 +27,26 @@
 class AByteBuffer;
 
 /**
+ * ---
+ * title: AUdpSocket
+ * icon: material/email-fast
+ * ---
+ *
  * @brief A bidirectional UDP socket.
  * @ingroup network
+ * @details
+ * UDP is connectionless: every `write` sends one datagram to an explicit destination and every `read` receives one
+ * datagram along with the sender's address. Delivery and ordering are not guaranteed.
+ *
+ * ```cpp
+ * AUdpSocket socket(9000);          // receiver, bound to port 9000
+ * AByteBuffer buffer;
+ * AInet4Address sender;
+ * socket.read(buffer, sender);      // blocks until a datagram arrives
+ * socket.write(buffer, sender);     // reply
+ * ```
+ *
+ * The datagram size is limited to 32767 bytes. See [network-udp].
  */
 class API_AUI_NETWORK AUdpSocket : public AAbstractSocket
 {

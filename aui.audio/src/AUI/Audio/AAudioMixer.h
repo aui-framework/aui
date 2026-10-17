@@ -14,6 +14,13 @@ class API_AUI_AUDIO IAudioPlayer;
  * @ingroup audio
  * @details
  * <!-- aui:experimental -->
+ *
+ * The mixer sums the output of all [IAudioPlayer]s which are currently playing and clamps the result. It is driven by
+ * the platform audio backend: `IAudioPlayer::play` adds the player to the mixer, `pause` and `stop` remove it.
+ * Applications normally don't use the mixer directly.
+ *
+ * Players that reach the end of their stream (and are not looping) or throw while being read are removed and notified
+ * with `IAudioPlayer::finished`.
  */
 class API_AUI_AUDIO AAudioMixer {
 public:

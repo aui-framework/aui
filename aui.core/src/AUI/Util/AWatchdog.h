@@ -32,8 +32,8 @@
  * It's important to periodically call AWatchdog::isHang in order to check for hangs. It can be done via separate
  * thread or AUI's timers (separate thread is more reliable).
  *
- * @see AWatchdog::run
- * @see AWatchdog::isHang
+ * See also: `AWatchdog::run`.
+ * See also: `AWatchdog::isHang`.
  */
 class API_AUI_CORE AWatchdog {
 public:

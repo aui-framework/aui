@@ -26,7 +26,7 @@ public:
 
     /**
      * @brief any_cast the external user data stored in this vertex.
-     * @sa mUserdata
+     * See also: `mUserdata`.
      */
     template<typename T>
     [[nodiscard]]

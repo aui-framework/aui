@@ -30,7 +30,7 @@ class AFuture;
 
 /**
  * @brief Thread pool implementation.
- * @see AThreadPool::global()
+ * See also: `AThreadPool::global()`.
  */
 class API_AUI_CORE AThreadPool {
 public:

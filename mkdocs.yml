@@ -116,77 +116,145 @@ theme:
 
 nav:
   - Home: index.md
+
   - getting-started.md
   - examples.md
 
-  - Introduction:
-    - app-lifetime.md
-    - aui-assets.md
-    - writing-tests.md
-    - code-style.md
-    - troubleshoot-list.md
-    - crosscompiling.md
-    - 'Hot Code Reload': ahotcodereload.md
-
-  - 'UI Architecture':
+  - 'UI':
     - ui-building-overview.md
     - layout-managers.md
+    - 'Window Management': awindow.md
+    - 'Views':
+      - 'Overview': views-overview.md
+      - 'Button': abutton.md
+      - 'Check box': acheckbox.md
+      - 'Label': alabel.md
+      - 'List': aforeachui.md
+      - 'Radio button': aradiobutton.md
+    - 'Building a form': ui-forms.md
+    - 'Lists, scrolling and tabs': ui-lists-and-containers.md
+    - 'Input events': ui-input-events.md
+    - 'Dialogs, menus and popups': ui-dialogs-and-menus.md
+    - 'Custom views': ui-custom-views.md
+    - 'Animations': ui-animations.md
+    - 'Styling (ASS)':
+      - ass.md
+      - ass_properties.md
     - signal_slot.md
     - property-system.md
-    - devtools.md
     - 'Handling HiDPI': ametric.md
+    - retained_immediate_ui.md
+    - render-to-texture.md
 
-  - 'Views':
-    - 'Overview': views-overview.md
-    - 'Button': abutton.md
-    - 'Check box': acheckbox.md
-    - 'Label': alabel.md
-    - 'List': aforeachui.md
-    - 'Radio button': aradiobutton.md
+  - 'Build & Deploy':
+    - app-build-overview.md
+    - aui.boot.md
+    - aui-configure-flags.md
+    - aui-assets.md
+    - writing-tests.md
+    - app-icon.md
+    - packaging.md
+    - runtime-dependency-resolution.md
+    - aui-command-line-arguments.md
 
-  - 'Styling':
-    - ass.md
-    - ass_properties.md
-
-  - 'Platform Specifics':
+  - 'Platforms':
     - windows.md
     - linux.md
     - macos.md
     - android.md
     - ios.md
     - emscripten.md
+    - crosscompiling.md
+    - crosscompiling-with-toolchain.md
 
-  - 'Other':
-      - app-icon.md
-      - packaging.md
-      - aui-command-line-arguments.md
-      - runtime-dependency-resolution.md
-      - forking-aui.md
+  - 'Tools & Debugging':
+    - devtools.md
+    - 'Hot Code Reload': ahotcodereload.md
+    - ide-plugins.md
+    - troubleshoot-list.md
 
-  - Reference:
-      - 'Installation methods':
-        - aui.boot.md
-      - classes.md
-      - macros.md
-      - CMake:
-          - aui_app.md
-          - aui_executable.md
-          - aui_link.md
-          - aui_module.md
-          - aui-configure-flags.md
-          - app-build-overview.md
-      - 'aui::core': core.md
-      - 'aui::views':
-        - 'Overview': views.md
-        - 'Window Management': awindow.md
-        - 'Rendering': irenderer.md
-      - 'aui::crypt': crypt.md
-      - 'aui::curl': curl.md
-      - 'aui::json': json.md
-      - 'aui::network': network.md
-      - 'aui::updater': updater.md
-      - 'aui::image': image.md
-      - 'aui::xml': xml.md
+  - classes.md
+  - macros.md
+  - CMake:
+    - aui_app.md
+    - aui_executable.md
+    - aui_link.md
+    - aui_module.md
+  - 'aui::core':
+    - 'Overview': core.md
+    - 'Strings': core-strings.md
+    - 'Containers': core-containers.md
+    - 'Smart pointers': core-smart-pointers.md
+    - 'Signal-slot': signal_slot.md
+    - 'Properties': property-system.md
+    - 'Background tasks': core-async.md
+    - 'Files and streams': core-files.md
+    - 'Binary data': core-binary-data.md
+    - 'Reflection': reflection.md
+    - 'Logging': alogger.md
+    - 'Localization': ai18n.md
+    - 'URLs': aurl.md
+  - 'aui::views':
+    - 'Overview': views.md
+    - 'Rendering': irenderer.md
+    - aui-box-model.md
+    - app-lifetime.md
+  - 'aui::crypt':
+    - 'Overview': crypt.md
+    - 'Hashing': crypt-hashing.md
+    - 'RSA': crypt-rsa.md
+    - 'Random': crypt-random.md
+  - 'aui::curl':
+    - 'Overview': curl.md
+    - 'HTTP requests': curl-requests.md
+    - 'Async requests and downloads': curl-async.md
+    - 'WebSocket': awebsocket.md
+  - 'aui::json':
+    - 'Overview': json.md
+    - 'Parsing': json-parsing.md
+    - 'Writing': json-writing.md
+    - 'Custom types': json-custom-types.md
+  - 'aui::network':
+    - 'Overview': network.md
+    - 'TCP client and server': network-tcp.md
+    - 'UDP and ping': network-udp.md
+    - 'AInet4Address': ainet4address.md
+    - 'ATcpSocket': atcpsocket.md
+    - 'ATcpServerSocket': atcpserversocket.md
+    - 'AUdpSocket': audpsocket.md
+    - 'AAbstractSocket': aabstractsocket.md
+  - 'aui::updater':
+    - 'Overview': updater.md
+    - 'Adding auto-update': updater-setup.md
+    - 'Update UI': updater-ui.md
+    - 'Publishing releases': updater-publishing.md
+    - 'Testing and debugging': updater-testing.md
+  - 'aui::image':
+    - 'Overview': image.md
+    - 'Loading images': image-loading.md
+    - 'Processing images': image-processing.md
+    - 'Custom formats': image-custom-loader.md
+  - 'aui::xml':
+    - 'Overview': xml.md
+    - 'Parsing XML': xml-parsing.md
+  - 'aui::audio':
+    - 'Overview': audio.md
+    - 'Playing sounds': audio-playback.md
+    - 'Custom sound sources': audio-custom-sources.md
+  - 'aui::uitests':
+    - 'Overview': uitests.md
+    - 'First UI test': uitests-first-test.md
+    - 'Finding views': uitests-selecting-views.md
+    - 'Simulating input': uitests-actions.md
+    - 'Checking views': uitests-assertions.md
+    - 'Screenshots and pixels': uitests-screenshots.md
+  - 'aui::data':
+    - 'Overview': data.md
+  - 'aui::sqlite':
+    - 'Overview': sqlite.md
+  - 'aui::mysql': mysql.md
 
-  - contributing.md
-
+  - Contributing:
+    - contributing.md
+    - code-style.md
+    - forking-aui.md

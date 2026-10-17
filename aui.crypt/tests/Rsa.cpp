@@ -51,23 +51,36 @@ TEST(Rsa, PEM_PublicWrite) {
 }
 
 TEST(Rsa, PEM_PrivateRead) {
+    // [rsa_private_roundtrip]
     auto both = ARsa::generate();
     auto priv = ARsa::fromPrivateKeyPEM(both->getPrivateKeyPEM());
 
     auto someData = ARandom().nextBytes(10000);
     auto result = priv->decrypt(both->encrypt(someData));
+    // [rsa_private_roundtrip]
 
     ASSERT_EQ(someData, result);
 
 }
 
 TEST(Rsa, PEM_PublicRead) {
+    // [rsa_public_only]
     auto both = ARsa::generate();
     auto pub = ARsa::fromPublicKeyPEM(both->getPublicKeyPEM());
 
     auto someData = ARandom().nextBytes(10000);
     auto result = both->decrypt(pub->encrypt(someData));
+    // [rsa_public_only]
 
     ASSERT_EQ(someData, result);
 
+}
+
+TEST(Rsa, EncryptDecryptLarge) {
+    // the encrypted data is noticeably larger than the input (padding), by more than a few kilobytes here
+    auto r = ARsa::generate();
+    auto someData = ARandom().nextBytes(200'000);
+    auto encrypted = r->encrypt(someData);
+    EXPECT_GT(encrypted.size(), someData.size());
+    EXPECT_EQ(r->decrypt(encrypted), someData);
 }

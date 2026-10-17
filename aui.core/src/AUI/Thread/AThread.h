@@ -34,7 +34,7 @@ class AFuture;
  * @details
  * Not all threads are created through AThread - these are interfaced with AAbstractThread.
  *
- * @see AThread::current()
+ * See also: `AThread::current()`.
  */
 class API_AUI_CORE AAbstractThread {
     friend class IEventLoop;

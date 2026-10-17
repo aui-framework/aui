@@ -4,6 +4,7 @@
 TEST(VersionTest, Parsing_version) { // HEADER_H2
     // Up to 3 numbers split with dots are supported:
     //AUI_DOCS_CODE_BEGIN
+    // [semver_parse] // HIDE
     EXPECT_EQ(aui::updater::Semver::fromString("1.2.3"), (aui::updater::Semver{ 1, 2, 3 }));
     EXPECT_EQ(aui::updater::Semver::fromString("1.2"), (aui::updater::Semver{ 1, 2, 0 }));
     EXPECT_EQ(aui::updater::Semver::fromString("1"), (aui::updater::Semver{ 1, 0, 0 }));
@@ -18,5 +19,6 @@ TEST(VersionTest, Parsing_version) { // HEADER_H2
     // "Channel names" and other suffixes are ignored:
     //AUI_DOCS_CODE_BEGIN
     EXPECT_EQ(aui::updater::Semver::fromString("1.2.3-beta"), (aui::updater::Semver{ 1, 2, 3 }));
+    // [semver_parse] // HIDE
     //AUI_DOCS_CODE_END
 }

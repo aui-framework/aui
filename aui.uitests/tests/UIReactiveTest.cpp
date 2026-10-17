@@ -36,6 +36,7 @@ protected:
 };
 }   // namespace
 
+// [reactive_label]
 TEST_F(UIReactiveTest, Label) {
     // Test that a reactive label updates its text when the bound property changes.
     // The test creates a simple state object with a reactive string property
@@ -59,6 +60,7 @@ TEST_F(UIReactiveTest, Label) {
     state->name = "Hello";
     EXPECT_EQ(*_cast<ALabel>(By::type<ALabel>().one())->text(), "Hello!");
 }
+// [reactive_label]
 
 /*
 TEST_F(UIReactiveTest, MultipleWithStyle) {

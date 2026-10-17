@@ -165,6 +165,7 @@ TEST_F(UIStyleTest, SetExtraStylesheet) {
     By::type<View>().check(averageColor(AColor::BLUE), "view should be colored");
 }
 
+// [pixel_color]
 TEST_F(UIStyleTest, Merge) {
     testing::InSequence s;
     using namespace ass;
@@ -192,3 +193,4 @@ TEST_F(UIStyleTest, Merge) {
     By::type<View>().check(pixelColorAt({0.f, 0.5f}, AColor::BLACK)); // outside of cross
     By::type<View>().check(pixelColorAt({0.5f, 0.5f}, AColor::RED)); // within cross, overlayed by red
 }
+// [pixel_color]

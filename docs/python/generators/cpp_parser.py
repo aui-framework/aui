@@ -492,11 +492,12 @@ def _scan():
         for file in files:
             if not any(part.startswith('aui.') for part in root_path.parts):
                 continue
-            if any(part.lower() == 'test' for part in root_path.parts):
+            if any(part == 'test' for part in root_path.parts):
+                # root-level test projects; note that AUI/Test (aui.uitests) is a part of the public API
                 continue
             if "aui.toolbox" in root_path.as_posix():
                 continue
-            if not file.endswith('.h'):
+            if not file.endswith(('.h', '.hpp')):
                 continue
             if "3rdparty" in root_path.as_posix():
                 continue

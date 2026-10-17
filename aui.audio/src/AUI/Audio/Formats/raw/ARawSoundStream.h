@@ -17,7 +17,7 @@
  * @brief Sound stream that outputs raw samples
  * @ingroup audio
  */
-class ARawSoundStream : public ISoundInputStream {
+class API_AUI_AUDIO ARawSoundStream : public ISoundInputStream {
 public:
     ARawSoundStream(AAudioFormat format, _<IInputStream>);
 

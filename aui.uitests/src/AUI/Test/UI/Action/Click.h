@@ -112,5 +112,5 @@ struct ViewActionPointerMoved { // for the cases when mouse* actions is not enou
 };
 
 using pointerPress = ViewActionPointerPressed;
-using pointerRelease = ViewActionPointerPressed;
+using pointerRelease = ViewActionPointerReleased;
 using pointerMove = ViewActionPointerMoved;
