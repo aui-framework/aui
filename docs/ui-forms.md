@@ -15,6 +15,39 @@ connect them to your state. For the layout side, see [layout-managers].
 | value between 0 and 1         | [Slider]                            |
 | action                        | [AButton]                           |
 
+## State and layout first
+
+Keep the values of a form in a state object made of properties, and describe the form with `Vertical` / `Horizontal`
+containers. Anything that depends on the state is written as `AUI_REACT(...)`: AUI tracks the properties read inside the
+expression and updates the view when they change. No manual refresh code is needed.
+
+```cpp
+struct Booking {
+    AProperty<AString> name;
+    AProperty<int> passengers = 1;
+    AProperty<bool> isReturnFlight = false;
+
+    bool isValid() const { return !name->empty() && *passengers > 0; }
+};
+
+...
+setContents(Vertical {
+    Horizontal {
+        Label { "Name:" },
+        _new<ATextField>() && state->name,
+    },
+    Label { AUI_REACT("Hello, {}!"_format(state->name)) },
+    Label { AUI_REACT("Passengers: {}"_format(state->passengers)) },
+    Button {
+        .content = Label { AUI_REACT(state->isValid() ? "Book" : "Fill in the form") },
+        .onClick = [=] { book(*state); },
+    } AUI_LET { AObject::connect(AUI_REACT(state->isValid()), AUI_SLOT(it)::setEnabled); },
+} AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } });
+```
+
+`Label { AUI_REACT(...) }` and `Button { .content = Label { AUI_REACT(...) } }` are the main tools: the form reads as a
+description of what is shown for the given state, and handlers (`.onClick`) only change the state.
+
 ## Text input and two-way binding
 
 The `text()` property of [ATextField] and [ATextArea] can be bound to an `AProperty<AString>` of your state with `&&`.
@@ -28,23 +61,23 @@ the code simply reads (and resets) it, and the text field goes empty by itself.
 
 ## Enabling a button when the form is valid
 
-Derive validity from the state with `APropertyPrecomputed`, which recomputes whenever a property it read has changed,
-and connect it to the `setEnabled` of the button:
-
-```cpp
-APropertyPrecomputed<bool> mCreateEnabled = [this] { return !(mEditedUser.surname->empty() || mEditedUser.name->empty()); };
-...
-Button { Label { "Create" }, { me::createClicked } } & mCreateEnabled > &AView::setEnabled,
-```
-
-The 7GUIs "CRUD" example in `examples/7guis/crud` has the entire code. The "Flight Booker" does the same inline, with
-`AUI_REACT`:
+Express validity as a reactive expression over the state and connect it to `setEnabled` of the button:
 
 ```cpp
 Button {
     .content = Label { "Book" },
     .onClick = [=] { /* ... */ },
 } AUI_LET { AObject::connect(AUI_REACT(state->isValid()), AUI_SLOT(it)::setEnabled); },
+```
+
+This is how the 7GUIs "Flight Booker" does it. If the validity is used in several places, give it a name with
+`APropertyPrecomputed`, which recomputes whenever a property it read has changed, as the 7GUIs "CRUD"
+(`examples/7guis/crud`) does:
+
+```cpp
+APropertyPrecomputed<bool> mCreateEnabled = [this] { return !(mEditedUser.surname->empty() || mEditedUser.name->empty()); };
+...
+Button { Label { "Create" }, { me::createClicked } } & mCreateEnabled > &AView::setEnabled,
 ```
 
 For details on properties and reactive expressions, see [property-system].

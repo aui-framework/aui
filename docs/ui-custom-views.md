@@ -57,33 +57,40 @@ see [ui-dialogs-and-menus].
 
 ## Exposing state
 
-Views in AUI are expected to cooperate with the property system. Instead of getter/setter pairs only, expose a property
-and a signal, so that the view can be used in data bindings and reactive expressions:
+Views in AUI are expected to cooperate with the property system and be usable from the declarative DSL, like
+`Label { AUI_REACT(...) }` or `Slider { .value = ..., .onValueChanged = ... }`. The idiomatic way to achieve this is to
+put the view behind a struct in `namespace declarative`: its fields are the inputs (`contract::In` for values flowing
+in, a callback or `contract::Slot` for events flowing out), and `operator()` builds the view out of existing ones.
 
 ```cpp
-class RatingView : public AView {
-public:
-    auto rating() const { return APropertyDef { this, &RatingView::getRating, &RatingView::setRating, ratingChanged }; }
+namespace declarative {
+struct Chip {
+    contract::In<AString> text;
+    contract::Slot<> onClick;
 
-    int getRating() const { return mRating; }
-    void setRating(int rating) {
-        if (mRating == rating) {
-            return;
-        }
-        mRating = rating;
-        redraw();
-        emit ratingChanged(rating);
+    _<AView> operator()() {
+        return Button {
+            .content = Label { .text = std::move(text) },
+            .onClick = std::move(onClick),
+        }();
     }
-
-signals:
-    emits<int> ratingChanged;
-
-private:
-    int mRating = 0;
 };
+}   // namespace declarative
 ```
 
-Now `RatingView` can be used like `_new<RatingView>() && state->rating`; see [property-system].
+Usage is the same as with the built-in views:
+
+```cpp
+Chip {
+    .text = AUI_REACT("Clicked {} times"_format(state->count)),
+    .onClick = [=] { ++state->count; },
+}
+```
+
+The struct does not own any state; it displays what it is given and reports what the user did.
+
+See `declarative::Slider` ([ASlider.h](https://github.com/aui-framework/aui/blob/master/aui.views/src/AUI/View/ASlider.h))
+for a complete reference implementation, and [property-system] for details on reactive expressions.
 
 ## Drawing with OpenGL
 
