@@ -55,7 +55,7 @@ void AWindow::quit() {
     });
     [static_cast<NSWindow*>(mHandle) close];
     mHandle = nullptr;
-    if (getWindowManager().mWindows.empty()) {
+    if (!getWindowManager().shouldKeepRunning()) {
         MacosApp::inst().quit();
     }
 }
@@ -128,18 +128,16 @@ void AWindow::flagRedraw() {
     }
 }
 
-
-void AWindow::setSize(glm::ivec2 size) {
-    auto s = static_cast<NSWindow*>(mHandle);
-    float dpi = getDpiRatio();
-    [s setMinSize:NSSizeFromCGSize({getMinimumWidth() / dpi, getMinimumHeight() / dpi})];
-    [s setMaxSize:NSSizeFromCGSize({getMaxSize().x / dpi, getMaxSize().y / dpi})];
-    [s setContentSize:NSSizeFromCGSize({size.x / dpi, size.y / dpi})];
-}
-
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
     AViewContainer::setSize({width, height});
+
+    auto s = static_cast<NSWindow*>(mHandle);
+    float dpi = getDpiRatio();
+    const auto minSize = getMinimumSize();
+    [s setMinSize:NSSizeFromCGSize({minSize.x / dpi, minSize.y / dpi})];
+    [s setMaxSize:NSSizeFromCGSize({getMaxSize().x / dpi, getMaxSize().y / dpi})];
+    [s setContentSize:NSSizeFromCGSize({width / dpi, height / dpi})];
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
@@ -156,18 +154,39 @@ void AWindow::setIcon(const AImage& image) {
 void AWindow::hide() {
 }
 
+void AWindow::activate(const AString&) {
+    show();
+    if (auto ns = static_cast<NSWindow*>(mHandle)) {
+        if ([ns isMiniaturized]) {
+            [ns deminiaturize:nil];
+        }
+        [ns makeKeyAndOrderFront:nil];
+    }
+    MacosApp::inst().activateIgnoringOtherApps();
+}
+
 void AWindow::blockUserInput(bool blockUserInput) {
 
 }
 
 void AWindowManager::notifyProcessMessages() {
+    auto self = this;
     dispatch_async(dispatch_get_main_queue(), ^{
         AThread::processMessages();
+        // holds released / quit() requested
+        if (self->mLoopRunning && !self->shouldKeepRunning()) {
+            MacosApp::inst().quit();
+        }
     });
 }
 
 void AWindowManager::loop() {
+    mLoopRunning = true;
+    if (!shouldKeepRunning()) {
+        return;
+    }
     MacosApp::inst().run();
+    mLoopRunning = false;
 }
 
 void AWindow::allowDragNDrop() {

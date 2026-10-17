@@ -10,19 +10,22 @@
  */
 
 #include "AView.h"
-#include "AUI/Common/AException.h"
-#include "AUI/Common/IStringable.h"
-#include "AUI/Enum/Visibility.h"
-#include "AUI/Render/IRenderer.h"
-#include "AUI/Util/ATokenizer.h"
-#include "AUI/Platform/AWindow.h"
-#include "AUI/Url/AUrl.h"
-#include "AUI/Render/RenderHints.h"
-#include "AUI/Animator/AAnimator.h"
 
 #include <exception>
-#include <glm/gtc/matrix_transform.hpp>
+#include <limits>
+#include <stack>
+#include <tuple>
 #include <memory>
+#include <glm/gtc/matrix_transform.hpp>
+#include <AUI/Common/AException.h>
+#include <AUI/Common/IStringable.h>
+#include <AUI/Enum/Visibility.h>
+#include <AUI/Render/IRenderer.h>
+#include <AUI/Util/ATokenizer.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/Url/AUrl.h>
+#include <AUI/Render/RenderHints.h>
+#include <AUI/Animator/AAnimator.h>
 #include <AUI/IO/AStringStream.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/ASS/AStylesheet.h>
@@ -30,24 +33,18 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Traits/callables.h>
 #include <AUI/Traits/iterators.h>
-#include <stack>
 #include <AUI/Action/AMenu.h>
-
-#include "AUI/Platform/ADesktop.h"
-#include "AUI/Platform/AFontManager.h"
-#include "AUI/Util/AMetric.h"
-#include "AUI/Util/Factory.h"
-#include "ALabel.h"
+#include <AUI/Platform/ADesktop.h>
+#include <AUI/Platform/AFontManager.h>
+#include <AUI/Util/AMetric.h>
+#include <AUI/Util/Factory.h>
+#include <AUI/View/ALabel.h>
 
 // windows.h
 #undef max
 #undef min
 
-static constexpr auto DEFINITELY_INVALID_SIZE = std::numeric_limits<int>::min() / 2;
-
-ASurface* AView::getWindow() const
-{
-
+ASurface* AView::getWindow() const {
     AView* parent = nullptr;
 
     for (AView* target = const_cast<AView*>(this); target; target = target->mParent) {
@@ -57,60 +54,79 @@ ASurface* AView::getWindow() const
     return dynamic_cast<ASurface*>(parent);
 }
 
-AView::AView()
-{
+AView::AView() {
     AUI_ASSERT_UI_THREAD_ONLY()
     aui::zero(mAss);
     setSlotsCallsOnlyOnMyThread(true);
 }
 
-AView::~AView() {
-    AUI_ASSERT_UI_THREAD_ONLY();
-}
+AView::~AView() { AUI_ASSERT_UI_THREAD_ONLY(); }
 
-void AView::redraw()
-{
+void AView::redraw() {
     AUI_ASSERT_UI_THREAD_ONLY();
     if (mRedrawRequested) {
         return;
     }
     static constexpr auto EXTRA_OFFSET = 8;
-    auto invalidRect = ARect<int>::fromTopLeftPositionAndSize(glm::ivec2(-EXTRA_OFFSET), getSize() + glm::ivec2(EXTRA_OFFSET * 2));
+    auto invalidRect =
+        ARect<int>::fromTopLeftPositionAndSize(glm::ivec2(-EXTRA_OFFSET), getSize() + glm::ivec2(EXTRA_OFFSET * 2));
     for (auto s : mAss) {
         AUI_NULLSAFE(s)->updateInvalidPixelRect(invalidRect);
     }
     markPixelDataInvalid(invalidRect);
     mRedrawRequested = true;
 }
-void AView::markMinContentSizeInvalid()
-{
+
+void AView::requestLayout() {
     AUI_ASSERT_UI_THREAD_ONLY();
-    mCachedMinContentSize.reset();
-    if (mMarkedMinContentSizeInvalid) {
-        // already marked.
-        // TODO uncomment this
-//        for (auto i = getParent(); i; i = i->getParent()) {
-//            AUI_ASSERT(i->mMarkedMinContentSizeInvalid);
-//        }
-        // return;
+    if (mLayoutGuard.is_locked()) {
+        return;
+        // throw AException("AView::requestLayout() is forbidden during AView::onLayout");
     }
-    mMarkedMinContentSizeInvalid = true;
-    AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
+    mWantsLayoutUpdate = true;
+    mLastLayoutSize = glm::ivec2(-1, -1);
+    mMeasureCache.clear();
+    mMinMaxSizesCache.clear();
+    if (std::exchange(mLayoutContributionChanged, false)) {
+        AUI_NULLSAFE(mParent)->requestLayout();
+        return;
+    }
+    if (!static_cast<bool>(getVisibility() & Visibility::FLAG_CONSUME_SPACE)) {
+        return;
+    }
+    if (isLayoutBoundary() && enqueueAsLayoutRoot()) {
+        return;
+    }
+    AUI_NULLSAFE(mParent)->requestLayout();
 }
 
-void AView::drawStencilMask(ARenderContext ctx)
-{
+bool AView::enqueueAsLayoutRoot() {
+    if (mPendingLayoutRoot) {
+        return true;
+    }
+    auto surface = getWindow();
+    if (surface == nullptr || surface == this) {
+        return false;
+    }
+    if (weak_from_this().expired()) {
+        return false;
+    }
+    surface->enqueueLayoutRoot(*this);
+    return true;
+}
+
+void AView::drawStencilMask(ARenderContext ctx) {
     switch (mOverflowMask) {
         case AOverflowMask::ROUNDED_RECT:
             if (mBorderRadius > 0) {
-                ctx.render.roundedRectangle(ASolidBrush{},
-                                     {mPadding.left, mPadding.top},
-                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()},
-                                     glm::max(mBorderRadius - std::min(mPadding.horizontal(), mPadding.vertical()), 0.f));
+                ctx.render.roundedRectangle(
+                    ASolidBrush {}, { mPadding.left, mPadding.top },
+                    { getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical() },
+                    glm::max(mBorderRadius - std::min(mPadding.horizontal(), mPadding.vertical()), 0.f));
             } else {
-                ctx.render.rectangle(ASolidBrush{},
-                                     {mPadding.left, mPadding.top},
-                                     {getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical()});
+                ctx.render.rectangle(
+                    ASolidBrush {}, { mPadding.left, mPadding.top },
+                    { getWidth() - mPadding.horizontal(), getHeight() - mPadding.vertical() });
             }
             break;
 
@@ -123,48 +139,44 @@ void AView::drawStencilMask(ARenderContext ctx)
 }
 
 void AView::postRender(ARenderContext ctx) {
-    if (mAnimator)
+    if (mAnimator) {
         mAnimator->postRender(this, ctx.render);
+    }
     popStencilIfNeeded(ctx);
 
     emit redrawn;
 }
 
 void AView::popStencilIfNeeded(ARenderContext ctx) {
-    if (getOverflow() == AOverflow::HIDDEN || getOverflow() == AOverflow::HIDDEN_FROM_THIS)
-    {
+    if (getOverflow() == AOverflow::HIDDEN || getOverflow() == AOverflow::HIDDEN_FROM_THIS) {
         /*
          * If the AView's Overflow set to Overflow::HIDDEN AView pushed it's mask into the stencil buffer but AView
          * cannot return stencil buffer to the previous state by itself because of C++ restrictions. We should also
          * apply mask AFTER transform updated and BEFORE rendering AView content. The only way to return the stencil
          * back is place it here, after rendering AView.
          */
-        RenderHints::popMask(ctx.render, [&] {
-            drawStencilMask(ctx);
-        });
+        RenderHints::popMask(ctx.render, [&] { drawStencilMask(ctx); });
     }
 }
-void AView::render(ARenderContext ctx)
-{
+
+void AView::render(ARenderContext ctx) {
     if (mAnimator)
         mAnimator->animate(this, ctx.render);
 
-    ensureAssUpdated();
+    // ensureAssUpdated();
 
     // draw list
     for (unsigned i = 0; i <= int(ass::prop::PropertySlot::SHADOW); ++i) {
-        if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT)) continue;
+        if (i == int(ass::prop::PropertySlot::BACKGROUND_EFFECT))
+            continue;
         if (auto w = mAss[i]) {
             w->renderFor(this, ctx);
         }
     }
 
-    //draw before drawing this element
-    if (mOverflow == AOverflow::HIDDEN_FROM_THIS)
-    {
-        RenderHints::pushMask(ctx.render, [&] {
-            drawStencilMask(ctx);
-        });
+    // draw before drawing this element
+    if (mOverflow == AOverflow::HIDDEN_FROM_THIS) {
+        RenderHints::pushMask(ctx.render, [&] { drawStencilMask(ctx); });
     }
 
     // draw list
@@ -177,12 +189,9 @@ void AView::render(ARenderContext ctx)
         }
     }
 
-    //draw stencil before drawing children elements
-    if (mOverflow == AOverflow::HIDDEN)
-    {
-        RenderHints::pushMask(ctx.render, [&] {
-            drawStencilMask(ctx);
-        });
+    // draw stencil before drawing children elements
+    if (mOverflow == AOverflow::HIDDEN) {
+        RenderHints::pushMask(ctx.render, [&] { drawStencilMask(ctx); });
     }
 
     if (auto w = mAss[int(ass::prop::PropertySlot::BACKGROUND_EFFECT)]) {
@@ -199,9 +208,7 @@ static void walkToParentStack(AView* view, aui::invocable<AView*> auto&& callbac
     callback(view);
 }
 
-void AView::invalidateAllStyles()
-{
-    auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusMargin() : glm::ivec2(DEFINITELY_INVALID_SIZE);
+void AView::invalidateAllStyles() {
     AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
 
     auto collectRules = [this](const AStylesheet& sh) {
@@ -222,18 +229,21 @@ void AView::invalidateAllStyles()
         collectRules(*v->mExtraStylesheet);
     });
 
-    invalidateStateStylesImpl(prevMinSize);
+    invalidateStateStylesImpl();
 }
 
-void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
-    if (!mAssHelper) return;
+void AView::invalidateStateStylesImpl() {
+    if (!mAssHelper)
+        return;
+    const auto layoutRelevantStyle = [&] { return std::tuple(mMargin, mMinSize, mMaxSize); };
+    const auto before = layoutRelevantStyle();
     mCursor.reset();
     mOverflow = AOverflow::VISIBLE;
     mMargin = {};
     mMinSize = {};
     mBorderRadius = 0.f;
-    //mForceStencilForBackground = false;
-    mMaxSize = glm::ivec2(std::numeric_limits<int>::max(), std::numeric_limits<int>::max());
+    // mForceStencilForBackground = false;
+    mMaxSize = { -1, -1 };
     mOpacity = 1;
     mTextColor = AColor::BLACK;
     aui::zero(mAss);
@@ -247,56 +257,146 @@ void AView::invalidateStateStylesImpl(glm::ivec2 prevMinimumSizePlusField) {
     mAssHelper->state.backgroundUrl.sizing.reset();
     mAssHelper->state.backgroundUrl.image.reset();
 
+    mApplyingStyles = true;
+    AUI_DEFER { mApplyingStyles = false; };
+
     for (const auto& r : mAssHelper->mPossiblyApplicableRules) {
         if (r.getSelector().isStateApplicable(this)) {
             applyAssRule(r);
         }
     }
     applyAssRule(mCustomStyleRule);
+    if (mExplicitMinSize) {
+        mMinSize = *mExplicitMinSize;
+    }
     commitStyle();
 
-    if (prevMinimumSizePlusField != getMinimumSizePlusMargin()) {
-        mMarkedMinContentSizeInvalid = true;
-        AUI_NULLSAFE(mParent)->markMinContentSizeInvalid();
+    if (before != layoutRelevantStyle()) {
+        mLayoutContributionChanged = true;
     }
+    requestLayout();
     redraw();
 }
 
-int AView::getContentMinimumWidth() {
-    return 0;
-}
+bool AView::hasFocus() const { return mHasFocus; }
 
-int AView::getContentMinimumHeight() {
-    return 0;
-}
-
-bool AView::hasFocus() const
-{
-    return mHasFocus;
-}
-
-int AView::getMinimumWidth() {
+AMinMaxAxis AView::computeMinMaxAxis(int height) {
     ensureAssUpdated();
-    return (mFixedSize.x == 0 ? ((glm::clamp)(getContentMinimumSize().x + mPadding.horizontal(), mMinSize.x, mMaxSize.x)) : mFixedSize.x);
+    if (auto cached = mMinMaxSizesCache.get(height)) {
+        return *cached;
+    }
+
+    auto sizes = onComputeIntrinsicMinMaxAxis(height == -1 ? -1 : std::max(0, height - mPadding.vertical()));
+    sizes.min += mPadding.horizontal();
+    sizes.max += mPadding.horizontal();
+
+    if (mFixedSize.x != 0) {
+        sizes.min = sizes.max = mFixedSize.x;
+    } else {
+        sizes.min = std::max(sizes.min, mMinSize.x);
+        sizes.max = std::max(sizes.max, sizes.min);
+        if (mMaxSize.x != -1) {
+            sizes.max = std::min(sizes.max, mMaxSize.x);
+            sizes.min = std::min(sizes.min, sizes.max);
+        }
+    }
+
+    return mMinMaxSizesCache.put(height, sizes);
 }
 
-int AView::getMinimumHeight() {
+glm::ivec2 AView::measure(AConstraints constraints) {
     ensureAssUpdated();
-    return (mFixedSize.y == 0 ? ((glm::clamp)(getContentMinimumSize().y + mPadding.vertical(), mMinSize.y, mMaxSize.y)) : mFixedSize.y);
+
+    if (mFixedSize.x != 0 && mFixedSize.y != 0) {
+        return mFixedSize;
+    }
+
+    if (auto cached = mMeasureCache.get(constraints)) {
+        return *cached;
+    }
+
+    AConstraints effective = constraints;
+    const bool requestedUnlimitedInline = effective.maxInline == -1;
+    const bool requestedUnlimitedBlock = effective.maxBlock == -1;
+    bool unlimitedInline = requestedUnlimitedInline;
+    bool unlimitedBlock = requestedUnlimitedBlock;
+
+    if (mFixedSize.x != 0) {
+        effective.minInline = effective.maxInline = mFixedSize.x;
+        unlimitedInline = false;
+    } else {
+        if (mMaxSize.x != -1) {
+            effective.maxInline = unlimitedInline ? mMaxSize.x : std::min(effective.maxInline, mMaxSize.x);
+            // our parent may stretch us (i.e. expanding in AStackedLayout), but never past our max size.
+            effective.minInline = std::min(effective.minInline, mMaxSize.x);
+            unlimitedInline = false;
+        }
+        // our own min size wins over our max size, though.
+        effective.minInline = std::max(effective.minInline, mMinSize.x);
+    }
+    if (mFixedSize.y != 0) {
+        effective.minBlock = effective.maxBlock = mFixedSize.y;
+        unlimitedBlock = false;
+    } else {
+        if (mMaxSize.y != -1) {
+            effective.maxBlock = unlimitedBlock ? mMaxSize.y : std::min(effective.maxBlock, mMaxSize.y);
+            effective.minBlock = std::min(effective.minBlock, mMaxSize.y);
+            unlimitedBlock = false;
+        }
+        effective.minBlock = std::max(effective.minBlock, mMinSize.y);
+    }
+
+    const int effectiveMaxInline =
+        unlimitedInline ? std::numeric_limits<int>::max() : std::max(effective.minInline, effective.maxInline);
+    const int effectiveMaxBlock =
+        unlimitedBlock ? std::numeric_limits<int>::max() : std::max(effective.minBlock, effective.maxBlock);
+
+    int hPadding = mPadding.left + mPadding.right;
+    int vPadding = mPadding.top + mPadding.bottom;
+
+    AConstraints content;
+    content.minInline = std::max(0, effective.minInline - hPadding);
+    content.maxInline = unlimitedInline ? -1 : std::max(0, effectiveMaxInline - hPadding);
+    content.minBlock = std::max(0, effective.minBlock - vPadding);
+    content.maxBlock = unlimitedBlock ? -1 : std::max(0, effectiveMaxBlock - vPadding);
+
+    glm::ivec2 content_size = onIntrinsicMeasure(content);
+
+    glm::ivec2 measured;
+    measured.x = std::max(content_size.x + hPadding, effective.minInline);
+    measured.y = std::max(content_size.y + vPadding, effective.minBlock);
+    if (mFixedSize.x != 0) {
+        measured.x = mFixedSize.x;   // contents that do not fit overflow instead of growing us.
+    } else if (mMaxSize.x != -1) {
+        measured.x = std::min(measured.x, effectiveMaxInline);
+    }
+    if (mFixedSize.y != 0) {
+        measured.y = mFixedSize.y;
+    } else if (mMaxSize.y != -1) {
+        measured.y = std::min(measured.y, effectiveMaxBlock);
+    }
+
+    return mMeasureCache.put(constraints, measured);
 }
 
-void AView::getTransform(glm::mat4& transform) const
-{
-    transform = glm::translate(transform, glm::vec3{ getPosition(), 0.f });
+glm::ivec2 AView::onIntrinsicMeasure(AConstraints constraints) {
+    const auto minMax = onComputeIntrinsicMinMaxAxis(constraints.isUnlimitedBlock() ? -1 : constraints.maxBlock);
+    const int maxInline = constraints.isUnlimitedInline() ? std::numeric_limits<int>::max() : constraints.maxInline;
+    return {
+        std::clamp(minMax.max, constraints.minInline, maxInline),
+        constraints.minBlock,
+    };
 }
 
-void AView::pack()
-{
-    setSize({ getMinimumWidth(), getMinimumHeight() });
+AMinMaxAxis AView::onComputeIntrinsicMinMaxAxis(int height) { return {}; }
+
+void AView::getTransform(glm::mat4& transform) const {
+    transform = glm::translate(transform, glm::vec3 { getPosition(), 0.f });
 }
 
-void AView::addAssName(const AString& assName)
-{
+void AView::pack() { layout(getPosition(), measure(AConstraints {})); }
+
+void AView::addAssName(const AString& assName) {
     AUI_ASSERTX(!assName.empty(), "empty ass name");
     if (mAssNames.contains(assName)) {
         return;
@@ -311,68 +411,54 @@ void AView::invalidateAssHelper() {
     redraw();
 }
 
-void AView::removeAssName(const AString& assName)
-{
+void AView::removeAssName(const AString& assName) {
     AUI_ASSERTX(!assName.empty(), "empty ass name");
     mAssNames.removeAll(assName);
     invalidateAssHelper();
 }
 
-
 namespace {
-    void setupConnectionsCustomStyleRecursive(AView* view, const ass::PropertyListRecursive& propertyList) {
-        for (const auto& d : propertyList.conditionalPropertyLists()) {
-            d.selector.setupConnections(view, view->getAssHelper());
-            setupConnectionsCustomStyleRecursive(view, d.list);
-        }
+void setupConnectionsCustomStyleRecursive(AView* view, const ass::PropertyListRecursive& propertyList) {
+    for (const auto& d : propertyList.conditionalPropertyLists()) {
+        d.selector.setupConnections(view, view->getAssHelper());
+        setupConnectionsCustomStyleRecursive(view, d.list);
     }
 }
+}   // namespace
 
-void AView::ensureAssUpdated()
-{
-    if (mAssHelper == nullptr)
-    {
+void AView::ensureAssUpdated() {
+    if (mAssHelper == nullptr) {
         mAssHelper = _new<AAssHelper>();
 
         setupConnectionsCustomStyleRecursive(this, mCustomStyleRule);
 
-        connect(customCssPropertyChanged, mAssHelper,
-                &AAssHelper::onInvalidateStateAss);
-        connect(mAssHelper->invalidateFullAss, this, [&]()
-        {
-            mAssHelper = nullptr;
-        });
+        connect(customCssPropertyChanged, mAssHelper, &AAssHelper::onInvalidateStateAss);
+        connect(mAssHelper->invalidateFullAss, this, [&]() { mAssHelper = nullptr; });
         connect(mAssHelper->invalidateStateAss, me::invalidateStateStyles);
 
         invalidateAllStyles();
     }
 }
 
-void AView::onMouseEnter()
-{
+void AView::onMouseEnter() {
     mMouseEntered = true;
-    if (AWindow::current()->shouldDisplayHoverAnimations()) {
+    if (ASurface::current()->shouldDisplayHoverAnimations()) {
         mHovered.set(this, true);
     }
 }
 
-
-void AView::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event)
-{
+void AView::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
     if (mCursor) {
-        AUI_NULLSAFE(AWindow::current())->setCursor(mCursor);
+        AUI_NULLSAFE(ASurface::current())->setCursor(mCursor);
     }
 }
 
-void AView::onMouseLeave()
-{
+void AView::onMouseLeave() {
     mMouseEntered = false;
     mHovered.set(this, false);
 }
 
-
-void AView::onPointerPressed(const APointerPressedEvent& event)
-{
+void AView::onPointerPressed(const APointerPressedEvent& event) {
     if (!mPressed.contains(event.pointerIndex)) {
         mPressed << event.pointerIndex;
         emit pressedState(true, event.pointerIndex);
@@ -380,8 +466,7 @@ void AView::onPointerPressed(const APointerPressedEvent& event)
     }
 }
 
-void AView::onPointerReleased(const APointerReleasedEvent& event)
-{
+void AView::onPointerReleased(const APointerReleasedEvent& event) {
     mPressed.removeAll(event.pointerIndex);
     try {
         emit pressedState(false, event.pointerIndex);
@@ -412,59 +497,31 @@ void AView::onPointerReleased(const APointerReleasedEvent& event)
     }
 }
 
-AMenuModel AView::composeContextMenu() {
-    return {};
-}
+AMenuModel AView::composeContextMenu() { return {}; }
 
-void AView::onPointerDoubleClicked(const APointerPressedEvent& event)
-{
-    emit doubleClicked(event.pointerIndex);
-}
+void AView::onPointerDoubleClicked(const APointerPressedEvent& event) { emit doubleClicked(event.pointerIndex); }
 
-void AView::onScroll(const AScrollEvent& event) {
-    emit scrolled(event.delta);
-}
+void AView::onScroll(const AScrollEvent& event) { emit scrolled(event.delta); }
 
-void AView::onKeyDown(AInput::Key key)
-{
-    emit keyPressed(key);
-}
+void AView::onKeyDown(AInput::Key key) { emit keyPressed(key); }
 
-void AView::onKeyRepeat(AInput::Key key)
-{
-}
+void AView::onKeyRepeat(AInput::Key key) {}
 
-void AView::onKeyUp(AInput::Key key)
-{
-    emit keyReleased(key);
-}
+void AView::onKeyUp(AInput::Key key) { emit keyReleased(key); }
 
-void AView::onFocusAcquired()
-{
-    mHasFocus.set(this, true);
-}
+void AView::onFocusAcquired() { mHasFocus.set(this, true); }
 
-void AView::onFocusLost()
-{
-    mHasFocus.set(this, false);
-}
+void AView::onFocusLost() { mHasFocus.set(this, false); }
 
-void AView::onCharEntered(AChar c)
-{
+void AView::onCharEntered(AChar c) {}
 
-}
+bool AView::handlesNonMouseNavigation() { return false; }
 
-bool AView::handlesNonMouseNavigation() {
-    return false;
-}
-
-void AView::setEnabled(bool enabled)
-{
+void AView::setEnabled(bool enabled) {
     mDirectlyEnabled = enabled;
     updateEnableState();
 }
-void AView::updateEnableState()
-{
+void AView::updateEnableState() {
     if (!mEnabled) {
         onMouseLeave();
     }
@@ -496,9 +553,7 @@ glm::ivec2 AView::getPositionInWindow() const {
     return p;
 }
 
-
 void AView::setPosition(glm::ivec2 position) {
-    mSkipUntilLayoutUpdate = false;
     if (mPosition == position) [[unlikely]] {
         return;
     }
@@ -506,32 +561,19 @@ void AView::setPosition(glm::ivec2 position) {
     redraw();
     emit mPositionChanged(position);
 }
-void AView::setSize(glm::ivec2 size)
-{
-    mMarkedMinContentSizeInvalid = false;
-    mSkipUntilLayoutUpdate = false;
+
+void AView::setSize(glm::ivec2 size) {
     auto newSize = mSize;
-    if (mFixedSize.x != 0)
-    {
-        newSize.x = mFixedSize.x;
+    // our container decides how much space we get: if it has less than our min size, we are squeezed, not overflowing.
+    // a fixed size is the only exception — it is law.
+    newSize.x = mFixedSize.x != 0 ? mFixedSize.x : size.x;
+    newSize.y = mFixedSize.y != 0 ? mFixedSize.y : size.y;
+    if (mMaxSize.x != -1) {
+        newSize.x = glm::min(newSize.x, mMaxSize.x);
     }
-    else
-    {
-        newSize.x = size.x;
-        if (mMinSize.x != 0)
-            newSize.x = glm::max(mMinSize.x, newSize.x);
+    if (mMaxSize.y != -1) {
+        newSize.y = glm::min(newSize.y, mMaxSize.y);
     }
-    if (mFixedSize.y != 0)
-    {
-        newSize.y = mFixedSize.y;
-    }
-    else
-    {
-        newSize.y = size.y;
-        if (mMinSize.y != 0)
-            newSize.y = glm::max(mMinSize.y, newSize.y);
-    }
-    newSize = glm::min(newSize, mMaxSize);
 
     if (mSize == newSize) [[unlikely]] {
         return;
@@ -541,18 +583,29 @@ void AView::setSize(glm::ivec2 size)
     emit mSizeChanged(newSize);
 }
 
-void AView::setGeometry(int x, int y, int width, int height) {
-    mSkipUntilLayoutUpdate = false;
+void AView::layout(int x, int y, int w, int h) {
+    if (mPosition == glm::ivec2(x, y) && mLastLayoutSize == glm::ivec2(w, h) && !mWantsLayoutUpdate) {
+        return;
+    }
     auto oldPosition = mPosition;
     auto oldSize = mSize;
     setPosition({ x, y });
-    setSize({width, height});
-
-    if (mPosition == oldPosition && mSize == oldSize) [[unlikely]] {
-        return;
+    setSize({ w, h });
+    {
+        std::unique_lock lock(mLayoutGuard, std::try_to_lock);
+        AUI_ASSERTX(lock.owns_lock(), "unable to lock layout of itself? recursive lock?");
+        onLayout(mSize);
     }
-    emit geometryChanged({x, y}, {width, height});
+    mSkipUntilLayoutUpdate = false;
+    mWantsLayoutUpdate = false;
+    mPendingLayoutRoot = false;
+    mLastLayoutSize = mSize;
+    if (oldPosition != mPosition || oldSize != mSize) {
+        emit geometryChanged(mPosition, mSize);
+    }
 }
+
+void AView::onLayout(glm::ivec2 size) {}
 
 bool AView::consumesClick(const glm::ivec2& pos) {
     if (mSkipUntilLayoutUpdate) {
@@ -575,7 +628,7 @@ void AView::focus(bool needFocusChainUpdate) {
 
     notifyParentChildFocused(mySharedPtr);
 
-    AUI_UI_THREAD_X [mySharedPtr = std::move(mySharedPtr), needFocusChainUpdate]() {
+    AUI_UI_THREAD_X[mySharedPtr = std::move(mySharedPtr), needFocusChainUpdate]() {
         auto window = mySharedPtr->getWindow();
         if (!window) {
             return;
@@ -587,9 +640,7 @@ void AView::focus(bool needFocusChainUpdate) {
     };
 }
 
-bool AView::capturesFocus() {
-    return true;
-}
+bool AView::capturesFocus() { return true; }
 
 Visibility AView::getVisibilityRecursive() const {
     if (mVisibility == Visibility::GONE)
@@ -609,9 +660,7 @@ Visibility AView::getVisibilityRecursive() const {
     return static_cast<Visibility>(v);
 }
 
-void AView::onDpiChanged() {
-    mAssHelper = nullptr;
-}
+void AView::onDpiChanged() { mAssHelper = nullptr; }
 
 void AView::notifyParentEnabledStateChanged(bool enabled) {
     mParentEnabled = enabled;
@@ -622,24 +671,23 @@ bool AView::onGesture(const glm::ivec2& origin, const AGestureEvent& event) {
     return transformGestureEventsToDesktop(origin, event);
 }
 bool AView::transformGestureEventsToDesktop(const glm::ivec2& origin, const AGestureEvent& event) {
-    return std::visit(aui::lambda_overloaded {
-        [&](const ALongPressEvent& e) {
-            auto menuModel = composeContextMenu();
-            bool result = false;
-            if (clickedRightOrLongPressed) {
-                emit clickedRightOrLongPressed;
-                result = true;
-            }
-            if (!menuModel.empty()) {
-                AMenu::show(menuModel);
-                result = true;
-            }
-            return result;
-        },
-        [&](const auto& e) {
-            return false;
-        }
-    }, event);
+    return std::visit(
+        aui::lambda_overloaded {
+            [&](const ALongPressEvent& e) {
+                auto menuModel = composeContextMenu();
+                bool result = false;
+                if (clickedRightOrLongPressed) {
+                    emit clickedRightOrLongPressed;
+                    result = true;
+                }
+                if (!menuModel.empty()) {
+                    AMenu::show(menuModel);
+                    result = true;
+                }
+                return result;
+            },
+            [&](const auto& e) { return false; } },
+        event);
 }
 
 void AView::applyAssRule(const ass::PropertyList& propertyList) {
@@ -663,11 +711,12 @@ void AView::applyAssRule(const ass::PropertyListRecursive& propertyList) {
 }
 
 ALayoutDirection AView::parentLayoutDirection() const noexcept {
-    if (mParent == nullptr) return ALayoutDirection::NONE;
-    if (mParent->getLayout() == nullptr) return ALayoutDirection::NONE;
+    if (mParent == nullptr)
+        return ALayoutDirection::NONE;
+    if (mParent->getLayout() == nullptr)
+        return ALayoutDirection::NONE;
     return mParent->getLayout()->getLayoutDirection();
 }
-
 
 void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     AUI_ASSERT_UI_THREAD_ONLY();
@@ -675,11 +724,9 @@ void AView::setCustomStyle(ass::PropertyListRecursive rule) {
     if (mAssHelper == nullptr) {
         return;
     }
-    auto prevMinSize = mCachedMinContentSize ? getMinimumSizePlusMargin() : glm::ivec2(DEFINITELY_INVALID_SIZE);
     AUI_ASSERTX(mAssHelper != nullptr, "invalidateAllStyles requires mAssHelper to be initialized");
-    invalidateStateStylesImpl(prevMinSize);
+    invalidateStateStylesImpl();
 }
-
 
 bool AView::hasIndirectParent(const _<AView>& v) {
     for (auto p = getParent(); p != nullptr; p = p->getParent()) {
@@ -690,9 +737,7 @@ bool AView::hasIndirectParent(const _<AView>& v) {
     return false;
 }
 
-bool AView::wantsTouchscreenKeyboard() {
-    return false;
-}
+bool AView::wantsTouchscreenKeyboard() { return false; }
 
 void AView::setExtraStylesheet(AStylesheet&& extraStylesheet) {
     mExtraStylesheet = _new<AStylesheet>(std::move(extraStylesheet));
@@ -709,8 +754,8 @@ void AView::onClickPrevented() {
 
 void AView::setCursor(AOptional<ACursor> cursor) {
     mCursor = std::move(cursor);
-    if (mParent) { // ASurface does not have parent
-        AWindow::current()->forceUpdateCursor();
+    if (mParent) {   // ASurface does not have parent
+        ASurface::current()->forceUpdateCursor();
     }
 }
 
@@ -718,22 +763,21 @@ void AView::onViewGraphSubtreeChanged() {
     invalidateAssHelper();
     emit viewGraphSubtreeChanged;
 }
-void AView::setVisibility(Visibility visibility) noexcept
-{
+
+void AView::setVisibility(Visibility visibility) noexcept {
     if (mVisibility == visibility) {
         return;
     }
     auto prev = std::exchange(mVisibility, visibility);
     if ((mVisibility & Visibility::FLAG_CONSUME_SPACE) != (prev & Visibility::FLAG_CONSUME_SPACE)) {
-        mMarkedMinContentSizeInvalid = false; // force
-        markMinContentSizeInvalid();
+        markLayoutContributionChanged();
     }
     redraw();
     emit mVisibilityChanged(visibility);
 }
 
 namespace aui::view::impl {
-    bool isDefinitelyInvisible(AView& view);
+bool isDefinitelyInvisible(AView& view);
 }
 
 void AView::markPixelDataInvalid(ARect<int> invalidArea) {
@@ -745,7 +789,7 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
     if (mRenderToTexture) {
         if (glm::all(glm::lessThanEqual(invalidArea.p1, glm::ivec2(0, 0))) &&
             glm::all(glm::greaterThanEqual(invalidArea.p2, getSize()))) {
-            mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Full{};
+            mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Full {};
         }
         mRenderToTexture->invalidArea.addRectangle(invalidArea);
         if (std::exchange(mRedrawRequested, true)) {
@@ -754,70 +798,72 @@ void AView::markPixelDataInvalid(ARect<int> invalidArea) {
         }
         // temporary disable drawing from texture. this will be set back to true by the callback below.
         mRenderToTexture->drawFromTexture = false;
-        AWindow::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](IRenderer& renderer) {
-            if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
-                // dead interface?
-                return;
-            }
+        ASurface::current()->beforeFrameQueue().enqueue(
+            [this, self = aui::ptr::shared_from_this(this)](IRenderer& renderer) {
+                if (!mRenderToTexture || !mRenderToTexture->rendererInterface) {
+                    // dead interface?
+                    return;
+                }
 
-            if (mRenderToTexture->skipRedrawUntilTextureIsPresented) {
-                // last frame we draw here was not used.
-                // we might want to skip drawing a new frame until AViewContainer::drawView flags that the rasterization
-                // results are actually displayed.
-                mRedrawRequested = false;
-                return;
-            }
+                if (mRenderToTexture->skipRedrawUntilTextureIsPresented) {
+                    // last frame we draw here was not used.
+                    // we might want to skip drawing a new frame until AViewContainer::drawView flags that the
+                    // rasterization results are actually displayed.
+                    mRedrawRequested = false;
+                    return;
+                }
 
-            if (glm::any(glm::equal(getSize(), glm::ivec2(0)))) {
-                // unable to render to zero-area texture
-                mRedrawRequested = false;
-                mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Empty{};
-                return;
-            }
+                if (glm::any(glm::equal(getSize(), glm::ivec2(0)))) {
+                    // unable to render to zero-area texture
+                    mRedrawRequested = false;
+                    mRenderToTexture->invalidArea = IRenderViewToTexture::InvalidArea::Empty {};
+                    return;
+                }
 
-            if (mRenderToTexture->invalidArea.empty()) {
-                // if we weren't check, begin would throw assertion failed. Theoretically, that should not happen.
-                // but why not safe check?
-                return;
-            }
+                if (mRenderToTexture->invalidArea.empty()) {
+                    // if we weren't check, begin would throw assertion failed. Theoretically, that should not happen.
+                    // but why not safe check?
+                    return;
+                }
 
-            APerformanceSection s("Render-to-texture rasterization", {}, debugString().toStdString());
-            auto invalidArea = std::exchange(mRenderToTexture->invalidArea, IRenderViewToTexture::InvalidArea::Empty{});
-            if (!mRenderToTexture->rendererInterface->begin(renderer, size(), invalidArea)) {
-                // unsuccessful
+                APerformanceSection s("Render-to-texture rasterization", {}, debugString().toStdString());
+                auto invalidArea =
+                    std::exchange(mRenderToTexture->invalidArea, IRenderViewToTexture::InvalidArea::Empty {});
+                if (!mRenderToTexture->rendererInterface->begin(renderer, size(), invalidArea)) {
+                    // unsuccessful
+                    mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
+                    return;
+                }
+                AUI_DEFER { mRenderToTexture->rendererInterface->end(renderer); };
+
+                ARenderContext contextOfTheView {
+                    .clippingRects =
+                        invalidArea.rectangles()
+                            ? ARenderContext::Rectangles(
+                                  invalidArea.rectangles()->begin(), invalidArea.rectangles()->end())
+                            : ARenderContext::Rectangles {},
+                    .render = renderer,
+                };
+                ARect<int> initialRect {
+                    .p1 = { 0, 0 },
+                    .p2 = size(),
+                };
+                if (contextOfTheView.clippingRects.empty()) {
+                    contextOfTheView.clippingRects << initialRect;
+                } else {
+                    contextOfTheView.clip(initialRect);
+                }
+                RenderHints::PushState state(renderer);
+                try {
+                    render(contextOfTheView);
+                    postRender(contextOfTheView);
+                } catch (const AException& e) {
+                    ALogger::err("AView") << "Unable to render view: " << e;
+                    return;
+                }
                 mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
-                return;
-            }
-            AUI_DEFER {
-                mRenderToTexture->rendererInterface->end(renderer);
-            };
-
-            ARenderContext contextOfTheView {
-                .clippingRects = invalidArea.rectangles() ? ARenderContext::Rectangles(invalidArea.rectangles()->begin(),
-                                                                                       invalidArea.rectangles()->end()) : ARenderContext::Rectangles{},
-                .render = renderer,
-            };
-            ARect<int> initialRect {
-                .p1 = { 0, 0 },
-                .p2 = size(),
-            };
-            if (contextOfTheView.clippingRects.empty()) {
-                contextOfTheView.clippingRects << initialRect;
-            } else {
-                contextOfTheView.clip(initialRect);
-            }
-            RenderHints::PushState state(renderer);
-            try {
-                render(contextOfTheView);
-                postRender(contextOfTheView);
-            }
-            catch (const AException& e) {
-                ALogger::err("AView") << "Unable to render view: " << e;
-                return;
-            }
-            mRenderToTexture->skipRedrawUntilTextureIsPresented = true;
-            mRenderToTexture->drawFromTexture = true;
-        });
+                mRenderToTexture->drawFromTexture = true;
+            });
         AUI_NULLSAFE(mParent)->markPixelDataInvalid(ARect<int>::fromTopLeftPositionAndSize(getPosition(), size()));
         return;
     }
@@ -834,17 +880,31 @@ AString AView::debugString() const {
     return "{} at {}"_format(mAssNames.empty() ? IStringable::toString(this) : mAssNames.last(), getPositionInWindow());
 }
 
+IInspectable::DebugInspectorInfo AView::debugInspectorInfo() {
+    DebugInspectorInfo info;
+    info.reserve(11);
+    info.push_back({ "Position", mPosition });
+    info.push_back({ "Size", mSize });
+    info.push_back({ "Min size", mMinSize });
+    info.push_back({ "Max size", mMaxSize });
+    info.push_back({ "Fixed size", mFixedSize });
+    info.push_back({ "Expanding", mExpanding });
+    info.push_back({ "Visibility", "{}"_format(mVisibility) });
+    info.push_back({ "Enabled", mEnabled });
+    info.push_back({ "Text color", mTextColor });
+    info.push_back({ "Opacity", float(mOpacity) });
+    info.push_back({ "Border radius", mBorderRadius });
+    return info;
+}
+
 void AView::forceUpdateLayoutRecursively() {
     AUI_DO_ONCE {
         ALogger::warn("AView") << "AView::forceUpdateLayoutRecursively() called; it's for debugging purposes only.";
     }
-    mMarkedMinContentSizeInvalid = true;
-    mCachedMinContentSize.reset();
+    requestLayout();
 }
 
-void AView::commitStyle() {
-
-}
+void AView::commitStyle() {}
 
 std::ostream& operator<<(std::ostream& os, const AView& view) {
     os << view.debugString();

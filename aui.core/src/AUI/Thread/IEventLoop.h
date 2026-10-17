@@ -28,6 +28,11 @@ public:
      */
     virtual void loop() = 0;
 
+    /**
+     * @brief Makes the event loop current for this thread (message delivery target) during Handle's lifetime.
+     * @details
+     * Handle does NOT control application lifetime; see AApplication for that.
+     */
     class API_AUI_CORE Handle {
     private:
         IEventLoop* mPrevEventLoop;
@@ -35,6 +40,8 @@ public:
 
     public:
         explicit Handle(IEventLoop* loop);
+        Handle(const Handle&) = delete;
+        Handle& operator=(const Handle&) = delete;
         ~Handle();
     };
 };

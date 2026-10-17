@@ -69,7 +69,10 @@ public:
     void render(ARenderContext context) override;
     void onCharEntered(AChar c) override;
     glm::ivec2 getCursorPosition() override;
-    void setSize(glm::ivec2 size) override;
+    void onLayout(glm::ivec2 size) override;
+    AMinMaxAxis onComputeIntrinsicMinMaxAxis(int widthConstraint) override;
+
+    bool shrinksToOccupiedWidth() const override { return false; }
 
     bool isPasswordField() const noexcept override;
 
@@ -122,5 +125,3 @@ public:
 
     static void setup(const _<ATextArea>& view) {}
 };
-
-

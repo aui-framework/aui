@@ -18,7 +18,7 @@
 #include <AUI/Platform/linux/IPlatformAbstraction.h>
 #include <AUI/Util/kAUI.h>
 
-void APlatform::openUrl(const AUrl& url) {
+static void openUrlViaPortal(const AUrl& url) {
     try {
         ADBus::session().call(
             "org.freedesktop.portal.Desktop",    // bus
@@ -30,4 +30,26 @@ void APlatform::openUrl(const AUrl& url) {
     } catch (const AException& e) {
         ALogger::err("APlatform") << "Failed to openUrl " << url.full() << ": " << e;
     }
+}
+
+void APlatform::openUrl(const AUrl& url) {
+    // xdg-desktop-portal's OpenURI does not handle directories (replies with an error which is never observed), so
+    // ask the file manager directly via org.freedesktop.FileManager1 (Nautilus, Dolphin, Thunar, Nemo, ...).
+    if (url.schema() == "file" && APath(url.path()).isDirectoryExists()) {
+        try {
+            *ADBus::session()
+                .callWithResult<void>(
+                    "org.freedesktop.FileManager1",     // bus
+                    "/org/freedesktop/FileManager1",    // object
+                    "org.freedesktop.FileManager1",     // interface
+                    "ShowFolders",                      // method
+                    AVector<std::string>{ url.full().toStdString() },
+                    std::string{})                      // startup id
+                ;
+            return;
+        } catch (const AException& e) {
+            ALogger::warn("APlatform") << "FileManager1 is not available, falling back to portal: " << e;
+        }
+    }
+    openUrlViaPortal(url);
 }

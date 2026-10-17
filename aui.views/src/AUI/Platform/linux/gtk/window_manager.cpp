@@ -131,7 +131,7 @@ void PlatformAbstractionGtk::windowManagerIteration() {
 void PlatformAbstractionGtk::windowManagerLoop() {
     auto& wm = AWindow::getWindowManager();
     wm.start();
-    while (wm.isLoopRunning() && !wm.getWindows().empty()) {
+    while (wm.shouldKeepRunning()) {
         windowManagerIteration();
     }
 }

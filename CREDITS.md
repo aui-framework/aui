@@ -15,3 +15,8 @@ And a big hand to everyone else who has contributed over the past!
 THANKS! <3
 
     -- Alex2772 <alex2772sc@gmail.com>
+
+## Third-party libraries
+
+- libdbus (Linux only, dynamically linked) — used under the Academic Free License 2.1
+  (<https://gitlab.freedesktop.org/dbus/dbus/-/blob/master/COPYING>).

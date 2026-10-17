@@ -39,6 +39,8 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
         auib_use_system_libs_begin()
         find_package(PkgConfig REQUIRED)
 
+        # libdbus is dual-licensed (AFL-2.1 OR GPL-2.0-or-later). AUI uses it under AFL-2.1 only; do not link it
+        # statically or bundle it in a way that would require the GPL option.
         pkg_check_modules(DBUS REQUIRED IMPORTED_TARGET dbus-1)
         pkg_check_modules(GLIB REQUIRED IMPORTED_TARGET glib-2.0)
         pkg_check_modules(GIO REQUIRED IMPORTED_TARGET gio-2.0)

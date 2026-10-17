@@ -21,6 +21,7 @@
 #include <AUI/Util/ACleanup.h>
 #include <AUI/Common/ATimer.h>
 #include <AUI/Platform/Entry.h>
+#include <AUI/Platform/AApplication.h>
 
 #if AUI_PLATFORM_WIN
 #include <windows.h>
@@ -160,9 +161,7 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
 #endif
     try {
         r = aui_entry(argsImpl());
-        if (auto el = AThread::current()->getCurrentEventLoop()) {
-            el->loop();
-        }
+        r = aui::detail::application::runMainLoopIfHeld(r);
     } catch (const AException& e) {
         ALogger::err("AUI") << "Uncaught exception: " << e;
     } catch (const std::exception& e) {

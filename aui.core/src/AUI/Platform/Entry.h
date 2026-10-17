@@ -27,8 +27,15 @@
  *
  * `AUI_ENTRY` of a graphical application should be non-blocking since on mobile platforms application's event loop is
  * located outsize of the entry point. On desktop platforms, an event loop is created outside `AUI_ENTRY` in order to
- * unify the mobile and desktop behaviour. If there are no open windows, the event loop breaks, causing the application
- * to exit with the exit code returned by `AUI_ENTRY` earlier, or `0`.
+ * unify the mobile and desktop behaviour. The event loop runs as long as the application is *held* (by open windows or
+ * by AApplication::hold()), then the application exits with the exit code returned by `AUI_ENTRY` earlier (or the one
+ * passed to AApplication::quit()). If nothing holds the application, it exits right after `AUI_ENTRY` returns, so
+ * `AUI_ENTRY` is perfectly fine for CLI applications, even if they link to `aui::views`.
+ *
+ * `AUI_ENTRY` is called every time the application's executable is launched. That includes a user trying to launch an
+ * already running application. By default, every launch is an independent process (multi instance). To make the
+ * application single instanced, call AApplication::requestSingleInstanceLock() in the beginning of `AUI_ENTRY`. See
+ * [app-lifetime] for details.
  *
  * Application arguments `(int argc, char** argv)` are forwarded to `AUI_ENTRY` as `AStringVector args`.
  *

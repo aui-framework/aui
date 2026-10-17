@@ -18,6 +18,7 @@
 
 #include <AUI/Util/AMetric.h>
 #include "IProperty.h"
+#include "AUI/Common/IStringable.h"
 
 namespace ass {
 
@@ -35,7 +36,7 @@ namespace ass {
 
     namespace prop {
         template<>
-        struct API_AUI_VIEWS Property<TransformOffset>: IPropertyBase {
+        struct API_AUI_VIEWS Property<TransformOffset>: IPropertyBase, IStringable {
         private:
             TransformOffset mInfo;
 
@@ -50,6 +51,10 @@ namespace ass {
             [[nodiscard]]
             const auto& value() const noexcept {
                 return mInfo;
+            }
+
+            AString toString() const override {
+                return "TransformOffset(x={}, y={})"_format(mInfo.offsetX, mInfo.offsetY);
             }
         };
 }

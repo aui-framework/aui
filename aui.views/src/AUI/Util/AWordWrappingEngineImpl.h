@@ -16,9 +16,10 @@
 #include "AUI/Util/AFraction.h"
 
 template<typename Container>
-void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, const glm::ivec2& size) {
+void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, const glm::ivec2& size, bool writePositions) {
     if (mEntries.empty()) {
         mHeight = 0;
+        mWidth = 0;
         return;
     }
 
@@ -34,10 +35,11 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
         int occupiedHorizontalSpace;
         int remainingHeight;
         glm::ivec2 position;
+        bool writePositions = true;
 
         void setPosition(glm::ivec2 p) {
             position = p;
-            if (p.x == UNDEFINED_POSITION_MARKER || p.y == UNDEFINED_POSITION_MARKER) {
+            if (!writePositions || p.x == UNDEFINED_POSITION_MARKER || p.y == UNDEFINED_POSITION_MARKER) {
                 return;
             }
             entry->setPosition(p);
@@ -55,6 +57,8 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
     AVector<FloatingEntry> leftFloat;
     AVector<FloatingEntry> rightFloat;
 
+    int maxRowWidth = 0;
+
     bool firstItem;
 
     auto beginRow = [&] {
@@ -70,7 +74,20 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
         currentRow = inflatedEntriesByRows.end() - 1;
     };
 
+    // contents of the row, with a trailing whitespace excluded - the same figure CENTER and RIGHT align by.
+    auto occupiedRowWidth = [&] {
+        int result = 0;
+        for (auto& i : leftFloat) result += i.occupiedHorizontalSpace;
+        for (auto& i : rightFloat) result += i.occupiedHorizontalSpace;
+        if (!currentRow->empty()) {
+            const auto end = currentRow->last().entry->escapesEdges() ? currentRow->end() - 1 : currentRow->end();
+            for (auto it = currentRow->begin(); it != end; ++it) result += it->occupiedHorizontalSpace;
+        }
+        return result;
+    };
+
     auto flushRow = [&](bool last) {
+        maxRowWidth = glm::max(maxRowWidth, occupiedRowWidth());
         const int currentYWithLineHeightApplied = currentY + (mLineHeight - 1.f) / 2.f * currentRowHeight;
         for (AVector<FloatingEntry>* floating : {&leftFloat, &rightFloat}) {
             for (FloatingEntry& i: *floating | ranges::views::reverse) {
@@ -110,7 +127,9 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
                     currentX = offset.x + leftPadding;
                     int index = 0;
                     for (auto& i: *currentRow) {
-                        i.entry->setPosition({currentX + (spacing * index).toInt(), currentYWithLineHeightApplied});
+                        if (writePositions) {
+                            i.entry->setPosition({currentX + (spacing * index).toInt(), currentYWithLineHeightApplied});
+                        }
                         currentX += i.occupiedHorizontalSpace;
                         ++index;
                     }
@@ -123,7 +142,9 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
                     currentX += i.occupiedHorizontalSpace;
                 }
                 for (auto& i: *currentRow) {
-                    i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    if (writePositions) {
+                        i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    }
                     currentX += i.occupiedHorizontalSpace;
                 }
                 break;
@@ -147,7 +168,9 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
 
                 currentX = leftPadding + (size.x - leftPadding - rightPadding - actualRowWidth) / 2;
                 for (auto& i: *currentRow) {
-                    i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    if (writePositions) {
+                        i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    }
                     currentX += i.occupiedHorizontalSpace;
                 }
                 break;
@@ -160,7 +183,9 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
                 for (auto& i : rightFloat) actualRowWidth += i.occupiedHorizontalSpace;
                 currentX = size.x - actualRowWidth;
                 for (auto& i : *currentRow) {
-                    i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    if (writePositions) {
+                        i.entry->setPosition({currentX + offset.x, currentYWithLineHeightApplied});
+                    }
                     currentX += i.occupiedHorizontalSpace;
                 }
                 break;
@@ -211,13 +236,13 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
         switch ((*currentItem)->getFloat()) {
             case AFloat::LEFT: {
                 int position = ranges::accumulate(leftFloat, 0, std::plus<>{}, &FloatingEntry::occupiedHorizontalSpace);
-                leftFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
+                leftFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y, {}, writePositions});
                 leftFloat.last().setPosition({position, UNDEFINED_POSITION_MARKER });
                 break;
             }
 
             case AFloat::RIGHT: {
-                rightFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y});
+                rightFloat.push_back({*currentItem, currentItemSize.x, currentItemSize.y, {}, writePositions});
                 int position = ranges::accumulate(rightFloat, offset.x + size.x, std::minus<>{}, &FloatingEntry::occupiedHorizontalSpace);
                 rightFloat.last().setPosition({position, UNDEFINED_POSITION_MARKER });
                 break;
@@ -242,4 +267,5 @@ void AWordWrappingEngine<Container>::performLayout(const glm::ivec2& offset, con
     }();
 
     mHeight = std::max(currentY + int(float(currentRowHeight) * mLineHeight), floatingMax) - offset.y;
+    mWidth = maxRowWidth;
 }

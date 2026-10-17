@@ -59,7 +59,7 @@ public:
     void onKeyDown(AInput::Key key) override {
         Super::onKeyDown(key);
         if (key == AInput::ESCAPE) {
-            AWindow::current()->setFocusedView(nullptr);
+            ASurface::current()->setFocusedView(nullptr);
         }
         AAbstractTypeable::handleKey(key);
         if (key == AInput::Key::RETURN && !AInput::isKeyDown(AInput::LSHIFT) && !AInput::isKeyDown(AInput::RSHIFT)) {
@@ -132,10 +132,14 @@ public:
     }
 
     void drawCursor(IRenderer& renderer, glm::ivec2 position) {
+        drawCursor(renderer, position, this->getFontStyle().size + this->getFontStyle().getDescenderHeight());
+    }
+
+    void drawCursor(IRenderer& renderer, glm::ivec2 position, unsigned height) {
         if (!this->hasFocus()) {
             return;
         }
-        drawCursorImpl(renderer, position, this->getFontStyle().size + this->getFontStyle().getDescenderHeight());
+        drawCursorImpl(renderer, position, height);
     }
 
 protected:

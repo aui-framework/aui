@@ -191,3 +191,11 @@ This is similar to modern declarative UI frameworks like SwiftUI or React.
 3. Sleeps the thread for that duration
 
 **Example:** For a 60Hz display: 1000ms / 60 = ~16.67ms delay per frame
+
+---
+
+## Application lifetime
+
+This application runs its own loop inside `AUI_ENTRY`. `AGLEmbedContext` is not an `AWindow`, so it does not hold the
+application: after `AUI_ENTRY` returns, the process exits. `AApplication::hold()` and `AApplication::quit()` do not
+affect the SDL loop. See [app-lifetime] for details.

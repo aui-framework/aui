@@ -11,6 +11,7 @@
 
 #include <dlfcn.h>
 #include "PlatformAbstractionAdw.h"
+#include <AUI/AppInfo.h>
 #include "adw_functions.h"
 namespace aui::adw1_fake {
 extern void* handle;
@@ -37,7 +38,8 @@ PlatformAbstractionAdw::PlatformAbstractionAdw() {
 }
 
 void PlatformAbstractionAdw::init() {
-    mApplication = G_APPLICATION(adw_application_new(nullptr, static_cast<GApplicationFlags>(0)));
+    mApplication = G_APPLICATION(adw_application_new(
+        aui::app_info::app_id.toStdString().c_str(), G_APPLICATION_NON_UNIQUE));
     PlatformAbstractionGtk::init();
 
     // TODO at the moment aui does not really support colors schemes, so we force light mode

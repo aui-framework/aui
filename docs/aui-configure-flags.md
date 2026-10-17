@@ -14,7 +14,7 @@ cmake --build .
 
 ### AUI_APP_PACKAGING { #AUI_APP_PACKAGING }
 Specifies the desired packaging method. This variable accepts CPack generator or one of the packaging methods provided
-by AUI. See [packaging] for more info.
+by AUI (`AUI_PORTABLE_ZIP`, `AUI_PORTABLE_TGZ`, `AUI_APPIMAGE`). See [packaging] for more info.
 
 ### AUI_CATCH_UNHANDLED
 Whether catch unhandled exceptions in the root of event loops or not. Might be useful to set `AUI_CATCH_UNHANDLED=0` for

@@ -103,11 +103,6 @@ float AWindow::fetchDpiFromSystem() const {
     return aui::detail::getMainScreenScale();
 }
 
-
-void AWindow::setSize(glm::ivec2 size) {
-    AViewContainer::setSize(size);
-}
-
 void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setPosition({x, y});
     AViewContainer::setSize({width, height});
@@ -126,6 +121,10 @@ void AWindow::setIcon(const AImage& image) {
 }
 
 void AWindow::hide() {
+}
+
+void AWindow::activate(const AString&) {
+    show();
 }
 
 void AWindow::blockUserInput(bool blockUserInput) {
