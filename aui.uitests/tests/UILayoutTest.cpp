@@ -334,6 +334,24 @@ TEST_F(UILayoutTest, Padding6) {
     expectGeometry(mock, 5, 10, 80, 70);
 }
 
+TEST_F(UILayoutTest, SpacerFixedReactive) {
+    auto space = _new<AProperty<int>>(5);   // AUI_REACT captures by copy, so share the property
+    auto mock = _new<AView>();
+    mock->setExpanding();
+
+    inflate(Vertical {
+        SpacerFixed { AUI_REACT(AMetric(**space, AMetric::T_PX)) },
+        mock,
+    } AUI_OVERRIDE_STYLE { FixedSize(100_px) });
+
+    settleLayout();
+    expectGeometry(mock, 0, 5, 100, 95);
+
+    *space = 30;
+    settleLayout();
+    expectGeometry(mock, 0, 30, 100, 70);
+}
+
 TEST_F(UILayoutTest, Margin1) {
     auto mock = _new<AView>() AUI_OVERRIDE_STYLE {
         Expanding {},
