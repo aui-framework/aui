@@ -246,3 +246,40 @@ TEST_F(UIWindowLifecycle, TitlebarHeightIsMaxOfContentsAndControls) {
     window->layout(glm::ivec2(0), glm::ivec2(400, 300));
     EXPECT_GE(titlebar->getHeight(), content->getHeight());
 }
+
+TEST_F(UIWindowLifecycle, SafeAreaTopFollowsWindowControlsHeight) {
+    auto window = _new<AWindow>(AWindow::Init {
+      .decoration = AWindow::Init::DecorationExtended {},
+    });
+    window->windowControlsInsets = AWindowControlsInsets { .left = 70, .right = 0, .height = 40 };
+#if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
+    EXPECT_EQ(window->safeAreaInsets->top, 40);
+    EXPECT_EQ(window->safeAreaInsets->left, 0);
+#endif
+}
+
+TEST_F(UIWindowLifecycle, SafeAreaIsZeroForDefaultDecoration) {
+    auto window = _new<AWindow>();
+    window->show();
+    window->layout(glm::ivec2(0), glm::ivec2(400, 300));
+    EXPECT_EQ(window->safeAreaInsets.value(), ABoxFields {});
+}
+
+#if !(AUI_PLATFORM_MACOS || AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS || AUI_PLATFORM_EMSCRIPTEN)
+TEST_F(UIWindowLifecycle, DrawnWindowControlsAreReportedInInsets) {
+    auto window = _new<AWindow>(AWindow::Init {
+      .decoration = AWindow::Init::DecorationExtended {},
+    });
+    if (window->hasNativeWindowControls()) {
+        GTEST_SKIP() << "native controls";
+    }
+    window->setContents(Vertical { Titlebar { _new<ALabel>("Title") }, SpacerExpanding {} });
+    window->show();
+    window->layout(glm::ivec2(0), glm::ivec2(400, 300));
+    window->redraw();
+    EXPECT_GT(window->windowControlsInsets->right, 0);
+    EXPECT_GT(window->windowControlsInsets->height, 0);
+    EXPECT_EQ(window->windowControlsInsets->left, 0);
+    EXPECT_EQ(window->safeAreaInsets->top, window->windowControlsInsets->height);
+}
+#endif

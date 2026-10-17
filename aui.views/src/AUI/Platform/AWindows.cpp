@@ -70,6 +70,26 @@ AWindow::AWindow(Init init) : mInit(std::move(init)) {
         return m.getUnit() == AMetric::T_DP ? m.getRawValue() * dpi : m.getRawValue();
     };
     setSize(glm::ivec2(int(toPx(mInit.width)), int(toPx(mInit.height))));
+    connect(windowControlsInsets.changed, this, [this] { updateSafeAreaInsetsFromControls(); });
+}
+
+void AWindow::updateDrawnWindowControlsInsets() {
+    if (!std::holds_alternative<Init::DecorationExtended>(mInit.decoration) || hasNativeWindowControls()) {
+        return;
+    }
+    // AUI-drawn controls are views, so the value is derived from the layout. Nothing reads this property back in this
+    // mode (see AWindowControls::build), thus the layout is not affected.
+    const auto insets = mTitlebar ? mTitlebar->drawnControlsInsets() : AWindowControlsInsets {};
+    if (insets != windowControlsInsets.value()) {
+        windowControlsInsets = insets;
+    }
+}
+
+void AWindow::updateSafeAreaInsetsFromControls() {
+#if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
+    // desktop: the controls strip is the only thing that may cover the contents. see AWindow::safeAreaInsets.
+    safeAreaInsets = ABoxFields { .top = windowControlsInsets->height };
+#endif
 }
 
 AWindow::AWindow(PopupTag, AWindow& parent)
@@ -209,6 +229,8 @@ void AWindow::redraw() {
 #endif
         }
         applyPendingLayoutRoots();
+        // after both full and partial relayouts.
+        updateDrawnWindowControlsInsets();
 
         auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         {

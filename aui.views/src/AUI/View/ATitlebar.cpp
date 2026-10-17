@@ -155,6 +155,35 @@ AOptional<AWindowControls::Button> ATitlebar::windowButtonAt(glm::ivec2 position
     return mStart->buttonAt(positionInWindow);
 }
 
+AWindowControlsInsets ATitlebar::drawnControlsInsets() const {
+    if (!mWindow || mWindow->hasNativeWindowControls()) {
+        return {};
+    }
+    // measures the visible buttons of one side: the width of the side and the height of the tallest button.
+    auto measure = [](const AWindowControls& side) {
+        glm::ivec2 result(0);
+        bool any = false;
+        for (const auto& v : side.getViews()) {
+            if (v->getVisibility() == Visibility::GONE) {
+                continue;
+            }
+            any = true;
+            result.y = std::max(result.y, v->getHeight());
+        }
+        if (any) {
+            result.x = side.getWidth();
+        }
+        return result;
+    };
+    const auto start = measure(*mStart);
+    const auto end = measure(*mEnd);
+    return AWindowControlsInsets {
+        .left = start.x,
+        .right = end.x,
+        .height = std::max(start.y, end.y),
+    };
+}
+
 void ATitlebar::setWindowButtonNativeHover(AOptional<AWindowControls::Button> button) {
     mStart->setButtonNativeHover(button);
     mEnd->setButtonNativeHover(button);

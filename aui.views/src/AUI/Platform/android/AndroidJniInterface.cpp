@@ -38,6 +38,17 @@ Java_com_github_aui_android_AuiView_handleResize(JNIEnv *env, jclass clazz, jint
 
 extern "C"
 JNIEXPORT void JNICALL
+Java_com_github_aui_android_AuiView_handleSafeAreaInsets(JNIEnv *env, jclass clazz, jint left, jint top, jint right,
+                                                         jint bottom) {
+    runOnGLThread([=] {
+        if (auto window = dynamic_cast<AWindow*>(ASurface::current())) {
+            window->safeAreaInsets = ABoxFields { .left = left, .right = right, .top = top, .bottom = bottom };
+        }
+    });
+}
+
+extern "C"
+JNIEXPORT void JNICALL
 Java_com_github_aui_android_AuiView_handleLongPress(JNIEnv *env, jclass clazz, jfloat x, jfloat y) {
     runOnGLThread([=] {
         AUI_NULLSAFE(ASurface::current())->onGesture({x, y}, ALongPressEvent{});
