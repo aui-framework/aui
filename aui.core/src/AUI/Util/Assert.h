@@ -47,8 +47,8 @@ namespace aui::assertion::detail {
  * If the condition evaluates to false, triggers default C++ assert behavior (that is, program termination) on debug
  * build or throws AAssertionFailedException on release builds, so it can be handled and reported properly in production
  * applications.
- * @sa AUI_ASSERTX
- * @sa AUI_ASSERT_NO_CONDITION
+ * See also: `AUI_ASSERTX`.
+ * See also: `AUI_ASSERT_NO_CONDITION`.
  *
  * ```cpp
  * int v = 2 + 2;
@@ -74,7 +74,7 @@ namespace aui::assertion::detail {
  * @ingroup useful_macros
  * @details
  * If the condition evaluates to false, throws AAssertionFailedException, so it can be handled and reported properly.
- * @sa AUI_ASSERT
+ * See also: `AUI_ASSERT`.
  *
  * ```cpp
  * int v = 2 + 2;
@@ -99,7 +99,7 @@ namespace aui::assertion::detail {
  * @ingroup useful_macros
  * @details
  * Throws `AAssertionFailedException`.
- * @sa AUI_ASSERT
+ * See also: `AUI_ASSERT`.
  *
  * ```cpp
  * switch (i) {

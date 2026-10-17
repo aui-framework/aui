@@ -16,6 +16,23 @@
 #include "AUI/Core.h"
 #include "AUI/Common/AByteBuffer.h"
 
+/**
+ * @brief Pseudo-random number generator.
+ * @ingroup core
+ * @details
+ * Wraps a `std::default_random_engine` seeded on construction, with shortcuts for common value types:
+ * ```cpp
+ * ARandom random;
+ * int i = random.nextInt();
+ * float f = random.nextFloat(0.f, 1.f);
+ * AUuid id = random.nextUuid();
+ * AByteBuffer salt = random.nextBytes(16);
+ * ```
+ *
+ * !!! warning
+ *
+ *     `ARandom` is not suitable for cryptographic purposes.
+ */
 class API_AUI_CORE ARandom
 {
 private:

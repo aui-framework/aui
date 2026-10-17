@@ -20,9 +20,11 @@
 
 namespace ACrypto {
     /**
-     * @brief (Probably) safe random based on multiple sources.
-     * @return buffer with random length of random data.
+     * @brief Returns 4096 cryptographically secure random bytes.
      * @ingroup crypt
+     * @details
+     * The bytes come from a CTR_DRBG generator seeded from the system entropy source (mbedTLS). Throws `AException`
+     * if the generator can't be seeded. See [crypt-random].
      */
     API_AUI_CRYPT _<AByteBuffer> safeRandom();
 };

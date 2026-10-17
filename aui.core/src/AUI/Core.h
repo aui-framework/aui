@@ -35,12 +35,19 @@
  * `aui::core` is the main module of AUI. All other modules are built on top of `aui::core`. It implements several basic
  * features:
  *
- * - [interruptable threads](AAbstractThread::interrupt())
+ * - [strings and text processing](core-strings.md)
+ * - [containers and optionals](core-containers.md)
+ * - [smart pointers](core-smart-pointers.md)
+ * - [signal-slot](signal_slot.md) and [properties](property-system.md)
+ * - [background tasks, futures and timers](core-async.md); [interruptable threads](AAbstractThread::interrupt())
+ * - [files, paths and streams](core-files.md)
+ * - [binary data, compression, UUIDs](core-binary-data.md)
  * - [i18n](ai18n.md)
  * - [logging](alogger.md)
+ * - [urls](aurl.md)
+ * - [reflection](reflection.md)
  * - data models
  * - trait classes
- * - [urls](aurl.md)
  */
 
 

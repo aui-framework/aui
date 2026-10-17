@@ -45,6 +45,7 @@ TEST(Threading, Async) {
 }
 
 TEST(Threading, SleepInterruption) {
+    // [core_async_cancel]
     bool called = false;
     auto future = AUI_THREADPOOL_X [&] {
         called = true;
@@ -57,6 +58,7 @@ TEST(Threading, SleepInterruption) {
     AThread::sleep(1000ms);
     ASSERT_TRUE(called) << "lambda has not called either";
 
+    // [core_async_cancel]
 }
 TEST(Threading, ConditionVariableInterruption) {
     bool called = false;
@@ -109,6 +111,7 @@ TEST(Threading, Future2) {
 }
 
 TEST(Threading, Future3) {
+    // [core_async_result]
     auto b = _new<bool>(false);
     auto v8 = AUI_THREADPOOL{
             AThread::sleep(1000ms);
@@ -126,6 +129,7 @@ TEST(Threading, Future3) {
 
     ASSERT_EQ(*v8, 8);
     ASSERT_EQ(*v1231, 1231.f);
+    // [core_async_result]
 }
 
 TEST(Threading, ParallelVoid) {

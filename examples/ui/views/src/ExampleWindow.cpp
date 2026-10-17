@@ -261,6 +261,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 GroupBox {
                   Label { "Dropdown lists" },
                   Vertical {
+                    /// [dropdown]
                     _new<ADropdownList>(AListModel<AString>::make({
                       "Dropdown list 1",
                       "Dropdown list 2",
@@ -269,6 +270,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                       "Dropdown list 5",
                       "Dropdown list 6",
                     })),
+                    /// [dropdown]
                     _new<ADropdownList>(AListModel<AString>::make({ "Disabled dropdown" })) AUI_LET { it->setDisabled(); },
                   } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
                 },
@@ -332,6 +334,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<AButton>("Show file chooser")
                         .connect(&AView::clicked, this,
                                  [&] {
+                                     /// [browse_file]
                                      mAsync << ADesktop::browseForFile(this).onSuccess([&](const APath& f) {
                                          if (f.empty()) {
                                              AMessageBox::show(this, "Result", "Cancelled");
@@ -339,6 +342,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                                              AMessageBox::show(this, "Result", "File: {}"_format(f));
                                          }
                                      });
+                                     /// [browse_file]
                                  }),
                     _new<AButton>("Show folder chooser")
                         .connect(&AView::clicked, this,
@@ -386,6 +390,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                 // list view
                 GroupBox {
                   Label { "List view" },
+                  /// [list_view]
                   [] {   // lambda style inlining
                       auto model = _new<DemoListModel>();
 
@@ -399,6 +404,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                           }
                       } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } };
                   }(),
+                  /// [list_view]
                 } AUI_OVERRIDE_STYLE {
                   Expanding {}
                 },
@@ -479,10 +485,12 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     GroupBox {
                       Label { "Slider" },
                       Vertical {
+                            /// [slider]
                             Slider {
                               .value = AUI_REACT(*progressBarState),
                               .onValueChanged = [=](aui::float_within_0_1 v) { *progressBarState = v; },
                             },
+                            /// [slider]
                       },
                     },
                   } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
@@ -529,25 +537,30 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
             "Common");
 
 #if !AUI_PLATFORM_EMSCRIPTEN
+        // [audio_from_url]
         mWavAudio = IAudioPlayer::fromUrl(":sound/sound1.wav");
         mOggAudio = IAudioPlayer::fromUrl(":sound/sound1.ogg");
+        // [audio_from_url]
 
         it->addTab(
             AScrollArea::Builder().withContents(std::conditional_t<
                                                 aui::platform::current::is_mobile(), Vertical, Horizontal> {
               Horizontal {
+                // [audio_controls]
                 Vertical {
                   _new<ALabel>("Play music using AUI!"),
                   _new<AButton>("Play .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::play),
                   _new<AButton>("Stop .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::stop),
                   _new<AButton>("Pause .wav music").connect(&AButton::clicked, AUI_SLOT(mWavAudio)::pause),
                 } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                // [audio_controls]
                 Vertical {
                   _new<ALabel>("Play music using AUI!"),
                   _new<AButton>("Play .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::play),
                   _new<AButton>("Stop .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::stop),
                   _new<AButton>("Pause .ogg music").connect(&AButton::clicked, AUI_SLOT(mOggAudio)::pause),
                 } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                // [audio_ass_sound]
                 Vertical {
                   _new<AButton>("Button produces sound when clicked") AUI_OVERRIDE_STYLE {
                         ass::on_state::Activated {
@@ -555,6 +568,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                         },
                       },
                 } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
+                // [audio_ass_sound]
               } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
             }),
             "Sounds");

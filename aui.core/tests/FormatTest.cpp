@@ -19,7 +19,9 @@
 #include <AUI/Traits/strings.h>
 
 TEST(Format, String) {
+    // [core_str_format]
     EXPECT_EQ("test {}"_format("azaza"), "test azaza");
+    // [core_str_format]
 }
 
 TEST(Format, Int) {
@@ -38,5 +40,7 @@ TEST(Format, IntNegative) {
     EXPECT_EQ("test {}"_format(-1234567890), "test -1234567890");
 }
 TEST(Format, Float) {
+    // [core_str_format_float]
     EXPECT_EQ("test {:.2}"_format(1.2f), "test 1.2");
+    // [core_str_format_float]
 }

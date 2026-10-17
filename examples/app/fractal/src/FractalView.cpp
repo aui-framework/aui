@@ -127,6 +127,7 @@ void FractalView::handleMatrixUpdated() {
     emit centerPosChanged(getPlotPosition(), getPlotScale());
 }
 
+/// [key_handling]
 void FractalView::onKeyDown(AInput::Key key) {
     AView::onKeyDown(key);
     onKeyRepeat(key);
@@ -160,6 +161,7 @@ void FractalView::onKeyRepeat(AInput::Key key) {
     }
     handleMatrixUpdated();
 }
+/// [key_handling]
 
 glm::dvec2 FractalView::getPlotPosition() const { return glm::dvec2(mTransform[3]); }
 

@@ -21,8 +21,6 @@
 #include <AUI/Common/AException.h>
 #include <glm/glm.hpp>
 
-constexpr uint8_t gKey[] = { 52, 12, 96, 112, 84, 4, 95, 125, 213, 234, 87, 195, 175, 13, 42, 0 };
-
 class ARsa::ARsaPrivate {
 public:
     mbedtls_pk_context pk = {};
@@ -68,7 +66,7 @@ AByteBuffer ARsa::encrypt(AByteBufferView in) {
         auto toRead = glm::min(static_cast<size_t>(in.end() - it), keyLen - paddingSize);
 
         size_t oldSize = buf.getSize();
-        buf.setSize(oldSize + keyLen);
+        buf.resize(oldSize + keyLen);   // each block grows by the padding, so the initial reserve may not be enough
 
         int r = mbedtls_rsa_pkcs1_encrypt(
             rsa,
@@ -207,8 +205,8 @@ _<ARsa> ARsa::fromPrivateKeyPEM(AByteBufferView buffer) {
         &instance->mPrivate->pk,
         reinterpret_cast<const unsigned char*>(nullTerminated.data()),
         nullTerminated.size(),
-        gKey,
-        sizeof(gKey) - 1,
+        nullptr,   // keys exported by getPrivateKeyPEM() are not encrypted
+        0,
         mbedtls_ctr_drbg_random,
         &instance->mPrivate->ctr_drbg
     );

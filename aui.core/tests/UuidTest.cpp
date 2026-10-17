@@ -24,9 +24,11 @@
 #include <AUI/Util/ARandom.h>
 
 TEST(Uuid, Canonical) {
+    // [core_uuid]
     AString s = "123e4567-e89b-12d3-a456-426655440000";
     AUuid uuid = s;
     ASSERT_EQ(uuid.toString(), s);
+    // [core_uuid]
 }
 TEST(Uuid, Raw) {
     AString s = "123e4567e89b12d3a456426655440000";
@@ -49,7 +51,9 @@ TEST(Uuid, ExceptionUnderflow) {
     ASSERT_THROW(AUuid("0000000000000000000000000000000"), AUuidException);
 }
 TEST(Uuid, ExceptionInvalidSymbol) {
+    // [core_uuid_invalid]
     ASSERT_THROW(AUuid("000000000000z0000000000000000000"), AUuidException);
+    // [core_uuid_invalid]
 }
 TEST(Uuid, ExceptionInvalidDash) {
     ASSERT_THROW(AUuid("0-0000000000000000000000000000000"), AUuidException);

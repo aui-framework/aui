@@ -31,6 +31,7 @@ AByteBuffer makeSource() {
 }
 
 TEST(Zlib, ActuallyCompresses) {
+    // [core_zlib]
     auto source = makeSource();
 
     AByteBuffer compressed;
@@ -42,6 +43,7 @@ TEST(Zlib, ActuallyCompresses) {
     aui::zlib::decompress(compressed, decompressed);
 
     EXPECT_EQ(source, decompressed);
+    // [core_zlib]
 }
 
 TEST(Zlib, DecompressStream) {
@@ -82,6 +84,7 @@ TEST(Zlib, DecompressZip) {
 }
 
 TEST(Zlib, CompressZip) {
+    // [core_zip_write]
     {
         aui::archive::zip::Writer writer(std::make_unique<AFileOutputStream>("test.zip"));
         writer.openFileInZip(APath("test") / "test.txt", [](IOutputStream& os) {
@@ -97,6 +100,7 @@ TEST(Zlib, CompressZip) {
         EXPECT_EQ(AString(AByteBuffer::fromStream(e.open()), AStringEncoding::LATIN1), "1234\n");
     });
     EXPECT_TRUE(called);
+    // [core_zip_write]
 }
 
 

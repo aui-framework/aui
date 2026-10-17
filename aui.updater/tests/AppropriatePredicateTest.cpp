@@ -5,9 +5,11 @@
 
 TEST(AppropriatePredicateTest, Custom_qualifier) {   // HEADER_H2
     // AUI_DOCS_CODE_BEGIN
+    // [predicate_qualifier] // HIDE
     aui::updater::AppropriatePortablePackagePredicate p { .qualifier = "windows-x86_64" };
     EXPECT_TRUE(p("app-windows-x86_64.zip"));
     EXPECT_FALSE(p("app-windows-x86.zip"));
+    // [predicate_qualifier] // HIDE
     // AUI_DOCS_CODE_END
 }
 

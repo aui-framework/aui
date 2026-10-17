@@ -11,6 +11,28 @@
  * @ingroup audio
  * @details
  * <!-- aui:experimental -->
+ *
+ * One IAudioPlayer plays one sound. Create it with `IAudioPlayer::fromUrl` or `IAudioPlayer::fromStream`; the returned
+ * object is backed by the native audio API of the current platform.
+ *
+ * ```cpp
+ * auto player = IAudioPlayer::fromUrl(":sound/click.ogg");
+ * player->setVolume(128);
+ * player->play();
+ * ```
+ *
+ * Playback state is changed with `play`, `pause` and `stop`. Use `setLoop` to repeat the sound and `setVolume` to change
+ * the volume (0 to 256, 256 is the original volume). The `finished` signal is emitted when the sound ends.
+ *
+ * Several players can play simultaneously; their output is mixed by [AAudioMixer].
+ *
+ * See [audio-playback] and [audio-custom-sources] for more.
+ *
+ * !!! warning
+ *
+ *     A player created from a stream can't be restarted after it has ended or has been stopped, and can't loop:
+ *     restarting requires reopening the source, which is only possible when the player knows the url. Create a new
+ *     player instead, or use `fromUrl`.
  */
 class API_AUI_AUDIO IAudioPlayer: public AObject {
 public:

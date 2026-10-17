@@ -17,12 +17,28 @@
 /**
  * @brief Xml document visitor.
  * @ingroup xml
+ * @details
+ * Root of the visitor chain passed to `AXml::read`. It is an [IXmlEntityVisitor] for the top level of the document,
+ * so `visitEntity` is called for every top-level element. Additionally, `visitHeader` is called when the
+ * `<?xml ... ?>` header is met.
+ *
+ * ```cpp
+ * struct MyDocument: IXmlDocumentVisitor {
+ *     _<IXmlEntityVisitor> visitEntity(AString entityName) override {
+ *         return _new<MyRoot>(std::move(entityName));
+ *     }
+ * };
+ * ```
+ *
+ * See [xml-parsing].
  */
 class IXmlDocumentVisitor: public IXmlEntityVisitor
 {
 public:
     /**
      * @brief Visits xml header.
+     * @return visitor of the header attributes (version, encoding...) or nullptr to ignore the header. The default
+     * implementation returns nullptr.
      */
 	virtual _<IXmlHeaderVisitor> visitHeader() { return nullptr; };
 };

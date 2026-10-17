@@ -15,6 +15,10 @@
 #include <AUI/Traits/values.h>
 #include "AEOFException.h"
 
+/**
+ * @brief Represents an output stream.
+ * @ingroup io
+ */
 class IOutputStream {
 public:
     virtual ~IOutputStream() = default;

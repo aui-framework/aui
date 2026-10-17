@@ -15,29 +15,40 @@
 
 #include "Random.h"
 
-#include <random>
-#include <chrono>
+#include <mbedtls/entropy.h>
+#include <mbedtls/ctr_drbg.h>
+#include <AUI/Common/AException.h>
 
 _<AByteBuffer> ACrypto::safeRandom() {
-    auto bb = _new<AByteBuffer>();
+    mbedtls_entropy_context entropy;
+    mbedtls_ctr_drbg_context drbg;
+    mbedtls_entropy_init(&entropy);
+    mbedtls_ctr_drbg_init(&drbg);
+    struct Cleanup {
+        mbedtls_entropy_context& entropy;
+        mbedtls_ctr_drbg_context& drbg;
+        ~Cleanup() {
+            mbedtls_ctr_drbg_free(&drbg);
+            mbedtls_entropy_free(&entropy);
+        }
+    } cleanup { entropy, drbg };
 
-    auto seed1 = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-
-    const size_t GARBAGE_SIZE = 0x1000;
-    char* garbage = new char[GARBAGE_SIZE];
-    bb->write(garbage, GARBAGE_SIZE);
-    bb->write(reinterpret_cast<const char*>(&garbage), sizeof(&garbage));
-    delete[] garbage;
-
-    auto seed2 = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-
-    std::default_random_engine re(seed1 ^ seed2);
-
-    for (size_t i = 0; i < 10; ++i) {
-        bb << std::uniform_int_distribution<size_t>()(re);
+    const char* personalization = "aui.crypt.safeRandom";
+    if (mbedtls_ctr_drbg_seed(&drbg, mbedtls_entropy_func, &entropy,
+                              reinterpret_cast<const unsigned char*>(personalization), strlen(personalization)) != 0) {
+        throw AException("Failed to seed RNG");
     }
-    auto seed3 = std::chrono::high_resolution_clock::now().time_since_epoch().count();
-    bb << seed3 << seed1 << seed2;
 
+    constexpr size_t TOTAL_SIZE = 0x1000;
+    auto bb = _new<AByteBuffer>();
+    bb->resize(TOTAL_SIZE);
+    auto* data = reinterpret_cast<unsigned char*>(bb->data());
+    // a single call of mbedtls_ctr_drbg_random is limited to MBEDTLS_CTR_DRBG_MAX_REQUEST bytes
+    for (size_t offset = 0; offset < TOTAL_SIZE; offset += MBEDTLS_CTR_DRBG_MAX_REQUEST) {
+        const size_t chunk = std::min<size_t>(MBEDTLS_CTR_DRBG_MAX_REQUEST, TOTAL_SIZE - offset);
+        if (mbedtls_ctr_drbg_random(&drbg, data + offset, chunk) != 0) {
+            throw AException("Failed to gather random bytes");
+        }
+    }
     return bb;
 }

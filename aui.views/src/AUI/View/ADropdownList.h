@@ -26,6 +26,23 @@
  * ![](imgs/views/ADropdownList.png)
  *
  * @ingroup views_input
+ * @details
+ * Shows the selected item as a button; a click opens a popup with all the items. The items come from a list model of
+ * strings (`AListModel<AString>` is the simplest one).
+ *
+ * <!-- aui:snippet examples/ui/views/src/ExampleWindow.cpp dropdown -->
+ *
+ * `selectionId()` is a property with the index of the selected item (starting from 0, the first item is selected by
+ * default). Bind it or listen to `selectionChanged`:
+ *
+ * ```cpp
+ * auto list = _new<ADropdownList>(AListModel<AString>::make({ "one-way flight", "return flight" }));
+ * AObject::connect(list->selectionId().changed, AObject::GENERIC_OBSERVER, [](int index) {
+ *     ALogger::info("App") << "Selected " << index;
+ * });
+ * ```
+ *
+ * The model can be replaced later with `setModel`. Like any other view, the list can be disabled with `setDisabled()`.
  */
 class API_AUI_VIEWS ADropdownList: public AButton {
 private:

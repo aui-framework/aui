@@ -13,7 +13,7 @@
 
 /**
  * Controls <code>AFuture::wait</code> behaviour.
- * @see AFuture::wait
+ * See also: `AFuture::wait`.
  */
 AUI_ENUM_FLAG(AFutureWait) {
     JUST_WAIT = 0b00,

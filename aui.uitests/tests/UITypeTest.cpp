@@ -35,6 +35,7 @@ using namespace declarative;
  * when text field is empty, hello message should be hidden.
  */
 
+// [type_fixture]
 class UIType: public testing::UITest {
 public:
 protected:
@@ -80,6 +81,7 @@ protected:
         UITest::TearDown();
     }
 };
+// [type_fixture]
 
 
 
@@ -109,6 +111,7 @@ TEST_F(UIType, HelloNotAppearsAfterClick) {
  * 1. types "Steve" to the text field
  * 2. clicks the button
  */
+// [type_test]
 TEST_F(UIType, HelloAppearsAfterClick) {
     // type "Steve" to the text field
     By::name("#username").perform(type("Steve"));
@@ -120,6 +123,7 @@ TEST_F(UIType, HelloAppearsAfterClick) {
     By::name("#hello").check(visible(), "label is not appeared")
                       .check(text("Hello, Steve!"), "invalid text");
 }
+// [type_test]
 
 /**
  * Checks that the message disappears.

@@ -17,6 +17,8 @@
  * @brief Implements audio gain filtering.
  * @ingroup audio
  * @details
+ * Scales samples by a linear factor derived from `aui::audio::VolumeLevel`. Used internally by IAudioPlayer; use
+ * `IAudioPlayer::setVolume` instead.
  */
 class API_AUI_AUDIO AGainFilter final {
 public:

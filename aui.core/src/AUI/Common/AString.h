@@ -41,9 +41,10 @@ class API_AUI_CORE AUtf8View;
  * higher-level functionality.
  *
  * ## Encoding model
- * All content is stored as UTF-8. Positional operations such as @ref substr, @ref trimLeft, and @ref trimRight
- * operate on Unicode code points, **not** raw bytes. Use @ref bytes() to access the underlying byte storage
- * directly when byte-level access is required.
+ * All content is stored as UTF-8. Positions and sizes (`length()`, `substr()`, `insert()`, `erase()`, `find()`) are
+ * measured in bytes, exactly as in `std::string`. Text-aware operations (`trim()` with a set of symbols, `uppercase()`,
+ * `lowercase()`) understand Unicode. To work with positions in terms of characters, use `utf8()`, which returns an
+ * `AUtf8View`. `bytes()` gives access to the underlying byte storage.
  *
  * ## Construction
  * `AString` can be constructed from any common character type:
@@ -71,7 +72,7 @@ class API_AUI_CORE AUtf8View;
  * ```
  *
  * ## Numeric parsing
- * Parsing methods return @ref AOptional to signal failure without exceptions:
+ * Parsing methods return [AOptional] to signal failure without exceptions:
  * ```cpp
  * AOptional<int32_t>  i = AString("42").toInt();      // 42
  * AOptional<double>   d = AString("3.14").toDouble(); // 3.14
@@ -85,10 +86,12 @@ class API_AUI_CORE AUtf8View;
  * AString s3 = AString::numberHex(255); // "ff"
  * ```
  *
- * @note For non-owning string references, prefer @ref AStringView. For iterating over
- * individual Unicode code points, use @ref AUtf8View via @ref utf8().
+ * !!! note
  *
- * @see AStringView, AUtf8View, AByteBuffer, AStringVector
+ *     For non-owning string references, prefer [AStringView]. For iterating over individual Unicode code points, use
+ *     `AUtf8View` via `utf8()`.
+ *
+ * See also: [AStringView], `AUtf8View`, [AByteBuffer], [AStringVector].
  */
 class API_AUI_CORE AString: public std::string {
 private:
@@ -239,13 +242,13 @@ public:
 
     /**
      * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
-     * @sa bytes, toUtf16, toUtf32
+     * See also: `bytes`, `toUtf16`, `toUtf32`.
      */
     AByteBuffer encode(AStringEncoding encoding) const;
 
     /**
      * @brief Encodes the UTF-8 string into a UTF-16 string
-     * @sa bytes, encode
+     * See also: `bytes`, `encode`.
      */
     std::u16string toUtf16() const {
         return view().toUtf16();
@@ -253,7 +256,7 @@ public:
 
     /**
      * @brief Encodes the UTF-8 string into a UTF-32 string
-     * @sa bytes, encode
+     * See also: `bytes`, `encode`.
      */
     std::u32string toUtf32() const {
         return view().toUtf32();
@@ -261,7 +264,7 @@ public:
 
     /**
      * @brief Returns a view of the raw UTF-8 encoded byte data.
-     * @sa encode
+     * See also: `encode`.
      */
     constexpr bytes_type& bytes() noexcept {
         return *this;
@@ -269,7 +272,7 @@ public:
 
     /**
      * @brief Returns a view of the raw UTF-8 encoded byte data.
-     * @sa encode
+     * See also: `encode`.
      */
     constexpr const bytes_type& bytes() const noexcept {
         return *this;
@@ -277,7 +280,7 @@ public:
 
     /**
      * @brief Compatibility method. Guarantees std::string with UTF-8
-     * @sa bytes
+     * See also: `bytes`.
      */
     std::string& toStdString() {
         return *this;
@@ -285,7 +288,7 @@ public:
 
     /**
      * @brief Compatibility method. Guarantees std::string with UTF-8
-     * @sa bytes
+     * See also: `bytes`.
      */
     const std::string& toStdString() const {
         return *this;
@@ -300,12 +303,12 @@ public:
     /**
      * @brief Returns a substring `[pos, pos + count)`.
      * @param pos The starting position of the substring.
-     * @param count The number of characters to include in the substring.
+     * @param count The number of bytes to include in the substring.
      * If the requested substring extends past the end of the string, i.e. the count is greater than `size() - pos`
      * (e.g. if `count == npos`), the returned substring is `[pos, size())`.
      *
-     * Since AString encapsulates a UTF-8 encoded string, the returned substring is always valid UTF-8, hence, it
-     * operates on top of UTF-8 code points. `pos` and `count` are interpreted as code points positions, not as byte.
+     * `pos` and `count` are interpreted as byte positions. Be careful not to cut a multibyte character in half; use
+     * `utf8().substr()` to count in Unicode characters.
      */
     [[nodiscard]]
     AStringView substr(size_type pos = 0, size_type count = npos) const noexcept {
@@ -462,7 +465,7 @@ public:
 
     /**
      * @brief Resizes the string to the length of its null-terminated content while preserving capacity.
-     * @sa shrink_to_fit
+     * See also: `shrink_to_fit`.
      */
     void resizeToNullTerminator();
 
@@ -564,7 +567,7 @@ public:
 
     /**
      * @brief Returns the string converted to an int using base. Returns std::nullopt if the conversion fails.
-     * @sa toNumberOrException
+     * See also: `toNumberOrException`.
      */
     AOptional<int> toNumber(aui::ranged_number<int, 2, 36> base) const noexcept {
         return view().toNumber(base);

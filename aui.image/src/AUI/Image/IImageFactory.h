@@ -15,6 +15,9 @@
 
 /**
  * @brief Produces images by the specified size.
+ * @details
+ * Used for vector (i.e., svg) and animated images, which can be rasterized at any size. Returned by
+ * `IImageLoader::getImageFactory`.
  */
 class IImageFactory
 {

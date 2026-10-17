@@ -20,8 +20,14 @@
 #include "AUI/Image/IAnimatedImageFactory.h"
 
 /**
- * @brief Image loader used for IDrawable::fromUrl and AImage::fromUrl.
+ * @brief Registry of [IImageLoader]s used by `IDrawable::fromUrl` and `AImage::fromUrl`.
  * @ingroup image
+ * @details
+ * The singleton `AImageLoaderRegistry::inst()` is populated by aui.image on startup with loaders for bmp, png, jpg,
+ * webp, svg (vector) and gif/animated webp (animated). `supportedFormats()` lists their names.
+ *
+ * Loaders are tried in registration order; the first one whose `matches` returns true wins. Register your own with
+ * `registerRasterLoader`, `registerVectorLoader` or `registerAnimatedLoader`. See [image-custom-loader].
  */
 class API_AUI_IMAGE AImageLoaderRegistry {
     friend class AImage::Cache;
