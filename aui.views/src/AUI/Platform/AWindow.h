@@ -46,7 +46,7 @@ class ATitlebar;
  * @brief Space occupied by the window controls (traffic lights, close/minimize/maximize buttons) inside the
  *        window, in pixels.
  * @details
- * Relevant for AWindow::Init::DecorationExtended only: the window contents extend into the titlebar, and the controls
+ * Relevant for `AWindow::Init::DecorationExtended` only: the window contents extend into the titlebar, and the controls
  * are drawn over them. The controls are reported regardless of who draws them: the OS (macOS, GTK) or AUI (Windows,
  * X11), so the value means the same on every platform. Titlebar uses this to keep its contents out of the controls'
  * way.
@@ -76,7 +76,7 @@ struct AWindowControlsInsets {
  * @details
  * ## Opening a window
  *
- * Create an AWindow, put views into it with AWindow::setContents and call AWindow::show:
+ * Create an AWindow, put views into it with `AWindow::setContents` and call `AWindow::show`:
  *
  * ```cpp
  * #include <AUI/Platform/Entry.h>
@@ -91,7 +91,10 @@ struct AWindowControlsInsets {
  * }
  * ```
  *
- * The application keeps running while at least one window is alive. The window is owned by AUI while it is shown, so
+ * Every window implicitly holds the application (see [AApplication::Hold]), so by default the application keeps
+ * running while at least one window is alive. This is adjustable: create an explicit hold with
+ * [AApplication::hold()] to keep the application running after the last window is closed, or release it to allow the
+ * application to exit. The window is owned by AUI while it is shown, so
  * you don't have to store the pointer; store it only if you want to talk to the window later.
  *
  * To open another window from the application (i.e., a settings dialog), do the same from any slot or callback on the
@@ -106,8 +109,8 @@ struct AWindowControlsInsets {
  * ```
  *
  * `AWindow(title, width, height)` creates an ordinary window with the OS-drawn titlebar. Anything else (a parent
- * window, modality, custom titlebar, fixed size) is configured with AWindow::Init, see [below](#creation-decorations-and-modality).
- * To close the window from code, use AWindow::close.
+ * window, modality, custom titlebar, fixed size) is configured with `AWindow::Init`, see [below](#creation-decorations-and-modality).
+ * To close the window from code, use `AWindow::close`.
  *
  * ## Architecture
  *
@@ -151,7 +154,7 @@ struct AWindowControlsInsets {
  *
  * ## Creation, decorations and modality
  *
- * AWindow is created with AWindow::Init - an aggregate describing everything that can't be changed afterwards:
+ * AWindow is created with `AWindow::Init` - an aggregate describing everything that can't be changed afterwards:
  *
  * ```cpp
  * _new<AWindow>(AWindow::Init {
@@ -242,7 +245,7 @@ struct AWindowControlsInsets {
  *
  * The native title follows the system font, color and the inactive window look. It is drawn over the window contents,
  * so neither ASS nor other views can affect it; it is shown only while [declarative::WindowTitle] is present (see
- * AWindow::hasNativeWindowTitle). Where AUI draws the title, style it with `t<AWindowTitle>()`.
+ * `AWindow::hasNativeWindowTitle`). Where AUI draws the title, style it with `t<AWindowTitle>()`.
  *
  * The result looks like an ordinary titlebar, but you control its background and can place your own views around
  * the title:
@@ -257,8 +260,8 @@ struct AWindowControlsInsets {
  * });
  * ```
  *
- * The window is the single source of truth for the title: AWindow::title is a property; the native title is the
- * window title itself, and the AUI-drawn [declarative::WindowTitle] is bound to it. Change the title with AWindow::setTitle (or `title() = ...`), and the
+ * The window is the single source of truth for the title: `AWindow::title` is a property; the native title is the
+ * window title itself, and the AUI-drawn [declarative::WindowTitle] is bound to it. Change the title with `AWindow::setTitle` (or `title() = ...`), and the
  * taskbar, window switcher and the title in your titlebar update together. Do not duplicate the title in a `Label`
  * with a string literal. If you need a label of your own (for example, with a prefix), bind it to the property:
  *
@@ -282,7 +285,7 @@ struct AWindowControlsInsets {
  *
  * - width: expanding, takes all the available width of the parent;
  * - height: the maximum of the contents' height and the window controls' height (native controls height from
- *   AWindow::windowControlsInsets or AUI-drawn buttons height). To make the titlebar taller, put a taller view or
+ *   `AWindow::windowControlsInsets` or AUI-drawn buttons height). To make the titlebar taller, put a taller view or
  *   padding into it. In a Borderless window it is just the height of the contents.
  *
  * The rectangle occupied by [declarative::Titlebar] after layout is what the window treats as the caption area: it is used for
@@ -297,19 +300,19 @@ struct AWindowControlsInsets {
  *
  * | What | API |
  * |---|---|
- * | title | AWindow::title property (AWindow::setTitle, `titleChanged`) |
- * | resizability | AWindow::setResizable / AWindow::isResizable |
- * | visibility | AWindow::show / AWindow::hide, reversible |
- * | closing | AWindow::close, **terminal** |
+ * | title | `AWindow::title` property (`AWindow::setTitle`, `titleChanged`) |
+ * | resizability | `AWindow::setResizable` / `AWindow::isResizable` |
+ * | visibility | `AWindow::show` / `AWindow::hide`, reversible |
+ * | closing | `AWindow::close`, **terminal** |
  *
  * `close()` works the same on all platforms: `closed` is emitted exactly once, the modal parent is unblocked, the native
  * window is destroyed. A closed window can't be shown again - create another one. Calling `show()` on a closed window logs
- * an error and does nothing. Closing by the close button calls AWindow::onCloseButtonClicked, which calls `close()`;
+ * an error and does nothing. Closing by the close button calls `AWindow::onCloseButtonClicked`, which calls `close()`;
  * override it to refuse closing.
  *
  * ## Native handles
  *
- * AWindow::nativeHandle returns the underlying native window object, which can be passed to platform APIs AUI does not
+ * `AWindow::nativeHandle` returns the underlying native window object, which can be passed to platform APIs AUI does not
  * wrap (DWM attributes, `NSWindow` tweaks, embedding into foreign toolkits, etc.). Its type is `AWindowNativePtr`
  * and depends on the platform:
  *
@@ -321,8 +324,8 @@ struct AWindowControlsInsets {
  * | Linux, X11 backend | `std::uintptr_t` | X11 `Window` (XID) |
  * | Android, iOS, web | `jobject` / `void*` | **not available**: always null, the surface is owned by the activity, view controller or canvas |
  *
- * The handle is null until the native window is created and after it is destroyed (see AWindow::close). It is owned by
- * AUI: don't destroy it, don't keep it past AWindow::closed. Use it from the UI thread only.
+ * The handle is null until the native window is created and after it is destroyed (see `AWindow::close`). It is owned by
+ * AUI: don't destroy it, don't keep it past `AWindow::closed`. Use it from the UI thread only.
  *
  * ```cpp
  * #include <AUI/Platform/AWindow.h>
@@ -404,7 +407,7 @@ public:
      * for a plain window `AWindow(title, width, height)` is enough. See [AWindow] for how to open a window.
      *
      * Everything here except `title` and `resizable` is applied at window creation and can't be changed afterwards.
-     * `title` and `resizable` are the initial values; use AWindow::setTitle and AWindow::setResizable to change them
+     * `title` and `resizable` are the initial values; use `AWindow::setTitle` and `AWindow::setResizable` to change them
      * at runtime.
      *
      * ```cpp
@@ -472,7 +475,7 @@ public:
         };
 
         /**
-         * @brief Initial window title. Change it with AWindow::setTitle.
+         * @brief Initial window title. Change it with `AWindow::setTitle`.
          */
         AString title = "My window";
 
@@ -497,7 +500,7 @@ public:
         Decoration decoration = DecorationDefault {};
 
         /**
-         * @brief Whether the user can resize the window. Initial value; change it with AWindow::setResizable.
+         * @brief Whether the user can resize the window. Initial value; change it with `AWindow::setResizable`.
          */
         bool resizable = true;
     };
@@ -517,7 +520,7 @@ public:
     void blockUserInput(bool blockUserInput = true) override;
 
     /**
-     * @return true if the user input is blocked by AWindow::blockUserInput (i.e., a modal child window is open).
+     * @return true if the user input is blocked by `AWindow::blockUserInput` (i.e., a modal child window is open).
      */
     [[nodiscard]]
     bool isUserInputBlocked() const noexcept { return mInputBlocked; }
@@ -536,8 +539,8 @@ public:
     /**
      * @return parameters this window was created with.
      * @details
-     * Read only. `Init::title` and `Init::resizable` are the initial values only; see AWindow::title and
-     * AWindow::isResizable for actual ones.
+     * Read only. `Init::title` and `Init::resizable` are the initial values only; see `AWindow::title` and
+     * `AWindow::isResizable` for actual ones.
      */
     [[nodiscard]]
     const Init& init() const noexcept { return mInit; }
@@ -595,7 +598,7 @@ public:
     /**
      * @brief Space occupied by the window controls, in pixels.
      * @details
-     * Non-zero only for AWindow::Init::DecorationExtended. Reported for both native (macOS, GTK) and AUI-drawn
+     * Non-zero only for `AWindow::Init::DecorationExtended`. Reported for both native (macOS, GTK) and AUI-drawn
      * (Windows, X11) window controls; the latter is known after the first layout pass.
      *
      * Android, iOS and web don't have window controls; the value is always zero.
@@ -607,7 +610,7 @@ public:
      * @details
      * Padding that guarantees the useful content is not overlapped by anything the application does not control:
      * the status bar, display cutout and navigation bar on Android and iOS; the window controls strip of
-     * AWindow::Init::DecorationExtended on desktop. Put it into padding of the root view:
+     * `AWindow::Init::DecorationExtended` on desktop. Put it into padding of the root view:
      *
      * ![](imgs/safe-zone.png)
      *
@@ -618,11 +621,11 @@ public:
      * ```
      *
      * The system UI itself is not part of the content area, so on desktop the value is zero if the window decoration
-     * is the OS' one (AWindow::Init::DecorationDefault) or there is none (AWindow::Init::DecorationBorderless): the OS
+     * is the OS' one (`AWindow::Init::DecorationDefault`) or there is none (`AWindow::Init::DecorationBorderless`): the OS
      * (or you) already positions the content below the titlebar.
      *
-     * For AWindow::Init::DecorationExtended, `top` is the height of AWindow::windowControlsInsets; [declarative::Titlebar]
-     * lives inside that strip. Use AWindow::windowControlsInsets when you need to know which corners of the strip are
+     * For `AWindow::Init::DecorationExtended`, `top` is the height of `AWindow::windowControlsInsets`; [declarative::Titlebar]
+     * lives inside that strip. Use `AWindow::windowControlsInsets` when you need to know which corners of the strip are
      * occupied, since the controls take a corner of it, not the whole strip.
      *
      * The software keyboard is not a part of the safe area.
@@ -630,14 +633,14 @@ public:
     AProperty<ABoxFields> safeAreaInsets;
 
     /**
-     * @return true if the platform draws the window controls (traffic lights, etc.) of AWindow::Init::DecorationExtended
-     * windows itself. Either way, they occupy AWindow::windowControlsInsets.
+     * @return true if the platform draws the window controls (traffic lights, etc.) of `AWindow::Init::DecorationExtended`
+     * windows itself. Either way, they occupy `AWindow::windowControlsInsets`.
      */
     [[nodiscard]]
     bool hasNativeWindowControls() const;
 
     /**
-     * @return true if the platform draws the title text of AWindow::Init::DecorationExtended window itself, over
+     * @return true if the platform draws the title text of `AWindow::Init::DecorationExtended` window itself, over
      * [declarative::WindowTitle] placed into [declarative::Titlebar]. True on macOS and Linux GTK/adw.
      */
     [[nodiscard]]
@@ -704,7 +707,7 @@ public:
      * unblocked, the native window is destroyed and the window is removed from the AWindowManager. The window can't be
      * shown again after that; create another one. Calling close() on a closed window does nothing.
      *
-     * Use AWindow::hide to hide the window temporarily.
+     * Use `AWindow::hide` to hide the window temporarily.
      */
     void close();
 
@@ -712,7 +715,7 @@ public:
      * @brief Hides the window without closing it.
      * @details
      * A hidden window is still alive: it is counted as an open window, so it keeps the application running
-     * (see AApplication::quitOnLastWindowClosed). Use AWindow::close to destroy it.
+     * (see `AApplication::quitOnLastWindowClosed`). Use `AWindow::close` to destroy it.
      *
      * A hidden window is not visible anywhere, including the taskbar.
      */
@@ -720,9 +723,9 @@ public:
 
     /**
      * @brief Shows the window, restores it if minimized and brings it to foreground.
-     * @param activationToken platform-specific focus stealing permission token (see AActivation::activationToken).
+     * @param activationToken platform-specific focus stealing permission token (see `AActivation::activationToken`).
      * @details
-     * Typical usage is handling AApplication::activated:
+     * Typical usage is handling `AApplication::activated`:
      * ```cpp
      * connect(AApplication::inst().activated, [window](const AActivation& a) { window->activate(a.activationToken); });
      * ```
@@ -742,10 +745,10 @@ public:
     /**
      * @brief The smallest size this window can be resized to.
      * @details
-     * In contrast to AView::getMinSize, which is the explicitly styled minimum, this one is measured from the
+     * In contrast to `AView::getMinSize`, which is the explicitly styled minimum, this one is measured from the
      * window's contents: a window is never smaller than the space its contents need at their narrowest, so its
      * layout is never squeezed into nothing. The styled minimum is respected as well, and the result is capped by
-     * AWindow::MAX_MIN_SIZE.
+     * `AWindow::MAX_MIN_SIZE`.
      */
     glm::ivec2 getMinimumSize();
 
@@ -767,7 +770,7 @@ public:
      * @brief Wraps your AView to window.
      * @param view view to wrap
      * @param init window creation parameters
-     * @return created window, AWindow::show() is not called
+     * @return created window, `AWindow::show()` is not called
      */
     static _<AWindow> wrapViewToWindow(const _<AView>& view, Init init);
 
@@ -969,7 +972,7 @@ private:
     void updateWindowControlsInsets();
 #endif
     /**
-     * @brief Publishes AWindow::windowControlsInsets of AUI-drawn window controls. Called after layout.
+     * @brief Publishes `AWindow::windowControlsInsets` of AUI-drawn window controls. Called after layout.
      */
     void updateDrawnWindowControlsInsets();
     void updateSafeAreaInsetsFromControls();
