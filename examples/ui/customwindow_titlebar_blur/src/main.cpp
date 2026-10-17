@@ -11,6 +11,7 @@
 
 #include "AUI/Platform/AMessageBox.h"
 #include "AUI/View/AButton.h"
+#include "AUI/View/ASpacerFixed.h"
 
 #include <AUI/Platform/Entry.h>
 #include <AUI/Platform/AWindow.h>
@@ -22,6 +23,28 @@
 using namespace declarative;
 using namespace ass;
 
+static AArc<AView> actualContent() {
+    auto scrollarea =
+        AScrollArea::Builder()
+            .withContents(Centered {
+                Icon { ":logo.svg" } AUI_OVERRIDE_STYLE { FixedSize { 1024_dp } },
+            })
+            .withExpanding()
+            .build();
+
+    // important: for scrollarea, we hjacking its AScrollAreaViewport so it shows its overflow
+    // TODO: declarative version of ScrollArea should provide viewport modifier so we don't need to mess up
+    // with the stylesheets
+    scrollarea << ".scrollarea-viewport-hack";
+    scrollarea->setExtraStylesheet(AStylesheet {
+        {
+            c(".scrollarea-viewport-hack") >> t<AScrollAreaViewport>(),
+            AOverflow::VISIBLE,
+        },
+    });
+    return scrollarea;
+}
+
 AUI_ENTRY {
     auto window = _new<AWindow>(AWindow::Init {
         .title = "Custom window titlebar blur",
@@ -30,40 +53,40 @@ AUI_ENTRY {
         .decoration = AWindow::Init::DecorationExtended {},
     });
 
-    window->setContents(Stacked {
-        // the scroll area takes the whole window, including the titlebar area.
-        AScrollArea::Builder()
-                .withContents(Centered {
-                    Icon { ":logo.svg" } AUI_OVERRIDE_STYLE { FixedSize { 1024_dp } },
-                })
-                .build() AUI_OVERRIDE_STYLE { Expanding() },
+    AArc<AView> titlebar =
+        Titlebar {
+            Horizontal {
+                Centered {
+                    Button {
+                        .content = Label { "Before" },
+                        .onClick = [w = window.get()] { AMessageBox::show(w, "Test", "Test"); },
+                    },
+                },
+                // shows window->title() and is aligned the way the OS aligns titles.
+                WindowTitle {},
+                Centered {
+                    Button {
+                        .content = Label { "After" },
+                        .onClick = [w = window.get()] { AMessageBox::show(w, "Test", "Test"); },
+                    },
+                },
+            },
+        } AUI_OVERRIDE_STYLE {
+            Backdrop {
+                Backdrop::GaussianBlur { 32_dp },
+            },
+            BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
+        };
 
-        // the titlebar is overlaid on top of the scroll area.
-        Vertical::Expanding {
-            Titlebar {
-                Horizontal {
-                    Centered {
-                        Button {
-                            .content = Label { "Before" },
-                            .onClick = [w = window.get()] { AMessageBox::show(w, "Test", "Test"); },
-                        },
-                    },
-                    // shows window->title() and is aligned the way the OS aligns titles.
-                    WindowTitle {},
-                    Centered {
-                        Button {
-                            .content = Label { "After" },
-                            .onClick = [w = window.get()] { AMessageBox::show(w, "Test", "Test"); },
-                        },
-                    },
-                },
-            } AUI_OVERRIDE_STYLE {
-                    Backdrop {
-                        Backdrop::GaussianBlur { 32_dp },
-                    },
-                    BackgroundSolid { AColor::WHITE.transparentize(0.5f) },
-                },
-            SpacerExpanding {},
+    window->setContents(Stacked {
+        Vertical::Expanding { // content layer
+            // shift contents from beneath titlebar, by simply measuring its height
+            SpacerFixed { AUI_REACT(AMetric(titlebar->size()->y, AMetric::T_PX)) },
+            actualContent(),
+        },
+        Vertical::Expanding {  // titlebar layer
+            titlebar,
+            SpacerExpanding {},   // blank space
         },
     });
 

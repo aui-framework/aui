@@ -14,6 +14,7 @@
 #include <AUI/View/AView.h>
 #include <AUI/Util/AMetric.h>
 #include <AUI/Util/Declarative/Containers.h>
+#include <AUI/Util/Declarative/Contracts.h>
 
 /**
  * @brief Fixed-size view which is useful in UI building.
@@ -39,6 +40,15 @@
 class API_AUI_VIEWS ASpacerFixed : public AView {
 public:
     explicit ASpacerFixed(AMetric space) : mSpace(space) {}
+
+    /**
+     * @brief Changes the space this view occupies.
+     */
+    void setSpace(AMetric space);
+
+    [[nodiscard]]
+    AMetric space() const noexcept { return mSpace; }
+
     bool consumesClick(const glm::ivec2& pos) override;
     DebugInspectorInfo debugInspectorInfo() override;
 
@@ -53,8 +63,23 @@ namespace declarative {
 
 /**
  * @declarativeformof{ASpacerFixed}
+ * @details
+ * The space can be [reactive](reactive.md):
+ *
+ * ```cpp
+ * SpacerFixed { AUI_REACT(AMetric(height, AMetric::T_PX)) },
+ * ```
  */
-struct SpacerFixed : aui::ui_building::view<ASpacerFixed> {
-    using aui::ui_building::view<ASpacerFixed>::view;
+struct SpacerFixed {
+    /**
+     * @brief Space to occupy along the direction of the parent layout.
+     */
+    contract::In<AMetric> space;
+
+    _<ASpacerFixed> operator()() {
+        auto view = _new<ASpacerFixed>(AMetric {});
+        space.bindTo(ASlotDef { AUI_SLOT(view.get())::setSpace });
+        return view;
+    }
 };
 }   // namespace declarative

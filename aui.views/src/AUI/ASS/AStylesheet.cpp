@@ -438,7 +438,8 @@ AStylesheet::AStylesheet() {
             Margin { 0 },
         },
         {
-            t<ATitlebar>() >> t<ALabel>(),
+            // only the title: user's labels (e.g., inside buttons) placed into the titlebar are styled as usual.
+            t<ATitlebar>() >> t<AWindowTitle>(),
             Margin { 0 },
             Padding { 7_dp },
             TextColor { 0xffffff_rgb },
@@ -473,11 +474,12 @@ AStylesheet::AStylesheet() {
             BackgroundImage {":uni/caption/close.svg", {}, {}, Sizing::CENTER }
         },
         {
-            t<ATitlebar>() >> t<AButton>::hover(),
+            // only AUI-drawn window buttons: user's buttons placed into the titlebar keep their own look.
+            t<ATitlebar>() >> class_of::hover(".default"),
             BackgroundSolid { 0x20ffffff_argb },
         },
         {
-            t<ATitlebar>() >> t<AButton>::active(),
+            t<ATitlebar>() >> class_of::active(".default"),
             BackgroundSolid { 0x30ffffff_argb },
         },
         {
