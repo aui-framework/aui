@@ -95,7 +95,7 @@ jobs:
 
      - name: Install macos dependencies
        run: brew install ninja 
-     
+
      - name: Configure CMake 
        run: cmake -GNinja -B ${{github.workspace}}/build -DAUI_BUILD_FOR=ios -DAUI_BUILD_EXAMPLES=TRUE -DAUI_IOS_CODE_SIGNING_REQUIRED=FALSE
 
