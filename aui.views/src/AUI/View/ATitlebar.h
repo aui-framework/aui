@@ -13,6 +13,7 @@
 
 #include <AUI/View/AViewContainer.h>
 #include <AUI/View/ALabel.h>
+#include <AUI/Platform/AWindow.h>
 
 class AWindow;
 class AButton;
@@ -24,7 +25,8 @@ class ATitlebar;
  * @details
  * Where the platform draws the window controls itself (macOS traffic lights, GTK window controls), AWindowControls is
  * a blank space of the size of the native controls (AWindow::windowControlsInsets). Elsewhere (Windows, X11), these are
- * AUI buttons following AWindow::Init::Buttons.
+ * AUI buttons following AWindow::Init::Buttons; their size is reported to AWindow::windowControlsInsets, so the
+ * property means the same everywhere.
  *
  * AWindowControls is a part of ATitlebar and is not intended to be used standalone.
  */
@@ -154,6 +156,12 @@ public:
      * @brief Reflects the pointer hovering a window button handled by the OS (non-client area).
      */
     void setWindowButtonNativeHover(AOptional<AWindowControls::Button> button);
+
+    /**
+     * @return space occupied by the AUI-drawn window buttons of this titlebar, after layout. Zero if the window
+     * controls are native or missing.
+     */
+    [[nodiscard]] AWindowControlsInsets drawnControlsInsets() const;
 
     /**
      * @return WindowTitle inside this titlebar, if any.

@@ -17,6 +17,7 @@ import android.view.GestureDetector
 import android.view.MotionEvent
 import android.view.View
 import android.view.View.OnTouchListener
+import android.view.WindowInsets
 import android.widget.Scroller
 import javax.microedition.khronos.egl.EGLConfig
 import javax.microedition.khronos.opengles.GL10
@@ -49,6 +50,9 @@ class AuiView(context: Context) : GLSurfaceView(context) {
 
         @JvmStatic
         private external fun handleLongPress(width: Int, height: Int)
+
+        @JvmStatic
+        private external fun handleSafeAreaInsets(left: Int, top: Int, right: Int, bottom: Int)
     }
 
     init {
@@ -102,6 +106,24 @@ class AuiView(context: Context) : GLSurfaceView(context) {
             }
         }.also { mRenderer = it })
         renderMode = RENDERMODE_CONTINUOUSLY
+    }
+
+    override fun onApplyWindowInsets(insets: WindowInsets): WindowInsets {
+        // system bars and display cutout are the safe area; the keyboard is not.
+        if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.R) {
+            val i = insets.getInsets(WindowInsets.Type.systemBars() or WindowInsets.Type.displayCutout())
+            handleSafeAreaInsets(i.left, i.top, i.right, i.bottom)
+        } else {
+            @Suppress("DEPRECATION")
+            handleSafeAreaInsets(
+                insets.systemWindowInsetLeft,
+                insets.systemWindowInsetTop,
+                insets.systemWindowInsetRight,
+                // systemWindowInsetBottom includes the keyboard on these versions; stable insets do not.
+                insets.stableInsetBottom
+            )
+        }
+        return super.onApplyWindowInsets(insets)
     }
 
     override fun onTouchEvent(event: MotionEvent?): Boolean {

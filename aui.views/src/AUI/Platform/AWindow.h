@@ -22,6 +22,7 @@
 #include "AUI/Util/AMetric.h"
 #include "AUI/Common/AOptional.h"
 #include "AUI/Common/AProperty.h"
+#include "AUI/Common/ABoxFields.h"
 #include "AWindowNativePtr.h"
 #include <AUI/Enum/AScreenOrientation.h>
 #include <variant>
@@ -42,25 +43,27 @@ class AWindowManager;
 class ATitlebar;
 
 /**
- * @brief Space occupied by the native window controls (traffic lights, close/minimize/maximize buttons) inside the
+ * @brief Space occupied by the window controls (traffic lights, close/minimize/maximize buttons) inside the
  *        window, in pixels.
  * @details
- * Relevant for AWindow::Init::DecorationExtended only: the window contents extend into the titlebar, and the native
- * controls are drawn over them. Titlebar uses this to keep its contents out of the controls' way.
+ * Relevant for AWindow::Init::DecorationExtended only: the window contents extend into the titlebar, and the controls
+ * are drawn over them. The controls are reported regardless of who draws them: the OS (macOS, GTK) or AUI (Windows,
+ * X11), so the value means the same on every platform. Titlebar uses this to keep its contents out of the controls'
+ * way.
  */
 struct AWindowControlsInsets {
     /**
-     * @brief Space occupied by native controls at the left edge of the window.
+     * @brief Space occupied by the controls at the left edge of the window.
      */
     int left = 0;
 
     /**
-     * @brief Space occupied by native controls at the right edge of the window.
+     * @brief Space occupied by the controls at the right edge of the window.
      */
     int right = 0;
 
     /**
-     * @brief Height of the native controls.
+     * @brief Height of the controls.
      */
     int height = 0;
 
@@ -590,16 +593,45 @@ public:
     bool isResizable() const;
 
     /**
-     * @brief Space occupied by the native window controls, in pixels.
+     * @brief Space occupied by the window controls, in pixels.
      * @details
-     * Non-zero only for AWindow::Init::DecorationExtended on platforms which draw the window controls natively
-     * (macOS, GTK).
+     * Non-zero only for AWindow::Init::DecorationExtended. Reported for both native (macOS, GTK) and AUI-drawn
+     * (Windows, X11) window controls; the latter is known after the first layout pass.
+     *
+     * Android, iOS and web don't have window controls; the value is always zero.
      */
     AProperty<AWindowControlsInsets> windowControlsInsets;
 
     /**
+     * @brief Parts of the window covered by the system UI, in pixels.
+     * @details
+     * Padding that guarantees the useful content is not overlapped by anything the application does not control:
+     * the status bar, display cutout and navigation bar on Android and iOS; the window controls strip of
+     * AWindow::Init::DecorationExtended on desktop. Put it into padding of the root view:
+     *
+     * ![](imgs/safe-zone.png)
+     *
+     * ```cpp
+     * connect(window->safeAreaInsets, root, [root = root.get()](const ABoxFields& i) {
+     *     root->setPadding(i);
+     * });
+     * ```
+     *
+     * The system UI itself is not part of the content area, so on desktop the value is zero if the window decoration
+     * is the OS' one (AWindow::Init::DecorationDefault) or there is none (AWindow::Init::DecorationBorderless): the OS
+     * (or you) already positions the content below the titlebar.
+     *
+     * For AWindow::Init::DecorationExtended, `top` is the height of AWindow::windowControlsInsets; [declarative::Titlebar]
+     * lives inside that strip. Use AWindow::windowControlsInsets when you need to know which corners of the strip are
+     * occupied, since the controls take a corner of it, not the whole strip.
+     *
+     * The software keyboard is not a part of the safe area.
+     */
+    AProperty<ABoxFields> safeAreaInsets;
+
+    /**
      * @return true if the platform draws the window controls (traffic lights, etc.) of AWindow::Init::DecorationExtended
-     * windows itself; they occupy AWindow::windowControlsInsets.
+     * windows itself. Either way, they occupy AWindow::windowControlsInsets.
      */
     [[nodiscard]]
     bool hasNativeWindowControls() const;
@@ -936,6 +968,11 @@ private:
     void applyTitlebarRect();
     void updateWindowControlsInsets();
 #endif
+    /**
+     * @brief Publishes AWindow::windowControlsInsets of AUI-drawn window controls. Called after layout.
+     */
+    void updateDrawnWindowControlsInsets();
+    void updateSafeAreaInsetsFromControls();
     void showImpl();
     void hideImpl();
     void setTitleImpl(const AString& title);

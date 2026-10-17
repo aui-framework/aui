@@ -12,6 +12,7 @@
 #include <AUI/Platform/AWindowManager.h>
 #include <AUI/Platform/AWindow.h>
 #import "AUIView.h"
+#include <cmath>
 #include <string>
 #include <OpenGLES/EAGLDrawable.h>
 
@@ -130,6 +131,28 @@ static GLuint defaultFb, colorBuffer = 0;
     CGSize size = self.bounds.size;
     float scale = (float)self.contentScaleFactor;
     auiWindow()->onResize(size.width * scale, size.height * scale);
+    [self publishSafeAreaInsets];
+}
+
+- (void) safeAreaInsetsDidChange
+{
+    [super safeAreaInsetsDidChange];
+    [self publishSafeAreaInsets];
+}
+
+- (void) publishSafeAreaInsets
+{
+    if (AWindow::getWindowManager().getWindows().empty()) {
+        return;
+    }
+    const UIEdgeInsets insets = self.safeAreaInsets;
+    const float scale = (float)self.contentScaleFactor;
+    auiWindow()->safeAreaInsets = ABoxFields {
+        .left = int(std::ceil(insets.left * scale)),
+        .right = int(std::ceil(insets.right * scale)),
+        .top = int(std::ceil(insets.top * scale)),
+        .bottom = int(std::ceil(insets.bottom * scale)),
+    };
 }
 
 - (void) startAnimation
