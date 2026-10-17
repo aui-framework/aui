@@ -80,8 +80,8 @@ AUI_ENTRY {
 
     window->setContents(Stacked {
         Vertical::Expanding { // content layer
-            // shift contents from beneath titlebar, by simply measuring its height
-            SpacerFixed { AUI_REACT(AMetric(titlebar->size()->y, AMetric::T_PX)) },
+            // keep contents out of the system UI (titlebar controls strip)
+            SpacerFixed { AUI_REACT(AMetric(window->safeAreaInsets->top, AMetric::T_PX)) },
             actualContent(),
         },
         Vertical::Expanding {  // titlebar layer
