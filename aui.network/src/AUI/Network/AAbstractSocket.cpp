@@ -52,6 +52,7 @@ void aui_wsa_init()
 #include <netinet/in.h>
 #include <cstring>
 #include <netdb.h>
+#include <unistd.h>
 #include <AUI/Logging/ALogger.h>
 
 #endif
@@ -88,8 +89,12 @@ AString AAbstractSocket::getErrorString()
 #endif
 }
 
-void AAbstractSocket::handleError(const AString& message, int code)
+void AAbstractSocket::handleError(const AString& message, [[maybe_unused]] int code)
 {
+#if !AUI_PLATFORM_WIN
+    // code is the return value of the failed syscall (-1); the actual reason is errno. getErrorString() may clobber it.
+    const int error = errno;
+#endif
 	AString msg = message + ": " + getErrorString();
 #if AUI_PLATFORM_WIN
 	switch (WSAGetLastError()) {
@@ -101,7 +106,7 @@ void AAbstractSocket::handleError(const AString& message, int code)
 		throw SocketException(msg);
 	}
 #else
-    switch (code) {
+    switch (error) {
         case EINTR:
             throw AThread::Interrupted();
         case ECONNRESET:
@@ -150,17 +155,22 @@ void AAbstractSocket::close()
 		closesocket(mHandle);
 #else
 		shutdown(mHandle, 2);
+		::close(mHandle);
 #endif
 		mHandle = 0;
 	}
 }
 
 
-void AAbstractSocket::setTimeout(int secs) {
+void AAbstractSocket::setTimeout(std::chrono::milliseconds timeout) {
+#if AUI_PLATFORM_WIN
+	// winsock expects milliseconds as DWORD
+	const DWORD tv = static_cast<DWORD>(timeout.count());
+#else
 	struct timeval tv;
-
-	tv.tv_sec = secs * 1000;
-	tv.tv_usec = 0;
+	tv.tv_sec = static_cast<decltype(tv.tv_sec)>(timeout.count() / 1000);
+	tv.tv_usec = static_cast<decltype(tv.tv_usec)>((timeout.count() % 1000) * 1000);
+#endif
 	if (setsockopt(getHandle(), SOL_SOCKET, SO_RCVTIMEO, reinterpret_cast<const char*>(&tv), sizeof(tv)) < 0) {
 		throw AIOException(AString("setsockopt error ") + getErrorString());
 	}

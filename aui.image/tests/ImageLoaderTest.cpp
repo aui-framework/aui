@@ -19,9 +19,11 @@ const static unsigned char AUI_PACKED_assettarget[] = "\x78\xda\x73\xf2\x35\x63\
 
 TEST(ImageLoader, Bmp) {
     ABuiltinFiles::registerAsset("target.bmp", AUI_PACKED_assettarget, sizeof(AUI_PACKED_assettarget));
+    // [image_from_url]
     auto image = AImage::fromUrl(":target.bmp");
 
     ASSERT_TRUE(image != nullptr);
     ASSERT_EQ(image->width(), 16);
     ASSERT_EQ(image->height(), 16);
+    // [image_from_url]
 }

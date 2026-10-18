@@ -138,6 +138,7 @@ public:
 }   // namespace
 
 // AUI_DOCS_CODE_BEGIN
+// [updater_entry] // HIDE
 class MyUpdater : public AUpdater {
 protected:
     AFuture<void> checkForUpdatesImpl() override { return AUI_THREADPOOL { /* stub */ }; }
@@ -152,6 +153,7 @@ AUI_ENTRY {
     _new<MainWindow>(updater)->show();
     return 0;
 }
+// [updater_entry] // HIDE
 // AUI_DOCS_CODE_END
 //
 // You can pass updater instance to your window (as shown in the example) and display update information from
@@ -272,6 +274,7 @@ TEST(UpdaterTest, Typical_Implementation) {   // HEADER_H2
 #endif
 #define AUI_CMAKE_PROJECT_VERSION 0.0.1
     // AUI_DOCS_CODE_BEGIN
+    // [updater_github] // HIDE
     static constexpr auto LOG_TAG = "MyUpdater";
     class MyUpdater: public AUpdater {
     public:
@@ -348,6 +351,7 @@ TEST(UpdaterTest, Typical_Implementation) {   // HEADER_H2
     private:
         AString mDownloadUrl;
     };
+    // [updater_github] // HIDE
     // AUI_DOCS_CODE_END
 }
 

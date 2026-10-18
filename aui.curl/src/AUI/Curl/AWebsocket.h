@@ -23,8 +23,24 @@
 #include "AUI/IO/ADynamicPipe.h"
 
 /**
- * @brief Websocket implementation.
+ * @brief WebSocket client (ws:// and wss://) built on top of ACurl.
  * @ingroup curl
+ * @details
+ * Connects on run(). Connection, incoming messages and closing are reported with signals; outgoing messages are sent
+ * with `writeText` and `writeBinary` (or by using AWebsocket as an `IOutputStream`, which sends text frames).
+ *
+ * ```cpp
+ * auto ws = _new<AWebsocket>("wss://ws.postman-echo.com/raw");
+ * AObject::connect(ws->connected, ws, [&] { ws->writeText("hello"); });
+ * AObject::connect(ws->received, ws, [&](AByteBufferView data) {
+ *     ALogger::info("ws") << AString::fromUtf8(data);
+ *     ws->close();
+ * });
+ * ws->run(); // blocks until closed
+ * ```
+ *
+ * `run()` blocks the calling thread, so use a dedicated thread (or an `AThreadPool` task) when the UI thread must stay
+ * responsive. Signals are emitted on the thread that runs the connection.
  */
 class API_AUI_CURL AWebsocket: public ACurl, public IOutputStream {
     friend class WebsocketTest_Receive1_Test;

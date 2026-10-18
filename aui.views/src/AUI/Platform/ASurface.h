@@ -30,6 +30,22 @@ namespace testing {
 class UITest;
 }
 
+/**
+ * @brief Root of a view tree that is displayed on some target: a window or an embedded surface.
+ * @ingroup views
+ * @details
+ * ASurface is a [AViewContainer] that owns the rendering context and routes the input (pointer, keyboard, focus) to
+ * views. [AWindow] is the ASurface backed by a native window; embedding AUI into another application (i.e., SDL) uses
+ * a surface of its own.
+ *
+ * `ASurface::current()` returns the surface which is being processed at the moment (i.e., the window a click handler
+ * belongs to). Typical operations:
+ *
+ * - `focusNextView()` moves the keyboard focus like ++tab++ does;
+ * - `blockUserInput()` makes the surface ignore the user, i.e., while a modal dialog is shown;
+ * - `createOverlappingSurface()` creates a lightweight popup drawn over the contents (used by dropdown lists and
+ *   menus).
+ */
 class API_AUI_VIEWS ASurface : public AViewContainer {
     friend class SoftwareRenderer;
     friend class IPlatformAbstraction;

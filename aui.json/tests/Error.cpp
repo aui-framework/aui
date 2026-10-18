@@ -37,6 +37,19 @@ TEST(Json, Error4)
 {
     EXPECT_THROW(AJson::fromString(R"({"array": [1,2,3})"), AJsonParseException);
 }
+
+TEST(Json, ParseErrorHandling)
+{
+    // [parse_error]
+    try {
+        AJson::fromString(R"({"array": [1,2,3})"); // missing closing bracket
+        FAIL() << "expected AJsonParseException";
+    } catch (const AJsonParseException& e) {
+        // e.getMessage() describes what went wrong
+        EXPECT_FALSE(e.getMessage().empty());
+    }
+    // [parse_error]
+}
 TEST(Json, Error5)
 {
     EXPECT_THROW(AJson::fromString(R"({"object": {"1"s:1,)"), AJsonParseException);
@@ -59,6 +72,7 @@ TEST(Json, Error9)
 }
 // ---- JSON path in error messages ----
 
+// [error_path_model]
 struct PathTestMessage {
     AString content;
 };
@@ -68,18 +82,22 @@ struct PathTestRoot {
     AVector<PathTestMessage> messages;
 };
 AJSON_FIELDS(PathTestRoot, (messages, "messages"))
+// [error_path_model]
 
 TEST(Json, ErrorPathTypeMismatch) {
+    // [error_path]
     // "content" field receives a number instead of a string
     auto json = AJson::fromString(R"({"messages":[{"content":1},{"content":2},{"content":3}]})");
     try {
         aui::from_json<PathTestRoot>(json);
         FAIL() << "expected AJsonTypeMismatchException";
     } catch (const AJsonTypeMismatchException& e) {
+        // the message contains the location of the faulty value, i.e., "messages[0].content: not a AString"
         AString msg = e.getMessage();
         EXPECT_TRUE(msg.contains("messages")) << "path missing 'messages': " << msg;
         EXPECT_TRUE(msg.contains("content")) << "path missing 'content': " << msg;
     }
+    // [error_path]
 }
 
 TEST(Json, ErrorPathMissingField) {

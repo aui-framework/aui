@@ -22,6 +22,13 @@
 /**
  * @brief Implements universally unique identifier (UUID)
  * @ingroup core
+ * @details
+ * A UUID can be parsed from a canonical (`8-4-4-4-12`) or raw (32 hex digits) string and printed in either format.
+ * Invalid input makes the constructor throw `AUuidException`.
+ *
+ * <!-- aui:snippet aui.core/tests/UuidTest.cpp core_uuid -->
+ *
+ * To generate a random UUID, use `ARandom::nextUuid()`.
  */
 class API_AUI_CORE AUuid {
 private:

@@ -19,7 +19,7 @@
 /**
  * @brief Describes sides of a 2D rectangle.
  * @ingroup core
- * @see ASides
+ * See also: `ASides`.
  */
 AUI_ENUM_FLAG(ASide) {
     NONE = 0,

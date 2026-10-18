@@ -127,7 +127,7 @@ public:
     /**
      * @brief Get list of (by default) direct children of this folder. This function outputs paths including the path
      *        listDir was called on.
-     * @sa relativelyTo
+     * See also: `relativelyTo`.
      * @return list of children of this folder.
      * @details
      * Use AFileListFlags enum flags to customize behaviour of this function.
@@ -244,8 +244,8 @@ public:
      * Unlike remove*Recursive functions, this function has no checks before proceeding, thus, it might throw
      * AIOException (including if the target does not exist).
      *
-     * @sa APath::removeFileRecursive()
-     * @sa APath::removeDirContentsRecursive()
+     * See also: `APath::removeFileRecursive()`.
+     * See also: `APath::removeDirContentsRecursive()`.
      */
     const APath& removeFile() const {
         view().removeFile();
@@ -261,7 +261,7 @@ public:
      *
      * If the target does not exist, this function has no effect.
      *
-     * @sa APath::removeDirContentsRecursive()
+     * See also: `APath::removeDirContentsRecursive()`.
      */
     const APath& removeFileRecursive() const {
         view().removeFileRecursive();
@@ -277,7 +277,7 @@ public:
      *
      * If the target does not exist, this function has no effect.
      *
-     * @sa APath::removeFileRecursive()
+     * See also: `APath::removeFileRecursive()`.
      */
     const APath& removeDirContentsRecursive() const {
         view().removeDirContentsRecursive();
@@ -498,7 +498,7 @@ public:
      *
      * When the application closes, a directory cleanup attempt will be performed.
      *
-     * @sa APath::nextRandomTemporary
+     * See also: `APath::nextRandomTemporary`.
      *
      * @return Path to a process-agnostic empty pre-created directory in system temp directory.
      */
@@ -511,8 +511,8 @@ public:
      * The file is guaranteed to be non-existent, however, its parent directory does. The such path can be used for
      * general purposes. The application might create any kind of file on this location (including dirs) or don't create
      * any file either.
-     * @sa APathOwner
-     * @sa APath:processTemporaryDir:
+     * See also: `APathOwner`.
+     * See also: `APath::processTemporaryDir`.
      */
     [[nodiscard]]
     static APath nextRandomTemporary();
@@ -529,7 +529,7 @@ public:
  * in RAII (Resource Acquisition Is Initialization) style.
  *
  * <!-- aui:snippet aui.updater/src/AUI/Updater/AUpdater.cpp APathOwner_example -->
- * @sa APath::nextRandomTemporary()
+ * See also: `APath::nextRandomTemporary()`.
  */
 struct API_AUI_CORE APathOwner: public aui::noncopyable {
 public:

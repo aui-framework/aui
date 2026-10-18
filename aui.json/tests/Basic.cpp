@@ -16,7 +16,7 @@
 #include <gtest/gtest.h>
 #include <AUI/Common/AString.h>
 #include <AUI/Json/AJson.h>
-#include <AUI/Json/AJson.h>
+#include <AUI/IO/AStringStream.h>
 
 
 // check const access
@@ -29,30 +29,29 @@ void check_girlfriend(const AJson& o) {
 
 TEST(Json, ObjectAssignValue)
 {
-    // arrange data
+    // [write_object]
     AJson o;
     o["name"] = "Alex2772";
     o["year"] = 2020;
     o["girlfriend"] = nullptr;
 
-    // check for resulting json
     ASSERT_EQ(AJson::toString(o), R"({"name":"Alex2772","year":2020,"girlfriend":null})");
+    // [write_object]
     check_girlfriend(o);
 }
 
 TEST(Json, ObjectAssignObject)
 {
-    // arrange data
+    // [write_nested]
     AJson o;
     o["name"] = "Alex2772";
     o["year"] = 2020;
 
     AJson root;
-    // assign object to another object. this is what we want check for
     root["user"] = o;
 
-    // check for resulting json
     ASSERT_EQ(AJson::toString(root), R"({"user":{"name":"Alex2772","year":2020}})");
+    // [write_nested]
 }
 TEST(Json, StringEscape)
 {
@@ -71,7 +70,7 @@ TEST(Json, StringEscape)
 
 TEST(Json, BraceInitialization)
 {
-    // arrange data
+    // [write_brace_init]
     AJson root = {
         {"array", AJson::Array{
             "value1",
@@ -80,31 +79,78 @@ TEST(Json, BraceInitialization)
         {"key", 1},
     };
 
-    // check for resulting json
     auto str = AJson::toString(root);
     ASSERT_EQ(str, R"({"array":["value1","value2"],"key":1})");
+    // [write_brace_init]
 }
 
 TEST(Json, Array)
 {
-    // arrange data
+    // [write_array]
     AJson root = AJson::Array{1, 2, 3};
-
-    // check for resulting json
     ASSERT_EQ(AJson::toString(root), R"([1,2,3])");
 
-    // check push
     root.push_back(10);
     root.push_back(9);
     ASSERT_EQ(AJson::toString(root), R"([1,2,3,10,9])");
     ASSERT_EQ(root[1].asInt(), 2);
+    // [write_array]
+}
+
+TEST(Json, ParseAccess)
+{
+    // [parse_access]
+    auto json = AJson::fromString(R"({"name":"Alex2772","year":2020,"tags":["a","b"],"girlfriend":null})");
+
+    EXPECT_EQ(json["name"].asString(), "Alex2772");
+    EXPECT_EQ(json["year"].asInt(), 2020);
+    EXPECT_EQ(json["tags"].asArray().size(), 2);
+    EXPECT_EQ(json["tags"][1].asString(), "b");
+    EXPECT_TRUE(json["girlfriend"].isNull());
+    // [parse_access]
+}
+
+TEST(Json, ParseTypeChecks)
+{
+    // [parse_type_checks]
+    auto json = AJson::fromString(R"({"year":2020})");
+
+    // optional accessors never throw
+    EXPECT_EQ(json["year"].asIntOpt(), 2020);
+    EXPECT_FALSE(json["year"].asStringOpt());
+
+    // regular accessors throw on type mismatch
+    EXPECT_THROW(json["year"].asString(), AJsonTypeMismatchException);
+    // [parse_type_checks]
+}
+
+TEST(Json, ParseContains)
+{
+    // [parse_contains]
+    const auto json = AJson::fromString(R"({"year":2020})");
+
+    EXPECT_TRUE(json.contains("year"));
+    EXPECT_FALSE(json.contains("name"));
+    if (auto year = json.containsOpt("year")) {
+        EXPECT_EQ(year->asInt(), 2020);
+    }
+    // [parse_contains]
+}
+
+TEST(Json, ParseStream)
+{
+    // [parse_stream]
+    auto json = AJson::fromStream(AStringStream(AString(R"({"hello":"world"})")));
+    EXPECT_EQ(json["hello"].asString(), "world");
+    // [parse_stream]
 }
 
 TEST(Json, SerializationDeserialization)
 {
-    // arrange data
+    // [round_trip]
     const char* str = R"({"a":null,"b":[1,2,3],"c":false,"d":true,"e":{"v":"123"}})";
     ASSERT_EQ(AJson::toString(AJson::fromString(str)), str);
+    // [round_trip]
 }
 
 

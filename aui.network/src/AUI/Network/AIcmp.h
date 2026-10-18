@@ -15,6 +15,18 @@
 #include "AUI/Thread/AFuture.h"
 #include "AInet4Address.h"
 
+/**
+ * @brief ICMP utilities.
+ * @ingroup network
+ * @details
+ * Currently contains `ping` only.
+ *
+ * ```cpp
+ * auto rtt = AIcmp::ping(AInet4Address::fromString("127.0.0.1"))->count();
+ * ```
+ *
+ * The result is an [AFuture] of the round trip time; it holds an exception if the host did not reply in time.
+ */
 namespace AIcmp {
     /**
      * @brief Sends ICMP ping echo packet.

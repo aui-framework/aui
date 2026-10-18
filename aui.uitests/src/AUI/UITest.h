@@ -13,7 +13,37 @@
 
 /**
  * @defgroup uitests aui::uitests
- * @brief ui tests library.
+ * @brief UI testing: find views, simulate user input and check what is on the screen.
+ * @details
+ * aui::uitests runs your real windows and views inside a GTest test, without a native window: a stub window manager and
+ * a software renderer are used, so tests are fast and work on a headless CI. A test finds views with `By`, acts on them
+ * as a user would (click, type, scroll) and checks the result.
+ *
+ * ```cpp
+ * #include <AUI/UITest.h>
+ *
+ * class UIGreeting : public testing::UITest {};
+ *
+ * TEST_F(UIGreeting, Click) {
+ *     _new<MyWindow>()->show();
+ *     By::text("Say hello").perform(click());
+ *     By::name("#hello").check(visible()).check(text("Hello!"));
+ * }
+ * ```
+ *
+ * Include `<AUI/UITest.h>` to get everything. If your project uses `aui_enable_tests` and AUI was imported with the
+ * `uitests` component (`auib_import(aui ... COMPONENTS core views uitests)`), `aui::uitests` is linked to the `Tests`
+ * target automatically; see [writing-tests] for the general test setup.
+ *
+ * Pages of this module:
+ *
+ * - [uitests-first-test] - fixture, window, a complete test;
+ * - [uitests-selecting-views] - finding views with `By` and combining matchers;
+ * - [uitests-actions] - clicks, typing, key presses, scrolling;
+ * - [uitests-assertions] - built-in checks, layout checks and custom assertions;
+ * - [uitests-screenshots] - pixel checks and failure reports.
+ *
+ * `testing::UITest` is the base class of UI test suites, `UIMatcher` is the object returned by `By`.
  */
 
 #include <AUI/View/AView.h>

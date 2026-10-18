@@ -17,7 +17,7 @@
  * @brief Simple command line arguments parser.
  * @ingroup core
  * @details
- * @see aui::args()
+ * See also: `aui::args()`.
  */
 class API_AUI_CORE ACommandLineArgs: public AStringVector {
 public:

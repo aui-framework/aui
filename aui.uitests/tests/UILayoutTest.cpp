@@ -121,6 +121,7 @@ TEST_F(UILayoutTest, LayoutSpacing1) {
     EXPECT_EQ((parent->getSize() - b->getSize()) / 2, b->getPosition());
 }
 
+// [same_width]
 TEST_F(UILayoutTest, LayoutSpacing2) {
     inflate(Horizontal::Expanding {
       Button { Label { "1" } } AUI_OVERRIDE_STYLE { Expanding {} },
@@ -129,6 +130,7 @@ TEST_F(UILayoutTest, LayoutSpacing2) {
 
     By::type<AButton>().check(sameWidth(), "widths of the buttons are not equal");
 }
+// [same_width]
 
 TEST_F(UILayoutTest, LayoutSpacing3) {
     inflate(Horizontal::Expanding {
@@ -171,6 +173,7 @@ TEST_F(UILayoutTest, LayoutSpacing5) {
     EXPECT_GT(title->position()->y + title->size()->y, body->position()->y);
 }
 
+// [expanding_width]
 TEST_F(UILayoutTest, ExpandingWithMinSize1) {
     inflate(Horizontal::Expanding {
       _new<AView>() << ".expanding_minsize" AUI_OVERRIDE_STYLE { Expanding {}, MinSize { 200_dp, {} } },
@@ -180,6 +183,7 @@ TEST_F(UILayoutTest, ExpandingWithMinSize1) {
     By::name(".expanding_minsize").check(width(200_dp), "width of .expanding_minsize is invalid");
     By::name(".expanding").check(width(100_dp), "width of .expanding is invalid");
 }
+// [expanding_width]
 
 TEST_F(UILayoutTest, ExpandingWithMinSize2) {
     inflate(Horizontal::Expanding {

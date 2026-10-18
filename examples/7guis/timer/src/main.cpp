@@ -41,6 +41,7 @@ public:
             Label { AUI_REACT("{:.1f}s"_format(duration_cast<milliseconds>(*mElapsedTime).count() / 1000.f)) },
             Horizontal {
               Label { "Duration:" },
+              /// [timer_slider]
               Slider {
                 .value = AUI_REACT(float(mDuration->count()) / float(MAX_DURATION.count())),
                 .onValueChanged =
@@ -49,6 +50,7 @@ public:
                             high_resolution_clock::duration(long(float(MAX_DURATION.count()) * float(newValue)));
                     },
               } AUI_OVERRIDE_STYLE { Expanding { 1, 0 } },
+              /// [timer_slider]
             } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
             _new<AButton>("Reset Timer") AUI_OVERRIDE_STYLE {
                   Expanding { 1, 0 },

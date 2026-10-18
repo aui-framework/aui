@@ -59,6 +59,15 @@ public:
  * Used for screen space saving by grouping views.
  *
  * Unlike APageView, has a row with buttons to switch tabs (pages).
+ *
+ * ```cpp
+ * auto tabs = _new<ATabView>();
+ * tabs->addTab(Centered { Label { "General settings" } }, "General");
+ * tabs->addTab(Centered { Label { "About the app" } }, "About");
+ * tabs->setTabId(1);   // switch programmatically
+ * ```
+ *
+ * Put tab contents in an [AScrollArea] if they may not fit.
  */
 class API_AUI_VIEWS ATabView: public AViewContainerBase {
 private:

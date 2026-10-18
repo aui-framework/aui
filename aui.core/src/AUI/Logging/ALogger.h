@@ -231,7 +231,7 @@ public:
     /**
      * @brief Sets log file for `ALogger::global()`.
      * @param path path to the log file.
-     * @see ALogger::setLogFile
+     * See also: `ALogger::setLogFile`.
      */
     static void setLogFileForGlobal(APath path);
 
