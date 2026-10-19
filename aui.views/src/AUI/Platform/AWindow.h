@@ -41,6 +41,7 @@
 class ARender;
 class AWindowManager;
 class ATitlebar;
+class IDrawable;
 
 /**
  * @brief Space occupied by the window controls (traffic lights, close/minimize/maximize buttons) inside the
@@ -439,6 +440,17 @@ public:
          */
         struct DecorationDefault {
             Buttons buttons;
+
+            /**
+             * @brief Whether the OS titlebar shows the application icon next to the title.
+             * @details
+             * Set it to false for dialog-like windows.
+             *
+             * @specificto{windows} Controls `WS_EX_DLGMODALFRAME`, the style that hides the icon. Ignored on the other
+             * platforms: macOS and Linux window managers (including GTK/adw) have no such thing as an icon in the
+             * titlebar of a window.
+             */
+            bool win32Icon = true;
         };
 
         /**
@@ -450,6 +462,17 @@ public:
          */
         struct DecorationExtended {
             Buttons buttons;
+
+            /**
+             * @brief Whether [declarative::Titlebar] draws the application icon (see `AWindow::windowIcon`) before
+             *        its contents, the way a Windows titlebar does.
+             * @details
+             * Nothing is shown if the window has no icon.
+             *
+             * @specificto{windows} Ignored on the other platforms: macOS and Linux window managers (including GTK/adw)
+             * have no such thing as an icon in the titlebar of a window.
+             */
+            bool win32Icon = true;
         };
 
         /**
@@ -663,6 +686,19 @@ public:
 
     [[nodiscard]]
     ATitlebar* titlebar() const noexcept { return mTitlebar; }
+
+    /**
+     * @return icon of the window: the one set by `AWindow::setIcon`, or the `MAINICON` resource of the executable. Used
+     * to draw the icon in [declarative::Titlebar].
+     * @specificto{windows} Null on the other platforms.
+     */
+    [[nodiscard]]
+    const _<IDrawable>& windowIcon() const noexcept { return mWindowIcon; }
+
+    /**
+     * @brief `AWindow::windowIcon` has changed.
+     */
+    emits<> windowIconChanged;
 
     /**
      * @brief Minimizes window (hide window to the taskbar, iconifies)
@@ -920,6 +956,7 @@ private:
     Init mInit;
     bool mIsPopup = false;
     ATitlebar* mTitlebar = nullptr;
+    _<IDrawable> mWindowIcon;
 
     /**
      * @brief Resizability reported when there's no native window to ask (i.e., under UI tests).

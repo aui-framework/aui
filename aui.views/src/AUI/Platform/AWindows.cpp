@@ -25,6 +25,7 @@
 #include <AUI/Action/AMenu.h>
 #include <AUI/View/ATitlebar.h>
 #include <AUI/View/AButton.h>
+#include <AUI/Util/AImageDrawable.h>
 
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Devtools/DevtoolsPanel.h>
@@ -65,6 +66,14 @@ AWindow::AWindow(Init init) : mInit(std::move(init)) {
     }
     mResizableCache = mInit.resizable;
     windowNativePreInit();
+#if AUI_PLATFORM_WIN
+    // the application icon (MAINICON), registered with the window class; AWindow::setIcon overrides it.
+    if (mHandle) {
+        if (auto icon = reinterpret_cast<HICON>(GetClassLongPtr(mHandle, GCLP_HICON))) {
+            mWindowIcon = _new<AImageDrawable>(_new<AImage>(aui::win32::iconToImage(icon)));
+        }
+    }
+#endif
     const auto dpi = fetchDpiFromSystem();
     const auto toPx = [&](AMetric m) {
         return m.getUnit() == AMetric::T_DP ? m.getRawValue() * dpi : m.getRawValue();

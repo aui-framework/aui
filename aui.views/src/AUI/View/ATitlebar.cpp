@@ -13,6 +13,10 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Layout/AHorizontalLayout.h>
 #include <AUI/View/AButton.h>
+#include <AUI/View/ADrawableView.h>
+#include <AUI/View/ASpacerExpanding.h>
+#include <AUI/Layout/AVerticalLayout.h>
+#include <AUI/ASS/Property/Padding.h>
 #include <AUI/ASS/Property/BackgroundImage.h>
 #include <AUI/Enum/Visibility.h>
 #include <AUI/Util/kAUI.h>
@@ -210,7 +214,45 @@ void ATitlebar::onViewGraphSubtreeChanged() {
     mWindow = window;
     if (mWindow) {
         mWindow->setTitlebar(this);
+        buildIcon(*mWindow);
     }
+}
+
+void ATitlebar::buildIcon(AWindow& window) {
+    if (mIconHost) {
+        return;
+    }
+    const auto* extended = std::get_if<AWindow::Init::DecorationExtended>(&window.init().decoration);
+#if AUI_PLATFORM_WIN
+    if (!extended || !extended->win32Icon) {
+        return;
+    }
+#else
+    // the application icon in the titlebar is a Windows thing.
+    return;
+#endif
+    mIcon = _new<ADrawableView>();
+    mIcon->addAssName(".window-icon");
+    const int size = int((16_dp).getValuePx());
+    mIcon->setFixedSize({ size, size });
+
+    // the layout aligns views to the top of the perpendicular axis; the host (stretched over the titlebar height)
+    // centers the icon vertically with spacers. The paddings are set with ASS: it overrides setMargin/setPadding.
+    mIconHost = _new<AViewContainer>();
+    mIconHost->setLayout(std::make_unique<AVerticalLayout>());
+    mIconHost->addView(_new<ASpacerExpanding>());
+    mIconHost->addView(mIcon);
+    mIconHost->addView(_new<ASpacerExpanding>());
+    mIconHost->setExpanding({ 0, 1 });
+    mIconHost->setCustomStyle({ ass::Padding { 0, 0, 0, 8_dp } });
+    addView(1, mIconHost);   // between the start controls and the contents
+
+    auto update = [this, &window] {
+        mIcon->setDrawable(window.windowIcon());
+        mIconHost->setVisibility(window.windowIcon() ? Visibility::VISIBLE : Visibility::GONE);
+    };
+    update();
+    connect(window.windowIconChanged, mIconHost, update);
 }
 
 AWindowTitle::AWindowTitle() {

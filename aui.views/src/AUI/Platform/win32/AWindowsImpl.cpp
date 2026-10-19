@@ -14,6 +14,7 @@
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Util/AImageDrawable.h"
 #include "AUI/Render/IRenderer.h"
 
 #include <glm/gtc/matrix_transform.hpp>
@@ -586,6 +587,11 @@ void AWindow::setIcon(const AImage& image) {
   mIcon = aui::win32::imageToIcon(image);
 
   SendMessage(mHandle, WM_SETICON, ICON_BIG, (LPARAM)mIcon.get());
+  // the titlebar draws the small icon
+  SendMessage(mHandle, WM_SETICON, ICON_SMALL, (LPARAM)mIcon.get());
+
+  mWindowIcon = _new<AImageDrawable>(_new<AImage>(image));
+  emit windowIconChanged();
 }
 
 void AWindow::hideImpl() {

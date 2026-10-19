@@ -17,6 +17,7 @@
 
 class AWindow;
 class AButton;
+class ADrawableView;
 class ATitlebar;
 
 /**
@@ -172,7 +173,11 @@ public:
 private:
     explicit ATitlebar(_<AView> contents);
 
+    void buildIcon(AWindow& window);
+
     AWindow* mWindow = nullptr;
+    _<AViewContainer> mIconHost;   // see AWindow::Init::DecorationExtended::icon
+    _<ADrawableView> mIcon;
     AWindowTitle* mWindowTitle = nullptr;
     _<AWindowControls> mStart;
     _<AWindowControls> mEnd;

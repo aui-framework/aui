@@ -78,7 +78,8 @@ void CommonRenderingContext::init(const Init& init) {
 
     const auto& windowInit = window.init();
     DWORD style = WS_OVERLAPPEDWINDOW;
-    DWORD exStyle = WS_EX_DLGMODALFRAME;
+    // WS_EX_DLGMODALFRAME hides the window icon in the titlebar; it's set only when the icon is explicitly disabled.
+    DWORD exStyle = 0;
     bool dwmFrame = false;
     bool disableClose = false;
     if (init.popup) {
@@ -92,6 +93,7 @@ void CommonRenderingContext::init(const Init& init) {
                   if (!d.buttons.minimize) style &= ~DWORD(WS_MINIMIZEBOX);
                   if (!d.buttons.maximize) style &= ~DWORD(WS_MAXIMIZEBOX);
                   disableClose = !d.buttons.close;
+                  if (!d.win32Icon) exStyle |= WS_EX_DLGMODALFRAME;
               },
               [&](const AWindow::Init::DecorationExtended&) {
                   // AUI draws the titlebar and the buttons (see ATitlebar); DWM keeps the shadow and rounded corners.
