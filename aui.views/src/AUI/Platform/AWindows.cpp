@@ -417,9 +417,16 @@ void AWindow::setSize(glm::ivec2 size) { setGeometry(getPosition().x, getPositio
 
 glm::ivec2 AWindow::getMinimumSize() {
     const auto styled = getMinSize();
-    // the narrowest our contents can be laid out at, and the height they need at exactly that width.
+    // the narrowest our contents can be laid out at.
     const int width = glm::max(styled.x, computeMinMaxAxis().min);
-    const int height = glm::max(styled.y, measure(AConstraints::fixedInline(width)).y);
+    // the height contents need depends on the width they are laid out at (i.e., wrapped text): a wide window needs
+    // less height than a narrow one. so it is measured at the current width, not at the minimum one.
+    // NOTE: this deviates from the convention of GTK and Qt (gtk_widget_measure at the minimum width, and
+    // QLayout::minimumHeightForWidth(minimumSize().width()) respectively), which yield a static minimum height: the
+    // tallest the contents can ever be. the static one never changes during a resize, while ours is re-announced to
+    // the window manager on every layout, which may feel jumpy (and lags one step behind on win32, as
+    // WM_GETMINMAXINFO is handled before the new width is applied). kept for now so a wide window can be made short.
+    const int height = glm::max(styled.y, measure(AConstraints::fixedInline(glm::max(width, getWidth()))).y);
     return glm::ivec2(width, height);
 }
 
