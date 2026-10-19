@@ -747,8 +747,7 @@ public:
      * @details
      * In contrast to `AView::getMinSize`, which is the explicitly styled minimum, this one is measured from the
      * window's contents: a window is never smaller than the space its contents need at their narrowest, so its
-     * layout is never squeezed into nothing. The styled minimum is respected as well, and the result is capped by
-     * `AWindow::MAX_MIN_SIZE`.
+     * layout is never squeezed into nothing. The styled minimum is respected as well.
      */
     glm::ivec2 getMinimumSize();
 

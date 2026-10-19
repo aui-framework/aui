@@ -416,13 +416,11 @@ void AWindow::setPosition(glm::ivec2 position) { setGeometry(position.x, positio
 void AWindow::setSize(glm::ivec2 size) { setGeometry(getPosition().x, getPosition().y, size.x, size.y); }
 
 glm::ivec2 AWindow::getMinimumSize() {
-    static constexpr int MAX_MIN_SIZE = 1000;
-
     const auto styled = getMinSize();
     // the narrowest our contents can be laid out at, and the height they need at exactly that width.
     const int width = glm::max(styled.x, computeMinMaxAxis().min);
     const int height = glm::max(styled.y, measure(AConstraints::fixedInline(width)).y);
-    return glm::min(glm::ivec2(width, height), glm::ivec2(MAX_MIN_SIZE));
+    return glm::ivec2(width, height);
 }
 
 glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) {
