@@ -82,7 +82,7 @@ void ViewPropertiesView::setTargetView(const _<AView>& targetView) {
     return;
   }
   AUI_NULLSAFE(targetView->getWindow())->profiling()->highlightView = targetView;
-  AUI_NULLSAFE(targetView->getWindow())->redraw();
+  AUI_NULLSAFE(targetView->getWindow())->flagRedraw();
 
   mTargetView = targetView;
   if (!targetView)
@@ -214,7 +214,7 @@ void ViewPropertiesView::requestTargetUpdate() {
     const auto start = high_resolution_clock::now();
     if (auto targetView = mTargetView.lock()) {
         if (auto targetWindow = targetView->getWindow()) {
-            targetWindow->redraw();
+            targetWindow->flagRedraw();
         }
     }
     logDurationIfNonZero("requestTargetUpdate", start);
