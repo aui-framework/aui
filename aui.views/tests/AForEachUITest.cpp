@@ -51,6 +51,29 @@ TEST(AForEachUI, MaterializesWholeFiniteModelWithoutViewport) {
     EXPECT_EQ(forEach->getViews().size(), items.size());
 }
 
+TEST(AForEachUI, RepeatedMeasurementWithoutViewportKeepsViews) {
+    const AVector<int> items = { 1, 2, 3, 4, 5 };
+    std::size_t created = 0;
+
+    auto forEach = AUI_DECLARATIVE_FOR_EX(i, items, AVerticalLayout, &) {
+        ++created;
+        return _new<FixedRowView>(glm::ivec2(150, 20));
+    };
+
+    forEach->layout({ 0, 0 }, { 150, 200 });
+    ASSERT_EQ(created, items.size());
+
+    // measuring with unlimited block axis (as done by parents and by the window) must not recreate the views, otherwise
+    // the freshly created views are never laid out.
+    forEach->measure(AConstraints {});
+    forEach->measure(AConstraints {});
+    forEach->layout({ 0, 0 }, { 150, 200 });
+
+    EXPECT_EQ(created, items.size());
+    ASSERT_EQ(forEach->getViews().size(), items.size());
+    EXPECT_EQ(forEach->getViews()[1]->getPosition().y, 20);
+}
+
 TEST(AForEachUI, ScrollAreaMaterializesOnlyInitialLazyWindow) {
     AVector<int> items;
     items.reserve(1000);
