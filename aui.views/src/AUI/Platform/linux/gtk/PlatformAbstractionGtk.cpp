@@ -494,7 +494,16 @@ void PlatformAbstractionGtk::windowAnnounceMinMaxSize(AWindow &window) {
     }
     auto handle = nativeHandle(window);
     const auto minSize = window.getMinimumSize();
-    gtk_widget_set_size_request(GTK_WIDGET(handle), minSize.x > 0 ? minSize.x : -1, minSize.y > 0 ? minSize.y : -1);
+    // AUI works in physical pixels, GTK in logical ones. The minimum size is the size of the AUI contents, so it is
+    // requested from the AUI widget rather than from the GtkWindow: the latter would not account for the header bar
+    // and the client-side decorations around the contents, cutting off the bottom and right edges of the contents.
+    auto context = dynamic_cast<RenderingContextGtk*>(window.getRenderingContext().get());
+    if (context && context->auiWidget()) {
+        auto surface = scaleSurfaceOf(window);
+        const float scale = surface ? float(gdk_surface_get_scale(surface)) : 1.f;
+        const auto logical = [&](int i) { return i > 0 ? int(std::ceil(float(i) / scale)) : -1; };
+        gtk_widget_set_size_request(context->auiWidget(), logical(minSize.x), logical(minSize.y));
+    }
     const auto maxSize = window.getMaxSize();
     if (maxSize.x == -1 && maxSize.y == -1) {
         return;

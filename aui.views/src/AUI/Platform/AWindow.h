@@ -748,6 +748,11 @@ public:
      * In contrast to `AView::getMinSize`, which is the explicitly styled minimum, this one is measured from the
      * window's contents: a window is never smaller than the space its contents need at their narrowest, so its
      * layout is never squeezed into nothing. The styled minimum is respected as well.
+     *
+     * The minimum height depends on the current width of the window (wrapped text needs less height in a wider
+     * window). Note that this differs from GTK and Qt, which use the height needed at the minimum width (a static
+     * value, the tallest the contents can be). As the minimum height changes along with the width, it is
+     * re-announced to the window manager on every layout; on win32 it may lag one resize step behind.
      */
     glm::ivec2 getMinimumSize();
 
