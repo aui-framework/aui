@@ -22,7 +22,39 @@
  *
  * @ingroup views_input
  * @details
- * ![](imgs/views/ATextField.gif)
+ * Single-line text input. For multiple lines see [ATextArea].
+ *
+ * ## Reading and writing the text
+ *
+ * `text()` is a property; it can be read, assigned, observed, and bound to other properties with `&&` (two-way) or
+ * `connect`. Whenever you change it from code, the field is updated.
+ *
+ * <!-- aui:snippet examples/7guis/crud/src/main.cpp crud_form -->
+ *
+ * Two signals report changes:
+ *
+ * - `textChanging` is emitted on every typed or removed symbol. This is what `text().changed` of the property refers
+ *   to, and the signal that data bindings listen to;
+ * - `textChanged` is emitted when the user finishes editing (the field loses focus) and when the text is set with
+ *   `setText`.
+ *
+ * ## Validation
+ *
+ * The field itself accepts any text; to validate, observe the text and style the field accordingly. The example below
+ * parses the text as a date and paints the field red if parsing fails.
+ *
+ * <!-- aui:snippet examples/7guis/flight_booker/src/main.cpp date_field -->
+ *
+ * ## Other options
+ *
+ * - `setPasswordMode(true)` hides the typed symbols and disables copying;
+ * - `setEditable(false)` makes the field read-only;
+ * - `setMaxTextLength(...)` limits the length of the text;
+ * - `setTextInputType(...)` and `setTextInputActionIcon(...)` hint the touchscreen keyboard;
+ * - `focus()` (from [AView]) puts the cursor to the field, i.e., `_new<ATextField>() AUI_LET { it->focus(); }`.
+ *
+ * Clipboard operations are available as `copyToClipboard()`, `cutToClipboard()` and `pasteFromClipboard()`; see also
+ * [AClipboard].
  */
 class API_AUI_VIEWS ATextField : public AAbstractTextField {
 public:

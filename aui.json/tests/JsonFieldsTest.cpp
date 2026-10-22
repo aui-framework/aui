@@ -23,6 +23,7 @@
 
 #include <AUI/Model/AListModel.h>
 
+// [fields_basic]
 // ORM data class
 struct Data2 {
     AVector<int> values;
@@ -37,6 +38,7 @@ AJSON_FIELDS(Data2,
         (values, "values")
         (i, "i")
 )
+// [fields_basic]
 
 std::ostream& operator<<(std::ostream& o, const Data2& d) {
     o << '[';
@@ -49,17 +51,20 @@ std::ostream& operator<<(std::ostream& o, const Data2& d) {
 
 TEST(Json, FieldsTestBasic)
 {
-    // arrange
+    // [fields_use]
     Data2 d = { {1, 2, 3}, 228 };
 
-    // check for serialization
+    // serialization
     auto jsonObject = aui::to_json(d);
     ASSERT_EQ(AJson::toString(jsonObject), R"({"values":[1,2,3],"i":228})");
 
+    // deserialization
     auto d2 = aui::from_json<Data2>(jsonObject);
     ASSERT_EQ(d, d2);
 
+    // all fields are required by default
     EXPECT_THROW(aui::from_json<Data2>(AJson::fromString(R"({"i":228})") /* no "values" field present */), AJsonException);
+    // [fields_use]
 }
 
 // [clang_format_toggle]
@@ -77,11 +82,13 @@ AJSON_FIELDS(DataOptional,
 
 TEST(Json, FieldsTestOptional)
     {
+    // [fields_optional_use]
     // should not throw an exception since v2 is optional
     DataOptional dst { 1, 2 };
     EXPECT_NO_THROW(aui::from_json<DataOptional>(AJson::fromString(R"({"v1":228})"), dst));
     EXPECT_EQ(dst.v1, 228); // should have modified presented value
     EXPECT_EQ(dst.v2, 2); // but should have kept previous value
+    // [fields_optional_use]
 
     // it should not ignore the value when it presents
     auto d2 = aui::from_json<DataOptional>(AJson::fromString(R"({"v1":228, "v2":229})"));

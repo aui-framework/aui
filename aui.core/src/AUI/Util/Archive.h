@@ -70,7 +70,7 @@ namespace zip {
  * @param visitor zip contents visitor.
  * @details
  * ZIP file names are passed to callback. Optionally, the callback might request file contents by FileEntry::open().
- * @sa aui::zlib::ExtractTo
+ * See also: `aui::zlib::ExtractTo`.
  */
 void API_AUI_CORE read(aui::no_escape<ISeekableInputStream> stream, const std::function<void(const FileEntry&)>& visitor);
 

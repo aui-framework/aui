@@ -21,6 +21,22 @@
  * @brief Owning image representation.
  * @ingroup image
  * @details
+ * AImage owns a pixel buffer together with its size and [APixelFormat]. Everything that only reads pixels (size,
+ * `get`, `cropped`, `convert`, ...) is inherited from [AImageView]; AImage adds the mutating operations `set`, `fill`,
+ * `insert`, `mirrorVertically` and `visit`.
+ *
+ * Images are usually created by decoding a file with `fromUrl`, `fromFile` or `fromBuffer`; these return `nullptr` if
+ * the data can't be decoded. See [image-loading].
+ *
+ * An empty image of a given size and format can be created directly:
+ *
+ * ```cpp
+ * AImage image({64, 64}, APixelFormat::RGBA_BYTE);
+ * image.fill(0xff0000_rgb);
+ * image.set({10, 10}, 0x00ff00_rgb);
+ * ```
+ *
+ * For pixel-level work see [image-processing].
  */
 class API_AUI_IMAGE AImage : public AImageView {
 private:
@@ -99,7 +115,7 @@ public:
     AFormattedImage(AByteBuffer data, glm::uvec2 size) : AImage(std::move(data), size, f) {}
     AFormattedImage(glm::uvec2 size) : AImage(size, f) {}
 
-    constexpr int format() const noexcept { return f; }
+    constexpr auto format() const noexcept { return f; }
 
     [[nodiscard]]
     const Color& get(glm::uvec2 position) const noexcept {

@@ -24,6 +24,16 @@
 /**
  * @brief Pixel in-memory format descriptor (type, count and order of subpixel components).
  * @ingroup image
+ * @details
+ * A format is a combination of a component layout (`R`, `RG`, `RGB`, `RGBA`, `ARGB`, `BGRA`) and a component type
+ * (`BYTE` or `FLOAT`), i.e., `RGBA_BYTE` or `RGBA_FLOAT`. `DEFAULT` is `RGBA_BYTE`.
+ *
+ * ```cpp
+ * APixelFormat format = APixelFormat::RGB_BYTE;
+ * format.bytesPerPixel(); // 3
+ * ```
+ *
+ * Use `AImageView::convert` to move between formats; see [image-processing].
  */
 enum class APixelFormat : std::uint8_t {
     UNKNOWN = 0,

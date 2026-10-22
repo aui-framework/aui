@@ -28,7 +28,9 @@
 #include <gmock/gmock.h>
 
 TEST(CurlTest, ToByteBuffer) {
+    // [curl_blocking]
     AByteBuffer buffer = ACurl::Builder("https://github.com").runBlocking().body;
+    // [curl_blocking]
     ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
 }
 /*
@@ -87,21 +89,26 @@ TEST(CurlTest, StackfulCoroutine) {
 
 TEST(CurlTest, ToStream) {
     {
+        // [curl_to_file]
         ACurl a(ACurl::Builder("https://github.com").withOutputStream(_new<AFileOutputStream>("temp.html")));
         a.run();
+        // [curl_to_file]
     }
     auto buffer = AByteBuffer::fromStream(AFileInputStream("temp.html"));
     ASSERT_TRUE(AString::fromUtf8(buffer).contains("DOCTYPE"));
 }
 
 TEST(CurlTest, Fail) {
+    // [curl_throw]
     ACurl a(ACurl::Builder("https://snonejklgnjkwernjkg3ernjknerjk.sfjgsjknsdgjknsdgjknjksdgnjkzdg")
                 .withOutputStream(_new<AFileOutputStream>("temp.html"))
                 .throwExceptionOnError(true));
     EXPECT_THROW(a.run(), ACurl::Exception);
+    // [curl_throw]
 }
 
 TEST(CurlTest, WebSocket) {
+    // [ws_echo]
     auto ws = _new<AWebsocket>("wss://ws.postman-echo.com/raw");
     unsigned c = 0;
     AObject::connect(ws->connected, ws, [&] {
@@ -121,6 +128,7 @@ TEST(CurlTest, WebSocket) {
         });
     });
     ws->run();
+    // [ws_echo]
     EXPECT_EQ(c, 2) << "not enough payloads received";
 }
 

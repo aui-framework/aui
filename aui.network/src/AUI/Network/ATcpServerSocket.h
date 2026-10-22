@@ -15,8 +15,26 @@
 
 
 /**
+ * ---
+ * title: ATcpServerSocket
+ * icon: material/server-network
+ * ---
+ *
  * @brief TCP server socket.
  * @ingroup network
+ * @details
+ * Binds to the given port on all interfaces upon construction and hands out an [ATcpSocket] per incoming connection.
+ *
+ * ```cpp
+ * ATcpServerSocket server(8080);
+ * for (;;) {
+ *     _<ATcpSocket> client = server.accept(); // blocks
+ *     // talk to the client
+ * }
+ * ```
+ *
+ * `accept()` blocks, so a server normally runs it in a dedicated thread (see [AThread]) and serves each client
+ * from a worker. See [network-tcp].
  */
 class API_AUI_NETWORK ATcpServerSocket: public AAbstractSocket
 {
@@ -27,7 +45,7 @@ public:
 	~ATcpServerSocket() override;
 
     /**
-     * Blocks the thread until next connection.
+     * @brief Blocks the thread until next connection.
      * @return new connection
      */
 	_<ATcpSocket> accept();

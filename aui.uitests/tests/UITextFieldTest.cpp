@@ -18,6 +18,7 @@ using namespace ass;
 using namespace declarative;
 using std::operator""sv;
 
+// [custom_assertion]
 namespace {
     struct SelectionMatchesAssert {
         ACursorSelectable::Selection selection;
@@ -36,6 +37,7 @@ namespace {
 
     using selectionMatches = SelectionMatchesAssert;
 }
+// [custom_assertion]
 
 class UITextField: public testing::UITest {
 public:
@@ -77,18 +79,22 @@ TEST_F(UITextField, CursorAppearsAtTheStart) {
 /**
  * Checks that then clicking at the right border of the text field, cursor jumps to the last symbol.
  */
+// [click_position]
 TEST_F(UITextField, CursorAppearsAtTheEnd) {
     By::type<ATextField>().perform(click({299_dp, 0_dp})) // click at the right border
                           .check(selectionMatches(12));
 }
+// [click_position]
 
 /**
  * Checks that when doubleclicking a whole word is selected
  */
+// [double_click]
 TEST_F(UITextField, DoubleClickWordSelection1) {
     By::type<ATextField>().perform(doubleClick({20_dp, 0_dp})) // click at the first word
                           .check(selectionMatches(0, 5));
 }
+// [double_click]
 
 /**
  * Checks that when doubleclicking a whole word is selected
@@ -117,6 +123,7 @@ TEST_F(UITextField, LeftRight) {
             ;
 }
 
+// [key_press]
 TEST_F(UITextField, HomeEnd) {
     By::type<ATextField>()
             .perform(click({0, 0}))
@@ -127,13 +134,16 @@ TEST_F(UITextField, HomeEnd) {
             .check(selectionMatches(0))
             ;
 }
+// [key_press]
 
+// [ctrl_a]
 TEST_F(UITextField, CtrlA) {
     By::type<ATextField>()
             .perform(keyDownAndUp(AInput::LCONTROL + AInput::A))
             .perform(type("replace"))
             .check(text("replace"));
 }
+// [ctrl_a]
 
 TEST_F(UITextField, CtrlLeftRight) {
     By::type<ATextField>()

@@ -13,6 +13,7 @@
 #  License, v. 2.0. If a copy of the MPL was not distributed with this
 #  file, You can obtain one at http://mozilla.org/MPL/2.0/.
 import logging
+import re
 from pathlib import Path
 
 from docs.python.generators import regexes, common
@@ -67,7 +68,9 @@ def parse_tests(path: Path):
                     output += line
                     output += "\n"
                 output += "```\n"
-                continue
+            # Escape C++ lambda introducer []() from being interpreted as
+            # markdown links. [] looks like empty-text markdown link syntax.
+            comment_contents = re.sub(r'\[\]\(', r'\\[](', comment_contents)
             output += comment_contents
             output += "\n"
     return output

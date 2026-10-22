@@ -22,7 +22,7 @@
  * @brief Defines performance profiling named (and colored) span within RAII range.
  * @ingroup core
  * @ingroup profiling
- * @sa profiling
+ * See also [profiling].
  */
 class API_AUI_CORE APerformanceSection {
 public:

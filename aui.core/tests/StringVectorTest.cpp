@@ -15,7 +15,9 @@
 #include "AUI/Common/AStringVector.h"
 
 TEST(StringVector, Split1) {
+    // [core_str_split]
     EXPECT_EQ("1x2"_as.split('x'), AStringVector({"1", "2"}));
+    // [core_str_split]
 }
 
 TEST(StringVector, Split2) {

@@ -39,7 +39,7 @@ namespace aui {
      * };
      * ```
      *
-     * @see <code>AUI_PARALLEL_MP</code>
+     * See also: `AUI_PARALLEL_MP`.
      */
     template<typename Iterator, typename Functor>
     auto parallel(Iterator begin, Iterator end, Functor&& functor) {
@@ -80,7 +80,7 @@ namespace aui {
  * tasks.wait();
  * ```
  *
- * @see aui::parallel
+ * See also: `aui::parallel`.
  */
 #define AUI_PARALLEL_MP(...) aui::impl::parallel::LambdaCapturer(__VA_ARGS__) \
 << [&](const std::decay_t<decltype(aui::impl::parallel::LambdaCapturer(__VA_ARGS__))::iterator>& begin, \

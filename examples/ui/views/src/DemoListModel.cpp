@@ -18,6 +18,7 @@
 
 #include <AUI/Traits/strings.h>
 
+/// [demo_list_model]
 size_t DemoListModel::listSize() {
     return mListSize;
 }
@@ -37,3 +38,4 @@ void DemoListModel::removeItem() {
         emit dataRemoved(range({mListSize}));
     }
 }
+/// [demo_list_model]

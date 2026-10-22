@@ -34,6 +34,7 @@ TEST(Path, Unix) {
 }
 
 TEST(Path, Copy) {
+    // [core_file_copy]
     _new<AFileOutputStream>("test.txt")->write("test", 4);
 
     APath::copy("test.txt", "test-copy.txt");
@@ -42,6 +43,7 @@ TEST(Path, Copy) {
     auto s = _new<AFileInputStream>("test-copy.txt")->read(buf, sizeof(buf));
     ASSERT_TRUE(s == 4);
     ASSERT_TRUE(memcmp(buf, "test", 4) == 0);
+    // [core_file_copy]
 }
 
 TEST(Path, Windows) {
@@ -57,7 +59,9 @@ TEST(Path, Windows) {
 }
 
 TEST(Path, Extension) {
+    // [core_path_extension]
     EXPECT_EQ(APath("test.txt").extension(), "txt");
     EXPECT_EQ(APath("te.st.txt").extension(), "txt");
     EXPECT_EQ(APath("C:/te.st.txt").extension(), "txt");
+    // [core_path_extension]
 }

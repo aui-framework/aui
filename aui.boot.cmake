@@ -861,6 +861,77 @@ if(CMAKE_SCRIPT_MODE_FILE)
         message(STATUS "")
         message(STATUS "Next steps:")
         message(STATUS "  cmake -B build && cmake --build build")
+    elseif("${_auib_cli_command}" STREQUAL "_auib_run_logged")
+        # Internal, used by _auib_execute_logged:
+        # cmake -P aui.boot.cmake _auib_run_logged -- <log file> <merge stderr> <command...>
+        # Runs the command with its stdout (and stderr, if <merge stderr> is TRUE) redirected to <log file> and writes
+        # the command's result to <log file>.result. <log file>.lock is held while the command runs; the OS releases
+        # it even if this process is killed, so _auib_tail never waits forever.
+        set(_auib_log "${CMAKE_ARGV5}")
+        math(EXPR _auib_last "${CMAKE_ARGC} - 1")
+        set(_auib_command "")
+        foreach(_auib_i RANGE 7 ${_auib_last})
+            string(REPLACE ";" "\\;" _auib_arg "${CMAKE_ARGV${_auib_i}}")
+            list(APPEND _auib_command "${_auib_arg}")
+        endforeach()
+        set(_auib_redirect OUTPUT_FILE "${_auib_log}")
+        if(CMAKE_ARGV6)
+            list(APPEND _auib_redirect ERROR_FILE "${_auib_log}")
+        endif()
+        file(LOCK "${_auib_log}.lock" RESULT_VARIABLE _auib_lock_result)
+        # written even if locking failed, so _auib_tail does not wait for the lock to be taken
+        file(WRITE "${_auib_log}.started" "")
+        execute_process(COMMAND ${_auib_command}
+                RESULT_VARIABLE _auib_result
+                ${_auib_redirect})
+        file(WRITE "${_auib_log}.result" "${_auib_result}")
+    elseif("${_auib_cli_command}" STREQUAL "_auib_tail")
+        # Internal, used by _auib_execute_logged:
+        # cmake -P aui.boot.cmake _auib_tail -- <log file> <prefix>
+        # Prints lines appended to <log file> with <prefix> until _auib_run_logged releases <log file>.lock and the log
+        # is fully consumed.
+        set(_auib_log "${CMAKE_ARGV5}")
+        set(_auib_offset 0)
+        set(_auib_pending "")
+        while(TRUE)
+            # check before reading, so the output written right before the lock is released is not lost
+            set(_auib_done FALSE)
+            if(EXISTS "${_auib_log}.started")
+                file(LOCK "${_auib_log}.lock" TIMEOUT 0 RESULT_VARIABLE _auib_lock_result)
+                if(_auib_lock_result EQUAL 0)
+                    set(_auib_done TRUE)
+                endif()
+            endif()
+            if(EXISTS "${_auib_log}")
+                file(SIZE "${_auib_log}" _auib_size)
+                if(_auib_size GREATER _auib_offset)
+                    math(EXPR _auib_limit "${_auib_size} - ${_auib_offset}")
+                    file(READ "${_auib_log}" _auib_chunk OFFSET ${_auib_offset} LIMIT ${_auib_limit})
+                    set(_auib_offset ${_auib_size})
+                    string(APPEND _auib_pending "${_auib_chunk}")
+                endif()
+            endif()
+            if(_auib_done)
+                string(APPEND _auib_pending "\n")
+            endif()
+            while(TRUE)
+                string(FIND "${_auib_pending}" "\n" _auib_pos)
+                if(_auib_pos EQUAL -1)
+                    break()
+                endif()
+                string(SUBSTRING "${_auib_pending}" 0 ${_auib_pos} _auib_line)
+                math(EXPR _auib_pos "${_auib_pos} + 1")
+                string(SUBSTRING "${_auib_pending}" ${_auib_pos} -1 _auib_pending)
+                string(REGEX REPLACE "\r$" "" _auib_line "${_auib_line}")
+                if(NOT _auib_line STREQUAL "")
+                    message("${CMAKE_ARGV6} ${_auib_line}")
+                endif()
+            endwhile()
+            if(_auib_done)
+                break()
+            endif()
+            execute_process(COMMAND "${CMAKE_COMMAND}" -E sleep 0.2)
+        endwhile()
     else()
         message(FATAL_ERROR "Unknown command: ${_auib_cli_command}. Use 'cmake -P aui.boot.cmake help' for usage.")
     endif()
@@ -1339,6 +1410,7 @@ function(_auib_try_download_precompiled_binary)
             "\nNote: tried following urls: ${_diagnostics}")
 endfunction()
 
+# Kept for older aui.build.cmake versions; use _auib_execute_logged instead.
 function(_auib_dump_with_prefix PREFIX PATH)
     file(READ "${PATH}" contents)
     STRING(REPLACE ";" "\\\\;" contents "${contents}")
@@ -1346,6 +1418,33 @@ function(_auib_dump_with_prefix PREFIX PATH)
     foreach (line ${contents})
         message("${PREFIX} ${line}")
     endforeach ()
+endfunction()
+
+# Runs COMMAND with its stdout written to LOG_FILE and, at the same time, printed line by line with PREFIX, so the
+# progress of a long process is visible while it runs.
+#
+# _auib_execute_logged(PREFIX <prefix> LOG_FILE <file> RESULT_VARIABLE <var> WORKING_DIRECTORY <dir>
+#                      [MERGE_STDERR] COMMAND <command...>)
+function(_auib_execute_logged)
+    cmake_parse_arguments(PARSE_ARGV 0 _ "MERGE_STDERR" "PREFIX;LOG_FILE;RESULT_VARIABLE;WORKING_DIRECTORY" "COMMAND")
+    set(_aux_files "${__LOG_FILE}.started" "${__LOG_FILE}.result" "${__LOG_FILE}.lock")
+    file(REMOVE "${__LOG_FILE}" ${_aux_files})
+    execute_process(
+            COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_FUNCTION_LIST_FILE}" _auib_run_logged --
+                    "${__LOG_FILE}" "${__MERGE_STDERR}" ${__COMMAND}
+            COMMAND "${CMAKE_COMMAND}" -P "${CMAKE_CURRENT_FUNCTION_LIST_FILE}" _auib_tail --
+                    "${__LOG_FILE}" "${__PREFIX}"
+            WORKING_DIRECTORY "${__WORKING_DIRECTORY}"
+            RESULTS_VARIABLE _results
+    )
+    if (EXISTS "${__LOG_FILE}.result")
+        file(READ "${__LOG_FILE}.result" _result)
+    else()
+        # _auib_run_logged died before the command finished
+        list(GET _results 0 _result)
+    endif()
+    file(REMOVE ${_aux_files})
+    set(${__RESULT_VARIABLE} "${_result}" PARENT_SCOPE)
 endfunction()
 
 function(_auib_find_git)
@@ -2031,23 +2130,23 @@ function(auib_import AUI_MODULE_NAME URL)
                 file(MAKE_DIRECTORY ${DEP_INSTALL_PREFIX})
                 file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
                 message("Configuring CMake ${AUI_MODULE_NAME}:${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}")
-                execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
-                        WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                _auib_execute_logged(PREFIX "[Configuring ${AUI_MODULE_NAME}]"
+                        LOG_FILE ${DEP_INSTALL_PREFIX}/configure.log
                         RESULT_VARIABLE STATUS_CODE
-                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log
+                        WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                        COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                 )
-                _auib_dump_with_prefix("[Configuring ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/configure.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(STATUS "Dependency CMake configure failed, clearing dir and trying again...")
                     file(REMOVE_RECURSE ${DEP_BINARY_DIR})
                     file(MAKE_DIRECTORY ${DEP_BINARY_DIR})
-                    execute_process(COMMAND ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
-                            WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                    _auib_execute_logged(PREFIX "[Configuring ${AUI_MODULE_NAME} (2)]"
+                            LOG_FILE ${DEP_INSTALL_PREFIX}/configure.log
                             RESULT_VARIABLE STATUS_CODE
-                            OUTPUT_FILE ${DEP_INSTALL_PREFIX}/configure.log
+                            WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                            COMMAND                             ${CMAKE_COMMAND} ${DEP_SOURCE_DIR} ${FINAL_CMAKE_ARGS}
                     )
-                    _auib_dump_with_prefix("[Configuring ${AUI_MODULE_NAME} (2)]" ${DEP_INSTALL_PREFIX}/configure.log)
                     if (NOT STATUS_CODE EQUAL 0)
                         message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}\nnote: check logs in ${DEP_INSTALL_PREFIX}")
                     endif()
@@ -2068,32 +2167,28 @@ function(auib_import AUI_MODULE_NAME URL)
                     LIST(APPEND _flags "--parallel" "${logical_cores}")
                 endif()
 
-                execute_process(COMMAND
-                        ${CMAKE_COMMAND}
+                _auib_execute_logged(PREFIX "[Building ${AUI_MODULE_NAME}]"
+                        LOG_FILE ${DEP_INSTALL_PREFIX}/build.log
+                        RESULT_VARIABLE STATUS_CODE
+                        WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                        COMMAND ${CMAKE_COMMAND}
                         --build ${DEP_BINARY_DIR} ${_flags}
                         --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
-
-                        WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                        RESULT_VARIABLE STATUS_CODE
-                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/build.log
                 )
-                _auib_dump_with_prefix("[Building ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/build.log)
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(FATAL_ERROR "Dependency build failed: ${AUI_MODULE_NAME}\nnote: check logs in ${DEP_INSTALL_PREFIX}")
                 endif()
 
                 message(STATUS "Installing ${AUI_MODULE_NAME}")
-                execute_process(COMMAND
-                        ${CMAKE_COMMAND}
+                _auib_execute_logged(PREFIX "[Installing ${AUI_MODULE_NAME}]"
+                        LOG_FILE ${DEP_INSTALL_PREFIX}/install.log
+                        RESULT_VARIABLE STATUS_CODE
+                        WORKING_DIRECTORY "${DEP_BINARY_DIR}"
+                        COMMAND ${CMAKE_COMMAND}
                         --install .
                         --config ${CMAKE_BUILD_TYPE} # fix vs and xcode generators
-
-                        WORKING_DIRECTORY "${DEP_BINARY_DIR}"
-                        RESULT_VARIABLE STATUS_CODE
-                        OUTPUT_FILE ${DEP_INSTALL_PREFIX}/install.log
-                        OUTPUT_QUIET)
-                _auib_dump_with_prefix("[Installing ${AUI_MODULE_NAME}]" ${DEP_INSTALL_PREFIX}/install.log)
+                )
 
                 if (NOT STATUS_CODE EQUAL 0)
                     message(FATAL_ERROR "CMake build failed: ${STATUS_CODE}\nnote: check logs in ${DEP_INSTALL_PREFIX}")

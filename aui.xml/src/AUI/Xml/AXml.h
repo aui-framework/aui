@@ -19,6 +19,8 @@
 /**
  * @brief Common aui::xml namespace.
  * @ingroup xml
+ * @details
+ * Contains the single entry point of the library, `AXml::read`. See [xml-parsing].
  */
 namespace AXml
 {
@@ -26,6 +28,11 @@ namespace AXml
     /**
      * @brief Parses xml from the input stream to the IXmlDocumentVisitor.
      * @ingroup xml
+     * @param is input stream to read from. It is read to the end.
+     * @param visitor receives the contents of the document.
+     * @details
+     * Throws [AXmlParseError] if an attribute value is not enclosed in quotes. Anything else the parser does not
+     * recognize is passed to the visitor as is or silently skipped; see [xml-parsing] for details.
      */
 	void API_AUI_XML read(const _<IInputStream>& is, const _<IXmlDocumentVisitor>& visitor);
 }

@@ -18,6 +18,39 @@
 #include <AUI/View/AViewContainer.h>
 #include "UITestUtil.h"
 
+/**
+ * @brief A lazy selector of views in all opened windows, with actions and checks to run on them.
+ * @ingroup uitests
+ * @details
+ * Obtain UIMatcher from the `By` functions (`By::text`, `By::name`, `By::type`, `By::exactType`, `By::value`).
+ * The matcher does not remember views: every `perform`, `check`, `one`, `toSet` and `toVector` call walks all windows
+ * of the window manager and finds the views that match at that moment. Therefore, the same matcher can be reused after
+ * UI has changed.
+ *
+ * Only views with `Visibility::VISIBLE` are matched (and views inside invisible containers are not reachable), unless
+ * `includeInvisibleViews()` is called or an assertion that ignores visibility is used (`visible()`, `notVisible()`,
+ * `gone()`, `isParentOf`).
+ *
+ * ```cpp
+ * By::text("Say hello").perform(click());
+ * By::name("#hello").check(visible()).check(text("Hello!"));
+ * ```
+ *
+ * Matchers are combined with `operator|` (either) and `operator&` (both):
+ *
+ * ```cpp
+ * (By::text("OK") | By::text("Cancel")).check(sameWidth());
+ * ```
+ *
+ * `perform` and `check` return the matcher itself, so they can be chained.
+ *
+ * !!! note
+ *
+ *     `check` fails the test when nothing is matched, and `perform` on an empty selection does nothing, only prints a
+ *     message. Do not assume that a `perform` found its target.
+ *
+ * See [uitests-selecting-views], [uitests-actions] and [uitests-assertions].
+ */
 class API_AUI_UITESTS UIMatcher {
 private:
     _<IMatcher> mMatcher;
@@ -64,6 +97,17 @@ public:
     ASet<_<AView>> toSet() const;
     AVector<_<AView>> toVector() const;
 
+    /**
+     * @brief Returns the first matched view, or nullptr if nothing is matched.
+     * @details
+     * Use it to get the actual view for direct inspection:
+     *
+     * ```cpp
+     * auto field = _cast<ATextField>(By::name("#username").one());
+     * ```
+     *
+     * The order of views is unspecified; when several views match, make the selector more precise.
+     */
     _<AView> one() const {
         auto set = toSet();
         if (set.empty()) {
@@ -73,11 +117,20 @@ public:
         return *set.begin();
     }
 
+    /**
+     * @brief Makes this matcher consider views that are not `Visibility::VISIBLE` as well.
+     */
     UIMatcher& includeInvisibleViews() {
         mIncludeInvisibleViews = true;
         return *this;
     }
 
+    /**
+     * @brief Runs an action (`click()`, `type("...")`, `scroll(...)` etc...) on every matched view.
+     * @details
+     * The UI is processed (`uitest::frame()`) before the first and after every action.
+     * @return this matcher, to chain further calls.
+     */
     template<class Action>
     UIMatcher& perform(Action&& action) {
         auto set = toSet();
@@ -145,9 +198,19 @@ public:
     }
 
 
+    /**
+     * @brief Checks that every matched view satisfies the assertion.
+     * @param assertion `visible()`, `text("...")`, `width(...)` etc... or any callable `bool(const _<AView>&)`.
+     * @param msg message to print when the check fails.
+     * @details
+     * Failing is non-fatal (`EXPECT_*` semantics): the test continues. An empty selection fails the check.
+     * @return this matcher, to chain further calls.
+     */
     template<class Assertion>
     UIMatcher& check(Assertion&& assertion, const char* msg = "no msg") {
-        mIncludeInvisibleViews = ignores_visibility<Assertion>::value;
+        // an explicit includeInvisibleViews() is respected; the assertion may only widen the selection for this check.
+        const bool includeInvisibleViewsBefore = mIncludeInvisibleViews;
+        mIncludeInvisibleViews = includeInvisibleViewsBefore || ignores_visibility<Assertion>::value;
         auto set = toSet();
         EXPECT_FALSE(set.empty()) << msg << ": empty set\n" << AStacktrace::capture(1);
 
@@ -155,9 +218,13 @@ public:
         for (auto& s : set) {
             EXPECT_TRUE(assertion(s)) << msg <<  "\n" << AStacktrace::capture(1);
         }
+        mIncludeInvisibleViews = includeInvisibleViewsBefore;
         return *this;
     }
 
+    /**
+     * @brief Matches containers that have a direct child matched by this matcher.
+     */
     [[nodiscard]]
     UIMatcher parent() const {
 
@@ -179,6 +246,11 @@ public:
         return { _new<ParentMatcher>(mMatcher) };
     }
 
+    /**
+     * @brief Matches the views whose parent is matched by this matcher.
+     * @details
+     * Combined with `parent()`, selects siblings: `By::name("a").parent().allChildren()`.
+     */
     [[nodiscard]]
     UIMatcher allChildren() const {
 

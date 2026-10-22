@@ -60,6 +60,18 @@ concept AImageVisitor = requires(T t) {
  * @brief Non-owning read-only image representation of some format.
  * @ingroup image
  * @details
+ * AImageView describes pixels stored elsewhere: a byte buffer, a row stride, a size and an [APixelFormat]. It does not
+ * copy anything, so the memory must outlive the view. [AImage] is the owning counterpart and converts to a view
+ * implicitly.
+ *
+ * Use the explicit stride constructor to look into a sub-rectangle of a bigger buffer or into externally padded memory.
+ *
+ * !!! note
+ *
+ *     `resizedLinearDownscale` and `convert` assume tightly packed rows. They are safe for [AImage], but may return
+ *     wrong results for views with padding. `cropped` respects the stride.
+ *
+ * See [image-processing] for usage.
  */
 class API_AUI_IMAGE AImageView {
 public:

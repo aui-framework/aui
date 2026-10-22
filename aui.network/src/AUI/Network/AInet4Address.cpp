@@ -63,10 +63,11 @@ AInet4Address::AInet4Address(uint32_t ip, uint16_t port):
 }
 
 AInet4Address AInet4Address::fromArray(std::array<uint8_t, 4> ip, uint16_t port) {
-    uint32_t u32ip = (static_cast<uint32_t>(ip[0]) << 24) |
-                    (static_cast<uint32_t>(ip[1]) << 16) |
-                    (static_cast<uint32_t>(ip[2]) << 8)  |
-                    (static_cast<uint32_t>(ip[3]));
+    // mAddr is kept in network byte order (same as sockaddr_in::sin_addr and the result of fromString), so the octets
+    // must go to memory in the order they are written: a.b.c.d.
+    uint32_t u32ip;
+    static_assert(sizeof(u32ip) == std::tuple_size_v<decltype(ip)>);
+    std::memcpy(&u32ip, ip.data(), sizeof(u32ip));
     return AInet4Address(u32ip, port);
 }
 AInet4Address AInet4Address::fromString(const AString& addr, uint16_t port) {

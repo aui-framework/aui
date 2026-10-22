@@ -399,7 +399,7 @@ class AStringVector;
  * @brief Non-owning, code-point-aware view into a UTF-8 string.
  * @ingroup core
  * @details
- * `AUtf8View` is the iterator layer that sits on top of @ref AStringView and @ref AString when you need
+ * `AUtf8View` is the iterator layer that sits on top of [AStringView] and [AString] when you need
  * to work with **individual Unicode characters** rather than raw bytes.
  */
 class API_AUI_CORE AUtf8View {
@@ -472,7 +472,7 @@ public:
 
     /**
      * @brief Returns the number of Unicode characters in the string
-     * @sa sizeBytes
+     * See also: `sizeBytes`.
      */
     size_type length() const noexcept;
 
@@ -497,7 +497,10 @@ public:
      * @param pos Index of the first Unicode character to include.
      * @param count Number of Unicode characters to include.
      * @return A new AUtf8View representing the sub-range.
-     * @note Both pos and count refer to Unicode characters, not raw bytes.
+     *
+     * !!! note
+     *
+     *     Both `pos` and `count` refer to Unicode characters, not raw bytes.
      */
     constexpr AUtf8View substr(size_type pos, size_type count = std::string_view::npos) const {
         auto it = begin();

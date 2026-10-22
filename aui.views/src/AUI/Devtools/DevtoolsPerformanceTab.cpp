@@ -72,21 +72,25 @@ namespace {
                 mTexture = ctx.backend.createTexture(mImage.size(), mImage.format());
             }
 
-            ctx.canvas.rectangle(ATexturedBrush {
-                .texture = mTexture,
-                .imageRendering = ImageRendering::PIXELATED,
-            }, {0, 0}, mImage.size() * plotScale());
+            ctx.canvas.rectangle(
+                APaint {
+                    .brush = ATexturedBrush {
+                        .texture = mTexture,
+                        .imageRendering = ImageRendering::PIXELATED,
+                    },
+                },
+                { 0, 0 }, mImage.size() * plotScale());
 
             if (!mSelectionMode) {
                 return;
             }
 
             if (mHoveredFrameIndex && !mSelectedFrameIndex) {
-                ctx.canvas.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.6f) }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.canvas.rectangle(APaint { ASolidBrush {AColor::WHITE.transparentize(0.6f) } }, {*mHoveredFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
 
             if (mSelectedFrameIndex) {
-                ctx.canvas.rectangle(ASolidBrush {AColor::WHITE.transparentize(0.5f) }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
+                ctx.canvas.rectangle(APaint { ASolidBrush {AColor::WHITE.transparentize(0.5f) } }, {*mSelectedFrameIndex * plotScale(), 0}, {plotScale(), getSize().y});
             }
         }
 

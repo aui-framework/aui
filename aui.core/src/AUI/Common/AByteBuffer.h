@@ -27,6 +27,31 @@
 /**
  * @brief std::vector-like growing array for byte storage.
  * @ingroup core
+ * @details
+ * `AByteBuffer` holds raw binary data: file contents, network packets, compressed blobs. It is also an
+ * [IOutputStream], so anything that can be written to a stream can be appended to it with `operator<<`.
+ *
+ * ## Conversions
+ * ```cpp
+ * AByteBuffer buffer = AByteBuffer::fromString("hello");     // bytes of the string, UTF-8
+ * AString hex = buffer.toHexString();
+ * AString base64 = buffer.toBase64String();
+ * auto decoded = AByteBuffer::fromBase64String(base64);
+ * AString text = AString::fromUtf8(decoded);
+ * ```
+ * <!-- aui:snippet aui.core/tests/Base64Test.cpp core_base64 -->
+ *
+ * ## Reading from streams
+ * `AByteBuffer::fromStream` reads the stream to the end (or up to a size limit):
+ * ```cpp
+ * auto contents = AByteBuffer::fromStream(AFileInputStream("data.bin"));
+ * ```
+ *
+ * ## Views
+ * `slice()` and the implicit conversion to [AByteBufferView] give a non-owning window into the buffer. A view is
+ * valid as long as the buffer is not resized or destroyed.
+ *
+ * Compression helpers (`aui::zlib::compress` and `aui::zlib::decompress`) accept views and write into a buffer.
  */
 class API_AUI_CORE AByteBuffer final: public IOutputStream {
 private:

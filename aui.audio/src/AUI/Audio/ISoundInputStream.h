@@ -11,6 +11,12 @@ class AUrl;
  * @ingroup audio
  * @details
  * <!-- aui:experimental -->
+ *
+ * An ISoundInputStream is an [IInputStream] of raw PCM samples plus a description of them (`info`). Implement it to
+ * feed [IAudioPlayer] with generated or custom decoded audio, see [audio-custom-sources].
+ *
+ * `ISoundInputStream::fromUrl` opens a url and picks a decoder (WAV, then Ogg Vorbis). It throws
+ * `aui::audio::ABadFormatException` if neither fits. Small local files (up to 100 KiB) are cached in memory.
  */
 class ISoundInputStream: public IInputStream {
 public:

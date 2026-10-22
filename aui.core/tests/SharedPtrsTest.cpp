@@ -49,6 +49,7 @@ public:
 
 
 TEST(SharedPtrs, Builder1) {
+    // [core_ptr_perform_as_member]
     auto builder = _new<SomeBuilderClass>();
     AUI_PERFORM_AS_MEMBER(*builder, {
        setUsername("John");
@@ -57,9 +58,11 @@ TEST(SharedPtrs, Builder1) {
 
     ASSERT_EQ(builder->getUsername(), "John");
     ASSERT_EQ(builder->getAge(), 23);
+    // [core_ptr_perform_as_member]
 }
 
 TEST(SharedPtrs, Builder2) {
+    // [core_ptr_let]
     auto builder = _new<SomeBuilderClass>() AUI_LET {
         it->setUsername("John");
         it->setAge(23);
@@ -68,6 +71,7 @@ TEST(SharedPtrs, Builder2) {
 
     ASSERT_EQ(builder->getUsername(), "John");
     ASSERT_EQ(builder->getAge(), 23);
+    // [core_ptr_let]
 }
 
 class SendObject : public AObject {
@@ -90,6 +94,7 @@ public:
 };
 
 TEST(SharedPtrs, ConnectBuilder) {
+    // [core_ptr_connect_builder]
     auto receiver = _new<ReceiverObject>();
 
     auto sender = _new<SendObject>()
@@ -101,6 +106,7 @@ TEST(SharedPtrs, ConnectBuilder) {
     });
 
     ASSERT_TRUE(receiver->mSignalInvoked);
+    // [core_ptr_connect_builder]
 }
 
 TEST(SharedPtrs, Performance1) {

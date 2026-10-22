@@ -42,21 +42,21 @@ public:
         explicit Entry(void* ptr) : mPtr(ptr), mFunctionName(std::nullopt) {}
 
         /**
-         * @see AStacktrace::resolveSymbolsIfNeeded()
+         * See also: `AStacktrace::resolveSymbolsIfNeeded()`.
          */
         const AOptional<AString>& functionName() const noexcept {
             return mFunctionName;
         }
 
         /**
-         * @see AStacktrace::resolveSymbolsIfNeeded()
+         * See also: `AStacktrace::resolveSymbolsIfNeeded()`.
          */
         const AOptional<AString>& fileName() const noexcept {
             return mFileName;
         }
 
         /**
-         * @see AStacktrace::resolveSymbolsIfNeeded()
+         * See also: `AStacktrace::resolveSymbolsIfNeeded()`.
          */
         AOptional<unsigned> lineNumber() const noexcept {
             return mLineNumber;

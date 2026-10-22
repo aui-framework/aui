@@ -183,7 +183,7 @@ public:
     /**
      * @brief Get list of (by default) direct children of this folder. This function outputs paths including the path
      *        listDir was called on.
-     * @sa relativelyTo
+     * See also: `relativelyTo`.
      * @return list of children of this folder.
      * @details
      * Use AFileListFlags enum flags to customize behaviour of this function.
@@ -281,8 +281,8 @@ public:
      * Unlike remove*Recursive functions, this function has no checks before proceeding, thus, it might throw
      * AIOException (including if the target does not exist).
      *
-     * @sa APath::removeFileRecursive()
-     * @sa APath::removeDirContentsRecursive()
+     * See also: `APath::removeFileRecursive()`.
+     * See also: `APath::removeDirContentsRecursive()`.
      */
     APathView removeFile() const;
 
@@ -295,7 +295,7 @@ public:
      *
      * If the target does not exist, this function has no effect.
      *
-     * @sa APath::removeDirContentsRecursive()
+     * See also: `APath::removeDirContentsRecursive()`.
      */
     APathView removeFileRecursive() const;
 
@@ -308,7 +308,7 @@ public:
      *
      * If the target does not exist, this function has no effect.
      *
-     * @sa APath::removeFileRecursive()
+     * See also: `APath::removeFileRecursive()`.
      */
     APathView removeDirContentsRecursive() const;
 

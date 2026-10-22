@@ -67,7 +67,7 @@ AImage AImageView::cropped(glm::uvec2 position, glm::uvec2 size) const {
 
     for (uint32_t sourceY = 0; sourceY < size.y; ++sourceY) {
         for (uint32_t sourceX = 0; sourceX < size.x; ++sourceX) {
-            uint32_t from = ((position.y + sourceY) * width() + (position.x + sourceX)) * bytesPerPixel();
+            uint32_t from = (position.y + sourceY) * mStride + (position.x + sourceX) * bytesPerPixel();
             uint32_t to = (sourceY * size.x + sourceX) * bytesPerPixel();
 
             for (uint32_t channel = 0; channel < bytesPerPixel(); ++channel)
