@@ -24,7 +24,8 @@ extern bool gKeyStates[AInput::KEYCOUNT + 1];
 namespace {
 
 glm::ivec2 pos(AWindow* window, NSEvent* event) {
-    float s = window->getDpiRatio();
+    // real pixels, see WindowDelegate windowDidResize:
+    float s = [[event window] backingScaleFactor];
     const NSPoint pos = [event locationInWindow];
     auto size = [[[event window] contentView] frame].size;
     return glm::ivec2{pos.x * s, (size.height - pos.y) * s};
@@ -120,9 +121,21 @@ AOptional<NSEventModifierFlags> modifierFlagOf(AInput::Key key) {
 - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
     ALOG_DEBUG(LOG_TAG) << "performKeyEquivalent";
     // Command key combinations are sent via performKeyEquivalent rather than
-    // keyDown:. We just forward this.
+    // keyDown:. Offer the event to the main menu first (Cmd+Q, etc.); otherwise the YES returned below swallows the
+    // combination and the menu item never fires.
+    if ([theEvent modifierFlags] & NSEventModifierFlagCommand) {
+        if ([[NSApp mainMenu] performKeyEquivalent:theEvent]) {
+            return YES;
+        }
+    }
     [self keyEvent:theEvent wasKeyEquivalent:YES];
     return YES;
+}
+
+// Without keyUp:, releases of regular keys never reached AWindow::onKeyUp: keyEvent: was only called from
+// performKeyEquivalent: (presses) and flagsChanged: (modifiers).
+- (void)keyUp:(NSEvent*)event {
+    [self keyEvent:event wasKeyEquivalent:NO];
 }
 
 - (BOOL)_wantsKeyDownForEvent:(NSEvent*)event {
@@ -355,7 +368,7 @@ AOptional<NSEventModifierFlags> modifierFlagOf(AInput::Key key) {
         deltaX = [event deltaX] * 40.0;
         deltaY = [event deltaY] * 40.0;
     }
-    CGFloat scale = mAWindow->getDpiRatio();
+    CGFloat scale = [[event window] backingScaleFactor];
     deltaX *= scale;
     deltaY *= scale;
     mAWindow->onScroll({

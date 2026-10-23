@@ -35,7 +35,10 @@
 }
 */
 - (void)windowDidResize:(NSNotification *)notification {
-    float s = mWindow->getDpiRatio();
+    // Real pixels (points * backingScaleFactor), not points * getDpiRatio(): the latter also includes
+    // ASurface::ScalingParams (UI scale), which affects dp<->px conversion only. Mixing them made the window (and the
+    // GL framebuffer) larger than the actual drawable.
+    const float s = [static_cast<NSWindow*>(mWindow->nativeHandle()) backingScaleFactor];
     const NSRect contentFrame = [[static_cast<NSWindow*>(mWindow->nativeHandle()) contentView] frame];
     mWindow->getRenderingContext()->beginResize(*mWindow);
     mWindow->onResize(contentFrame.size.width * s, contentFrame.size.height * s);
