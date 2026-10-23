@@ -133,7 +133,8 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     AViewContainer::setSize({width, height});
 
     auto s = static_cast<NSWindow*>(mHandle);
-    float dpi = getDpiRatio();
+    // real pixels <-> points, see WindowDelegate windowDidResize:
+    const float dpi = [s backingScaleFactor];
     const auto minSize = getMinimumSize();
     [s setMinSize:NSSizeFromCGSize({minSize.x / dpi, minSize.y / dpi})];
     // -1 means "unlimited" (see AView::getMaxSize); dividing it by dpi would pass a negative size to AppKit, which

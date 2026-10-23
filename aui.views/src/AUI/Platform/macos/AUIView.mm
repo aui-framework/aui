@@ -24,7 +24,8 @@ extern bool gKeyStates[AInput::KEYCOUNT + 1];
 namespace {
 
 glm::ivec2 pos(AWindow* window, NSEvent* event) {
-    float s = window->getDpiRatio();
+    // real pixels, see WindowDelegate windowDidResize:
+    float s = [[event window] backingScaleFactor];
     const NSPoint pos = [event locationInWindow];
     auto size = [[[event window] contentView] frame].size;
     return glm::ivec2{pos.x * s, (size.height - pos.y) * s};
@@ -367,7 +368,7 @@ AOptional<NSEventModifierFlags> modifierFlagOf(AInput::Key key) {
         deltaX = [event deltaX] * 40.0;
         deltaY = [event deltaY] * 40.0;
     }
-    CGFloat scale = mAWindow->getDpiRatio();
+    CGFloat scale = [[event window] backingScaleFactor];
     deltaX *= scale;
     deltaY *= scale;
     mAWindow->onScroll({
