@@ -136,7 +136,11 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     float dpi = getDpiRatio();
     const auto minSize = getMinimumSize();
     [s setMinSize:NSSizeFromCGSize({minSize.x / dpi, minSize.y / dpi})];
-    [s setMaxSize:NSSizeFromCGSize({getMaxSize().x / dpi, getMaxSize().y / dpi})];
+    // -1 means "unlimited" (see AView::getMaxSize); dividing it by dpi would pass a negative size to AppKit, which
+    // then clamps the window to 0x0.
+    const auto maxSize = getMaxSize();
+    const auto maxDimension = [&](int v) -> CGFloat { return v < 0 ? CGFLOAT_MAX : v / dpi; };
+    [s setMaxSize:NSSizeFromCGSize({maxDimension(maxSize.x), maxDimension(maxSize.y)})];
     [s setContentSize:NSSizeFromCGSize({width / dpi, height / dpi})];
 }
 
