@@ -17,6 +17,7 @@
 
 namespace UITestState {
     bool ourIsUITest = false;
+    float ourSystemDpi = 1.f;
 }
 
 bool UITestState::isTesting() {
@@ -28,4 +29,13 @@ void UITestState::beginUITest() {
 }
 void UITestState::endUITest() {
     ourIsUITest = false;
+    ourSystemDpi = 1.f;
+}
+
+void UITestState::setSystemDpi(float dpi) {
+    ourSystemDpi = dpi;
+}
+
+float UITestState::systemDpi() {
+    return ourSystemDpi;
 }

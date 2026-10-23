@@ -271,6 +271,11 @@ macro(aui_enable_tests AUI_MODULE_NAME)
                 ${_source_dir}/src/*.test.cpp
                 ${_source_dir}/tests/*.cpp
         )
+        if (APPLE)
+            # tests of Objective-C++ platform glue
+            file(GLOB_RECURSE _tests_mm_srcs ${_source_dir}/tests/*.mm)
+            list(APPEND TESTS_SRCS ${_tests_mm_srcs})
+        endif()
 
         if (NOT TARGET Tests)
             set(TESTS_MODULE_NAME Tests)

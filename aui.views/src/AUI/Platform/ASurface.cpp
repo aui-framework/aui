@@ -54,8 +54,8 @@ void ASurface::onResize(int width, int height) {
 
 void ASurface::updateDpi() {
     float newDpi = [&]() -> float {
-        float systemDpi = fetchDpiFromSystem();
-        float ratio = mScalingParams.scalingFactor * (UITestState::isTesting() ? 1.f : systemDpi);
+        const float systemDpi = UITestState::isTesting() ? UITestState::systemDpi() : fetchDpiFromSystem();
+        float ratio = mScalingParams.scalingFactor * systemDpi;
         if (!mScalingParams.minimalWindowSizeDp) {
             return ratio;
         }
