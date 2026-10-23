@@ -120,9 +120,21 @@ AOptional<NSEventModifierFlags> modifierFlagOf(AInput::Key key) {
 - (BOOL)performKeyEquivalent:(NSEvent*)theEvent {
     ALOG_DEBUG(LOG_TAG) << "performKeyEquivalent";
     // Command key combinations are sent via performKeyEquivalent rather than
-    // keyDown:. We just forward this.
+    // keyDown:. Offer the event to the main menu first (Cmd+Q, etc.); otherwise the YES returned below swallows the
+    // combination and the menu item never fires.
+    if ([theEvent modifierFlags] & NSEventModifierFlagCommand) {
+        if ([[NSApp mainMenu] performKeyEquivalent:theEvent]) {
+            return YES;
+        }
+    }
     [self keyEvent:theEvent wasKeyEquivalent:YES];
     return YES;
+}
+
+// Without keyUp:, releases of regular keys never reached AWindow::onKeyUp: keyEvent: was only called from
+// performKeyEquivalent: (presses) and flagsChanged: (modifiers).
+- (void)keyUp:(NSEvent*)event {
+    [self keyEvent:event wasKeyEquivalent:NO];
 }
 
 - (BOOL)_wantsKeyDownForEvent:(NSEvent*)event {

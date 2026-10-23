@@ -33,6 +33,16 @@ MacosApp& MacosApp::inst() {
     self = [super init];
     return self;
 }
+
+// AppKit does not deliver keyUp: to the window while Command is held, so the release of Cmd+<key> would be lost and
+// the key would stay stuck as pressed. Deliver it manually.
+- (void)sendEvent:(NSEvent*)event {
+    if ([event type] == NSEventTypeKeyUp && ([event modifierFlags] & NSEventModifierFlagCommand)) {
+        [[[self keyWindow] firstResponder] tryToPerform:@selector(keyUp:) with:event];
+        return;
+    }
+    [super sendEvent:event];
+}
 @end
 
 @interface AUIAppDelegate : NSObject <NSApplicationDelegate>
