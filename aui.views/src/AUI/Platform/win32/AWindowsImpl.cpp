@@ -527,11 +527,23 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
 
   // the actual non-client area: unlike AdjustWindowRectEx, it is zero for custom caption windows, whose
   // WM_NCCALCSIZE makes the client area cover the whole window.
-  RECT windowRect, clientRect;
-  GetWindowRect(mHandle, &windowRect);
-  GetClientRect(mHandle, &clientRect);
-  const int nonClientX = (windowRect.right - windowRect.left) - (clientRect.right - clientRect.left);
-  const int nonClientY = (windowRect.bottom - windowRect.top) - (clientRect.bottom - clientRect.top);
+  int nonClientX = 0;
+  int nonClientY = 0;
+  if (IsIconic(mHandle)) {
+      // a minimized window has an empty client rect, so it can't be used to measure the frame.
+      if (!hasCustomFrame(*this)) {
+          RECT r = {0, 0, 0, 0};
+          AdjustWindowRectEx(&r, GetWindowLongPtr(mHandle, GWL_STYLE), false, GetWindowLongPtr(mHandle, GWL_EXSTYLE));
+          nonClientX = (r.right - r.left);
+          nonClientY = (r.bottom - r.top);
+      }
+  } else {
+      RECT windowRect, clientRect;
+      GetWindowRect(mHandle, &windowRect);
+      GetClientRect(mHandle, &clientRect);
+      nonClientX = (windowRect.right - windowRect.left) - (clientRect.right - clientRect.left);
+      nonClientY = (windowRect.bottom - windowRect.top) - (clientRect.bottom - clientRect.top);
+  }
   MoveWindow(mHandle, x, y, width + nonClientX, height + nonClientY, false);
 }
 

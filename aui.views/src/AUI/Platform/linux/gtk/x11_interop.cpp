@@ -39,10 +39,16 @@ struct Backend {
 
 Backend backend() {
     // these symbols exist only if GTK was built with X11 backend.
-    Backend b;
-    b.displayGetType = reinterpret_cast<GType (*)()>(dlsym(handle, "gdk_x11_display_get_type"));
-    b.displayGetXDisplay = reinterpret_cast<Display* (*)(GdkDisplay*)>(dlsym(handle, "gdk_x11_display_get_xdisplay"));
-    b.surfaceGetXid = reinterpret_cast<::Window (*)(GdkSurface*)>(dlsym(handle, "gdk_x11_surface_get_xid"));
+    // the symbols never change, so they are looked up once.
+    static const Backend symbols = [] {
+        Backend s;
+        s.displayGetType = reinterpret_cast<GType (*)()>(dlsym(handle, "gdk_x11_display_get_type"));
+        s.displayGetXDisplay =
+            reinterpret_cast<Display* (*)(GdkDisplay*)>(dlsym(handle, "gdk_x11_display_get_xdisplay"));
+        s.surfaceGetXid = reinterpret_cast<::Window (*)(GdkSurface*)>(dlsym(handle, "gdk_x11_surface_get_xid"));
+        return s;
+    }();
+    Backend b = symbols;
     if (!b.displayGetType || !b.displayGetXDisplay || !b.surfaceGetXid) {
         return b;
     }
