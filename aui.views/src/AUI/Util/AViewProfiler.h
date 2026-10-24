@@ -22,6 +22,19 @@
 class API_AUI_VIEWS AViewProfiler {
 public:
     static void displayBoundsOn(AView& v, ARenderContext ctx);
+
+    /**
+     * @brief Draws overflow (clipping) indicators over the view hierarchy of v.
+     * @param v root view to walk through, typically ASurface.
+     * @param ctx render context of v.
+     * @details
+     * Every view with AOverflow other than AOverflow::VISIBLE is outlined. If the contents of such view stick out of
+     * its bounds (and thus are cut off), the edges where it happens are marked with a band and the amount of the cut
+     * off contents in px.
+     *
+     * Enabled by ASurface::Profiling::showOverflow (devtools).
+     */
+    static void displayOverflowOn(AView& v, ARenderContext ctx);
 };
 
 
