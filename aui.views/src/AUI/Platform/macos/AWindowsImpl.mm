@@ -11,6 +11,7 @@
 
 #include "AUI/GL/gl.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Platform/detail/WindowGeometry.h"
 #import <Cocoa/Cocoa.h>
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
@@ -72,10 +73,13 @@ void AWindow::show() {
         redraw();
     };
 
-    auto ns = static_cast<NSWindow*>(mHandle);
-    [ns orderFront:nil];
-    [ns setIsVisible:YES];
-    MacosApp::inst().activateIgnoringOtherApps();
+    // no native window (i.e., AStubWindowManager in tests): don't touch AppKit, it would turn the process into a
+    // foreground application (dock icon, menu bar) and steal the focus
+    if (auto ns = static_cast<NSWindow*>(mHandle)) {
+        [ns orderFront:nil];
+        [ns setIsVisible:YES];
+        MacosApp::inst().activateIgnoringOtherApps();
+    }
 
     emit shown();
 }
@@ -136,13 +140,15 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     // real pixels <-> points, see WindowDelegate windowDidResize:
     const float dpi = [s backingScaleFactor];
     const auto minSize = getMinimumSize();
-    [s setMinSize:NSSizeFromCGSize({minSize.x / dpi, minSize.y / dpi})];
+    [s setMinSize:NSSizeFromCGSize({aui::platform::detail::pixelsToPoints(minSize.x, dpi),
+                                    aui::platform::detail::pixelsToPoints(minSize.y, dpi)})];
     // -1 means "unlimited" (see AView::getMaxSize); dividing it by dpi would pass a negative size to AppKit, which
     // then clamps the window to 0x0.
     const auto maxSize = getMaxSize();
-    const auto maxDimension = [&](int v) -> CGFloat { return v < 0 ? CGFLOAT_MAX : v / dpi; };
-    [s setMaxSize:NSSizeFromCGSize({maxDimension(maxSize.x), maxDimension(maxSize.y)})];
-    [s setContentSize:NSSizeFromCGSize({width / dpi, height / dpi})];
+    [s setMaxSize:NSSizeFromCGSize({aui::platform::detail::maxPixelsToPoints(maxSize.x, dpi),
+                                    aui::platform::detail::maxPixelsToPoints(maxSize.y, dpi)})];
+    [s setContentSize:NSSizeFromCGSize({aui::platform::detail::pixelsToPoints(width, dpi),
+                                        aui::platform::detail::pixelsToPoints(height, dpi)})];
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
@@ -166,8 +172,8 @@ void AWindow::activate(const AString&) {
             [ns deminiaturize:nil];
         }
         [ns makeKeyAndOrderFront:nil];
+        MacosApp::inst().activateIgnoringOtherApps();
     }
-    MacosApp::inst().activateIgnoringOtherApps();
 }
 
 void AWindow::blockUserInput(bool blockUserInput) {

@@ -24,8 +24,9 @@ protected:
     void SetUp() override {
         Test::SetUp();
 
-        if (std::getenv("CI")) {
-            GTEST_SKIP() << "Disabled on CI";
+        // opens a real window on the user's desktop, so it's opt-in
+        if (!std::getenv("AUI_TEST_REAL_WINDOWS")) {
+            GTEST_SKIP() << "Opens a real window; set AUI_TEST_REAL_WINDOWS=1 to run";
         }
 
         ARenderingContextOptions::set({

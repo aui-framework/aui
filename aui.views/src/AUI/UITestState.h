@@ -17,4 +17,12 @@ namespace UITestState {
     API_AUI_VIEWS bool isTesting();
     API_AUI_VIEWS void beginUITest();
     API_AUI_VIEWS void endUITest();
+
+    /**
+     * @brief System dpi (monitor scale) reported to windows while testing. 1 by default; reset by endUITest().
+     * @details
+     * Set it before creating windows. Allows checking hidpi behaviour without a hidpi monitor.
+     */
+    API_AUI_VIEWS void setSystemDpi(float dpi);
+    API_AUI_VIEWS float systemDpi();
 };

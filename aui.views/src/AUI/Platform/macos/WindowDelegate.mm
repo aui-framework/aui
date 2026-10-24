@@ -14,6 +14,7 @@
 //
 
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Platform/detail/WindowGeometry.h>
 #include "WindowDelegate.h"
 
 @implementation WindowDelegate {
@@ -41,7 +42,8 @@
     const float s = [static_cast<NSWindow*>(mWindow->nativeHandle()) backingScaleFactor];
     const NSRect contentFrame = [[static_cast<NSWindow*>(mWindow->nativeHandle()) contentView] frame];
     mWindow->getRenderingContext()->beginResize(*mWindow);
-    mWindow->onResize(contentFrame.size.width * s, contentFrame.size.height * s);
+    mWindow->onResize(aui::platform::detail::pointsToPixels(contentFrame.size.width, s),
+                      aui::platform::detail::pointsToPixels(contentFrame.size.height, s));
     mWindow->getRenderingContext()->endResize(*mWindow);
     mWindow->redraw();
 }
