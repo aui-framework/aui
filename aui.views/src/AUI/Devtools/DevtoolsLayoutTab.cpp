@@ -146,7 +146,7 @@ DevtoolsLayoutTab::DevtoolsLayoutTab(ASurface* targetWindow) : mTargetWindow(tar
     });
     connect(mouseLeave, [this] {
         AUI_NULLSAFE(mTargetWindow->profiling())->highlightView = _weak<AView>();
-        mTargetWindow->redraw();
+        mTargetWindow->flagRedraw();
     });
     connect(targetWindow->mouseMove, [this, targetWindow, model](glm::ivec2 position) {
         if (!AInput::isKeyDown(AInput::LCONTROL)) {
@@ -173,7 +173,7 @@ DevtoolsLayoutTab::~DevtoolsLayoutTab() {
     }
     if (mTargetWindow) {
         AUI_NULLSAFE(mTargetWindow->profiling())->highlightView = _weak<AView>();
-        mTargetWindow->redraw();
+        mTargetWindow->flagRedraw();
     }
 }
 

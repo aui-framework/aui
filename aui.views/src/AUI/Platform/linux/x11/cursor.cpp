@@ -78,7 +78,7 @@ void setCursor(AWindow* window, Cursor cursorHandle) {
         return;
     prevCursor = cursorHandle;
 
-    XDefineCursor(PlatformAbstractionX11::ourDisplay, window->getNativeHandle(), cursorHandle);
+    XDefineCursor(PlatformAbstractionX11::ourDisplay, window->nativeHandle(), cursorHandle);
 }
 
 void setFontCursor(AWindow* window, int cursor) {
@@ -126,6 +126,14 @@ void PlatformAbstractionX11::applyNativeCursor(const ACursor& cursor, AWindow* p
                       setFontCursor(pWindow, XC_sb_v_double_arrow);
                       break;
                   }
+                  case ACursor::NWSE_RESIZE: {
+                      setFontCursor(pWindow, XC_bottom_right_corner);
+                      break;
+                  }
+                  case ACursor::NESW_RESIZE: {
+                      setFontCursor(pWindow, XC_bottom_left_corner);
+                      break;
+                  }
                   case ACursor::MOVE: {
                       setFontCursor(pWindow, XC_fleur);
                       break;
@@ -147,34 +155,4 @@ void PlatformAbstractionX11::applyNativeCursor(const ACursor& cursor, AWindow* p
               setCursor(pWindow, custom->handle());
           } },
         cursor.value());
-}
-
-void PlatformAbstractionX11::windowSetStyle(AWindow& window, WindowStyle ws) {
-    if (!!(ws & (WindowStyle::SYS | WindowStyle::NO_DECORATORS))) {
-        // note the struct is declared elsewhere, is here just for clarity.
-        // code is from [http://tonyobryan.com/index.php?article=9][1]
-        typedef struct Hints {
-            unsigned long flags;
-            unsigned long functions;
-            unsigned long decorations;
-            long inputMode;
-            unsigned long status;
-        } Hints;
-
-        /*
-         * flags:
-         * LS
-         *  0 - close disable
-         *  1 - decorations disable
-         * MS
-         */
-        Hints hints;
-
-        // code to remove decoration
-        hints.flags = 2;
-        hints.decorations = 0;
-        XChangeProperty(
-            PlatformAbstractionX11::ourDisplay, nativeHandle(window), PlatformAbstractionX11::ourAtoms.wmHints,
-            PlatformAbstractionX11::ourAtoms.wmHints, 32, PropModeReplace, (unsigned char*) &hints, 5);
-    }
 }

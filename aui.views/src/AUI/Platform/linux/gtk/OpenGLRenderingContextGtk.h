@@ -33,8 +33,12 @@ public:
         using namespace aui::gtk4_fake;
         auto prev = gdk_gl_context_get_current();
         auto ctx = ourContext;
+        if (ctx != nullptr && prev == ctx) {
+            // already under the context (i.e., a window is realized while processing messages under gtkDoUnderContext);
+            // the outer scope restores everything.
+            ctx = nullptr;
+        }
         if (ctx != nullptr) {
-            AUI_ASSERT(prev != ctx);
             gdk_gl_context_make_current(ctx);
         }
         return aui::ptr::manage_unique(ctx, [prev](GdkGLContext*) {

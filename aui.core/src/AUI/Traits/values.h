@@ -478,11 +478,11 @@ public:
     static constexpr auto MIN = min;
     static constexpr auto MAX = max;
 
-    ranged_number(UnderlyingType value)
+    constexpr ranged_number(UnderlyingType value)
       : value(glm::clamp(value, static_cast<UnderlyingType>(min), static_cast<UnderlyingType>(max))) {}
-    ranged_number() : value(min) {}
+    constexpr ranged_number() : value(min) {}
 
-    operator UnderlyingType() const {   // make it possible to work with ranged_number like with the underlying type
+    constexpr operator UnderlyingType() const {   // make it possible to work with ranged_number like with the underlying type
         return value;
     }
 

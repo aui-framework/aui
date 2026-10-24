@@ -503,7 +503,13 @@ void AForEachUIBase::ensureViewsForLazyMeasurement(AConstraints constraints) {
     }
 }
 
-void AForEachUIBase::materializeAllViewsForMeasurement() { // TODO(Nelonn): calls always when not needed
+void AForEachUIBase::materializeAllViewsForMeasurement() {
+    if (mCache && !getViews().empty() && !mViewport.lock()) {
+        // without a viewport, every view is already materialized (see ensureViewsForMeasurement and onLayout). Don't
+        // recreate them: it throws away the views that have just been laid out, and they are not laid out again
+        // unless the layout is requested - which the recreation itself does.
+        return;
+    }
     if (mCache) {
         removeAllViews();
         mCache->items.clear();

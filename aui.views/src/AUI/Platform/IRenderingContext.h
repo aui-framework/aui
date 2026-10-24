@@ -15,7 +15,6 @@
 #include "AWindowNativePtr.h"
 #include "IRenderingContext.h"
 #include <AUI/Common/AString.h>
-#include <AUI/Enum/WindowStyle.h>
 #include <AUI/Image/AImage.h>
 
 class ASurface;
@@ -40,7 +39,16 @@ public:
         AString name;
         int width;
         int height;
-        WindowStyle ws;
+
+        /**
+         * @brief Whether this is a popup window (dropdown, context menu); see AWindow::isPopup.
+         */
+        bool popup;
+
+        /**
+         * @brief Parent window. Other creation parameters (decoration, modality, etc.) are available via
+         *        AWindow::init of `window`.
+         */
         AWindow* parent;
 
         void setRenderingContext(_unique<IRenderingContext>&& context) const;

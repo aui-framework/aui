@@ -17,9 +17,11 @@
 
 #include <AUI/Common/ATimer.h>
 #include <AUI/Common/AVector.h>
+#include <AUI/Image/IDrawable.h>
 #include <AUI/Layout/AVerticalLayout.h>
 #include <AUI/Platform/ADesktop.h>
 #include <AUI/Util/UIBuildingHelpers.h>
+#include <AUI/View/ADrawableView.h>
 #include <AUI/View/ALabel.h>
 
 using namespace declarative;
@@ -33,7 +35,7 @@ class AMenuContainer : public AViewContainerBase {
     glm::ivec2 mOriginPosition;
 
     void onShowSublistMenu(const _<AView>& view, const AVector<AMenuItem>& items) {
-        auto pos = mOriginPosition + view->getPosition() + glm::ivec2(getMinSize().x, 0);
+        auto pos = mOriginPosition + view->getPosition() + glm::ivec2(measure({}).x, 0);
         mSubWindow = _new<AMenuContainer>(items, pos);
 
         ASurface* window = nullptr;
@@ -46,6 +48,8 @@ class AMenuContainer : public AViewContainerBase {
         surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
         surfaceContainer->addView(mSubWindow);
         mSubWindow->setSurface(surfaceContainer);
+        // measure only once the menu is in the view hierarchy (styles applied)
+        surfaceContainer->setOverlappingSurfaceSize(mSubWindow->measure({}));
 
         mSublistOnHoverDisplayDelay->stop();
     }
@@ -60,15 +64,18 @@ class AMenuContainer : public AViewContainerBase {
         setLayout(std::make_unique<AVerticalLayout>());
         for (auto& i : vector) {
             _<AView> view;
+            auto icon = (i.icon ? _new<ADrawableView>(i.icon) : _new<ADrawableView>()) << ".menu-item-icon";
 
             switch (i.type) {
                 case AMenu::SINGLE: {
                     if (i.shortcut.empty()) {
                         addView(view = Horizontal {
+                            icon,
                             _new<ALabel>(i.name) << ".menu-item-name",
                         } << ".menu-item");
                     } else {
                         addView(view = Horizontal {
+                            icon,
                             _new<ALabel>(i.name) << ".menu-item-name",
                             _new<ASpacerExpanding>(),
                             _new<ALabel>(i.shortcut) << ".menu-item-shortcut"
@@ -96,6 +103,7 @@ class AMenuContainer : public AViewContainerBase {
 
                 case AMenu::SUBLIST: {
                     addView(view = Horizontal {
+                        icon,
                         _new<ALabel>(i.name) << ".menu-item-name",
                         _new<ASpacerExpanding>(),
                         _new<ALabel>(">")
@@ -151,6 +159,8 @@ void AWindowMenuProvider::createMenu(const AVector<AMenuItem>& vector) {
     surfaceContainer->setLayout(std::make_unique<AStackedLayout>());
     surfaceContainer->addView(menu);
     menu->setSurface(surfaceContainer);
+    // measure only once the menu is in the view hierarchy (styles applied)
+    surfaceContainer->setOverlappingSurfaceSize(menu->measure({}));
     mMenuContainer = menu;
 }
 

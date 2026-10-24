@@ -13,6 +13,7 @@
 
 #include "AUI/Image/AImage.h"
 #include <Windows.h>
+#include <memory>
 
 namespace aui::win32 {
     /**
@@ -31,56 +32,76 @@ namespace aui::win32 {
     API_AUI_VIEWS AImage bitmapToImage(HBITMAP hbitmap);
 
 
-    enum class BitmapMode {
-        RGB,
-        A
+    /**
+     * @brief How the alpha channel is stored in a bitmap created by `imageToBitmap`.
+     * @exclusivefor{windows}
+     */
+    enum class BitmapAlpha {
+        /**
+         * @brief Color channels are left as is. Suitable for icons and cursors.
+         */
+        STRAIGHT,
+
+        /**
+         * @brief Color channels are multiplied by alpha. Required for menu item bitmaps (AlphaBlend, DWM).
+         */
+        PREMULTIPLIED,
     };
 
     namespace detail {
+        struct BitmapDeleter { void operator()(HBITMAP h) const noexcept { DeleteObject(h); } };
+        struct MenuDeleter { void operator()(HMENU h) const noexcept { DestroyMenu(h); } };
+        struct IconDeleter { void operator()(HICON h) const noexcept { DestroyIcon(h); } };
+        struct DcDeleter { void operator()(HDC h) const noexcept { DeleteDC(h); } };
 
-        template<typename T>
-        struct Win32Object: aui::noncopyable {
-        public:
-
-            Win32Object(T value) : value(value) {}
-            Win32Object(Win32Object&& rhs) noexcept : value(rhs.value) {
-                rhs.value = nullptr;
-            }
-
-            operator T() const noexcept {
-                return value;
-            }
-
-            ~Win32Object() {}
-
-        protected:
-            T value = nullptr;
-        };
+        template<typename Handle, typename Deleter>
+        using Owned = std::unique_ptr<std::remove_pointer_t<Handle>, Deleter>;
     }
 
-    struct Bitmap: detail::Win32Object<HBITMAP> {
-    public:
-        using detail::Win32Object<HBITMAP>::Win32Object;
+    /**
+     * @brief Owning HBITMAP.
+     * @exclusivefor{windows}
+     */
+    using Bitmap = detail::Owned<HBITMAP, detail::BitmapDeleter>;
 
-        ~Bitmap() {
-            if (value) {
-                DeleteObject(value);
-            }
-        }
-    };
+    /**
+     * @brief Owning HMENU. Destroying a menu also destroys the submenus attached to it, so release() a submenu
+     * once it is appended to its parent.
+     * @exclusivefor{windows}
+     */
+    using Menu = detail::Owned<HMENU, detail::MenuDeleter>;
 
-    struct DeviceContext: detail::Win32Object<HDC> {
-    public:
-        using detail::Win32Object<HDC>::Win32Object;
+    /**
+     * @brief Owning HICON. HCURSOR is the same handle type, so it is used for cursors as well.
+     * @exclusivefor{windows}
+     */
+    using Icon = detail::Owned<HICON, detail::IconDeleter>;
 
-        ~DeviceContext() {
-            if (value) {
-                ReleaseDC(NULL, value);
-            }
-        }
-    };
+    /**
+     * @brief Owning memory HDC (CreateCompatibleDC).
+     * @exclusivefor{windows}
+     */
+    using MemoryDc = detail::Owned<HDC, detail::DcDeleter>;
 
-    API_AUI_VIEWS Bitmap imageRgbToBitmap(AImageView image, BitmapMode mode = BitmapMode::RGB);
+    /**
+     * @brief AImage to 32-bit top-down BGRA HBITMAP (DIB section).
+     * @ingroup core
+     * @exclusivefor{windows}
+     */
+    API_AUI_VIEWS Bitmap imageToBitmap(AImageView image, BitmapAlpha alpha = BitmapAlpha::STRAIGHT);
+
+    /**
+     * @brief AImage to icon.
+     * @ingroup core
+     * @exclusivefor{windows}
+     */
+    API_AUI_VIEWS Icon imageToIcon(AImageView image);
+
+    /**
+     * @brief AImage to cursor.
+     * @ingroup core
+     * @param hotspot cursor's active point, in image pixels.
+     * @exclusivefor{windows}
+     */
+    API_AUI_VIEWS Icon imageToCursor(AImageView image, glm::ivec2 hotspot = {0, 0});
 }
-
-

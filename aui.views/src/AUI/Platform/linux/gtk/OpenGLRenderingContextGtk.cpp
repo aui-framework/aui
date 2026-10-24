@@ -58,6 +58,14 @@ void OpenGLRenderingContextGtk::init(const IRenderingContext::Init& init) {
 
 void OpenGLRenderingContextGtk::destroyNativeWindow(ASurface& window) {
     if (auto c = dynamic_cast<AWindow*>(&window)) {
+        if (PlatformAbstractionGtk::isPopup(*c)) {
+            auto popover = PlatformAbstractionGtk::gtkWidget(*c);
+            if (gtk_widget_get_parent(popover) != nullptr) {
+                gtk_widget_unparent(popover);
+            }
+            g_object_unref(popover);   // reference taken on creation
+            return;
+        }
         gtk_window_destroy(PlatformAbstractionGtk::nativeHandle(*c));
     }
 }

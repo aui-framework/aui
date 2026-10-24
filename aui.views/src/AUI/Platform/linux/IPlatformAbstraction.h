@@ -63,7 +63,9 @@ public:
     virtual bool inputIsKeyDown(AInput::Key k) = 0;
 
     // WINDOW
-    virtual void windowSetStyle(AWindow& window, WindowStyle ws) = 0;
+    virtual void windowSetTitle(AWindow& window, const AString& title) = 0;
+    virtual void windowSetResizable(AWindow& window, bool resizable) = 0;
+    virtual bool windowIsResizable(AWindow& window) const = 0;
     virtual float windowFetchDpiFromSystem(AWindow& window) = 0;
     virtual void windowRestore(AWindow& window) = 0;
     virtual void windowMinimize(AWindow& window) = 0;
@@ -85,8 +87,69 @@ public:
     virtual void windowShowTouchscreenKeyboardImpl(AWindow& window) = 0;
     virtual void windowHideTouchscreenKeyboardImpl(AWindow& window) = 0;
     virtual void windowMoveToCenter(AWindow& window) = 0;
-    virtual void windowQuit(AWindow& window) = 0;
     virtual void windowAnnounceMinMaxSize(AWindow& window) = 0;
+
+    /**
+     * @brief Hands the window drag over to the window manager (used by custom captions).
+     * @details
+     * Must be called from the pointer pressed handler: the window manager needs the button press which started the
+     * drag.
+     */
+    virtual void windowBeginMove(AWindow& window) = 0;
+
+    /**
+     * @brief Window edge or corner, in order of `_NET_WM_MOVERESIZE` directions.
+     */
+    enum class ResizeEdge {
+        TOP_LEFT,
+        TOP,
+        TOP_RIGHT,
+        RIGHT,
+        BOTTOM_RIGHT,
+        BOTTOM,
+        BOTTOM_LEFT,
+        LEFT,
+    };
+
+    /**
+     * @brief Hands the window resize by the specified edge over to the window manager.
+     * @details
+     * Same requirements as windowBeginMove.
+     */
+    virtual void windowBeginResize(AWindow& window, ResizeEdge edge) = 0;
+
+    /**
+     * @return true if the window has resize borders provided by the window manager or the toolkit; otherwise, a custom
+     * window has to handle resizing by its edges itself.
+     */
+    virtual bool windowHasNativeResizeBorders(AWindow& window) = 0;
+
+    /**
+     * @brief Reports the rects of ATitlebar and AWindowTitle inside it (in window coordinates, pixels) to the platform
+     * after layout.
+     * @param titlebar rect of ATitlebar; empty if the window has no titlebar.
+     * @param title rect of AWindowTitle; empty if the titlebar has no visible AWindowTitle, in this case the native
+     * title should be hidden.
+     * @details
+     * Used to align native window controls and the native title with the titlebar contents.
+     */
+    virtual void windowSetTitlebarRect(AWindow& window, AOptional<ARect<int>> titlebar, AOptional<ARect<int>> title) {}
+
+    /**
+     * @return true if the toolkit draws window controls of the DecorationExtended window by itself and reports their
+     * size via AWindow::windowControlsInsets.
+     */
+    virtual bool windowHasNativeWindowControls(AWindow& window) { return false; }
+
+    /**
+     * @return true if the toolkit draws the title of the DecorationExtended window by itself, over AWindowTitle.
+     */
+    virtual bool windowHasNativeWindowTitle(AWindow& window) { return false; }
+
+    /**
+     * @return true if the toolkit blocks the parent of a modal window by itself, so AUI doesn't have to.
+     */
+    virtual bool windowHasNativeModality() const { return false; }
     virtual void windowManagerInitNativeWindow(const IRenderingContext::Init& init) = 0;
     virtual float windowGetDpiRatio(AWindow& window);
 
@@ -101,8 +164,22 @@ public:
         return window.mHandle;
     }
 
-    static AWindow*& parentWindow(AWindow& window) {
-        return window.mParentWindow;
+    /**
+     * @brief Window input is blocked by a modal child window.
+     */
+    static bool& inputBlocked(AWindow& window) {
+        return window.mInputBlocked;
+    }
+
+    /**
+     * @brief Window manager is moving or resizing the window by the request of AUI (see AWindow::beginMove).
+     */
+    static bool& windowManagerDragging(AWindow& window) {
+        return window.mWindowManagerDragging;
+    }
+
+    static AWindow* parentWindow(AWindow& window) {
+        return window.parentWindow();
     }
 #if AUI_PLATFORM_LINUX
     static bool& wasMaximized(AWindow& window) {

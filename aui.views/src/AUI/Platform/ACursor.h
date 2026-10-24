@@ -67,6 +67,16 @@ public:
          * <img src="https://github.com/aui-framework/aui/raw/master/docs/imgs/cursor_ns_resize.png">
          */
         NS_RESIZE,
+
+        /**
+         * @brief Bidirectional resize cursor northwest-southeast.
+         */
+        NWSE_RESIZE,
+
+        /**
+         * @brief Bidirectional resize cursor northeast-southwest.
+         */
+        NESW_RESIZE,
     };
 
     ACursor(System systemCursor): mValue(systemCursor) {}

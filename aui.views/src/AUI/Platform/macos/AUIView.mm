@@ -108,6 +108,14 @@ AOptional<NSEventModifierFlags> modifierFlagOf(AInput::Key key) {
     return YES;
 }
 
+- (BOOL)acceptsFirstMouse:(NSEvent*)event {
+    // Deliver the first click on a background window to the view instead of just
+    // activating the window. Without this, clicking the parent window while a popup
+    // (e.g. context menu) is open only activates the parent; the click is swallowed,
+    // so AWindowBase::onPointerPressed never fires and the popup stays open.
+    return YES;
+}
+
 - (BOOL)becomeFirstResponder {
     ALOG_DEBUG(LOG_TAG) << "becomeFirstResponder";
     return YES;
@@ -223,6 +231,7 @@ AOptional<NSEventModifierFlags> modifierFlagOf(AInput::Key key) {
 }
 
 - (void)keyEvent:(NSEvent*)theEvent wasKeyEquivalent:(BOOL)equiv {
+    if (mAWindow->isUserInputBlocked()) return;
     ALOG_DEBUG(LOG_TAG) << "keyEvent";
     NSEventType eventType = [theEvent type];
     NSEventModifierFlags modifierFlags = [theEvent modifierFlags];
@@ -326,38 +335,47 @@ AOptional<NSEventModifierFlags> modifierFlagOf(AInput::Key key) {
 }
 
 - (void)mouseMoved:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseMoved(mAWindow, event);
 }
 
 - (void)mouseDragged:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseMoved(mAWindow, event);
 }
 
 - (void)rightMouseDragged:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseMoved(mAWindow, event);
 }
 
 - (void)otherMouseDragged:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseMoved(mAWindow, event);
 }
 
 - (void)mouseDown:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseButtonDown(mAWindow, event, AInput::LBUTTON);
 }
 
 - (void)mouseUp:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseButtonUp(mAWindow, event, AInput::LBUTTON);
 }
 
 - (void)rightMouseDown:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseButtonDown(mAWindow, event, AInput::RBUTTON);
 }
 
 - (void)rightMouseUp:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     onMouseButtonUp(mAWindow, event, AInput::RBUTTON);
 }
 
 - (void)scrollWheel:(NSEvent *)event {
+    if (mAWindow->isUserInputBlocked()) return;
     CGFloat deltaX;
     CGFloat deltaY;
     if ([event hasPreciseScrollingDeltas]) {

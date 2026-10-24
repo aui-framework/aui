@@ -17,9 +17,12 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Platform/win32/Theme.h>
 #include <AUI/Platform/CommonRenderingContext.h>
+#include <AUI/Traits/callables.h>
+#include <variant>
 #include <AUI/Platform/ARenderingContextOptions.h>
 #include <AUI/AppInfo.h>
 #include <algorithm>
+#include <dwmapi.h>
 
 LRESULT CALLBACK WindowProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
     auto window = reinterpret_cast<AWindow*>(GetWindowLongPtr(hwnd, GWLP_USERDATA));
@@ -73,11 +76,48 @@ void CommonRenderingContext::init(const Init& init) {
         }
     }
 
+    const auto& windowInit = window.init();
     DWORD style = WS_OVERLAPPEDWINDOW;
+    // WS_EX_DLGMODALFRAME hides the window icon in the titlebar; it's set only when the icon is explicitly disabled.
+    DWORD exStyle = 0;
+    bool dwmFrame = false;
+    bool disableClose = false;
+    if (init.popup) {
+        // popups are hosted as a child of the parent window; no decorations
+        style = WS_CHILD;
+        exStyle = 0;
+    } else {
+        std::visit(
+            aui::lambda_overloaded {
+              [&](const AWindow::Init::DecorationDefault& d) {
+                  if (!d.buttons.minimize) style &= ~DWORD(WS_MINIMIZEBOX);
+                  if (!d.buttons.maximize) style &= ~DWORD(WS_MAXIMIZEBOX);
+                  disableClose = !d.buttons.close;
+                  if (!d.win32Icon) exStyle |= WS_EX_DLGMODALFRAME;
+              },
+              [&](const AWindow::Init::DecorationExtended&) {
+                  // AUI draws the titlebar and the buttons (see ATitlebar); DWM keeps the shadow and rounded corners.
+                  exStyle = 0;
+                  dwmFrame = true;
+              },
+              [&](const AWindow::Init::DecorationBorderless& d) {
+                  exStyle = 0;
+                  if (d.shadow) {
+                      dwmFrame = true;
+                  } else {
+                      style = WS_POPUP;
+                  }
+              },
+            },
+            windowInit.decoration);
+        if (!windowInit.resizable) {
+            style &= ~(DWORD(WS_THICKFRAME) | DWORD(WS_MAXIMIZEBOX));
+        }
+    }
 
     auto u16windowClass = aui::win32::toWchar(mWindowClass);
     auto u16windowName = aui::win32::toWchar(init.name);
-    window.mHandle = CreateWindowEx(WS_EX_DLGMODALFRAME, u16windowClass.c_str(), u16windowName.c_str(), style,
+    window.mHandle = CreateWindowEx(exStyle, u16windowClass.c_str(), u16windowName.c_str(), style,
                              GetSystemMetrics(SM_CXSCREEN) / 2 - init.width / 2,
                              GetSystemMetrics(SM_CYSCREEN) / 2 - init.height / 2, init.width, init.height,
                              init.parent != nullptr ? init.parent->mHandle : nullptr, nullptr, GetModuleHandle(nullptr), nullptr);
@@ -88,11 +128,22 @@ void CommonRenderingContext::init(const Init& init) {
 
     SetWindowLongPtr(window.mHandle, GWLP_USERDATA, reinterpret_cast<long long int>(&window));
 
-    // used for ACustomWindow
     window.winProc(window.mHandle, WM_CREATE, 0, 0);
 
-    if ((init.ws & WindowStyle::MODAL) && init.parent) {
-        EnableWindow(init.parent->mHandle, false);
+    if (init.popup) {
+        // small shadow
+        SetClassLong(window.mHandle, GCL_STYLE, GetClassLong(window.mHandle, GCL_STYLE) | CS_DROPSHADOW);
+    }
+    if (disableClose) {
+        EnableMenuItem(GetSystemMenu(window.mHandle, FALSE), SC_CLOSE, MF_BYCOMMAND | MF_GRAYED);
+    }
+    if (dwmFrame) {
+        // the whole window is the client area (see WM_NCCALCSIZE); the frame extension keeps the shadow.
+        const MARGINS margins = { 0, 0, 1, 0 };
+        DwmExtendFrameIntoClientArea(window.mHandle, &margins);
+        SetWindowPos(
+            window.mHandle, nullptr, 0, 0, 0, 0,
+            SWP_FRAMECHANGED | SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_NOOWNERZORDER | SWP_NOACTIVATE);
     }
 
     RECT clientRect;

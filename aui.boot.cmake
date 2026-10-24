@@ -1075,14 +1075,21 @@ if (NOT CMAKE_C_COMPILER_ID)
     message(FATAL_ERROR "CMAKE_C_COMPILER_ID is not set.\nnote: Please include aui.boot AFTER project() call.")
 endif()
 
-if (CMAKE_SYSTEM_PROCESSOR MATCHES "(x86)|(X86)|(amd64)|(AMD64)")
+# CMAKE_SYSTEM_PROCESSOR reflects the *host* on Windows, which is wrong when e.g. an x86 toolchain is used on an ARM64
+# machine. MSVC reports the actual target in CMAKE_<LANG>_COMPILER_ARCHITECTURE_ID.
+set(_aui_arch "${CMAKE_SYSTEM_PROCESSOR}")
+if (MSVC AND CMAKE_C_COMPILER_ARCHITECTURE_ID)
+    set(_aui_arch "${CMAKE_C_COMPILER_ARCHITECTURE_ID}")
+endif()
+
+if (_aui_arch MATCHES "(x86)|(X86)|(x64)|(amd64)|(AMD64)")
     if (CMAKE_SIZEOF_VOID_P EQUAL 8)
         set(_aui_target_arch "x86_64")
     elseif (CMAKE_SIZEOF_VOID_P EQUAL 4)
         set(_aui_target_arch "x86")
     endif()
 else()
-    string(TOLOWER "${CMAKE_SYSTEM_PROCESSOR}" _aui_target_arch)
+    string(TOLOWER "${_aui_arch}" _aui_target_arch)
 endif()
 
 if (ANDROID)

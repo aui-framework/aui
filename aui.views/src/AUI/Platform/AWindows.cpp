@@ -23,6 +23,9 @@
 #include <chrono>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Action/AMenu.h>
+#include <AUI/View/ATitlebar.h>
+#include <AUI/View/AButton.h>
+#include <AUI/Util/AImageDrawable.h>
 
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/Devtools/DevtoolsPanel.h>
@@ -36,11 +39,83 @@
 
 using namespace declarative;
 
+namespace {
+/**
+ * @return whether the parent of a modal window has to be blocked by AUI.
+ */
+bool needsManualModalBlock() {
+#if AUI_PLATFORM_LINUX
+    return !IPlatformAbstraction::current().windowHasNativeModality();
+#else
+    return true;
+#endif
+}
+}   // namespace
+
 bool AWindow::consumesClick(const glm::ivec2& pos) { return AViewContainer::consumesClick(pos); }
 
-void AWindow::onClosed() {
-    emit closed();
-    quit();
+AWindow::AWindow() : AWindow(Init {}) {}
+
+AWindow::AWindow(AString title, AMetric width, AMetric height)
+  : AWindow(Init { .title = std::move(title), .width = width, .height = height }) {}
+
+AWindow::AWindow(Init init) : mInit(std::move(init)) {
+    mWindowTitle = mInit.title;
+    if (std::holds_alternative<Init::DecorationExtended>(mInit.decoration)) {
+        addAssName(".window-extended");
+    }
+    mResizableCache = mInit.resizable;
+    windowNativePreInit();
+#if AUI_PLATFORM_WIN
+    // the application icon (MAINICON), registered with the window class; AWindow::setIcon overrides it.
+    if (mHandle) {
+        if (auto icon = reinterpret_cast<HICON>(GetClassLongPtr(mHandle, GCLP_HICON))) {
+            mWindowIcon = _new<AImageDrawable>(_new<AImage>(aui::win32::iconToImage(icon)));
+        }
+    }
+#endif
+    const auto dpi = fetchDpiFromSystem();
+    const auto toPx = [&](AMetric m) {
+        return m.getUnit() == AMetric::T_DP ? m.getRawValue() * dpi : m.getRawValue();
+    };
+    setSize(glm::ivec2(int(toPx(mInit.width)), int(toPx(mInit.height))));
+    connect(windowControlsInsets.changed, this, [this] { updateSafeAreaInsetsFromControls(); });
+}
+
+void AWindow::updateDrawnWindowControlsInsets() {
+    if (!std::holds_alternative<Init::DecorationExtended>(mInit.decoration) || hasNativeWindowControls()) {
+        return;
+    }
+    // AUI-drawn controls are views, so the value is derived from the layout. Nothing reads this property back in this
+    // mode (see AWindowControls::build), thus the layout is not affected.
+    const auto insets = mTitlebar ? mTitlebar->drawnControlsInsets() : AWindowControlsInsets {};
+    if (insets != windowControlsInsets.value()) {
+        windowControlsInsets = insets;
+    }
+}
+
+void AWindow::updateSafeAreaInsetsFromControls() {
+#if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS)
+    // desktop: the controls strip is the only thing that may cover the contents. see AWindow::safeAreaInsets.
+    safeAreaInsets = ABoxFields { .top = windowControlsInsets->height };
+#endif
+}
+
+AWindow::AWindow(PopupTag, AWindow& parent)
+  : mInit(Init {
+        .title = "MENU",
+        .width = 100_dp,
+        .height = 100_dp,
+        .parent = Init::Parent { .window = parent },
+        .decoration = Init::DecorationBorderless { .shadow = false },
+        .resizable = false,
+    }),
+    mIsPopup(true) {
+    mWindowTitle = mInit.title;
+    mResizableCache = false;
+    windowNativePreInit();
+    const auto dpi = fetchDpiFromSystem();
+    setSize(glm::ivec2(int(100 * dpi), int(100 * dpi)));
 }
 
 void AWindow::doDrawWindow() {
@@ -53,7 +128,7 @@ void AWindow::doDrawWindow() {
 void AWindow::createDevtoolsWindow() {
     class DevtoolsWindow : public AWindow {
     public:
-        DevtoolsWindow() : AWindow("Devtools", 500_dp, 400_dp) {}
+        DevtoolsWindow() : AWindow(Init { .title = "Devtools", .width = 500_dp, .height = 400_dp }) {}
 
     protected:
         void createDevtoolsWindow() override {
@@ -107,13 +182,44 @@ void AWindow::redraw() {
                 size.y = glm::min(size.y, maxSize.y);
             size = glm::max(size, getMinimumSize());
             AView::setSize(size);
-#if AUI_PLATFORM_WIN
-            // win32 lets us resize the native window right here, keeping it in sync with the layout. on the other
-            // platforms this would mean arguing with the window manager from inside a paint, so we don't.
+#if AUI_PLATFORM_WIN || AUI_PLATFORM_MACOS
+            // win32 and macos let us resize the native window right here (on macos this also announces the min/max
+            // size to NSWindow), keeping it in sync with the layout. on the other platforms this would mean arguing
+            // with the window manager from inside a paint, so we don't.
             setSize(size);
 #endif
             auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
             layout(getPosition(), getSize());
+#if AUI_PLATFORM_MACOS
+            // also hides the native title when the titlebar is gone.
+            applyTitlebarRect();
+#elif AUI_PLATFORM_LINUX
+            {
+                const auto rectOf = [](const AView& v) {
+                    return ARect<int>::fromTopLeftPositionAndSize(v.getPositionInWindow(), v.getSize());
+                };
+                AOptional<ARect<int>> titlebarRect;
+                AOptional<ARect<int>> titleRect;
+                if (mTitlebar) {
+                    titlebarRect = rectOf(*mTitlebar);
+                    if (auto title = mTitlebar->windowTitle(); title && title->getVisibility() == Visibility::VISIBLE) {
+                        titleRect = rectOf(*title);
+                    }
+                }
+                if (titlebarRect != mLastTitlebarRect || titleRect != mLastWindowTitleRect) {
+                    mLastTitlebarRect = titlebarRect;
+                    mLastWindowTitleRect = titleRect;
+                    // we are in the middle of painting; toolkits don't like when their widgets are changed under
+                    // painting.
+                    AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken), titlebarRect, titleRect] {
+                        if (alive.expired() || mClosed) {
+                            return;
+                        }
+                        IPlatformAbstraction::current().windowSetTitlebarRect(*this, titlebarRect, titleRect);
+                    };
+                }
+            }
+#endif
             auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
             unsigned millis = mFrameMillis = static_cast<unsigned>((after - before).count());
             if (millis > 20) {
@@ -132,6 +238,8 @@ void AWindow::redraw() {
 #endif
         }
         applyPendingLayoutRoots();
+        // after both full and partial relayouts.
+        updateDrawnWindowControlsInsets();
 
         auto before = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
         {
@@ -173,16 +281,84 @@ void AWindow::redraw() {
     }
 }
 
-_<AWindow> AWindow::wrapViewToWindow(
-    const _<AView>& view, const AString& title, int width, int height, AWindow* parent, WindowStyle ws) {
+_<AWindow> AWindow::wrapViewToWindow(const _<AView>& view, Init init) {
     view->setExpanding();
 
-    auto window = _new<AWindow>(title, width, height, parent, ws);
+    auto window = _new<AWindow>(std::move(init));
     window->setContents(Stacked { view });
     return window;
 }
 
-void AWindow::close() { onClosed(); }
+void AWindow::show() {
+    if (mClosed) {
+        ALogger::err("AWindow") << "show() called on a closed window; create another window instead:\n"
+                                << AStacktrace::capture(1);
+        AUI_ASSERTX(false, "closed window can't be shown again");
+        return;
+    }
+    showImpl();
+}
+
+void AWindow::hide() {
+    if (mClosed) {
+        return;
+    }
+    hideImpl();
+}
+
+void AWindow::setTitle(AString title) {
+    if (mWindowTitle == title) {
+        return;
+    }
+    mWindowTitle = std::move(title);
+    emit titleChanged(mWindowTitle);
+    if (mClosed) {
+        return;
+    }
+    setTitleImpl(mWindowTitle);
+}
+
+void AWindow::destroyNativeWindow() {
+    if (std::exchange(mNativeDestroyed, true)) {
+        return;
+    }
+#if AUI_PLATFORM_WIN
+    if (mHandle) {
+        ShowWindow(mHandle, SW_HIDE);
+    }
+#endif
+    if (mRenderingContext) {
+        mRenderingContext->destroyNativeWindow(*this);
+    }
+    mHandle = {};
+}
+
+void AWindow::close() {
+    if (std::exchange(mClosed, true)) {
+        return;
+    }
+    // keep ourselves alive until the end of this function and a bit longer, so slots connected to closed and the code
+    // which called us are able to finish their business.
+    auto self = std::move(mSelfHolder);
+    mSelfHolder = nullptr;
+
+    emit closed();
+
+    if (mInit.parent && mInit.parent->modal && !mInit.parent->window.isClosed() && needsManualModalBlock()) {
+        mInit.parent->window.blockUserInput(false);
+    }
+
+    destroyNativeWindow();
+#if AUI_PLATFORM_WIN
+    setLayout(nullptr);
+#endif
+    getWindowManager().mWindows.removeIf([this](const auto& p) { return p.get() == this; });
+
+    if (self) {
+        AThread::current()->enqueue([self = std::move(self)]() mutable { self = nullptr; });
+    }
+    getWindowManager().notifyProcessMessages();
+}
 
 void AWindow::onFocusAcquired() {
     mIsFocused = true;
@@ -195,6 +371,31 @@ void AWindow::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event) {
         return;
     }
     AUI_NULLSAFE(mCursor)->applyNativeCursor(this);
+#if AUI_PLATFORM_LINUX
+    applyResizeEdgeCursor(pos);
+#endif
+}
+
+void AWindow::onPointerPressed(const APointerPressedEvent& event) {
+    if (!UITestState::isTesting() && !mClosed && captionPressed(event)) {
+        return;
+    }
+    ASurface::onPointerPressed(event);
+}
+
+bool AWindow::isCaptionAt(const glm::ivec2& pos) {
+    auto v = getViewAtRecursive(pos);
+    // the deepest view is usually a part of an interactive widget (i.e., a label inside a button), so we check all
+    // views from it up to the titlebar.
+    for (AView* cur = v.get(); cur != nullptr && cur != this; cur = cur->getParent()) {
+        if (dynamic_cast<AButton*>(cur) || cur->getAssNames().contains(".override-title-dragging")) {
+            return false;
+        }
+        if (dynamic_cast<ATitlebar*>(cur)) {
+            return true;
+        }
+    }
+    return false;
 }
 
 void AWindow::onFocusLost() {
@@ -224,13 +425,18 @@ void AWindow::setPosition(glm::ivec2 position) { setGeometry(position.x, positio
 void AWindow::setSize(glm::ivec2 size) { setGeometry(getPosition().x, getPosition().y, size.x, size.y); }
 
 glm::ivec2 AWindow::getMinimumSize() {
-    static constexpr int MAX_MIN_SIZE = 1000;
-
     const auto styled = getMinSize();
-    // the narrowest our contents can be laid out at, and the height they need at exactly that width.
+    // the narrowest our contents can be laid out at.
     const int width = glm::max(styled.x, computeMinMaxAxis().min);
-    const int height = glm::max(styled.y, measure(AConstraints::fixedInline(width)).y);
-    return glm::min(glm::ivec2(width, height), glm::ivec2(MAX_MIN_SIZE));
+    // the height contents need depends on the width they are laid out at (i.e., wrapped text): a wide window needs
+    // less height than a narrow one. so it is measured at the current width, not at the minimum one.
+    // NOTE: this deviates from the convention of GTK and Qt (gtk_widget_measure at the minimum width, and
+    // QLayout::minimumHeightForWidth(minimumSize().width()) respectively), which yield a static minimum height: the
+    // tallest the contents can ever be. the static one never changes during a resize, while ours is re-announced to
+    // the window manager on every layout, which may feel jumpy (and lags one step behind on win32, as
+    // WM_GETMINMAXINFO is handled before the new width is applied). kept for now so a wide window can be made short.
+    const int height = glm::max(styled.y, measure(AConstraints::fixedInline(glm::max(width, getWidth()))).y);
+    return glm::ivec2(width, height);
 }
 
 glm::ivec2 AWindow::mapPositionTo(const glm::ivec2& position, _<AWindow> other) {
@@ -253,18 +459,20 @@ AWindowManager::AWindowManager() : mHandle(this) {
 
 AWindowManager::~AWindowManager() {}
 
-void AWindow::windowNativePreInit(const AString& name, int width, int height, AWindow* parent, WindowStyle ws) {
-    mWindowTitle = name;
-    mParentWindow = parent;
+void AWindow::windowNativePreInit() {
+    const int width = int(mInit.width.getRawValue());
+    const int height = int(mInit.height.getRawValue());
     mSize = (glm::max) (glm::ivec2 { width, height }, getMinSize());
 
     currentWindowStorage() = this;
 
-    getWindowManager().initNativeWindow({ *this, name, width, height, ws, parent });
+    getWindowManager().initNativeWindow({ *this, mInit.title, width, height, mIsPopup, parentWindow() });
 
     moveToCenter();
 
-    setWindowStyle(ws);
+    if (mInit.parent && mInit.parent->modal && needsManualModalBlock()) {
+        mInit.parent->window.blockUserInput(true);
+    }
 
     AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken)] {
         if (alive.expired()) {
@@ -285,11 +493,11 @@ void AWindow::windowNativePreInit(const AString& name, int width, int height, AW
 _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& position, const glm::ivec2& size) {
     class AOverlappingWindow : public AWindow {
     public:
-        AOverlappingWindow(AWindow* parent) : AWindow("MENU", 100_dp, 100_dp, parent, WindowStyle::SYS) {
+        AOverlappingWindow(AWindow& parent) : AWindow(PopupTag {}, parent) {
             setCustomStyle({ ass::Padding { 0 } });
         }
     };
-    auto window = _new<AOverlappingWindow>(this);
+    auto window = _new<AOverlappingWindow>(*this);
     auto finalPos = unmapPosition(position);
     window->setGeometry(finalPos.x, finalPos.y, size.x, size.y);
     // show later

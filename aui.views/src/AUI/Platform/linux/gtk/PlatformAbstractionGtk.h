@@ -24,6 +24,26 @@ public:
         return reinterpret_cast<aui::gtk4_fake::GtkWindow*&>(IPlatformAbstraction::nativeHandle(window));
     }
 
+    /**
+     * @brief Native handle of the window as a widget. Either GtkWindow or, for popups, GtkPopover.
+     */
+    static aui::gtk4_fake::GtkWidget* gtkWidget(AWindow& window) {
+        return reinterpret_cast<aui::gtk4_fake::GtkWidget*>(IPlatformAbstraction::nativeHandle(window));
+    }
+
+    /**
+     * @brief GtkWindow of the window; nullptr if the window is a popup.
+     */
+    static aui::gtk4_fake::GtkWindow* nativeWindow(AWindow& window);
+
+    /**
+     * @brief Whether the window is displayed as GtkPopover.
+     * @details
+     * Wayland clients can't position toplevels, but can position popups (xdg_popup). GTK4 exposes them only as
+     * GtkPopover, so popup AUI windows (AWindow::isPopup) are hosted in a GtkPopover on Wayland.
+     */
+    static bool isPopup(AWindow& window);
+
     PlatformAbstractionGtk();
     ~PlatformAbstractionGtk() override;
     void init() override;
@@ -36,7 +56,9 @@ public:
     AInput::Key inputFromNative(int k) override;
     int inputToNative(AInput::Key key) override;
     bool inputIsKeyDown(AInput::Key k) override;
-    void windowSetStyle(AWindow &window, WindowStyle ws) override;
+    void windowSetTitle(AWindow &window, const AString& title) override;
+    void windowSetResizable(AWindow &window, bool resizable) override;
+    bool windowIsResizable(AWindow &window) const override;
     float windowFetchDpiFromSystem(AWindow &window) override;
     void windowRestore(AWindow &window) override;
     void windowMinimize(AWindow &window) override;
@@ -57,8 +79,25 @@ public:
     void windowShowTouchscreenKeyboardImpl(AWindow &window) override;
     void windowHideTouchscreenKeyboardImpl(AWindow &window) override;
     void windowMoveToCenter(AWindow &window) override;
-    void windowQuit(AWindow &window) override;
     void windowAnnounceMinMaxSize(AWindow &window) override;
+    void windowSetTitlebarRect(AWindow &window, AOptional<ARect<int>> titlebar, AOptional<ARect<int>> title) override;
+    bool windowHasNativeWindowControls(AWindow &window) override;
+    bool windowHasNativeWindowTitle(AWindow &window) override;
+    void windowBeginMove(AWindow &window) override;
+    void windowBeginResize(AWindow &window, ResizeEdge edge) override;
+    bool windowHasNativeResizeBorders(AWindow &window) override;
+    bool windowHasNativeModality() const override { return true; }
+
+    /**
+     * @brief The latest button press; required by the window manager to start interactive move.
+     */
+    struct LastButtonPress {
+        aui::gtk4_fake::GdkDevice* device = nullptr;
+        unsigned button = 0;
+        double x = 0;
+        double y = 0;
+        uint32_t time = 0;
+    } lastButtonPress;
     void windowManagerInitNativeWindow(const IRenderingContext::Init &init) override;
     float windowGetDpiRatio(AWindow &window) override;
     AMessageBox::ResultButton messageBoxShow(
@@ -68,12 +107,50 @@ public:
     static AInput::Key inputFromNative2(unsigned key);
 
 protected:
+    static constexpr auto POPUP_KEY = "aui-popup";
+    static constexpr auto CONTROLS_START_KEY = "aui-controls-start";
+    static constexpr auto CONTROLS_END_KEY = "aui-controls-end";
+    static constexpr auto TITLE_KEY = "aui-title";
+    static constexpr auto TITLE_SPACER_START_KEY = "aui-title-spacer-start";
+    static constexpr auto TITLE_SPACER_END_KEY = "aui-title-spacer-end";
     AGlibPtr<GApplication> mApplication;
     aui::gtk4_fake::GtkWidget* windowManagerInitGtkBox(const IRenderingContext::Init &init) const;
+
+    /**
+     * @brief Builds the child widget of the window, according to AWindow::Init::decoration.
+     */
+    aui::gtk4_fake::GtkWidget* windowManagerInitContent(const IRenderingContext::Init &init, aui::gtk4_fake::GtkWindow* window) const;
+
+    /**
+     * @return system decoration layout filtered by the enabled buttons.
+     */
+    static AString gtkFilteredLayout(const AWindow::Init::Buttons& buttons);
     void windowManagerInitCommon(const IRenderingContext::Init &init, aui::gtk4_fake::GtkWindow* window);
+
+    /**
+     * @brief Hides disabled window buttons by adjusting titlebar's decoration layout.
+     */
+    static void gtkApplyButtons(aui::gtk4_fake::GtkWidget* titlebar, const AWindow::Init::Buttons& buttons);
+
+    /**
+     * @brief Creates popover-hosted window if the window is a popup and the display server needs it.
+     * @return true if the window was created.
+     */
+    bool windowManagerInitPopup(const IRenderingContext::Init &init);
     void gtkSetWindowClassHint(RenderingContextGtk* context, aui::gtk4_fake::GtkWindow* gtkWindow);
 
+    /**
+     * @brief Titlebar widget which visibility is controlled by AWindow::Init::decoration.
+     * @details
+     * Present only if the window was created with client-side decorations (i.e., titlebar was installed before the
+     * window got realized).
+     */
+    static aui::gtk4_fake::GtkWidget* gtkTitlebar(aui::gtk4_fake::GtkWindow* window);
+    static void gtkSetTitlebar(aui::gtk4_fake::GtkWindow* window, aui::gtk4_fake::GtkWidget* titlebar);
+
 private:
+    static constexpr auto TITLEBAR_KEY = "aui-titlebar";
+    void popupSetGeometry(AWindow &window, int x, int y, int width, int height);
     GMainContext* mMainContext;
     
     void setupDpiChangeMonitoring();

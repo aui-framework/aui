@@ -15,6 +15,7 @@
 #include "AUI/View/ACheckBox.h"
 #include "AUI/View/AText.h"
 #include "AUI/Platform/APlatform.h"
+#include "AUI/Action/AMenu.h"
 
 using namespace ass;
 using namespace declarative;
@@ -42,6 +43,7 @@ _<ALabel> header(AString title) {
 }   // namespace
 
 DevtoolsProfilingOptions::DevtoolsProfilingOptions(ASurface* targetWindow) {
+    auto usingSystemMenus = _new<AProperty<bool>>(AMenu::usingSystemMenus());
     auto scalingParams = _new<AProperty<aui::float_within_0_1>>(1.f / 3.f);
     setContents(Centered { AScrollArea::Builder().withContents(
         Vertical::Expanding {
@@ -124,6 +126,18 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(ASurface* targetWindow) {
           AText::fromItems(
               { "In addition to your monitor DPI adjustments, changes scaling factor with AWindow::setScalingParams "
                 "API. In this setting, 100% takes no effect." }),
+          header("Menus"),
+          CheckBox {
+            AUI_REACT(*usingSystemMenus),
+            [usingSystemMenus](bool checked) {
+                *usingSystemMenus = checked;
+                AMenu::setUseSystemMenus(checked);
+            },
+            Label { "Use system menus" },
+          },
+          AText::fromItems(
+              { "Switches context menus between platform-native (NSMenu, HMENU) and AUI-drawn ones "
+                "(AMenu::setUseSystemMenus). No effect on Linux." }),
           header("Typography"),
           /// [fromItems]
           CheckBox {

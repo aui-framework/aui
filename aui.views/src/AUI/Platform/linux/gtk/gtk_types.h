@@ -220,6 +220,23 @@ using GdkSurface = struct _GdkSurface;
 using GtkFileChooser = struct _GtkFileChooser;
 using GtkIconTheme = struct _GtkIconTheme;
 using GdkDisplay = struct _GdkDisplay;
+using GdkClipboard = struct _GdkClipboard;
+using GdkCursor = struct _GdkCursor;
+using GdkMemoryTexture = struct _GdkMemoryTexture;
+enum GdkToplevelState : unsigned {
+    GDK_TOPLEVEL_STATE_MINIMIZED = 1 << 0,
+    GDK_TOPLEVEL_STATE_MAXIMIZED = 1 << 1,
+};
+enum GdkSurfaceEdge {
+    GDK_SURFACE_EDGE_NORTH_WEST,
+    GDK_SURFACE_EDGE_NORTH,
+    GDK_SURFACE_EDGE_NORTH_EAST,
+    GDK_SURFACE_EDGE_WEST,
+    GDK_SURFACE_EDGE_EAST,
+    GDK_SURFACE_EDGE_SOUTH_WEST,
+    GDK_SURFACE_EDGE_SOUTH,
+    GDK_SURFACE_EDGE_SOUTH_EAST,
+};
 using GdkPixbuf = struct _GdkPixbuf;
 using GtkTreeModel = struct _GtkTreeModel;
 using GtkCssProvider = struct _GtkCssProvider;
@@ -228,7 +245,19 @@ using GtkImage = struct _GtkImage;
 using GtkFileFilter = struct _GtkFileFilter;
 using GtkPrinter = struct _GtkPrinter;
 using GtkPrintBackend = struct _GtkPrintBackend;
-using GdkRectangle = struct _GdkRectangle;
+using GdkRectangle = struct _GdkRectangle {
+    int x;
+    int y;
+    int width;
+    int height;
+};
+using GtkPopover = struct _GtkPopover {
+    GtkWidget parent_instance;
+};
+typedef enum { GTK_POS_LEFT, GTK_POS_RIGHT, GTK_POS_TOP, GTK_POS_BOTTOM } GtkPositionType;
+typedef enum { GTK_PACK_START, GTK_PACK_END } GtkPackType;
+typedef enum { GTK_OVERFLOW_VISIBLE, GTK_OVERFLOW_HIDDEN } GtkOverflow;
+typedef enum { GTK_ALIGN_FILL, GTK_ALIGN_START, GTK_ALIGN_END, GTK_ALIGN_CENTER, GTK_ALIGN_BASELINE } GtkAlign;
 using GtkIMMulticontext = struct _GtkIMMulticontext;
 using GtkPageSetup = struct _GtkPageSetup;
 using GtkPaperSize = struct _GtkPaperSize;

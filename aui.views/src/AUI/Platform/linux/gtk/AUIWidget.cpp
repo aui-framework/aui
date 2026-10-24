@@ -121,6 +121,13 @@ static void aui_widget_init(AUIWidget* myWidget) {
                 }
 
                 case GDK_BUTTON_PRESS: {
+                    if (auto pa = dynamic_cast<PlatformAbstractionGtk*>(IPlatformAbstraction::currentSafe())) {
+                        auto& press = pa->lastButtonPress;
+                        press.device = gdk_event_get_device(event);
+                        press.button = gdk_button_event_get_button(event);
+                        press.time = gdk_event_get_time(event);
+                        gdk_event_get_position(event, &press.x, &press.y);
+                    }
                     auto position = getEventPosition(event, GTK_WIDGET(widget));
 
                     widget->renderingContext->window().onPointerPressed(APointerPressedEvent {
@@ -188,7 +195,10 @@ static void aui_widget_init(AUIWidget* myWidget) {
 static void aui_widget_class_init(AUIWidgetClass* klass) {
     GTK_WIDGET_CLASS(klass)->realize = [](GtkWidget* widget) {
         GTK_WIDGET_CLASS(aui_widget_parent_class)->realize(widget);
-        AUI_WIDGET_WIDGET(widget)->renderingContext->gtkRealize(widget);
+        auto& context = *AUI_WIDGET_WIDGET(widget)->renderingContext;
+        context.gtkRealize(widget);
+        // the initial scale never triggers scale-factor notification, so apply it explicitly (like X11 does).
+        context.gtkDoUnderContext([&] { context.window().updateDpi(); });
     };
     GTK_WIDGET_CLASS(klass)->unrealize = [](GtkWidget* widget) {
         GTK_WIDGET_CLASS(aui_widget_parent_class)->unrealize(widget);
@@ -199,7 +209,22 @@ static void aui_widget_class_init(AUIWidgetClass* klass) {
         AUI_WIDGET_WIDGET(widget)->renderingContext->gtkSnapshot(widget, snapshot);
     };
 
+    GTK_WIDGET_CLASS(klass)->size_allocate = [](GtkWidget* widget, int width, int height, int baseline) {
+        GTK_WIDGET_CLASS(aui_widget_parent_class)->size_allocate(widget, width, height, baseline);
+        // popovers attached to this widget (popup windows, native menus) must be re-positioned and re-sized along with
+        // it; GTK doesn't do that for custom widgets without a layout manager.
+        for (auto child = gtk_widget_get_first_child(widget); child; child = gtk_widget_get_next_sibling(child)) {
+            if (gtk_widget_get_mapped(child)) {
+                gtk_popover_present(reinterpret_cast<GtkPopover*>(child));
+            }
+        }
+    };
+
     G_OBJECT_CLASS(klass)->dispose = [](GObject* object) {
+        // popups attached to this widget are still owned by their AWindows; just detach them.
+        while (auto child = gtk_widget_get_first_child(GTK_WIDGET(object))) {
+            gtk_widget_unparent(child);
+        }
         auto widget = AUI_WIDGET_WIDGET(object);
         widget->~AUIWidget();
         G_OBJECT_CLASS(aui_widget_parent_class)->dispose(object);

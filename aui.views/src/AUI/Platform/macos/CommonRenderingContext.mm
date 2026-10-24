@@ -14,6 +14,8 @@
 //
 
 #include <AUI/Platform/CommonRenderingContext.h>
+#include <AUI/Traits/callables.h>
+#include <variant>
 #include "MacosApp.h"
 #import "WindowDelegate.h"
 #import "AUIView.h"
@@ -28,7 +30,46 @@ void CommonRenderingContext::init(const Init& init) {
         auto& window = init.window;
         MacosApp::inst();
         auto windowRect = NSMakeRect(100, 100, init.width, init.height);
-        NSWindowStyleMask windowStyle = NSWindowStyleMaskTitled | NSWindowStyleMaskClosable | NSWindowStyleMaskResizable | NSWindowStyleMaskMiniaturizable;
+        const auto& windowInit = window.init();
+        NSWindowStyleMask windowStyle = NSWindowStyleMaskBorderless;
+        bool transparentTitlebar = false;
+        bool hasShadow = true;
+        AWindow::Init::Buttons buttons;
+        bool showButtons = true;
+        if (!init.popup) {
+            std::visit(
+                aui::lambda_overloaded {
+                  [&](const AWindow::Init::DecorationDefault& d) {
+                      windowStyle = NSWindowStyleMaskTitled;
+                      if (d.buttons.close) windowStyle |= NSWindowStyleMaskClosable;
+                      if (d.buttons.minimize) windowStyle |= NSWindowStyleMaskMiniaturizable;
+                      buttons = d.buttons;
+                  },
+                  [&](const AWindow::Init::DecorationExtended& d) {
+                      // content extends into the titlebar; the native traffic lights are kept.
+                      windowStyle = NSWindowStyleMaskTitled | NSWindowStyleMaskFullSizeContentView;
+                      if (d.buttons.close) windowStyle |= NSWindowStyleMaskClosable;
+                      if (d.buttons.minimize) windowStyle |= NSWindowStyleMaskMiniaturizable;
+                      transparentTitlebar = true;
+                      buttons = d.buttons;
+                  },
+                  [&](const AWindow::Init::DecorationBorderless& d) {
+                      if (d.shadow) {
+                          // titled window without the titlebar: the system keeps the shadow and rounded corners.
+                          windowStyle = NSWindowStyleMaskTitled | NSWindowStyleMaskFullSizeContentView;
+                          transparentTitlebar = true;
+                          showButtons = false;
+                      } else {
+                          windowStyle = NSWindowStyleMaskBorderless;
+                          hasShadow = false;
+                      }
+                  },
+                },
+                windowInit.decoration);
+            if (windowInit.resizable) {
+                windowStyle |= NSWindowStyleMaskResizable;
+            }
+        }
         NSWindow* nsWindow = [[NSWindow alloc] initWithContentRect:windowRect styleMask:windowStyle backing:NSBackingStoreBuffered defer:NO];
         AUI_ASSERT(nsWindow != nullptr);
         window.mHandle = nsWindow;
@@ -46,11 +87,33 @@ void CommonRenderingContext::init(const Init& init) {
             [nsWindow setAcceptsMouseMovedEvents:YES];
             [nsWindow setRestorable:NO];
             [nsWindow setTitle: [NSString stringWithUTF8String:(init.name.c_str())]];
+            if (init.popup) {
+                // popup (context menu, dropdown, tooltip)
+                [nsWindow setLevel:NSPopUpMenuWindowLevel];
+                [nsWindow setHidesOnDeactivate:YES];
+                [nsWindow setOpaque:NO];
+                [nsWindow setBackgroundColor:[NSColor clearColor]];
+                [nsWindow setHasShadow:YES];
+            } else {
+                [nsWindow setHasShadow:hasShadow];
+                if (transparentTitlebar) {
+                    [nsWindow setTitlebarAppearsTransparent:YES];
+                    [nsWindow setTitleVisibility:NSWindowTitleHidden];
+                }
+                [[nsWindow standardWindowButton:NSWindowCloseButton] setHidden:!(showButtons && buttons.close)];
+                [[nsWindow standardWindowButton:NSWindowMiniaturizeButton] setHidden:!(showButtons && buttons.minimize)];
+                [[nsWindow standardWindowButton:NSWindowZoomButton] setHidden:!(showButtons && buttons.maximize && windowInit.resizable)];
+                if (auto parent = window.parentWindow(); parent && parent->nativeHandle()) {
+                    // keeps the child above its parent and moves them together
+                    [static_cast<NSWindow*>(parent->nativeHandle()) addChildWindow:nsWindow ordered:NSWindowAbove];
+                }
+            }
         } @catch (NSException* e) {
             throw AException([[e reason] UTF8String]);
         }
 
         mWindow = &window;
+        window.updateWindowControlsInsets();
 
 
         CVDisplayLinkCreateWithActiveCGDisplays(reinterpret_cast<CVDisplayLinkRef*>(&mDisplayLink));

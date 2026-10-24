@@ -143,6 +143,7 @@ nav:
     - signal_slot.md
     - property-system.md
     - 'Handling HiDPI': ametric.md
+    - migration-window-init.md
     - retained_immediate_ui.md
     - render-to-texture.md
 
@@ -197,6 +198,7 @@ nav:
   - 'aui::views':
     - 'Overview': views.md
     - 'Rendering': irenderer.md
+    - 'Menu': amenu.md
     - aui-box-model.md
     - app-lifetime.md
   - 'aui::crypt':
