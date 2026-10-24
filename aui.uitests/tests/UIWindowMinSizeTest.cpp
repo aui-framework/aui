@@ -61,14 +61,15 @@ TEST_F(UIWindowMinSize, IsMeasuredFromContents) {
     EXPECT_EQ(mWindow->getMinimumSize().y, 40 + padding.vertical());
 }
 
-// Contents that need more than that are expected to scroll or to overflow: a window that does not fit on the screen
-// is worse than a clipped view.
-TEST_F(UIWindowMinSize, IsCapped) {
+// The minimum size is not capped: contents that need more space than any screen has still get what they ask for.
+TEST_F(UIWindowMinSize, IsNotCapped) {
     build(Centered {
         _new<AView>() AUI_OVERRIDE_STYLE { MinSize { 5000_dp } },
     });
 
-    EXPECT_EQ(mWindow->getMinimumSize(), glm::ivec2(1000));
+    const auto padding = mWindow->getPadding();
+    EXPECT_EQ(mWindow->getMinimumSize().x, 5000 + padding.horizontal());
+    EXPECT_EQ(mWindow->getMinimumSize().y, 5000 + padding.vertical());
 }
 
 // An empty window demands nothing but its own padding.

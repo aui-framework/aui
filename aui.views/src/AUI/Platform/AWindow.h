@@ -439,7 +439,7 @@ public:
          * @brief Ordinary OS-drawn titlebar and border.
          */
         struct DecorationDefault {
-            Buttons buttons;
+            Buttons buttons = Buttons {};
 
             /**
              * @brief Whether the OS titlebar shows the application icon next to the title.
@@ -461,7 +461,7 @@ public:
          * titlebar.
          */
         struct DecorationExtended {
-            Buttons buttons;
+            Buttons buttons = Buttons {};
 
             /**
              * @brief Whether [declarative::Titlebar] draws the application icon (see `AWindow::windowIcon`) before
