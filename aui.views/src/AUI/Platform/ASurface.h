@@ -30,6 +30,8 @@ namespace testing {
 class UITest;
 }
 
+struct ARenderContext;
+
 /**
  * @brief Root of a view tree that is displayed on some target: a window or an embedded surface.
  * @ingroup views
@@ -53,7 +55,7 @@ class API_AUI_VIEWS ASurface : public AViewContainer {
     friend struct IRenderingContext::Init;
 
 public:
-    using BeforeFrameQueue = AMessageQueue<AFakeMutex, IRenderer&>;
+    using BeforeFrameQueue = AMessageQueue<AFakeMutex, ARenderContext>;
 
     /**
      * @return Current surface for current thread.
@@ -478,6 +480,15 @@ protected:
 
     void markPixelDataInvalid(ARect<int> invalidArea) override;
 
+    [[nodiscard]]
+    const AOptional<ARect<int>>& getInvalidArea() const noexcept {
+        return mInvalidArea;
+    }
+
+    void resetInvalidArea() {
+        mInvalidArea.reset();
+    }
+
 private:
     void processTouchscreenKeyboardRequest();
 
@@ -488,6 +499,7 @@ private:
      */
     AVector<_weak<AView>> mPendingLayoutRoots;
     aui::lazy<Profiling> mProfiling = [] { return Profiling {}; };
+    AOptional<ARect<int>> mInvalidArea;
     float mDpiRatio = 1.f;
     ScalingParams mScalingParams;
 

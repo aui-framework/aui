@@ -9,17 +9,12 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 07.01.2021.
-//
-
-
 #include "TransformOffset.h"
-#include "AUI/Render/IRenderer.h"
+#include <AUI/Render/ACanvas.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 void ass::prop::Property<ass::TransformOffset>::renderFor(AView* view, const ARenderContext& ctx) {
-    ctx.render.setTransform(glm::translate(glm::mat4(1.f), glm::vec3{mInfo.offsetX, mInfo.offsetY, 0.0}));
+    ctx.canvas.setTransform(glm::translate(glm::mat4(1.f), glm::vec3{mInfo.offsetX, mInfo.offsetY, 0.0}));
 }
 
 ass::prop::PropertySlot ass::prop::Property<ass::TransformOffset>::getPropertySlot() const {

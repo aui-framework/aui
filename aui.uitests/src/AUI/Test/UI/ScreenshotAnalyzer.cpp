@@ -15,8 +15,14 @@
 
 #include "ScreenshotAnalyzer.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Util/AStubWindowManager.h"
+#include <AUI/Platform/IRenderingContext.h>
 
 ScreenshotAnalyzer ScreenshotAnalyzer::makeScreenshot() {
+    if (auto stub = dynamic_cast<AStubWindowManager*>(&ASurface::getWindowManager())) {
+        return stub->makeScreenshot(*dynamic_cast<AWindow*>(AWindow::current()));
+    }
+    // a real window manager (i.e., UIOpenGLRendererTest) renders on an actual surface
     return ASurface::current()->getRenderingContext()->makeScreenshot();
 }
 

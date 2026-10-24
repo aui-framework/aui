@@ -18,6 +18,8 @@
 
 #include "AAnimator.h"
 
+class ACanvas;
+
 class API_AUI_VIEWS APlaceholderAnimator: public AAnimator {
 public:
     APlaceholderAnimator();
@@ -31,7 +33,7 @@ public:
     };
 
 protected:
-    void doPostRender(AView* view, float theta, IRenderer& render) override;
+    void doPostRender(AView* view, float theta, ACanvas& render) override;
 };
 
 

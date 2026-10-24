@@ -63,7 +63,7 @@ namespace aui::render::brush::gradient {
 
         [[nodiscard]]
         AImageView gradientMap() const noexcept {
-            return AImageView({(const char*)colors.data(), colors.sizeInBytes()}, {colors.size(), 1}, APixelFormat::RGBA_BYTE);
+            return AImageView({(const char*)colors.data(), colors.sizeInBytes()}, {colors.size(), 1}, APixelFormat::R8G8B8A8_UNORM);
         }
     };
 }

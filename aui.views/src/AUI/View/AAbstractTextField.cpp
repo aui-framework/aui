@@ -44,7 +44,7 @@ AMinMaxAxis AAbstractTextField::onComputeIntrinsicMinMaxAxis(int height) {
 void AAbstractTextField::render(ARenderContext ctx) {
     AView::render(ctx);
 
-    prerenderStringIfNeeded(ctx.render);
+    prerenderStringIfNeeded(ctx.canvas);
 
     AStaticVector<ARect<int>, 1> selectionRects;
     const int baselineY = getVerticalAlignmentOffset();
@@ -60,16 +60,16 @@ void AAbstractTextField::render(ARenderContext ctx) {
             { mPadding.left + beginPos, lineTop },
             { endPos - beginPos, lineHeight }));
     }
-    drawSelectionBeforeAndAfter(ctx.render, selectionRects, [&] {
-        doDrawString(ctx.render);
+    drawSelectionBeforeAndAfter(ctx.canvas, selectionRects, [&] {
+        doDrawString(ctx.canvas);
     });
     if (!mIsEditable) {
         return;
     }
-    drawCursor(ctx.render, { mAbsoluteCursorPos + mPadding.left, lineTop }, lineHeight);
+    drawCursor(ctx.canvas, { mAbsoluteCursorPos + mPadding.left, lineTop }, lineHeight);
 }
 
-void AAbstractTextField::doDrawString(IRenderer& render) {
+void AAbstractTextField::doDrawString(ACanvas& render) {
     if (!mPrerenderedString) {
         return;
     }
@@ -77,8 +77,7 @@ void AAbstractTextField::doDrawString(IRenderer& render) {
 
     render.translate(
             {mPadding.left - mHorizontalScroll + mTextAlignOffset, getVerticalAlignmentOffset()});
-    render.setColor(textColor());
-    mPrerenderedString->draw();
+    mPrerenderedString->draw(render);
 }
 
 
@@ -185,7 +184,7 @@ void AAbstractTextField::onCharEntered(AChar c) {
     emit textChanging(AString(mContents));
 }
 
-void AAbstractTextField::prerenderStringIfNeeded(IRenderer& render) {
+void AAbstractTextField::prerenderStringIfNeeded(ACanvas& render) {
     if (!mPrerenderedString) {
         auto text = getDisplayText() + mSuffix.toUtf32();
         updateTextAlignOffset();

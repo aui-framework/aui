@@ -15,7 +15,7 @@
 
 
 #include "TransformScale.h"
-#include "AUI/Render/IRenderer.h"
+#include <AUI/Render/ACanvas.hpp>
 #include <glm/gtc/matrix_transform.hpp>
 
 void ass::prop::Property<ass::TransformScale>::renderFor(AView* view, const ARenderContext& ctx) {
@@ -24,7 +24,7 @@ void ass::prop::Property<ass::TransformScale>::renderFor(AView* view, const ARen
     m = glm::translate(m, glm::vec3(pivot, 0.f));
     m = glm::scale(m, glm::vec3(mInfo.scale, 1.0f));
     m = glm::translate(m, glm::vec3(-pivot, 0.f));
-    ctx.render.setTransform(m);
+    ctx.canvas.setTransform(m);
 }
 
 ass::prop::PropertySlot ass::prop::Property<ass::TransformScale>::getPropertySlot() const {

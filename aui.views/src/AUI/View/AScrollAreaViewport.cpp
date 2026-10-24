@@ -9,7 +9,10 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
+#include <AUI/Render/ABrush.h>
+#include <AUI/Render/APaint.hpp>
 #include <AUI/Util/ALayoutInflater.h>
+#include <AUI/Util/ARaiiHelper.h>
 #include "AScrollAreaViewport.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AUI/Platform/AWindow.h"
@@ -61,21 +64,125 @@ AMinMaxAxis AScrollAreaViewport::onComputeIntrinsicMinMaxAxis(int height) { retu
 void AScrollAreaViewport::onLayout(glm::ivec2 size) {
     mInner->setSkipUntilLayoutUpdate(false);
     // mScrollSurfaceSize is set by AScrollArea::onLayout; fall back to the viewport's own size so that expanding
-    // children fill the viewport when the content is smaller than it (matches the old applyGeometryToChildren
-    // behaviour: setSize(max(mInner->getMinimumSize(), getSize()))).
+    // children fill the viewport when the content is smaller than it.
     const glm::ivec2 innerSize = glm::max(mScrollSurfaceSize, size);
     mInner->layout(-glm::ivec2(mScroll), innerSize);
-    if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
-        if (!IRenderViewToTexture::isEnabledForView(*mInner)) {
-            auto w = ASurface::current();
-            if (!w) {
-                return;
-            }
 
-            IRenderViewToTexture::enableForView(w->getRenderingContext()->renderer(), *mInner);
+    if (mInner->getSize().x * mInner->getSize().y >= RENDER_TO_TEXTURE_THRESHOLD_AREA) {
+        if (!mRenderToTexture) {
+            mRenderToTexture.emplace();
+        } else if (mRenderToTexture->texture && mRenderToTexture->texture->getSize() != glm::u32vec2(getSize())) {
+            mRenderToTexture->texture = nullptr;
+            mRenderToTexture->invalidArea.reset();
+            mOffscreenRedrawRequested = false;
         }
     } else {
-        IRenderViewToTexture::disableForView(*mInner);
+        mRenderToTexture.reset();
+        mOffscreenRedrawRequested = false;
+    }
+}
+
+void AScrollAreaViewport::render(ARenderContext ctx) {
+    if (mRenderToTexture) {
+        if (!mRenderToTexture->texture || mRenderToTexture->texture->getSize() != glm::u32vec2(getSize())) {
+            drawOffscreen(ctx);
+        }
+        if (mRenderToTexture->texture) {
+            ctx.canvas.rectangle(APaint{ATexturedBrush{mRenderToTexture->texture, {}, {}, {}, {}, true}}, {0, 0}, getSize());
+        }
+        mRedrawRequested = false;
+    } else {
+        AViewContainerBase::render(ctx);
+    }
+}
+
+void AScrollAreaViewport::markPixelDataInvalid(ARect<int> invalidArea) {
+    if (mRenderToTexture) {
+        if (mRenderToTexture->invalidArea) {
+            mRenderToTexture->invalidArea->p1 = glm::min(mRenderToTexture->invalidArea->p1, invalidArea.p1);
+            mRenderToTexture->invalidArea->p2 = glm::max(mRenderToTexture->invalidArea->p2, invalidArea.p2);
+        } else {
+            mRenderToTexture->invalidArea = invalidArea;
+        }
+        if (!std::exchange(mOffscreenRedrawRequested, true)) {
+            AWindow::current()->beforeFrameQueue().enqueue([this, self = aui::ptr::shared_from_this(this)](ARenderContext rc) {
+                if (!mRenderToTexture) {
+                    mOffscreenRedrawRequested = false;
+                    return;
+                }
+                if (!mRenderToTexture->invalidArea) {
+                    mOffscreenRedrawRequested = false;
+                    return;
+                }
+                drawOffscreen(rc);
+            });
+        }
+        AUI_NULLSAFE(mParent)->markPixelDataInvalid(ARect<int>::fromTopLeftPositionAndSize(getPosition(), getSize()));
+        return;
+    }
+
+    AViewContainerBase::markPixelDataInvalid(invalidArea);
+}
+
+void AScrollAreaViewport::drawOffscreen(ARenderContext rc) {
+    if (!mRenderToTexture) {
+        mOffscreenRedrawRequested = false;
+        return;
+    }
+
+    if (glm::any(glm::equal(getSize(), glm::ivec2(0)))) {
+        mRedrawRequested = false;
+        mOffscreenRedrawRequested = false;
+        mRenderToTexture->invalidArea.reset();
+        return;
+    }
+
+    if (!mRenderToTexture->texture || mRenderToTexture->texture->getSize() != glm::u32vec2(getSize())) {
+        mRenderToTexture->texture = rc.backend.createTexture(getSize());
+        mRenderToTexture->invalidArea.reset();
+    }
+
+    auto offscreenPass = rc.backend.beginOffscreen(mRenderToTexture->texture);
+    auto contextOfTheView = offscreenPass->context();
+
+    AUI_DEFER {
+        rc.backend.endOffscreen(std::move(offscreenPass));
+        mRenderToTexture->invalidArea.reset();
+        mOffscreenRedrawRequested = false;
+    };
+
+    bool highlightRedrawRequests = false;
+    if (auto window = AWindow::current()) {
+        if (auto& p = window->profiling()) [[unlikely]] {
+            highlightRedrawRequests = p->highlightRedrawRequests;
+        }
+    }
+
+    if (!highlightRedrawRequests && mRenderToTexture->invalidArea) {
+        ARect<int> expandedArea = mRenderToTexture->invalidArea.value();
+        expandedArea.p1 -= 8;
+        expandedArea.p2 += 8;
+        auto clipRect = ARect<float>::fromTopLeftPositionAndSize(expandedArea.min(), expandedArea.size());
+        contextOfTheView.clipRect = clipRect;
+        contextOfTheView.canvas.pushClipRect(clipRect);
+        APaint clear_paint;
+        clear_paint.blending = Blending::CLEAR;
+        contextOfTheView.canvas.rectangle(clear_paint, expandedArea.min(), expandedArea.size());
+    } else {
+        contextOfTheView.canvas.clear();
+    }
+
+    try {
+        AViewContainerBase::render(contextOfTheView);
+    } catch (const AException& e) {
+        ALogger::err("AScrollAreaViewport") << "Unable to render viewport: " << e;
+    }
+
+    if (highlightRedrawRequests && mRenderToTexture->invalidArea) {
+        ARect<int> expandedArea = mRenderToTexture->invalidArea.value();
+        expandedArea.p1 -= 8;
+        expandedArea.p2 += 8;
+        contextOfTheView.canvas.rectangle(APaint{ASolidBrush{0x40ff00ff_argb}}, expandedArea.min(), expandedArea.size());
     }
 }
 

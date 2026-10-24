@@ -17,6 +17,7 @@
 #include <AUI/Common/AByteBuffer.h>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Util/kAUI.h>
+#include <AUI/Render/FontAtlas.hpp>
 
 #if AUI_PLATFORM_WIN
 // Reading a font file by its UTF-16 path (see loadOneFallbackLocked): the
@@ -137,4 +138,8 @@ _<AFont> AFontManager::loadFont(const AUrl& url) {
 AFontManager& AFontManager::inst() {
     static AFontManager f;
     return f;
+}
+
+_<aui::AFontCache> AFontManager::createCache(IRendererBackend* renderer) {
+    return _new<aui::AFontCache>(*renderer);
 }

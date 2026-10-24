@@ -9,19 +9,16 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 22.09.2020.
-//
-
 #include "ASizeAnimator.h"
 #include <AUI/View/AView.h>
+#include <AUI/Render/ACanvas.hpp>
 
 ASizeAnimator::ASizeAnimator(const glm::ivec2& beginSize, const glm::ivec2& endSize):
     mBeginSize(beginSize), mEndSize(endSize) {
 
 }
 
-void ASizeAnimator::doAnimation(AView* view, float theta, IRenderer& render) {
+void ASizeAnimator::doAnimation(AView* view, float theta, ACanvas& render) {
     if (mEndSize.x == 0 && mEndSize.y == 0) {
         mEndSize = view->getSize();
     }

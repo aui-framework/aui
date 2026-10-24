@@ -108,14 +108,14 @@ template <auto f>
 class AFormattedImage : public AImage {
 public:
     using Color = AFormattedColor<f>;
-    static constexpr auto FORMAT = f;
+    static constexpr APixelFormat FORMAT = f;
 
     AFormattedImage() { mFormat = f; }
 
     AFormattedImage(AByteBuffer data, glm::uvec2 size) : AImage(std::move(data), size, f) {}
     AFormattedImage(glm::uvec2 size) : AImage(size, f) {}
 
-    constexpr int format() const noexcept { return f; }
+    constexpr auto format() const noexcept { return f; }
 
     [[nodiscard]]
     const Color& get(glm::uvec2 position) const noexcept {
@@ -174,12 +174,12 @@ public:
 template <AImageVisitor Visitor>
 auto AImage::visit(Visitor&& visitor) {
     return AImageView::visit([&](const auto& image) {
-        static constexpr int format = std::decay_t<decltype(image)>::FORMAT;
+        static constexpr APixelFormat format = std::decay_t<decltype(image)>::FORMAT;
         return visitor(const_cast<AFormattedImage<format>&>(reinterpret_cast<const AFormattedImage<format>&>(image)));
     });
 }
 
-template <auto /* APixelFormat::Value */ desiredFormat>
+template <auto /* APixelFormat */ desiredFormat>
 void AImageView::convert(aui::invocable<AFormattedImageView<desiredFormat>> auto&& consumer) const {
     if (format() == desiredFormat) {
         // easy path: format on runtime was matched with the desired one, so we pass it as it
@@ -192,7 +192,7 @@ void AImageView::convert(aui::invocable<AFormattedImageView<desiredFormat>> auto
     // convert
     visit([&](const auto& source) {
         using source_image_t      = std::decay_t<decltype(source)>;
-        static constexpr auto sourceFormat      = (APixelFormat::Value)source_image_t::FORMAT;
+        static constexpr auto sourceFormat      = (APixelFormat)source_image_t::FORMAT;
         std::transform(source.begin(), source.end(), converted.begin(), aui::pixel_format::convert<sourceFormat, desiredFormat>);
     });
 

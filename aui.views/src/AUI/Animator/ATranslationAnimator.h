@@ -9,13 +9,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 27.08.2020.
-//
-
 #pragma once
 
-#include <AUI/Render/IRenderer.h>
+#include <AUI/Render/ACanvas.hpp>
 #include "AAnimator.h"
 
 class API_AUI_VIEWS ATranslationAnimator: public AAnimator {
@@ -26,6 +22,6 @@ private:
 public:
     ATranslationAnimator(const glm::vec2& from, const glm::vec2& to = {0.f, 0.f});
 
-    void doAnimation(AView* view, float theta, IRenderer& render) override;
+    void doAnimation(AView* view, float theta, ACanvas& render) override;
 };
 

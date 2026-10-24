@@ -16,6 +16,7 @@
 #include "MyWindow.h"
 #include "AUI/Platform/AMessageBox.h"
 #include "AUI/View/ACheckBox.h"
+#include <AUI/Render/ACanvas.hpp>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/AView.h>
@@ -34,9 +35,8 @@ public:
     void render(ARenderContext ctx) override {
         AView::render(ctx);
         // things that render every frame don't even require observing AHotCodeReload::inst().patchEnd.
-        ctx.render.setColor(AColor::RED);
         static int frame = 0; // bss test
-        ctx.render.string({0, 60}, fmt::format("frame = {}", frame++));
+        ctx.canvas.string(APaint{ASolidBrush{}, AColor::RED}, {0, 60}, fmt::format("frame = {}", frame++));
     }
 };
 }

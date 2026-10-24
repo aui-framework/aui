@@ -9,18 +9,14 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 18.09.2020.
-//
-
 #pragma once
 
-#include <AUI/Render/IRenderer.h>
+#include <AUI/Render/ACanvas.hpp>
 #include "AAnimator.h"
 
 class API_AUI_VIEWS AFocusAnimator: public AAnimator {
 public:
     AFocusAnimator();
-    void doAnimation(AView* view, float theta, IRenderer& render) override;
+    void doAnimation(AView* view, float theta, ACanvas& render) override;
 };
 

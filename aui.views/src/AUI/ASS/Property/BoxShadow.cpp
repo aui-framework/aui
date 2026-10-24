@@ -9,16 +9,13 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-//
-// Created by alex2 on 01.01.2021.
-//
-
 #include "BoxShadow.h"
-#include "AUI/Render/IRenderer.h"
+#include <AUI/Render/ACanvas.hpp>
 
 
 void ass::prop::Property<ass::BoxShadow>::renderFor(AView* view, const ARenderContext& ctx) {
-    ctx.render.boxShadow({mInfo.offsetX.getValuePx() - mInfo.spreadRadius.getValuePx(),
+    ctx.canvas.boxShadow(APaint{},
+                      {mInfo.offsetX.getValuePx() - mInfo.spreadRadius.getValuePx(),
                        mInfo.offsetY.getValuePx() - mInfo.spreadRadius.getValuePx()},
                       glm::vec2(view->getSize()) + mInfo.spreadRadius.getValuePx() * 2.f,
                        mInfo.blurRadius,

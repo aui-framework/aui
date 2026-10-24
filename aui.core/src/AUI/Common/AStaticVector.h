@@ -15,6 +15,7 @@
 #include "AException.h"
 #include <utility>
 #include <span>
+#include <algorithm>
 
 
 #define AUI_ASSERT_MY_ITERATOR(it) AUI_ASSERTX((this->begin() <= it && it <= this->end()), "foreign iterator")
@@ -192,6 +193,13 @@ public:
     [[nodiscard]]
     constexpr std::size_t size() const noexcept {
         return mEnd - mBegin;
+    }
+
+    template<std::size_t OtherMaxSize>
+    [[nodiscard]]
+    constexpr bool operator==(const AStaticVector<StoredType, OtherMaxSize>& other) const noexcept {
+        if (size() != other.size()) return false;
+        return std::equal(begin(), end(), other.begin());
     }
 
     template<typename OtherIterator>

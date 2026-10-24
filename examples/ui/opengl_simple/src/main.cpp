@@ -9,7 +9,7 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "AUI/GL/State.h"
+#include "AUI/Render/ARender/GL/State.h"
 #include "AUI/Platform/ARenderingContextOptions.h"
 
 #include <AUI/Platform/Entry.h>
@@ -28,14 +28,14 @@ struct State {
 class MyRenderer : public AView {
 public:
     MyRenderer(_<State> state) : mState(std::move(state)) {
-        // Simple passthrough ES 2.0 shaders
+        // Simple passthrough shaders. No `precision` qualifier: that's an ES/WebGL-only construct and is
+        // a syntax error on a desktop GL compatibility profile without an explicit `#version` directive.
         const char* vsSrc =
             "attribute vec2 aPos;\n"
             "void main(){\n"
             "  gl_Position = vec4(aPos, 0.0, 1.0);\n"
             "}\n";
         const char* fsSrc =
-            "precision mediump float;\n"
             "void main(){\n"
             "  gl_FragColor = vec4(1.0, 0.4, 0.2, 1.0);\n"
             "}\n";
@@ -100,16 +100,19 @@ public:
 
     void render(ARenderContext ctx) override {
         AView::render(ctx);
-        cleanupAUIGLState();
 
-        // Draw triangle
-        glUseProgram(mProgram);
-        glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
-        glEnableVertexAttribArray(0);
-        glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (const void*) 0);
-        glDrawArrays(GL_TRIANGLES, 0, 3);
+        ctx.canvas.enqueueGlCallback([this](const glm::mat4& transform) {
+            cleanupAUIGLState();
 
-        cleanupAUIGLState();
+            // Draw triangle
+            glUseProgram(mProgram);
+            glBindBuffer(GL_ARRAY_BUFFER, mVertexBufferObject);
+            glEnableVertexAttribArray(0);
+            glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (const void*) 0);
+            glDrawArrays(GL_TRIANGLES, 0, 3);
+
+            cleanupAUIGLState();
+        });
 
         // calculate fps
         auto now = std::chrono::high_resolution_clock::now();

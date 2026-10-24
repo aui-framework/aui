@@ -32,6 +32,7 @@
  */
 struct ASolidBrush {
     AColor solidColor = AColor::WHITE;
+    bool operator==(const ASolidBrush&) const noexcept = default;
 };
 
 
@@ -39,7 +40,7 @@ struct ASolidBrush {
  * The brush used with a custom graphics API shaders.
  */
 struct ACustomShaderBrush {
-
+    bool operator==(const ACustomShaderBrush&) const noexcept = default;
 };
 
 
@@ -50,6 +51,7 @@ struct ALinearGradientBrush {
     struct ColorEntry {
         aui::float_within_0_1 position;
         AColor color;
+        bool operator==(const ColorEntry&) const noexcept = default;
     };
 
     AStaticVector<ColorEntry, 2> colors;
@@ -62,6 +64,10 @@ struct ALinearGradientBrush {
      * direction.
      */
     AAngleRadians rotation = 180_deg;
+
+    bool operator==(const ALinearGradientBrush& o) const noexcept {
+        return rotation == o.rotation && colors == o.colors;
+    }
 };
 
 class ITexture;
@@ -74,19 +80,11 @@ struct ATexturedBrush {
 
     /**
      * Optional. Top left UV coords of the texture.
-     * <dl>
-     *     <dt><b>Warning!</b></dt>
-     *     <dd>When set, on software renderer it produces extra CPU costs.</dd>
-     * </dl>
      */
     AOptional<glm::vec2> uv1;
 
     /**
      * Optional. Bottom right UV coords of the texture.
-     * <dl>
-     *     <dt><b>Warning!</b></dt>
-     *     <dd>When set, on software renderer it produces extra CPU costs.</dd>
-     * </dl>
      */
     AOptional<glm::vec2> uv2;
 
@@ -103,6 +101,12 @@ struct ATexturedBrush {
      * Optional. Controls how does the image behaves when it's size is not enough to cover the whole rect.
      */
     Repeat repeat = Repeat::NONE;
+
+    bool premultiplied = false;
+
+    bool operator==(const ATexturedBrush& other) const {
+        return texture == other.texture && uv1 == other.uv1 && uv2 == other.uv2 && imageRendering == other.imageRendering && repeat == other.repeat && premultiplied == other.premultiplied;
+    }
 };
 
 

@@ -45,7 +45,7 @@ public:
     explicit AAbstractLabel(AString text) noexcept: mText(std::move(text)) {}
 
     void render(ARenderContext context) override;
-    void doRenderText(IRenderer& render);
+    void doRenderText(ARenderContext render);
 
     glm::ivec2 onIntrinsicMeasure(AConstraints constraints) override;
     AMinMaxAxis onComputeIntrinsicMinMaxAxis(int height) override;
@@ -67,11 +67,16 @@ public:
         mIconColor = iconColor;
     }
 
-    void doPrerender(IRenderer& render, int maxWidth);
+    void doPrerender(ACanvas& render, int maxWidth);
 
     void onDpiChanged() override;
 
     void setText(AString newText);
+
+    void setTextColor(AColor color) override {
+        AView::setTextColor(color);
+        invalidateFont();
+    }
 
     void invalidateFont() override;
 

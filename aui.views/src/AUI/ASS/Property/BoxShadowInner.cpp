@@ -14,11 +14,12 @@
 //
 
 #include "BoxShadowInner.h"
-#include "AUI/Render/IRenderer.h"
+#include <AUI/Render/ACanvas.hpp>
 
 
 void ass::prop::Property<ass::BoxShadowInner>::renderFor(AView* view, const ARenderContext& ctx) {
-    ctx.render.boxShadowInner({0, 0},
+    ctx.canvas.boxShadowInner(APaint{},
+                             {0, 0},
                              glm::vec2(view->getSize()),
                              mInfo.blurRadius,
                              mInfo.spreadRadius,

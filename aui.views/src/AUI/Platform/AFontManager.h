@@ -20,20 +20,23 @@
 #include <cstdint>
 #include <memory>
 #include "AUI/Font/AFont.h"
+
+class IRendererBackend;
+namespace aui { class AFontCache; }
+
 class API_AUI_VIEWS AFontManager {
 public:
-	AFontManager();
+    AFontManager();
     AFontManager(const AFontManager&) = delete;
     virtual ~AFontManager();
 
     static AFontManager& inst();
 
-	[[nodiscard]] _<AFontFamily> getDefaultFamily() {
-        return mDefaultFamily;
-    }
-	[[nodiscard]] _<AFont> getDefaultFont() {
-        return mDefaultFont;
-    }
+    [[nodiscard]]
+    _<aui::AFontCache> createCache(IRendererBackend* renderer);
+
+    [[nodiscard]] _<AFontFamily> getDefaultFamily() { return mDefaultFamily; }
+    [[nodiscard]] _<AFont> getDefaultFont() { return mDefaultFont; }
 
     [[nodiscard]]
     _<AFontFamily> getFontFamily(const AString& name) const {
@@ -107,9 +110,9 @@ private:
     [[nodiscard]]
     FT_FaceRec_* getFallbackFace(char32_t codepoint);
 
-	AString getPathToFont(const AString& family);
+    AString getPathToFont(const AString& family);
 
     _<AFont> loadFont(const AUrl& url);
 
-	friend class AFont;
+    friend class AFont;
 };

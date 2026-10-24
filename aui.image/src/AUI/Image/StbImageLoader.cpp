@@ -25,13 +25,13 @@ _<AImage> StbImageLoader::getRasterImage(AByteBufferView buffer) {
                                               &x, &y, &channels, 4)) {
         ARaiiHelper dealloc = [&] { stbi_image_free(data); };
         channels = 4;
-        unsigned format = APixelFormat::BYTE;
+        APixelFormat format = APixelFormat::R8_UNORM;
         switch (channels) {
             case 3:
-                format |= APixelFormat::RGB;
+                format = APixelFormat::R8G8B8_UNORM;
                 break;
             case 4:
-                format |= APixelFormat::RGBA;
+                format = APixelFormat::R8G8B8A8_UNORM;
                 break;
             default:
                 AUI_ASSERT(0);

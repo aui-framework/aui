@@ -17,14 +17,11 @@
 #include <memory>
 #include <glm/glm.hpp>
 #include <AUI/Url/AUrl.h>
-
-#include "AUI/Render/FontRendering.h"
-
-#include "AUI/Render/SimpleTexturePacker.h"
-
-#include "AUI/Common/AStringVector.h"
-#include "AFontFamily.h"
+#include <AUI/Font/FontRendering.hpp>
+#include <AUI/Common/AStringVector.h>
+#include <AUI/Font/AFontFamily.h>
 #include <AUI/Common/AByteBuffer.h>
+#include <AUI/Image/AImage.h>
 
 class AString;
 
@@ -107,7 +104,6 @@ public:
             return emptyAdvanceFor(horizontal.advance, glyphFailed, spaceWidth);
         }
 
-        void* rendererData = nullptr;
     };
 
     /**
@@ -165,7 +161,6 @@ public:
 
     struct FontData {
         AMap<char32_t, Character> characters;
-        void* rendererData = nullptr;
     };
 
     using FontEntry = std::pair<FontKey, FontData&>;
@@ -281,4 +276,6 @@ public:
 
     [[nodiscard]]
     bool isItalic() const;
+
+    void* mRendererData = nullptr;
 };

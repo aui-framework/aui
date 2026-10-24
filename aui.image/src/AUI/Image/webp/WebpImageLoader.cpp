@@ -54,7 +54,7 @@ _<AImage> WebpImageLoader::getRasterImage(AByteBufferView buffer) {
 
     WebPIterator iter;
     if (WebPDemuxGetFrame(demux, 1, &iter)) {
-        constexpr auto PIXEL_FORMAT = APixelFormat(APixelFormat::RGBA_BYTE);
+        constexpr auto PIXEL_FORMAT = APixelFormat(APixelFormat::R8G8B8A8_UNORM);
         int w, h;
         auto decodedBuffer = WebPDecodeRGBA(reinterpret_cast<const uint8_t *>(buffer.data()),
                                             buffer.size(), &w, &h);
@@ -64,7 +64,7 @@ _<AImage> WebpImageLoader::getRasterImage(AByteBufferView buffer) {
         };
 
         if (decodedBuffer) {
-            return _new<AImage>(AByteBuffer(decodedBuffer, PIXEL_FORMAT.bytesPerPixel() * width * height),
+            return _new<AImage>(AByteBuffer(decodedBuffer, ::bytesPerPixel(PIXEL_FORMAT) * width * height),
                                 glm::uvec2(width, height), PIXEL_FORMAT);
         }
     }
@@ -83,8 +83,8 @@ void WebpImageLoader::save(aui::no_escape<IOutputStream> outputStream, AImageVie
     }
     pic.width = image.width();
     pic.height = image.height();
-    bool bUseRGBA = image.format() == APixelFormat::RGBA_BYTE;
-    if (!bUseRGBA && image.format() != APixelFormat::RGB_BYTE)
+    bool bUseRGBA = image.format() == APixelFormat::R8G8B8A8_UNORM;
+    if (!bUseRGBA && image.format() != APixelFormat::R8G8B8_UNORM)
         throw AException("WebPSave unsupported type");
     const uint8_t* data = reinterpret_cast<const uint8_t*>(image.data());
     int stride = image.width() * (bUseRGBA ? 4 : 3);   // RGB|RGBA
