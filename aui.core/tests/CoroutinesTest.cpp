@@ -143,7 +143,7 @@ TEST(Coroutines, CoAwaitException) {
 }
 
 TEST(Coroutines, CoAwaitPreservesThread) {
-    /// [co_await1]
+    /// [co_await_thread]
     AAsyncHolder async;
     async << []() -> AFuture<> {
         auto original = AThread::current();
@@ -156,7 +156,7 @@ TEST(Coroutines, CoAwaitPreservesThread) {
     while (!async.empty()) {
         loop.iteration();
     }
-    /// [co_await1]
+    /// [co_await_thread]
 }
 
 static auto switch_to_new_thread(std::thread &out) {

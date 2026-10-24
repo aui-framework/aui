@@ -14,6 +14,7 @@
 //
 
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Platform/detail/WindowGeometry.h>
 #include "WindowDelegate.h"
 
 @implementation WindowDelegate {
@@ -41,10 +42,14 @@
 - (void)windowDidResize:(NSNotification *)notification {
     // keep AUI's idea of the position in sync, otherwise setSize() below would move the window back.
     mWindow->AViewContainer::setPosition(mWindow->getWindowPosition());
-    float s = mWindow->getDpiRatio();
+    // Real pixels (points * backingScaleFactor), not points * getDpiRatio(): the latter also includes
+    // ASurface::ScalingParams (UI scale), which affects dp<->px conversion only. Mixing them made the window (and the
+    // GL framebuffer) larger than the actual drawable.
+    const float s = [static_cast<NSWindow*>(mWindow->nativeHandle()) backingScaleFactor];
     const NSRect contentFrame = [[static_cast<NSWindow*>(mWindow->nativeHandle()) contentView] frame];
     mWindow->getRenderingContext()->beginResize(*mWindow);
-    mWindow->onResize(contentFrame.size.width * s, contentFrame.size.height * s);
+    mWindow->onResize(aui::platform::detail::pointsToPixels(contentFrame.size.width, s),
+                      aui::platform::detail::pointsToPixels(contentFrame.size.height, s));
     mWindow->getRenderingContext()->endResize(*mWindow);
     mWindow->redraw();
 }

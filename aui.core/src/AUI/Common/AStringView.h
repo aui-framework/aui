@@ -28,7 +28,7 @@ class API_AUI_CORE AStringVector;
  * @brief Non-owning view into a UTF-8 string - a lightweight `const` reference to character data you don't own.
  * @ingroup core
  * @details
- * `AStringView` is the read-only counterpart to @ref AString. It inherits from `std::string_view` and holds
+ * `AStringView` is the read-only counterpart to [AString]. It inherits from `std::string_view` and holds
  * only a pointer and a length - **no heap allocation, no copy**. This makes it the correct type to use
  * for any function parameter that only needs to *read* a string, regardless of whether the caller holds
  * an `AString`, a `std::string`, a `const char*`, or a string literal.
@@ -59,7 +59,7 @@ class API_AUI_CORE AStringVector;
  *     return local.trim();    // dangling - local is destroyed on return
  * }
  * ```
- * When ownership is needed, convert to @ref AString explicitly:
+ * When ownership is needed, convert to [AString] explicitly:
  * ```cpp
  * AString owned = AString(view);
  * ```
@@ -83,11 +83,13 @@ class API_AUI_CORE AStringVector;
  * AStringView("bad").toInt()       // AOptional<int32_t>{nullopt}
  * ```
  *
- * @note Methods that must produce a new string - `uppercase()`, `lowercase()`, `replacedAll()`,
- * `split()`, `encode()` - return an @ref AString or @ref AStringVector and allocate only at that point.
- * Pure view operations (`trim`, `substr`, `startsWith`, `contains`) return `AStringView` and never allocate.
+ * !!! note
  *
- * @see AString, AUtf8View, AByteBuffer, AStringVector
+ *     Methods that must produce a new string - `uppercase()`, `lowercase()`, `replacedAll()`, `split()`, `encode()` -
+ *     return an [AString] or [AStringVector] and allocate only at that point. Pure view operations (`trim`, `substr`,
+ *     `startsWith`, `contains`) return `AStringView` and never allocate.
+ *
+ * See also: [AString], `AUtf8View`, [AByteBuffer], [AStringVector].
  */
 class API_AUI_CORE AStringView: public std::string_view {
 private:
@@ -165,12 +167,12 @@ public:
     /**
      * @brief Returns a substring `[pos, pos + count)`.
      * @param pos The starting position of the substring.
-     * @param count The number of characters to include in the substring.
+     * @param count The number of bytes to include in the substring.
      * If the requested substring extends past the end of the string, i.e. the count is greater than `size() - pos`
      * (e.g. if `count == npos`), the returned substring is `[pos, size())`.
      *
-     * Since AString encapsulates a UTF-8 encoded string, the returned substring is always valid UTF-8, hence, it
-     * operates on top of UTF-8 code points. `pos` and `count` are interpreted as code points positions, not as byte.
+     * `pos` and `count` are interpreted as byte positions. Be careful not to cut a multibyte character in half; use
+     * `utf8().substr()` to count in Unicode characters.
      */
     [[nodiscard]]
     constexpr AStringView substr(size_type pos = 0, size_type count = npos) const noexcept {
@@ -179,19 +181,19 @@ public:
 
     /**
      * @brief Encodes the string into a null-terminated byte buffer using the specified encoding.
-     * @sa bytes, toUtf16, toUtf32
+     * See also: `bytes`, `toUtf16`, `toUtf32`.
      */
     AByteBuffer encode(AStringEncoding encoding) const;
 
     /**
      * @brief Encodes the UTF-8 string into a UTF-16 string
-     * @sa bytes, encode
+     * See also: `bytes`, `encode`.
      */
     std::u16string toUtf16() const;
 
     /**
      * @brief Encodes the UTF-8 string into a UTF-32 string
-     * @sa bytes, encode
+     * See also: `bytes`, `encode`.
      */
     std::u32string toUtf32() const;
 
@@ -376,7 +378,7 @@ public:
 
     /**
      * @brief Returns the string converted to an int using base. Returns std::nullopt if the conversion fails.
-     * @sa toNumberOrException
+     * See also: `toNumberOrException`.
      */
     AOptional<int> toNumber(aui::ranged_number<int, 2, 36> base) const noexcept;
 

@@ -62,6 +62,7 @@ TEST_F(UpdaterStatusTest, Test1) {
     // Typical observer of status is a UI projection displaying its value. You can even display controls in it:
     mTestWindow->setContents(Vertical {
       // AUI_DOCS_CODE_BEGIN
+      // [updater_status_ui] // HIDE
       CustomLayout {} & mUpdater->status.readProjected([&updater = mUpdater](const std::any& status) -> _<AView> {
           if (std::any_cast<AUpdater::StatusIdle>(&status)) {
               return _new<AButton>("Check for updates").connect(&AView::clicked, AUI_SLOT(updater)::checkForUpdates);
@@ -81,6 +82,7 @@ TEST_F(UpdaterStatusTest, Test1) {
           }
           return nullptr;
       }),
+      // [updater_status_ui] // HIDE
       // AUI_DOCS_CODE_END
     });
     mUpdater->status = AUpdater::StatusIdle {};

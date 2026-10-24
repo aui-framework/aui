@@ -11,6 +11,7 @@
 
 #include "AUI/GL/gl.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Platform/detail/WindowGeometry.h"
 #import <Cocoa/Cocoa.h>
 #include "AUI/GL/GLDebug.h"
 #include "AUI/Common/AString.h"
@@ -56,10 +57,13 @@ void AWindow::showImpl() {
         redraw();
     };
 
-    auto ns = static_cast<NSWindow*>(mHandle);
-    [ns orderFront:nil];
-    [ns setIsVisible:YES];
-    MacosApp::inst().activateIgnoringOtherApps();
+    // no native window (i.e., AStubWindowManager in tests): don't touch AppKit, it would turn the process into a
+    // foreground application (dock icon, menu bar) and steal the focus
+    if (auto ns = static_cast<NSWindow*>(mHandle)) {
+        [ns orderFront:nil];
+        [ns setIsVisible:YES];
+        MacosApp::inst().activateIgnoringOtherApps();
+    }
 
     emit shown();
 }
@@ -238,15 +242,21 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     NSScreen* primary = [[NSScreen screens] firstObject];
     if (!primary) return;
     const CGFloat primaryH = [primary frame].size.height;
-    const float dpi = getDpiRatio();
+    // real pixels <-> points, see WindowDelegate windowDidResize:
+    const float dpi = [s backingScaleFactor];
     const auto minSize = getMinimumSize();
+    [s setContentMinSize:NSSizeFromCGSize({aui::platform::detail::pixelsToPoints(minSize.x, dpi),
+                                           aui::platform::detail::pixelsToPoints(minSize.y, dpi)})];
+    // -1 means "unlimited" (see AView::getMaxSize); dividing it by dpi would pass a negative size to AppKit, which
+    // then clamps the window to 0x0.
     const auto maxSize = getMaxSize();
-    [s setContentMinSize:NSMakeSize(minSize.x / dpi, minSize.y / dpi)];
-    [s setContentMaxSize:NSMakeSize(maxSize.x < 0 ? CGFLOAT_MAX : maxSize.x / dpi,
-                                    maxSize.y < 0 ? CGFLOAT_MAX : maxSize.y / dpi)];
+    [s setContentMaxSize:NSSizeFromCGSize({aui::platform::detail::maxPixelsToPoints(maxSize.x, dpi),
+                                           aui::platform::detail::maxPixelsToPoints(maxSize.y, dpi)})];
 
     // width/height describe the content area; x/y is the top-left corner of the whole window frame.
-    const NSSize frameSize = [s frameRectForContentRect:NSMakeRect(0, 0, width / dpi, height / dpi)].size;
+    const double contentW = aui::platform::detail::pixelsToPoints(width, dpi);
+    const double contentH = aui::platform::detail::pixelsToPoints(height, dpi);
+    const NSSize frameSize = [s frameRectForContentRect:NSMakeRect(0, 0, contentW, contentH)].size;
     // Flip AUI top-left origin back to AppKit bottom-left for setFrame.
     const NSRect frame = NSMakeRect(x / dpi, primaryH - y / dpi - frameSize.height, frameSize.width, frameSize.height);
     if (!NSEqualRects(frame, [s frame])) {
@@ -278,8 +288,8 @@ void AWindow::activate(const AString&) {
             [ns deminiaturize:nil];
         }
         [ns makeKeyAndOrderFront:nil];
+        MacosApp::inst().activateIgnoringOtherApps();
     }
-    MacosApp::inst().activateIgnoringOtherApps();
 }
 
 void AWindow::blockUserInput(bool blockUserInput) {

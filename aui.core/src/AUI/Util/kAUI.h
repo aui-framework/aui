@@ -194,7 +194,7 @@ using decode_type_t = typename decode_type<T>::type;
  * AUI_DEFER { printf(" world\n") };
  * printf("Hello");
  * ```
- * @sa ARaiiHelper
+ * See also: `ARaiiHelper`.
  */
 #define AUI_DEFER ARaiiHelper AUI_PP_CAT($AUI_DEFER_at_line_, __LINE__) = [&]
 

@@ -18,6 +18,20 @@
 
 #include <AUI/Common/AString.h>
 
+/**
+ * @brief Access to the system clipboard (text only).
+ * @ingroup views
+ * @details
+ * ```cpp
+ * AClipboard::copyToClipboard("Hello");
+ * if (!AClipboard::isEmpty()) {
+ *     AString s = AClipboard::pasteFromClipboard();
+ * }
+ * ```
+ *
+ * Text views such as [ATextField] and [ATextArea] handle ++ctrl+c++, ++ctrl+x++ and ++ctrl+v++ on their own; use
+ * AClipboard when you need to put or take text programmatically, i.e., from a "Copy link" button.
+ */
 class API_AUI_VIEWS AClipboard {
 public:
     static void copyToClipboard(const AString& text);

@@ -79,7 +79,7 @@ namespace aui::enumerate {
 /**
  * @brief Enum trait to transform enum to name, name to enum, list all enums and vise versa.
  * @ingroup reflection
- * @see AUI_ENUM_VALUES
+ * See also: `AUI_ENUM_VALUES`.
  */
 template<typename enum_t>
 class AEnumerate {
@@ -112,7 +112,7 @@ public:
 
     /**
      * @brief Get runtime name to enum value mapping.
-     * @see byName
+     * See also: `byName`.
      */
     static const AMap<AString, enum_t>& nameToValueMap();
 
@@ -176,7 +176,7 @@ namespace aui::enumerate {
     /**
      * @brief constexpr std::array of all possible enum values is the order they've been passed to AUI_ENUM_VALUES.
      * @ingroup core
-     * @see AUI_ENUM_VALUES
+     * See also: `AUI_ENUM_VALUES`.
      */
     template<typename enum_t> requires aui::is_complete<AEnumerateAllValues<enum_t>>
     inline constexpr auto ALL_VALUES = []<auto... values>(typename AEnumerate<enum_t>::template Values<values...>) {

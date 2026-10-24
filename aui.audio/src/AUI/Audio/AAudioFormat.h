@@ -77,6 +77,20 @@ void convertSampleFormat(ASampleFormat inF, ASampleFormat outF, const char* inB,
  * @ingroup audio
  * @details
  */
+/**
+ * @brief Describes PCM audio: channel count, sample rate and sample format.
+ * @ingroup audio
+ * @details
+ * Returned by `ISoundInputStream::info`. Samples of different channels are interleaved.
+ *
+ * ```cpp
+ * AAudioFormat {
+ *     .channelCount = AChannelFormat::STEREO,
+ *     .sampleRate = 44100,
+ *     .sampleFormat = ASampleFormat::I16,
+ * }
+ * ```
+ */
 struct API_AUI_AUDIO AAudioFormat {
     /**
      * @brief Channel count.

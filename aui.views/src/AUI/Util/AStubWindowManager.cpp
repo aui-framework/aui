@@ -29,6 +29,7 @@ public:
       override
 #endif
     {
+        init.window.updateDpi();
         reallocate(init.window);
     }
 

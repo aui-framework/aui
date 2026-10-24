@@ -29,42 +29,30 @@ struct AMenuItem;
 using AMenuModel = AVector<AMenuItem>;
 
 /**
- * @brief Context (popup) menu.
+ * @brief Popup (context) menu.
+ * @ingroup views
  * @details
- * Describes a menu with a model ([AMenuModel]) and shows it at the cursor position. By default, AUI shows the
- * platform-native menu, see [AMenu::setUseSystemMenus].
+ * A menu is described with a model - a vector of `AMenuItem` structures with a name, an optional shortcut hint,
+ * and an `onAction` handler.
  *
- * Text fields ([AAbstractTypeable]) use it to show Cut/Copy/Paste/Select All on right click:
+ * The most common way to show a menu is to override `AView::composeContextMenu`; it is called when the user right
+ * clicks the view (or long presses it on touchscreens). Return an empty model to show nothing.
  *
  * ```cpp
- * AMenu::show({
- *   {
- *     .name = "aui.cut"_i18n,
- *     .shortcut = AInput::CMD_CTRL + AInput::X,
- *     .onAction = [&] { cutToClipboard(); },
- *     .enabled = hasSelection(),
- *   },
- *   {
- *     .name = "aui.copy"_i18n,
- *     .shortcut = AInput::CMD_CTRL + AInput::C,
- *     .onAction = [&] { copyToClipboard(); },
- *     .enabled = hasSelection(),
- *   },
- *   {
- *     .name = "aui.paste"_i18n,
- *     .shortcut = AInput::CMD_CTRL + AInput::V,
- *     .onAction = [&] { pasteFromClipboard(); },
- *     .enabled = !AClipboard::isEmpty(),
- *   },
- *   { .type = AMenu::SEPARATOR },
- *   {
- *     .name = "aui.select_all"_i18n,
- *     .shortcut = AInput::CMD_CTRL + AInput::A,
- *     .onAction = [&] { selectAll(); },
- *     .enabled = !getText().empty(),
- *   },
- * });
+ * class MyView : public AView {
+ * protected:
+ *     AMenuModel composeContextMenu() override {
+ *         return {
+ *             { .name = "Copy", .shortcut = AInput::CMD_CTRL + AInput::C, .onAction = [this] { copy(); } },
+ *             { .type = AMenu::SEPARATOR },
+ *             { .name = "Disabled", .enabled = false },
+ *         };
+ *     }
+ * };
  * ```
+ *
+ * To show a menu on your own, call `AMenu::show(model)`. Menus are closed with `AMenu::close()`; `AMenu::isOpen()`
+ * tells whether there's an open menu.
  *
  * ## Appearance
  *
@@ -81,6 +69,11 @@ using AMenuModel = AVector<AMenuItem>;
  *
  *     The final look of the menu depends on the OS version and, on Linux, on the desktop environment (and its theme).
  *     The screenshots above are examples and may differ from what your users see.
+ *
+ * !!! note
+ *
+ *     `shortcut` is a text hint only; AUI does not register it as a global hotkey. Handle the keys yourself, see
+ *     [ui-input-events].
  */
 class API_AUI_VIEWS AMenu {
 private:

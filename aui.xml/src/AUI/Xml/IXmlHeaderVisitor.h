@@ -15,6 +15,9 @@
 /**
  * @brief Xml header visitor.
  * @ingroup xml
+ * @details
+ * Receives attributes of the `<?xml version="1.0" encoding="UTF-8"?>` header. Return it from
+ * `IXmlDocumentVisitor::visitHeader`. See [xml-parsing].
  */
 class IXmlHeaderVisitor
 {

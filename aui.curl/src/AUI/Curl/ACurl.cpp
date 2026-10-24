@@ -426,7 +426,7 @@ AFuture<ACurl::Response> ACurl::Builder::runAsync(ACurlMulti& curlMulti) {
 }
 
 ACurl::Builder& ACurl::Builder::withTimeout(std::chrono::seconds timeout) {
-    auto res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_TIME, timeout.count());
+    auto res = curl_easy_setopt(mCURL, CURLOPT_LOW_SPEED_TIME, long(timeout.count()));
     AUI_ASSERT(res == 0);
     return *this;
 }

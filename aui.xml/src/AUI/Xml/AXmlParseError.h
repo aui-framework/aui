@@ -15,6 +15,9 @@
 /**
  * @brief Thrown when a parse error occur.
  * @ingroup xml
+ * @details
+ * Derives from `std::runtime_error`; `what()` contains the unexpected character and its position. Thrown by
+ * `AXml::read` when an attribute value is not quoted or a closing tag is malformed. See [xml-parsing].
  */
 class AXmlParseError: public std::runtime_error
 {

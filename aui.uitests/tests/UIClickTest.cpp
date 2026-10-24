@@ -36,6 +36,7 @@ using namespace declarative;
  * that's it.
  */
 
+// [click_fixture]
 class UIClick : public testing::UITest {
 public:
 
@@ -82,6 +83,7 @@ protected:
 
     _<TestWindow> mTestWindow;
 };
+// [click_fixture]
 
 /**
  * Checks that the message is not appeared yet.
@@ -94,6 +96,7 @@ TEST_F(UIClick, HelloIsNotAppeared) {
 /**
  * Checks that the message appears when button is clicked.
  */
+// [click_test]
 TEST_F(UIClick, HelloAppearsAfterClick) {
     EXPECT_CALL(*mTestWindow, onButtonClicked).Times(1);
     // press the button
@@ -102,10 +105,12 @@ TEST_F(UIClick, HelloAppearsAfterClick) {
     // check label is appeared
     By::text("Hello!").check(visible(), "label is not appeared");
 }
+// [click_test]
 
 /**
  * Checks clickedRightOrLongPressed by right clicking.
  */
+// [right_click]
 TEST_F(UIClick, RightClick) {
     // check clicked right or long pressed signal emitted
     EXPECT_CALL(*mTestWindow, onButtonClickedRightOrLongPressed).Times(1);
@@ -113,10 +118,12 @@ TEST_F(UIClick, RightClick) {
     // press the button
     By::text("Say hello").perform(clickRight());
 }
+// [right_click]
 
 /**
  * Checks clickedRightOrLongPressed by right clicking.
  */
+// [long_press]
 TEST_F(UIClick, LongPress) {
     // check clicked right or long pressed signal is emitted
     EXPECT_CALL(*mTestWindow, onButtonClickedRightOrLongPressed).Times(1);
@@ -124,6 +131,7 @@ TEST_F(UIClick, LongPress) {
     // press the button
     By::text("Say hello").perform(gestureLongPress());
 }
+// [long_press]
 
 /**
  * Checks if clicks will be performed after onPointerPressed and onPointerReleased

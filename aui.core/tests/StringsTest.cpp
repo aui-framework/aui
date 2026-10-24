@@ -18,6 +18,7 @@
 
 
 TEST(Strings, ToInt) {
+    // [core_str_to_int]
     EXPECT_EQ("123"_as.toInt(), 123);
     EXPECT_EQ("0"_as.toInt(), 0);
     EXPECT_EQ("-251"_as.toInt(), -251);
@@ -29,6 +30,7 @@ TEST(Strings, ToInt) {
     EXPECT_EQ("0xabcdef"_as.toInt(), 0xabcdef);
     EXPECT_EQ("0xabcdef123456"_as.toInt(), std::nullopt); // overflow
     EXPECT_EQ("123456214214"_as.toInt(), std::nullopt); // overflow
+    // [core_str_to_int]
 }
 
 TEST(Strings, ToUInt) {
@@ -51,8 +53,10 @@ TEST(Strings, ToFloat) {
 }
 
 TEST(Strings, Uppercase1) {
+    // [core_str_case]
     EXPECT_EQ("a"_as.uppercase(), "A"); // ascii
     EXPECT_EQ("å"_au8.uppercase(), "Å"); // unicode
+    // [core_str_case]
 }
 
 TEST(Strings, Uppercase2) {
@@ -65,7 +69,9 @@ TEST(Strings, Downcase1) {
 }
 
 TEST(Strings, ReplaceAll1) {
+    // [core_str_replace]
     EXPECT_EQ("abcdef"_as.replaceAll("ab", "12"), "12cdef");
+    // [core_str_replace]
 }
 
 TEST(Strings, ReplaceAll2) {
@@ -124,11 +130,13 @@ TEST(Strings, Contains) {
 }
 
 TEST(Strings, StartsWith) {
+    // [core_str_starts_with]
     EXPECT_EQ("Ку🤡Ку"_as.utf8().startsWith(U'К'), true);
     EXPECT_EQ("Ку🤡Ку"_as.startsWith("Ку"), true); // russian letters
 
     EXPECT_EQ("Ку🤡Ку"_as.utf8().startsWith(U'K'), false);
     EXPECT_EQ("Ку🤡Ку"_as.startsWith("Ky"), false); // english letters
+    // [core_str_starts_with]
 }
 
 TEST(Strings, EndsWith) {
@@ -152,17 +160,21 @@ TEST(Strings, MultibyteErase) {
 }
 
 TEST(Strings, MultibyteInsert) {
+    // [core_str_insert]
     auto s = "AB"_as;
     s.insert(1, U'🤡');
     EXPECT_EQ(s, "A🤡B");
     EXPECT_EQ(s.bytes().size(), 6);
+    // [core_str_insert]
 }
 
 TEST(Strings, Chinese) {
+    // [core_str_length]
     EXPECT_EQ("嗨"_as, "嗨");
     EXPECT_EQ("嗨"_as.length(), 3);
     EXPECT_EQ("嗨"_as.utf8().length(), 1);
     EXPECT_EQ("嗨"_as.toStdString(), "嗨");
+    // [core_str_length]
 }
 
 TEST(Strings, Utf8Iterators) {
@@ -173,9 +185,11 @@ TEST(Strings, Utf8Iterators) {
 }
 
 TEST(Strings, UtfEncoding) {
+    // [core_str_encoding]
     AString str("Привет, 🤡, Как твои дела?");
     EXPECT_EQ(str.toUtf16(), u"Привет, 🤡, Как твои дела?");
     EXPECT_EQ(str.toUtf32(), U"Привет, 🤡, Как твои дела?");
+    // [core_str_encoding]
 }
 
 TEST(Strings, Substr1) {
@@ -185,22 +199,28 @@ TEST(Strings, Substr1) {
 }
 
 TEST(Strings, Substr2) {
+    // [core_str_utf8_substr]
     AString str("🤡, как твои дела?");
     EXPECT_EQ(str.utf8().substr(0, 1), "🤡");
     EXPECT_EQ(str.utf8().substr(1), ", как твои дела?");
     EXPECT_EQ(str.utf8().substr(1, 3), ", к");
+    // [core_str_utf8_substr]
 }
 
 TEST(Strings, TrimSingleSymbol) {
+    // [core_str_trim_single]
     EXPECT_EQ(AString("  a b  ").trim(), "a b");
     EXPECT_EQ(AString("xxaxx").trim('x'), "a");
     // only the given symbol is removed
     EXPECT_EQ(AString("\t a \n").trim(), "\t a \n");
+    // [core_str_trim_single]
 }
 
 TEST(Strings, TrimSet) {
+    // [core_str_trim_set]
     EXPECT_EQ(AString("\t a b \r\n").trim(" \t\r\n"), "a b");
     EXPECT_EQ(AString("xyhixyx").trim("xy"), "hi");
+    // [core_str_trim_set]
 }
 
 TEST(Strings, TrimSetOrderDoesNotMatter) {

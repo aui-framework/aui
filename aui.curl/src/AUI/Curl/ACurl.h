@@ -270,6 +270,10 @@ public:
 
         /**
          * @brief Specifies acceptable response time.
+         * @details
+         * This is not a limit of the total request duration. It is the same as `withLowSpeedTime`: the request is
+         * aborted when the transfer speed stays below the low speed limit (1 KiB/s by default, see `withLowSpeedLimit`)
+         * for `timeout`. Large transfers that make progress are not interrupted.
          * @return this
          */
         Builder& withTimeout(std::chrono::seconds timeout);

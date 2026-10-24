@@ -74,7 +74,8 @@ void CommonRenderingContext::init(const Init& init) {
         AUI_ASSERT(nsWindow != nullptr);
         window.mHandle = nsWindow;
         window.updateDpi();
-        [nsWindow setContentSize:NSMakeSize(init.width / window.getDpiRatio(), init.height / window.getDpiRatio())];
+        const CGFloat backingScale = [nsWindow backingScaleFactor];
+        [nsWindow setContentSize:NSMakeSize(init.width / backingScale, init.height / backingScale)];
 
         @try {
             auto view = [[AUIView alloc] initWithWindow:&window];

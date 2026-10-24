@@ -22,8 +22,33 @@
 class AByteBuffer;
 
 /**
+ * ---
+ * title: ATcpSocket
+ * icon: material/lan-connect
+ * ---
+ *
  * @brief A bidirectional TCP connection (either a client connection or returned by ATcpServerSocket).
  * @ingroup network
+ * @details
+ * ATcpSocket is both [IInputStream] and [IOutputStream], so it plugs into everything that works with streams:
+ * `AByteBuffer`, `AJson::fromStream`, etc.
+ *
+ * The constructor connects to the destination address and blocks until the connection is established or fails
+ * (throws [AIOException]).
+ *
+ * ```cpp
+ * ATcpSocket socket(AInet4Address::fromString("127.0.0.1", 8080));
+ * socket.write("hello", 5);
+ * char buf[256];
+ * size_t n = socket.read(buf, sizeof(buf));
+ * ```
+ *
+ * `read` blocks until some data arrives and returns the amount of bytes read, which can be less than requested. It
+ * returns 0 when the peer has closed the connection gracefully. TCP is a stream, not a message protocol: one `write`
+ * on one side does not correspond to one `read` on the other. Use `IInputStream::readExact` or
+ * a length prefix when you need whole messages.
+ *
+ * See [network-tcp] for a full client/server walkthrough.
  */
 class API_AUI_NETWORK ATcpSocket : public AAbstractSocket, public IInputStream, public IOutputStream {
     friend class ATcpServerSocket;

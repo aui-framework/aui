@@ -15,8 +15,25 @@
 #include "AUI/Common/AColor.h"
 #include "AUI/View/AView.h"
 
+/**
+ * @brief A screenshot of the current window contents which can be analyzed in tests.
+ * @ingroup uitests
+ * @details
+ * Most of the time, you don't need this class directly; `averageColor` and `pixelColorAt` assertions use it. Use it when
+ * you need something custom:
+ *
+ * ```cpp
+ * auto screenshot = ScreenshotAnalyzer::makeScreenshot().clip(By::name("#preview").one());
+ * EXPECT_EQ(screenshot.image().size(), glm::uvec2(64, 64));
+ * ```
+ *
+ * See [uitests-screenshots].
+ */
 class API_AUI_UITESTS ScreenshotAnalyzer {
 public:
+    /**
+     * @brief Takes a screenshot of the current window.
+     */
     static ScreenshotAnalyzer makeScreenshot();
 
     [[nodiscard]]
