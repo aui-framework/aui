@@ -11,6 +11,14 @@
 
 #include "ASpacerFixed.h"
 
+void ASpacerFixed::setSpace(AMetric space) {
+    if (mSpace == space) {
+        return;
+    }
+    mSpace = space;
+    requestLayout();
+}
+
 bool ASpacerFixed::consumesClick(const glm::ivec2& pos) {
     return false;
 }

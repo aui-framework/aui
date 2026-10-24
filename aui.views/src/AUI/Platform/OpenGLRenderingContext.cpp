@@ -40,8 +40,16 @@ void OpenGLRenderingContext::beginFramebuffer(glm::uvec2 windowSize) {
     }
     if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
         if (fb->size() != windowSize) {
+#if AUI_PLATFORM_WIN
+            // Parallels' OpenGL keeps the old size of renderbuffers respecified with glRenderbufferStorage, clipping
+            // everything drawn to the framebuffer. Recreating the renderbuffers works around it.
+            tryEnableFramebuffer(windowSize);
+#else
             fb->resize(windowSize);
+#endif
         }
+    }
+    if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
         fb->bind();
         mViewportSize = fb->supersampledSize();
     } else {

@@ -50,14 +50,15 @@ public:
         }
 
         _<AWindow> buildWindow(const AString& title, AWindow* parent = nullptr) {
-            auto window = AWindow::wrapViewToWindow(buildContainer(),
-                                                    title,
-                                                    300_dp,
-                                                    400_dp,
-                                                    parent,
-                                                    WindowStyle::MODAL |
-                                                    WindowStyle::NO_RESIZE |
-                                                    WindowStyle::NO_MINIMIZE_MAXIMIZE);
+            auto window = AWindow::wrapViewToWindow(buildContainer(), AWindow::Init {
+                .title = title,
+                .width = 300_dp,
+                .height = 400_dp,
+                .parent = parent ? AOptional<AWindow::Init::Parent>(AWindow::Init::Parent { .window = *parent, .modal = true })
+                                 : std::nullopt,
+                .decoration = AWindow::Init::DecorationDefault { .buttons = { .minimize = false, .maximize = false } },
+                .resizable = false,
+            });
             return window;
         }
 

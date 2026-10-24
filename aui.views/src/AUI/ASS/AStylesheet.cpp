@@ -30,7 +30,7 @@
 #include <AUI/View/AHDividerView.h>
 #include <AUI/View/AVDividerView.h>
 #include <AUI/View/ATabView.h>
-#include <AUI/Platform/ACustomCaptionWindow.h>
+#include <AUI/View/ATitlebar.h>
 #include <AUI/View/ARulerView.h>
 #include <AUI/View/ATreeView.h>
 #include <AUI/View/AText.h>
@@ -75,6 +75,11 @@ AStylesheet::AStylesheet() {
 #else
             Padding { 8_dp },
 #endif
+        },
+        {
+            // contents extend into the titlebar, up to the window edges.
+            class_of(".window-extended"),
+            Padding { 0 },
         },
 
          // ASpinner
@@ -426,26 +431,31 @@ AStylesheet::AStylesheet() {
             BackgroundSolid { 0x808080_rgb },
         },
 
-        // CUSTOM WINDOWS ===================================================
+        // ATITLEBAR ========================================================
         {
-            type_of<ACustomCaptionWindow>(),
-            Padding { 0 },
-            Border { 1_px, getOsThemeColor() },
-        },
-        {
-            class_of(".window-title"),
+            t<ATitlebar>(),
             BackgroundSolid { getOsThemeColor() },
-            FixedSize { {}, 30_dp }
+            Margin { 0 },
         },
         {
-            class_of(".window-title") >> class_of(".title"),
+            // only the title: user's labels (e.g., inside buttons) placed into the titlebar are styled as usual.
+            t<ATitlebar>() >> t<AWindowTitle>(),
             Margin { 0 },
             Padding { 7_dp },
             TextColor { 0xffffff_rgb },
             FontSize { 9_pt },
         },
         {
-            class_of(".window-title") >> class_of(".default"),
+            // applies where AUI draws the title (see AWindow::hasNativeWindowTitle).
+            t<AWindowTitle>(),
+#if AUI_PLATFORM_APPLE || AUI_PLATFORM_LINUX
+            ATextAlign::CENTER,
+#else
+            ATextAlign::LEFT,
+#endif
+        },
+        {
+            t<ATitlebar>() >> class_of(".default"),
             BorderRadius{ 0 },
             BoxShadow { nullptr },
             Border { nullptr },
@@ -456,28 +466,39 @@ AStylesheet::AStylesheet() {
             BackgroundImage {{}, {}, {}, Sizing::CENTER }
         },
         {
-            class_of(".window-title") >> class_of(".minimize"),
+            t<ATitlebar>() >> class_of(".minimize"),
             BackgroundImage {":uni/caption/minimize.svg", {}, {}, Sizing::CENTER }
         },
         {
-            class_of(".window-title") >> class_of(".close"),
+            t<ATitlebar>() >> class_of(".close"),
             BackgroundImage {":uni/caption/close.svg", {}, {}, Sizing::CENTER }
         },
         {
-            class_of(".window-title") >> t<AButton>::hover(),
+            // only AUI-drawn window buttons: user's buttons placed into the titlebar keep their own look.
+            t<ATitlebar>() >> class_of::hover(".default"),
             BackgroundSolid { 0x20ffffff_argb },
         },
         {
-            class_of(".window-title") >> t<AButton>::active(),
+            t<ATitlebar>() >> class_of::active(".default"),
             BackgroundSolid { 0x30ffffff_argb },
         },
         {
-            class_of(".window-title") >> class_of::hover(".close"),
+            t<ATitlebar>() >> class_of::hover(".close"),
             BackgroundSolid { 0xe81123_rgb }
         },
         {
-            class_of(".window-title") >> class_of::active(".close"),
+            t<ATitlebar>() >> class_of::active(".close"),
             BackgroundSolid { 0x80e81123_argb }
+        },
+        // win32 reports the window buttons as non-client area, so views don't get pointer events there and
+        // ":hover" never matches; AWindowControls toggles these classes instead.
+        {
+            t<ATitlebar>() >> class_of(".nc-hover"),
+            BackgroundSolid { 0x20ffffff_argb },
+        },
+        {
+            t<ATitlebar>() >> class_of(".nc-hover-close"),
+            BackgroundSolid { 0xe81123_rgb }
         },
         {
             class_of(".window-content"),
@@ -607,6 +628,11 @@ AStylesheet::AStylesheet() {
         {
             c(".menu-item-shortcut"),
             TextColor { 0x404040_rgb },
+        },
+        {
+            c(".menu-item-icon"),
+            FixedSize { 16_dp },
+            Margin { 0, 6_dp, 0, 0 },
         },
 
         {

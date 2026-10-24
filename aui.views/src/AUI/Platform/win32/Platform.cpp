@@ -34,18 +34,22 @@ void PlatformWin32::setClipboardText(const AString& text) {
 }
 
 AString PlatformWin32::getClipboardText() {
-    OpenClipboard(nullptr);
-    HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
-    std::wstring_view memView = static_cast<const wchar_t*>(GlobalLock(hMem));
-    AUI_DEFER {
-        GlobalUnlock(hMem);
-        CloseClipboard();
-    };
-    if (memView.data()) {
-        AString s(reinterpret_cast<const char16_t*>(memView.data()), memView.length());
-        return s;
+    if (!OpenClipboard(nullptr)) {
+        return {};
     }
-    return {};
+    AUI_DEFER { CloseClipboard(); };
+    HGLOBAL hMem = GetClipboardData(CF_UNICODETEXT);
+    if (!hMem) {
+        // clipboard is empty or contains non-text data.
+        return {};
+    }
+    const auto* data = static_cast<const wchar_t*>(GlobalLock(hMem));
+    if (!data) {
+        return {};
+    }
+    AUI_DEFER { GlobalUnlock(hMem); };
+    std::wstring_view memView = data;
+    return AString(reinterpret_cast<const char16_t*>(memView.data()), memView.length());
 }
 
 AMessageBox::ResultButton PlatformWin32::messageBoxShow(
@@ -53,7 +57,7 @@ AMessageBox::ResultButton PlatformWin32::messageBoxShow(
     AMessageBox::Button b) {
     using namespace AMessageBox;
 
-    HWND window = parent ? parent->getNativeHandle() : nullptr;
+    HWND window = parent ? parent->nativeHandle() : nullptr;
 
     long flags = 0;
 

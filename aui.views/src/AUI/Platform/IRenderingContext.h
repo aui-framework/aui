@@ -15,7 +15,6 @@
 #include "AWindowNativePtr.h"
 #include "IRenderingContext.h"
 #include <AUI/Common/AString.h>
-#include <AUI/Enum/WindowStyle.h>
 #include <AUI/Image/AImage.h>
 
 class ASurface;
@@ -38,10 +37,19 @@ public:
     struct API_AUI_VIEWS Init {
         AWindow& window;
         AString name;
-        int width;
-        int height;
-        WindowStyle ws;
-        AWindow* parent;
+        int width = 0;
+        int height = 0;
+
+        /**
+         * @brief Whether this is a popup window (dropdown, context menu); see AWindow::isPopup.
+         */
+        bool popup = false;
+
+        /**
+         * @brief Parent window. Other creation parameters (decoration, modality, etc.) are available via
+         *        AWindow::init of `window`.
+         */
+        AWindow* parent = nullptr;
 
         void setRenderingContext(_unique<IRenderingContext>&& context) const;
     };

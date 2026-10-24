@@ -35,7 +35,13 @@
     return frameSize;
 }
 */
+- (void)windowDidMove:(NSNotification *)notification {
+    mWindow->AViewContainer::setPosition(mWindow->getWindowPosition());
+}
+
 - (void)windowDidResize:(NSNotification *)notification {
+    // keep AUI's idea of the position in sync, otherwise setSize() below would move the window back.
+    mWindow->AViewContainer::setPosition(mWindow->getWindowPosition());
     // Real pixels (points * backingScaleFactor), not points * getDpiRatio(): the latter also includes
     // ASurface::ScalingParams (UI scale), which affects dp<->px conversion only. Mixing them made the window (and the
     // GL framebuffer) larger than the actual drawable.
