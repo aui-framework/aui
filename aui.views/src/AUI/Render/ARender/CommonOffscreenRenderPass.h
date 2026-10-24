@@ -11,10 +11,10 @@
 
 #pragma once
 
-#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ARender/IRendererBackend.h>
 #include <AUI/Render/ARender/ADrawList.hpp>
 #include <AUI/Render/ARender/ADisplayListCanvas.hpp>
-#include <AUI/Render/RendererCanvas.h>
+#include <AUI/Render/ARender/AUIRenderer.h>
 
 class CommonOffscreenRenderPass : public IOffscreenRenderPass {
 public:
@@ -22,7 +22,7 @@ public:
     _<ITexture> target;
     ADrawList displayList;
     ADisplayListCanvas canvas;
-    RendererCanvas rendererCanvas;
+    AUIRenderer rendererCanvas;
 
     CommonOffscreenRenderPass(IRendererBackend& backend, const _<ITexture>& target) : 
         backend(backend), target(target), canvas(displayList, backend), rendererCanvas(canvas, backend) {}

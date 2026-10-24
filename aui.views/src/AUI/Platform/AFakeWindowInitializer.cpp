@@ -9,9 +9,9 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ARender/IRendererBackend.h>
 #include <AUI/Render/ACanvas.hpp>
-#include <AUI/Render/RendererCanvas.h>
+#include <AUI/Render/ARender/AUIRenderer.h>
 #include <AUI/Render/ARender/ADrawList.hpp>
 #include <AUI/Render/ARender/ADisplayListCanvas.hpp>
 #include <AUI/Render/FontAtlas.hpp>
@@ -92,6 +92,6 @@ struct AFakeWindowInitializer {
     FakeBackend backend;
     ADrawList dl;
     ADisplayListCanvas canvas;
-    RendererCanvas renderer;
+    AUIRenderer renderer;
     AFakeWindowInitializer(): canvas(dl, backend), renderer(canvas, backend) {}
 };

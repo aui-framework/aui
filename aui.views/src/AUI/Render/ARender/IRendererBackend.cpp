@@ -12,6 +12,7 @@
 #include "IRendererBackend.h"
 #include <range/v3/all.hpp>
 #include <AUI/Traits/callables.h>
+#include <AUI/Logging/ALogger.h>
 
 void IRendererBackend::backdrops(const ADrawList::Backdrop& v, const glm::mat4& transform) {
     auto p1 = glm::vec2(transform * glm::vec4(v.position, 0.f, 1.f));
@@ -34,4 +35,9 @@ void IRendererBackend::backdrops(const ADrawList::Backdrop& v, const glm::mat4& 
         ranges::to_vector;
     this->backdrops(glm::ivec2(lower), glm::ivec2(upper - lower),
                     std::span<const Preprocessed>(preprocessed.data(), preprocessed.size()));
+}
+
+void IRendererBackend::customGlCallback(const ADrawList::CustomGlCallback& v, const glm::mat4& transform) {
+    ALogger::warn("IRendererBackend") << "enqueueGlCallback was used, but the active renderer backend has no "
+                                         "OpenGL context to run it with; the callback was skipped";
 }

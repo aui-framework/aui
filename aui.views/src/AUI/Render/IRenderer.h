@@ -34,6 +34,15 @@ class ACanvas;
 /**
  * @brief Base class for renderer.
  * @ingroup views
+ * @details
+ * This is the only seam the rest of the framework (views, layouts, ASS, ...) is written against; nothing
+ * outside `AUI/Render/ARender` knows or cares how an `IRenderer` actually draws anything.
+ *
+ * AUI's own implementation - [AUIRenderer], batching through `ADrawList` into an `IRendererBackend`
+ * (OpenGL or software) - lives entirely under `AUI/Render/ARender`. That whole folder is one
+ * self-contained, deletable unit: a different renderer (e.g. backed by Skia) is a new class that
+ * implements `IRenderer` (and `ACanvas`) directly and knows nothing about `IRendererBackend`,
+ * `ADrawList`, or OpenGL - it is not a plugin *for* `AUIRenderer`, it *replaces* it.
  */
 class IRenderer: public aui::noncopyable {
 public:

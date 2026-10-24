@@ -85,7 +85,7 @@ void OpenGLRenderingContext::init(const Init& init) {
 
     mRenderer = ourRenderer();
     mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
-    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
+    mRendererWrapper = std::make_unique<AUIRenderer>(*mCanvas, *mRenderer);
     ALogger::info("OpenGL context is ready");
 }
 

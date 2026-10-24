@@ -1417,6 +1417,12 @@ void OpenGLBackend::squareSector(const ADrawList::SquareSector& v, const glm::ma
     glDrawElements(GL_TRIANGLES, 6, GL_UNSIGNED_INT, (void*)iOffset);
 }
 
+void OpenGLBackend::customGlCallback(const ADrawList::CustomGlCallback& v, const glm::mat4& transform) {
+    if (!v.callback) return;
+    GLDebugGroupLocal debugGroup("customGlCallback");
+    v.callback(transform);
+}
+
 void OpenGLBackend::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) {
     if (!glm::all(glm::greaterThan(size, glm::ivec2(0)))) return;
     if (backdrops.empty()) return;

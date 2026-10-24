@@ -67,6 +67,7 @@ public:
                       AAngleRadians begin,
                       AAngleRadians end) override;
     void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) override;
+    void enqueueGlCallback(std::function<void(const glm::mat4& transform)> callback) override;
 
     void scale(const glm::vec2& multiplier) override;
 

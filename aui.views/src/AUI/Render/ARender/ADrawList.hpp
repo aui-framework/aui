@@ -12,6 +12,7 @@
 #pragma once
 
 #include <variant>
+#include <functional>
 #include <AUI/Render/ABorderStyle.h>
 #include <AUI/ASS/Property/Backdrop.h>
 #include <AUI/Font/AFontStyle.h>
@@ -131,6 +132,14 @@ public:
         AVector<ass::Backdrop::Any> backdrops;
     };
 
+    /**
+     * @brief Escape hatch: an arbitrary callback invoked at this exact point of the draw list, allowed to
+     * issue raw OpenGL calls. See [ACanvas::enqueueGlCallback] before using this.
+     */
+    struct CustomGlCallback {
+        std::function<void(const glm::mat4& transform)> callback;
+    };
+
     struct PushClipRect {
         ARect<float> rect;
         AClipOp op;
@@ -174,7 +183,7 @@ public:
         using Command = std::variant<
             SolidRectangles, GradientRectangles, TexturedRectangles, SolidRoundedRectangles, GradientRoundedRectangles,
             TexturedRoundedRectangles, RectangleBorders, RoundedRectangleBorders, BoxShadow, BoxShadowInner, Glyphs,
-            Lines, LineBatches, Points, SquareSector, Backdrop, PushClipRect, PushClipRoundedRect, PopClipRect, Clear, PushLayer, PopLayer, PushMask, PopMask>;
+            Lines, LineBatches, Points, SquareSector, Backdrop, CustomGlCallback, PushClipRect, PushClipRoundedRect, PopClipRect, Clear, PushLayer, PopLayer, PushMask, PopMask>;
         Command command;
         glm::mat4 transform;
         APaint paint;

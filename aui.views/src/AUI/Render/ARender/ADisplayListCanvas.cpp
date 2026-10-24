@@ -10,7 +10,7 @@
  */
 
 #include "ADisplayListCanvas.hpp"
-#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ARender/IRendererBackend.h>
 #include <AUI/Render/FontAtlas.hpp>
 #include <AUI/Traits/callables.h>
 #include <glm/gtc/matrix_transform.hpp>
@@ -258,6 +258,10 @@ void ADisplayListCanvas::squareSector(const APaint& paint,
 
 void ADisplayListCanvas::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) {
     add(ADrawList::Backdrop{position, size, {backdrops.begin(), backdrops.end()}}, {});
+}
+
+void ADisplayListCanvas::enqueueGlCallback(std::function<void(const glm::mat4& transform)> callback) {
+    add(ADrawList::CustomGlCallback{std::move(callback)}, {});
 }
 
 void ADisplayListCanvas::add(ADrawList::StoredCommand::Command command, const APaint& paint) {

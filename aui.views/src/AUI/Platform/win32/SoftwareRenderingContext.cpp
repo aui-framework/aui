@@ -10,10 +10,10 @@
  */
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
-#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ARender/IRendererBackend.h>
 #include <AUI/Render/ARender/Software/SoftwareRenderer.h>
 #include <AUI/Render/ARender/ADisplayListCanvas.hpp>
-#include <AUI/Render/RendererCanvas.h>
+#include <AUI/Render/ARender/AUIRenderer.h>
 #include <AUI/Image/AImage.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext()
@@ -32,7 +32,7 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init& init) {
     mRenderer = _new<SoftwareRenderer>();
     mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
 
-    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
+    mRendererWrapper = std::make_unique<AUIRenderer>(*mCanvas, *mRenderer);
 }
 
 void SoftwareRenderingContext::destroyNativeWindow(ASurface& window) {

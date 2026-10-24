@@ -10,7 +10,7 @@
  */
 
 #include "ADrawList.hpp"
-#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ARender/IRendererBackend.h>
 #include <AUI/Render/ACanvas.hpp>
 #include <AUI/Traits/callables.h>
 
@@ -26,6 +26,9 @@ bool isBarrier(const ADrawList::StoredCommand::Command& cmd) {
         [](const ADrawList::PushClipRoundedRect&) { return true; },
         [](const ADrawList::PopClipRect&)         { return true; },
         [](const ADrawList::Clear&)               { return true; },
+        // CustomGlCallback may touch arbitrary GL state, so it must never be reordered, merged with
+        // neighboring commands, or treated as occluded/occluding.
+        [](const ADrawList::CustomGlCallback&)    { return true; },
         [](const auto&)                           { return false; }
     }, cmd);
 }
@@ -854,6 +857,7 @@ void ADrawList::draw(IRendererBackend& renderer, const _<ITexture>& windowTarget
                         [&](const LineBatches& v)             { renderer.lines(v, entity.transform, entity.paint); },
                         [&](const SquareSector& v)            { renderer.squareSector(v, entity.transform, entity.paint); },
                         [&](const Backdrop& v)                { renderer.backdrops(v, entity.transform); },
+                        [&](const CustomGlCallback& v)        { renderer.customGlCallback(v, entity.transform); },
                         [&](const auto&)                      {}
                     },
                     entity.command);

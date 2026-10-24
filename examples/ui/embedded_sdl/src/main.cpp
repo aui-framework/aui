@@ -16,7 +16,7 @@
 #include <AUI/Platform/AGLEmbedContext.h>
 #include <AUI/Render/IRenderer.h>
 #include <AUI/Render/ARender/ADisplayListCanvas.hpp>
-#include <AUI/Render/RendererCanvas.h>
+#include <AUI/Render/ARender/AUIRenderer.h>
 #include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
 #include <AUI/Util/Declarative/Containers.h>
 #include <AUI/View/AButton.h>
@@ -190,13 +190,13 @@ struct EmbedRenderingContext : IRenderingContext {
     std::shared_ptr<OpenGLBackend> m_renderer;
     ADrawList m_displayList;
     _unique<ADisplayListCanvas> m_canvas;
-    _unique<RendererCanvas> m_rendererWrapper;
+    _unique<AUIRenderer> m_rendererWrapper;
 
     EmbedRenderingContext() {}
 
     void init() {
         m_canvas = std::make_unique<ADisplayListCanvas>(m_displayList, *m_renderer);
-        m_rendererWrapper = std::make_unique<RendererCanvas>(*m_canvas, *m_renderer);
+        m_rendererWrapper = std::make_unique<AUIRenderer>(*m_canvas, *m_renderer);
     }
 
     ~EmbedRenderingContext() override {

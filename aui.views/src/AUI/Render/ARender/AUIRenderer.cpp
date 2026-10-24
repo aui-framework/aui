@@ -9,88 +9,88 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include "RendererCanvas.h"
+#include "AUIRenderer.h"
 #include <AUI/Render/ACanvas.hpp>
-#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ARender/IRendererBackend.h>
 #include <AUI/Render/FontAtlas.hpp>
 #include <range/v3/all.hpp>
 #include <AUI/Render/ARender/GL/OpenGLBackend.hpp>
 #include <AUI/Render/ARender/Software/SoftwareRenderer.h>
 
-RendererCanvas::RendererCanvas(ACanvas& canvas, IRendererBackend& backend) : mCanvas(canvas), mBackend(backend) {}
+AUIRenderer::AUIRenderer(ACanvas& canvas, IRendererBackend& backend) : mCanvas(canvas), mBackend(backend) {}
 
-_<IRenderer::IMultiStringCanvas> RendererCanvas::newMultiStringCanvas(const AFontStyle& style) {
+_<IRenderer::IMultiStringCanvas> AUIRenderer::newMultiStringCanvas(const AFontStyle& style) {
     auto entryData = aui::getFontEntryData(style, mBackend.getFontCache());
     return _new<aui::MultiStringCanvas>(mBackend, entryData, style);
 }
 
-_<IRenderer::IPrerenderedString> RendererCanvas::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
+_<IRenderer::IPrerenderedString> AUIRenderer::prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) {
     if (text.empty()) return nullptr;
     auto c = newMultiStringCanvas(fs);
     c->addString(position, text);
     return c->finalize();
 }
 
-void RendererCanvas::setColorForced(const AColor& color) {
+void AUIRenderer::setColorForced(const AColor& color) {
     mColorMultiplier = color;
 }
 
-const AColor& RendererCanvas::getColor() const {
+const AColor& AUIRenderer::getColor() const {
     return mColorMultiplier;
 }
 
-void RendererCanvas::setTransform(const glm::mat4& transform) {
+void AUIRenderer::setTransform(const glm::mat4& transform) {
     mCanvas.setTransform(transform);
 }
 
-void RendererCanvas::setTransformForced(const glm::mat4& transform) {
+void AUIRenderer::setTransformForced(const glm::mat4& transform) {
     mCanvas.setTransformForced(transform);
 }
 
-void RendererCanvas::setBlending(Blending blending) {
+void AUIRenderer::setBlending(Blending blending) {
     mBlending = blending;
 }
 
-glm::mat4 RendererCanvas::getProjectionMatrix() const {
+glm::mat4 AUIRenderer::getProjectionMatrix() const {
     return mBackend.getProjectionMatrix();
 }
 
-glm::mat4 RendererCanvas::getTransform() {
+glm::mat4 AUIRenderer::getTransform() {
     return mCanvas.getTransform();
 }
 
-void RendererCanvas::translate(const glm::vec2& offset) {
+void AUIRenderer::translate(const glm::vec2& offset) {
     mCanvas.translate(offset);
 }
 
-void RendererCanvas::rotate(const glm::vec3& axis, AAngleRadians angle) {
+void AUIRenderer::rotate(const glm::vec3& axis, AAngleRadians angle) {
     mCanvas.rotate(axis, angle);
 }
 
-void RendererCanvas::rotate(AAngleRadians angle) {
+void AUIRenderer::rotate(AAngleRadians angle) {
     mCanvas.rotate(angle);
 }
 
-void RendererCanvas::setAllowRenderToTexture(bool allowRenderToTexture) {
+void AUIRenderer::setAllowRenderToTexture(bool allowRenderToTexture) {
     mBackend.setAllowRenderToTexture(allowRenderToTexture);
 }
 
-bool RendererCanvas::allowRenderToTexture() const noexcept {
+bool AUIRenderer::allowRenderToTexture() const noexcept {
     return mBackend.allowRenderToTexture();
 }
 
-void RendererCanvas::setRenderScale(float render_scale) {
+void AUIRenderer::setRenderScale(float render_scale) {
     mRenderScale = render_scale;
 }
 
-float RendererCanvas::getRenderScale() const noexcept {
+float AUIRenderer::getRenderScale() const noexcept {
     return mRenderScale;
 }
 
-void RendererCanvas::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) {
+void AUIRenderer::backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) {
     mCanvas.backdrops(position, size, backdrops);
 }
 
-void RendererCanvas::stub(glm::vec2 position, glm::vec2 size) {
+void AUIRenderer::stub(glm::vec2 position, glm::vec2 size) {
     mCanvas.rectangle(paint(ASolidBrush{0xa0a0a0_rgb}), position, size);
 }

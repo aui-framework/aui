@@ -14,7 +14,7 @@
 #include "AUI/Platform/ARenderingContextOptions.h"
 #include "AUI/Image/png/PngImageLoader.h"
 #include "AUI/Render/ARender/GL/OpenGLBackend.hpp"
-#include "AUI/Render/RendererCanvas.h"
+#include "AUI/Render/ARender/AUIRenderer.h"
 
 static void OpenGLRendering(benchmark::State& state) {
 

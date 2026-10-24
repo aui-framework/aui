@@ -17,7 +17,7 @@
 #include <AUI/Common/AColor.h>
 #include <AUI/Render/ARender/ADrawList.hpp>
 #include <AUI/Render/IRendererInterfaces.h>
-#include "IRenderer.h"
+#include <AUI/Render/IRenderer.h>
 #include <AUI/Render/ARenderContext.h>
 
 class ASurface;
@@ -33,8 +33,13 @@ public:
 };
 
 /**
- * @brief Actual renderer interface.
- * Stateless batch-oriented rendering backend.
+ * @brief Stateless batch-oriented rendering backend for [AUIRenderer].
+ * @details
+ * This is internal to AUI's own renderer, not a general extension point: it executes the primitives
+ * `ADrawList` produces (rectangles, glyphs, masks, ...) against a concrete graphics API. The two
+ * implementations are `OpenGLBackend` (`AUI/Render/ARender/GL`) and `SoftwareRenderer`
+ * (`AUI/Render/ARender/Software`). A from-scratch renderer (e.g. Skia-based) has no use for this
+ * interface - it implements [IRenderer] directly instead.
  */
 class API_AUI_VIEWS IRendererBackend {
 public:
@@ -80,6 +85,22 @@ public:
 
     virtual void backdrops(const ADrawList::Backdrop& v, const glm::mat4& transform);
     virtual void backdrops(glm::ivec2 fbSize, glm::ivec2 size, std::span<const ass::Backdrop::Preprocessed> backdrops) = 0;
+
+    /**
+     * @brief Executes a [ACanvas::enqueueGlCallback]'d callback. See that method before using this.
+     * @details
+     * The clip rect (`setClipRect`) and mask (`setMask`) in effect at the point the callback was enqueued
+     * are applied beforehand, same as for any other draw command. Nothing else is guaranteed: the callback
+     * runs with whatever GL state (bound program, VAO, textures, blend mode...) the previous command in the
+     * draw list happened to leave behind, and the next command will likewise run with whatever state the
+     * callback leaves behind.
+     *
+     * The default implementation logs a warning and does nothing, since it's only meaningful on backends
+     * that actually have an OpenGL context (see [OpenGLBackend]). A backend that cannot execute raw GL
+     * (e.g. a software rasterizer) silently drops it instead of asserting, so the same UI tree can still
+     * render - just without whatever the callback was supposed to draw.
+     */
+    virtual void customGlCallback(const ADrawList::CustomGlCallback& v, const glm::mat4& transform);
 
     virtual void setMask(const _<ITexture>& mask, const glm::vec4& maskRect = glm::vec4(0.f)) = 0;
 

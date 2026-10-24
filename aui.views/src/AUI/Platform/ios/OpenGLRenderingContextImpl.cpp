@@ -38,7 +38,7 @@ void OpenGLRenderingContext::init(const Init& init) {
     gladLoadGLES2Loader(reinterpret_cast<GLADloadproc>(UIKit_GL_GetProcAddress));
     mRenderer = ourRenderer();
     mCanvas = std::make_unique<ADisplayListCanvas>(mDrawList, *mRenderer);
-    mRendererWrapper = std::make_unique<RendererCanvas>(*mCanvas, *mRenderer);
+    mRendererWrapper = std::make_unique<AUIRenderer>(*mCanvas, *mRenderer);
 }
 
 void OpenGLRenderingContext::destroyNativeWindow(ASurface& window) {

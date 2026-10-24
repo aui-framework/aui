@@ -14,6 +14,7 @@
 #include <glm/glm.hpp>
 #include <vector>
 #include <span>
+#include <functional>
 #include <AUI/Common/AColor.h>
 #include <AUI/Render/ABrush.h>
 #include <AUI/Render/ABorderStyle.h>
@@ -124,6 +125,38 @@ public:
                               AAngleRadians end) = 0;
 
     virtual void backdrops(glm::ivec2 position, glm::ivec2 size, std::span<const ass::Backdrop::Any> backdrops) = 0;
+
+    /**
+     * @brief Escape hatch to issue raw OpenGL calls from within AUI's rendering pipeline.
+     * @param callback invoked with the canvas's current transform when the enqueued command is actually
+     *        executed.
+     * @details
+     * @warning Think twice before reaching for this. AUI batches, reorders and culls draw commands for
+     * performance; everything you draw through `rectangle()`, `string()`, etc. plays nicely with that.
+     * A raw GL callback does not: it is an opaque, unmovable barrier in the draw list (it can't be
+     * reordered, merged or culled), so using it anywhere other than rarely will quietly undo the
+     * optimizations the rest of your UI relies on, and it ties your view to the OpenGL backend
+     * specifically - it is silently skipped (with a logged warning) on any other [IRendererBackend],
+     * such as the software rasterizer. If you can express what you want with the regular `ACanvas` API,
+     * [ITexture] + a custom shader, or by rendering to an offscreen texture and drawing that texture with
+     * `rectangle()`, do that instead.
+     *
+     * If you still need this - for a one-off effect that genuinely can't be expressed otherwise - keep in
+     * mind:
+     * - The callback runs synchronously, later, when this part of the draw list is actually rendered - not
+     *   when you call `enqueueGlCallback`. Don't capture anything by reference that might be gone by then.
+     * - The clip rect active at enqueue time is applied as the GL scissor box beforehand, same as for any
+     *   other draw command, so you don't need to (and can't easily) handle clipping yourself.
+     * - AUI makes no promise about what GL state (bound program, VAO, textures, blend function, depth/
+     *   stencil state, etc.) is active when your callback runs, and it makes no promise about restoring
+     *   its own state after your callback either. You must save/restore (or at least not rely on and not
+     *   leak) whatever GL state you touch - see `examples/ui/opengl_simple` for the save/cleanup pattern.
+     * - `enqueueGlCallback` is only ever meaningful together with the OpenGL backend
+     *   ([OpenGLBackend], under `AUI/Render/ARender/GL`). It is the one sanctioned crack in that
+     *   boundary - everything else in the framework is written against [IRenderer]/[ACanvas] and does not
+     *   know OpenGL exists.
+     */
+    virtual void enqueueGlCallback(std::function<void(const glm::mat4& transform)> callback) = 0;
 
     virtual _<aui::IMultiStringCanvas> newMultiStringCanvas(const AFontStyle& style) = 0;
     virtual _<aui::IPrerenderedString> prerenderString(glm::vec2 position, const AString& text, const AFontStyle& fs) = 0;

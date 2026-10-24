@@ -21,7 +21,7 @@
 #include "AUI/Render/ARender/GL/OpenGLBackend.hpp"
 #include <AUI/Render/ARender/ADrawList.hpp>
 #include <AUI/Render/ARender/ADisplayListCanvas.hpp>
-#include <AUI/Render/RendererCanvas.h>
+#include <AUI/Render/ARender/AUIRenderer.h>
 
 class OpenGLRenderingContext: public CommonRenderingContext {
 public:
@@ -68,7 +68,7 @@ protected:
     ADrawList mDrawList;
     ADrawList mPresentDisplayList;
     _unique<ADisplayListCanvas> mCanvas;
-    _unique<RendererCanvas> mRendererWrapper;
+    _unique<AUIRenderer> mRendererWrapper;
     glm::uvec2 mViewportSize { 0, 0 };
     _<ITexture> mWindowTarget;
     _<ITexture> mBackbufferTarget;

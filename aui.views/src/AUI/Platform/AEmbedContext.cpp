@@ -21,8 +21,8 @@
 #include <AUI/Render/ARender/ADrawList.hpp>
 #include <AUI/Render/ARender/ADisplayListCanvas.hpp>
 #include <AUI/Platform/IRenderingContext.h>
-#include <AUI/Render/IRendererBackend.h>
-#include <AUI/Render/RendererCanvas.h>
+#include <AUI/Render/ARender/IRendererBackend.h>
+#include <AUI/Render/ARender/AUIRenderer.h>
 
 class AEmbedContext::EmbedWindow : public ASurface {
     friend class AEmbedContext;

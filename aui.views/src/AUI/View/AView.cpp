@@ -14,8 +14,8 @@
 #include <AUI/Render/ACanvas.hpp>
 #include <AUI/Render/ARender/ADrawList.hpp>
 #include <AUI/Render/ARender/ADisplayListCanvas.hpp>
-#include <AUI/Render/RendererCanvas.h>
-#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ARender/AUIRenderer.h>
+#include <AUI/Render/ARender/IRendererBackend.h>
 #include <AUI/Render/ITexture.h>
 
 #include <exception>

@@ -16,7 +16,7 @@
 #include "AAnimatedDrawable.h"
 #include "AUI/Image/gif/GifImageFactory.h"
 #include <AUI/Render/ACanvas.hpp>
-#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ARender/IRendererBackend.h>
 #include <AUI/Platform/AWindow.h>
 #include <AUI/View/AView.h>
 

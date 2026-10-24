@@ -11,7 +11,7 @@
 
 #include "ANoiseDrawable.h"
 #include <AUI/Render/ACanvas.hpp>
-#include <AUI/Render/IRendererBackend.h>
+#include <AUI/Render/ARender/IRendererBackend.h>
 #include <AUI/Util/ARandom.h>
 
 void ANoiseDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) {
@@ -22,11 +22,11 @@ void ANoiseDrawable::draw(ARenderContext ctx, const IDrawable::Params& params) {
         AFormattedImage<APixelFormat::R8G8B8A8_UNORM> data({ 32, 32 });
         ARandom r;
         for (auto& color : data) {
-            color.r = color.g = color.b = uint8_t(r.nextInt());
+            color.r = color.g = color.b = static_cast<uint8_t>(r.nextInt());
             color.a = 255;
         }
         mNoise->upload(AImageView(data));
-        }
+    }
 
     ctx.canvas.rectangle(APaint {
         .brush = ATexturedBrush {

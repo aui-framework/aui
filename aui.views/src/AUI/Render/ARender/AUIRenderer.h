@@ -14,9 +14,18 @@
 #include <AUI/Render/IRenderer.h>
 #include <AUI/Render/ACanvas.hpp>
 
-class API_AUI_VIEWS RendererCanvas : public IRenderer {
+/**
+ * @brief AUI's own, built-in implementation of [IRenderer].
+ * @details
+ * Translates `IRenderer`/`ACanvas` calls into an `ADrawList`, which is batched, reordered and culled, then
+ * played back against whichever [IRendererBackend] is active (OpenGL or software). This class, its
+ * `IRendererBackend`, and everything else under `AUI/Render/ARender` are an implementation detail - a
+ * replacement renderer (Skia or otherwise) does not extend or wrap `AUIRenderer`, it implements
+ * `IRenderer` on its own and is wired up wherever a window currently constructs an `AUIRenderer`.
+ */
+class API_AUI_VIEWS AUIRenderer : public IRenderer {
 public:
-    RendererCanvas(ACanvas& canvas, IRendererBackend& backend);
+    AUIRenderer(ACanvas& canvas, IRendererBackend& backend);
 
     ACanvas& canvas() override { return mCanvas; }
 
