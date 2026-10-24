@@ -132,6 +132,11 @@ void Win32MenuProvider::createMenu(const AVector<AMenuItem>& vector) {
         }
     }
 
+    if (hwnd) {
+        // without this the menu does not close when the user clicks elsewhere (see TrackPopupMenuEx remarks).
+        SetForegroundWindow(hwnd);
+    }
+
     mOpen = true;
     const BOOL cmd = TrackPopupMenuEx(
         root.get(),

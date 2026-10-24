@@ -18,6 +18,7 @@
 
 #import <Cocoa/Cocoa.h>
 
+#include <cstring>
 #include <functional>
 #include <utility>
 
