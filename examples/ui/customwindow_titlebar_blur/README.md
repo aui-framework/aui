@@ -5,18 +5,18 @@ Window with extended decoration, whose titlebar blurs the contents scrolled unde
 
 ![](imgs/Screenshot_20261017_082728.png)
 
-This example demonstrates [AWindow::Init::DecorationExtended] with [declarative::Titlebar] overlaid on top of an
+This example demonstrates `AWindow::Init::DecorationExtended` with [declarative::Titlebar] overlaid on top of an
 [AScrollArea] using [AStackedLayout].
 
 ## How it works
 
-The window contents are a [declarative::Stacked] of two layers:
+The window contents are a `declarative::Stacked` of two layers:
 
-1. Content layer: a [declarative::Vertical] with an [ASpacerFixed] on top and the [AScrollArea] below it. The spacer's
+1. Content layer: a `declarative::Vertical` with an [ASpacerFixed] on top and the [AScrollArea] below it. The spacer's
    height is bound to the titlebar's measured height (`AUI_REACT(AMetric(titlebar->size()->y, AMetric::T_PX))`), so
    the initial position of the contents is shifted from beneath the titlebar, while scrolled content can still go under
    it.
-2. Titlebar layer: a [declarative::Vertical] with [declarative::Titlebar] at the top and a `SpacerExpanding` below, so
+2. Titlebar layer: a `declarative::Vertical` with [declarative::Titlebar] at the top and a `SpacerExpanding` below, so
    the titlebar does not capture the rest of the window. Its style sets a translucent background (`BackgroundSolid`
    with a half-transparent white) and [ass::Backdrop] with `Backdrop::GaussianBlur`, which blurs whatever is rendered
    underneath the titlebar.

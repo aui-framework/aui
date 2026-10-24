@@ -33,7 +33,7 @@ namespace aui::win32 {
 
 
     /**
-     * @brief How the alpha channel is stored in a bitmap created by [imageToBitmap].
+     * @brief How the alpha channel is stored in a bitmap created by `imageToBitmap`.
      * @exclusivefor{windows}
      */
     enum class BitmapAlpha {

@@ -138,7 +138,7 @@ public:
 
 
 /**
- * @brief An item of [AMenuModel].
+ * @brief An item of `AMenuModel`.
  * @details
  * Fields not applicable to the item's `type` are ignored. Whether `shortcut` and `icon` are displayed depends on the
  * platform; see [AMenu].
