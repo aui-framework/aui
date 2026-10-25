@@ -11,6 +11,8 @@
 
 #include "JsonRpc.h"
 
+#include <algorithm>
+
 #include "AUI/Json/Exception.h"
 #include "AUI/Logging/ALogger.h"
 
@@ -81,6 +83,16 @@ void JsonRpcDispatcher::registerMethod(AString name, SyncHandler handler) {
 bool JsonRpcDispatcher::hasMethod(const AString& name) const {
     std::lock_guard lock(mMutex);
     return mMethods.contains(name);
+}
+
+AVector<AString> JsonRpcDispatcher::methodNames() const {
+    std::lock_guard lock(mMutex);
+    AVector<AString> names;
+    for (const auto& [name, _] : mMethods) {
+        names.push_back(name);
+    }
+    std::sort(names.begin(), names.end());
+    return names;
 }
 
 void JsonRpcDispatcher::handle(const AString& message, Respond respond) const {

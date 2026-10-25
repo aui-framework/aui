@@ -405,6 +405,18 @@ private:
         }
     }
 
+    /// Closing a socket that has unread data makes the system send RST, which may destroy the response the client has
+    /// not read yet. So after an error response, let the client finish sending and leave.
+    void drainInput() {
+        try {
+            mSocket->setTimeout(std::chrono::milliseconds(300));
+            char chunk[1024];
+            while (mSocket->read(chunk, sizeof(chunk)) > 0) {
+            }
+        } catch (const AException&) {
+        }
+    }
+
     void run() {
         try {
             if (performHandshake()) {
@@ -412,6 +424,8 @@ private:
                     mServer.config.onConnected(shared_from_this());
                 }
                 readLoop();
+            } else {
+                drainInput();
             }
         } catch (const AException& e) {
             ALogger::debug(LOG_TAG) << "connection failed: " << e.getMessage();

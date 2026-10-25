@@ -80,6 +80,11 @@ public:
     [[nodiscard]] bool hasMethod(const AString& name) const;
 
     /**
+     * @return names of the registered methods, sorted
+     */
+    [[nodiscard]] AVector<AString> methodNames() const;
+
+    /**
      * @brief Processes a single message (a request or a batch).
      * @param respond called with the serialized response, unless there is nothing to answer.
      */
