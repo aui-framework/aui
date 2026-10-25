@@ -25,6 +25,7 @@
 #include "AUI/Platform/Entry.h"
 #include "Agent/JsonRpc.h"
 #include "Agent/Methods.h"
+#include "Agent/Pairing.h"
 #include "Agent/RefTable.h"
 
 using namespace aui::remote;
@@ -39,34 +40,11 @@ _<ARemoteAgent>& slot() {
     return agent;
 }
 
-AString randomToken() {
-    // 128 bits from the operating system's entropy source
-    std::random_device device;
-    static constexpr char HEX[] = "0123456789abcdef";
-    std::string token;
-    for (int i = 0; i < 16; ++i) {
-        const auto byte = static_cast<std::uint8_t>(device());
-        token.push_back(HEX[byte >> 4]);
-        token.push_back(HEX[byte & 0xf]);
-    }
-    return AString(token);
-}
-
-bool constantTimeEquals(const std::string& a, const std::string& b) {
-    if (a.size() != b.size()) {
-        return false;
-    }
-    unsigned difference = 0;
-    for (std::size_t i = 0; i < a.size(); ++i) {
-        difference |= static_cast<unsigned char>(a[i]) ^ static_cast<unsigned char>(b[i]);
-    }
-    return difference == 0;
-}
 }   // namespace
 
 struct ARemoteAgent::Impl {
     Options options;
-    AString token;
+    Pairing pairing;
     APath discoveryFile;
     RefTable refs;
     FunctionRegistry functions;
@@ -77,7 +55,9 @@ struct ARemoteAgent::Impl {
 ARemoteAgent::ARemoteAgent(Options options) : mImpl(std::make_unique<Impl>()) {
     auto& impl = *mImpl;
     impl.options = std::move(options);
-    impl.token = impl.options.token.empty() ? randomToken() : impl.options.token;
+    if (!impl.options.key.empty()) {
+        impl.pairing.authorize(impl.options.key.toStdString());
+    }
 
     auto& dispatcher = impl.dispatcher;
     dispatcher.registerMethod("session.hello", JsonRpcDispatcher::SyncHandler([this](const AJson&) {
@@ -101,32 +81,31 @@ ARemoteAgent::ARemoteAgent(Options options) : mImpl(std::make_unique<Impl>()) {
     AWebsocketServer::Config config;
     config.bindAddress = impl.options.bindAddress;
     config.port = impl.options.port;
-    config.verifyHandshake = [token = impl.token.toStdString()](const AWebsocketServer::Request& request) {
-        // browsers always send Origin; a web page must not be able to drive the application
-        if (request.headers.contains("origin")) {
-            return false;
-        }
-        std::string presented;
-        if (auto query = request.queryParameter("token")) {
-            presented = query->toStdString();
-        } else if (auto it = request.headers.find("authorization"); it != request.headers.end()) {
-            constexpr std::string_view PREFIX = "bearer ";
-            auto value = it->second.toStdString();
-            if (value.size() > PREFIX.size() && AString(value.substr(0, PREFIX.size())).lowercase() == AString(PREFIX)) {
-                presented = value.substr(PREFIX.size());
-            }
-        }
-        return constantTimeEquals(presented, token);
+    config.verifyHandshake = [](const AWebsocketServer::Request& request) {
+        // browsers always send Origin; a web page must not be able to even try to pair
+        return !request.headers.contains("origin");
     };
     config.onConnected = [this](_<AWebsocketServer::Connection> connection) {
         _weak<AWebsocketServer::Connection> weak = connection;
-        connection->onMessage = [this, weak](AByteBuffer message, bool) {
-            mImpl->dispatcher.handle(AString::fromUtf8(message), [weak](AString response) {
-                // the response may be ready after the client left
-                if (auto c = weak.lock()) {
-                    c->sendText(response);
-                }
-            });
+        // a client presents the key it got paired with
+        std::string key;
+        if (auto query = connection->request().queryParameter("key")) {
+            key = query->toStdString();
+        }
+        auto authorized = std::make_shared<std::atomic<bool>>(mImpl->pairing.isAuthorized(key));
+        auto respond = [weak](AString response) {
+            // the response may be ready after the client left
+            if (auto c = weak.lock()) {
+                c->sendText(response);
+            }
+        };
+        connection->onMessage = [this, authorized, respond](AByteBuffer message, bool) {
+            const auto text = AString::fromUtf8(message);
+            if (*authorized) {
+                mImpl->dispatcher.handle(text, respond);
+                return;
+            }
+            respond(AJson::toString(handleUnauthorized(text, *authorized)));
         };
     };
     impl.server = std::make_unique<AWebsocketServer>(std::move(config));
@@ -146,7 +125,6 @@ ARemoteAgent::ARemoteAgent(Options options) : mImpl(std::make_unique<Impl>()) {
                 { "protocol", PROTOCOL_VERSION },
                 { "pid", int(AProcess::self()->getPid()) },
                 { "port", int(impl.server->port()) },
-                { "token", impl.token },
                 { "exe", AString(AProcess::self()->getPathToExecutable()) },
                 { "argv", AJson(std::move(argv)) },
                 { "cwd", AString(std::filesystem::current_path().string()) },
@@ -154,7 +132,7 @@ ARemoteAgent::ARemoteAgent(Options options) : mImpl(std::make_unique<Impl>()) {
                                                            std::chrono::system_clock::now().time_since_epoch())
                                                            .count()) },
             };
-            // the token is a secret: the file must be readable by its owner only
+            // keep the file private anyway
             {
                 AFileOutputStream(impl.discoveryFile) << AJson::toString(info);
             }
@@ -193,6 +171,36 @@ _<ARemoteAgent> ARemoteAgent::start(Options options) {
     return agent;
 }
 
+AJson ARemoteAgent::handleUnauthorized(const AString& text, std::atomic<bool>& authorized) {
+    AJson id(nullptr);
+    try {
+        auto request = AJson::fromString(text);
+        if (!request.isObject()) {
+            return jsonRpcError(id, rpc_code::UNAUTHORIZED, "not paired", "call pair.begin, then pair.confirm");
+        }
+        if (auto i = request.containsOpt("id")) {
+            id = *i;
+        }
+        const auto method = request.containsOpt("method") ? request["method"].asString() : AString {};
+        const auto params = request.containsOpt("params") ? request["params"] : AJson(nullptr);
+        if (method == "pair.begin") {
+            return AJson { { "jsonrpc", "2.0" }, { "id", id }, { "result", mImpl->pairing.begin() } };
+        }
+        if (method == "pair.confirm") {
+            const auto key = params["key"].asString().toStdString();
+            auto result = mImpl->pairing.confirm(params["code"].asString(), key);
+            authorized = true;
+            return AJson { { "jsonrpc", "2.0" }, { "id", id }, { "result", std::move(result) } };
+        }
+        return jsonRpcError(id, rpc_code::UNAUTHORIZED, "not paired",
+                            "call pair.begin, read the code in the application window and send it with pair.confirm");
+    } catch (const RpcException& e) {
+        return jsonRpcError(id, e.code(), e.getMessage(), e.hint());
+    } catch (const AException& e) {
+        return jsonRpcError(id, rpc_code::INVALID_PARAMS, e.getMessage(), "pair.confirm takes { code, key }");
+    }
+}
+
 void ARemoteAgent::registerFunction(AString name, AString description,
                                     std::function<AFuture<AJson>(const AJson&)> handler) {
     mImpl->functions.add(std::move(name), std::move(description), std::move(handler));
@@ -211,7 +219,11 @@ void ARemoteAgent::startIfRequested() {
         return;
     }
     try {
-        start();
+        Options options;
+        if (const char* key = std::getenv("AUI_REMOTE_KEY")) {
+            options.key = key;
+        }
+        start(std::move(options));
     } catch (const AException& e) {
         ALogger::err(LOG_TAG) << "Unable to start the remote agent: " << e;
     }
@@ -219,8 +231,8 @@ void ARemoteAgent::startIfRequested() {
 
 std::uint16_t ARemoteAgent::port() const noexcept { return mImpl->server->port(); }
 
-const AString& ARemoteAgent::token() const noexcept { return mImpl->token; }
-
 const APath& ARemoteAgent::discoveryFile() const noexcept { return mImpl->discoveryFile; }
+
+Pairing& ARemoteAgent::pairing() noexcept { return mImpl->pairing; }
 
 JsonRpcDispatcher& ARemoteAgent::dispatcher() noexcept { return mImpl->dispatcher; }

@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <atomic>
 #include <functional>
 #include <memory>
 
@@ -24,6 +25,7 @@
 
 namespace aui::remote {
 class JsonRpcDispatcher;
+class Pairing;
 }
 
 /**
@@ -31,7 +33,9 @@ class JsonRpcDispatcher;
  * @ingroup dev_extras
  * @details
  * The agent listens on the loopback interface and speaks JSON-RPC 2.0 over WebSocket. A client finds it through the
- * discovery file `~/.aui/remote/<pid>.json`, which holds the port and the token; the token is required to connect.
+ * discovery file `~/.aui/remote/<pid>.json`, which holds the port. The first time a client connects it has to be paired:
+ * the application shows a 6-digit code in its window and the client sends it back (`pair.begin`, `pair.confirm`)
+ * together with a key it generated; later it connects with `?key=` and needs no code.
  *
  * It starts by itself when the application is run with the environment variable `AUI_REMOTE=1` and `aui::dev_extras`
  * is linked, no code needed. To start it from the code, call ARemoteAgent::start.
@@ -62,9 +66,10 @@ public:
         bool writeDiscoveryFile = true;
 
         /**
-         * @brief Token clients must present. A random one is generated when empty.
+         * @brief A key that is trusted without pairing, i.e., when the client launches the application itself and
+         * passes the key in the environment variable `AUI_REMOTE_KEY`.
          */
-        AString token;
+        AString key;
     };
 
     /**
@@ -92,9 +97,9 @@ public:
     [[nodiscard]] std::uint16_t port() const noexcept;
 
     /**
-     * @return the token clients must present, as `?token=` of the URL or `Authorization: Bearer`
+     * @brief Pairing state; lets tests and tools see the current code.
      */
-    [[nodiscard]] const AString& token() const noexcept;
+    [[nodiscard]] aui::remote::Pairing& pairing() noexcept;
 
     /**
      * @return path to the discovery file; empty if it was not written
@@ -129,6 +134,7 @@ public:
 
 private:
     explicit ARemoteAgent(Options options);
+    AJson handleUnauthorized(const AString& text, std::atomic<bool>& authorized);
     struct Impl;
     std::unique_ptr<Impl> mImpl;
 };

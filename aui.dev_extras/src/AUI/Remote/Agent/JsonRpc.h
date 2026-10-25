@@ -68,6 +68,11 @@ private:
  * The dispatcher does not care about threads: `handle` may be called from any thread, handlers and `respond` are
  * called on whatever thread executes them.
  */
+/**
+ * @brief Builds a JSON-RPC error response.
+ */
+API_AUI_DEV_EXTRAS AJson jsonRpcError(const AJson& id, int code, const AString& message, const AString& hint = {});
+
 class API_AUI_DEV_EXTRAS JsonRpcDispatcher {
 public:
     using Handler = std::function<AFuture<AJson>(const AJson& params)>;

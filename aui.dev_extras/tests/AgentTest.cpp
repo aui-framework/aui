@@ -15,6 +15,7 @@
 #include <thread>
 
 #include "AUI/Curl/AWebsocket.h"
+#include "AUI/Remote/Agent/Pairing.h"
 #include "AUI/Remote/ARemoteAgent.h"
 #include "AUI/Remote/Agent/JsonRpc.h"
 #include "AUI/UITest.h"
@@ -28,10 +29,12 @@ using namespace declarative;
 using namespace std::chrono_literals;
 
 namespace {
+constexpr auto KEY = "test-key-0123456789abcdef";
+
 _<ARemoteAgent> agent() {
     ARemoteAgent::Options options;
     options.writeDiscoveryFile = false;
-    options.token = "test-token";
+    options.key = KEY;
     return ARemoteAgent::start(std::move(options));
 }
 }   // namespace
@@ -407,22 +410,30 @@ TEST_F(AgentTest, ListedWindowIdWorks) {
 namespace {
 /// Connects to the agent over a real WebSocket on a background thread while the test pumps the UI thread.
 struct WebsocketSession {
+    /// Produces the next request from the replies so far; an empty string closes the connection.
+    using Script = std::function<AString(const AVector<AString>& replies)>;
+
     std::atomic<bool> finished = false;
     std::atomic<bool> connected = false;
-    AString reply;
+    AVector<AString> replies;   // read after `finished` only
     std::thread thread;
 
-    WebsocketSession(const AString& url, AString request) {
-        thread = std::thread([this, url, request = std::move(request)] {
+    WebsocketSession(const AString& url, Script script) {
+        thread = std::thread([this, url, script = std::move(script)] {
             try {
                 auto ws = _new<AWebsocket>(url);
                 AObject::connect(ws->connected, ws, [&, ws] {
                     connected = true;
-                    ws->writeText(request);
+                    ws->writeText(script(replies));
                 });
                 AObject::connect(ws->received, ws, [&, ws](AByteBufferView payload) {
-                    reply = AString::fromUtf8(payload);
-                    ws->close();
+                    replies << AString::fromUtf8(payload);
+                    auto next = script(replies);
+                    if (next.empty()) {
+                        ws->close();
+                    } else {
+                        ws->writeText(next);
+                    }
                 });
                 ws->run();
             } catch (const AException&) {
@@ -430,7 +441,16 @@ struct WebsocketSession {
             finished = true;
         });
     }
+
+    /// Sends one request.
+    WebsocketSession(const AString& url, AString request)
+      : WebsocketSession(url, [request = std::move(request)](const AVector<AString>& replies) {
+            return replies.empty() ? request : AString {};
+        }) {}
+
     ~WebsocketSession() { thread.join(); }
+
+    AString reply() const { return replies.empty() ? AString {} : replies.last(); }
 
     void waitPumping() {
         for (int i = 0; i < 12000 && !finished; ++i) {   // up to a minute: loopback connect() may be slow behind a VPN
@@ -443,31 +463,83 @@ struct WebsocketSession {
 
 TEST_F(AgentTest, FullStackOverWebsocket) {
     auto window = showWindow(_new<AButton>("Click me"));
-    const auto url = "ws://127.0.0.1:" + AString::number(agent()->port()) + "/?token=test-token";
+    const auto url = "ws://127.0.0.1:" + AString::number(agent()->port()) + "/?key=" + KEY;
     WebsocketSession session(url, R"({"jsonrpc":"2.0","id":1,"method":"view.interactive"})");
     session.waitPumping();
     ASSERT_TRUE(session.finished);
-    ASSERT_FALSE(session.reply.empty());
-    auto response = AJson::fromString(session.reply);
+    ASSERT_FALSE(session.reply().empty());
+    auto response = AJson::fromString(session.reply());
     bool found = false;
     for (const auto& e : response["result"].asArray()) {
         found |= e["label"].asString() == "Click me";
     }
-    EXPECT_TRUE(found) << session.reply;
+    EXPECT_TRUE(found) << session.reply();
 }
 
-TEST_F(AgentTest, WrongTokenIsRejected) {
-    const auto url = "ws://127.0.0.1:" + AString::number(agent()->port()) + "/?token=wrong";
-    WebsocketSession session(url, R"({"jsonrpc":"2.0","id":1,"method":"session.hello"})");
-    session.waitPumping();
-    EXPECT_TRUE(session.finished);
-    EXPECT_FALSE(session.connected);
-    EXPECT_TRUE(session.reply.empty());
+TEST_F(AgentTest, UnpairedClientCanNotDoAnything) {
+    for (const char* query : { "", "?key=wrong-key-0123456789abcdef" }) {
+        WebsocketSession session("ws://127.0.0.1:" + AString::number(agent()->port()) + "/" + query,
+                                 R"({"jsonrpc":"2.0","id":1,"method":"view.interactive"})");
+        session.waitPumping();
+        ASSERT_TRUE(session.finished);
+        auto response = AJson::fromString(session.reply());
+        EXPECT_EQ(response["error"]["code"].asInt(), rpc_code::UNAUTHORIZED) << session.reply();
+        EXPECT_FALSE(response.contains("result"));
+    }
 }
 
-TEST_F(AgentTest, MissingTokenIsRejected) {
-    const auto url = "ws://127.0.0.1:" + AString::number(agent()->port()) + "/";
-    WebsocketSession session(url, R"({"jsonrpc":"2.0","id":1,"method":"session.hello"})");
+TEST_F(AgentTest, PairingFlow) {
+    const AString newKey = "freshly-generated-key-0123456789";
+    auto ids = std::make_shared<int>(0);
+    auto rpcText = [ids](const char* method, const AString& params) {
+        return "{\"jsonrpc\":\"2.0\",\"id\":" + AString::number(++*ids) + ",\"method\":\"" + method +
+               "\",\"params\":" + params + "}";
+    };
+    WebsocketSession session(
+        "ws://127.0.0.1:" + AString::number(agent()->port()) + "/",
+        [&, rpcText](const AVector<AString>& replies) -> AString {
+            switch (replies.size()) {
+                case 0: return rpcText("pair.begin", "{}");
+                case 1: return rpcText("pair.confirm", "{\"code\":\"not-it\",\"key\":\"" + newKey + "\"}");
+                case 2:
+                    return rpcText("pair.confirm", "{\"code\":\"" + AString(agent()->pairing().currentCode()) +
+                                                       "\",\"key\":\"" + newKey + "\"}");
+                case 3: return rpcText("session.hello", "{}");   // the same connection is authorized now
+                default: return {};
+            }
+        });
     session.waitPumping();
-    EXPECT_FALSE(session.connected);
+    ASSERT_TRUE(session.finished);
+    ASSERT_EQ(session.replies.size(), 4u);
+    EXPECT_TRUE(AJson::fromString(session.replies[0])["result"]["pending"].asBool());
+    EXPECT_EQ(AJson::fromString(session.replies[1])["error"]["code"].asInt(), rpc_code::UNAUTHORIZED);
+    EXPECT_TRUE(AJson::fromString(session.replies[2])["result"]["paired"].asBool());
+    EXPECT_EQ(AJson::fromString(session.replies[3])["result"]["protocol"].asInt(), 1);
+
+    // later connections just present the key
+    EXPECT_TRUE(agent()->pairing().isAuthorized(newKey.toStdString()));
+    WebsocketSession again("ws://127.0.0.1:" + AString::number(agent()->port()) + "/?key=" + newKey,
+                           R"({"jsonrpc":"2.0","id":1,"method":"session.hello"})");
+    again.waitPumping();
+    EXPECT_EQ(AJson::fromString(again.reply())["result"]["protocol"].asInt(), 1);
+}
+
+TEST_F(AgentTest, PairingCodeIsLimitedToThreeAttempts) {
+    auto& pairing = agent()->pairing();
+    pairing.begin();
+    const AString key = "another-key-0123456789abcdef";
+    const auto code = pairing.currentCode();
+    const AString wrong = code == "000000" ? AString("111111") : AString("000000");
+    for (int i = 0; i < 3; ++i) {
+        EXPECT_THROW(pairing.confirm(wrong, key.toStdString()), RpcException);
+    }
+    // even the right code is void now
+    EXPECT_THROW(pairing.confirm(AString(code), key.toStdString()), RpcException);
+    EXPECT_FALSE(pairing.isAuthorized(key.toStdString()));
+}
+
+TEST_F(AgentTest, ShortKeyIsRejected) {
+    auto& pairing = agent()->pairing();
+    pairing.begin();
+    EXPECT_THROW(pairing.confirm(AString(pairing.currentCode()), "short"), RpcException);
 }

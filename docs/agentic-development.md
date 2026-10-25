@@ -17,11 +17,25 @@ aui_link(${PROJECT_NAME} PRIVATE aui::dev_extras)   # development builds only
 ```
 
 Run the application with `AUI_REMOTE=1`. The agent starts by itself, listens on `127.0.0.1` at a random port and writes
-`~/.aui/remote/<pid>.json` (readable by the owner only) with the port and the token. To start it from code, call
-[ARemoteAgent::start].
+`~/.aui/remote/<pid>.json` with the port. To start it from code, call [ARemoteAgent::start].
 
-A client must present the token (`ws://127.0.0.1:<port>/?token=<token>` or `Authorization: Bearer`), and connections
-carrying an `Origin` header (web pages) are rejected.
+## Pairing
+
+A client that connects for the first time has to be paired, so that nothing on the machine can drive the application
+behind your back:
+
+1. The client calls `pair.begin`. The application writes a 6-digit code to the log and shows it in an overlay over its
+   window.
+2. A human types the code into the client (the GUI of [aui-remote](https://github.com/aui-framework/remote), or tells it
+   to the agent that uses its CLI).
+3. The client calls `pair.confirm` with `{ code, key }`, where `key` is a random string the client has just generated.
+
+From now on, until the application exits, the client connects with `ws://127.0.0.1:<port>/?key=<key>` and needs no code.
+A code is valid for 2 minutes and 3 attempts. Until paired, a connection can call nothing but `pair.begin` and
+`pair.confirm`; connections with an `Origin` header (web pages) are rejected altogether.
+
+When the client launches the application itself, it passes a key in the environment variable `AUI_REMOTE_KEY` along with
+`AUI_REMOTE=1`, and no pairing is needed.
 
 ## Protocol
 

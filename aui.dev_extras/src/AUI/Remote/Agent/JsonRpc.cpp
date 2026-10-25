@@ -69,6 +69,10 @@ AJson errorFromException(const AJson& id, std::exception_ptr e) {
 RpcException::RpcException(int code, AString message, AString hint)
   : AException(std::move(message), nullptr), mCode(code), mHint(std::move(hint)) {}
 
+AJson jsonRpcError(const AJson& id, int code, const AString& message, const AString& hint) {
+    return errorResponse(id, code, message, hint);
+}
+
 void JsonRpcDispatcher::registerMethod(AString name, Handler handler) {
     std::lock_guard lock(mMutex);
     mMethods[std::move(name)] = std::move(handler);
