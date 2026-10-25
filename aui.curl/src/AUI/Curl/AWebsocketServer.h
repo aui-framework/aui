@@ -22,6 +22,7 @@
 #include "AUI/Common/AOptional.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Common/SharedPtrTypes.h"
+#include "AUI/Crypt/ATlsIdentity.h"
 
 /**
  * @brief WebSocket server (RFC 6455) listening on a TCP port.
@@ -47,6 +48,11 @@
  * One thread accepts connections and one thread per connection reads from the socket. Every callback is called from
  * one of these threads, never from the thread that created the server; marshal to your thread (i.e., `AUI_UI_THREAD`)
  * if needed. `Connection::send*` may be called from any thread.
+ *
+ * ### Encryption
+ *
+ * Set `Config::tls` to serve `wss://`. A client that fails the handshake, i.e., one that speaks plain `ws://`, is
+ * dropped without any response.
  *
  * ### Limits
  *
@@ -92,6 +98,15 @@ public:
          */
         AString bindAddress = "127.0.0.1";
         std::uint16_t port = 0;
+
+        /**
+         * @brief Makes the server speak `wss://`: every connection starts with a TLS handshake using this identity.
+         * @details
+         * Without it the server speaks plain `ws://`, so everything, including secrets, is visible to whoever can
+         * sniff the traffic. A self-signed identity ([ATlsIdentity::generateSelfSigned]) is fine when the client gets
+         * its fingerprint from a trusted channel.
+         */
+        _<ATlsIdentity> tls;
 
         std::size_t maxHeaderSize = 16 * 1024;
         std::size_t maxMessageSize = 64 * 1024 * 1024;

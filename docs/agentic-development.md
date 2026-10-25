@@ -17,7 +17,18 @@ aui_link(${PROJECT_NAME} PRIVATE aui::dev_extras)   # development builds only
 ```
 
 Run the application with `AUI_REMOTE=1`. The agent starts by itself, listens on `127.0.0.1` at a random port and writes
-`~/.aui/remote/<pid>.json` with the port. To start it from code, call [ARemoteAgent::start].
+`~/.aui/remote/<pid>.json` with the port and the fingerprint of its certificate. To start it from code, call
+[ARemoteAgent::start].
+
+## Encryption
+
+The agent speaks `wss://` only; there is no plain `ws://` mode. It generates a self-signed certificate on every start
+and publishes its SHA-256 fingerprint as `certSha256` in the discovery file. A client must accept the server only when
+the certificate matches that fingerprint: the discovery file (readable by its owner only) is the trusted channel, so
+the traffic, including the key and the screenshots' paths, can't be read or altered by whoever sniffs the network.
+Clients based on libcurl do not verify the peer, which is fine on the loopback but not a protection.
+
+[AWebsocketServer] with `Config::tls` and [ATlsSession] from `aui::crypt` are the building blocks.
 
 ## Pairing
 
@@ -30,7 +41,7 @@ behind your back:
    to the agent that uses its CLI).
 3. The client calls `pair.confirm` with `{ code, key }`, where `key` is a random string the client has just generated.
 
-From now on, until the application exits, the client connects with `ws://127.0.0.1:<port>/?key=<key>` and needs no code.
+From now on, until the application exits, the client connects with `wss://127.0.0.1:<port>/?key=<key>` and needs no code.
 A code is valid for 2 minutes and 3 attempts. Until paired, a connection can call nothing but `pair.begin` and
 `pair.confirm`; connections with an `Origin` header (web pages) are rejected altogether.
 

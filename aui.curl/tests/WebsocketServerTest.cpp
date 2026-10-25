@@ -14,6 +14,7 @@
 #include <atomic>
 #include <thread>
 
+#include "AUI/Crypt/ATlsSession.h"
 #include "AUI/Curl/AWebsocket.h"
 #include "AUI/Curl/AWebsocketServer.h"
 #include "AUI/Curl/Detail/WebsocketFrame.h"
@@ -57,8 +58,20 @@ public:
         mSocket.setTimeout(5s);
     }
 
-    void sendRaw(std::string_view data) { mSocket.write(data.data(), data.size()); }
-    void sendRaw(const AByteBuffer& data) { mSocket.write(data.data(), data.size()); }
+    /// Speaks TLS; `pin` is the fingerprint the server must present.
+    RawClient(std::uint16_t port, AByteBuffer pin) : RawClient(port) {
+        ATlsTransport transport {
+            [this](std::chrono::milliseconds t) { return mSocket.waitForRead(t); },
+            [this](char* dst, std::size_t size) { return mSocket.read(dst, size); },
+            [this](const char* src, std::size_t size) { mSocket.write(src, size); },
+        };
+        ATlsSession::ClientOptions options;
+        options.expectedFingerprint = std::move(pin);
+        mTls = ATlsSession::connect(std::move(transport), options, 5s);
+    }
+
+    void sendRaw(std::string_view data) { writeSome(data.data(), data.size()); }
+    void sendRaw(const AByteBuffer& data) { writeSome(data.data(), data.size()); }
 
     static std::string upgradeRequest(std::string_view target = "/", std::string_view key = SAMPLE_KEY,
                                       std::string_view extra = {}) {
@@ -78,7 +91,7 @@ public:
         std::string head;
         char c;
         while (head.find("\r\n\r\n") == std::string::npos) {
-            if (mSocket.read(&c, 1) == 0) {
+            if (readSome(&c, 1) == 0) {
                 break;
             }
             head += c;
@@ -102,7 +115,7 @@ public:
                 return f;
             }
             char buf[4096];
-            auto n = mSocket.read(buf, sizeof(buf));
+            auto n = readSome(buf, sizeof(buf));
             if (n == 0) {
                 return std::nullopt;
             }
@@ -118,7 +131,17 @@ public:
 
 private:
     ATcpSocket mSocket;
+    _<ATlsSession> mTls;
     FrameDecoder mDecoder;
+
+    std::size_t readSome(char* dst, std::size_t size) { return mTls ? mTls->read(dst, size) : mSocket.read(dst, size); }
+    void writeSome(const char* src, std::size_t size) {
+        if (mTls) {
+            mTls->write(src, size);
+        } else {
+            mSocket.write(src, size);
+        }
+    }
 };
 
 bool startsWith(const std::string& s, std::string_view prefix) { return s.compare(0, prefix.size(), prefix) == 0; }
@@ -517,4 +540,104 @@ TEST(WebsocketServerTest, AWebsocketClientEcho) {
     });
     ws->run();
     EXPECT_EQ(received, "hello from AWebsocket");
+}
+
+namespace {
+AWebsocketServer::Config tlsEchoConfig(_<ATlsIdentity> identity) {
+    auto config = echoConfig();
+    config.tls = std::move(identity);
+    return config;
+}
+}   // namespace
+
+TEST(WebsocketServerTlsTest, EchoOverTls) {
+    auto identity = ATlsIdentity::generateSelfSigned("aui-test");
+    AWebsocketServer server(tlsEchoConfig(identity));
+    server.start();
+    RawClient client(server.port(), identity->fingerprintSha256());
+    ASSERT_TRUE(startsWith(client.handshake(), "HTTP/1.1 101"));
+    for (std::size_t size : {0u, 125u, 126u, 65536u, 300000u}) {
+        AByteBuffer payload;
+        payload.resize(size);
+        for (std::size_t i = 0; i < size; ++i) {
+            payload.data()[i] = static_cast<char>(i * 13);
+        }
+        client.send(Opcode::BINARY, payload);
+        auto reply = client.readFrame();
+        ASSERT_TRUE(reply) << "size=" << size;
+        EXPECT_EQ(reply->payload, payload) << "size=" << size;
+    }
+}
+
+TEST(WebsocketServerTlsTest, ClientWithWrongFingerprintGivesUp) {
+    auto identity = ATlsIdentity::generateSelfSigned("aui-test");
+    auto other = ATlsIdentity::generateSelfSigned("aui-test");
+    AWebsocketServer server(tlsEchoConfig(identity));
+    server.start();
+    EXPECT_THROW(RawClient(server.port(), other->fingerprintSha256()), ATlsException);
+}
+
+TEST(WebsocketServerTlsTest, PlainClientIsDropped) {
+    auto identity = ATlsIdentity::generateSelfSigned("aui-test");
+    AWebsocketServer server(tlsEchoConfig(identity));
+    server.start();
+    RawClient client(server.port());
+    client.sendRaw(RawClient::upgradeRequest());
+    // no HTTP response: the server can't make sense of the bytes and hangs up
+    EXPECT_FALSE(startsWith(client.readHead(), "HTTP/1.1"));
+}
+
+TEST(WebsocketServerTlsTest, TlsClientIsDroppedByPlainServer) {
+    AWebsocketServer server(echoConfig());
+    server.start();
+    auto identity = ATlsIdentity::generateSelfSigned("aui-test");
+    EXPECT_ANY_THROW(RawClient(server.port(), identity->fingerprintSha256()));
+}
+
+TEST(WebsocketServerTlsTest, VerifyHandshakeStillApplies) {
+    auto identity = ATlsIdentity::generateSelfSigned("aui-test");
+    auto config = tlsEchoConfig(identity);
+    config.verifyHandshake = [](const AWebsocketServer::Request& request) {
+        return bool(request.queryParameter("key"));
+    };
+    AWebsocketServer server(std::move(config));
+    server.start();
+    {
+        RawClient client(server.port(), identity->fingerprintSha256());
+        EXPECT_TRUE(startsWith(client.handshake("/"), "HTTP/1.1 403"));
+    }
+    {
+        RawClient client(server.port(), identity->fingerprintSha256());
+        EXPECT_TRUE(startsWith(client.handshake("/?key=x"), "HTTP/1.1 101"));
+    }
+}
+
+TEST(WebsocketServerTlsTest, AWebsocketClientOverWss) {
+    auto identity = ATlsIdentity::generateSelfSigned("aui-test");
+    AWebsocketServer server(tlsEchoConfig(identity));
+    server.start();
+
+    auto ws = _new<AWebsocket>("wss://127.0.0.1:" + AString::number(server.port()) + "/");
+    std::string received;
+    AObject::connect(ws->connected, ws, [&] { ws->writeText("hello over tls"); });
+    AObject::connect(ws->received, ws, [&](AByteBufferView payload) {
+        received += std::string_view(payload.data(), payload.size());
+        ws->close();
+    });
+    ws->run();
+    EXPECT_EQ(received, "hello over tls");
+}
+
+TEST(WebsocketServerTlsTest, StopWithConnectedTlsClients) {
+    auto identity = ATlsIdentity::generateSelfSigned("aui-test");
+    auto server = std::make_unique<AWebsocketServer>(tlsEchoConfig(identity));
+    server->start();
+    RawClient connected(server->port(), identity->fingerprintSha256());
+    ASSERT_TRUE(startsWith(connected.handshake(), "HTTP/1.1 101"));
+    server.reset();   // must neither hang nor crash
+    EXPECT_ANY_THROW({
+        if (!connected.readFrame()) {
+            throw std::runtime_error("eof");
+        }
+    });
 }

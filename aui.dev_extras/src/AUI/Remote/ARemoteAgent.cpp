@@ -17,6 +17,7 @@
 #include <mutex>
 #include <random>
 
+#include "AUI/Crypt/ATlsIdentity.h"
 #include "AUI/Curl/AWebsocketServer.h"
 #include "AUI/IO/AFileOutputStream.h"
 #include "AUI/Json/AJson.h"
@@ -45,6 +46,7 @@ _<ARemoteAgent>& slot() {
 struct ARemoteAgent::Impl {
     Options options;
     Pairing pairing;
+    _<ATlsIdentity> identity;
     APath discoveryFile;
     RefTable refs;
     FunctionRegistry functions;
@@ -78,7 +80,11 @@ ARemoteAgent::ARemoteAgent(Options options) : mImpl(std::make_unique<Impl>()) {
     registerFunctionMethods(dispatcher, impl.functions);
     registerDiagnosticsMethods(dispatcher);
 
+    // always encrypted: the key and everything on the screen must not be readable from the network
+    impl.identity = ATlsIdentity::generateSelfSigned("aui-remote-agent");
+
     AWebsocketServer::Config config;
+    config.tls = impl.identity;
     config.bindAddress = impl.options.bindAddress;
     config.port = impl.options.port;
     config.verifyHandshake = [](const AWebsocketServer::Request& request) {
@@ -125,6 +131,9 @@ ARemoteAgent::ARemoteAgent(Options options) : mImpl(std::make_unique<Impl>()) {
                 { "protocol", PROTOCOL_VERSION },
                 { "pid", int(AProcess::self()->getPid()) },
                 { "port", int(impl.server->port()) },
+                { "scheme", "wss" },
+                // a client pins the self-signed certificate by this fingerprint
+                { "certSha256", impl.identity->fingerprintHex() },
                 { "exe", AString(AProcess::self()->getPathToExecutable()) },
                 { "argv", AJson(std::move(argv)) },
                 { "cwd", AString(std::filesystem::current_path().string()) },
@@ -146,7 +155,7 @@ ARemoteAgent::ARemoteAgent(Options options) : mImpl(std::make_unique<Impl>()) {
         }
     }
 
-    ALogger::info(LOG_TAG) << "Remote agent listens on 127.0.0.1:" << impl.server->port()
+    ALogger::info(LOG_TAG) << "Remote agent listens on wss://127.0.0.1:" << impl.server->port()
                            << (impl.discoveryFile.empty() ? AString {} : " (" + AString(impl.discoveryFile) + ")");
 }
 
@@ -232,6 +241,8 @@ void ARemoteAgent::startIfRequested() {
 std::uint16_t ARemoteAgent::port() const noexcept { return mImpl->server->port(); }
 
 const APath& ARemoteAgent::discoveryFile() const noexcept { return mImpl->discoveryFile; }
+
+AString ARemoteAgent::certificateFingerprint() const { return mImpl->identity->fingerprintHex(); }
 
 Pairing& ARemoteAgent::pairing() noexcept { return mImpl->pairing; }
 

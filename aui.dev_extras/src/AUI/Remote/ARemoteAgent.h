@@ -32,7 +32,8 @@ class Pairing;
  * @brief In-process agent that lets a remote client (i.e., an AI agent through `aui-remote`) inspect and drive the app.
  * @ingroup dev_extras
  * @details
- * The agent listens on the loopback interface and speaks JSON-RPC 2.0 over WebSocket. A client finds it through the
+ * The agent listens on the loopback interface and speaks JSON-RPC 2.0 over secure WebSocket (`wss://`, a self-signed
+ * certificate that a client pins by the fingerprint from the discovery file; there is no plain `ws://` mode). A client finds it through the
  * discovery file `~/.aui/remote/<pid>.json`, which holds the port. The first time a client connects it has to be paired:
  * the application shows a 6-digit code in its window and the client sends it back (`pair.begin`, `pair.confirm`)
  * together with a key it generated; later it connects with `?key=` and needs no code.
@@ -95,6 +96,11 @@ public:
      * @return the port the agent listens
      */
     [[nodiscard]] std::uint16_t port() const noexcept;
+
+    /**
+     * @return SHA-256 of the agent's self-signed certificate as hex; also stored in the discovery file as `certSha256`
+     */
+    [[nodiscard]] AString certificateFingerprint() const;
 
     /**
      * @brief Pairing state; lets tests and tools see the current code.

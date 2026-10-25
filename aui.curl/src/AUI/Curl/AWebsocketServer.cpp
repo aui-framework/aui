@@ -18,6 +18,7 @@
 #include <thread>
 
 #include "AUI/Crypt/AHash.h"
+#include "AUI/Crypt/ATlsSession.h"
 #include "AUI/Curl/Detail/WebsocketFrame.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Network/AInet4Address.h"
@@ -109,6 +110,19 @@ class AWebsocketServer::Impl::ConnectionImpl : public AWebsocketServer::Connecti
 public:
     ConnectionImpl(Impl& server, _<ATcpSocket> socket) : mServer(server), mSocket(std::move(socket)) {}
 
+    /// Starts TLS on the socket if the server is configured to; throws on failure.
+    void startTls() {
+        if (!mServer.config.tls) {
+            return;
+        }
+        ATlsTransport transport {
+            [socket = mSocket](std::chrono::milliseconds timeout) { return socket->waitForRead(timeout); },
+            [socket = mSocket](char* dst, std::size_t size) { return socket->read(dst, size); },
+            [socket = mSocket](const char* src, std::size_t size) { socket->write(src, size); },
+        };
+        mTls = ATlsSession::accept(std::move(transport), mServer.config.tls, mServer.config.handshakeTimeout);
+    }
+
     ~ConnectionImpl() override { join(); }
 
     void startThread() {
@@ -149,6 +163,9 @@ public:
     void shutdownSocket() {
         std::lock_guard lock(mWriteMutex);
         mOpen = false;
+        if (mTls) {
+            mTls->close();
+        }
         if (mSocket) {
             mSocket->close();
         }
@@ -157,6 +174,7 @@ public:
 private:
     Impl& mServer;
     _<ATcpSocket> mSocket;
+    _<ATlsSession> mTls;
     Request mRequest;
     std::thread mThread;
     std::mutex mWriteMutex;
@@ -170,7 +188,11 @@ private:
             return false;
         }
         try {
-            mSocket->write(data.data(), data.size());
+            if (mTls) {
+                mTls->write(data.data(), data.size());
+            } else {
+                mSocket->write(data.data(), data.size());
+            }
             return true;
         } catch (const AException& e) {
             ALogger::debug(LOG_TAG) << "write failed: " << e.getMessage();
@@ -199,6 +221,10 @@ private:
 
     bool mHandshaking = true;
 
+    std::size_t readSome(char* dst, std::size_t size) {
+        return mTls ? mTls->read(dst, size) : mSocket->read(dst, size);
+    }
+
     void respond(std::string_view status, std::string_view extraHeaders = {}) {
         std::string response = "HTTP/1.1 ";
         response += status;
@@ -217,7 +243,7 @@ private:
                 respond("431 Request Header Fields Too Large");
                 return std::nullopt;
             }
-            auto n = mSocket->read(chunk, sizeof(chunk));
+            auto n = readSome(chunk, sizeof(chunk));
             if (n == 0) {
                 return std::nullopt;
             }
@@ -344,7 +370,7 @@ private:
         char chunk[64 * 1024];
         try {
             for (;;) {
-                const auto n = mSocket->read(chunk, sizeof(chunk));
+                const auto n = readSome(chunk, sizeof(chunk));
                 if (n == 0) {
                     return;   // EOF
                 }
@@ -419,12 +445,13 @@ private:
 
     void run() {
         try {
+            startTls();
             if (performHandshake()) {
                 if (mServer.config.onConnected) {
                     mServer.config.onConnected(shared_from_this());
                 }
                 readLoop();
-            } else {
+            } else if (!mTls) {
                 drainInput();
             }
         } catch (const AException& e) {

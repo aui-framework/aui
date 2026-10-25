@@ -14,7 +14,10 @@
 #include <atomic>
 #include <thread>
 
+#include "AUI/Crypt/ATlsSession.h"
 #include "AUI/Curl/AWebsocket.h"
+#include "AUI/Network/AInet4Address.h"
+#include "AUI/Network/ATcpSocket.h"
 #include "AUI/Remote/Agent/Pairing.h"
 #include "AUI/Remote/ARemoteAgent.h"
 #include "AUI/Remote/Agent/JsonRpc.h"
@@ -463,7 +466,7 @@ struct WebsocketSession {
 
 TEST_F(AgentTest, FullStackOverWebsocket) {
     auto window = showWindow(_new<AButton>("Click me"));
-    const auto url = "ws://127.0.0.1:" + AString::number(agent()->port()) + "/?key=" + KEY;
+    const auto url = "wss://127.0.0.1:" + AString::number(agent()->port()) + "/?key=" + KEY;
     WebsocketSession session(url, R"({"jsonrpc":"2.0","id":1,"method":"view.interactive"})");
     session.waitPumping();
     ASSERT_TRUE(session.finished);
@@ -478,7 +481,7 @@ TEST_F(AgentTest, FullStackOverWebsocket) {
 
 TEST_F(AgentTest, UnpairedClientCanNotDoAnything) {
     for (const char* query : { "", "?key=wrong-key-0123456789abcdef" }) {
-        WebsocketSession session("ws://127.0.0.1:" + AString::number(agent()->port()) + "/" + query,
+        WebsocketSession session("wss://127.0.0.1:" + AString::number(agent()->port()) + "/" + query,
                                  R"({"jsonrpc":"2.0","id":1,"method":"view.interactive"})");
         session.waitPumping();
         ASSERT_TRUE(session.finished);
@@ -496,7 +499,7 @@ TEST_F(AgentTest, PairingFlow) {
                "\",\"params\":" + params + "}";
     };
     WebsocketSession session(
-        "ws://127.0.0.1:" + AString::number(agent()->port()) + "/",
+        "wss://127.0.0.1:" + AString::number(agent()->port()) + "/",
         [&, rpcText](const AVector<AString>& replies) -> AString {
             switch (replies.size()) {
                 case 0: return rpcText("pair.begin", "{}");
@@ -518,7 +521,7 @@ TEST_F(AgentTest, PairingFlow) {
 
     // later connections just present the key
     EXPECT_TRUE(agent()->pairing().isAuthorized(newKey.toStdString()));
-    WebsocketSession again("ws://127.0.0.1:" + AString::number(agent()->port()) + "/?key=" + newKey,
+    WebsocketSession again("wss://127.0.0.1:" + AString::number(agent()->port()) + "/?key=" + newKey,
                            R"({"jsonrpc":"2.0","id":1,"method":"session.hello"})");
     again.waitPumping();
     EXPECT_EQ(AJson::fromString(again.reply())["result"]["protocol"].asInt(), 1);
@@ -542,4 +545,37 @@ TEST_F(AgentTest, ShortKeyIsRejected) {
     auto& pairing = agent()->pairing();
     pairing.begin();
     EXPECT_THROW(pairing.confirm(AString(pairing.currentCode()), "short"), RpcException);
+}
+
+TEST_F(AgentTest, PlainWebsocketIsNotServed) {
+    // there is no ws:// mode: the TLS handshake fails, so the client never gets connected
+    WebsocketSession session("ws://127.0.0.1:" + AString::number(agent()->port()) + "/?key=" + KEY,
+                             R"({"jsonrpc":"2.0","id":1,"method":"session.hello"})");
+    session.waitPumping();
+    EXPECT_TRUE(session.finished);
+    EXPECT_FALSE(session.connected);
+    EXPECT_TRUE(session.replies.empty());
+}
+
+TEST_F(AgentTest, CertificateFingerprintIsPublished) {
+    const auto fingerprint = agent()->certificateFingerprint();
+    EXPECT_EQ(fingerprint.length(), 64u);
+    for (AChar c : fingerprint) {
+        EXPECT_TRUE((c >= '0' && c <= '9') || (c >= 'a' && c <= 'f'));
+    }
+}
+
+TEST_F(AgentTest, PresentedCertificateMatchesThePublishedFingerprint) {
+    std::thread client([&] {
+        ATcpSocket socket(AInet4Address::fromString("127.0.0.1", agent()->port()));
+        ATlsTransport transport {
+            [&](std::chrono::milliseconds t) { return socket.waitForRead(t); },
+            [&](char* dst, std::size_t size) { return socket.read(dst, size); },
+            [&](const char* src, std::size_t size) { socket.write(src, size); },
+        };
+        auto session = ATlsSession::connect(transport);
+        ASSERT_TRUE(session->peerFingerprintSha256());
+        EXPECT_EQ(ATlsIdentity::toHex(*session->peerFingerprintSha256()), agent()->certificateFingerprint());
+    });
+    client.join();
 }
