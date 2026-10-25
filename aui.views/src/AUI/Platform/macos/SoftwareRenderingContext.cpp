@@ -10,6 +10,9 @@
  */
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include "AUI/Common/AByteBufferView.h"
+#include "AUI/Image/AImage.h"
+#include "AUI/Image/APixelFormat.h"
 #include <AUI/Software/SoftwareRenderer.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext() {
@@ -47,7 +50,14 @@ void SoftwareRenderingContext::endResize(ASurface &window) {
 
 }
 AImage SoftwareRenderingContext::makeScreenshot() {
-    return AImage{};
+    if (!mBitmapBlob) {
+        return {};
+    }
+    AByteBuffer data;
+    const size_t s = mBitmapSize.x * mBitmapSize.y * 4;
+    data.resize(s);
+    std::memcpy(data.data(), mBitmapBlob, s);
+    return AImageView(data, mBitmapSize, APixelFormat::BGRA | APixelFormat::BYTE).convert(APixelFormat::RGBA_BYTE);
 }
 
 void SoftwareRenderingContext::reallocate(const ASurface& window) {

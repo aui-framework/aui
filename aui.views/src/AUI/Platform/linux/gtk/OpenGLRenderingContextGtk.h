@@ -48,6 +48,11 @@ public:
     }
     void gtkDoUnderContext(const std::function<void()>& callback) override; // this is soo bad
 
+protected:
+    void runWithGlContext(const std::function<void()>& callback) override { gtkDoUnderContext(callback); }
+
+public:
+
 private:
     struct Texture {
         aui::gtk4_fake::GdkGLTextureBuilder* builder {};

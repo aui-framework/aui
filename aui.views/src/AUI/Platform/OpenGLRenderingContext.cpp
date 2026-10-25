@@ -11,6 +11,8 @@
 
 #include "OpenGLRenderingContext.h"
 #include "AUI/GL/RenderTarget/RenderbufferRenderTarget.h"
+#include "AUI/Image/AImage.h"
+#include "AUI/Util/kAUI.h"
 
 static constexpr auto LOG_TAG = "OpenGLRenderingContext";
 
@@ -90,4 +92,88 @@ uint32_t OpenGLRenderingContext::getSupersamplingRatio() const noexcept {
         return fb->supersamlingRatio();
     }
     return 1;
+}
+namespace {
+/// Reads the currently bound read framebuffer to a top-down RGBA image.
+AImage readBoundFramebuffer(glm::uvec2 size) {
+    AImage result(size, APixelFormat::RGBA_BYTE);
+    GLint previousAlignment = 4;
+    glGetIntegerv(GL_PACK_ALIGNMENT, &previousAlignment);
+    glPixelStorei(GL_PACK_ALIGNMENT, 1);
+    glReadPixels(0, 0, size.x, size.y, GL_RGBA, GL_UNSIGNED_BYTE,
+                 static_cast<void*>(result.modifiableBuffer().data()));
+    glPixelStorei(GL_PACK_ALIGNMENT, previousAlignment);
+    result.mirrorVertically();   // opengl origin is the bottom left corner
+    return result;
+}
+}   // namespace
+
+#if !AUI_PLATFORM_WIN && !AUI_PLATFORM_MACOS
+void OpenGLRenderingContext::runWithGlContext(const std::function<void()>& callback) { callback(); }
+#endif
+
+AImage OpenGLRenderingContext::makeScreenshot() {
+    AImage result;
+    runWithGlContext([&] {
+        // the framebuffer bindings are restored afterwards, so we don't confuse the renderer with our actions. note that
+        // gl::Framebuffer::bind* are avoided intentionally: they update the current framebuffer tracking.
+        GLint previousRead = 0, previousDraw = 0;
+        glGetIntegerv(GL_READ_FRAMEBUFFER_BINDING, &previousRead);
+        glGetIntegerv(GL_DRAW_FRAMEBUFFER_BINDING, &previousDraw);
+        AUI_DEFER {
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, previousRead);
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, previousDraw);
+        };
+
+#if !AUI_PLATFORM_EMSCRIPTEN
+        if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
+            const auto size = fb->size();
+            if (size.x == 0 || size.y == 0) {
+                return;
+            }
+            if (fb->supersamlingRatio() <= 1) {
+                glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->getHandle());
+                result = readBoundFramebuffer(size);
+                return;
+            }
+
+            // downsample to the window resolution the same way as endFramebuffer does when presenting.
+            GLuint resolveFramebuffer = 0, resolveRenderbuffer = 0;
+            glGenFramebuffers(1, &resolveFramebuffer);
+            glGenRenderbuffers(1, &resolveRenderbuffer);
+            AUI_DEFER {
+                glDeleteFramebuffers(1, &resolveFramebuffer);
+                glDeleteRenderbuffers(1, &resolveRenderbuffer);
+            };
+            GLint previousRenderbuffer = 0;
+            glGetIntegerv(GL_RENDERBUFFER_BINDING, &previousRenderbuffer);
+            glBindRenderbuffer(GL_RENDERBUFFER, resolveRenderbuffer);
+            glRenderbufferStorage(GL_RENDERBUFFER, GL_RGBA8, size.x, size.y);
+            glBindRenderbuffer(GL_RENDERBUFFER, previousRenderbuffer);
+
+            glBindFramebuffer(GL_DRAW_FRAMEBUFFER, resolveFramebuffer);
+            glFramebufferRenderbuffer(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_RENDERBUFFER, resolveRenderbuffer);
+            if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE) {
+                ALogger::err(LOG_TAG) << "Unable to make a screenshot: resolve framebuffer is incomplete";
+                return;
+            }
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, fb->getHandle());
+            const auto supersampled = fb->supersampledSize();
+            glBlitFramebuffer(0, 0, supersampled.x, supersampled.y,   // src
+                              0, 0, size.x, size.y,                   // dst
+                              GL_COLOR_BUFFER_BIT, GL_LINEAR);
+            glBindFramebuffer(GL_READ_FRAMEBUFFER, resolveFramebuffer);
+            result = readBoundFramebuffer(size);
+            return;
+        }
+#endif
+
+        // no offscreen framebuffer: the picture lives in the default one.
+        if (mViewportSize.x == 0 || mViewportSize.y == 0) {
+            return;
+        }
+        glBindFramebuffer(GL_READ_FRAMEBUFFER, gl::Framebuffer::DEFAULT_FB);
+        result = readBoundFramebuffer(mViewportSize);
+    });
+    return result;
 }

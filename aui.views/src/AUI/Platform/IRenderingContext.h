@@ -57,6 +57,12 @@ public:
     virtual ~IRenderingContext() = default;
     virtual void destroyNativeWindow(ASurface& window) = 0;
 
+    /**
+     * @brief Captures what the window currently shows.
+     * @return RGBA image of the window's size in pixels, top row first; empty image if the context can't capture.
+     * @details
+     * Call it from the UI thread, between frames.
+     */
     virtual AImage makeScreenshot() = 0;
 
     virtual void beginPaint(ASurface& window) = 0;
