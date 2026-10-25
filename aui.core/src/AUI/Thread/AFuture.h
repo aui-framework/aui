@@ -60,6 +60,29 @@ public:
     ~AInvocationTargetException() noexcept override = default;
 };
 
+/**
+ * @brief Thrown (as the cause of AInvocationTargetException) into a future by AFuture::withTimeout() when the timeout has
+ * elapsed.
+ */
+class ATimeoutException: public AException {
+public:
+    ATimeoutException(const AString& message = "timed out"): AException(message, nullptr) {}
+    ~ATimeoutException() noexcept override = default;
+};
+
+template<typename T>
+class AFuture;
+
+namespace aui::impl::future {
+    /**
+     * @brief Calls callback from the timer thread after the specified duration. Not cancellable.
+     */
+    API_AUI_CORE void scheduleTimeout(std::chrono::milliseconds duration, std::function<void()> callback);
+
+    template<typename T>
+    void bindTimeout(const AFuture<T>& source, const AFuture<T>& result, std::chrono::milliseconds duration);
+}
+
 namespace aui::impl::future {
     /**
      * This class calls cancel() and wait() methods of AFuture::Inner BEFORE AFuture::Inner destruction in order to keep
@@ -135,6 +158,7 @@ namespace aui::impl::future {
             std::function<void(const AException& exception)> onError;
             _<AAbstractThread> thread;
             bool cancelled = false;
+            std::function<void()> cancelHandler;
 
             explicit Inner(std::function<Value()> task) noexcept: task(std::move(task)) {
                 if constexpr(isVoid) {
@@ -194,12 +218,46 @@ namespace aui::impl::future {
             void wait(const _weak<CancellationWrapper<Inner>>& innerWeak, ABitField<AFutureWait> flags = AFutureWait::DEFAULT);
 
             void cancel() noexcept {
-                std::unique_lock lock(mutex);
-                if (!cancelled) {
+                std::function<void()> handler;
+                {
+                    std::unique_lock lock(mutex);
+                    if (cancelled) {
+                        return;
+                    }
                     cancelled = true;
-                    if (thread && !hasResult()) {
+                    if (hasResult()) {
+                        cancelHandler = nullptr;
+                        return;
+                    }
+                    if (thread) {
                         thread->interrupt();
                     }
+                    handler = std::move(cancelHandler);
+                    cancelHandler = nullptr;
+                }
+                // called without the lock: the handler is free to touch this future.
+                if (handler) {
+                    handler();
+                }
+            }
+
+            void addCancelHandler(std::function<void()> handler) {
+                std::unique_lock lock(mutex);
+                if (hasResult()) {
+                    return;
+                }
+                if (cancelled) {
+                    lock.unlock();
+                    handler();
+                    return;
+                }
+                if (cancelHandler) {
+                    cancelHandler = [prev = std::move(cancelHandler), handler = std::move(handler)] {
+                        prev();
+                        handler();
+                    };
+                } else {
+                    cancelHandler = std::move(handler);
                 }
             }
 
@@ -491,6 +549,23 @@ namespace aui::impl::future {
          */
         void cancel() const noexcept {
             (*mInner)->cancel();
+        }
+
+        /**
+         * @brief Registers a callback that is called when this future is cancelled before it has got a result.
+         * @param handler callback. Must not throw.
+         * @details
+         * Cancellation happens by an explicit cancel() call or when the last reference to the future is destroyed.
+         * This is the place for the producer to abort the underlying operation (close a socket, drop a pending
+         * request, etc.). The handler is called without internal locks held, on the thread that cancelled the future.
+         *
+         * If the future is already cancelled, the handler is called immediately. If the future already has a result,
+         * the handler is never called.
+         *
+         * The handler is stored inside the future, so it must not hold a strong reference to the future itself.
+         */
+        void onCancel(std::function<void()> handler) const {
+            (*mInner)->addCancelHandler(std::move(handler));
         }
 
         void reportInterrupted() const {
@@ -814,6 +889,27 @@ public:
         });
         return result;
     }
+
+    /**
+     * @brief Creates a future that mirrors this one but fails if this one does not complete in time.
+     * @param duration timeout.
+     * @return a new future. It completes with this future's result, or with an exception caused by
+     *         ATimeoutException if the timeout elapsed first.
+     * @details
+     * When the timeout elapses, this (source) future is cancelled, so its onCancel handler can abort the underlying
+     * operation. The source is kept alive by the returned future; when the returned future is cancelled or destroyed,
+     * the source is cancelled too.
+     *
+     * ```cpp
+     * try {
+     *   auto reply = co_await sendRequest().withTimeout(10s);
+     * } catch (const AException&) {
+     *   // timed out (or sendRequest failed)
+     * }
+     * ```
+     */
+    [[nodiscard]]
+    AFuture withTimeout(std::chrono::milliseconds duration) const;
 };
 
 template<>
@@ -940,7 +1036,86 @@ public:
         super::onFinally(std::forward<Callback>(callback));
         return *this;
     }
+
+    /**
+     * @brief Creates a future that mirrors this one but fails if this one does not complete in time.
+     * @param duration timeout.
+     * @return a new future. It completes with this future's result, or with an exception caused by
+     *         ATimeoutException if the timeout elapsed first.
+     * @details
+     * When the timeout elapses, this (source) future is cancelled, so its onCancel handler can abort the underlying
+     * operation. The source is kept alive by the returned future; when the returned future is cancelled or destroyed,
+     * the source is cancelled too.
+     *
+     * ```cpp
+     * try {
+     *   auto reply = co_await sendRequest().withTimeout(10s);
+     * } catch (const AException&) {
+     *   // timed out (or sendRequest failed)
+     * }
+     * ```
+     */
+    [[nodiscard]]
+    AFuture withTimeout(std::chrono::milliseconds duration) const;
 };
+
+template<typename T>
+AFuture<T> AFuture<T>::withTimeout(std::chrono::milliseconds duration) const {
+    AFuture result;
+    aui::impl::future::bindTimeout(*this, result, duration);
+    return result;
+}
+
+inline AFuture<void> AFuture<void>::withTimeout(std::chrono::milliseconds duration) const {
+    AFuture result;
+    aui::impl::future::bindTimeout(*this, result, duration);
+    return result;
+}
+
+template<typename T>
+void aui::impl::future::bindTimeout(const AFuture<T>& source, const AFuture<T>& result, std::chrono::milliseconds duration) {
+    // whoever settles the result first (source or timer) sets the flag.
+    auto settled = _new<std::atomic_bool>(false);
+    auto resultWeak = result.inner().weak();
+
+    // the result owns the source (the source's producer may rely on someone holding it) and cancels it when the result
+    // is cancelled/destroyed. The source only knows the result weakly, so there is no reference cycle.
+    result.onCancel([source] { source.cancel(); });
+
+    source.onSuccess([resultWeak, settled](const auto&... v) {
+        if (settled->exchange(true)) {
+            return;
+        }
+        if (auto r = resultWeak.lock()) {
+            AFuture<T>(std::move(r)).supplyValue(v...);
+        }
+    });
+    source.onError([resultWeak, settled](const AException& e) {
+        if (settled->exchange(true)) {
+            return;
+        }
+        if (auto r = resultWeak.lock()) {
+            AFuture<T>(std::move(r)).supplyException(e.causedBy());
+        }
+    });
+
+    scheduleTimeout(duration, [resultWeak, sourceWeak = source.inner().weak(), settled, duration] {
+        if (settled->exchange(true)) {
+            return;
+        }
+        if (auto r = resultWeak.lock()) {
+            try {
+                throw ATimeoutException(AString("timed out after ") + AString::number(int(duration.count())) + "ms");
+            } catch (...) {
+                AFuture<T>(std::move(r)).supplyException();
+            }
+        }
+        // abort the underlying operation. The source is alive as long as the result is (see onCancel above).
+        if (auto s = sourceWeak.lock()) {
+            AFuture<T>(std::move(s)).cancel();
+        }
+    });
+}
 
 template <typename Value>
 void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapper<Inner>>& innerWeak,
