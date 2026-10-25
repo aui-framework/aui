@@ -86,7 +86,7 @@
  *
  * ### Setup
  *
- * **Link to remote_tools module**: `aui_link(my_target PUBLIC aui::remote_tools)`
+ * **Link to dev_extras module**: `aui_link(my_target PUBLIC aui::dev_extras)`
  *
  * **Add object files to track**:
  *
@@ -98,7 +98,7 @@
  * **Observe** `AHotCodeReload::inst().patchEnd` to re-call patched functions to see the effect. For UI, extract
  * `setContents` call to a member function and call it in constructor. Also, connect to
  * `AHotCodeReload::inst().patchEnd` to re-initialize UI components after the patch. Use `__has_include` to check if
- * `aui::remote_tools` was added in your `CMakeLists.txt`.
+ * `aui::dev_extras` was added in your `CMakeLists.txt`.
  *
  * <!-- aui:snippet examples/ui/hot_code_reload/src/MyWindow.cpp AHotCodeReload_example -->
  *
@@ -146,7 +146,7 @@
  * - Do not rely on this system for data or memory layout changes.
  * - Consider combining hot reload with precompiled headers to further minimize turnaround time.
  */
-class API_AUI_REMOTE_TOOLS AHotCodeReload : public AObject {
+class API_AUI_DEV_EXTRAS AHotCodeReload : public AObject {
 public:
     ~AHotCodeReload();
 

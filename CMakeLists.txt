@@ -127,7 +127,7 @@ define_aui_component(xml)
 define_aui_component(json)
 define_aui_component(audio)
 define_aui_component(updater)
-define_aui_component(remote_tools)
+define_aui_component(dev_extras)
 
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
@@ -163,6 +163,7 @@ set(AUI_ALL_COMPONENTS core
                        toolbox
                        audio
                        updater
+                       dev_extras
         )
 
 

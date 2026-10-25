@@ -35,7 +35,7 @@ aui.<module>/
 | `aui.uitests`     | UI testing utilities                                            |
 | `aui.updater`     | App auto-updates for non-centralized distribution               |
 | `aui.toolbox`     | Build-time tool (e.g. converts assets to embeddable `.cpp`)     |
-| `aui.mysql`, `aui.remote_tools` | Additional/optional modules                      |
+| `aui.mysql`, `aui.dev_extras` | Additional/optional modules                      |
 
 ### Top-level things worth knowing
 
