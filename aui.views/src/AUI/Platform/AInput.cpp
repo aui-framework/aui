@@ -151,11 +151,11 @@ AString AInput::getName(Key k)
 }
 
 bool AInput::isKeyDown(Key k) {
-    if (UITestState::isTesting()) {
-        return gKeyStateForTesting[k];
-    }
     if (const auto o = gKeyOverrides.state[k]; o >= 0) {
         return o != 0;
+    }
+    if (UITestState::isTesting()) {
+        return gKeyStateForTesting[k];
     }
     return AInput::native::isKeyDown(k);
 }

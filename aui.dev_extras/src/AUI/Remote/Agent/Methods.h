@@ -32,4 +32,9 @@ void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
  */
 void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
 
+/**
+ * `input.pointer`, `input.type`, `input.key`.
+ */
+void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
+
 }   // namespace aui::remote

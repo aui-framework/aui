@@ -288,6 +288,52 @@ TEST_F(AgentTest, ScreenshotSavesPngAndCrops) {
     EXPECT_NE(cropped["path"].asString(), fullPath);
 }
 
+TEST_F(AgentTest, ClickInvokesButton) {
+    int clicks = 0;
+    auto button = _new<AButton>("Click me");
+    AObject::connect(button->clicked, button, [&] { ++clicks; });
+    auto window = showWindow(button);
+    auto ref = ok("view.find", AJson { { "type", "AButton" } }).asArray().front()["ref"].asString();
+    ok("input.pointer", AJson { { "ref", ref } });
+    EXPECT_EQ(clicks, 1);
+    ok("input.pointer", AJson { { "ref", ref }, { "action", "click" } });
+    EXPECT_EQ(clicks, 2);
+}
+
+TEST_F(AgentTest, ClickByCoordinates) {
+    int clicks = 0;
+    auto button = _new<AButton>("Click me");
+    AObject::connect(button->clicked, button, [&] { ++clicks; });
+    auto window = showWindow(button);
+    const auto center = button->getCenterPointInWindow();
+    ok("input.pointer", AJson { { "x", center.x }, { "y", center.y } });
+    EXPECT_EQ(clicks, 1);
+    ok("input.pointer", AJson { { "x", 1 }, { "y", 1 } });
+    EXPECT_EQ(clicks, 1);
+}
+
+TEST_F(AgentTest, TypeIntoTextField) {
+    auto field = _new<ATextField>();
+    auto window = showWindow(field);
+    auto ref = ok("view.find", AJson { { "type", "ATextField" } }).asArray().front()["ref"].asString();
+    ok("input.type", AJson { { "ref", ref }, { "text", "hello" } });
+    EXPECT_EQ(field->text(), "hello");
+    ok("input.key", AJson { { "key", "BACKSPACE" } });
+    EXPECT_EQ(field->text(), "hell");
+    ok("input.key", AJson { { "key", "A" }, { "modifiers", AJson::fromString(R"(["ctrl"])") } });
+    ok("input.type", AJson { { "text", "x" } });
+    EXPECT_EQ(field->text(), "x");
+}
+
+TEST_F(AgentTest, InputErrors) {
+    auto window = showWindow(_new<AButton>("b"));
+    EXPECT_EQ(errorCode("input.key", AJson { { "key", "NO_SUCH_KEY" } }), rpc_code::INVALID_PARAMS);
+    EXPECT_EQ(errorCode("input.pointer", AJson { { "action", "teleport" }, { "x", 1 }, { "y", 1 } }),
+              rpc_code::INVALID_PARAMS);
+    EXPECT_EQ(errorCode("input.pointer", AJson { { "ref", "v0:99999" } }), rpc_code::STALE_REF);
+    EXPECT_EQ(errorCode("input.type", AJson::fromString("{}")), rpc_code::INVALID_PARAMS);
+}
+
 TEST_F(AgentTest, ListedWindowIdWorks) {
     auto window = showWindow(Label { "hi" });
     auto windows = ok("window.list");
