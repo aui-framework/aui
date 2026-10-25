@@ -13,6 +13,7 @@
 #include "AUI/UITest.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/AButton.h"
+#include "AUI/View/ATextField.h"
 #include "AUI/Platform/AOverlappingSurface.h"
 
 using namespace declarative;
@@ -59,8 +60,48 @@ TEST_F(ASurfaceIntrospectionTest, InjectedPressReachesViews) {
     uitest::frame();
 
     const auto center = glm::vec2(button->getCenterPointInWindow());
-    window->injectPointerPressed({ center, APointerIndex::button(AInput::LBUTTON) });
-    window->onPointerReleased({ center, APointerIndex::button(AInput::LBUTTON) });
+    window->injectEvent(APointerPressedEvent { center, APointerIndex::button(AInput::LBUTTON) });
+    window->injectEvent(APointerReleasedEvent { center, APointerIndex::button(AInput::LBUTTON) });
     uitest::frame();
     EXPECT_EQ(clicked, 1);
+}
+
+TEST_F(ASurfaceIntrospectionTest, InjectedKeysAndCharsReachFocusedView) {
+    auto window = _new<AWindow>();
+    auto field = _new<ATextField>();
+    window->setContents(Centered { field });
+    window->show();
+    uitest::frame();
+
+    const auto center = glm::vec2(field->getCenterPointInWindow());
+    window->injectEvent(APointerPressedEvent { center, APointerIndex::button(AInput::LBUTTON) });
+    window->injectEvent(APointerReleasedEvent { center, APointerIndex::button(AInput::LBUTTON) });
+    uitest::frame();
+
+    window->injectEvent(AInjectedChar { 'h' });
+    window->injectEvent(AInjectedChar { 'i' });
+    uitest::frame();
+    EXPECT_EQ(field->getText(), "hi");
+
+    window->injectEvent(AInjectedKey { AInjectedKey::Action::DOWN, AInput::BACKSPACE });
+    window->injectEvent(AInjectedKey { AInjectedKey::Action::UP, AInput::BACKSPACE });
+    uitest::frame();
+    EXPECT_EQ(field->getText(), "h");
+}
+
+TEST_F(ASurfaceIntrospectionTest, InjectedMoveHoversViews) {
+    auto window = _new<AWindow>();
+    auto button = _new<AButton>("Hover me");
+    window->setContents(Centered { button });
+    window->show();
+    uitest::frame();
+    EXPECT_FALSE(button->isMouseEntered());
+
+    window->injectEvent(AInjectedPointerMove { glm::vec2(button->getCenterPointInWindow()) });
+    uitest::frame();
+    EXPECT_TRUE(button->isMouseEntered());
+
+    window->injectEvent(AInjectedPointerMove { glm::vec2(1, 1) });
+    uitest::frame();
+    EXPECT_FALSE(button->isMouseEntered());
 }
