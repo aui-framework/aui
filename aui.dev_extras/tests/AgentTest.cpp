@@ -272,6 +272,22 @@ TEST_F(AgentTest, WindowIdMustBeAWindow) {
     EXPECT_EQ(errorCode("view.tree", AJson { { "windowId", buttonRef } }), rpc_code::NO_SUCH_WINDOW);
 }
 
+TEST_F(AgentTest, ScreenshotSavesPngAndCrops) {
+    auto window = showWindow(_new<AButton>("Shot"));
+    auto full = ok("screenshot");
+    const auto fullPath = full["path"].asString();
+    EXPECT_TRUE(APath(fullPath).isRegularFileExists());
+    EXPECT_TRUE(fullPath.endsWith(".png"));
+    EXPECT_GT(full["width"].asInt(), 0);
+
+    auto ref = ok("view.find", AJson { { "type", "AButton" } }).asArray().front()["ref"].asString();
+    auto cropped = ok("screenshot", AJson { { "ref", ref } });
+    EXPECT_TRUE(APath(cropped["path"].asString()).isRegularFileExists());
+    EXPECT_LT(cropped["width"].asInt(), full["width"].asInt());
+    EXPECT_LT(cropped["height"].asInt(), full["height"].asInt());
+    EXPECT_NE(cropped["path"].asString(), fullPath);
+}
+
 TEST_F(AgentTest, ListedWindowIdWorks) {
     auto window = showWindow(Label { "hi" });
     auto windows = ok("window.list");

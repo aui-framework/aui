@@ -27,4 +27,9 @@ _<AWindow> windowFromParams(const AJson& params, RefTable& refs);
  */
 void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
 
+/**
+ * `screenshot`.
+ */
+void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
+
 }   // namespace aui::remote

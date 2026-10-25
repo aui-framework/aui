@@ -91,6 +91,7 @@ ARemoteAgent::ARemoteAgent(Options options) : mImpl(std::make_unique<Impl>()) {
         };
     }));
     registerInspectionMethods(dispatcher, impl.refs);
+    registerScreenshotMethods(dispatcher, impl.refs);
 
     AWebsocketServer::Config config;
     config.bindAddress = impl.options.bindAddress;
