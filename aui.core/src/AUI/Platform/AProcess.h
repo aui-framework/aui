@@ -18,6 +18,7 @@
 #include <AUI/IO/APath.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Common/AVector.h>
+#include <AUI/Common/AMap.h>
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/IO/IInputStream.h>
@@ -181,6 +182,20 @@ public:
          * Process working directory. Defaults to working directory of the calling process.
          */
         APath workDir;
+
+        /**
+         * @details
+         * Environment variables of the child process. They are added to the environment of the calling process (or
+         * used alone if `inheritEnvironment` is false). A variable replaces an inherited one with the same name.
+         */
+        AMap<AString, AString> environment;
+
+        /**
+         * @details
+         * Whether the child process gets the environment of the calling process in addition to `environment`.
+         * Defaults to true.
+         */
+        bool inheritEnvironment = true;
     };
 
     /**

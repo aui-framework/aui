@@ -28,6 +28,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <cassert>
+#include <map>
+#include <string>
+#include <vector>
 #include <spawn.h>
 #include <AUI/Common/AStringVector.h>
 #include <cstring>
@@ -147,6 +150,33 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                | ranges::to_vector;
     }();
 
+    // the child must not allocate between fork() and exec(), so the environment is prepared in advance.
+    std::vector<std::string> environmentStrings;
+    std::vector<char*> envp;
+    char** childEnvironment = environ;
+    if (!mInfo.environment.empty() || !mInfo.inheritEnvironment) {
+        std::map<std::string, std::string> merged;
+        if (mInfo.inheritEnvironment) {
+            for (char** e = environ; e != nullptr && *e != nullptr; ++e) {
+                std::string_view entry = *e;
+                if (auto eq = entry.find('='); eq != std::string_view::npos && eq > 0) {
+                    merged[std::string(entry.substr(0, eq))] = std::string(entry.substr(eq + 1));
+                }
+            }
+        }
+        for (const auto& [name, value] : mInfo.environment) {
+            merged[name.toStdString()] = value.toStdString();
+        }
+        for (const auto& [name, value] : merged) {
+            environmentStrings.push_back(name + "=" + value);
+        }
+        for (auto& s : environmentStrings) {
+            envp.push_back(s.data());
+        }
+        envp.push_back(nullptr);
+        childEnvironment = envp.data();
+    }
+
     Pipe pipeStdin;
     Pipe pipeStdout;
     Pipe pipeStderr;
@@ -202,7 +232,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                 if (!mInfo.workDir.empty()) {
                     chdir(mInfo.workDir.toStdString().c_str());
                 }
-                execve(executable.c_str(), argv.data(), environ);
+                execve(executable.c_str(), argv.data(), childEnvironment);
             };
 
             if (detachedSpecific) {

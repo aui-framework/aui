@@ -22,6 +22,9 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Logging/ALogger.h>
 #include <psapi.h>
+#include <cwchar>
+#include <cwctype>
+#include <map>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include <AUI/Platform/Pipe.h>
@@ -209,6 +212,43 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         creationFlags |= DETACHED_PROCESS;
     }
 
+    // block of "NAME=value\0" strings terminated by an extra \0, sorted by name as CreateProcess recommends.
+    std::wstring environmentBlock;
+    if (!mInfo.environment.empty() || !mInfo.inheritEnvironment) {
+        std::map<std::wstring, std::wstring> entries;   // upper-cased name (names are case-insensitive) -> NAME=value
+        auto add = [&](std::wstring_view name, std::wstring_view value) {
+            std::wstring key(name);
+            for (auto& c : key) {
+                c = static_cast<wchar_t>(std::towupper(c));
+            }
+            entries[std::move(key)] = std::wstring(name) + L"=" + std::wstring(value);
+        };
+        if (mInfo.inheritEnvironment) {
+            if (LPWCH inherited = GetEnvironmentStringsW()) {
+                for (const wchar_t* p = inherited; *p; p += std::wcslen(p) + 1) {
+                    std::wstring_view entry = p;
+                    // skip the leading '=' of the hidden per-drive variables (=C:=C:\)
+                    if (auto eq = entry.find(L'=', 1); eq != std::wstring_view::npos) {
+                        add(entry.substr(0, eq), entry.substr(eq + 1));
+                    }
+                }
+                FreeEnvironmentStringsW(inherited);
+            }
+        }
+        for (const auto& [name, value] : mInfo.environment) {
+            add(aui::win32::toWchar(name), aui::win32::toWchar(value));
+        }
+        for (const auto& [_, entry] : entries) {
+            environmentBlock += entry;
+            environmentBlock.push_back(L'\0');
+        }
+        environmentBlock.push_back(L'\0');
+        if (entries.empty()) {
+            environmentBlock.push_back(L'\0');
+        }
+        creationFlags |= CREATE_UNICODE_ENVIRONMENT;
+    }
+
     auto wExecutable = aui::win32::toWchar(mInfo.executable);
     auto wArgs = aui::win32::toWchar(args);
     auto wWorkDir = aui::win32::toWchar(mInfo.workDir);
@@ -218,7 +258,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                        nullptr,
                        true,
                        creationFlags,
-                       nullptr,
+                       environmentBlock.empty() ? nullptr : environmentBlock.data(),
                        mInfo.workDir.empty() ? nullptr : wWorkDir.data(),
                        &startupInfo,
                        &mProcessInformation)) {
