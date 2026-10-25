@@ -199,4 +199,172 @@ TEST(Coroutines, CoAwait3rdPartyCoro) {
 }
 
 
+/**
+ * @brief A future that is never completed on its own.
+ */
+static AFuture<int> neverCompletes() { return AFuture<int>(); }
+
+static bool isTimeout(const AException& e) {
+    try {
+        std::rethrow_exception(e.causedBy());
+    } catch (const ATimeoutException&) {
+        return true;
+    } catch (...) {
+        return false;
+    }
+}
+
+TEST(Coroutines, TimeoutFires) {
+    AAsyncHolder async;
+    AEventLoop loop;
+    IEventLoop::Handle h(&loop);
+    bool caught = false;
+    async << [](bool& caught) -> AFuture<> {
+        try {
+            co_await neverCompletes().timeout(100ms);
+            ADD_FAILURE() << "should have timed out";
+        } catch (const AException& e) {
+            caught = isTimeout(e);
+        }
+    }(caught);
+    while (!async.empty()) {
+        loop.iteration();
+    }
+    EXPECT_TRUE(caught);
+}
+
+TEST(Coroutines, TimeoutNotFiredValue) {
+    AAsyncHolder async;
+    AEventLoop loop;
+    IEventLoop::Handle h(&loop);
+    int result = 0;
+    async << [](int& result) -> AFuture<> {
+        result = co_await longTask().timeout(10s); // longTask takes 500ms
+    }(result);
+    while (!async.empty()) {
+        loop.iteration();
+    }
+    EXPECT_EQ(result, 228);
+}
+
+TEST(Coroutines, TimeoutNotFiredVoid) {
+    AAsyncHolder async;
+    AEventLoop loop;
+    IEventLoop::Handle h(&loop);
+    bool done = false;
+    async << [](bool& done) -> AFuture<> {
+        co_await AThread::asyncSleep(50ms).timeout(10s);
+        done = true;
+    }(done);
+    while (!async.empty()) {
+        loop.iteration();
+    }
+    EXPECT_TRUE(done);
+}
+
+TEST(Coroutines, TimeoutPropagatesSourceException) {
+    AAsyncHolder async;
+    AEventLoop loop;
+    IEventLoop::Handle h(&loop);
+    bool caught = false;
+    async << [](bool& caught) -> AFuture<> {
+        try {
+            co_await longTaskException().timeout(10s);
+            ADD_FAILURE() << "exception was not propagated";
+        } catch (const AException& e) {
+            caught = !isTimeout(e);
+        }
+    }(caught);
+    while (!async.empty()) {
+        loop.iteration();
+    }
+    EXPECT_TRUE(caught) << "source's exception must not be replaced with ATimeoutException";
+}
+
+TEST(Coroutines, TimeoutAlreadyCompleted) {
+    AFuture<int> source;
+    source.supplyValue(322);
+    auto withTimeout = source.timeout(10s);
+    ASSERT_TRUE(withTimeout.hasValue());
+    EXPECT_EQ(*withTimeout, 322);
+}
+
+TEST(Coroutines, TimeoutCancelsSource) {
+    auto source = neverCompletes();
+    std::atomic_bool cancelled = false;
+    source.onCancel([&] { cancelled = true; });
+
+    auto withTimeout = source.timeout(50ms);
+    source = nullptr; // withTimeout must keep the source alive
+    EXPECT_FALSE(cancelled);
+
+    auto deadline = std::chrono::steady_clock::now() + 5s;
+    while (!withTimeout.hasResult() && std::chrono::steady_clock::now() < deadline) {
+        AThread::sleep(5ms);
+    }
+    ASSERT_TRUE(withTimeout.hasException());
+    EXPECT_TRUE(cancelled) << "the timeout must cancel the source so the producer could abort the operation";
+}
+
+TEST(Coroutines, TimeoutResultDestroyedCancelsSource) {
+    auto source = neverCompletes();
+    bool cancelled = false;
+    source.onCancel([&] { cancelled = true; });
+    {
+        auto withTimeout = source.timeout(10s);
+    }
+    EXPECT_TRUE(cancelled);
+}
+
+TEST(Coroutines, TimeoutCoroutineFrameCleanedUp) {
+    auto testArgumentCapture = _new<int>(322);
+    AAsyncHolder async;
+    AEventLoop loop;
+    IEventLoop::Handle h(&loop);
+    async << [](_<int> testArgumentCapture) -> AFuture<> {
+        try {
+            co_await neverCompletes().timeout(50ms);
+        } catch (const AException&) {
+        }
+    }(testArgumentCapture);
+    while (!async.empty()) {
+        loop.iteration();
+    }
+    EXPECT_EQ(testArgumentCapture.use_count(), 1) << "coro frame leaked";
+}
+
+TEST(Coroutines, OnCancel) {
+    {
+        auto f = neverCompletes();
+        int calls = 0;
+        f.onCancel([&] { ++calls; });
+        f.cancel();
+        f.cancel();
+        EXPECT_EQ(calls, 1);
+    }
+    {   // destruction cancels
+        int calls = 0;
+        {
+            auto f = neverCompletes();
+            f.onCancel([&] { ++calls; });
+        }
+        EXPECT_EQ(calls, 1);
+    }
+    {   // completed futures are not cancelled
+        int calls = 0;
+        auto f = neverCompletes();
+        f.onCancel([&] { ++calls; });
+        f.supplyValue(1);
+        f.cancel();
+        EXPECT_EQ(calls, 0);
+    }
+    {   // registering on already cancelled future calls immediately
+        int calls = 0;
+        auto f = neverCompletes();
+        f.cancel();
+        f.onCancel([&] { ++calls; });
+        EXPECT_EQ(calls, 1);
+    }
+}
+
 #endif
