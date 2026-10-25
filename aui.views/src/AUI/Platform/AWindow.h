@@ -727,6 +727,9 @@ public:
 
     void flagRedraw() override;
 
+    [[nodiscard]]
+    bool isFrameScheduled() const noexcept override { return mRedrawFlag; }
+
     /**
      * Shows the window.
      * <dl>

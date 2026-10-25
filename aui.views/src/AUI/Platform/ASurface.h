@@ -318,6 +318,41 @@ public:
         }
     }
 
+    /**
+     * @return overlapping surfaces (popups, menus, dropdown lists) that are currently shown over this surface. They are
+     * drawn above and receive pointer events before the contents of this surface.
+     *
+     * !!! note
+     *
+     *     Some platforms implement overlapping surfaces as native popup windows, which are windows of their own in
+     *     the window manager as well (see AWindow::isPopup).
+     */
+    [[nodiscard]]
+    const ASet<_<AOverlappingSurface>>& overlappingSurfaces() const noexcept { return mOverlappingSurfaces; }
+
+    /**
+     * @brief Whether a redraw was requested and the frame is not drawn yet.
+     * @details
+     * Not every platform tracks it: the default implementation returns false.
+     */
+    [[nodiscard]]
+    virtual bool isFrameScheduled() const noexcept { return false; }
+
+    /**
+     * @return true if some view is waiting for the layout update.
+     */
+    [[nodiscard]]
+    bool hasPendingLayout() const noexcept;
+
+    /**
+     * @brief Feeds a pointer press as if the pointer device made it, but skips window manager interactions of the
+     * window (i.e., dragging the window by its custom caption).
+     * @details
+     * For synthetic input, i.e., remote control. A pointer press that goes to a custom caption of a real window
+     * starts moving the window instead of reaching the views under it.
+     */
+    void injectPointerPressed(const APointerPressedEvent& event);
+
     void onFocusLost() override;
     void render(ARenderContext context) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;

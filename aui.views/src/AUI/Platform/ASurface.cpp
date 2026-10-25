@@ -443,6 +443,10 @@ void ASurface::createDevtoolsWindow() {
 
 void ASurface::flagRedraw() {}
 
+bool ASurface::hasPendingLayout() const noexcept { return mWantsLayoutUpdate || !mPendingLayoutRoots.empty(); }
+
+void ASurface::injectPointerPressed(const APointerPressedEvent& event) { ASurface::onPointerPressed(event); }
+
 void ASurface::onLayout(glm::ivec2 size) {
     APerformanceSection updateLayout("layout update");
     AViewContainer::onLayout(size);
