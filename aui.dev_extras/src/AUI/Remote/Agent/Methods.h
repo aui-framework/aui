@@ -23,6 +23,12 @@ namespace aui::remote {
 _<AWindow> windowFromParams(const AJson& params, RefTable& refs);
 
 /**
+ * @brief The implementation of `view.find`; must be called on the UI thread.
+ * @return array of described views
+ */
+AJson findViews(RefTable& refs, const AJson& params);
+
+/**
  * `window.list`, `view.tree`, `view.find`, `view.properties`, `view.hitTest`, `view.interactive`.
  */
 void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
@@ -36,5 +42,10 @@ void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
  * `input.pointer`, `input.type`, `input.key`.
  */
 void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
+
+/**
+ * `wait.idle`, `wait.view`.
+ */
+void registerWaitMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
 
 }   // namespace aui::remote

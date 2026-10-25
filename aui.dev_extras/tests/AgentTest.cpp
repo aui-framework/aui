@@ -20,6 +20,7 @@
 #include "AUI/UITest.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/AButton.h"
+#include "AUI/View/ALabel.h"
 #include "AUI/View/ATextField.h"
 
 using namespace aui::remote;
@@ -47,8 +48,11 @@ protected:
         };
         AString response;
         agent()->dispatcher().handle(AJson::toString(request), [&](AString r) { response = std::move(r); });
-        for (int i = 0; i < 200 && response.empty(); ++i) {
+        for (int i = 0; i < 2000 && response.empty(); ++i) {
             uitest::frame();
+            if (response.empty()) {
+                std::this_thread::sleep_for(2ms);   // methods like wait.* poll in real time
+            }
         }
         EXPECT_FALSE(response.empty()) << "no response to " << method;
         return AJson::fromString(response.empty() ? AString("{}") : response);
@@ -332,6 +336,26 @@ TEST_F(AgentTest, InputErrors) {
               rpc_code::INVALID_PARAMS);
     EXPECT_EQ(errorCode("input.pointer", AJson { { "ref", "v0:99999" } }), rpc_code::STALE_REF);
     EXPECT_EQ(errorCode("input.type", AJson::fromString("{}")), rpc_code::INVALID_PARAMS);
+}
+
+TEST_F(AgentTest, WaitIdleResolves) {
+    auto window = showWindow(Label { "hi" });
+    auto result = ok("wait.idle", AJson { { "quietMs", 30 } });
+    EXPECT_TRUE(result["idle"].asBool());
+}
+
+TEST_F(AgentTest, WaitViewAppearsAndDisappears) {
+    auto label = _new<ALabel>("later");
+    _<AViewContainer> container = Vertical {};
+    auto window = showWindow(container);
+    EXPECT_EQ(errorCode("wait.view", AJson { { "text", "later" }, { "timeoutMs", 50 } }), rpc_code::TIMEOUT);
+
+    AThread::main()->enqueue([&] { container->addView(label); });
+    auto result = ok("wait.view", AJson { { "text", "later" } });
+    EXPECT_EQ(result["matches"].asArray().size(), 1u);
+
+    AThread::main()->enqueue([&] { container->removeView(label); });
+    ok("wait.view", AJson { { "text", "later" }, { "state", "gone" } });
 }
 
 TEST_F(AgentTest, ListedWindowIdWorks) {

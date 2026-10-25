@@ -399,6 +399,7 @@ class API_AUI_VIEWS AWindow: public ASurface
     friend class CommonRenderingContext;
     friend class SoftwareRenderingContext;
     friend class AWindowManager;
+    friend class AStubWindowManager;
     friend struct painter;
 public:
     /**

@@ -68,6 +68,34 @@ _<AWindow> windowFromParams(const AJson& params, RefTable& refs) {
     throw RpcException(rpc_code::NO_SUCH_WINDOW, "the application has no windows", "wait until a window is shown");
 }
 
+AJson findViews(RefTable& refs, const AJson& params) {
+    refs.newGeneration();
+    const auto root = params.contains("ref") ? viewFromParams(params, refs) : _<AView>(windowFromParams(params, refs));
+    const auto type = lowercased(params.containsOpt("type") ? params["type"].asString() : AString {});
+    const auto text = lowercased(params.containsOpt("text") ? params["text"].asString() : AString {});
+    const auto assName = params.containsOpt("assName") ? params["assName"].asString() : AString {};
+    const bool onlyInteractive = params.containsOpt("interactive") && params["interactive"].asBool();
+    const bool includeInvisible = params.containsOpt("includeInvisible") && params["includeInvisible"].asBool();
+
+    aui::impl::JsonArray found;
+    view_json::visit(root, [&](const _<AView>& view) {
+        if (!includeInvisible && view->getVisibility() != Visibility::VISIBLE) {
+            return false;   // the whole branch is invisible
+        }
+        if (!type.empty() && !lowercased(view_json::typeName(view)).contains(type)) return true;
+        if (!text.empty()) {
+            // a button is found by its label, which is the text of a view inside of it
+            const auto shown = view_json::interactiveRole(view).empty() ? view_json::textOf(view) : view_json::labelOf(view);
+            if (!lowercased(shown).contains(text)) return true;
+        }
+        if (!assName.empty() && !view->getAssNames().contains(assName)) return true;
+        if (onlyInteractive && view_json::interactiveRole(view).empty()) return true;
+        found.push_back(describe(refs, view));
+        return true;
+    });
+    return array(std::move(found));
+}
+
 void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     dispatcher.registerMethod("window.list", JsonRpcDispatcher::Handler([&refs](const AJson&) {
         return onUiThread([&refs] {
@@ -112,33 +140,7 @@ void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     }));
 
     dispatcher.registerMethod("view.find", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
-        return onUiThread([&refs, params = params] {
-            refs.newGeneration();
-            const auto root = params.contains("ref") ? viewFromParams(params, refs) : _<AView>(windowFromParams(params, refs));
-            const auto type = lowercased(params.containsOpt("type") ? params["type"].asString() : AString {});
-            const auto text = lowercased(params.containsOpt("text") ? params["text"].asString() : AString {});
-            const auto assName = params.containsOpt("assName") ? params["assName"].asString() : AString {};
-            const bool onlyInteractive = params.containsOpt("interactive") && params["interactive"].asBool();
-            const bool includeInvisible = params.containsOpt("includeInvisible") && params["includeInvisible"].asBool();
-
-            aui::impl::JsonArray found;
-            view_json::visit(root, [&](const _<AView>& view) {
-                if (!includeInvisible && view->getVisibility() != Visibility::VISIBLE) {
-                    return false;   // the whole branch is invisible
-                }
-                if (!type.empty() && !lowercased(view_json::typeName(view)).contains(type)) return true;
-                if (!text.empty()) {
-                    // a button is found by its label, which is the text of a view inside of it
-                    const auto shown = view_json::interactiveRole(view).empty() ? view_json::textOf(view) : view_json::labelOf(view);
-                    if (!lowercased(shown).contains(text)) return true;
-                }
-                if (!assName.empty() && !view->getAssNames().contains(assName)) return true;
-                if (onlyInteractive && view_json::interactiveRole(view).empty()) return true;
-                found.push_back(describe(refs, view));
-                return true;
-            });
-            return array(std::move(found));
-        });
+        return onUiThread([&refs, params = params] { return findViews(refs, params); });
     }));
 
     dispatcher.registerMethod("view.hitTest", JsonRpcDispatcher::Handler([&refs](const AJson& params) {

@@ -65,6 +65,7 @@ void AStubWindowManager::drawFrame() {
         w->pack();
         w->getRenderingContext()->endResize(*w);
         w->redraw();
+        w->mRedrawFlag = false;   // the frame is drawn; see AWindow::isFrameScheduled
     }
 }
 
