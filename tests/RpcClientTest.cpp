@@ -47,25 +47,26 @@ CliResult runCli(std::initializer_list<const char*> args, const cli::Directories
     return result;
 }
 
-void writeDiscovery(const APath& dir, std::uint32_t pid, std::uint16_t port) {
+void writeDiscovery(const APath& dir, std::uint32_t pid, std::uint16_t port, const AString& cert = {}) {
     dir.makeDirs();
     std::ofstream(((dir / (AString::number(pid) + ".json"))).toStdString())
         << R"({"protocol":1,"pid":)" << pid << R"(,"port":)" << port
-        << R"(,"exe":"/bin/fake","argv":["/bin/fake"],"cwd":"/","startedAt":"t0"})";
+        << R"(,"scheme":"wss","certSha256":")" << cert.toStdString()
+        << R"(","exe":"/bin/fake","argv":["/bin/fake"],"cwd":"/","startedAt":"t0"})";
 }
 
 }   // namespace
 
 TEST(RpcClientTest, CallsWithKey) {
     FakeAgent agent("goodkey");
-    RpcClient client(agent.port(), "goodkey");
+    RpcClient client(agent.port(), agent.certSha256(), "goodkey");
     auto result = client.call("window.list");
     EXPECT_EQ(result["windows"][0]["title"].asString(), "Fake");
 }
 
 TEST(RpcClientTest, SeveralRequestsShareTheConnection) {
     FakeAgent agent("goodkey");
-    RpcClient client(agent.port(), "goodkey");
+    RpcClient client(agent.port(), agent.certSha256(), "goodkey");
     auto results = client.callSequence({ { "window.list", {} }, { "view.tree", AJson { { "depth", 4 } } } });
     ASSERT_EQ(results.size(), 2u);
     EXPECT_EQ(results[1]["echoDepth"].asInt(), 4);
@@ -73,7 +74,7 @@ TEST(RpcClientTest, SeveralRequestsShareTheConnection) {
 
 TEST(RpcClientTest, ErrorsCarryCodeAndHint) {
     FakeAgent agent("goodkey");
-    RpcClient client(agent.port(), "goodkey");
+    RpcClient client(agent.port(), agent.certSha256(), "goodkey");
     try {
         client.call("fail");
         FAIL();
@@ -85,7 +86,7 @@ TEST(RpcClientTest, ErrorsCarryCodeAndHint) {
 
 TEST(RpcClientTest, UnauthorizedConnectionCanOnlyPair) {
     FakeAgent agent;
-    RpcClient client(agent.port(), "");
+    RpcClient client(agent.port(), agent.certSha256(), "");
     try {
         client.call("window.list");
         FAIL();
@@ -95,14 +96,41 @@ TEST(RpcClientTest, UnauthorizedConnectionCanOnlyPair) {
     EXPECT_TRUE(client.call("pair.begin")["pending"].asBool());
 }
 
+TEST(RpcClientTest, WrongCertificateIsRejected) {
+    FakeAgent agent("goodkey");
+    FakeAgent other;
+    try {
+        RpcClient(agent.port(), other.certSha256(), "goodkey").call("window.list");
+        FAIL();
+    } catch (const RpcError& e) {
+        EXPECT_NE(e.getMessage().find("secure connection failed"), AString::NPOS);
+    }
+}
+
+TEST(RpcClientTest, RefusesAgentWithoutPinnedWss) {
+    AppInfo app;
+    app.pid = 1;
+    app.port = 1;
+    EXPECT_THROW(RpcClient::forApp(app, "k"), RpcError);
+    app.scheme = "ws";
+    app.certSha256 = AString(64, 'a');
+    EXPECT_THROW(RpcClient::forApp(app, "k"), RpcError);
+    app.scheme = "wss";
+    EXPECT_NO_THROW(RpcClient::forApp(app, "k"));
+    app.certSha256 = "abcd";
+    EXPECT_THROW(RpcClient::forApp(app, "k"), RpcError);
+}
+
 TEST(RpcClientTest, ConnectionToNothingFails) {
     // a port nobody listens to: the fake agent is gone
     std::uint16_t port;
+    AString cert;
     {
         FakeAgent agent;
         port = agent.port();
+        cert = agent.certSha256();
     }
-    EXPECT_THROW(RpcClient(port, "k").call("window.list", {}, std::chrono::seconds(5)), RpcError);
+    EXPECT_THROW(RpcClient(port, cert, "k").call("window.list", {}, std::chrono::seconds(5)), RpcError);
 }
 
 TEST(CliTest, ListShowsPairedFlagAndPrunesDeadApps) {
@@ -127,7 +155,7 @@ TEST(CliTest, PairingFlow) {
     FakeAgent agent;
     cli::Directories d { dir / "apps", dir / "keys" };
     const auto pid = AProcess::self()->getPid();
-    writeDiscovery(d.discovery, pid, agent.port());
+    writeDiscovery(d.discovery, pid, agent.port(), agent.certSha256());
     const AString pidText = AString::number(pid);
 
     // not paired yet: a command is refused locally

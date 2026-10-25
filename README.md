@@ -36,6 +36,14 @@ Applications started with `launch` get a key through `AUI_REMOTE_KEY` and need n
 
 Applications are discovered through `~/.aui/remote/<pid>.json`; files of dead processes are deleted by `list`.
 
+### Transport
+
+The agent speaks JSON-RPC 2.0 over `wss://127.0.0.1:<port>/?key=<key>` with a self-signed certificate. The discovery
+file carries `scheme` (`wss`) and `certSha256`; the client connects only if the SHA-256 of the presented certificate
+equals `certSha256` (no CA chain is verified). Agents whose discovery file lacks either are refused. The client is
+implemented on `ATlsSession` (aui::crypt) over `ATcpSocket` with a hand-written WebSocket handshake and the frame codec of
+aui::curl, because `AWebsocket` can't pin certificates.
+
 ## Building
 
 ```bash
@@ -53,7 +61,8 @@ cmake -B build -GNinja -DAUI_LOCAL_PATH=$HOME/CLionProjects/aui
 In this mode AUI is imported with `add_subdirectory`, so the AUI tests are built into `Tests` as well. Drop the flag (and
 bump `AUI_VERSION`) to return to a released AUI.
 
-Needs an AUI that has `AWebsocket` (aui::curl). The tests also use `AWebsocketServer` as a stand-in for the agent.
+Needs an AUI with `ATlsSession` (aui::crypt) and the WebSocket frame codec of aui::curl. The tests use `AWebsocketServer` with a
+self-signed `ATlsIdentity` as a stand-in for the agent.
 
 ## Claude Code skill
 

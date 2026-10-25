@@ -1,10 +1,18 @@
 #include "RpcClient.h"
 
-#include <condition_variable>
-#include <mutex>
-#include <thread>
+#include <random>
 
-#include <AUI/Curl/AWebsocket.h>
+#if !AUI_PLATFORM_WIN
+#include <signal.h>
+#endif
+
+#include <AUI/Crypt/ATlsSession.h>
+#include <AUI/Curl/Detail/WebsocketFrame.h>
+#include <AUI/Network/AInet4Address.h>
+#include <AUI/Network/ATcpSocket.h>
+
+using namespace aui::websocket;
+using namespace std::chrono_literals;
 
 namespace aui_remote {
 
@@ -18,8 +26,18 @@ AJson RpcError::toJson() const {
     return result;
 }
 
-AString RpcClient::url() const {
-    AString result = "ws://127.0.0.1:{}/"_format(mPort);
+RpcClient RpcClient::forApp(const AppInfo& app, AString key) {
+    if (!app.isSupported()) {
+        throw RpcError(
+            rpc_code::CLIENT_ERROR, "{} does not offer a pinned wss connection"_format(app.displayName()),
+            AJson { { "hint", "the discovery file needs scheme \"wss\" and certSha256; rebuild the application with a "
+                              "newer aui::dev_extras" } });
+    }
+    return RpcClient(app.port, app.certSha256, std::move(key));
+}
+
+AString RpcClient::target() const {
+    AString result = "/";
     if (!mKey.empty()) {
         result += "?key=" + mKey;
     }
@@ -28,134 +46,195 @@ AString RpcClient::url() const {
 
 namespace {
 
-struct Session {
-    AVector<RpcRequest> requests;
-    AVector<AJson> results;
-    std::size_t nextToSend = 0;
-
-    std::mutex mutex;
-    std::condition_variable cv;
-    bool done = false;
-    AOptional<RpcError> error;
-    _<AWebsocket> websocket;
-
-    void finish(AOptional<RpcError> e = std::nullopt) {
-        std::unique_lock lock(mutex);
-        if (done) {
-            return;
+AByteBuffer fromHex(const AString& hex) {
+    AByteBuffer result;
+    auto digit = [](char c) -> int {
+        if (c >= '0' && c <= '9') return c - '0';
+        if (c >= 'a' && c <= 'f') return c - 'a' + 10;
+        if (c >= 'A' && c <= 'F') return c - 'A' + 10;
+        return -1;
+    };
+    for (std::size_t i = 0; i + 1 < hex.size(); i += 2) {
+        const int hi = digit(hex[i]);
+        const int lo = digit(hex[i + 1]);
+        if (hi < 0 || lo < 0) {
+            throw RpcError(rpc_code::CLIENT_ERROR, "certSha256 is not a hex string");
         }
-        done = true;
-        error = std::move(e);
-        if (websocket) {
-            websocket->close();
-        }
-        cv.notify_all();
+        const char byte = char(hi * 16 + lo);
+        result.write(&byte, 1);
     }
+    return result;
+}
 
-    void sendNext(AWebsocket& ws) {
-        const auto& request = requests[nextToSend];
-        AJson json = AJson::Object {};
-        json["jsonrpc"] = "2.0";
-        json["id"] = int(nextToSend + 1);
-        json["method"] = request.method;
-        if (!request.params.isEmpty() && !request.params.isNull()) {
-            json["params"] = request.params;
-        }
-        ws.writeText(AJson::toString(json));
-    }
+/// One blocking connection: TLS pinned to a fingerprint, HTTP upgrade, masked frames.
+class Connection {
+public:
+    Connection(std::uint16_t port, const AString& certSha256, const AString& target,
+               std::chrono::steady_clock::time_point deadline)
+      : mSocket(AInet4Address::fromString("127.0.0.1", port)), mDecoder(false, 1 << 28), mDeadline(deadline) {
+        mSocket.setTimeout(std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now()));
+        ATlsTransport transport {
+            [this](std::chrono::milliseconds t) { return mSocket.waitForRead(t); },
+            [this](char* dst, std::size_t size) { return mSocket.read(dst, size); },
+            [this](const char* src, std::size_t size) { mSocket.write(src, size); },
+        };
+        ATlsSession::ClientOptions options;
+        options.expectedFingerprint = fromHex(certSha256);
+        mTls = ATlsSession::connect(std::move(transport), options, 5s);
 
-    void onMessage(AWebsocket& ws, AByteBufferView payload) {
-        AJson json;
-        try {
-            json = AJson::fromString(AString::fromUtf8(payload));
-        } catch (const AException&) {
-            return;   // not a JSON-RPC message; i.e., a pong
+        std::random_device device;
+        char nonce[16];
+        for (auto& c : nonce) {
+            c = char(device());
         }
-        if (!json.isObject()) {
-            return;
-        }
-        auto id = json.containsOpt("id");
-        if (!id || !id->isInt() || id->asInt() != int(nextToSend + 1)) {
-            return;   // notification or someone else's answer
-        }
-        if (auto e = json.containsOpt("error"); e && e->isObject()) {
-            AJson data;
-            if (auto d = e->containsOpt("data")) {
-                data = *d;
+        std::string request = "GET " + target.toStdString() +
+                              " HTTP/1.1\r\nHost: 127.0.0.1\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+                              "Sec-WebSocket-Version: 13\r\nSec-WebSocket-Key: " +
+                              AByteBuffer(nonce, sizeof(nonce)).toBase64String().toStdString() + "\r\n\r\n";
+        mTls->write(request.data(), request.size());
+
+        std::string head;
+        char c;
+        while (head.find("\r\n\r\n") == std::string::npos) {
+            if (mTls->read(&c, 1) == 0) {
+                break;
             }
-            finish(RpcError(
-                e->containsOpt("code") ? (*e)["code"].asInt() : rpc_code::CLIENT_ERROR,
-                e->containsOpt("message") ? (*e)["message"].asString() : AString("unknown error"), std::move(data)));
-            return;
+            head += c;
         }
-        if (auto r = json.containsOpt("result")) {
-            results << *r;
-        } else {
-            results << AJson(nullptr);
+        if (head.rfind("HTTP/1.1 101", 0) != 0) {
+            const auto line = head.substr(0, head.find("\r\n"));
+            throw RpcError(
+                rpc_code::CLIENT_ERROR, "the application refused the connection: " + AString::fromUtf8(line),
+                AJson { { "hint", "the key is missing or wrong; run `aui-remote cli pair <pid>`" } });
         }
-        ++nextToSend;
-        if (nextToSend == requests.size()) {
-            finish();
-        } else {
-            sendNext(ws);
+    }
+
+    ~Connection() {
+        try {
+            send(Opcode::CLOSE, {});
+        } catch (...) {
         }
+        if (mTls) {
+            mTls->close();
+        }
+    }
+
+    void sendText(const AString& text) { send(Opcode::TEXT, AByteBufferView(text.data(), text.size())); }
+
+    /// @return the next text message
+    AString readText() {
+        for (;;) {
+            while (auto frame = mDecoder.next()) {
+                switch (frame->opcode) {
+                    case Opcode::TEXT:
+                    case Opcode::BINARY:
+                        return AString::fromUtf8(frame->payload);
+                    case Opcode::PING:
+                        send(Opcode::PONG, frame->payload);
+                        break;
+                    case Opcode::CLOSE:
+                        throw RpcError(rpc_code::CLIENT_ERROR, "the application closed the connection");
+                    default:
+                        break;
+                }
+            }
+            const auto left = mDeadline - std::chrono::steady_clock::now();
+            if (left <= 0ms || !mSocket.waitForRead(std::chrono::duration_cast<std::chrono::milliseconds>(left))) {
+                throw RpcError(
+                    rpc_code::CLIENT_ERROR, "timeout waiting for the application",
+                    AJson { { "hint", "the application is busy or hung; try again or raise the timeout" } });
+            }
+            char buf[4096];
+            const auto n = mTls->read(buf, sizeof(buf));
+            if (n == 0) {
+                throw RpcError(rpc_code::CLIENT_ERROR, "the application closed the connection");
+            }
+            mDecoder.feed(AByteBufferView(buf, n));
+        }
+    }
+
+private:
+    ATcpSocket mSocket;
+    _<ATlsSession> mTls;
+    FrameDecoder mDecoder;
+    std::chrono::steady_clock::time_point mDeadline;
+
+    void send(Opcode opcode, AByteBufferView payload) {
+        std::random_device device;
+        Mask mask;
+        for (auto& m : mask) {
+            m = std::uint8_t(device());
+        }
+        auto frame = encodeFrame(opcode, payload, true, mask);
+        mTls->write(frame.data(), frame.size());
     }
 };
 
 }   // namespace
 
 AVector<AJson> RpcClient::callSequence(const AVector<RpcRequest>& requests, std::chrono::milliseconds timeout) const {
-    auto session = std::make_shared<Session>();
-    session->requests = requests;
-    const auto urlString = url();
+#if !AUI_PLATFORM_WIN
+    // a vanished peer must be an error of the call, not the death of the process
+    ::signal(SIGPIPE, SIG_IGN);
+#endif
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    AVector<AJson> results;
+    try {
+        Connection connection(mPort, mCertSha256, target(), deadline);
+        for (std::size_t i = 0; i < requests.size(); ++i) {
+            const auto& request = requests[i];
+            AJson json = AJson::Object {};
+            json["jsonrpc"] = "2.0";
+            json["id"] = int(i + 1);
+            json["method"] = request.method;
+            if (!request.params.isEmpty() && !request.params.isNull()) {
+                json["params"] = request.params;
+            }
+            connection.sendText(AJson::toString(json));
 
-    // AWebsocket::run blocks and delivers its signals on the thread it runs on, so it gets a thread of its own.
-    std::thread worker([session, urlString] {
-        try {
-            auto ws = _new<AWebsocket>(urlString);
-            {
-                std::unique_lock lock(session->mutex);
-                if (session->done) {
-                    return;
+            for (;;) {
+                AJson answer;
+                try {
+                    answer = AJson::fromString(connection.readText());
+                } catch (const AJsonException&) {
+                    continue;
                 }
-                session->websocket = ws;
-            }
-            AObject::connect(ws->connected, ws, [session, &ws = *ws] { session->sendNext(ws); });
-            AObject::connect(ws->received, ws, [session, &ws = *ws](AByteBufferView payload) {
-                session->onMessage(ws, payload);
-            });
-            AObject::connect(ws->websocketClosed, ws, [session](const AString&) {
-                session->finish(RpcError(rpc_code::CLIENT_ERROR, "the application closed the connection"));
-            });
-            ws->run();
-            session->finish(RpcError(rpc_code::CLIENT_ERROR, "the connection was closed"));
-        } catch (const AException& e) {
-            session->finish(RpcError(
-                rpc_code::CLIENT_ERROR, "can't talk to the application: " + e.getMessage(),
-                AJson { { "hint", "check that the application is running and the key is valid (pair first)" } }));
-        }
-        std::unique_lock lock(session->mutex);
-        session->websocket = nullptr;
-    });
-
-    {
-        std::unique_lock lock(session->mutex);
-        if (!session->cv.wait_for(lock, timeout, [&] { return session->done; })) {
-            session->done = true;
-            session->error = RpcError(
-                rpc_code::CLIENT_ERROR, "timeout waiting for the answer to " + requests[session->nextToSend].method,
-                AJson { { "hint", "the application is busy or hung; try again or raise the timeout" } });
-            if (session->websocket) {
-                session->websocket->close();
+                if (!answer.isObject()) {
+                    continue;
+                }
+                auto id = answer.containsOpt("id");
+                if (!id || !id->isInt() || id->asInt() != int(i + 1)) {
+                    continue;   // notification or someone else's answer
+                }
+                if (auto e = answer.containsOpt("error"); e && e->isObject()) {
+                    AJson data;
+                    if (auto d = e->containsOpt("data")) {
+                        data = *d;
+                    }
+                    throw RpcError(
+                        e->containsOpt("code") ? (*e)["code"].asInt() : rpc_code::CLIENT_ERROR,
+                        e->containsOpt("message") ? (*e)["message"].asString() : AString("unknown error"),
+                        std::move(data));
+                }
+                results << (answer.containsOpt("result") ? answer["result"] : AJson(nullptr));
+                break;
             }
         }
+    } catch (const RpcError&) {
+        throw;
+    } catch (const ProtocolError& e) {
+        throw RpcError(rpc_code::CLIENT_ERROR, AString("protocol error: ") + e.what());
+    } catch (const ATlsException& e) {
+        throw RpcError(
+            rpc_code::CLIENT_ERROR, "secure connection failed: " + e.getMessage(),
+            AJson { { "hint", "the certificate does not match the discovery file; the application may have been "
+                              "restarted or is not the one it claims to be" } });
+    } catch (const AException& e) {
+        throw RpcError(
+            rpc_code::CLIENT_ERROR, "can't talk to the application: " + e.getMessage(),
+            AJson { { "hint", "check that the application is running" } });
     }
-    worker.join();
-
-    if (session->error) {
-        throw *session->error;
-    }
-    return std::move(session->results);
+    return results;
 }
 
 AJson RpcClient::call(AString method, AJson params, std::chrono::milliseconds timeout) const {

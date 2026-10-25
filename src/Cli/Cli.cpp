@@ -28,6 +28,9 @@ AJson toJson(const AppInfo& app, bool paired) {
         { "exe", app.exe },
         { "argv", std::move(argv) },
         { "cwd", app.cwd },
+        { "scheme", app.scheme },
+        { "certSha256", app.certSha256 },
+        { "supported", app.isSupported() },
         { "startedAt", app.startedAt },
         { "paired", paired },
     };
@@ -90,14 +93,14 @@ AJson doPair(const ParsedArgs& args, const Directories& directories) {
     KeyStore store(directories.keys);
     if (auto code = args.get("code")) {
         const auto key = KeyStore::generateKey();
-        auto result = RpcClient(app.port, "").call("pair.confirm", AJson { { "code", *code }, { "key", key } });
+        auto result = RpcClient::forApp(app, "").call("pair.confirm", AJson { { "code", *code }, { "key", key } });
         if (!(result.isObject() && result.containsOpt("paired") && (result)["paired"].asBool())) {
             throw clientError("the application did not confirm the pairing", "call pair again", result);
         }
         store.store(app, key);
         return AJson { { "paired", true }, { "pid", int(app.pid) } };
     }
-    RpcClient(app.port, "").call("pair.begin");
+    RpcClient::forApp(app, "").call("pair.begin");
     note("The window of {} shows a 6-digit code. Finish with: aui-remote cli pair {} --code <code>"_format(
         app.displayName(), app.pid));
     return AJson {
@@ -261,7 +264,7 @@ AJson doRemoteCommand(const ParsedArgs& args, const CommandRequest& request, con
             AJson { { "hint", "run `aui-remote cli pair {}` and enter the code shown by the application"_format(
                                   app.pid) } });
     }
-    return RpcClient(app.port, *key).call(request.method, request.params, request.timeout);
+    return RpcClient::forApp(app, *key).call(request.method, request.params, request.timeout);
 }
 
 }   // namespace

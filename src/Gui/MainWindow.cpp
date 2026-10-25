@@ -189,7 +189,7 @@ void MainWindow::inspect() {
         AString error;
         _<AImage> image;
         try {
-            RpcClient client(app->port, *key);
+            auto client = RpcClient::forApp(*app, *key);
             const auto json = client.call("view.tree", AJson { { "depth", 12 } });
             renderTree(json, 0, tree);
             const auto shot = client.call("screenshot");

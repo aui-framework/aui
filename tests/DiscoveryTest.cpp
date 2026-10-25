@@ -16,7 +16,7 @@ void write(const APath& file, const std::string& content) {
 
 std::string json(int pid, int port) {
     return R"({"protocol":1,"pid":)" + std::to_string(pid) + R"(,"port":)" + std::to_string(port) +
-           R"(,"exe":"/usr/bin/app","argv":["/usr/bin/app","--x"],"cwd":"/home","startedAt":"2026-10-25T10:00:00Z"})";
+           R"(,"scheme":"wss","certSha256":")" + std::string(64, 'A') + R"(","exe":"/usr/bin/app","argv":["/usr/bin/app","--x"],"cwd":"/home","startedAt":"2026-10-25T10:00:00Z"})";
 }
 }   // namespace
 
@@ -32,6 +32,9 @@ TEST(DiscoveryTest, ParsesDiscoveryFile) {
     EXPECT_EQ(apps[0].cwd, "/home");
     EXPECT_EQ(apps[0].startedAt, "2026-10-25T10:00:00Z");
     EXPECT_EQ(apps[0].displayName(), "app (10)");
+    EXPECT_EQ(apps[0].scheme, "wss");
+    EXPECT_EQ(apps[0].certSha256, AString(64, 'a'));   // normalized to lowercase
+    EXPECT_TRUE(apps[0].isSupported());
 }
 
 TEST(DiscoveryTest, StartedAtMayBeANumber) {

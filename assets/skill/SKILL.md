@@ -9,7 +9,9 @@ description: Run, look at, click and type into a running AUI application (screen
 prints one JSON object on the last line of stdout; on failure the exit code is non-zero and the object is
 `{"error":{"code","message","data":{"hint"}}}`. Read `data.hint`.
 
-The application must link `aui::dev_extras` (development builds only, never ship it).
+The application must link `aui::dev_extras` (development builds only, never ship it). The connection is `wss` to
+127.0.0.1 with the certificate pinned from the app's discovery file; `list` shows `supported: false` for apps that
+don't offer it.
 
 ## Start the application
 

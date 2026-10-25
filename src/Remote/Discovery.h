@@ -23,9 +23,24 @@ struct AppInfo {
     AString cwd;
 
     /**
+     * @brief `wss` for every supported agent.
+     */
+    AString scheme;
+
+    /**
+     * @brief SHA-256 of the DER certificate of the agent, lowercase hex. The agent is trusted only if it presents it.
+     */
+    AString certSha256;
+
+    /**
      * @brief Start time as written by the agent. Together with the pid it identifies the process.
      */
     AString startedAt;
+
+    /**
+     * @return whether the discovery file describes an agent this client can talk to (wss with a pinned certificate)
+     */
+    [[nodiscard]] bool isSupported() const;
 
     /**
      * @return exe file name and the pid, i.e., "myapp (1234)"

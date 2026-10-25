@@ -16,17 +16,17 @@ include(aui.boot.cmake)
 
 if (AUI_LOCAL_PATH)
     auib_import(aui ${AUI_LOCAL_PATH} ADD_SUBDIRECTORY
-            COMPONENTS core views curl json image
+            COMPONENTS core views curl json image crypt network
             VERSION local) # any version that is not cached by AUI.Boot as a download
 else ()
     auib_import(aui https://github.com/aui-framework/aui
-            COMPONENTS core views curl json image
+            COMPONENTS core views curl json image crypt network
             VERSION ${AUI_VERSION})
 endif ()
 
 aui_executable(${PROJECT_NAME})
 
-aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views aui::curl aui::json aui::image)
+aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views aui::curl aui::json aui::image aui::crypt aui::network)
 
 aui_compile_assets(${PROJECT_NAME})
 

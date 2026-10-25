@@ -4,6 +4,7 @@
 #include <mutex>
 #include <set>
 
+#include <AUI/Crypt/ATlsIdentity.h>
 #include <AUI/Curl/AWebsocketServer.h>
 #include <AUI/Json/AJson.h>
 
@@ -22,10 +23,16 @@ public:
     explicit FakeAgent(AString preAuthorizedKey = {});
 
     [[nodiscard]] std::uint16_t port() const noexcept { return mServer->port(); }
+    /**
+     * @return SHA-256 of the certificate of the agent, hex; what the discovery file carries
+     */
+    [[nodiscard]] AString certSha256() const { return mIdentity->fingerprintHex(); }
+
     [[nodiscard]] bool hasKey(const AString& key) const;
     [[nodiscard]] int pairBeginCalls() const noexcept { return mPairBegin; }
 
 private:
+    _<ATlsIdentity> mIdentity = ATlsIdentity::generateSelfSigned("aui-remote-test");
     std::unique_ptr<AWebsocketServer> mServer;
     mutable std::mutex mMutex;
     std::set<std::string> mKeys;

@@ -46,6 +46,8 @@ AString AppInfo::displayName() const {
     return "{} ({})"_format(name.empty() ? AString("?") : AString(name), pid);
 }
 
+bool AppInfo::isSupported() const { return scheme == "wss" && certSha256.length() == 64; }
+
 AppInfo AppInfo::fromJson(const AJson& json) {
     AppInfo info;
     if (auto v = json.containsOpt("protocol")) {
@@ -61,6 +63,12 @@ AppInfo AppInfo::fromJson(const AJson& json) {
     }
     if (auto v = json.containsOpt("cwd"); v && v->isString()) {
         info.cwd = v->asString();
+    }
+    if (auto v = json.containsOpt("scheme"); v && v->isString()) {
+        info.scheme = v->asString();
+    }
+    if (auto v = json.containsOpt("certSha256"); v && v->isString()) {
+        info.certSha256 = AString(v->asString().lowercase());
     }
     if (auto v = json.containsOpt("startedAt")) {
         info.startedAt = scalarToString(*v);

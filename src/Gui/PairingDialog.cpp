@@ -53,7 +53,7 @@ void PairingDialog::begin() {
     mAsync << AUI_THREADPOOL {
         AString status;
         try {
-            RpcClient(mApp.port, "").call("pair.begin");
+            RpcClient::forApp(mApp, "").call("pair.begin");
             status = "Waiting for the code.";
         } catch (const RpcError& e) {
             status = "Can't start pairing: " + e.getMessage();
@@ -75,7 +75,7 @@ void PairingDialog::confirm() {
         bool ok = false;
         bool needNewCode = false;
         try {
-            RpcClient(mApp.port, "").call("pair.confirm", AJson { { "code", code }, { "key", key } });
+            RpcClient::forApp(mApp, "").call("pair.confirm", AJson { { "code", code }, { "key", key } });
             KeyStore().store(mApp, key);
             ok = true;
         } catch (const RpcError& e) {

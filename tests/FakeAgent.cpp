@@ -9,6 +9,7 @@ FakeAgent::FakeAgent(AString preAuthorizedKey) {
         mKeys.insert(preAuthorizedKey.toStdString());
     }
     AWebsocketServer::Config config;
+    config.tls = mIdentity;
     config.onConnected = [this](_<AWebsocketServer::Connection> connection) {
         auto* c = connection.get();
         bool authorized = false;
