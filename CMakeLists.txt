@@ -68,6 +68,9 @@ if(AUIB_COMPONENTS)
     list(APPEND AUIB_COMPONENTS core)
     list(APPEND AUIB_COMPONENTS crypt) # toolbox
     list(APPEND AUIB_COMPONENTS image) # toolbox
+    if (curl IN_LIST AUIB_COMPONENTS)
+        list(APPEND AUIB_COMPONENTS network) # AWebsocketServer
+    endif()
     if (views IN_LIST AUIB_COMPONENTS)
         list(APPEND AUIB_COMPONENTS xml)
         if (NOT CMAKE_CROSSCOMPILING)

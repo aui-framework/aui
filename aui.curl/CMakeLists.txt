@@ -24,4 +24,4 @@ aui_module(aui.curl EXPORT aui WHOLEARCHIVE)
 aui_enable_tests(aui.curl)
 aui_link(aui.curl PUBLIC aui::core aui::json)
 
-aui_link(aui.curl PRIVATE CURL::libcurl aui::crypt)
+aui_link(aui.curl PRIVATE CURL::libcurl aui::crypt aui::network)

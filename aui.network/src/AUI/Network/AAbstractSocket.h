@@ -62,6 +62,12 @@ protected:
     void bind(uint16_t bindingPort);
 
     /**
+     * @brief Binds socket to the given address and port. Port 0 lets the system pick a free port; the picked port is
+     * available through getAddress() afterwards.
+     */
+    void bind(const AInet4Address& bindingAddress);
+
+    /**
      * @brief Creates socket handle.
      */
     virtual int createSocket() = 0;

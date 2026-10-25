@@ -119,22 +119,35 @@ void AAbstractSocket::handleError(const AString& message, [[maybe_unused]] int c
 
 void AAbstractSocket::bind(uint16_t bindingPort)
 {
-	mSelfAddress = AInet4Address(0u, bindingPort);
+	bind(AInet4Address(0u, bindingPort));
+}
+
+void AAbstractSocket::bind(const AInet4Address& bindingAddress)
+{
+	mSelfAddress = bindingAddress;
 	auto addr = mSelfAddress.addr();
+	const auto portString = bindingAddress.toString();
 	for (unsigned i = 5; i >= 0; --i) {
         const int res = ::bind(getHandle(), reinterpret_cast<const sockaddr*>(&addr), sizeof(sockaddr_in));
         if (res < 0) {
             if (i == 0) {
-                ALogger::err("failed to bind to port: " + AString::number(bindingPort) + ", giving up.");
-                handleError("failed to bind to port: " + AString::number(bindingPort), res);
+                ALogger::err("failed to bind to: " + portString + ", giving up.");
+                handleError("failed to bind to: " + portString, res);
             } else {
-                ALogger::err("failed to bind to port: " + AString::number(bindingPort) + ", trying again");
+                ALogger::err("failed to bind to: " + portString + ", trying again");
                 AThread::sleep(std::chrono::seconds(3));
             }
         } else {
             break;
         }
     }
+
+	// the actual port is assigned by the system when binding to port 0.
+	sockaddr_in actual {};
+	socklen_t actualLength = sizeof(actual);
+	if (getsockname(getHandle(), reinterpret_cast<sockaddr*>(&actual), &actualLength) == 0) {
+		mSelfAddress = AInet4Address(actual);
+	}
 }
 
 AAbstractSocket::AAbstractSocket()

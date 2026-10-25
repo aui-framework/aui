@@ -50,11 +50,14 @@ size_t ATcpSocket::read(char* dst, size_t size)
 
 void ATcpSocket::write(const char* buffer, size_t size)
 {
-	int res = send(getHandle(), buffer, size, 0);
-	if (res < 0) {
-		handleError("socket write error", res);
+	while (size > 0) {
+		int res = send(getHandle(), buffer, size, 0);
+		if (res < 0) {
+			handleError("socket write error", res);
+		}
+		buffer += res;
+		size -= static_cast<size_t>(res);
 	}
-	assert(res == size);
 }
 
 int ATcpSocket::createSocket()
