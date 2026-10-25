@@ -170,6 +170,7 @@ nav:
 
   - 'Tools & Debugging':
     - devtools.md
+    - agentic-development.md
     - 'Hot Code Reload': ahotcodereload.md
     - ide-plugins.md
     - troubleshoot-list.md
