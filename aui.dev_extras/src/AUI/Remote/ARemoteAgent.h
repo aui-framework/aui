@@ -11,12 +11,15 @@
 
 #pragma once
 
+#include <functional>
 #include <memory>
 
 #include "AUI/Common/AOptional.h"
 #include "AUI/Common/AString.h"
 #include "AUI/Common/SharedPtrTypes.h"
 #include "AUI/IO/APath.h"
+#include "AUI/Json/AJson.h"
+#include "AUI/Thread/AFuture.h"
 #include "AUI/api.h"
 
 namespace aui::remote {
@@ -97,6 +100,27 @@ public:
      * @return path to the discovery file; empty if it was not written
      */
     [[nodiscard]] const APath& discoveryFile() const noexcept;
+
+    /**
+     * @brief Exposes an application specific function to the client (`fn.list`, `fn.call`).
+     * @param name name the client calls the function by
+     * @param description what it does and what arguments it expects; shown by `fn.list`
+     * @param handler called on the UI thread with the `arguments` of the call; the result of the future is the
+     *        result of the call
+     * @details
+     * Useful to put the application in a state that is hard to reach through the UI, i.e., to log in or to open a
+     * document.
+     *
+     * ```cpp
+     * ARemoteAgent::start()->registerFunction("openDocument", "arguments: { path: string }", [](const AJson& args) {
+     *     openDocument(args["path"].asString());
+     *     AFuture<AJson> result;
+     *     result.supplyValue(AJson { { "ok", true } });
+     *     return result;
+     * });
+     * ```
+     */
+    void registerFunction(AString name, AString description, std::function<AFuture<AJson>(const AJson&)> handler);
 
     /**
      * @return the methods of the protocol

@@ -11,6 +11,9 @@
 
 #pragma once
 
+#include <functional>
+#include <mutex>
+
 #include "JsonRpc.h"
 #include "RefTable.h"
 
@@ -47,5 +50,36 @@ void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
  * `wait.idle`, `wait.view`.
  */
 void registerWaitMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
+
+/**
+ * @brief Functions the application exposes to the client with ARemoteAgent::registerFunction.
+ */
+class FunctionRegistry {
+public:
+    using Handler = std::function<AFuture<AJson>(const AJson& arguments)>;
+
+    void add(AString name, AString description, Handler handler);
+
+    struct Entry {
+        AString description;
+        Handler handler;
+    };
+    [[nodiscard]] AOptional<Entry> find(const AString& name) const;
+    [[nodiscard]] AMap<AString, AString> descriptions() const;
+
+private:
+    mutable std::mutex mMutex;
+    AMap<AString, Entry> mEntries;
+};
+
+/**
+ * `fn.list`, `fn.call`.
+ */
+void registerFunctionMethods(JsonRpcDispatcher& dispatcher, FunctionRegistry& functions);
+
+/**
+ * `diag.log`: the recent log entries.
+ */
+void registerDiagnosticsMethods(JsonRpcDispatcher& dispatcher);
 
 }   // namespace aui::remote

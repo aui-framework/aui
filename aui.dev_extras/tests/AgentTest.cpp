@@ -358,6 +358,41 @@ TEST_F(AgentTest, WaitViewAppearsAndDisappears) {
     ok("wait.view", AJson { { "text", "later" }, { "state", "gone" } });
 }
 
+TEST_F(AgentTest, RegisteredFunctionsAreCallable) {
+    agent()->registerFunction("echo", "returns its arguments", [](const AJson& args) {
+        AFuture<AJson> result;
+        result.supplyValue(AJson { { "echo", args["value"] } });
+        return result;
+    });
+    agent()->registerFunction("fail", "always fails", [](const AJson&) {
+        AFuture<AJson> result;
+        result.supplyException(std::make_exception_ptr(AException("boom")));
+        return result;
+    });
+    auto list = ok("fn.list");
+    bool found = false;
+    for (const auto& f : list.asArray()) {
+        found |= f["name"].asString() == "echo";
+    }
+    EXPECT_TRUE(found);
+    EXPECT_EQ(ok("fn.call", AJson { { "name", "echo" }, { "arguments", AJson { { "value", 42 } } } })["echo"].asInt(), 42);
+    EXPECT_EQ(errorCode("fn.call", AJson { { "name", "fail" } }), rpc_code::INTERNAL_ERROR);
+    EXPECT_EQ(errorCode("fn.call", AJson { { "name", "nope" } }), rpc_code::UNKNOWN_FUNCTION);
+}
+
+TEST_F(AgentTest, LogIsAvailable) {
+    ALogger::info("AgentTestTag") << "hello from the test";
+    auto result = ok("diag.log", AJson { { "limit", 50 } });
+    bool found = false;
+    for (const auto& e : result["entries"].asArray()) {
+        found |= e["message"].asString().contains("hello from the test") && e["tag"].asString() == "AgentTestTag";
+    }
+    EXPECT_TRUE(found) << AJson::toString(result);
+    const auto next = result["next"].asInt();
+    EXPECT_EQ(ok("diag.log", AJson { { "since", next } })["entries"].asArray().size(), 0u);
+    EXPECT_EQ(errorCode("diag.log", AJson { { "level", "loud" } }), rpc_code::INVALID_PARAMS);
+}
+
 TEST_F(AgentTest, ListedWindowIdWorks) {
     auto window = showWindow(Label { "hi" });
     auto windows = ok("window.list");

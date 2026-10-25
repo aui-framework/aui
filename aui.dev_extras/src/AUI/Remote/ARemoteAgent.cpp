@@ -69,6 +69,7 @@ struct ARemoteAgent::Impl {
     AString token;
     APath discoveryFile;
     RefTable refs;
+    FunctionRegistry functions;
     JsonRpcDispatcher dispatcher;
     std::unique_ptr<AWebsocketServer> server;
 };
@@ -94,6 +95,8 @@ ARemoteAgent::ARemoteAgent(Options options) : mImpl(std::make_unique<Impl>()) {
     registerScreenshotMethods(dispatcher, impl.refs);
     registerInputMethods(dispatcher, impl.refs);
     registerWaitMethods(dispatcher, impl.refs);
+    registerFunctionMethods(dispatcher, impl.functions);
+    registerDiagnosticsMethods(dispatcher);
 
     AWebsocketServer::Config config;
     config.bindAddress = impl.options.bindAddress;
@@ -188,6 +191,11 @@ _<ARemoteAgent> ARemoteAgent::start(Options options) {
         agent = aui::ptr::manage_shared(new ARemoteAgent(std::move(options)));
     }
     return agent;
+}
+
+void ARemoteAgent::registerFunction(AString name, AString description,
+                                    std::function<AFuture<AJson>(const AJson&)> handler) {
+    mImpl->functions.add(std::move(name), std::move(description), std::move(handler));
 }
 
 _<ARemoteAgent> ARemoteAgent::start() { return start(Options {}); }
