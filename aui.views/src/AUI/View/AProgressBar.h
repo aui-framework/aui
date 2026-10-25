@@ -67,6 +67,8 @@ public:
     };
     ~AProgressBar() override;
 
+    DebugInspectorInfo debugInspectorInfo() override;
+
     /**
      * Set progress bar value.
      * @param value progress value, where `0.0f` = 0%, `1.0f` = 100%

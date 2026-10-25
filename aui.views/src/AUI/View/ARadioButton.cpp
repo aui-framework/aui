@@ -77,3 +77,10 @@ void ARadioButton::Group::setSelectedId(int id) {
     mSelectedId = id;
     mButtons[id]->setChecked(true);
 }
+
+IInspectable::DebugInspectorInfo ARadioButton::debugInspectorInfo() {
+    auto info = AViewContainerBase::debugInspectorInfo();
+    const bool checked = mCircle->checked;
+    info.push_back({ "checked", checked });
+    return info;
+}
