@@ -49,6 +49,7 @@ void aui_wsa_init()
 #else
 
 #include <sys/socket.h>
+#include <poll.h>
 #include <netinet/in.h>
 #include <cstring>
 #include <netdb.h>
@@ -174,6 +175,33 @@ void AAbstractSocket::close()
 	}
 }
 
+
+bool AAbstractSocket::waitForRead(std::chrono::milliseconds timeout) {
+    if (mHandle == 0) {
+        throw AIOException("socket is closed");
+    }
+#if AUI_PLATFORM_WIN
+    WSAPOLLFD fd {};
+    fd.fd = static_cast<SOCKET>(mHandle);
+    fd.events = POLLRDNORM;
+    const int res = WSAPoll(&fd, 1, static_cast<INT>(timeout.count()));
+#else
+    pollfd fd {};
+    fd.fd = mHandle;
+    fd.events = POLLIN;
+    const int res = poll(&fd, 1, static_cast<int>(timeout.count()));
+#endif
+    if (res < 0) {
+        throw AIOException(AString("poll error ") + getErrorString());
+    }
+    if (res == 0) {
+        return false;
+    }
+    if (fd.revents & POLLNVAL) {
+        throw AIOException("socket is closed");
+    }
+    return true;   // readable, or POLLHUP / POLLERR, which a read reports
+}
 
 void AAbstractSocket::setTimeout(std::chrono::milliseconds timeout) {
 #if AUI_PLATFORM_WIN

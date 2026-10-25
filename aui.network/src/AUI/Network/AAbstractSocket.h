@@ -87,5 +87,13 @@ public:
      */
     void setTimeout(std::chrono::milliseconds timeout);
 
+    /**
+     * @brief Waits until a read would not block.
+     * @param timeout how long to wait; zero just checks
+     * @return true if there is data to read, or the peer has closed the connection (read returns 0)
+     * @throws AIOException if the socket is closed or broken
+     */
+    [[nodiscard]] bool waitForRead(std::chrono::milliseconds timeout);
+
     const AInet4Address& getAddress() const { return mSelfAddress; }
 };
