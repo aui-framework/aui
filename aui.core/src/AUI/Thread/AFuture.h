@@ -61,7 +61,7 @@ public:
 };
 
 /**
- * @brief Thrown (as the cause of AInvocationTargetException) into a future by AFuture::timeout() when the timeout has
+ * @brief Thrown (as the cause of AInvocationTargetException) into a future by AFuture::withTimeout() when the timeout has
  * elapsed.
  */
 class ATimeoutException: public AException {
@@ -902,14 +902,14 @@ public:
      *
      * ```cpp
      * try {
-     *   auto reply = co_await sendRequest().timeout(10s);
+     *   auto reply = co_await sendRequest().withTimeout(10s);
      * } catch (const AException&) {
      *   // timed out (or sendRequest failed)
      * }
      * ```
      */
     [[nodiscard]]
-    AFuture timeout(std::chrono::milliseconds duration) const;
+    AFuture withTimeout(std::chrono::milliseconds duration) const;
 };
 
 template<>
@@ -1049,24 +1049,24 @@ public:
      *
      * ```cpp
      * try {
-     *   auto reply = co_await sendRequest().timeout(10s);
+     *   auto reply = co_await sendRequest().withTimeout(10s);
      * } catch (const AException&) {
      *   // timed out (or sendRequest failed)
      * }
      * ```
      */
     [[nodiscard]]
-    AFuture timeout(std::chrono::milliseconds duration) const;
+    AFuture withTimeout(std::chrono::milliseconds duration) const;
 };
 
 template<typename T>
-AFuture<T> AFuture<T>::timeout(std::chrono::milliseconds duration) const {
+AFuture<T> AFuture<T>::withTimeout(std::chrono::milliseconds duration) const {
     AFuture result;
     aui::impl::future::bindTimeout(*this, result, duration);
     return result;
 }
 
-inline AFuture<void> AFuture<void>::timeout(std::chrono::milliseconds duration) const {
+inline AFuture<void> AFuture<void>::withTimeout(std::chrono::milliseconds duration) const {
     AFuture result;
     aui::impl::future::bindTimeout(*this, result, duration);
     return result;

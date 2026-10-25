@@ -221,7 +221,7 @@ TEST(Coroutines, TimeoutFires) {
     bool caught = false;
     async << [](bool& caught) -> AFuture<> {
         try {
-            co_await neverCompletes().timeout(100ms);
+            co_await neverCompletes().withTimeout(100ms);
             ADD_FAILURE() << "should have timed out";
         } catch (const AException& e) {
             caught = isTimeout(e);
@@ -239,7 +239,7 @@ TEST(Coroutines, TimeoutNotFiredValue) {
     IEventLoop::Handle h(&loop);
     int result = 0;
     async << [](int& result) -> AFuture<> {
-        result = co_await longTask().timeout(10s); // longTask takes 500ms
+        result = co_await longTask().withTimeout(10s); // longTask takes 500ms
     }(result);
     while (!async.empty()) {
         loop.iteration();
@@ -253,7 +253,7 @@ TEST(Coroutines, TimeoutNotFiredVoid) {
     IEventLoop::Handle h(&loop);
     bool done = false;
     async << [](bool& done) -> AFuture<> {
-        co_await AThread::asyncSleep(50ms).timeout(10s);
+        co_await AThread::asyncSleep(50ms).withTimeout(10s);
         done = true;
     }(done);
     while (!async.empty()) {
@@ -269,7 +269,7 @@ TEST(Coroutines, TimeoutPropagatesSourceException) {
     bool caught = false;
     async << [](bool& caught) -> AFuture<> {
         try {
-            co_await longTaskException().timeout(10s);
+            co_await longTaskException().withTimeout(10s);
             ADD_FAILURE() << "exception was not propagated";
         } catch (const AException& e) {
             caught = !isTimeout(e);
@@ -284,9 +284,9 @@ TEST(Coroutines, TimeoutPropagatesSourceException) {
 TEST(Coroutines, TimeoutAlreadyCompleted) {
     AFuture<int> source;
     source.supplyValue(322);
-    auto withTimeout = source.timeout(10s);
-    ASSERT_TRUE(withTimeout.hasValue());
-    EXPECT_EQ(*withTimeout, 322);
+    auto guarded = source.withTimeout(10s);
+    ASSERT_TRUE(guarded.hasValue());
+    EXPECT_EQ(*guarded, 322);
 }
 
 TEST(Coroutines, TimeoutCancelsSource) {
@@ -294,15 +294,15 @@ TEST(Coroutines, TimeoutCancelsSource) {
     std::atomic_bool cancelled = false;
     source.onCancel([&] { cancelled = true; });
 
-    auto withTimeout = source.timeout(50ms);
-    source = nullptr; // withTimeout must keep the source alive
+    auto guarded = source.withTimeout(50ms);
+    source = nullptr; // guarded must keep the source alive
     EXPECT_FALSE(cancelled);
 
     auto deadline = std::chrono::steady_clock::now() + 5s;
-    while (!withTimeout.hasResult() && std::chrono::steady_clock::now() < deadline) {
+    while (!guarded.hasResult() && std::chrono::steady_clock::now() < deadline) {
         AThread::sleep(5ms);
     }
-    ASSERT_TRUE(withTimeout.hasException());
+    ASSERT_TRUE(guarded.hasException());
     EXPECT_TRUE(cancelled) << "the timeout must cancel the source so the producer could abort the operation";
 }
 
@@ -311,7 +311,7 @@ TEST(Coroutines, TimeoutResultDestroyedCancelsSource) {
     bool cancelled = false;
     source.onCancel([&] { cancelled = true; });
     {
-        auto withTimeout = source.timeout(10s);
+        auto guarded = source.withTimeout(10s);
     }
     EXPECT_TRUE(cancelled);
 }
@@ -323,7 +323,7 @@ TEST(Coroutines, TimeoutCoroutineFrameCleanedUp) {
     IEventLoop::Handle h(&loop);
     async << [](_<int> testArgumentCapture) -> AFuture<> {
         try {
-            co_await neverCompletes().timeout(50ms);
+            co_await neverCompletes().withTimeout(50ms);
         } catch (const AException&) {
         }
     }(testArgumentCapture);
