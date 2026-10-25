@@ -21,21 +21,22 @@ aui.<module>/
 
 ### Modules
 
-| Module            | Purpose                                                         |
-|-------------------|-----------------------------------------------------------------|
+| Module            | Purpose                                                                                 |
+|-------------------|-----------------------------------------------------------------------------------------|
 | `aui.core`        | Central library: types, containers, threading, i/o, reflection, signal-slot, properties |
-| `aui.views`       | UI toolkit: views, layouts, ASS styling, rendering              |
-| `aui.image`       | Image loading and processing                                    |
-| `aui.crypt`       | OpenSSL wrapper                                                  |
-| `aui.curl`        | http(s)/ftp requests                                            |
-| `aui.network`     | TCP/UDP networking                                              |
-| `aui.json`        | JSON parser                                                     |
-| `aui.xml`         | XML parser                                                      |
-| `aui.audio`       | Audio recording and playback                                    |
-| `aui.uitests`     | UI testing utilities                                            |
-| `aui.updater`     | App auto-updates for non-centralized distribution               |
-| `aui.toolbox`     | Build-time tool (e.g. converts assets to embeddable `.cpp`)     |
-| `aui.mysql`, `aui.dev_extras` | Additional/optional modules                      |
+| `aui.views`       | UI toolkit: views, layouts, ASS styling, rendering                                      |
+| `aui.image`       | Image loading and processing                                                            |
+| `aui.crypt`       | OpenSSL wrapper                                                                         |
+| `aui.curl`        | http(s)/ftp requests                                                                    |
+| `aui.network`     | TCP/UDP networking                                                                      |
+| `aui.json`        | JSON parser                                                                             |
+| `aui.xml`         | XML parser                                                                              |
+| `aui.audio`       | Audio recording and playback                                                            |
+| `aui.uitests`     | UI testing utilities                                                                    |
+| `aui.updater`     | App auto-updates for non-centralized distribution                                       |
+| `aui.toolbox`     | Build-time tool (e.g. converts assets to embeddable `.cpp`)                             |
+| `aui.mysql`       | MySQL (disabled)                                                                        |
+| `aui.dev_extras`  | Optional modules for development and agentic (AI) work                                  |
 
 ### Top-level things worth knowing
 
@@ -80,7 +81,7 @@ Read the relevant doc before making non-trivial changes:
 - **Style & contributing**: `code-style.md`, `contributing.md`, `forking-aui.md`
 - **Packaging & platforms**: `packaging.md`, `android.md`, `ios.md`, `linux.md`, `macos.md`,
   `windows.md`, `emscripten.md`, `crosscompiling*.md`
-- **Runtime**: `runtime-dependency-resolution.md`, `devtools.md`, `troubleshoot-list.md`
+- **Runtime**: `runtime-dependency-resolution.md`, `devtools.md`, `agentic-development.md`, `troubleshoot-list.md`
 
 ---
 
@@ -129,6 +130,14 @@ Platform/compiler branching uses `AUI_PLATFORM_*` and `AUI_COMPILER_*` in both C
 use compiler-specific things like `#ifdef _WIN32`.
 
 ---
+
+## Looking at a running application
+
+To verify a UI change in a real window, link `aui::dev_extras` (development builds only), start the application with
+`AUI_REMOTE=1` and drive it through the remote agent: inspect views, click, type, take screenshots. The `aui-remote`
+tool ([github.com/aui-framework/remote](https://github.com/aui-framework/remote)) wraps this into a CLI, and the
+`aui-remote` skill in `.claude/skills` describes the loop. The first connection has to be paired with a 6-digit code the
+application shows in its window: ask the user for it. See `docs/agentic-development.md`.
 
 ## Contributing conventions
 
