@@ -151,6 +151,20 @@ DevtoolsProfilingOptions::DevtoolsProfilingOptions(ASurface* targetWindow) {
           AText::fromItems(
               { "Displays a horizontal line indicating the text baseline. When multiple text views are placed in a row, "
                 "their baselines should align for proper visual appearance." }),
+          header("Layout"),
+          CheckBox {
+            AUI_REACT(targetWindow->profiling()->showOverflow),
+            [targetWindow](bool checked) {
+                targetWindow->profiling()->showOverflow = checked;
+                targetWindow->redraw();
+            },
+            Label { "Show overflow" },
+          },
+          AText::fromItems(
+              { "Marks ", coloredRect(0xff5252_rgb),
+                " the edges where a view cuts its contents off (AOverflow::HIDDEN, AOverflow::HIDDEN_FROM_THIS), "
+                "along with the amount of the contents that didn't fit. Views whose contents fit in are left "
+                "untouched." }),
         }
         << ".items" AUI_OVERRIDE_STYLE {
                       MaxSize { 700_dp, {} },

@@ -96,6 +96,12 @@ public:
          * @brief When set to true, all rendered strings will display their baselines.
          */
         AProperty<bool> showBaseline = false;
+
+        /**
+         * @brief When set to true, the edges where a view cuts its contents off (AOverflow::HIDDEN,
+         * AOverflow::HIDDEN_FROM_THIS) are marked, along with the amount of the contents that didn't fit.
+         */
+        AProperty<bool> showOverflow = false;
     };
 
     /**

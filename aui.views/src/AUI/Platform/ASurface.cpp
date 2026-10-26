@@ -522,6 +522,9 @@ void ASurface::render(ARenderContext context) {
         AViewContainer::render(context);
 
         if (auto& p = profiling()) {
+            if (p->showOverflow) {
+                AViewProfiler::displayOverflowOn(*this, context);
+            }
             if (auto v = p->highlightView->lock()) {
                 AViewProfiler::displayBoundsOn(*v, context);
             }
