@@ -333,6 +333,25 @@ TEST(Coroutines, TimeoutCoroutineFrameCleanedUp) {
     EXPECT_EQ(testArgumentCapture.use_count(), 1) << "coro frame leaked";
 }
 
+TEST(Coroutines, TimeoutMoveOnlyValue) {
+    AAsyncHolder async;
+    AEventLoop loop;
+    IEventLoop::Handle h(&loop);
+    int result = 0;
+    async << [](int& result) -> AFuture<> {
+        auto source = AUI_THREADPOOL {
+            AThread::sleep(50ms);
+            return std::make_unique<int>(322);
+        };
+        auto value = co_await source.withTimeout(10s);
+        result = *value;
+    }(result);
+    while (!async.empty()) {
+        loop.iteration();
+    }
+    EXPECT_EQ(result, 322);
+}
+
 TEST(Coroutines, OnCancel) {
     {
         auto f = neverCompletes();

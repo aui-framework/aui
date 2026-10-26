@@ -1087,7 +1087,16 @@ void aui::impl::future::bindTimeout(const AFuture<T>& source, const AFuture<T>& 
             return;
         }
         if (auto r = resultWeak.lock()) {
-            AFuture<T>(std::move(r)).supplyValue(v...);
+            AFuture<T> result(std::move(r));
+            if constexpr (std::is_void_v<T>) {
+                result.supplyValue();
+            } else if constexpr (std::is_copy_constructible_v<T>) {
+                result.supplyValue(v...);
+            } else {
+                // move-only value (i.e. unique_ptr). The source is owned by this future and is not going to be read
+                // by anyone else, same as co_await does with the future's value.
+                result.supplyValue(std::move(const_cast<T&>(v))...);
+            }
         }
     });
     source.onError([resultWeak, settled](const AException& e) {
