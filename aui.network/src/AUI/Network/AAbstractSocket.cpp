@@ -73,6 +73,14 @@ void AAbstractSocket::init()
 	}
 #endif
 
+#if !AUI_PLATFORM_WIN && defined(SO_NOSIGPIPE)
+	{
+		// writing to a socket closed by the peer must fail with an error instead of killing the process
+		const int one = 1;
+		setsockopt(mHandle, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(one));
+	}
+#endif
+
 	static const int buflen = 1 << 24;
 	if (setsockopt(mHandle, SOL_SOCKET, SO_RCVBUF, (char*)& buflen, sizeof(buflen)) < 0 ||
 		setsockopt(mHandle, SOL_SOCKET, SO_SNDBUF, (char*)& buflen, sizeof(buflen)) < 0)

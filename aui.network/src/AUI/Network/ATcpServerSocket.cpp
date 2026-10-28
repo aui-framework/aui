@@ -39,6 +39,13 @@ _<ATcpSocket> ATcpServerSocket::accept()
 		handleError("socket accept error", s);
 	}
 
+#if !AUI_PLATFORM_WIN && defined(SO_NOSIGPIPE)
+	{
+		const int one = 1;
+		setsockopt(s, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(one));
+	}
+#endif
+
 	return aui::ptr::manage_shared(new ATcpSocket(s, addr));
 }
 

@@ -23,6 +23,10 @@
 
 #endif
 
+#ifndef MSG_NOSIGNAL
+#define MSG_NOSIGNAL 0   // macOS: SIGPIPE is suppressed with SO_NOSIGPIPE, see AAbstractSocket::init and ATcpServerSocket::accept
+#endif
+
 
 ATcpSocket::ATcpSocket(const AInet4Address& destinationAddress)
 {
@@ -51,7 +55,7 @@ size_t ATcpSocket::read(char* dst, size_t size)
 void ATcpSocket::write(const char* buffer, size_t size)
 {
 	while (size > 0) {
-		int res = send(getHandle(), buffer, size, 0);
+		int res = send(getHandle(), buffer, size, MSG_NOSIGNAL);
 		if (res < 0) {
 			handleError("socket write error", res);
 		}
