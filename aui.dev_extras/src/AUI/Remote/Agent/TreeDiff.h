@@ -11,6 +11,7 @@
 
 #pragma once
 
+#include <array>
 #include <cstdint>
 
 #include "AUI/Common/AMap.h"
@@ -30,6 +31,8 @@ struct Node {
     AString type;
     AOptional<AString> text;
     AOptional<AString> name;
+    /// type of the layout of a container, i.e. `AHorizontalLayout`
+    AOptional<AString> layout;
     int x = 0;
     int y = 0;
     int w = 0;
@@ -37,6 +40,9 @@ struct Node {
     int absX = 0;
     int absY = 0;
     bool visible = true;
+    /// `{left, top, right, bottom}`; omitted in json when all zero
+    std::array<int, 4> padding {};
+    std::array<int, 4> margin {};
     AVector<AString> children;   // refs
 
     [[nodiscard]] bool operator==(const Node& rhs) const noexcept = default;

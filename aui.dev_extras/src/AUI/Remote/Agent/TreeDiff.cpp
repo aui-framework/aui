@@ -53,6 +53,25 @@ Tree apply(const Diff& diff, const Tree& base) {
     return result;
 }
 
+namespace {
+AJson fieldsToJson(const std::array<int, 4>& fields) {
+    aui::impl::JsonArray result;
+    for (int v : fields) {
+        result.push_back(AJson(v));
+    }
+    return AJson(std::move(result));
+}
+
+std::array<int, 4> fieldsFromJson(const AJson& json) {
+    std::array<int, 4> result {};
+    const auto& array = json.asArray();
+    for (std::size_t i = 0; i < result.size() && i < array.size(); ++i) {
+        result[i] = array[i].asInt();
+    }
+    return result;
+}
+}   // namespace
+
 AJson toJson(const Node& node) {
     AJson json {
         { "type", node.type },
@@ -70,6 +89,15 @@ AJson toJson(const Node& node) {
     if (node.name) {
         json["name"] = *node.name;
     }
+    if (node.layout) {
+        json["layout"] = *node.layout;
+    }
+    if (node.padding != std::array<int, 4> {}) {
+        json["padding"] = fieldsToJson(node.padding);
+    }
+    if (node.margin != std::array<int, 4> {}) {
+        json["margin"] = fieldsToJson(node.margin);
+    }
     aui::impl::JsonArray children;
     for (const auto& child : node.children) {
         children.push_back(AJson(child));
@@ -86,6 +114,15 @@ Node nodeFromJson(const AJson& json) {
     }
     if (auto name = json.containsOpt("name")) {
         node.name = name->asString();
+    }
+    if (auto layout = json.containsOpt("layout")) {
+        node.layout = layout->asString();
+    }
+    if (auto padding = json.containsOpt("padding")) {
+        node.padding = fieldsFromJson(*padding);
+    }
+    if (auto margin = json.containsOpt("margin")) {
+        node.margin = fieldsFromJson(*margin);
     }
     node.x = json["x"].asInt();
     node.y = json["y"].asInt();

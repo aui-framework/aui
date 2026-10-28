@@ -130,8 +130,9 @@ the connection. Subscribing again on the same connection replaces the parameters
 ```
 
 `width` and `height` are the size of the encoded image in pixels, `windowWidth` and `windowHeight` are the logical size
-of the window. The tree is a flat map of refs to nodes (`type`, `text` and `name` (ASS names) if there are any, geometry
-relative to the parent and to the window, `visible`, `children` as refs), the same refs as in `view.tree`.
+of the window. The tree is a flat map of refs to nodes (`type`, `text` and `name` (ASS names) if there are any, `layout` of
+a container, geometry relative to the parent and to the window, `padding` and `margin` as `[left, top, right, bottom]`
+unless they are zero, `visible`, `children` as refs), the same refs as in `view.tree`.
 
 The tree is not sent in full every time: it is a difference against the last tree the client has confirmed with
 `frames.ack` (params `{ seq }`), `base` being the `seq` of that frame, or `null` for a full tree. `upsert` holds every

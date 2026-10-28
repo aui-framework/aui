@@ -150,7 +150,24 @@ AOptional<std::chrono::steady_clock::duration> RemoteOverlay::visibleAge(
     return ageOf(time, lifetime);
 }
 
+void RemoteOverlay::addBeforeDraw(AWindow& window, const void* owner, std::function<void()> callback) {
+    if (auto overlay = of(window)) {
+        overlay->mBeforeDraw.push_back({ owner, std::move(callback) });
+    }
+}
+
+void RemoteOverlay::removeBeforeDraw(AWindow& window, const void* owner) {
+    if (auto overlay = of(window)) {
+        overlay->mBeforeDraw.removeIf([&](const auto& hook) { return hook.first == owner; });
+    }
+}
+
 void RemoteOverlay::draw(IRenderer& renderer) {
+    // a callback may add or remove callbacks
+    const auto hooks = mBeforeDraw;
+    for (const auto& hook : hooks) {
+        hook.second();
+    }
     if (mHidden) {
         return;
     }

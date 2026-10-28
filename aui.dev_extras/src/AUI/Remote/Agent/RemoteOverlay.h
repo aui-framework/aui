@@ -12,6 +12,7 @@
 #pragma once
 
 #include <chrono>
+#include <functional>
 
 #include <glm/glm.hpp>
 
@@ -65,6 +66,15 @@ public:
      */
     static void setHidden(AWindow& window, bool hidden);
 
+    /**
+     * @brief Registers a callback that runs on every frame of the window right before the overlay is drawn, i.e. when
+     *        the frame is complete and still clean. Does nothing unless the overlay is enabled.
+     * @param owner identifies the callback for removeBeforeDraw
+     */
+    static void addBeforeDraw(AWindow& window, const void* owner, std::function<void()> callback);
+
+    static void removeBeforeDraw(AWindow& window, const void* owner);
+
     ~RemoteOverlay();
 
 private:
@@ -80,6 +90,7 @@ private:
 
     AWindow& mWindow;
     bool mHidden = false;
+    AVector<std::pair<const void*, std::function<void()>>> mBeforeDraw;
     std::chrono::steady_clock::time_point mActivityTime {};
     std::chrono::steady_clock::time_point mPointerTime {};
     std::chrono::steady_clock::time_point mClickTime {};

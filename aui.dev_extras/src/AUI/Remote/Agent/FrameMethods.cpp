@@ -18,8 +18,9 @@
 #include "AUI/Image/jpg/JpgImageLoader.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Reflect/AReflect.h"
+#include "AUI/View/AViewContainer.h"
 #include "AUI/Thread/AThreadPool.h"
-#include "AUI/Util/ARaiiHelper.h"
 #include "RemoteOverlay.h"
 #include "TreeDiff.h"
 #include "UiThread.h"
@@ -78,6 +79,12 @@ void collectTree(RefTable& refs, const _<AView>& view, tree_diff::Tree& tree, co
     node.absX = absolute.x;
     node.absY = absolute.y;
     node.visible = view_json::isVisible(view);
+    if (auto container = _cast<AViewContainer>(view); container && container->getLayout()) {
+        node.layout = AReflect::name(container->getLayout().get());
+    }
+    const auto fields = [](const ABoxFields& f) { return std::array { f.left, f.top, f.right, f.bottom }; };
+    node.padding = fields(view->getPadding());
+    node.margin = fields(view->getMargin());
 
     const auto& children = view_json::childrenOf(view);
     AVector<AString> childRefs;
@@ -127,38 +134,33 @@ AString encodeFrame(AImage image, Params params, std::int64_t seq, glm::ivec2 wi
 /**
  * @brief The stream of frames of one window to one connection. UI thread only (except the sending part).
  * @details
- * A frame is produced after the window has rendered, but not inside of the render: the clean frame (without the
- * overlay) needs a render of its own. While a frame is being sent, new renders only leave a mark; when the send
- * completes, the mark makes a fresh frame.
+ * A frame is captured at the end of a render, right before the remote control overlay draws itself (see
+ * RemoteOverlay::addBeforeDraw), so it is clean and costs no render of its own (which would be presented and make the
+ * overlay flicker). While a frame is being sent, new renders only leave a mark; when the send completes, the mark
+ * asks for a fresh render.
  */
 class Subscription : public AObject {
 public:
     Subscription(RefTable& refs, _weak<RpcConnection> connection, _<AWindow> window, Params params, std::int64_t seq)
       : mRefs(refs), mConnection(std::move(connection)), mWindow(window), mParams(params), mSeq(seq) {
-        AObject::connect(window->postRender, *this, [this] { schedule(); });
+        RemoteOverlay::enable(*window);
+        RemoteOverlay::addBeforeDraw(*window, this, [this] { onRendered(); });
+    }
+
+    ~Subscription() override {
+        if (auto window = mWindow.lock()) {
+            RemoteOverlay::removeBeforeDraw(*window, this);
+        }
     }
 
     [[nodiscard]] const _weak<RpcConnection>& connection() const noexcept { return mConnection; }
     [[nodiscard]] std::int64_t seq() const noexcept { return mSeq; }
 
+    /// Makes sure a frame comes soon.
     void schedule() {
-        if (mProducing) {
-            return;   // the render we've made ourselves to get a clean frame
+        if (auto window = mWindow.lock()) {
+            window->flagRedraw();
         }
-        if (mInFlight) {
-            mDirty = true;
-            return;
-        }
-        if (mScheduled) {
-            return;
-        }
-        mScheduled = true;
-        AThread::main()->enqueue([weak = weakPtr()] {
-            if (auto self = weak.lock()) {
-                self->mScheduled = false;
-                self->produce();
-            }
-        });
     }
 
     void ack(std::int64_t seq) {
@@ -183,11 +185,16 @@ private:
     std::int64_t mSeq;
     bool mInFlight = false;
     bool mDirty = false;
-    bool mScheduled = false;
-    bool mProducing = false;
     AOptional<std::pair<std::int64_t, tree_diff::Tree>> mAcked;
     std::map<std::int64_t, tree_diff::Tree> mUnacked;
 
+    void onRendered() {
+        if (mInFlight) {
+            mDirty = true;
+            return;
+        }
+        produce();
+    }
     void produce();
     void onSent() {
         mInFlight = false;
@@ -204,30 +211,13 @@ void Subscription::produce() {
         return;
     }
     mDirty = false;
-    mProducing = true;
-    AUI_DEFER { mProducing = false; };
 
-    // the remote control overlay must not appear in the frame: render a clean one. The overlay asks for redraws only
-    // while it is on screen, so this does not keep the window rendering forever.
-    const bool overlayShown = RemoteOverlay::isShown(*window);
     AImage image;
-    {
-        if (overlayShown) {
-            RemoteOverlay::setHidden(*window, true);
-            window->redraw();
-        }
-        AUI_DEFER {
-            if (overlayShown) {
-                RemoteOverlay::setHidden(*window, false);
-                window->flagRedraw();
-            }
-        };
-        try {
-            image = window->getRenderingContext()->makeScreenshot();
-        } catch (const AException& e) {
-            ALogger::err(LOG_TAG) << "unable to capture the window: " << e.getMessage();
-            return;
-        }
+    try {
+        image = window->getRenderingContext()->makeScreenshot();
+    } catch (const AException& e) {
+        ALogger::err(LOG_TAG) << "unable to capture the window: " << e.getMessage();
+        return;
     }
     if (image.width() == 0 || image.height() == 0) {
         ALogger::warn(LOG_TAG) << "the rendering context returned an empty screenshot; no frame";

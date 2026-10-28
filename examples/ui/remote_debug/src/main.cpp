@@ -62,7 +62,7 @@ AUI_ENTRY {
           .content = Label { "Click me" },
           .onClick = [state]() mutable { state->value += 1; },
         },
-        AText::fromItems({ "Use", link("https://github.com/aui-framework/remote"), " to connect to this application." })
+        AText::fromItems({ "Use ", link("https://github.com/aui-framework/remote"), " to connect to this application." })
       } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
     });
     window->show();

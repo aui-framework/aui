@@ -190,4 +190,20 @@ TEST(TreeDiff, JsonShape) {
     EXPECT_TRUE(a1["visible"].asBool());
     EXPECT_TRUE(a1["children"].asArray().empty());
     EXPECT_TRUE(toJson(diff(a))["base"].isNull());
+    EXPECT_FALSE(a1.contains("layout"));
+    EXPECT_FALSE(a1.contains("padding"));
+    EXPECT_FALSE(a1.contains("margin"));
+}
+
+TEST(TreeDiff, BoxModelRoundTrip) {
+    auto a = sample();
+    a.nodes["a"].layout = "AHorizontalLayout";
+    a.nodes["a"].padding = { 1, 2, 3, 4 };
+    a.nodes["a"].margin = { 5, 6, 7, 8 };
+    const auto json = toJson(diff(a));
+    const auto& node = json["upsert"]["a"];
+    EXPECT_EQ(node["layout"].asString(), "AHorizontalLayout");
+    EXPECT_EQ(node["padding"].asArray().size(), 4u);
+    EXPECT_EQ(node["margin"][3].asInt(), 8);
+    EXPECT_EQ(apply(diffFromJson(json), {}), a);
 }

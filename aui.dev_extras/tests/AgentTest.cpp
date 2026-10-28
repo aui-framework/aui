@@ -989,11 +989,18 @@ TEST_F(FramesTest, ResubscribeForcesFullTree) {
     const auto before = connection->messages().size();
 
     call("frames.subscribe", AJson { { "scale", 0.25 } });
-    ASSERT_TRUE(waitForFrames(before + 1));
-    const auto frame = connection->messages().back()["params"];
+    // the first frame of the new subscription: the stream goes on, and frames of the old one may still be arriving
+    const auto fullWidth = connection->messages().front()["params"]["width"].asInt();
+    const auto isNew = [&](const AJson& m) { return m["params"]["width"].asInt() < fullWidth; };
+    ASSERT_TRUE(pumpUntil([&] {
+        const auto messages = connection->messages();
+        return std::any_of(messages.begin() + before, messages.end(), isNew);
+    }));
+    const auto messages = connection->messages();
+    auto first = std::find_if(messages.begin() + before, messages.end(), isNew);
+    const auto frame = (*first)["params"];
     EXPECT_TRUE(frame["tree"]["base"].isNull());
     EXPECT_GT(frame["seq"].asLongInt(), 1);   // numbering goes on
-    EXPECT_LT(frame["width"].asInt(), connection->messages().front()["params"]["width"].asInt());
 }
 
 TEST_F(FramesTest, ClosedConnectionIsForgotten) {
