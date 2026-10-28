@@ -876,6 +876,15 @@ public:
     void setMobileScreenOrientation(AScreenOrientation screenOrientation);
 
 signals:
+    /**
+     * @brief Emitted at the end of every frame, after the contents of the window are drawn.
+     * @details
+     * Whatever a slot draws (with `getRenderingContext()->renderer()`) appears on top of everything else. It is the
+     * place for things which are not part of the UI, i.e., the remote control indication of `aui::dev_extras`. A slot
+     * that animates should call AWindow::flagRedraw by itself.
+     */
+    emits<> postRender;
+
     emits<> closed;
     emits<> shown;
 
