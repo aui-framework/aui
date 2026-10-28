@@ -55,6 +55,9 @@ class Pairing;
  *     only, and do not release products alongside it.
  *
  * All methods that touch the UI are executed on the UI thread.
+ *
+ * For a few seconds after every command, windows show a pink banner at the top and a pink pointer where the client
+ * hovered or clicked (see `RemoteOverlay`). Neither is included in screenshots.
  */
 class API_AUI_DEV_EXTRAS ARemoteDebug {
 public:

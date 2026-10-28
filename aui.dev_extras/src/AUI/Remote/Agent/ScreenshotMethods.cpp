@@ -21,6 +21,8 @@
 #include "AUI/IO/APath.h"
 #include "AUI/Platform/ASurface.h"
 #include "AUI/Platform/AWindow.h"
+#include "AUI/Util/ARaiiHelper.h"
+#include "RemoteOverlay.h"
 #include "UiThread.h"
 
 namespace aui::remote {
@@ -50,6 +52,16 @@ void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     dispatcher.registerMethod("screenshot", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
         return onUiThread([&refs, params = params] {
             auto window = windowFromParams(params, refs);
+
+            // the remote control overlay must not appear in screenshots: render a clean frame to capture.
+            RemoteOverlay::setHidden(*window, true);
+            AUI_DEFER {
+                RemoteOverlay::setHidden(*window, false);
+                window->flagRedraw();
+            };
+            if (RemoteOverlay::isEnabled(*window)) {
+                window->redraw();
+            }
 
             AImage image;
             try {

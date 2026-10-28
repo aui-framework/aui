@@ -16,6 +16,7 @@
 #include "AUI/Event/AInjectedEvent.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/AWindow.h"
+#include "RemoteOverlay.h"
 #include "UiThread.h"
 
 namespace aui::remote {
@@ -142,76 +143,123 @@ AFuture<AJson> inTwoSteps(First first, Second second) {
     return result;
 }
 
+constexpr auto CLICK_DURATION = std::chrono::milliseconds(50);
+
+// params: action (click|doubleClick|press|release|move|drag|scroll; default click), ref | x, y,
+//         pointer (mouse|finger; default mouse), button (left|right|middle; mouse only), modifiers, drag: toRef | toX, toY, scroll: dx, dy
+// A coroutine, so `click` can hold the button without blocking the UI thread. Resumes on the UI thread.
+AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
+    const auto action = params.containsOpt("action") ? params["action"].asString() : AString("click");
+    const auto pointer = params.containsOpt("pointer") ? params["pointer"].asString() : AString("mouse");
+    if (pointer != "mouse" && pointer != "finger") {
+        throw RpcException(rpc_code::INVALID_PARAMS, "unknown pointer: " + pointer, "mouse or finger");
+    }
+    const bool finger = pointer == "finger";
+    const auto button = buttonByName(params);
+    const auto index = finger ? APointerIndex::finger(0) : APointerIndex::button(button);
+    auto target = resolveTarget(params, refs);
+    auto& window = target.window;
+    auto position = target.position;
+
+    OverrideScope modifiers(modifiersOf(params));
+    // a finger has no buttons for AInput to report
+    auto overrideButton = [&](bool down) {
+        if (finger) {
+            return;
+        }
+        if (down) {
+            AInput::overrideState(button, true);
+        } else {
+            AInput::resetOverride(button);
+        }
+    };
+    auto move = [&](glm::vec2 to) {
+        window->injectEvent(AInjectedPointerMove { to, APointerMoveEvent { index } });
+    };
+    auto press = [&] {
+        overrideButton(true);
+        window->injectEvent(APointerPressedEvent { position, index });
+    };
+    auto release = [&] {
+        window->injectEvent(APointerReleasedEvent { position, index });
+        overrideButton(false);
+    };
+
+    if (action == "move") {
+        move(position);
+    } else if (action == "press") {
+        // the button stays "down" for AInput until `release`; views read it via the event, so don't leak it.
+        move(position);
+        press();
+        overrideButton(false);
+    } else if (action == "release") {
+        window->injectEvent(APointerReleasedEvent { position, index });
+    } else if (action == "click") {
+        move(position);
+        press();
+        // a real click lasts a moment; the caller gets the answer only after the button is released
+        RemoteOverlay::showPointer(*window, position, index, true, true);
+        co_await AThread::asyncSleep(CLICK_DURATION);
+        release();
+    } else if (action == "doubleClick") {
+        move(position);
+        press();
+        release();
+        overrideButton(true);
+        window->injectEvent(AInjectedPointerDoubleClick { APointerPressedEvent { position, index } });
+        release();
+    } else if (action == "drag") {
+        const auto to = resolveTarget(params, refs, "to").position;
+        constexpr int STEPS = 10;
+        move(position);
+        press();
+        overrideButton(true);
+        for (int i = 1; i <= STEPS; ++i) {
+            move(glm::mix(position, to, float(i) / STEPS));
+        }
+        position = to;
+        release();
+    } else if (action == "scroll") {
+        move(position);
+        window->injectEvent(AScrollEvent {
+          .origin = position,
+          .delta = { params.containsOpt("dx") ? number(params, "dx") : 0.f,
+                     params.containsOpt("dy") ? number(params, "dy") : 0.f },
+        });
+    } else {
+        throw RpcException(rpc_code::INVALID_PARAMS, "unknown action: " + action,
+                           "click, doubleClick, press, release, move, drag or scroll");
+    }
+    RemoteOverlay::enable(*window);
+    // between `press` and `release` the pointer stays on the screen
+    RemoteOverlay::showPointer(*window, position, index, action != "move" && action != "scroll", action == "press");
+    co_return AJson {
+        { "at", describePoint(target) },
+    };
+}
+
+/// Passes the outcome of `inputPointer` to `result`.
+/// A coroutine is cancelled when its future is destroyed, so `self` holds the future of this very coroutine until it is
+/// done.
+AFuture<> answerPointer(RefTable& refs, AJson params, AFuture<AJson> result, std::shared_ptr<AFuture<>> self) {
+    try {
+        result.supplyValue(co_await inputPointer(refs, std::move(params)));
+    } catch (...) {
+        result.supplyException();
+    }
+    *self = nullptr;
+}
+
 }   // namespace
 
 void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
-    // params: action (click|doubleClick|press|release|move|drag|scroll; default click), ref | x, y,
-    //         button (left|right|middle), modifiers, drag: toRef | toX, toY, scroll: dx, dy
     dispatcher.registerMethod("input.pointer", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
-        return onUiThread([&refs, params = params] {
-            const auto action = params.containsOpt("action") ? params["action"].asString() : AString("click");
-            const auto button = buttonByName(params);
-            const auto index = APointerIndex::button(button);
-            auto target = resolveTarget(params, refs);
-            auto& window = target.window;
-            auto position = target.position;
-
-            OverrideScope modifiers(modifiersOf(params));
-            auto press = [&] {
-                AInput::overrideState(button, true);
-                window->injectEvent(APointerPressedEvent { position, index });
-            };
-            auto release = [&] {
-                window->injectEvent(APointerReleasedEvent { position, index });
-                AInput::resetOverride(button);
-            };
-
-            if (action == "move") {
-                window->injectEvent(AInjectedPointerMove { position });
-            } else if (action == "press") {
-                // the button stays "down" for AInput until `release`; views read it via the event, so don't leak it.
-                window->injectEvent(AInjectedPointerMove { position });
-                press();
-                AInput::resetOverride(button);
-            } else if (action == "release") {
-                window->injectEvent(APointerReleasedEvent { position, index });
-            } else if (action == "click") {
-                window->injectEvent(AInjectedPointerMove { position });
-                press();
-                release();
-            } else if (action == "doubleClick") {
-                window->injectEvent(AInjectedPointerMove { position });
-                press();
-                release();
-                AInput::overrideState(button, true);
-                window->injectEvent(AInjectedPointerDoubleClick { APointerPressedEvent { position, index } });
-                release();
-            } else if (action == "drag") {
-                const auto to = resolveTarget(params, refs, "to").position;
-                constexpr int STEPS = 10;
-                window->injectEvent(AInjectedPointerMove { position });
-                press();
-                AInput::overrideState(button, true);
-                for (int i = 1; i <= STEPS; ++i) {
-                    window->injectEvent(AInjectedPointerMove { glm::mix(position, to, float(i) / STEPS) });
-                }
-                position = to;
-                release();
-            } else if (action == "scroll") {
-                window->injectEvent(AInjectedPointerMove { position });
-                window->injectEvent(AScrollEvent {
-                  .origin = position,
-                  .delta = { params.containsOpt("dx") ? number(params, "dx") : 0.f,
-                             params.containsOpt("dy") ? number(params, "dy") : 0.f },
-                });
-            } else {
-                throw RpcException(rpc_code::INVALID_PARAMS, "unknown action: " + action,
-                                   "click, doubleClick, press, release, move, drag or scroll");
-            }
-            return AJson {
-                { "at", describePoint(target) },
-            };
+        AFuture<AJson> result;
+        AThread::main()->enqueue([&refs, params = params, result] {
+            auto self = std::make_shared<AFuture<>>();
+            *self = answerPointer(refs, params, result, self);
         });
+        return result;
     }));
 
     // params: text, ref? (focuses the view first)

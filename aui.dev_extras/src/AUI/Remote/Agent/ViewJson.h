@@ -27,6 +27,11 @@ namespace aui::remote {
 namespace view_json {
 
 /**
+ * @return direct children of the view; empty for views that are not containers
+ */
+const AVector<_<AView>>& childrenOf(const _<AView>& view);
+
+/**
  * @return type name of the view, i.e. `AButton`
  */
 AString typeName(const _<AView>& view);
@@ -48,7 +53,7 @@ AString labelOf(const _<AView>& view);
 AString interactiveRole(const _<AView>& view);
 
 /**
- * @return actions a client may perform on the view, i.e. `click`, `type`.
+ * @return actions a client may perform on the view, i.e. `clickable`, `typeable`, `keyable`.
  */
 AJson actionsOf(const AString& role);
 

@@ -12,6 +12,8 @@
 #include <gmock/gmock.h>
 
 #include <atomic>
+#include <fstream>
+#include <sstream>
 #include <thread>
 
 #include "AUI/Crypt/ATlsSession.h"
@@ -19,8 +21,11 @@
 #include "AUI/Network/AInet4Address.h"
 #include "AUI/Network/ATcpSocket.h"
 #include "AUI/Remote/Agent/Pairing.h"
-#include "AUI/Remote/ARemoteAgent.h"
+#include "AUI/Remote/ARemoteDebug.h"
 #include "AUI/Remote/Agent/JsonRpc.h"
+#include "AUI/Remote/Agent/RemoteOverlay.h"
+#include "AUI/Remote/Agent/TreeDiff.h"
+#include <condition_variable>
 #include "AUI/UITest.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/AButton.h"
@@ -34,11 +39,12 @@ using namespace std::chrono_literals;
 namespace {
 constexpr auto KEY = "test-key-0123456789abcdef";
 
-_<ARemoteAgent> agent() {
-    ARemoteAgent::Options options;
+_<ARemoteDebug> agent() {
+    ARemoteDebug::Options options;
     options.writeDiscoveryFile = false;
+    options.pairing = ARemoteDebug::PairingPolicy::SESSION;   // keep ~/.aui untouched
     options.key = KEY;
-    return ARemoteAgent::start(std::move(options));
+    return ARemoteDebug::start(std::move(options));
 }
 }   // namespace
 
@@ -205,7 +211,7 @@ TEST_F(AgentTest, InteractiveListsRolesLabelsAndActions) {
     EXPECT_TRUE((*button)["rect"]["w"].asInt() > 0);
     bool canType = false;
     for (const auto& a : (*textbox)["actions"].asArray()) {
-        canType |= a.asString() == "type";
+        canType |= a.asString() == "typeable";
     }
     EXPECT_TRUE(canType);
 }
@@ -320,6 +326,54 @@ TEST_F(AgentTest, ClickByCoordinates) {
     EXPECT_EQ(clicks, 1);
     ok("input.pointer", AJson { { "x", 1 }, { "y", 1 } });
     EXPECT_EQ(clicks, 1);
+}
+
+TEST_F(AgentTest, ClickHoldsTheButtonBeforeRelease) {
+    auto button = _new<AButton>("Click me");
+    auto window = showWindow(button);
+    auto ref = ok("view.find", AJson { { "type", "AButton" } }).asArray().front()["ref"].asString();
+    const auto start = std::chrono::steady_clock::now();
+    ok("input.pointer", AJson { { "ref", ref } });
+    EXPECT_GE(std::chrono::steady_clock::now() - start, 50ms);
+    EXPECT_FALSE(button->isPressed());
+}
+
+TEST_F(AgentTest, MoveHoversWithoutClick) {
+    int clicks = 0;
+    auto button = _new<AButton>("Hover me");
+    AObject::connect(button->clicked, button, [&] { ++clicks; });
+    auto window = showWindow(button);
+    uitest::frame();
+    EXPECT_FALSE(button->isMouseHover());
+    auto ref = ok("view.find", AJson { { "type", "AButton" } }).asArray().front()["ref"].asString();
+    ok("input.pointer", AJson { { "ref", ref }, { "action", "move" } });
+    EXPECT_TRUE(button->isMouseHover());
+    EXPECT_EQ(clicks, 0);
+    ok("input.pointer", AJson { { "x", 1 }, { "y", 1 }, { "action", "move" } });
+    EXPECT_FALSE(button->isMouseHover());
+}
+
+TEST_F(AgentTest, FingerTapClicks) {
+    int clicks = 0;
+    auto button = _new<AButton>("Tap me");
+    AObject::connect(button->clicked, button, [&] { ++clicks; });
+    auto window = showWindow(button);
+    uitest::frame();
+    auto ref = ok("view.find", AJson { { "type", "AButton" } }).asArray().front()["ref"].asString();
+    ok("input.pointer", AJson { { "ref", ref }, { "pointer", "finger" } });
+    EXPECT_EQ(clicks, 1);
+    EXPECT_FALSE(AInput::isKeyDown(AInput::LBUTTON));
+    EXPECT_NE(errorCode("input.pointer", AJson { { "ref", ref }, { "pointer", "pen" } }), 0);
+}
+
+TEST_F(AgentTest, OverlayIsOnAndScreenshotsDontLeaveItHidden) {
+    auto window = showWindow(_new<AButton>("Overlay"));
+    ok("input.pointer", AJson { { "x", 5 }, { "y", 5 }, { "action", "move" } });   // remote input turns it on
+    EXPECT_TRUE(RemoteOverlay::isEnabled(*window));
+    ok("screenshot");
+    EXPECT_TRUE(RemoteOverlay::isEnabled(*window));
+    ok("screenshot");
+    EXPECT_TRUE(RemoteOverlay::isEnabled(*window));
 }
 
 TEST_F(AgentTest, TypeIntoTextField) {
@@ -541,6 +595,71 @@ TEST_F(AgentTest, PairingCodeIsLimitedToThreeAttempts) {
     EXPECT_FALSE(pairing.isAuthorized(key.toStdString()));
 }
 
+TEST_F(AgentTest, AskingForNewCodesIsThrottled) {
+    // a fresh instance: the one of the agent is shared with other tests
+    aui::remote::Pairing pairing;
+    for (int i = 0; i < aui::remote::Pairing::FREE_WASTED_CODES + 2; ++i) {
+        pairing.begin();   // each one replaces the previous unused code
+    }
+    EXPECT_THROW(pairing.begin(), RpcException);
+}
+
+namespace {
+void pairWith(aui::remote::Pairing& pairing, const std::string& key) {
+    pairing.begin();
+    pairing.confirm(AString(pairing.currentCode()), key);
+}
+}   // namespace
+
+TEST_F(AgentTest, PairedKeySurvivesRestart) {
+    const auto file = APath::getDefaultPath(APath::TEMP) / "aui-pairing-test" / "trusted.keys";
+    file.parent().makeDirs();
+    if (file.isRegularFileExists()) {
+        file.removeFile();
+    }
+    const std::string key = "persistent-key-0123456789abcdef";
+    {
+        aui::remote::Pairing before;
+        before.persistTo(file);
+        EXPECT_EQ(before.trust(), aui::remote::Pairing::Trust::PERSISTENT);
+        pairWith(before, key);
+        EXPECT_TRUE(before.isAuthorized(key));
+    }
+    aui::remote::Pairing after;   // the application has been restarted
+    after.persistTo(file);
+    EXPECT_TRUE(after.isAuthorized(key));
+    EXPECT_FALSE(after.isAuthorized("some-other-key-0123456789abcd"));
+
+    // only a hash is stored
+    std::ifstream in(file.toStdString());
+    std::stringstream content;
+    content << in.rdbuf();
+    EXPECT_EQ(content.str().find(key), std::string::npos);
+}
+
+TEST_F(AgentTest, SessionPairingIsForgottenOnRestart) {
+    const std::string key = "session-key-0123456789abcdef";
+    {
+        aui::remote::Pairing before;   // no file: trusted until exit
+        EXPECT_EQ(before.trust(), aui::remote::Pairing::Trust::SESSION);
+        pairWith(before, key);
+        EXPECT_TRUE(before.isAuthorized(key));
+    }
+    aui::remote::Pairing after;
+    EXPECT_FALSE(after.isAuthorized(key));
+}
+
+TEST_F(AgentTest, AlwaysRequireCodeDistrustsKnownKeys) {
+    const std::string key = "always-key-0123456789abcdef";
+    aui::remote::Pairing pairing;
+    pairing.setAlwaysRequireCode(true);
+    EXPECT_EQ(pairing.trust(), aui::remote::Pairing::Trust::CONNECTION);
+    pairWith(pairing, key);
+    EXPECT_FALSE(pairing.isAuthorized(key));
+    pairing.authorize("launch-key-0123456789abcdef");   // launched by the client itself
+    EXPECT_TRUE(pairing.isAuthorized("launch-key-0123456789abcdef"));
+}
+
 TEST_F(AgentTest, ShortKeyIsRejected) {
     auto& pairing = agent()->pairing();
     pairing.begin();
@@ -578,4 +697,321 @@ TEST_F(AgentTest, PresentedCertificateMatchesThePublishedFingerprint) {
         EXPECT_EQ(ATlsIdentity::toHex(*session->peerFingerprintSha256()), agent()->certificateFingerprint());
     });
     client.join();
+}
+
+namespace {
+
+/// Stands for a client: collects what the agent pushes. Sending can be held to emulate a slow connection.
+class TestConnection : public RpcConnection {
+public:
+    bool sendText(const AString& text) override {
+        std::unique_lock lock(mMutex);
+        ++mSendsStarted;
+        mCv.wait(lock, [&] { return !mHeld; });
+        mMessages.push_back(AJson::fromString(text));
+        return true;
+    }
+
+    void hold(bool held) {
+        {
+            std::lock_guard lock(mMutex);
+            mHeld = held;
+        }
+        mCv.notify_all();
+    }
+
+    AVector<AJson> messages() {
+        std::lock_guard lock(mMutex);
+        return mMessages;
+    }
+
+    int sendsStarted() {
+        std::lock_guard lock(mMutex);
+        return mSendsStarted;
+    }
+
+    ~TestConnection() override { hold(false); }
+
+private:
+    std::mutex mMutex;
+    std::condition_variable mCv;
+    AVector<AJson> mMessages;
+    int mSendsStarted = 0;
+    bool mHeld = false;
+};
+}   // namespace
+
+class FramesTest : public AgentTest {
+protected:
+    _<TestConnection> connection = _new<TestConnection>();
+
+    AJson call(const AString& method, AJson params = AJson::fromString("{}")) {
+        AJson request {
+            { "jsonrpc", "2.0" },
+            { "id", 1 },
+            { "method", method },
+            { "params", std::move(params) },
+        };
+        AString response;
+        agent()->dispatcher().handle(AJson::toString(request), [&](AString r) { response = std::move(r); }, connection);
+        pumpUntil([&] { return !response.empty(); });
+        EXPECT_FALSE(response.empty()) << "no response to " << method;
+        return AJson::fromString(response.empty() ? AString("{}") : response);
+    }
+
+    template <typename Condition>
+    bool pumpUntil(Condition condition) {
+        for (int i = 0; i < 2000 && !condition(); ++i) {
+            uitest::frame();
+            if (!condition()) {
+                std::this_thread::sleep_for(2ms);
+            }
+        }
+        return condition();
+    }
+
+    bool waitForFrames(std::size_t count) {
+        return pumpUntil([&] { return connection->messages().size() >= count; });
+    }
+
+    /// Lets the UI thread settle: whatever would be sent has been sent.
+    void settle() {
+        for (int i = 0; i < 20; ++i) {
+            uitest::frame();
+            std::this_thread::sleep_for(2ms);
+        }
+    }
+
+    static tree_diff::Tree treeOf(const AJson& message, const tree_diff::Tree& base = {}) {
+        return tree_diff::apply(tree_diff::diffFromJson(message["params"]["tree"]), base);
+    }
+
+    void TearDown() override {
+        connection->notifyClosed();
+        AgentTest::TearDown();
+    }
+};
+
+TEST_F(FramesTest, SubscribeSendsFullFrame) {
+    auto window = showWindow(Label { "hello frames" });
+    EXPECT_TRUE(call("frames.subscribe")["result"]["subscribed"].asBool());
+    ASSERT_TRUE(waitForFrames(1));
+
+    const auto message = connection->messages().front();
+    EXPECT_FALSE(message.contains("id"));
+    EXPECT_EQ(message["method"].asString(), "frames.frame");
+    const auto& frame = message["params"];
+    EXPECT_EQ(frame["seq"].asLongInt(), 1);
+    EXPECT_EQ(frame["windowWidth"].asInt(), window->getWidth());
+    EXPECT_EQ(frame["windowHeight"].asInt(), window->getHeight());
+    EXPECT_GT(frame["width"].asInt(), 0);
+    EXPECT_LE(frame["width"].asInt(), frame["windowWidth"].asInt() * 4);   // downscaled by 0.5 of the device pixels
+
+    const auto jpeg = AByteBuffer::fromBase64String(frame["jpeg"].asString());
+    ASSERT_GT(jpeg.size(), 2u);
+    EXPECT_EQ(static_cast<unsigned char>(jpeg.data()[0]), 0xff);
+    EXPECT_EQ(static_cast<unsigned char>(jpeg.data()[1]), 0xd8);
+
+    EXPECT_TRUE(frame["tree"]["base"].isNull());
+    const auto tree = treeOf(message);
+    ASSERT_TRUE(tree.nodes.contains(tree.root));
+    EXPECT_EQ(tree.nodes.at(tree.root).type.contains("AWindow"), true);
+    bool hasLabel = false;
+    for (const auto& [ref, node] : tree.nodes) {
+        hasLabel |= node.text && *node.text == "hello frames";
+    }
+    EXPECT_TRUE(hasLabel);
+}
+
+TEST_F(FramesTest, ScaleAndQualityAreValidated) {
+    auto window = showWindow(Label { "hi" });
+    for (const auto& params : { AJson { { "scale", 0.0 } }, AJson { { "scale", 1.5 } }, AJson { { "quality", 0 } },
+                                AJson { { "quality", 101 } } }) {
+        auto response = call("frames.subscribe", params);
+        ASSERT_TRUE(response.contains("error")) << AJson::toString(params);
+        EXPECT_EQ(response["error"]["code"].asInt(), rpc_code::INVALID_PARAMS);
+    }
+    settle();
+    EXPECT_TRUE(connection->messages().empty());
+}
+
+TEST_F(FramesTest, FullScaleKeepsThePixels) {
+    auto window = showWindow(Label { "hi" });
+    call("frames.subscribe", AJson { { "scale", 1.0 }, { "quality", 100 } });
+    ASSERT_TRUE(waitForFrames(1));
+    const auto frame = connection->messages().front()["params"];
+    const auto screenshot = call("screenshot")["result"];
+    EXPECT_EQ(frame["width"].asInt(), screenshot["width"].asInt());
+    EXPECT_EQ(frame["height"].asInt(), screenshot["height"].asInt());
+}
+
+TEST_F(FramesTest, OnlyOneFrameInFlight) {
+    auto label = _new<ALabel>("zero");
+    auto window = showWindow(label);
+    connection->hold(true);
+    call("frames.subscribe");
+    ASSERT_TRUE(pumpUntil([&] { return connection->sendsStarted() == 1; }));
+
+    // renders while the first frame is stuck: nothing may be sent or queued
+    for (int i = 0; i < 5; ++i) {
+        label->setText("text " + AString::number(i));
+        settle();
+    }
+    EXPECT_EQ(connection->sendsStarted(), 1);
+
+    connection->hold(false);
+    ASSERT_TRUE(waitForFrames(2));
+    const auto messages = connection->messages();
+    // the five renders left no trace: the numbering is gapless
+    EXPECT_EQ(messages[1]["params"]["seq"].asLongInt(), 2);
+
+    // the second frame carries the latest state; the first was not acked, so it is a full tree
+    EXPECT_TRUE(messages[1]["params"]["tree"]["base"].isNull());
+    bool latest = false;
+    for (const auto& [ref, node] : treeOf(messages[1]).nodes) {
+        latest |= node.text && *node.text == "text 4";
+    }
+    EXPECT_TRUE(latest);
+}
+
+TEST_F(FramesTest, DiffIsAgainstTheLastAckedFrame) {
+    // the window renders all the time under UITest, so frames flow continuously: look for the one with the change
+    auto hasText = [](const AJson& message, const AString& text) {
+        for (const auto& [ref, node] : tree_diff::diffFromJson(message["params"]["tree"]).upsert) {
+            if (node.text && *node.text == text) {
+                return true;
+            }
+        }
+        return false;
+    };
+    auto waitForText = [&](const AString& text) -> AOptional<AJson> {
+        AOptional<AJson> found;
+        pumpUntil([&] {
+            for (const auto& message : connection->messages()) {
+                if (hasText(message, text)) {
+                    found = message;
+                    return true;
+                }
+            }
+            return false;
+        });
+        return found;
+    };
+
+    auto label = _new<ALabel>("one");
+    auto window = showWindow(Vertical { label, Label { "static" } });
+    call("frames.subscribe");
+    ASSERT_TRUE(waitForFrames(1));
+    const auto tree1 = treeOf(connection->messages()[0]);
+    call("frames.ack", AJson { { "seq", 1 } });
+
+    label->setText("two");
+    auto frame2 = waitForText("two");
+    ASSERT_TRUE(frame2);
+    EXPECT_EQ((*frame2)["params"]["tree"]["base"].asLongInt(), 1);
+    const auto diff2 = tree_diff::diffFromJson((*frame2)["params"]["tree"]);
+    EXPECT_LT(diff2.upsert.size(), tree1.nodes.size());   // not the whole tree
+
+    // frame 2 is not acked (as if it was lost on the way): the next one still goes against frame 1
+    label->setText("three");
+    auto frame3 = waitForText("three");
+    ASSERT_TRUE(frame3);
+    EXPECT_GT((*frame3)["params"]["seq"].asLongInt(), (*frame2)["params"]["seq"].asLongInt());
+    EXPECT_EQ((*frame3)["params"]["tree"]["base"].asLongInt(), 1);
+    const auto tree3 = treeOf(*frame3, tree1);
+    bool three = false;
+    for (const auto& [ref, node] : tree3.nodes) {
+        three |= node.text && *node.text == "three";
+    }
+    EXPECT_TRUE(three);
+
+    // an ack of a frame that was never sent is ignored; an ack of a real one moves the base
+    call("frames.ack", AJson { { "seq", 99999 } });
+    const auto seq3 = (*frame3)["params"]["seq"].asLongInt();
+    call("frames.ack", AJson { { "seq", seq3 } });
+    label->setText("four");
+    auto frame4 = waitForText("four");
+    ASSERT_TRUE(frame4);
+    EXPECT_EQ((*frame4)["params"]["tree"]["base"].asLongInt(), seq3);
+    EXPECT_EQ(treeOf(*frame4, tree3).nodes.size(), tree3.nodes.size());
+}
+
+TEST_F(FramesTest, TreeKeepsRefsOfViewTree) {
+    auto label = _new<ALabel>("a");
+    auto window = showWindow(label);
+    call("frames.subscribe");
+    ASSERT_TRUE(waitForFrames(1));
+    const auto tree = treeOf(connection->messages()[0]);
+    // refs of the tree are usable with the other methods
+    AString labelRef;
+    for (const auto& [ref, node] : tree.nodes) {
+        if (node.text && *node.text == "a") {
+            labelRef = ref;
+        }
+    }
+    ASSERT_FALSE(labelRef.empty());
+    auto properties = call("view.properties", AJson { { "ref", labelRef } });
+    EXPECT_FALSE(properties.contains("error")) << AJson::toString(properties);
+}
+
+TEST_F(FramesTest, OverlayDoesNotLoopAndIsHiddenFromFrames) {
+    auto window = showWindow(Label { "hi" });
+    RemoteOverlay::enable(*window);
+    RemoteOverlay::flagActivity(*window);
+    call("frames.subscribe");
+    ASSERT_TRUE(waitForFrames(1));
+    call("frames.ack", AJson { { "seq", 1 } });
+    // the overlay is not hidden for good
+    settle();
+    EXPECT_TRUE(RemoteOverlay::isShown(*window));
+}
+
+TEST_F(FramesTest, UnsubscribeStopsFrames) {
+    auto label = _new<ALabel>("a");
+    auto window = showWindow(label);
+    call("frames.subscribe");
+    ASSERT_TRUE(waitForFrames(1));
+    settle();
+    EXPECT_FALSE(call("frames.unsubscribe").contains("error"));
+    const auto before = connection->messages().size();
+    label->setText("b");
+    settle();
+    EXPECT_EQ(connection->messages().size(), before);
+}
+
+TEST_F(FramesTest, ResubscribeForcesFullTree) {
+    auto label = _new<ALabel>("a");
+    auto window = showWindow(label);
+    call("frames.subscribe");
+    ASSERT_TRUE(waitForFrames(1));
+    call("frames.ack", AJson { { "seq", 1 } });
+    settle();
+    const auto before = connection->messages().size();
+
+    call("frames.subscribe", AJson { { "scale", 0.25 } });
+    ASSERT_TRUE(waitForFrames(before + 1));
+    const auto frame = connection->messages().back()["params"];
+    EXPECT_TRUE(frame["tree"]["base"].isNull());
+    EXPECT_GT(frame["seq"].asLongInt(), 1);   // numbering goes on
+    EXPECT_LT(frame["width"].asInt(), connection->messages().front()["params"]["width"].asInt());
+}
+
+TEST_F(FramesTest, ClosedConnectionIsForgotten) {
+    auto label = _new<ALabel>("a");
+    auto window = showWindow(label);
+    call("frames.subscribe");
+    ASSERT_TRUE(waitForFrames(1));
+    settle();
+    connection->notifyClosed();
+    settle();
+    const auto before = connection->messages().size();
+    label->setText("b");
+    settle();
+    // a connection that is over does not receive anything even though the object is alive
+    EXPECT_EQ(connection->messages().size(), before);
+}
+
+TEST_F(FramesTest, NeedsAConnection) {
+    auto window = showWindow(Label { "hi" });
+    EXPECT_EQ(errorCode("frames.subscribe"), rpc_code::NOT_SUPPORTED);
 }

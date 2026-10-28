@@ -39,6 +39,7 @@ constexpr int NO_SUCH_WINDOW = -32003;
 constexpr int NOT_SUPPORTED = -32004;
 constexpr int TIMEOUT = -32005;
 constexpr int UNKNOWN_FUNCTION = -32006;
+constexpr int RATE_LIMITED = -32007;
 }   // namespace rpc_code
 
 /**
@@ -73,14 +74,55 @@ private:
  */
 API_AUI_DEV_EXTRAS AJson jsonRpcError(const AJson& id, int code, const AString& message, const AString& hint = {});
 
+/**
+ * @brief A client connected to the dispatcher; lets a method push notifications and keep per-client state.
+ * @details
+ * Methods that need to know who is calling (i.e., `frames.subscribe`) are registered with
+ * JsonRpcDispatcher::registerConnectionMethod and receive the connection the request came in through.
+ */
+class API_AUI_DEV_EXTRAS RpcConnection {
+public:
+    virtual ~RpcConnection();
+
+    /**
+     * @brief Sends the text to the client. May block until it is written and may be called from any thread, except
+     * the UI one if the client is slow.
+     * @return false if the connection is closed.
+     */
+    virtual bool sendText(const AString& text) = 0;
+
+    /**
+     * @brief Adds a callback invoked (on whatever thread) when the connection is over. Invoked at once if it already
+     * is.
+     */
+    void addCloseListener(std::function<void()> listener);
+
+    /**
+     * @brief The transport calls it when the connection is over. Subsequent calls do nothing.
+     */
+    void notifyClosed();
+
+private:
+    std::mutex mMutex;
+    bool mClosed = false;
+    AVector<std::function<void()>> mListeners;
+};
+
 class API_AUI_DEV_EXTRAS JsonRpcDispatcher {
 public:
     using Handler = std::function<AFuture<AJson>(const AJson& params)>;
     using SyncHandler = std::function<AJson(const AJson& params)>;
+    using ConnectionHandler = std::function<AFuture<AJson>(const AJson& params, const _<RpcConnection>& connection)>;
     using Respond = std::function<void(AString response)>;
 
     void registerMethod(AString name, Handler handler);
     void registerMethod(AString name, SyncHandler handler);
+
+    /**
+     * @brief Registers a method that needs the connection of the caller. The connection is null if `handle` was called
+     * without one.
+     */
+    void registerConnectionMethod(AString name, ConnectionHandler handler);
 
     [[nodiscard]] bool hasMethod(const AString& name) const;
 
@@ -92,15 +134,16 @@ public:
     /**
      * @brief Processes a single message (a request or a batch).
      * @param respond called with the serialized response, unless there is nothing to answer.
+     * @param connection the caller; null if the message does not come from a connection.
      */
-    void handle(const AString& message, Respond respond) const;
+    void handle(const AString& message, Respond respond, _<RpcConnection> connection = nullptr) const;
 
 private:
     using Reply = std::function<void(AOptional<AJson>)>;
-    void handleOne(const AJson& request, Reply reply) const;
+    void handleOne(const AJson& request, Reply reply, const _<RpcConnection>& connection) const;
 
     mutable std::mutex mMutex;
-    AMap<AString, Handler> mMethods;
+    AMap<AString, ConnectionHandler> mMethods;
 };
 
 }   // namespace aui::remote

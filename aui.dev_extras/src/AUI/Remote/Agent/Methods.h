@@ -52,7 +52,13 @@ void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
 void registerWaitMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
 
 /**
- * @brief Functions the application exposes to the client with ARemoteAgent::registerFunction.
+ * `frames.subscribe`, `frames.unsubscribe`, `frames.ack`: the window as a stream of JPEG frames along with the diffs of
+ * its view tree, pushed as `frames.frame` notifications. See docs/agentic-development.md.
+ */
+void registerFrameMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
+
+/**
+ * @brief Functions the application exposes to the client with ARemoteDebug::registerFunction.
  */
 class FunctionRegistry {
 public:

@@ -73,9 +73,44 @@ AJson jsonRpcError(const AJson& id, int code, const AString& message, const AStr
     return errorResponse(id, code, message, hint);
 }
 
-void JsonRpcDispatcher::registerMethod(AString name, Handler handler) {
+RpcConnection::~RpcConnection() = default;
+
+void RpcConnection::addCloseListener(std::function<void()> listener) {
+    {
+        std::lock_guard lock(mMutex);
+        if (!mClosed) {
+            mListeners.push_back(std::move(listener));
+            return;
+        }
+    }
+    listener();
+}
+
+void RpcConnection::notifyClosed() {
+    AVector<std::function<void()>> listeners;
+    {
+        std::lock_guard lock(mMutex);
+        if (mClosed) {
+            return;
+        }
+        mClosed = true;
+        listeners = std::move(mListeners);
+    }
+    for (const auto& listener : listeners) {
+        listener();
+    }
+}
+
+void JsonRpcDispatcher::registerConnectionMethod(AString name, ConnectionHandler handler) {
     std::lock_guard lock(mMutex);
     mMethods[std::move(name)] = std::move(handler);
+}
+
+void JsonRpcDispatcher::registerMethod(AString name, Handler handler) {
+    registerConnectionMethod(
+        std::move(name), ConnectionHandler([handler = std::move(handler)](const AJson& params, const _<RpcConnection>&) {
+            return handler(params);
+        }));
 }
 
 void JsonRpcDispatcher::registerMethod(AString name, SyncHandler handler) {
@@ -99,7 +134,7 @@ AVector<AString> JsonRpcDispatcher::methodNames() const {
     return names;
 }
 
-void JsonRpcDispatcher::handle(const AString& message, Respond respond) const {
+void JsonRpcDispatcher::handle(const AString& message, Respond respond, _<RpcConnection> connection) const {
     AJson request;
     try {
         request = AJson::fromString(message);
@@ -137,7 +172,7 @@ void JsonRpcDispatcher::handle(const AString& message, Respond respond) const {
                 if (!responses.empty()) {
                     batch->respond(AJson::toString(AJson(std::move(responses))));
                 }
-            });
+            }, connection);
         }
         return;
     }
@@ -146,10 +181,10 @@ void JsonRpcDispatcher::handle(const AString& message, Respond respond) const {
         if (response) {
             respond(AJson::toString(*response));
         }
-    });
+    }, connection);
 }
 
-void JsonRpcDispatcher::handleOne(const AJson& request, Reply reply) const {
+void JsonRpcDispatcher::handleOne(const AJson& request, Reply reply, const _<RpcConnection>& connection) const {
     AJson id = nullptr;
     if (!request.isObject()) {
         reply(errorResponse(id, rpc_code::INVALID_REQUEST, "request must be an object"));
@@ -190,7 +225,7 @@ void JsonRpcDispatcher::handleOne(const AJson& request, Reply reply) const {
         params = *p;
     }
 
-    Handler handler;
+    ConnectionHandler handler;
     {
         std::lock_guard lock(mMutex);
         if (auto it = mMethods.find(methodField->asString()); it != mMethods.end()) {
@@ -204,7 +239,7 @@ void JsonRpcDispatcher::handleOne(const AJson& request, Reply reply) const {
 
     AFuture<AJson> future;
     try {
-        future = handler(params);
+        future = handler(params, connection);
     } catch (...) {
         answer(errorFromException(id, std::current_exception()));
         return;

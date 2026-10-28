@@ -7,3 +7,6 @@ aui_link(aui.dev_extras PUBLIC aui::core aui::json)
 
 # remote agent
 aui_link(aui.dev_extras PRIVATE aui::views aui::curl)
+
+# the mouse pointer of the remote control overlay
+aui_compile_assets(aui.dev_extras)

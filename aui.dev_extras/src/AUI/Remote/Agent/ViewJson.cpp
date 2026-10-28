@@ -25,6 +25,8 @@ namespace aui::remote::view_json {
 namespace {
 AJson array(aui::impl::JsonArray items = {}) { return AJson(std::move(items)); }
 
+}   // namespace
+
 const AVector<_<AView>>& childrenOf(const _<AView>& view) {
     static const AVector<_<AView>> none;
     if (auto container = _cast<AViewContainerBase>(view)) {
@@ -32,7 +34,6 @@ const AVector<_<AView>>& childrenOf(const _<AView>& view) {
     }
     return none;
 }
-}   // namespace
 
 AString typeName(const _<AView>& view) { return AReflect::name(view.get()); }
 
@@ -73,9 +74,9 @@ AString interactiveRole(const _<AView>& view) {
 }
 
 AJson actionsOf(const AString& role) {
-    if (role == "textbox") return array({ AJson("click"), AJson("type") });
-    if (role == "focusable") return array({ AJson("click"), AJson("key") });
-    return array({ AJson("click") });
+    if (role == "textbox") return array({ AJson("clickable"), AJson("typeable") });
+    if (role == "focusable") return array({ AJson("clickable"), AJson("keyable") });
+    return array({ AJson("clickable") });
 }
 
 AJson geometry(const _<AView>& view) {

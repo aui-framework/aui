@@ -23,11 +23,14 @@
 #include "AUI/Json/AJson.h"
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Platform/AProcess.h"
+#include "AUI/Platform/ASurface.h"
+#include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/Entry.h"
 #include "Agent/JsonRpc.h"
 #include "Agent/Methods.h"
 #include "Agent/Pairing.h"
 #include "Agent/RefTable.h"
+#include "Agent/RemoteOverlay.h"
 
 using namespace aui::remote;
 
@@ -53,6 +56,46 @@ APath trustedKeysFile() {
     std::snprintf(suffix, sizeof(suffix), "%016llx", static_cast<unsigned long long>(hash));
     return APath::getDefaultPath(APath::HOME) / ".aui" / "remote" / "trusted" /
            (AString(AProcess::self()->getPathToExecutable().filename()) + "-" + suffix + ".keys");
+}
+
+/// Marks every window as remotely controlled (pink banner and pointer). Windows created later are caught on the next
+/// call. `activity` also shows the banner: a command has arrived.
+void enableRemoteOverlay(bool activity) {
+    AThread::main()->enqueue([activity] {
+        for (const auto& window : ASurface::getWindowManager().getWindows()) {
+            RemoteOverlay::enable(*window);
+            if (activity) {
+                RemoteOverlay::flagActivity(*window);
+            }
+        }
+    });
+}
+
+
+/// A client's connection as the methods see it.
+class WebsocketRpcConnection : public RpcConnection {
+public:
+    explicit WebsocketRpcConnection(_weak<AWebsocketServer::Connection> connection) : mConnection(std::move(connection)) {}
+
+    bool sendText(const AString& text) override {
+        if (auto connection = mConnection.lock()) {
+            return connection->sendText(text);
+        }
+        return false;
+    }
+
+private:
+    _weak<AWebsocketServer::Connection> mConnection;
+};
+
+bool isFrameAck(const AString& message) {
+    try {
+        const auto request = AJson::fromString(message);
+        return request.isObject() && request.containsOpt("method") && request["method"].isString() &&
+               request["method"].asString() == "frames.ack";
+    } catch (const AException&) {
+        return false;
+    }
 }
 
 }   // namespace
@@ -95,6 +138,7 @@ ARemoteDebug::ARemoteDebug(Options options) : mImpl(std::make_unique<Impl>()) {
     registerScreenshotMethods(dispatcher, impl.refs);
     registerInputMethods(dispatcher, impl.refs);
     registerWaitMethods(dispatcher, impl.refs);
+    registerFrameMethods(dispatcher, impl.refs);
     registerFunctionMethods(dispatcher, impl.functions);
     registerDiagnosticsMethods(dispatcher);
 
@@ -117,16 +161,22 @@ ARemoteDebug::ARemoteDebug(Options options) : mImpl(std::make_unique<Impl>()) {
             key = query->toStdString();
         }
         auto authorized = std::make_shared<std::atomic<bool>>(mImpl->pairing.isAuthorized(key));
+        auto rpcConnection = _new<WebsocketRpcConnection>(weak);
+        connection->onClosed = [rpcConnection] { rpcConnection->notifyClosed(); };
         auto respond = [weak](AString response) {
             // the response may be ready after the client left
             if (auto c = weak.lock()) {
                 c->sendText(response);
             }
         };
-        connection->onMessage = [this, authorized, respond](AByteBuffer message, bool) {
+        connection->onMessage = [this, authorized, respond, rpcConnection](AByteBuffer message, bool) {
             const auto text = AString::fromUtf8(message);
             if (*authorized) {
-                mImpl->dispatcher.handle(text, respond);
+                // acknowledging a frame is not a command: it would make the overlay show up, which makes a frame
+                if (!isFrameAck(text)) {
+                    enableRemoteOverlay(true);
+                }
+                mImpl->dispatcher.handle(text, respond, rpcConnection);
                 return;
             }
             respond(AJson::toString(handleUnauthorized(text, *authorized)));
@@ -194,6 +244,7 @@ _<ARemoteDebug> ARemoteDebug::start(Options options) {
     auto& agent = slot();
     if (!agent) {
         agent = aui::ptr::manage_shared(new ARemoteDebug(std::move(options)));
+        enableRemoteOverlay(false);
     }
     return agent;
 }
