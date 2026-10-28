@@ -5,18 +5,23 @@ description: Run, look at, click and type into a running AUI application through
 
 # Driving an AUI application
 
-1. The application must link `aui::dev_extras` (development builds only). Start it with `AUI_REMOTE=1`.
+1. The application must link `aui::dev_extras` (development builds only) and call `ARemoteDebug::start()` under
+   `#if AUI_DEBUG`; see `examples/ui/remote_debug`. If it does not, add it.
 2. Find it in `~/.aui/remote/<pid>.json` (`port`). The first time, pair: `pair.begin` makes the application show a
    6-digit code; ask the user for it and send `pair.confirm` with `{ code, key }` (`key` is a random string you
    generate). Then connect to `wss://127.0.0.1:<port>/?key=<key>`, accepting only the certificate whose SHA-256 is `certSha256` from
    the discovery file. Speak JSON-RPC 2.0, or use `aui-remote cli`
-   if installed. An application you start yourself with `AUI_REMOTE=1 AUI_REMOTE_KEY=<key>` needs no pairing.
+   if installed. An application you start yourself with `AUI_REMOTE_KEY=<key>` (read by
+   `ARemoteDebug::Options::fromEnvironment()`) needs no pairing.
 3. Loop: `view.interactive` (what can be clicked) -> `input.pointer` / `input.type` / `input.key` -> `wait.idle`
    -> `screenshot` (returns a PNG path; look at the file) -> fix the code, rebuild, repeat.
 
 Methods: `session.hello`, `window.list`, `view.tree`, `view.find`, `view.properties`, `view.hitTest`,
 `view.interactive`, `screenshot`, `input.pointer`, `input.type`, `input.key`, `wait.idle`, `wait.view`,
 `diag.log`, `fn.list`, `fn.call`. Full description: `docs/agentic-development.md`.
+
+`input.pointer` with `action: "move"` hovers without clicking; `pointer: "finger"` sends touch instead of mouse. The application shows a pink banner (for 3 s after a command) and a pink pointer
+for the user; neither is part of screenshots.
 
 Rules:
 - Refs (`v<gen>:<id>`) go stale after the tree changes; on `STALE_REF` call `view.find` again.

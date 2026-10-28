@@ -133,9 +133,10 @@ use compiler-specific things like `#ifdef _WIN32`.
 
 ## Looking at a running application
 
-To verify a UI change in a real window, link `aui::dev_extras` (development builds only), start the application with
-`AUI_REMOTE=1` and drive it through the remote agent: inspect views, click, type, take screenshots. The `aui-remote`
-tool ([github.com/aui-framework/remote](https://github.com/aui-framework/remote)) wraps this into a CLI, and the
+To verify a UI change in a real window, link `aui::dev_extras` (development builds only) and start the remote agent
+from the application: `ARemoteDebug::start()` under `#if AUI_DEBUG`, see `examples/ui/remote_debug`. Then drive it
+through the agent: inspect views, click, type, take screenshots. The `aui-remote` tool
+([github.com/aui-framework/remote](https://github.com/aui-framework/remote)) wraps this into a CLI, and the
 `aui-remote` skill in `.claude/skills` describes the loop. The first connection has to be paired with a 6-digit code the
 application shows in its window: ask the user for it. See `docs/agentic-development.md`.
 
