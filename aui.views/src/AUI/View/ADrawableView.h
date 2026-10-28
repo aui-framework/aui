@@ -17,6 +17,7 @@
 
 #include <AUI/Image/IDrawable.h>
 #include <AUI/Util/Declarative/Containers.h>
+#include <AUI/Util/Declarative/Contracts.h>
 #include "AView.h"
 
 /**
@@ -115,8 +116,40 @@ namespace declarative {
 
 /**
  * <!-- aui:no_dedicated_page -->
+ * @details
+ * Accepts an url (`Icon { ":img/logo.svg" }`), a drawable, or a [reactive] expression that evaluates to either of
+ * them:
+ *
+ * ```cpp
+ * Icon { AUI_REACT(*expanded ? ":img/expanded.svg" : ":img/collapsed.svg") }
+ * ```
  */
 struct Icon : aui::ui_building::view<ADrawableIconView> {
     using aui::ui_building::view<ADrawableIconView>::view;
+
+    /**
+     * @brief Icon that follows a [reactive] expression of an url or a drawable.
+     */
+    template <typename F>
+    Icon(aui::react::Expression<F>&& expression) : Icon(contract::In<_<IDrawable>>(toDrawable(std::move(expression)))) {}
+
+    /**
+     * @brief Icon that shows a drawable, possibly reactive.
+     */
+    Icon(contract::In<_<IDrawable>> drawable) : aui::ui_building::view<ADrawableIconView>() {
+        drawable.bindTo((*this)()->drawable().assignment());
+    }
+
+private:
+    template <typename F>
+    static auto toDrawable(aui::react::Expression<F>&& expression) {
+        if constexpr (std::is_convertible_v<std::invoke_result_t<F&>, AUrl>) {
+            return aui::react::makeExpression([f = std::move(expression.expression)]() -> _<IDrawable> {
+                return IDrawable::fromUrl(f());
+            });
+        } else {
+            return std::move(expression);
+        }
+    }
 };
 }   // namespace declarative
