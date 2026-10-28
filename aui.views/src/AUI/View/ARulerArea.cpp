@@ -62,7 +62,12 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
 }
 
 void ARulerArea::onLayout(glm::ivec2 size) {
-    mWrappedView->setSize(mWrappedView->measure(AConstraints {}));
+    // the wrapper has no layout manager, so the wrapped view is laid out here; otherwise it would stay
+    // AView::mSkipUntilLayoutUpdate forever, would not consume clicks and views stacked above the ruler area would win
+    // the hit test
+    const auto wrappedSize = mWrappedView->measure(AConstraints {});
+    const auto position = (getSize() - wrappedSize) / 2;
+    mWrappedView->layout(position.x, position.y, wrappedSize.x, wrappedSize.y);
     updatePosition();
     AViewContainerBase::onLayout(size);
 }
