@@ -52,7 +52,7 @@ public:
 
     // CURSOR
     void applyNativeCursor(const ACursor &cursor, AWindow *pWindow) override;
-    _<ACursor::Custom> createCustomCursor(AImageView image) override;
+    _<ACursor::Custom> createCustomCursor(AImageView image, glm::ivec2 hotspot) override;
 
     // CLIPBOARD
     void setClipboardText(const AString& text) override;
