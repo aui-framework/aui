@@ -33,7 +33,11 @@ void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
         auto velocity = glm::max(glm::length(s->prevPrevVelocity),
                                  glm::length(s->prevVelocity),
                                  glm::length(s->currentVelocity));
+        // the fps is measured once a second; until then, assume a usual screen instead of dividing by zero
         auto fps = static_cast<float>(ASurface::current()->getFps());
+        if (fps <= 0.f) {
+            fps = 60.f;
+        }
         mState = KineticScrollingState{
             .pointer = e.pointerIndex,
             .origin = s->origin,
