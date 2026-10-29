@@ -52,6 +52,7 @@ With several apps running pass `--pid N` to every command.
 | `find [--type T] [--text S] [--ass NAME] [--ref R] [--interactive] [--include-invisible] [--window W]` | search views |
 | `props <ref>`                                                   | properties of a view                                  |
 | `hit <x> <y> [--window W]`                                      | views under a point                                   |
+| `scroll-into-view <ref>`                                        | scrolls the scroll areas so the view is visible; prints `visible` |
 | `interactive [--window W]`                                      | clickable and typeable views                          |
 | `screenshot [--window W] [--ref R] [--padding N]`               | saves a PNG, prints `path`; `--ref` crops to a view   |
 | `click\|dblclick\|press\|release\|move <ref \| x y> [--pointer mouse\|finger] [--button b] [--mod m]...` | pointer; without `--pointer` the app uses its native one (mouse on desktop, finger on Android/iOS) |

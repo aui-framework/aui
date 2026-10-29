@@ -188,7 +188,7 @@ ParsedArgs ParsedArgs::parse(const AStringVector& args) {
 }
 
 AStringVector commandNames() {
-    return { "list",     "pair",  "hello",    "windows", "resize", "tree",      "find",     "props",     "hit",
+    return { "list",     "pair",  "hello",    "windows", "resize", "scroll-into-view", "tree",      "find",     "props",     "hit",
              "screenshot", "interactive", "click", "dblclick", "press", "release", "drag",       "scroll",
              "move",     "type",  "key",      "wait-idle", "wait-view", "logs",     "functions", "call",
              "launch",   "stop",  "compare" };
@@ -220,6 +220,10 @@ AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {
             request.timeout = std::chrono::milliseconds(timeout) + WAIT_MARGIN;
         }
         copyWindow(args, params);
+    } else if (cmd == "scroll-into-view") {
+        requirePositional(args, 1, "scroll-into-view <ref>");
+        request.method = "view.scrollIntoView";
+        params["ref"] = args.positional[0];
     } else if (cmd == "tree") {
         request.method = "view.tree";
         if (auto v = args.get("ref")) {

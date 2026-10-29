@@ -180,6 +180,13 @@ TEST(ArgsTest, Resize) {
     EXPECT_THROW(buildRequest(parse({ "resize", "wide", "600" })), ArgsError);
 }
 
+TEST(ArgsTest, ScrollIntoView) {
+    auto r = request({ "scroll-into-view", "v1:7" });
+    EXPECT_EQ(r.method, "view.scrollIntoView");
+    EXPECT_EQ(r.params["ref"].asString(), "v1:7");
+    EXPECT_THROW(buildRequest(parse({ "scroll-into-view" })), ArgsError);
+}
+
 TEST(ArgsTest, LocalCommandsAreNotAgentCalls) {
     for (auto c : { "list", "pair", "launch", "stop", "compare", "nonsense" }) {
         EXPECT_FALSE(buildRequest(parse({ c })).hasValue()) << c;
