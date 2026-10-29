@@ -1,0 +1,448 @@
+#include "Args.h"
+
+#include <set>
+
+namespace aui_remote::cli {
+
+namespace {
+
+const std::set<std::string> FLAGS = { "interactive", "include-invisible", "inspector", "json", "annotate", "help" };
+
+/// number if the text looks like one, string otherwise.
+AJson numberOrString(const AString& text) {
+    if (auto i = text.toInt()) {
+        return *i;
+    }
+    return text;
+}
+
+AJson number(const AString& text, const AString& what) {
+    if (auto i = text.toInt()) {
+        return *i;
+    }
+    if (auto d = text.toDouble()) {
+        return *d;
+    }
+    throw ArgsError("{} must be a number, got '{}'"_format(what, text));
+}
+
+int intOption(const ParsedArgs& args, const AString& name, int defaultValue) {
+    if (auto v = args.get(name)) {
+        if (auto i = v->toInt()) {
+            return *i;
+        }
+        throw ArgsError("--{} must be an integer, got '{}'"_format(name, *v));
+    }
+    return defaultValue;
+}
+
+void copyWindow(const ParsedArgs& args, AJson& params) {
+    if (auto w = args.get("window")) {
+        params["windowId"] = numberOrString(*w);
+    }
+}
+
+void requirePositional(const ParsedArgs& args, std::size_t count, const AString& usage) {
+    if (args.positional.size() < count) {
+        throw ArgsError("usage: aui-remote cli " + usage);
+    }
+}
+
+AJson filters(const ParsedArgs& args) {
+    AJson params = AJson::Object {};
+    if (auto v = args.get("type")) {
+        params["type"] = *v;
+    }
+    if (auto v = args.get("text")) {
+        params["text"] = *v;
+    }
+    if (auto v = args.get("ass")) {
+        params["assName"] = *v;
+    }
+    if (auto v = args.get("ref")) {
+        params["ref"] = *v;
+    }
+    if (args.has("interactive")) {
+        params["interactive"] = true;
+    }
+    if (args.has("include-invisible")) {
+        params["includeInvisible"] = true;
+    }
+    copyWindow(args, params);
+    return params;
+}
+
+/// Reads a pointer target (`<ref>` or `<x> <y>`) from the positional arguments starting at `index`.
+void readTarget(const ParsedArgs& args, std::size_t& index, AJson& params, const AString& refKey, const AString& xKey,
+                const AString& yKey, const AString& usage) {
+    if (index >= args.positional.size()) {
+        throw ArgsError("usage: aui-remote cli " + usage);
+    }
+    const auto& first = args.positional[index];
+    if (first.toDouble()) {
+        if (index + 1 >= args.positional.size()) {
+            throw ArgsError("a point needs both x and y; usage: aui-remote cli " + usage);
+        }
+        params[xKey] = number(first, "x");
+        params[yKey] = number(args.positional[index + 1], "y");
+        index += 2;
+    } else {
+        params[refKey] = first;
+        index += 1;
+    }
+}
+
+AJson pointerParams(const ParsedArgs& args, const AString& action, const AString& usage) {
+    AJson params = AJson::Object {};
+    params["action"] = action;
+    std::size_t index = 0;
+    readTarget(args, index, params, "ref", "x", "y", usage);
+    if (action == "drag") {
+        readTarget(args, index, params, "toRef", "toX", "toY", usage);
+    }
+    if (action == "scroll") {
+        params["dx"] = intOption(args, "dx", 0);
+        params["dy"] = intOption(args, "dy", 0);
+    }
+    if (auto b = args.get("button")) {
+        params["button"] = *b;
+    }
+    // without it the application uses the pointer native to its platform
+    if (auto p = args.get("pointer")) {
+        if (*p != "mouse" && *p != "finger") {
+            throw ArgsError("--pointer must be mouse or finger, got '{}'"_format(*p));
+        }
+        params["pointer"] = *p;
+    }
+    if (args.has("mod")) {
+        AJson modifiers = AJson::Array {};
+        for (const auto& m : args.getAll("mod")) {
+            modifiers.push_back(m);
+        }
+        params["modifiers"] = std::move(modifiers);
+    }
+    copyWindow(args, params);
+    return params;
+}
+
+constexpr std::chrono::milliseconds WAIT_MARGIN = std::chrono::seconds(10);
+
+/// Copies `--option` as a number to `params[key]`; `required` throws when it is absent.
+void copyNumber(const ParsedArgs& args, AJson& params, const AString& option, const AString& key, bool required = false,
+                const AString& usage = {}) {
+    if (auto v = args.get(option)) {
+        params[key] = number(*v, "--" + option);
+    } else if (required) {
+        throw ArgsError("--{} is required; usage: aui-remote cli {}"_format(option, usage));
+    }
+}
+
+/// A gesture takes as long as it says; the client waits for it on top of the usual margin.
+void extendTimeout(CommandRequest& request, const ParsedArgs& args) {
+    if (args.has("duration")) {
+        request.timeout = std::chrono::milliseconds(intOption(args, "duration", 0)) + WAIT_MARGIN;
+    }
+}
+
+}   // namespace
+
+AOptional<AString> ParsedArgs::get(const AString& name) const {
+    if (auto it = options.find(name); it != options.end() && !it->second.empty()) {
+        return it->second.last();
+    }
+    return std::nullopt;
+}
+
+AStringVector ParsedArgs::getAll(const AString& name) const {
+    if (auto it = options.find(name); it != options.end()) {
+        return it->second;
+    }
+    return {};
+}
+
+AOptional<int> ParsedArgs::getInt(const AString& name) const {
+    if (auto v = get(name)) {
+        return v->toInt();
+    }
+    return std::nullopt;
+}
+
+bool ParsedArgs::isFlag(const AString& name) { return FLAGS.contains(name.toStdString()); }
+
+ParsedArgs ParsedArgs::parse(const AStringVector& args) {
+    ParsedArgs result;
+    bool commandRead = false;
+    for (std::size_t i = 0; i < args.size(); ++i) {
+        const auto& arg = args[i];
+        if (arg == "--") {
+            for (++i; i < args.size(); ++i) {
+                result.rest << args[i];
+            }
+            break;
+        }
+        if (arg.startsWith("--") && arg.length() > 2) {
+            auto name = arg.substr(2);
+            if (auto eq = name.find('='); eq != AString::NPOS) {
+                result.options[name.substr(0, eq)] << name.substr(eq + 1);
+            } else if (isFlag(name)) {
+                result.options[name];
+            } else {
+                if (i + 1 >= args.size()) {
+                    throw ArgsError("option --{} needs a value"_format(name));
+                }
+                result.options[name] << args[++i];
+            }
+            continue;
+        }
+        if (!commandRead) {
+            result.command = arg;
+            commandRead = true;
+        } else {
+            result.positional << arg;
+        }
+    }
+    return result;
+}
+
+AStringVector commandNames() {
+    return { "list",     "pair",  "hello",    "windows", "resize", "scale", "scroll-into-view", "tree",      "find",     "props",     "hit",
+             "screenshot", "interactive", "click", "dblclick", "press", "release", "drag",       "scroll",
+             "long-press", "fling", "pinch", "rotate", "touch",
+             "move",     "type",  "key",      "wait-idle", "wait-view", "logs",     "functions", "call",
+             "launch",   "stop",  "compare" };
+}
+
+AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {
+    const auto& cmd = args.command;
+    CommandRequest request;
+    request.params = AJson::Object {};
+    auto& params = request.params;
+
+    if (cmd == "hello") {
+        request.method = "session.hello";
+    } else if (cmd == "windows") {
+        request.method = "window.list";
+    } else if (cmd == "resize") {
+        requirePositional(args, 2, "resize <width> <height> [--window id] [--timeout ms]");
+        request.method = "window.resize";
+        for (auto [i, name] : { std::pair { 0, "width" }, std::pair { 1, "height" } }) {
+            auto value = args.positional[i].toInt();
+            if (!value || *value <= 0) {
+                throw ArgsError("{} must be a positive integer, got '{}'"_format(name, args.positional[i]));
+            }
+            params[name] = *value;
+        }
+        if (args.has("timeout")) {
+            const int timeout = intOption(args, "timeout", 0);
+            params["timeoutMs"] = timeout;
+            request.timeout = std::chrono::milliseconds(timeout) + WAIT_MARGIN;
+        }
+        copyWindow(args, params);
+    } else if (cmd == "scale") {
+        requirePositional(args, 1, "scale <factor|reset> [--window id] [--timeout ms]");
+        request.method = "window.setScale";
+        if (args.positional[0] == "reset") {
+            params["reset"] = true;
+        } else if (auto factor = args.positional[0].toDouble(); factor && *factor > 0) {
+            params["factor"] = *factor;
+        } else {
+            throw ArgsError("scale must be a positive number or reset, got '{}'"_format(args.positional[0]));
+        }
+        if (args.has("timeout")) {
+            const int timeout = intOption(args, "timeout", 0);
+            params["timeoutMs"] = timeout;
+            request.timeout = std::chrono::milliseconds(timeout) + WAIT_MARGIN;
+        }
+        copyWindow(args, params);
+    } else if (cmd == "scroll-into-view") {
+        requirePositional(args, 1, "scroll-into-view <ref>");
+        request.method = "view.scrollIntoView";
+        params["ref"] = args.positional[0];
+    } else if (cmd == "tree") {
+        request.method = "view.tree";
+        if (auto v = args.get("ref")) {
+            params["ref"] = *v;
+        }
+        if (args.has("depth")) {
+            params["depth"] = intOption(args, "depth", 0);
+        }
+        if (args.has("inspector")) {
+            params["include"] = AJson::Array { "inspector" };
+        }
+        copyWindow(args, params);
+    } else if (cmd == "find") {
+        request.method = "view.find";
+        params = filters(args);
+    } else if (cmd == "props") {
+        requirePositional(args, 1, "props <ref>");
+        request.method = "view.properties";
+        params["ref"] = args.positional[0];
+    } else if (cmd == "hit") {
+        requirePositional(args, 2, "hit <x> <y> [--window id]");
+        request.method = "view.hitTest";
+        params["x"] = number(args.positional[0], "x");
+        params["y"] = number(args.positional[1], "y");
+        copyWindow(args, params);
+    } else if (cmd == "interactive") {
+        request.method = "view.interactive";
+        copyWindow(args, params);
+    } else if (cmd == "screenshot") {
+        request.method = "screenshot";
+        if (auto v = args.get("ref")) {
+            params["ref"] = *v;
+        }
+        if (args.has("annotate")) {
+            params["annotate"] = true;
+        }
+        if (args.has("padding")) {
+            params["padding"] = intOption(args, "padding", 0);
+        }
+        copyWindow(args, params);
+    } else if (cmd == "click" || cmd == "dblclick" || cmd == "press" || cmd == "release" || cmd == "move" ||
+               cmd == "drag" || cmd == "scroll") {
+        request.method = "input.pointer";
+        const AString usage = cmd == "drag"     ? "drag <ref|x y> <ref|x y> [--pointer mouse|finger] [--button b] [--mod m]..."
+                              : cmd == "scroll" ? "scroll <ref|x y> [--dx n] [--dy n]"
+                                                : cmd + " <ref|x y> [--pointer mouse|finger] [--button b] [--mod m]...";
+        params = pointerParams(args, cmd == "dblclick" ? AString("doubleClick") : cmd, usage);
+    } else if (cmd == "long-press") {
+        const AString usage = "long-press <ref|x y> [--duration ms]";
+        request.method = "input.pointer";
+        params = pointerParams(args, "longPress", usage);
+        copyNumber(args, params, "duration", "durationMs");
+        extendTimeout(request, args);
+    } else if (cmd == "fling") {
+        const AString usage = "fling <ref|x y> [--dx n] [--dy n] [--velocity px/s]";
+        request.method = "input.pointer";
+        params = pointerParams(args, "fling", usage);
+        copyNumber(args, params, "dx", "dx");
+        copyNumber(args, params, "dy", "dy");
+        copyNumber(args, params, "velocity", "velocity");
+        if (!params.contains("dx") && !params.contains("dy")) {
+            throw ArgsError("fling needs --dx or --dy (the way of the finger); usage: aui-remote cli " + usage);
+        }
+    } else if (cmd == "pinch" || cmd == "rotate") {
+        const AString usage = cmd == "pinch" ? "pinch <ref|x y> --from px --to px [--angle deg] [--duration ms]"
+                                             : "rotate <ref|x y> --degrees n [--distance px] [--duration ms]";
+        request.method = "input.touch";
+        std::size_t index = 0;
+        readTarget(args, index, params, "ref", "x", "y", usage);
+        params["gesture"] = cmd;
+        if (cmd == "pinch") {
+            copyNumber(args, params, "from", "from", true, usage);
+            copyNumber(args, params, "to", "to", true, usage);
+            copyNumber(args, params, "angle", "angle");
+        } else {
+            copyNumber(args, params, "degrees", "degrees", true, usage);
+            copyNumber(args, params, "distance", "distance");
+        }
+        copyNumber(args, params, "duration", "durationMs");
+        extendTimeout(request, args);
+        copyWindow(args, params);
+    } else if (cmd == "touch") {
+        const AString usage = R"(touch --fingers '[{"finger":0,"points":[{"x":10,"y":10,"t":0},...]},...]')";
+        request.method = "input.touch";
+        auto fingers = args.get("fingers");
+        if (!fingers) {
+            throw ArgsError("usage: aui-remote cli " + usage);
+        }
+        try {
+            params["fingers"] = AJson::fromString(*fingers);
+        } catch (const AException& e) {
+            throw ArgsError("--fingers is not valid JSON: " + e.getMessage());
+        }
+        if (!params["fingers"].isArray()) {
+            throw ArgsError("--fingers must be an array; usage: aui-remote cli " + usage);
+        }
+        // the gesture lasts until its last point
+        int duration = 0;
+        for (const auto& f : params["fingers"].asArray()) {
+            if (auto points = f.containsOpt("points"); points && points->isArray()) {
+                for (const auto& p : points->asArray()) {
+                    if (auto t = p.containsOpt("t"); t && t->isInt()) {
+                        duration = std::max(duration, t->asInt());
+                    }
+                }
+            }
+        }
+        request.timeout = std::chrono::milliseconds(duration) + WAIT_MARGIN;
+        copyWindow(args, params);
+    } else if (cmd == "type") {
+        requirePositional(args, 1, "type <text> [--ref ref]");
+        request.method = "input.type";
+        params["text"] = args.positional[0];
+        if (auto v = args.get("ref")) {
+            params["ref"] = *v;
+        }
+    } else if (cmd == "key") {
+        requirePositional(args, 1, "key <key> [--mod ctrl]... [--ref ref] [--action press|release]");
+        request.method = "input.key";
+        params["key"] = args.positional[0];
+        if (args.has("mod")) {
+            AJson modifiers = AJson::Array {};
+            for (const auto& m : args.getAll("mod")) {
+                modifiers.push_back(m);
+            }
+            params["modifiers"] = std::move(modifiers);
+        }
+        if (auto v = args.get("ref")) {
+            params["ref"] = *v;
+        }
+        if (auto v = args.get("action")) {
+            params["action"] = *v;
+        }
+    } else if (cmd == "wait-idle") {
+        request.method = "wait.idle";
+        const int timeout = intOption(args, "timeout", 0);
+        if (args.has("timeout")) {
+            params["timeoutMs"] = timeout;
+            request.timeout = std::chrono::milliseconds(timeout) + WAIT_MARGIN;
+        }
+        if (args.has("quiet")) {
+            params["quietMs"] = intOption(args, "quiet", 0);
+        }
+    } else if (cmd == "wait-view") {
+        request.method = "wait.view";
+        params = filters(args);
+        params["state"] = args.get("state").valueOr("visible");
+        if (params["state"].asString() != "visible" && params["state"].asString() != "gone") {
+            throw ArgsError("--state must be visible or gone");
+        }
+        if (args.has("timeout")) {
+            const int timeout = intOption(args, "timeout", 0);
+            params["timeoutMs"] = timeout;
+            request.timeout = std::chrono::milliseconds(timeout) + WAIT_MARGIN;
+        }
+    } else if (cmd == "logs") {
+        request.method = "diag.log";
+        if (args.has("since")) {
+            params["since"] = intOption(args, "since", 0);
+        }
+        if (auto v = args.get("level")) {
+            params["level"] = *v;
+        }
+        if (args.has("limit")) {
+            params["limit"] = intOption(args, "limit", 0);
+        }
+    } else if (cmd == "functions") {
+        request.method = "fn.list";
+    } else if (cmd == "call") {
+        requirePositional(args, 1, "call <name> [--args '{\"json\":true}']");
+        request.method = "fn.call";
+        params["name"] = args.positional[0];
+        if (auto v = args.get("args")) {
+            try {
+                params["arguments"] = AJson::fromString(*v);
+            } catch (const AException& e) {
+                throw ArgsError("--args is not valid JSON: " + e.getMessage());
+            }
+        } else {
+            params["arguments"] = AJson::Object {};
+        }
+    } else {
+        return std::nullopt;
+    }
+    return request;
+}
+
+}   // namespace aui_remote::cli
