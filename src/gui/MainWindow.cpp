@@ -1,6 +1,7 @@
 #include "MainWindow.h"
 
 #include <AUI/Common/ATimer.h>
+#include <AUI/Platform/AProcess.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/ALabel.h>
 #include <AUI/View/ATitlebar.h>
@@ -70,6 +71,8 @@ void MainWindow::refreshApps() {
     mAsync << AUI_THREADPOOL {
         auto apps = discovery::list();
         KeyStore().pruneExcept(apps);
+        // a debug build is an application with a remote agent too; it is not shown to itself
+        apps.removeIf([self = AProcess::self()->getPid()](const AppInfo& app) { return app.pid == self; });
         AUI_UI_THREAD {
             mApps = apps;
             updateWelcome();

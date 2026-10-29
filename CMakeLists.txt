@@ -10,12 +10,16 @@ option(AUIB_NO_PRECOMPILED "AUI.Boot: disable precompiled dependencies" OFF)
 include(aui.boot.cmake)
 
 auib_import(aui https://github.com/aui-framework/aui
-        COMPONENTS core views curl json image crypt network
+        COMPONENTS core views curl json image crypt network dev_extras
         VERSION 3325c1525d53a5e400596857f8622b4173236b1b)
 
 aui_executable(${PROJECT_NAME})
 
 aui_link(${PROJECT_NAME} PRIVATE aui::core aui::views aui::curl aui::json aui::image aui::crypt aui::network)
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    # a debug build of the GUI can be driven by aui-remote itself, see README.md
+    aui_link(${PROJECT_NAME} PRIVATE aui::dev_extras)
+endif ()
 
 aui_compile_assets(${PROJECT_NAME})
 
