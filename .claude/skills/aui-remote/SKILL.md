@@ -17,7 +17,7 @@ description: Run, look at, click and type into a running AUI application through
    -> `screenshot` (returns a PNG path; look at the file) -> fix the code, rebuild, repeat.
 
 Methods: `session.hello`, `window.list`, `window.resize`, `view.tree`, `view.find`, `view.properties`, `view.hitTest`,
-`view.interactive`, `screenshot`, `input.pointer`, `input.type`, `input.key`, `wait.idle`, `wait.view`,
+`view.interactive`, `view.scrollIntoView`, `screenshot`, `input.pointer`, `input.type`, `input.key`, `wait.idle`, `wait.view`,
 `diag.log`, `fn.list`, `fn.call`. Full description: `docs/agentic-development.md`.
 
 `input.pointer` with `action: "move"` hovers without clicking; `pointer: "finger"` sends touch instead of mouse. The application shows a pink banner (for 3 s after a command) and a pink pointer

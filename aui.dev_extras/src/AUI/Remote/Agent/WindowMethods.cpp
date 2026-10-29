@@ -11,7 +11,9 @@
 
 #include "Methods.h"
 
+#include "AUI/View/AScrollArea.h"
 #include "Poller.h"
+#include "ViewJson.h"
 
 namespace aui::remote {
 
@@ -30,6 +32,14 @@ int sizeParam(const AJson& params, const char* name) {
                            "pass width and height in the units of window.list");
     }
     return v->asInt();
+}
+
+ARect<int> rectInWindow(const AView& view) {
+    return ARect<int>::fromTopLeftPositionAndSize(view.getPositionInWindow(), view.getSize());
+}
+
+bool contains(const ARect<int>& outer, const ARect<int>& inner) {
+    return inner.p1.x >= outer.p1.x && inner.p1.y >= outer.p1.y && inner.p2.x <= outer.p2.x && inner.p2.y <= outer.p2.y;
 }
 }   // namespace
 
@@ -92,6 +102,61 @@ void registerWindowMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
                 return result;
             },
             timeout, "the window to be resized");
+        return poller->start();
+    }));
+
+    // params: ref, timeoutMs (default 3000)
+    dispatcher.registerMethod("view.scrollIntoView", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
+        auto ref = params.containsOpt("ref");
+        if (!ref || !ref->isString()) {
+            throw RpcException(rpc_code::INVALID_PARAMS, "missing param: ref", "take a ref from view.find or view.tree");
+        }
+        const auto timeout = millisParam(params, "timeoutMs", 3s);
+
+        struct State {
+            bool started = false;
+            _weak<AView> view;
+            int scrollAreas = 0;
+        };
+        auto state = std::make_shared<State>();
+        auto poller = std::make_shared<Poller>(
+            [&refs, ref = ref->asString(), state](std::chrono::milliseconds) -> AOptional<AJson> {
+                if (!state->started) {
+                    state->started = true;
+                    auto view = refs.resolve(ref);
+                    state->view = view;
+                    // the innermost area first: scrolling it moves the view within the outer ones
+                    for (auto parent = view->getParent(); parent; parent = parent->getParent()) {
+                        if (auto area = dynamic_cast<AScrollArea*>(parent)) {
+                            area->scrollTo(view);
+                            ++state->scrollAreas;
+                        }
+                    }
+                    return std::nullopt;
+                }
+                auto view = state->view.lock();
+                if (!view) {
+                    throw RpcException(rpc_code::STALE_REF, "the view was removed while scrolling",
+                                       "find it again with view.find");
+                }
+                auto window = view->getWindow();
+                if (window && window->hasPendingLayout()) {
+                    return std::nullopt;
+                }
+                const auto rect = rectInWindow(*view);
+                bool visible = !window || contains(rectInWindow(*window), rect);
+                for (auto parent = view->getParent(); parent && visible; parent = parent->getParent()) {
+                    if (auto area = dynamic_cast<AScrollArea*>(parent)) {
+                        visible = contains(rectInWindow(*area), rect);
+                    }
+                }
+                return AJson {
+                    { "rect", view_json::geometry(view) },
+                    { "scrollAreas", state->scrollAreas },
+                    { "visible", visible },
+                };
+            },
+            timeout, "the scroll to finish");
         return poller->start();
     }));
 }

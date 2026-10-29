@@ -89,6 +89,7 @@ Text frames, JSON-RPC 2.0, protocol version 1. Errors carry `data.hint` with a s
 | `window.resize`                                       | resizes a window (`width`, `height`), answers when the layout is done |
 | `view.tree`, `view.find`, `view.properties`           | inspect views; `view.find` filters by `type`, `text`, `assName`|
 | `view.hitTest`, `view.interactive`                    | the views under a point; clickable / typeable elements         |
+| `view.scrollIntoView`                                 | scrolls the scroll areas around a view so that it is visible   |
 | `screenshot`                                          | saves a PNG to the temp folder and returns its path; `ref` crops to a view |
 | `input.pointer`                                       | `click`, `doubleClick`, `press`, `release`, `move`, `drag`, `scroll` |
 | `input.type`, `input.key`                             | typed text and key presses with modifiers                      |

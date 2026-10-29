@@ -30,6 +30,7 @@
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/AButton.h"
 #include "AUI/View/ALabel.h"
+#include "AUI/View/AScrollArea.h"
 #include "AUI/View/ATextField.h"
 
 using namespace aui::remote;
@@ -470,6 +471,25 @@ TEST_F(AgentTest, WindowResize) {
     EXPECT_EQ(errorCode("window.resize", AJson { { "width", 100 } }), rpc_code::INVALID_PARAMS);
     EXPECT_EQ(errorCode("window.resize", AJson { { "width", 100 }, { "height", 100 }, { "windowId", "v0:99999" } }),
               rpc_code::STALE_REF);
+}
+
+TEST_F(AgentTest, ScrollIntoView) {
+    _<AViewContainer> list = Vertical {};
+    for (int i = 0; i < 50; ++i) {
+        list->addView(Label { "item {}"_format(i) });
+    }
+    auto last = _new<ALabel>("the last one");
+    list->addView(last);
+    auto window = showWindow(AScrollArea::Builder().withContents(list).build() AUI_OVERRIDE_STYLE { FixedSize { 200_px, 100_px } });
+    const auto ref = ok("view.find", AJson { { "text", "the last one" } })[0]["ref"].asString();
+
+    auto result = ok("view.scrollIntoView", AJson { { "ref", ref } });
+    EXPECT_EQ(result["scrollAreas"].asInt(), 1);
+    EXPECT_TRUE(result["visible"].asBool()) << AJson::toString(result);
+    EXPECT_EQ(result["rect"]["absY"].asInt(), last->getPositionInWindow().y);
+
+    EXPECT_EQ(errorCode("view.scrollIntoView", AJson::fromString("{}")), rpc_code::INVALID_PARAMS);
+    EXPECT_EQ(errorCode("view.scrollIntoView", AJson { { "ref", "v0:99999" } }), rpc_code::STALE_REF);
 }
 
 TEST_F(AgentTest, ListedWindowIdWorks) {
