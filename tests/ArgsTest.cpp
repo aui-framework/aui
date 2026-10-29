@@ -108,6 +108,13 @@ TEST(ArgsTest, DragAndScroll) {
     EXPECT_EQ(scroll.params["dx"].asInt(), 0);
 }
 
+TEST(ArgsTest, PointerIsLeftToTheApplicationUnlessChosen) {
+    EXPECT_FALSE(request({ "click", "v1:1" }).params.contains("pointer"));
+    EXPECT_EQ(request({ "click", "v1:1", "--pointer", "finger" }).params["pointer"].asString(), "finger");
+    EXPECT_EQ(request({ "drag", "1", "2", "3", "4", "--pointer", "mouse" }).params["pointer"].asString(), "mouse");
+    EXPECT_THROW(buildRequest(parse({ "click", "v1:1", "--pointer", "pen" })), ArgsError);
+}
+
 TEST(ArgsTest, PointNeedsBothCoordinates) {
     EXPECT_THROW(buildRequest(parse({ "click", "10" })), ArgsError);
     EXPECT_THROW(buildRequest(parse({ "click" })), ArgsError);

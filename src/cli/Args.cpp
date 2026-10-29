@@ -107,6 +107,13 @@ AJson pointerParams(const ParsedArgs& args, const AString& action, const AString
     if (auto b = args.get("button")) {
         params["button"] = *b;
     }
+    // without it the application uses the pointer native to its platform
+    if (auto p = args.get("pointer")) {
+        if (*p != "mouse" && *p != "finger") {
+            throw ArgsError("--pointer must be mouse or finger, got '{}'"_format(*p));
+        }
+        params["pointer"] = *p;
+    }
     if (args.has("mod")) {
         AJson modifiers = AJson::Array {};
         for (const auto& m : args.getAll("mod")) {
@@ -253,9 +260,9 @@ AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {
     } else if (cmd == "click" || cmd == "dblclick" || cmd == "press" || cmd == "release" || cmd == "move" ||
                cmd == "drag" || cmd == "scroll") {
         request.method = "input.pointer";
-        const AString usage = cmd == "drag"     ? "drag <ref|x y> <ref|x y> [--button b] [--mod m]..."
+        const AString usage = cmd == "drag"     ? "drag <ref|x y> <ref|x y> [--pointer mouse|finger] [--button b] [--mod m]..."
                               : cmd == "scroll" ? "scroll <ref|x y> [--dx n] [--dy n]"
-                                                : cmd + " <ref|x y> [--button b] [--mod m]...";
+                                                : cmd + " <ref|x y> [--pointer mouse|finger] [--button b] [--mod m]...";
         params = pointerParams(args, cmd == "dblclick" ? AString("doubleClick") : cmd, usage);
     } else if (cmd == "type") {
         requirePositional(args, 1, "type <text> [--ref ref]");

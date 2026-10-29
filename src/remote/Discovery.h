@@ -38,6 +38,11 @@ struct AppInfo {
     AString startedAt;
 
     /**
+     * @brief The pointer native to the platform of the application, `mouse` or `finger` (mobile).
+     */
+    AString defaultPointer = "mouse";
+
+    /**
      * @return whether the discovery file describes an agent this client can talk to (wss with a pinned certificate)
      */
     [[nodiscard]] bool isSupported() const;

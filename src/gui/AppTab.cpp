@@ -20,6 +20,7 @@ using namespace declarative;
 using namespace aui_remote;
 
 AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
+    mPointer = mApp.defaultPointer == "finger" ? RemoteViewport::Pointer::FINGER : RemoteViewport::Pointer::MOUSE;
     mViewport = _new<RemoteViewport>();
     connect(mPointer, AUI_SLOT(mViewport)::setPointer);
 

@@ -54,7 +54,7 @@ With several apps running pass `--pid N` to every command.
 | `hit <x> <y> [--window W]`                                      | views under a point                                   |
 | `interactive [--window W]`                                      | clickable and typeable views                          |
 | `screenshot [--window W] [--ref R] [--padding N]`               | saves a PNG, prints `path`; `--ref` crops to a view   |
-| `click\|dblclick\|press\|release\|move <ref \| x y> [--button b] [--mod m]...` | pointer                   |
+| `click\|dblclick\|press\|release\|move <ref \| x y> [--pointer mouse\|finger] [--button b] [--mod m]...` | pointer; without `--pointer` the app uses its native one (mouse on desktop, finger on Android/iOS) |
 | `drag <ref \| x y> <ref \| x y>`                                | drag from one point to another                        |
 | `scroll <ref \| x y> --dx N --dy N`                             | wheel                                                 |
 | `type <text> [--ref R]`, `key <key> [--mod m]... [--ref R]`     | keyboard                                              |

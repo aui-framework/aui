@@ -62,6 +62,9 @@ AppInfo AppInfo::fromJson(const AJson& json) {
     if (auto v = json.containsOpt("certSha256"); v && v->isString()) {
         info.certSha256 = AString(v->asString().lowercase());
     }
+    if (auto v = json.containsOpt("defaultPointer"); v && v->isString()) {
+        info.defaultPointer = v->asString();
+    }
     if (auto v = json.containsOpt("startedAt")) {
         info.startedAt = scalarToString(*v);
     }
