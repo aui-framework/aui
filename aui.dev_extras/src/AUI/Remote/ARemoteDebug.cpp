@@ -26,6 +26,7 @@
 #include "AUI/Platform/ASurface.h"
 #include "AUI/Platform/AWindow.h"
 #include "AUI/Platform/Entry.h"
+#include "AUI/Util/ACleanup.h"
 #include "Agent/JsonRpc.h"
 #include "Agent/Methods.h"
 #include "Agent/Pairing.h"
@@ -40,6 +41,8 @@ constexpr int PROTOCOL_VERSION = 1;
 
 std::mutex gMutex;
 _<ARemoteDebug>& slot() {
+    // statics die in reverse order: make the logger, which the agent uses until its very end, outlive it
+    ALogger::global();
     static _<ARemoteDebug> agent;
     return agent;
 }
@@ -248,6 +251,11 @@ _<ARemoteDebug> ARemoteDebug::start(Options options) {
     if (!agent) {
         agent = aui::ptr::manage_shared(new ARemoteDebug(std::move(options)));
         enableRemoteOverlay(false);
+        // stop the server while sockets, curl and windows are still there; static destruction is too late for that
+        ACleanup::afterEntry([] {
+            std::lock_guard lock(gMutex);
+            slot() = nullptr;
+        });
     }
     return agent;
 }
