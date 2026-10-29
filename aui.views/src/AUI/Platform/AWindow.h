@@ -729,7 +729,13 @@ public:
     void flagRedraw() override;
 
     [[nodiscard]]
-    bool isFrameScheduled() const noexcept override { return mRedrawFlag; }
+    bool isFrameScheduled() const noexcept override {
+#if AUI_PLATFORM_WIN
+        return !mRedrawFlag;   // on Windows the flag means "a redraw may be requested", see flagRedraw
+#else
+        return mRedrawFlag;
+#endif
+    }
 
     /**
      * Shows the window.

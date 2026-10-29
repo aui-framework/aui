@@ -65,7 +65,12 @@ void AStubWindowManager::drawFrame() {
         w->pack();
         w->getRenderingContext()->endResize(*w);
         w->redraw();
-        w->mRedrawFlag = false;   // the frame is drawn; see AWindow::isFrameScheduled
+        // the frame is drawn; see AWindow::isFrameScheduled
+#if AUI_PLATFORM_WIN
+        w->mRedrawFlag = true;
+#else
+        w->mRedrawFlag = false;
+#endif
     }
 }
 
