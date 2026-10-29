@@ -80,7 +80,7 @@ public:
     };
 
     /**
-     * @brief Well-known values for [Properties::hotspot].
+     * @brief Well-known values for `Properties::hotspot`.
      */
     struct Hotspot {
         static constexpr glm::vec2 TOP_LEFT { 0.f, 0.f };
@@ -137,7 +137,7 @@ public:
     int size() const { return mSize; }
 
     /**
-     * @return [Properties::hotspot]
+     * @return `Properties::hotspot`
      */
     glm::vec2 hotspot() const { return mHotspot; }
 

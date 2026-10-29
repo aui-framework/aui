@@ -24,7 +24,7 @@
  * @ingroup crypt
  * @details
  * Created with [ATlsIdentity::generateSelfSigned]. A self-signed certificate is not trusted by anyone, so a client
- * identifies the server by the certificate's [fingerprint][ATlsIdentity::fingerprintSha256] obtained from a trusted
+ * identifies the server by the certificate's fingerprint (`fingerprintSha256()`) obtained from a trusted
  * channel instead.
  *
  * ```cpp
