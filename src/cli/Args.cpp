@@ -6,7 +6,7 @@ namespace aui_remote::cli {
 
 namespace {
 
-const std::set<std::string> FLAGS = { "interactive", "include-invisible", "inspector", "help" };
+const std::set<std::string> FLAGS = { "interactive", "include-invisible", "inspector", "json", "help" };
 
 /// number if the text looks like one, string otherwise.
 AJson numberOrString(const AString& text) {

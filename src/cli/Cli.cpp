@@ -8,6 +8,7 @@
 #include <AUI/Platform/AProcess.h>
 
 #include "ImageCompare.h"
+#include "TreeText.h"
 #include "remote/KeyStore.h"
 #include "remote/Pairing.h"
 #include "remote/RpcClient.h"
@@ -360,7 +361,12 @@ int run(const AStringVector& args, const Directories& directories) {
         } else {
             throw ArgsError("unknown command '{}'; commands: {}"_format(parsed.command, commandNames().join(' ')));
         }
-        print(result);
+        if (parsed.command == "tree" && !parsed.has("json") && !parsed.has("inspector")) {
+            // for a neural network the JSON is mostly noise: print the compact text
+            std::cout << renderTreeText(result).toStdString() << std::flush;
+        } else {
+            print(result);
+        }
         return 0;
     } catch (const ArgsError& e) {
         print(AJson { { "error", RpcError(-32602, e.getMessage(), AJson { { "hint", "see the usage in the message" } })

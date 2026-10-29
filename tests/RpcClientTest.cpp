@@ -43,7 +43,9 @@ CliResult runCli(std::initializer_list<const char*> args, const cli::Directories
             lastLine = line;
         }
     }
-    result.json = AJson::fromString(AString::fromUtf8(lastLine));
+    if (!lastLine.empty() && (lastLine[0] == '{' || lastLine[0] == '[')) {   // `tree` prints text by default
+        result.json = AJson::fromString(AString::fromUtf8(lastLine));
+    }
     return result;
 }
 
@@ -194,8 +196,11 @@ TEST(CliTest, PairingFlow) {
     auto windows = runCli({ "windows" }, d);
     ASSERT_EQ(windows.exitCode, 0) << windows.stdoutText;
     EXPECT_EQ(windows.json["windows"][0]["title"].asString(), "Fake");
-    auto tree = runCli({ "tree", "--depth", "2" }, d);
+    auto tree = runCli({ "tree", "--depth", "2", "--json" }, d);
     EXPECT_EQ(tree.json["echoDepth"].asInt(), 2);
+    auto text = runCli({ "tree" }, d);   // compact text by default
+    ASSERT_EQ(text.exitCode, 0) << text.stdoutText;
+    EXPECT_EQ(text.stdoutText, "AWindow [v1:1]\n");
 }
 
 TEST(CliTest, ForgottenClientIsAskedToPairAgain) {

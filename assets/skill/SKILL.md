@@ -47,7 +47,7 @@ With several apps running pass `--pid N` to every command.
 | Command                                                         | Purpose                                               |
 |-----------------------------------------------------------------|-------------------------------------------------------|
 | `windows`                                                       | windows and their ids                                 |
-| `tree [--ref R] [--depth N] [--inspector] [--window W]`         | view hierarchy                                        |
+| `tree [--ref R] [--depth N] [--json] [--inspector] [--window W]` | view hierarchy, compact text (`--json` or `--inspector`: JSON) |
 | `find [--type T] [--text S] [--ass NAME] [--ref R] [--interactive] [--include-invisible] [--window W]` | search views |
 | `props <ref>`                                                   | properties of a view                                  |
 | `hit <x> <y> [--window W]`                                      | views under a point                                   |
