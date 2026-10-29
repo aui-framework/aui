@@ -12,6 +12,7 @@
 #include "network/KeyStore.h"
 #include "network/Pairing.h"
 #include "network/RpcClient.h"
+#include "platform/Process.h"
 
 using namespace std::chrono_literals;
 
@@ -230,17 +231,22 @@ AJson doLaunch(const ParsedArgs& args, const Directories& directories) {
     info.args = AProcess::ArgStringList { std::move(shellArgs) };
 #endif
 
+    platform::keepStreamsFromChildren();
     auto process = AProcess::create(std::move(info));
     process->run(ASubProcessExecutionFlags::DETACHED);
-    const auto pid = process->getPid();
+    const auto pid = process->getPid();   // of the shell
+    auto appPid = pid;
 
     const auto timeout = std::chrono::seconds(args.getInt("timeout").valueOr(30));
     const auto deadline = std::chrono::steady_clock::now() + timeout;
     while (std::chrono::steady_clock::now() < deadline) {
-        if (auto app = discovery::find(pid, directories.discovery)) {
+        if (auto launched = platform::launchedApplicationPid(pid)) {
+            appPid = *launched;
+        }
+        if (auto app = discovery::find(appPid, directories.discovery)) {
             KeyStore(directories.keys).storeSession(*app, key);
             return AJson {
-                { "pid", int(pid) },
+                { "pid", int(appPid) },
                 { "port", int(app->port) },
                 { "stdout", stdoutPath.toStdString() },
                 { "stderr", stderrPath.toStdString() },
@@ -254,11 +260,12 @@ AJson doLaunch(const ParsedArgs& args, const Directories& directories) {
         }
         std::this_thread::sleep_for(100ms);
     }
+    discovery::terminateProcess(appPid);
     discovery::terminateProcess(pid);
     throw clientError(
         "the remote agent did not start in {} s"_format(timeout.count()),
         "the application was stopped; no discovery file appeared, does it link aui::dev_extras and call ARemoteDebug::start()?",
-        AJson { { "pid", int(pid) }, { "stderr", stderrPath.toStdString() } });
+        AJson { { "pid", int(appPid) }, { "stderr", stderrPath.toStdString() } });
 }
 
 AJson doStop(const ParsedArgs& args, const Directories& directories) {

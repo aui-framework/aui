@@ -11,4 +11,8 @@ void platform::requestTermination(std::uint32_t pid) { ::kill(static_cast<pid_t>
 
 void platform::forceTermination(std::uint32_t pid) { ::kill(static_cast<pid_t>(pid), SIGKILL); }
 
+std::optional<std::uint32_t> platform::launchedApplicationPid(std::uint32_t shellPid) { return shellPid; }
+
+void platform::keepStreamsFromChildren() {}
+
 }   // namespace aui_remote
