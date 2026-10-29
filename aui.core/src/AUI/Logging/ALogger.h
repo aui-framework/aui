@@ -139,7 +139,7 @@ public:
                     };
                 }
                 auto& h = std::get<HeapBuffer>(mBuffer);
-                return { h.data(), h.size() };
+                return { h.data(), h.size() - 1 };
             }
         };
 

@@ -120,3 +120,13 @@ TEST(ALoggerSink, LoggingFromSeveralThreads) {
     for (auto& t : threads) t.join();
     EXPECT_EQ(calls, 200);
 }
+
+TEST(ALoggerSink, LongMessageHasNoNullTerminator) {
+    // longer than the stack buffer of LogWriter, so the message is assembled on the heap
+    const std::string text(5000, 'x');
+    AString message;
+    ScopedSink s(_new<ALogger::CallbackSink>([&](const ALogger::Entry& e) { message = e.message; }));
+    ALogger::info("SinkTest") << text;
+    EXPECT_EQ(message.bytes().size(), text.size());
+    EXPECT_EQ(message, text);
+}
