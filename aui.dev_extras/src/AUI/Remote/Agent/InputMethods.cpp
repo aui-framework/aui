@@ -12,7 +12,9 @@
 #include "Methods.h"
 
 #include <algorithm>
+#include <numbers>
 
+#include "AUI/Event/AGestureEvent.h"
 #include "AUI/Event/AInjectedEvent.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/AWindow.h"
@@ -145,8 +147,187 @@ AFuture<AJson> inTwoSteps(First first, Second second) {
 
 constexpr auto CLICK_DURATION = std::chrono::milliseconds(50);
 
-// params: action (click|doubleClick|press|release|move|drag|scroll; default click), ref | x, y,
-//         pointer (mouse|finger; default: defaultPointer()), button (left|right|middle; mouse only), modifiers, drag: toRef | toX, toY, scroll: dx, dy
+// AUI has no long press timer of its own: on Android ALongPressEvent comes from the system GestureDetector, whose
+// timeout is 400-500 ms. Holding a bit longer looks like a real long press there.
+constexpr auto LONG_PRESS_DURATION = std::chrono::milliseconds(600);
+
+// touch events of a 60 Hz screen. ATouchScroller takes the velocity from the distance between consecutive moves
+// (times 60), so moves have to come at this pace for a fling to be as fast as asked.
+constexpr auto TOUCH_FRAME = std::chrono::milliseconds(16);
+constexpr float TOUCH_FRAMES_PER_SECOND = 60.f;
+
+constexpr auto MAX_GESTURE_DURATION = std::chrono::seconds(30);
+
+int intOr(const AJson& params, const char* name, int fallback) {
+    if (auto v = params.containsOpt(name)) {
+        return v->isInt() ? v->asInt() : int(v->asNumber());
+    }
+    return fallback;
+}
+
+float numberOr(const AJson& params, const char* name, float fallback) {
+    return params.containsOpt(name) ? number(params, name) : fallback;
+}
+
+/// A finger moving through points; times are milliseconds since the start of the gesture.
+struct Track {
+    int finger = 0;
+    AVector<std::pair<std::chrono::milliseconds, glm::vec2>> points;
+};
+
+/// Presses, moves and releases of all fingers, in the order of time.
+struct TouchEvent {
+    enum class Kind { PRESS, MOVE, RELEASE };
+    std::chrono::milliseconds time;
+    int finger;
+    Kind kind;
+    glm::vec2 position;
+};
+
+AVector<TouchEvent> timelineOf(const AVector<Track>& tracks) {
+    AVector<TouchEvent> events;
+    for (const auto& track : tracks) {
+        const auto& points = track.points;
+        events << TouchEvent { points.first().first, track.finger, TouchEvent::Kind::PRESS, points.first().second };
+        for (std::size_t i = 1; i < points.size(); ++i) {
+            const auto [fromTime, from] = points[i - 1];
+            const auto [toTime, to] = points[i];
+            // in between the points, the finger moves smoothly, a move per screen frame
+            for (auto t = fromTime + TOUCH_FRAME; t < toTime; t += TOUCH_FRAME) {
+                const auto progress = float((t - fromTime).count()) / float((toTime - fromTime).count());
+                events << TouchEvent { t, track.finger, TouchEvent::Kind::MOVE, glm::mix(from, to, progress) };
+            }
+            events << TouchEvent { toTime, track.finger, TouchEvent::Kind::MOVE, to };
+        }
+        events << TouchEvent { points.last().first, track.finger, TouchEvent::Kind::RELEASE, points.last().second };
+    }
+    // at the same moment, all fingers move before any of them is lifted: a finger lifted first would turn the last
+    // step of a two-finger gesture into a one-finger one
+    std::stable_sort(events.begin(), events.end(),
+                     [](const auto& a, const auto& b) { return std::tie(a.time, a.kind) < std::tie(b.time, b.kind); });
+    return events;
+}
+
+/// Plays the fingers in real time; resumes on the UI thread when all of them are released.
+AFuture<> playTracks(_<AWindow> window, AVector<Track> tracks) {
+    const auto events = timelineOf(tracks);
+    const auto start = std::chrono::steady_clock::now();
+    RemoteOverlay::enable(*window);
+    for (const auto& e : events) {
+        const auto due = start + e.time;
+        if (const auto now = std::chrono::steady_clock::now(); due > now) {
+            co_await AThread::asyncSleep(std::chrono::duration_cast<std::chrono::milliseconds>(due - now));
+        }
+        const auto index = APointerIndex::finger(e.finger);
+        switch (e.kind) {
+            case TouchEvent::Kind::PRESS:
+                window->injectEvent(APointerPressedEvent { e.position, index });
+                break;
+            case TouchEvent::Kind::MOVE:
+                window->injectEvent(AInjectedPointerMove { e.position, APointerMoveEvent { index } });
+                break;
+            case TouchEvent::Kind::RELEASE:
+                window->injectEvent(APointerReleasedEvent { e.position, index });
+                break;
+        }
+        RemoteOverlay::showPointer(*window, e.position, index, e.kind == TouchEvent::Kind::PRESS,
+                                   e.kind != TouchEvent::Kind::RELEASE);
+    }
+}
+
+void validate(const AVector<Track>& tracks) {
+    if (tracks.empty()) {
+        throw RpcException(rpc_code::INVALID_PARAMS, "no fingers", "pass fingers: [{ finger, points: [{ x, y, t }] }]");
+    }
+    AVector<int> seen;
+    for (const auto& track : tracks) {
+        if (track.finger < 0 || track.finger > 9 || seen.contains(track.finger)) {
+            throw RpcException(rpc_code::INVALID_PARAMS, "finger indices must be unique, 0..9");
+        }
+        seen << track.finger;
+        if (track.points.empty()) {
+            throw RpcException(rpc_code::INVALID_PARAMS, "a finger without points");
+        }
+        for (std::size_t i = 0; i < track.points.size(); ++i) {
+            const auto t = track.points[i].first;
+            if (t.count() < 0 || (i > 0 && t < track.points[i - 1].first) || t > MAX_GESTURE_DURATION) {
+                throw RpcException(rpc_code::INVALID_PARAMS, "point times must grow from 0 and stay under 30000 ms");
+            }
+        }
+    }
+}
+
+/// Two fingers placed symmetrically around `center`, moving for `duration`; `at(progress)` gives the distance from the
+/// center to a finger and the angle of the line between the fingers.
+template <typename At>
+AVector<Track> twoFingers(glm::vec2 center, std::chrono::milliseconds duration, At at) {
+    AVector<Track> tracks { Track { 0, {} }, Track { 1, {} } };
+    const int steps = std::max(1, int(duration / TOUCH_FRAME));
+    for (int i = 0; i <= steps; ++i) {
+        const float progress = float(i) / float(steps);
+        const auto [radius, angle] = at(progress);
+        const glm::vec2 offset = glm::vec2(std::cos(angle), std::sin(angle)) * radius;
+        const auto time = std::chrono::milliseconds(duration.count() * i / steps);
+        tracks[0].points << std::pair { time, center - offset };
+        tracks[1].points << std::pair { time, center + offset };
+    }
+    return tracks;
+}
+
+// params: fingers: [{ finger?, points: [{ x, y, t }] }] | gesture (pinch|rotate) with ref | x, y (the center),
+//         pinch: from, to (distance between the fingers, px), angle? (degrees, 0 = horizontal);
+//         rotate: degrees, distance? (between the fingers, default 100); durationMs? (default 300); windowId?
+AFuture<AJson> inputTouch(RefTable& refs, AJson params) {
+    AVector<Track> tracks;
+    _<AWindow> window;
+    if (auto fingers = params.containsOpt("fingers")) {
+        window = windowFromParams(params, refs);
+        int nextFinger = 0;
+        for (const auto& f : fingers->asArray()) {
+            Track track { intOr(f, "finger", nextFinger), {} };
+            nextFinger = track.finger + 1;
+            for (const auto& p : f["points"].asArray()) {
+                track.points << std::pair { std::chrono::milliseconds(intOr(p, "t", 0)),
+                                            glm::vec2(number(p, "x"), number(p, "y")) };
+            }
+            tracks << std::move(track);
+        }
+    } else if (auto gesture = params.containsOpt("gesture")) {
+        auto target = resolveTarget(params, refs);
+        window = target.window;
+        const auto duration = std::chrono::milliseconds(std::clamp(intOr(params, "durationMs", 300), 16, 30000));
+        constexpr float DEG = std::numbers::pi_v<float> / 180.f;
+        if (gesture->asString() == "pinch") {
+            const float from = number(params, "from") / 2.f, to = number(params, "to") / 2.f;
+            const float angle = numberOr(params, "angle", 0.f) * DEG;
+            tracks = twoFingers(target.position, duration, [&](float t) { return std::pair { glm::mix(from, to, t), angle }; });
+        } else if (gesture->asString() == "rotate") {
+            const float radius = numberOr(params, "distance", 100.f) / 2.f;
+            const float degrees = number(params, "degrees") * DEG;
+            tracks = twoFingers(target.position, duration, [&](float t) { return std::pair { radius, degrees * t }; });
+        } else {
+            throw RpcException(rpc_code::INVALID_PARAMS, "unknown gesture: " + gesture->asString(), "pinch or rotate");
+        }
+    } else {
+        throw RpcException(rpc_code::INVALID_PARAMS, "pass fingers or gesture",
+                           "fingers: [{ finger, points: [{ x, y, t }] }], or gesture: pinch | rotate");
+    }
+    validate(tracks);
+    co_await playTracks(window, tracks);
+    std::chrono::milliseconds duration { 0 };
+    for (const auto& track : tracks) {
+        duration = std::max(duration, track.points.last().first);
+    }
+    co_return AJson {
+        { "fingers", int(tracks.size()) },
+        { "durationMs", int(duration.count()) },
+    };
+}
+
+// params: action (click|doubleClick|press|release|move|drag|scroll|longPress|fling; default click), ref | x, y,
+//         pointer (mouse|finger; default: defaultPointer()), button (left|right|middle; mouse only), modifiers, drag: toRef | toX, toY, scroll: dx, dy,
+//         longPress: durationMs; fling: dx, dy (the way of the finger), velocity (px/s, default 2000).
+//         longPress and fling are touch gestures, they use a finger whatever `pointer` says.
 // A coroutine, so `click` can hold the button without blocking the UI thread. Resumes on the UI thread.
 AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
     const auto action = params.containsOpt("action") ? params["action"].asString() : AString("click");
@@ -219,6 +400,39 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
         }
         position = to;
         release();
+    } else if (action == "longPress") {
+        const auto duration = std::chrono::milliseconds(intOr(params, "durationMs", LONG_PRESS_DURATION.count()));
+        const auto finger = APointerIndex::finger(0);
+        RemoteOverlay::enable(*window);
+        window->injectEvent(APointerPressedEvent { position, finger });
+        RemoteOverlay::showPointer(*window, position, finger, true, true);
+        co_await AThread::asyncSleep(std::clamp(duration, std::chrono::milliseconds(0), std::chrono::milliseconds(30000)));
+        // as the platform does when the timeout passes; a handled long press is not followed by a click
+        const bool handled = window->onGesture(glm::ivec2(position), ALongPressEvent {});
+        window->injectEvent(APointerReleasedEvent { position, finger });
+        RemoteOverlay::showPointer(*window, position, finger, false, false);
+        co_return AJson {
+            { "at", describePoint(target) },
+            { "handled", handled },
+        };
+    } else if (action == "fling") {
+        const glm::vec2 way { numberOr(params, "dx", 0.f), numberOr(params, "dy", 0.f) };
+        const float length = glm::length(way);
+        if (length < 1.f) {
+            throw RpcException(rpc_code::INVALID_PARAMS, "fling needs dx or dy", "the way of the finger in px");
+        }
+        const float velocity = std::max(1.f, numberOr(params, "velocity", 2000.f));
+        // the velocity is the step between moves times 60; the last three steps count, so there are at least three
+        const int steps = std::max(3, int(std::ceil(length / (velocity / TOUCH_FRAMES_PER_SECOND))));
+        Track track { 0, {} };
+        for (int i = 0; i <= steps; ++i) {
+            track.points << std::pair { TOUCH_FRAME * i, position + way * (float(i) / float(steps)) };
+        }
+        co_await playTracks(window, { std::move(track) });
+        co_return AJson {
+            { "at", describePoint(target) },
+            { "velocity", int(length / float(steps) * TOUCH_FRAMES_PER_SECOND) },
+        };
     } else if (action == "scroll") {
         move(position);
         window->injectEvent(AScrollEvent {
@@ -228,7 +442,7 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
         });
     } else {
         throw RpcException(rpc_code::INVALID_PARAMS, "unknown action: " + action,
-                           "click, doubleClick, press, release, move, drag or scroll");
+                           "click, doubleClick, press, release, move, drag, scroll, longPress or fling");
     }
     RemoteOverlay::enable(*window);
     // between `press` and `release` the pointer stays on the screen
@@ -238,16 +452,34 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
     };
 }
 
-/// Passes the outcome of `inputPointer` to `result`.
+/// Passes the outcome of `work` to `result`.
 /// A coroutine is cancelled when its future is destroyed, so `self` holds the future of this very coroutine until it is
 /// done.
-AFuture<> answerPointer(RefTable& refs, AJson params, AFuture<AJson> result, std::shared_ptr<AFuture<>> self) {
+AFuture<> answer(AFuture<AJson> work, AFuture<AJson> result, std::shared_ptr<AFuture<>> self) {
     try {
-        result.supplyValue(co_await inputPointer(refs, std::move(params)));
+        result.supplyValue(co_await work);
     } catch (...) {
         result.supplyException();
     }
     *self = nullptr;
+}
+
+/// Runs a coroutine of an input method on the UI thread.
+template <typename Coroutine>
+AFuture<AJson> onUiThreadAsync(RefTable& refs, AJson params, Coroutine coroutine) {
+    AFuture<AJson> result;
+    AThread::main()->enqueue([&refs, params = std::move(params), result, coroutine] {
+        auto self = std::make_shared<AFuture<>>();
+        AFuture<AJson> work;
+        try {
+            work = coroutine(refs, params);
+        } catch (...) {
+            result.supplyException();
+            return;
+        }
+        *self = answer(std::move(work), result, self);
+    });
+    return result;
 }
 
 }   // namespace
@@ -262,12 +494,30 @@ AString defaultPointer() {
 
 void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     dispatcher.registerMethod("input.pointer", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
-        AFuture<AJson> result;
-        AThread::main()->enqueue([&refs, params = params, result] {
-            auto self = std::make_shared<AFuture<>>();
-            *self = answerPointer(refs, params, result, self);
+        return onUiThreadAsync(refs, params, inputPointer);
+    }));
+
+    dispatcher.registerMethod("input.touch", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
+        return onUiThreadAsync(refs, params, inputTouch);
+    }));
+
+    // params: gesture (longPress), ref | x, y, windowId?
+    // Only the gesture, as the platform reports it; a client that holds a finger itself (the GUI) sends it when its
+    // own long press timeout passes.
+    dispatcher.registerMethod("input.gesture", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
+        return onUiThread([&refs, params = params] {
+            const auto gesture = params.containsOpt("gesture") ? params["gesture"].asString() : AString {};
+            if (gesture != "longPress") {
+                throw RpcException(rpc_code::INVALID_PARAMS, "unknown gesture: " + gesture, "longPress");
+            }
+            auto target = resolveTarget(params, refs);
+            RemoteOverlay::enable(*target.window);
+            const bool handled = target.window->onGesture(glm::ivec2(target.position), ALongPressEvent {});
+            return AJson {
+                { "at", describePoint(target) },
+                { "handled", handled },
+            };
         });
-        return result;
     }));
 
     // params: text, ref? (focuses the view first)

@@ -53,7 +53,7 @@ void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
 AString defaultPointer();
 
 /**
- * `input.pointer`, `input.type`, `input.key`.
+ * `input.pointer`, `input.touch`, `input.gesture`, `input.type`, `input.key`.
  */
 void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
 

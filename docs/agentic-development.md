@@ -91,7 +91,9 @@ Text frames, JSON-RPC 2.0, protocol version 1. Errors carry `data.hint` with a s
 | `view.hitTest`, `view.interactive`                    | the views under a point; clickable / typeable elements         |
 | `view.scrollIntoView`                                 | scrolls the scroll areas around a view so that it is visible   |
 | `screenshot`                                          | saves a PNG to the temp folder and returns its path; `ref` crops to a view |
-| `input.pointer`                                       | `click`, `doubleClick`, `press`, `release`, `move`, `drag`, `scroll` |
+| `input.pointer`                                       | `click`, `doubleClick`, `press`, `release`, `move`, `drag`, `scroll`, `longPress`, `fling` |
+| `input.touch`                                         | several fingers at once: `pinch`, `rotate` or arbitrary tracks |
+| `input.gesture`                                       | a long press gesture alone, for clients that hold the finger themselves |
 | `input.type`, `input.key`                             | typed text and key presses with modifiers                      |
 | `wait.idle`, `wait.view`                              | wait until nothing is happening / until a view appears or is gone |
 | `frames.subscribe`, `frames.unsubscribe`, `frames.ack` | a stream of window frames with the view tree, see below     |
@@ -104,6 +106,23 @@ ignored then). Without it, the pointer is the one native to the platform: `finge
 `session.hello` and the discovery file report it as `defaultPointer`.
 
 `click` holds the button for 50 ms before releasing it, and the call returns only after the release was delivered.
+
+Touch gestures always use fingers, whatever `pointer` says, and the call returns once the last finger is lifted:
+
+- `longPress` holds finger 0 for `durationMs` (600 by default), then delivers the long press gesture and lifts the
+  finger. AUI has no long press timer of its own: on Android the gesture comes from the system, so the agent sends it
+  the same way. The result has `handled`; a handled long press is not followed by a click.
+- `fling` moves finger 0 by `dx`, `dy` with `velocity` px/s (2000 by default), a move per 16 ms, and lifts it, so the
+  kinetic scroll of [AScrollArea] continues on its own; `wait.idle` waits for it to stop. AUI takes the velocity from
+  the distance between the last moves, so a way shorter than three steps (`3 * velocity / 60`) gives a slower fling;
+  the result reports the `velocity` delivered.
+- `input.touch` plays `fingers: [{ finger, points: [{ x, y, t }] }]` (`t` in ms from the start, up to 30 s; between the
+  points a finger moves smoothly), or a `gesture` around `ref` or `x`, `y`: `pinch` (`from`, `to`: the distance
+  between two fingers, `angle` of the line between them) or `rotate` (`degrees`, `distance` between the fingers), both
+  over `durationMs` (300 by default). AUI handles two-finger gestures in [A2FingerTransformArea] (pan, scale, rotation);
+  other views see the fingers as separate pointers.
+- `input.gesture` with `gesture: "longPress"` delivers only the gesture at the point. The `aui-remote` GUI sends it
+  when a finger has been held still for 500 ms in T mode.
 
 `window.resize` returns once the size has stayed the same for 100 ms with no pending layout, so a screenshot taken right
 after it shows the new size. A window is never smaller than its contents need, and the window manager may adjust the

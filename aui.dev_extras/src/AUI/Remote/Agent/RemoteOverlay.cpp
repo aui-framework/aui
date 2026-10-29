@@ -116,12 +116,13 @@ void RemoteOverlay::showPointer(AWindow& window, glm::vec2 position, APointerInd
     }
     const auto now = Clock::now();
     overlay->mActivityTime = now;
-    overlay->mPointerTime = now;
-    overlay->mPointer = position;
-    overlay->mFinger = pointer.isFinger();
-    overlay->mHeld = held;
+    auto& marker = overlay->mMarkers[pointer.finger().valueOr(-1)];
+    marker.time = now;
+    marker.position = position;
+    marker.finger = pointer.isFinger();
+    marker.held = held;
     if (click) {
-        overlay->mClickTime = now;
+        marker.clickTime = now;
     }
     window.flagRedraw();
 }
@@ -131,9 +132,17 @@ bool RemoteOverlay::isShown(AWindow& window) {
     if (!overlay) {
         return false;
     }
-    return overlay->visibleAge(overlay->mActivityTime, BANNER_LIFETIME) ||
-           overlay->visibleAge(overlay->mPointerTime, POINTER_LIFETIME) ||
-           ageOf(overlay->mClickTime, RIPPLE_LIFETIME);
+    if (visibleAge(overlay->mActivityTime, BANNER_LIFETIME, overlay->anyHeld())) {
+        return true;
+    }
+    return std::any_of(overlay->mMarkers.begin(), overlay->mMarkers.end(), [](const auto& entry) {
+        const auto& m = entry.second;
+        return visibleAge(m.time, POINTER_LIFETIME, m.held) || ageOf(m.clickTime, RIPPLE_LIFETIME);
+    });
+}
+
+bool RemoteOverlay::anyHeld() const {
+    return std::any_of(mMarkers.begin(), mMarkers.end(), [](const auto& entry) { return entry.second.held; });
 }
 
 void RemoteOverlay::setHidden(AWindow& window, bool hidden) {
@@ -143,8 +152,8 @@ void RemoteOverlay::setHidden(AWindow& window, bool hidden) {
 }
 
 AOptional<std::chrono::steady_clock::duration> RemoteOverlay::visibleAge(
-    std::chrono::steady_clock::time_point time, std::chrono::steady_clock::duration lifetime) const {
-    if (mHeld) {
+    std::chrono::steady_clock::time_point time, std::chrono::steady_clock::duration lifetime, bool held) {
+    if (held) {
         return std::chrono::steady_clock::duration::zero();
     }
     return ageOf(time, lifetime);
@@ -172,11 +181,13 @@ void RemoteOverlay::draw(IRenderer& renderer) {
         return;
     }
     drawBanner(renderer);
-    drawPointer(renderer);
+    for (const auto& [_, marker] : mMarkers) {
+        drawMarker(renderer, marker);
+    }
 }
 
 void RemoteOverlay::drawBanner(IRenderer& renderer) {
-    if (!visibleAge(mActivityTime, BANNER_LIFETIME)) {
+    if (!visibleAge(mActivityTime, BANNER_LIFETIME, anyHeld())) {
         return;
     }
     AFontStyle style;
@@ -203,24 +214,24 @@ void RemoteOverlay::drawBanner(IRenderer& renderer) {
     mWindow.flagRedraw();   // until it expires
 }
 
-void RemoteOverlay::drawPointer(IRenderer& renderer) {
-    auto age = visibleAge(mPointerTime, POINTER_LIFETIME);
+void RemoteOverlay::drawMarker(IRenderer& renderer, const Marker& marker) {
+    auto age = visibleAge(marker.time, POINTER_LIFETIME, marker.held);
     if (!age) {
         return;
     }
     const auto fade = 1.f - progressOf(*age, POINTER_LIFETIME);
 
     // the same ripple for a finger and a mouse
-    if (auto sinceClick = ageOf(mClickTime, RIPPLE_LIFETIME)) {
+    if (auto sinceClick = ageOf(marker.clickTime, RIPPLE_LIFETIME)) {
         const auto t = progressOf(*sinceClick, RIPPLE_LIFETIME);
-        drawCircle(renderer, withAlpha(PINK, 0.5f * (1.f - t)), mPointer, float(8_dp) + float(40_dp) * t);
+        drawCircle(renderer, withAlpha(PINK, 0.5f * (1.f - t)), marker.position, float(8_dp) + float(40_dp) * t);
     }
 
-    if (mFinger) {
-        drawCircle(renderer, AColor(1.f, 1.f, 1.f, fade), mPointer, float(9_dp));
-        drawCircle(renderer, withAlpha(PINK, fade), mPointer, float(7_dp));
+    if (marker.finger) {
+        drawCircle(renderer, AColor(1.f, 1.f, 1.f, fade), marker.position, float(9_dp));
+        drawCircle(renderer, withAlpha(PINK, fade), marker.position, float(7_dp));
     } else {
-        drawArrow(renderer, mPointer, fade);
+        drawArrow(renderer, marker.position, fade);
     }
     mWindow.flagRedraw();   // until it fades out
 }

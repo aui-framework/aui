@@ -28,6 +28,7 @@
 #include <condition_variable>
 #include "AUI/UITest.h"
 #include "AUI/Util/UIBuildingHelpers.h"
+#include "AUI/View/A2FingerTransformArea.h"
 #include "AUI/View/AButton.h"
 #include "AUI/View/ALabel.h"
 #include "AUI/View/AScrollArea.h"
@@ -471,6 +472,91 @@ TEST_F(AgentTest, WindowResize) {
     EXPECT_EQ(errorCode("window.resize", AJson { { "width", 100 } }), rpc_code::INVALID_PARAMS);
     EXPECT_EQ(errorCode("window.resize", AJson { { "width", 100 }, { "height", 100 }, { "windowId", "v0:99999" } }),
               rpc_code::STALE_REF);
+}
+
+TEST_F(AgentTest, LongPress) {
+    auto view = _new<ALabel>("hold me") AUI_OVERRIDE_STYLE { FixedSize { 100_px, 40_px } };
+    int longPressed = 0, clicked = 0;
+    AObject::connect(view->clickedRightOrLongPressed, view, [&] { ++longPressed; });
+    AObject::connect(view->clicked, view, [&] { ++clicked; });
+    auto window = showWindow(view);
+    const auto ref = ok("view.find", AJson { { "text", "hold me" } })[0]["ref"].asString();
+
+    // even with a mouse as the default pointer, a long press is a touch gesture
+    auto result = ok("input.pointer", AJson { { "ref", ref }, { "action", "longPress" }, { "durationMs", 50 } });
+    EXPECT_TRUE(result["handled"].asBool());
+    EXPECT_EQ(longPressed, 1);
+    EXPECT_EQ(clicked, 0) << "a handled long press is not followed by a click";
+
+    // the gesture alone, as the GUI sends it while it holds the finger itself
+    EXPECT_TRUE(ok("input.gesture", AJson { { "gesture", "longPress" }, { "ref", ref } })["handled"].asBool());
+    EXPECT_EQ(longPressed, 2);
+    EXPECT_EQ(errorCode("input.gesture", AJson { { "gesture", "tap" }, { "ref", ref } }), rpc_code::INVALID_PARAMS);
+}
+
+TEST_F(AgentTest, FlingScrollsFurtherThanTheFinger) {
+    _<AViewContainer> list = Vertical {};
+    for (int i = 0; i < 200; ++i) {
+        list->addView(Label { "item {}"_format(i) });
+    }
+    auto area = AScrollArea::Builder().withContents(list).build();
+    auto window = showWindow(area AUI_OVERRIDE_STYLE { FixedSize { 200_px, 300_px } });
+    const auto center = area->getCenterPointInWindow();
+
+    auto result = ok("input.pointer", AJson { { "x", center.x }, { "y", center.y + 100 }, { "action", "fling" },
+                                              { "dy", -200 }, { "velocity", 3000 } });
+    EXPECT_NEAR(result["velocity"].asInt(), 3000, 100);
+    const auto afterFinger = area->verticalScrollbar()->getCurrentScroll();
+    EXPECT_GE(afterFinger, 180);   // the finger itself moved the contents (minus the touch slop)
+    for (int i = 0; i < 30; ++i) {
+        uitest::frame();   // the kinetic scroll goes on frame by frame
+    }
+    EXPECT_GT(area->verticalScrollbar()->getCurrentScroll(), afterFinger + 50);
+}
+
+TEST_F(AgentTest, PinchAndRotateReachA2FingerTransformArea) {
+    auto area = _new<A2FingerTransformArea>() AUI_OVERRIDE_STYLE { FixedSize { 300_px, 300_px } };
+    A2DTransform total;
+    AObject::connect(area->transformed, area, [&](const A2DTransform& t) { total.applyDelta(t); });
+    auto window = showWindow(area);
+    const auto center = area->getCenterPointInWindow();
+
+    auto pinch = ok("input.touch", AJson { { "gesture", "pinch" }, { "x", center.x }, { "y", center.y }, { "from", 50 },
+                                           { "to", 150 }, { "durationMs", 100 } });
+    EXPECT_EQ(pinch["fingers"].asInt(), 2);
+    EXPECT_NEAR(total.scale, 3.f, 0.1f);
+
+    total = {};
+    ok("input.touch", AJson { { "gesture", "rotate" }, { "x", center.x }, { "y", center.y }, { "degrees", 90 },
+                              { "durationMs", 100 } });
+    EXPECT_NEAR(std::abs(total.rotation.degrees()), 90.f, 2.f);
+    EXPECT_NEAR(total.scale, 1.f, 0.05f);
+}
+
+TEST_F(AgentTest, TouchTracks) {
+    auto area = _new<A2FingerTransformArea>() AUI_OVERRIDE_STYLE { FixedSize { 300_px, 300_px } };
+    A2DTransform total;
+    AObject::connect(area->transformed, area, [&](const A2DTransform& t) { total.applyDelta(t); });
+    auto window = showWindow(area);
+    const auto c = area->getCenterPointInWindow();
+
+    // two fingers moving together pan
+    auto result = ok("input.touch", AJson::fromString(R"({"fingers":[
+        {"points":[{"x":)" + AString::number(c.x - 20) + R"(,"y":)" + AString::number(c.y) + R"(,"t":0},
+                   {"x":)" + AString::number(c.x - 20) + R"(,"y":)" + AString::number(c.y + 40) + R"(,"t":80}]},
+        {"points":[{"x":)" + AString::number(c.x + 20) + R"(,"y":)" + AString::number(c.y) + R"(,"t":0},
+                   {"x":)" + AString::number(c.x + 20) + R"(,"y":)" + AString::number(c.y + 40) + R"(,"t":80}]}]})"));
+    EXPECT_EQ(result["fingers"].asInt(), 2);
+    EXPECT_EQ(result["durationMs"].asInt(), 80);
+    EXPECT_NEAR(total.offset.y, 40.f, 2.f);
+
+    EXPECT_EQ(errorCode("input.touch", AJson::fromString("{}")), rpc_code::INVALID_PARAMS);
+    EXPECT_EQ(errorCode("input.touch", AJson::fromString(R"({"fingers":[{"points":[{"x":1,"y":1,"t":50},{"x":1,"y":1,"t":10}]}]})")),
+              rpc_code::INVALID_PARAMS);
+    EXPECT_EQ(errorCode("input.touch", AJson::fromString(R"({"fingers":[{"finger":1,"points":[{"x":1,"y":1}]},{"finger":1,"points":[{"x":1,"y":1}]}]})")),
+              rpc_code::INVALID_PARAMS);
+    EXPECT_EQ(errorCode("input.touch", AJson { { "gesture", "swirl" }, { "x", 1 }, { "y", 1 } }), rpc_code::INVALID_PARAMS);
+    EXPECT_EQ(errorCode("input.pointer", AJson { { "x", 1 }, { "y", 1 }, { "action", "fling" } }), rpc_code::INVALID_PARAMS);
 }
 
 TEST_F(AgentTest, ScrollIntoView) {

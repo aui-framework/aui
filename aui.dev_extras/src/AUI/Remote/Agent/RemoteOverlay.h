@@ -27,8 +27,9 @@ namespace aui::remote {
  * Per window, drawn on top of the contents at the end of every frame (see AWindow::postRender):
  *
  * - a pink banner at the top edge, for a few seconds after every command;
- * - a pink pointer (an arrow for a mouse, a circle for a finger) where the last pointer action happened, for a few
- *   seconds, with a short ripple on click.
+ * - a pink pointer (an arrow for the mouse, a circle per finger) where the last action of that pointer happened, for a
+ *   few seconds, with a short ripple on click. Every finger has its own circle, so a multi-touch gesture shows all of
+ *   them; all mouse buttons share the arrow.
  *
  * Must be used on the UI thread only.
  */
@@ -50,8 +51,8 @@ public:
     /**
      * @brief Shows the pointer at the position (px). Does nothing unless the overlay is enabled.
      * @param click plays the ripple
-     * @param held the button is pressed and not released yet: the banner and the pointer stay until the next call
-     *        with `held` false, which starts their timeout
+     * @param held the button (finger) is pressed and not released yet: the banner and the pointer stay until the next
+     *        call for the same pointer with `held` false, which starts their timeout
      */
     static void showPointer(AWindow& window, glm::vec2 position, APointerIndex pointer, bool click, bool held);
 
@@ -81,22 +82,30 @@ private:
     explicit RemoteOverlay(AWindow& window);
     static RemoteOverlay* of(AWindow& window);
 
-    /// Like a plain age of the event, but a held pointer never gets old.
-    AOptional<std::chrono::steady_clock::duration> visibleAge(std::chrono::steady_clock::time_point time,
-                                                              std::chrono::steady_clock::duration lifetime) const;
+    struct Marker {
+        std::chrono::steady_clock::time_point time {};
+        std::chrono::steady_clock::time_point clickTime {};
+        glm::vec2 position { 0 };
+        bool finger = false;
+        bool held = false;
+    };
+
+    [[nodiscard]] bool anyHeld() const;
+
+    /// Like a plain age of the event, but never gets old while `held`.
+    static AOptional<std::chrono::steady_clock::duration> visibleAge(std::chrono::steady_clock::time_point time,
+                                                                     std::chrono::steady_clock::duration lifetime,
+                                                                     bool held);
     void draw(IRenderer& renderer);
     void drawBanner(IRenderer& renderer);
-    void drawPointer(IRenderer& renderer);
+    void drawMarker(IRenderer& renderer, const Marker& marker);
 
     AWindow& mWindow;
     bool mHidden = false;
     AVector<std::pair<const void*, std::function<void()>>> mBeforeDraw;
     std::chrono::steady_clock::time_point mActivityTime {};
-    std::chrono::steady_clock::time_point mPointerTime {};
-    std::chrono::steady_clock::time_point mClickTime {};
-    glm::vec2 mPointer { 0 };
-    bool mFinger = false;
-    bool mHeld = false;
+    /// The mouse is -1, fingers are their indices.
+    AMap<int, Marker> mMarkers;
 };
 
 }   // namespace aui::remote
