@@ -131,6 +131,7 @@ ARemoteDebug::ARemoteDebug(Options options) : mImpl(std::make_unique<Impl>()) {
         return AJson {
             { "protocol", PROTOCOL_VERSION },
             { "pid", int(AProcess::self()->getPid()) },
+            { "defaultPointer", defaultPointer() },
             { "methods", AJson(std::move(methods)) },
         };
     }));
@@ -204,6 +205,7 @@ ARemoteDebug::ARemoteDebug(Options options) : mImpl(std::make_unique<Impl>()) {
                 // a client pins the self-signed certificate by this fingerprint
                 { "certSha256", impl.identity->fingerprintHex() },
                 { "exe", AString(AProcess::self()->getPathToExecutable()) },
+                { "defaultPointer", defaultPointer() },
                 { "argv", AJson(std::move(argv)) },
                 { "cwd", AString(std::filesystem::current_path().string()) },
                 { "startedAt", static_cast<std::int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(

@@ -106,6 +106,7 @@ protected:
 TEST_F(AgentTest, HelloListsMethods) {
     auto result = ok("session.hello");
     EXPECT_EQ(result["protocol"].asInt(), 1);
+    EXPECT_EQ(result["defaultPointer"].asString(), "mouse");   // tests run on desktop platforms
     AVector<AString> methods;
     for (const auto& m : result["methods"].asArray()) {
         methods << m.asString();

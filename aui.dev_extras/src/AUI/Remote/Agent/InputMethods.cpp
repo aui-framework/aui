@@ -146,11 +146,11 @@ AFuture<AJson> inTwoSteps(First first, Second second) {
 constexpr auto CLICK_DURATION = std::chrono::milliseconds(50);
 
 // params: action (click|doubleClick|press|release|move|drag|scroll; default click), ref | x, y,
-//         pointer (mouse|finger; default mouse), button (left|right|middle; mouse only), modifiers, drag: toRef | toX, toY, scroll: dx, dy
+//         pointer (mouse|finger; default: defaultPointer()), button (left|right|middle; mouse only), modifiers, drag: toRef | toX, toY, scroll: dx, dy
 // A coroutine, so `click` can hold the button without blocking the UI thread. Resumes on the UI thread.
 AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
     const auto action = params.containsOpt("action") ? params["action"].asString() : AString("click");
-    const auto pointer = params.containsOpt("pointer") ? params["pointer"].asString() : AString("mouse");
+    const auto pointer = params.containsOpt("pointer") ? params["pointer"].asString() : defaultPointer();
     if (pointer != "mouse" && pointer != "finger") {
         throw RpcException(rpc_code::INVALID_PARAMS, "unknown pointer: " + pointer, "mouse or finger");
     }
@@ -251,6 +251,14 @@ AFuture<> answerPointer(RefTable& refs, AJson params, AFuture<AJson> result, std
 }
 
 }   // namespace
+
+AString defaultPointer() {
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+    return "finger";
+#else
+    return "mouse";
+#endif
+}
 
 void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     dispatcher.registerMethod("input.pointer", JsonRpcDispatcher::Handler([&refs](const AJson& params) {

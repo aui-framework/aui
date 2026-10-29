@@ -47,6 +47,12 @@ void registerWindowMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
 void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
 
 /**
+ * @brief The pointer `input.pointer` uses when the client does not choose one: `finger` on mobile platforms, `mouse`
+ * elsewhere.
+ */
+AString defaultPointer();
+
+/**
  * `input.pointer`, `input.type`, `input.key`.
  */
 void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);

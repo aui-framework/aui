@@ -98,8 +98,9 @@ Text frames, JSON-RPC 2.0, protocol version 1. Errors carry `data.hint` with a s
 | `fn.list`, `fn.call`                                  | application functions, see below                               |
 
 `input.pointer` with `move` only moves the mouse, which is how to get a hover state without a click. The `pointer` param
-selects the device: `mouse` (default) or `finger`, which delivers the same actions as touch events of finger 0 (`button`
-is ignored then).
+selects the device: `mouse` or `finger`, which delivers the same actions as touch events of finger 0 (`button` is
+ignored then). Without it, the pointer is the one native to the platform: `finger` on Android and iOS, `mouse` elsewhere;
+`session.hello` and the discovery file report it as `defaultPointer`.
 
 `click` holds the button for 50 ms before releasing it, and the call returns only after the release was delivered.
 
