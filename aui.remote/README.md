@@ -1,10 +1,10 @@
 # aui-remote
 
-Client of the remote agent of [AUI](https://github.com/aui-framework/aui) applications (`aui::dev_extras`). It lets a
-human or an AI coding agent look at a running AUI app, click and type into it, read its log and compare screenshots.
+Client of the remote agent of AUI applications (`aui::dev_extras`), module `aui.remote` of AUI. It lets a human or an AI
+coding agent look at a running AUI app, click and type into it, read its log and compare screenshots.
 
 - GUI (`aui-remote`): running applications, pairing, the live frame of the selected one with the input forwarded to it,
-  and the checkbox "Let Agents drive AUI remote" that installs the Claude Code skill. The view tree works like the
+  and the checkbox "Allow Claude to use AUI Remote" that installs the Claude Code skill. The view tree works like the
   in-process devtools: hovering a view draws its content, padding and margin over the frame, clicking it shows its
   properties, and moving the pointer over the frame with CTRL held picks the view under it.
 - CLI (`aui-remote cli <command>`): the same through the command line. Every command prints one JSON object on the
@@ -110,8 +110,9 @@ Notes from agents that used it to develop AUI applications, `aui-remote` itself 
 
 **Debugging aui-remote with aui-remote**
 
-A Debug build (`CMAKE_BUILD_TYPE=Debug`) of the GUI links `aui::dev_extras` and starts the remote agent, so the CLI can
-drive it like any other app:
+In a Debug build of AUI itself (`AUI_REMOTE_SELF_DEBUG`, on by default there; never in builds that AUI.Boot makes for a
+consumer, nor in release packages) the GUI links `aui::dev_extras` and starts the remote agent, so the CLI can drive it
+like any other app:
 
 ```bash
 ./build/bin/aui-remote cli launch -- $PWD/build/bin/aui-remote   # prints the pid of the GUI
@@ -131,30 +132,24 @@ screenshot of the inspected app taken directly.
 
 ## Building
 
+`aui.remote` is built with AUI when the modules it needs are (views, curl, json, image, crypt, network) and AUI is not
+cross-compiled:
+
 ```bash
 cmake -B build -GNinja
-cmake --build build -j8
-cmake --build build -j8 --target Tests && ./build/bin/Tests
+cmake --build build -j8 -t aui.remote          # build/bin/aui-remote
+cmake --build build -j8 -t Tests && ./build/bin/Tests --gtest_filter='EndToEndTest.*:CliTest.*'
 ```
 
-AUI is pinned to a commit of `aui-framework/aui` (`VERSION` of `auib_import` in `CMakeLists.txt`), because the client
-follows the protocol of `aui::dev_extras` on its development branch. When the agent changes, push the AUI commit first,
-then bump the hash here.
+Its tests run in the `Tests` of AUI. `EndToEndTest` drives the real agent of `aui.dev_extras` with the CLI, so a change
+of the protocol has to keep both sides in step; `FakeAgent` stands in for the agent where a test needs to control it.
 
-To change AUI along with this app, import it as a subdirectory:
-
-```bash
-cmake -B build -GNinja -DAUIB_AUI_AS=ON
-```
-
-AUI is then built from the source tree AUI.Boot prints during configure (`~/.aui/repo/aui-<hash>`); edit it there. See
-`AUIB_<PackageName>_AS` in `aui.boot.cmake`.
-
-Needs an AUI with `ATlsSession` (aui::crypt) and the WebSocket frame codec of aui::curl. The tests use `AWebsocketServer` with a
-self-signed `ATlsIdentity` as a stand-in for the agent.
+In a consumer project, `cmake -P aui.boot.cmake remote build` prints the path to the `aui-remote` of the AUI the project
+uses. With `-DAUIB_AUI_AS=ON` AUI is a part of the consumer's build: `aui.remote` is then excluded from all and built
+with `cmake --build build -t aui.remote`.
 
 ## Claude Code skill
 
-Tick "Let Agents drive AUI remote" to write `($CLAUDE_CONFIG_DIR or ~/.claude)/skills/aui-remote/SKILL.md`; untick to
+Tick "Allow Claude to use AUI Remote" to write `($CLAUDE_CONFIG_DIR or ~/.claude)/skills/aui-remote/SKILL.md`; untick to
 remove it. The state of the checkbox is the existence of that file. The skill is built from
 `assets/skill/SKILL.md`, with `{{EXE}}` replaced by the path to this executable.

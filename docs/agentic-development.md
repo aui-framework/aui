@@ -52,8 +52,7 @@ behind your back:
 
 1. The client calls `pair.begin`. The application writes a 6-digit code to the log and shows it in an overlay over its
    window.
-2. A human types the code into the client (the GUI of [aui-remote](https://github.com/aui-framework/remote), or tells it
-   to the agent that uses its CLI).
+2. A human types the code into the client (the GUI of `aui-remote`, or tells it to the agent that uses its CLI).
 3. The client calls `pair.confirm` with `{ code, key }`, where `key` is a random string the client has just generated.
 
 Pairing is a one-time procedure. The application stores a SHA-256 of the key (not the key itself) next to the path of its
@@ -64,7 +63,7 @@ for a period that doubles every time. Until paired, a connection can call nothin
 `pair.confirm`; connections with an `Origin` header (web pages) are rejected altogether.
 
 To check every scenario while debugging, set `Options::pairing` (or the environment variable `AUI_REMOTE_PAIRING`,
-read by [ARemoteDebug::Options::fromEnvironment]):
+read by `ARemoteDebug::Options::fromEnvironment()`):
 
 | Value      | Behavior                                                                          |
 |------------|-----------------------------------------------------------------------------------|
@@ -76,7 +75,7 @@ Where the hashes are kept is `Options::trustedKeysFile`: by default `~/.aui/remo
 application data folder on Android and iOS. On Emscripten nothing survives a reload, so it behaves like `session`.
 
 When the client launches the application itself, it passes a key in the environment variable `AUI_REMOTE_KEY`, and no
-pairing is needed. [ARemoteDebug::Options::fromEnvironment] reads it, as in the example above.
+pairing is needed. `ARemoteDebug::Options::fromEnvironment()` reads it, as in the example above.
 
 ## Protocol
 
@@ -200,5 +199,13 @@ ARemoteDebug::start()->registerFunction("openDocument", "arguments: { path: stri
 
 ## Using with an agent
 
-The [aui-remote](https://github.com/aui-framework/remote) tool wraps the protocol into a command line that an agent can
-call; its GUI installs a skill that teaches the agent the loop. Anything that speaks WebSocket works as well.
+`aui-remote` (module `aui.remote`) wraps the protocol into a command line that an agent can call; its GUI installs a
+skill that teaches the agent the loop. It is built for the host along with AUI and comes in `bin/` of AUI
+distributions, next to `aui.toolbox`. In a consumer project, AUI.Boot prints its path:
+
+```shell
+$(cmake -P aui.boot.cmake remote build) cli list
+```
+
+With `-DAUIB_AUI_AS=ON` (see [configure flags](aui-configure-flags.md)), AUI is a part of the consumer's build and
+`aui-remote` is built on demand: `cmake --build build -t aui.remote`. Anything that speaks WebSocket works as well.

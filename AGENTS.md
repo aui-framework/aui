@@ -37,6 +37,7 @@ aui.<module>/
 | `aui.toolbox`     | Build-time tool (e.g. converts assets to embeddable `.cpp`)                             |
 | `aui.mysql`       | MySQL (disabled)                                                                        |
 | `aui.dev_extras`  | Optional modules for development and agentic (AI) work                                  |
+| `aui.remote`      | `aui-remote`: GUI and CLI client of the remote agent of `aui.dev_extras` (host tool)    |
 
 ### Top-level things worth knowing
 
@@ -135,9 +136,9 @@ use compiler-specific things like `#ifdef _WIN32`.
 
 To verify a UI change in a real window, link `aui::dev_extras` (development builds only) and start the remote agent
 from the application: `ARemoteDebug::start()` under `#if AUI_DEBUG`, see `examples/ui/remote_debug`. Then drive it
-through the agent: inspect views, click, type, take screenshots. The `aui-remote` tool
-([github.com/aui-framework/remote](https://github.com/aui-framework/remote)) wraps this into a CLI, and the
-`aui-remote` skill in `.claude/skills` describes the loop. The first connection has to be paired with a 6-digit code the
+through the agent: inspect views, click, type, take screenshots. The `aui-remote` tool (module `aui.remote`, shipped in
+`bin/` of AUI distributions) wraps this into a CLI; in a consumer project, `cmake -P aui.boot.cmake remote build` prints
+its path. The `aui-remote` skill in `.claude/skills` describes the loop. The first connection has to be paired with a 6-digit code the
 application shows in its window: ask the user for it. See `docs/agentic-development.md`.
 
 ## Contributing conventions
