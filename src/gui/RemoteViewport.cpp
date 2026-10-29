@@ -15,6 +15,11 @@ namespace {
 
 constexpr auto MOVE_PERIOD = 16ms;   // ~60 hover events per second at most
 
+// a finger held still this long is a long press; like the default of Android, which reports long presses to AUI
+// there. Injected touches don't go through the platform, so the viewport tells the application itself.
+constexpr auto LONG_PRESS_TIMEOUT = 500ms;
+constexpr float LONG_PRESS_SLOP = 8.f;   // window px the finger may wander
+
 AString keyName(AInput::Key key) {
     auto name = AEnumerate<AInput::Key>::toName(key);
     if (name.startsWith("AInput::")) {
@@ -64,6 +69,22 @@ void frame(IRenderer& render, const ABrush& brush, Rect outer, Rect inner) {
 RemoteViewport::RemoteViewport() {
     mMoveTimer = _new<ATimer>(MOVE_PERIOD);
     connect(mMoveTimer->fired, me::flushMove);
+    mLongPressTimer = _new<ATimer>(LONG_PRESS_TIMEOUT);
+    connect(mLongPressTimer->fired, me::fireLongPress);
+}
+
+void RemoteViewport::cancelLongPress() {
+    mLongPressTimer->stop();
+    mLongPressAt.reset();
+}
+
+void RemoteViewport::fireLongPress() {
+    const auto at = mLongPressAt;
+    cancelLongPress();
+    if (!at || !mStream) {
+        return;
+    }
+    mStream->call("input.gesture", AJson { { "gesture", "longPress" }, { "x", at->x }, { "y", at->y } });
 }
 
 RemoteViewport::~RemoteViewport() = default;
@@ -71,6 +92,7 @@ RemoteViewport::~RemoteViewport() = default;
 void RemoteViewport::setStream(_<FrameStream> stream) {
     mStream = std::move(stream);
     mPressed = false;
+    cancelLongPress();
     mPendingMove.reset();
 }
 
@@ -236,6 +258,9 @@ void RemoteViewport::onPointerMove(glm::vec2 pos, const APointerMoveEvent& event
     if (!target) {
         return;
     }
+    if (mLongPressAt && glm::distance(*mLongPressAt, *target) > LONG_PRESS_SLOP) {
+        cancelLongPress();
+    }
     if (std::chrono::steady_clock::now() - mLastMove >= MOVE_PERIOD) {
         sendMove(*target);
         return;
@@ -256,6 +281,10 @@ void RemoteViewport::onPointerPressed(const APointerPressedEvent& event) {
     mPressed = true;
     sendMove(*target);
     sendPointer("press", *target, event.asButton);
+    if (mPointer == Pointer::FINGER) {
+        mLongPressAt = *target;
+        mLongPressTimer->start();
+    }
 }
 
 void RemoteViewport::onPointerReleased(const APointerReleasedEvent& event) {
@@ -264,6 +293,7 @@ void RemoteViewport::onPointerReleased(const APointerReleasedEvent& event) {
         return;
     }
     mPressed = false;
+    cancelLongPress();
     const auto target = mapping().toWindowClamped(event.position);
     sendMove(target);   // also flushes the pending move
     sendPointer("release", target, event.asButton);

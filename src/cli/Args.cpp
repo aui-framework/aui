@@ -127,6 +127,23 @@ AJson pointerParams(const ParsedArgs& args, const AString& action, const AString
 
 constexpr std::chrono::milliseconds WAIT_MARGIN = std::chrono::seconds(10);
 
+/// Copies `--option` as a number to `params[key]`; `required` throws when it is absent.
+void copyNumber(const ParsedArgs& args, AJson& params, const AString& option, const AString& key, bool required = false,
+                const AString& usage = {}) {
+    if (auto v = args.get(option)) {
+        params[key] = number(*v, "--" + option);
+    } else if (required) {
+        throw ArgsError("--{} is required; usage: aui-remote cli {}"_format(option, usage));
+    }
+}
+
+/// A gesture takes as long as it says; the client waits for it on top of the usual margin.
+void extendTimeout(CommandRequest& request, const ParsedArgs& args) {
+    if (args.has("duration")) {
+        request.timeout = std::chrono::milliseconds(intOption(args, "duration", 0)) + WAIT_MARGIN;
+    }
+}
+
 }   // namespace
 
 AOptional<AString> ParsedArgs::get(const AString& name) const {
@@ -190,6 +207,7 @@ ParsedArgs ParsedArgs::parse(const AStringVector& args) {
 AStringVector commandNames() {
     return { "list",     "pair",  "hello",    "windows", "resize", "scroll-into-view", "tree",      "find",     "props",     "hit",
              "screenshot", "interactive", "click", "dblclick", "press", "release", "drag",       "scroll",
+             "long-press", "fling", "pinch", "rotate", "touch",
              "move",     "type",  "key",      "wait-idle", "wait-view", "logs",     "functions", "call",
              "launch",   "stop",  "compare" };
 }
@@ -268,6 +286,68 @@ AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {
                               : cmd == "scroll" ? "scroll <ref|x y> [--dx n] [--dy n]"
                                                 : cmd + " <ref|x y> [--pointer mouse|finger] [--button b] [--mod m]...";
         params = pointerParams(args, cmd == "dblclick" ? AString("doubleClick") : cmd, usage);
+    } else if (cmd == "long-press") {
+        const AString usage = "long-press <ref|x y> [--duration ms]";
+        request.method = "input.pointer";
+        params = pointerParams(args, "longPress", usage);
+        copyNumber(args, params, "duration", "durationMs");
+        extendTimeout(request, args);
+    } else if (cmd == "fling") {
+        const AString usage = "fling <ref|x y> [--dx n] [--dy n] [--velocity px/s]";
+        request.method = "input.pointer";
+        params = pointerParams(args, "fling", usage);
+        copyNumber(args, params, "dx", "dx");
+        copyNumber(args, params, "dy", "dy");
+        copyNumber(args, params, "velocity", "velocity");
+        if (!params.contains("dx") && !params.contains("dy")) {
+            throw ArgsError("fling needs --dx or --dy (the way of the finger); usage: aui-remote cli " + usage);
+        }
+    } else if (cmd == "pinch" || cmd == "rotate") {
+        const AString usage = cmd == "pinch" ? "pinch <ref|x y> --from px --to px [--angle deg] [--duration ms]"
+                                             : "rotate <ref|x y> --degrees n [--distance px] [--duration ms]";
+        request.method = "input.touch";
+        std::size_t index = 0;
+        readTarget(args, index, params, "ref", "x", "y", usage);
+        params["gesture"] = cmd;
+        if (cmd == "pinch") {
+            copyNumber(args, params, "from", "from", true, usage);
+            copyNumber(args, params, "to", "to", true, usage);
+            copyNumber(args, params, "angle", "angle");
+        } else {
+            copyNumber(args, params, "degrees", "degrees", true, usage);
+            copyNumber(args, params, "distance", "distance");
+        }
+        copyNumber(args, params, "duration", "durationMs");
+        extendTimeout(request, args);
+        copyWindow(args, params);
+    } else if (cmd == "touch") {
+        const AString usage = R"(touch --fingers '[{"finger":0,"points":[{"x":10,"y":10,"t":0},...]},...]')";
+        request.method = "input.touch";
+        auto fingers = args.get("fingers");
+        if (!fingers) {
+            throw ArgsError("usage: aui-remote cli " + usage);
+        }
+        try {
+            params["fingers"] = AJson::fromString(*fingers);
+        } catch (const AException& e) {
+            throw ArgsError("--fingers is not valid JSON: " + e.getMessage());
+        }
+        if (!params["fingers"].isArray()) {
+            throw ArgsError("--fingers must be an array; usage: aui-remote cli " + usage);
+        }
+        // the gesture lasts until its last point
+        int duration = 0;
+        for (const auto& f : params["fingers"].asArray()) {
+            if (auto points = f.containsOpt("points"); points && points->isArray()) {
+                for (const auto& p : points->asArray()) {
+                    if (auto t = p.containsOpt("t"); t && t->isInt()) {
+                        duration = std::max(duration, t->asInt());
+                    }
+                }
+            }
+        }
+        request.timeout = std::chrono::milliseconds(duration) + WAIT_MARGIN;
+        copyWindow(args, params);
     } else if (cmd == "type") {
         requirePositional(args, 1, "type <text> [--ref ref]");
         request.method = "input.type";

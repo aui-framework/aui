@@ -115,6 +115,44 @@ TEST(ArgsTest, PointerIsLeftToTheApplicationUnlessChosen) {
     EXPECT_THROW(buildRequest(parse({ "click", "v1:1", "--pointer", "pen" })), ArgsError);
 }
 
+TEST(ArgsTest, TouchGestures) {
+    auto longPress = request({ "long-press", "v1:1", "--duration", "40000" });
+    EXPECT_EQ(longPress.method, "input.pointer");
+    EXPECT_EQ(longPress.params["action"].asString(), "longPress");
+    EXPECT_EQ(longPress.params["durationMs"].asInt(), 40000);
+    EXPECT_GT(longPress.timeout, std::chrono::milliseconds(40000));
+
+    auto fling = request({ "fling", "10", "20", "--dy", "-300", "--velocity", "2500.5" });
+    EXPECT_EQ(fling.params["action"].asString(), "fling");
+    EXPECT_EQ(fling.params["x"].asInt(), 10);
+    EXPECT_EQ(fling.params["dy"].asInt(), -300);
+    EXPECT_FALSE(fling.params.contains("dx"));
+    EXPECT_DOUBLE_EQ(fling.params["velocity"].asNumber(), 2500.5);
+    EXPECT_THROW(buildRequest(parse({ "fling", "v1:1" })), ArgsError);
+
+    auto pinch = request({ "pinch", "v1:3", "--from", "50", "--to", "200", "--window", "v1:1" });
+    EXPECT_EQ(pinch.method, "input.touch");
+    EXPECT_EQ(pinch.params["gesture"].asString(), "pinch");
+    EXPECT_EQ(pinch.params["ref"].asString(), "v1:3");
+    EXPECT_EQ(pinch.params["to"].asInt(), 200);
+    EXPECT_EQ(pinch.params["windowId"].asString(), "v1:1");
+    EXPECT_THROW(buildRequest(parse({ "pinch", "v1:3", "--from", "50" })), ArgsError);
+
+    auto rotate = request({ "rotate", "100", "100", "--degrees", "-45", "--duration", "500" });
+    EXPECT_EQ(rotate.params["gesture"].asString(), "rotate");
+    EXPECT_EQ(rotate.params["degrees"].asInt(), -45);
+    EXPECT_EQ(rotate.params["durationMs"].asInt(), 500);
+    EXPECT_THROW(buildRequest(parse({ "rotate", "100", "100" })), ArgsError);
+
+    auto touch = request({ "touch", "--fingers", R"([{"points":[{"x":1,"y":2,"t":0},{"x":5,"y":2,"t":20000}]}])" });
+    EXPECT_EQ(touch.method, "input.touch");
+    EXPECT_EQ(touch.params["fingers"][0]["points"][1]["x"].asInt(), 5);
+    EXPECT_GT(touch.timeout, std::chrono::milliseconds(20000));
+    EXPECT_THROW(buildRequest(parse({ "touch" })), ArgsError);
+    EXPECT_THROW(buildRequest(parse({ "touch", "--fingers", "{oops" })), ArgsError);
+    EXPECT_THROW(buildRequest(parse({ "touch", "--fingers", "{}" })), ArgsError);
+}
+
 TEST(ArgsTest, PointNeedsBothCoordinates) {
     EXPECT_THROW(buildRequest(parse({ "click", "10" })), ArgsError);
     EXPECT_THROW(buildRequest(parse({ "click" })), ArgsError);

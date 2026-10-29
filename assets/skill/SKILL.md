@@ -58,6 +58,11 @@ With several apps running pass `--pid N` to every command.
 | `click\|dblclick\|press\|release\|move <ref \| x y> [--pointer mouse\|finger] [--button b] [--mod m]...` | pointer; without `--pointer` the app uses its native one (mouse on desktop, finger on Android/iOS) |
 | `drag <ref \| x y> <ref \| x y>`                                | drag from one point to another                        |
 | `scroll <ref \| x y> --dx N --dy N`                             | wheel                                                 |
+| `long-press <ref \| x y> [--duration ms]`                       | touch and hold; prints `handled`                      |
+| `fling <ref \| x y> [--dx N] [--dy N] [--velocity px/s]`        | swipe and lift, the list keeps scrolling; `wait-idle` waits for it |
+| `pinch <ref \| x y> --from D --to D [--angle deg]`              | two fingers, distance from D to D (zoom)              |
+| `rotate <ref \| x y> --degrees N [--distance D]`                | two fingers turning around the point                  |
+| `touch --fingers '[{"finger":0,"points":[{"x":1,"y":2,"t":0},...]}]'` | any multi-touch: finger tracks, `t` in ms        |
 | `type <text> [--ref R]`, `key <key> [--mod m]... [--ref R]`     | keyboard                                              |
 | `wait-idle [--timeout ms] [--quiet ms]`                         | until nothing is happening                            |
 | `wait-view <find filters> [--state visible\|gone] [--timeout ms]` | until a view appears or disappears                  |

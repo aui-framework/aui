@@ -17,7 +17,8 @@
  * remote window pixels. When it is given a different size, the frame is letterboxed with the aspect ratio preserved.
  *
  * Hover, press, move, release, scroll, keys and characters are sent as `input.pointer`, `input.key` and `input.type`.
- * Press and release are always separate events (never the atomic `click`), so drag and long press work.
+ * Press and release are always separate events (never the atomic `click`), so drag works. A finger (T mode) held still
+ * for a while also sends `input.gesture` longPress: injected touches don't go through the platform's gesture detector.
  *
  * Like the in-process devtools, the viewport draws the box model (content, padding, margin) of a highlighted view over
  * the frame, and moving the pointer with CTRL held emits inspectRequested (hit testing is up to the receiver).
@@ -95,6 +96,8 @@ private:
     Pointer mPointer = Pointer::MOUSE;
     bool mPressed = false;
     _<ATimer> mMoveTimer;
+    _<ATimer> mLongPressTimer;
+    AOptional<glm::vec2> mLongPressAt;   // window position of the finger that may become a long press
     AOptional<glm::vec2> mPendingMove;
     std::chrono::steady_clock::time_point mLastMove {};
     AOptional<Highlight> mHighlight;
@@ -102,5 +105,7 @@ private:
     void sendPointer(const char* action, glm::vec2 windowPos, AOptional<AInput::Key> button = std::nullopt);
     void sendMove(glm::vec2 windowPos);
     void flushMove();
+    void cancelLongPress();
+    void fireLongPress();
     void renderHighlight(ARenderContext& ctx, const Highlight& highlight);
 };
