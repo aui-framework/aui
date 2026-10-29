@@ -37,7 +37,9 @@ With several apps running pass `--pid N` to every command.
 
 ## The loop
 
-1. `interactive` lists what can be clicked or typed into (with refs); `find --type Button --text OK` searches.
+1. On a screen you haven't seen yet, `screenshot --annotate`: the PNG has a numbered box over every clickable or
+   typeable view, and `marks` maps each number to its ref. `interactive` lists the same without the picture;
+   `find --type Button --text OK` searches.
 2. Act: `click <ref>`, `click <x> <y>`, `type "text" [--ref R]`, `key Enter [--mod ctrl]`.
 3. `wait-idle` after every input, then `screenshot` and look at the PNG whose path is in the result.
 4. Fix the code, rebuild, `stop` and `launch` again.
@@ -55,7 +57,7 @@ With several apps running pass `--pid N` to every command.
 | `hit <x> <y> [--window W]`                                      | views under a point                                   |
 | `scroll-into-view <ref>`                                        | scrolls the scroll areas so the view is visible; prints `visible` |
 | `interactive [--window W]`                                      | clickable and typeable views                          |
-| `screenshot [--window W] [--ref R] [--padding N]`               | saves a PNG, prints `path`; `--ref` crops to a view   |
+| `screenshot [--window W] [--ref R] [--padding N] [--annotate]`  | saves a PNG, prints `path`; `--ref` crops to a view; `--annotate` numbers the interactive views and prints `marks` (number -> ref) |
 | `click\|dblclick\|press\|release\|move <ref \| x y> [--pointer mouse\|finger] [--button b] [--mod m]...` | pointer; without `--pointer` the app uses its native one (mouse on desktop, finger on Android/iOS) |
 | `drag <ref \| x y> <ref \| x y>`                                | drag from one point to another                        |
 | `scroll <ref \| x y> --dx N --dy N`                             | wheel                                                 |

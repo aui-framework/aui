@@ -6,7 +6,7 @@ namespace aui_remote::cli {
 
 namespace {
 
-const std::set<std::string> FLAGS = { "interactive", "include-invisible", "inspector", "json", "help" };
+const std::set<std::string> FLAGS = { "interactive", "include-invisible", "inspector", "json", "annotate", "help" };
 
 /// number if the text looks like one, string otherwise.
 AJson numberOrString(const AString& text) {
@@ -290,6 +290,9 @@ AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {
         request.method = "screenshot";
         if (auto v = args.get("ref")) {
             params["ref"] = *v;
+        }
+        if (args.has("annotate")) {
+            params["annotate"] = true;
         }
         if (args.has("padding")) {
             params["padding"] = intOption(args, "padding", 0);

@@ -189,6 +189,9 @@ TEST(ArgsTest, ShotLogsCallHit) {
     EXPECT_EQ(shot.method, "screenshot");
     EXPECT_EQ(shot.params["padding"].asInt(), 8);
     EXPECT_EQ(shot.params["windowId"].asString(), "v1:1");
+    EXPECT_FALSE(shot.params.contains("annotate"));
+    auto annotated = request({ "screenshot", "--annotate" });
+    EXPECT_TRUE(annotated.params["annotate"].asBool());
 
     auto logs = request({ "logs", "--since", "5", "--level", "warn", "--limit", "10" });
     EXPECT_EQ(logs.method, "diag.log");
