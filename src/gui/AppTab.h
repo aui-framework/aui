@@ -2,6 +2,8 @@
 
 #include <AUI/Common/AProperty.h>
 #include <AUI/Thread/AAsyncHolder.h>
+#include <AUI/Model/AListModel.h>
+#include <AUI/View/ADropdownList.h>
 #include <AUI/View/ATextField.h>
 #include <AUI/View/AViewContainer.h>
 
@@ -55,6 +57,10 @@ private:
     _<ATextField> mWidthField;
     _<ATextField> mHeightField;
     glm::ivec2 mRemoteSize { 0, 0 };
+    _<ADropdownList> mScaleList;
+    _<AListModel<AString>> mScaleModel;
+    AVector<float> mScaleFactors;
+    float mRemoteScale = 1.f;
     _<ViewTreeView> mTreeView;
     _<ViewDetails> mDetails;
     _<const aui_remote::ViewTree> mTree;
@@ -71,5 +77,8 @@ private:
     void inspectAt(glm::vec2 windowPos);
     void showDetails(const AString& ref);
     void showRemoteSize(glm::ivec2 size);
+    void addScaleOption(float factor);
+    void showRemoteScale(float factor);
+    void rescaleRemoteWindow(int index);
     void resizeRemoteWindow();
 };

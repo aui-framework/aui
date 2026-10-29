@@ -30,6 +30,11 @@ struct FrameUpdate {
     glm::ivec2 windowSize { 0, 0 };
 
     /**
+     * @brief The scale the application applies on top of the system DPI (`window.setScale`); 1 if not reported.
+     */
+    float scalingFactor = 1.f;
+
+    /**
      * @brief Decoded frame, downscaled by the subscription scale.
      */
     _<AImage> image;

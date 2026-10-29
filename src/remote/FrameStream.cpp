@@ -288,6 +288,9 @@ void FrameStream::start(float scale, aui::ranged_number<int, 0, 100> quality) {
                 FrameUpdate update;
                 update.seq = seq;
                 update.windowSize = { params["windowWidth"].asInt(), params["windowHeight"].asInt() };
+                if (auto v = params.containsOpt("scalingFactor"); v && v->isNumber()) {
+                    update.scalingFactor = float(v->asNumber());
+                }
                 update.image = AImage::fromBuffer(AByteBuffer::fromBase64String(params["jpeg"].asString()));
                 if (!update.image) {
                     throw AException("can't decode the frame " + AString::number(seq));

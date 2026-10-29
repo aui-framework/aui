@@ -3,6 +3,7 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
+#include <AUI/View/ADropdownList.h>
 #include <AUI/View/ALabel.h>
 #include <AUI/View/ARulerArea.h>
 #include <AUI/View/AScrollArea.h>
@@ -42,6 +43,14 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
     mWidthField = sizeField();
     mHeightField = sizeField();
 
+    mScaleModel = _new<AListModel<AString>>();
+    for (auto factor : { 0.5f, 0.75f, 1.f, 1.25f, 1.5f, 2.f, 3.f }) {
+        addScaleOption(factor);
+    }
+    mScaleList = _new<ADropdownList>(mScaleModel);
+    mScaleList->setSelectionId(2);
+    connect(mScaleList->selectionChanged, me::rescaleRemoteWindow);
+
     // the viewport inside the ruler area, with the remote window size and the mode switch [ M | T ] in the corner
     _<AView> viewportArea = Stacked::Expanding {
         _new<ARulerArea>(Stacked {
@@ -53,6 +62,8 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
             mWidthField,
             Label { "×" },
             mHeightField,
+            SpacerFixed { 8_dp },
+            mScaleList,
             SpacerFixed { 8_dp },
             pointerButton("M", RemoteViewport::Pointer::MOUSE),
             pointerButton("T", RemoteViewport::Pointer::FINGER),
@@ -196,6 +207,7 @@ void AppTab::startStream() {
         if (frame.image) {
             mViewport->setFrame(frame.image, frame.windowSize);
             showRemoteSize(frame.windowSize);
+            showRemoteScale(frame.scalingFactor);
         }
         if (frame.tree && !frame.tree->empty()) {
             setTree(frame.tree);
@@ -309,4 +321,34 @@ void AppTab::resizeRemoteWindow() {
     // the next frame shows the size the window got, which may differ (its minimum size, the window manager)
     mAsync << mStream->request("window.resize", AJson { { "width", size.x }, { "height", size.y } })
                   .onError([](const AException& e) { ALogger::warn("AppTab") << "window.resize: " << e; });
+}
+
+void AppTab::addScaleOption(float factor) {
+    mScaleFactors << factor;
+    mScaleModel->push_back("{}%"_format(int(std::round(factor * 100.f))));
+}
+
+void AppTab::showRemoteScale(float factor) {
+    mRemoteScale = factor;
+    auto it = std::find_if(mScaleFactors.begin(), mScaleFactors.end(),
+                           [&](float f) { return std::abs(f - factor) < 0.001f; });
+    if (it == mScaleFactors.end()) {
+        // set by someone else (i.e. the CLI) to a value that is not in the list
+        addScaleOption(factor);
+        it = mScaleFactors.end() - 1;
+    }
+    // equal to mRemoteScale, so rescaleRemoteWindow does not send it back
+    mScaleList->setSelectionId(int(it - mScaleFactors.begin()));
+}
+
+void AppTab::rescaleRemoteWindow(int index) {
+    if (!mStream || index < 0 || index >= int(mScaleFactors.size())) {
+        return;
+    }
+    const auto factor = mScaleFactors[index];
+    if (std::abs(factor - mRemoteScale) < 0.001f) {
+        return;
+    }
+    mAsync << mStream->request("window.setScale", AJson { { "factor", double(factor) } })
+                  .onError([](const AException& e) { ALogger::warn("AppTab") << "window.setScale: " << e; });
 }

@@ -218,6 +218,17 @@ TEST(ArgsTest, Resize) {
     EXPECT_THROW(buildRequest(parse({ "resize", "wide", "600" })), ArgsError);
 }
 
+TEST(ArgsTest, Scale) {
+    auto scale = request({ "scale", "1.5", "--window", "v1:1" });
+    EXPECT_EQ(scale.method, "window.setScale");
+    EXPECT_DOUBLE_EQ(scale.params["factor"].asNumber(), 1.5);
+    EXPECT_EQ(scale.params["windowId"].asString(), "v1:1");
+    EXPECT_TRUE(request({ "scale", "reset" }).params["reset"].asBool());
+    EXPECT_THROW(buildRequest(parse({ "scale" })), ArgsError);
+    EXPECT_THROW(buildRequest(parse({ "scale", "big" })), ArgsError);
+    EXPECT_THROW(buildRequest(parse({ "scale", "0" })), ArgsError);
+}
+
 TEST(ArgsTest, ScrollIntoView) {
     auto r = request({ "scroll-into-view", "v1:7" });
     EXPECT_EQ(r.method, "view.scrollIntoView");

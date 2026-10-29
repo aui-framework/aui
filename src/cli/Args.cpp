@@ -205,7 +205,7 @@ ParsedArgs ParsedArgs::parse(const AStringVector& args) {
 }
 
 AStringVector commandNames() {
-    return { "list",     "pair",  "hello",    "windows", "resize", "scroll-into-view", "tree",      "find",     "props",     "hit",
+    return { "list",     "pair",  "hello",    "windows", "resize", "scale", "scroll-into-view", "tree",      "find",     "props",     "hit",
              "screenshot", "interactive", "click", "dblclick", "press", "release", "drag",       "scroll",
              "long-press", "fling", "pinch", "rotate", "touch",
              "move",     "type",  "key",      "wait-idle", "wait-view", "logs",     "functions", "call",
@@ -231,6 +231,22 @@ AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {
                 throw ArgsError("{} must be a positive integer, got '{}'"_format(name, args.positional[i]));
             }
             params[name] = *value;
+        }
+        if (args.has("timeout")) {
+            const int timeout = intOption(args, "timeout", 0);
+            params["timeoutMs"] = timeout;
+            request.timeout = std::chrono::milliseconds(timeout) + WAIT_MARGIN;
+        }
+        copyWindow(args, params);
+    } else if (cmd == "scale") {
+        requirePositional(args, 1, "scale <factor|reset> [--window id] [--timeout ms]");
+        request.method = "window.setScale";
+        if (args.positional[0] == "reset") {
+            params["reset"] = true;
+        } else if (auto factor = args.positional[0].toDouble(); factor && *factor > 0) {
+            params["factor"] = *factor;
+        } else {
+            throw ArgsError("scale must be a positive number or reset, got '{}'"_format(args.positional[0]));
         }
         if (args.has("timeout")) {
             const int timeout = intOption(args, "timeout", 0);
