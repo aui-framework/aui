@@ -1,19 +1,11 @@
 #include "Discovery.h"
 
+#include "Process.h"
+
 #include <algorithm>
 #include <fstream>
 #include <sstream>
 #include <thread>
-
-#include <AUI/Platform/AProcess.h>
-#include <AUI/Platform/APlatform.h>
-
-#if AUI_PLATFORM_WIN
-#include <windows.h>
-#else
-#include <cerrno>
-#include <signal.h>
-#endif
 
 namespace aui_remote {
 
@@ -83,42 +75,21 @@ AppInfo AppInfo::fromJson(const AJson& json) {
 
 APath discovery::defaultDirectory() { return APath::getDefaultPath(APath::HOME) / ".aui" / "remote"; }
 
-bool discovery::isProcessAlive(std::uint32_t pid) {
-#if AUI_PLATFORM_WIN
-    HANDLE h = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, FALSE, pid);
-    if (h == nullptr) {
-        return GetLastError() == ERROR_ACCESS_DENIED;
-    }
-    DWORD code = 0;
-    const bool alive = GetExitCodeProcess(h, &code) && code == STILL_ACTIVE;
-    CloseHandle(h);
-    return alive;
-#else
-    return ::kill(static_cast<pid_t>(pid), 0) == 0 || errno == EPERM;
-#endif
-}
+bool discovery::isProcessAlive(std::uint32_t pid) { return platform::isProcessAlive(pid); }
 
 bool discovery::terminateProcess(std::uint32_t pid, std::chrono::milliseconds grace) {
     if (!isProcessAlive(pid)) {
         return true;
     }
-#if AUI_PLATFORM_WIN
-    if (auto process = AProcess::fromPid(pid)) {
-        process->kill();
-    }
-#else
-    ::kill(static_cast<pid_t>(pid), SIGTERM);
-#endif
+    platform::requestTermination(pid);
     const auto deadline = std::chrono::steady_clock::now() + grace;
     while (isProcessAlive(pid) && std::chrono::steady_clock::now() < deadline) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
-#if !AUI_PLATFORM_WIN
     if (isProcessAlive(pid)) {
-        ::kill(static_cast<pid_t>(pid), SIGKILL);
+        platform::forceTermination(pid);
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
-#endif
     return !isProcessAlive(pid);
 }
 
