@@ -181,7 +181,9 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         }
     });
 
-    auto args = "\"" + mInfo.executable + "\" " + std::visit(aui::lambda_overloaded {
+    // argv[0] with native separators: some programs parse their own path out of the command line, and cmd.exe takes
+    // the slashes of "C:/Windows/system32/cmd.exe" for switches ("The filename ... syntax is incorrect")
+    auto args = "\"" + AString(mInfo.executable).replacedAll("/", "\\") + "\" " + std::visit(aui::lambda_overloaded {
         [](const ArgSingleString& single) {
             return single.arg;
         },
