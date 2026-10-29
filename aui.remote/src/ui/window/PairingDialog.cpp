@@ -39,7 +39,10 @@ PairingDialog::PairingDialog(AWindow& parent, AppInfo app)
     mStatus = "Asking the application to show a code...";
     setContents(Vertical {
       Label { "Enter the 6-digit code shown in the window of the application." },
-      _new<ATextField>() && mCode,
+      (_new<ATextField>() && mCode) AUI_LET {
+          connect(it->actionButtonPressed, me::confirm);
+          it->focus();
+      },
       Label { AUI_REACT(*mStatus) },
       Horizontal {
         SpacerExpanding {},
@@ -69,8 +72,7 @@ void PairingDialog::confirm() {
     }
     mBusy = true;
     mStatus = "Checking the code...";
-    mAsync << AUI_THREADPOOL {
-        const auto code = (*mCode).trim();
+    mAsync << AUI_THREADPOOL_X[this, code = (*mCode).trim()] {
         AString status;
         bool ok = false;
         bool needNewCode = false;
