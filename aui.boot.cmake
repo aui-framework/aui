@@ -73,6 +73,7 @@ Available commands:
 | `help` | Print help message |
 | `update [version]` | Update `aui.boot.cmake` to the specified version (default: `master`) |
 | `create` | Create a new project in the current directory (clones `example_app`) |
+| `remote [build dir]` | Print the path to `aui-remote` of the AUI used by the project configured in `build dir` (default: `build`) |
 
 Example — updating to the latest release:
 ```shell
@@ -83,6 +84,15 @@ Example — bootstrapping a new project:
 ```shell
 cmake -P aui.boot.cmake create
 ```
+
+Example — running `aui-remote` (see [agentic-development]) of the AUI a project is built with:
+```shell
+$(cmake -P aui.boot.cmake remote build) cli list
+```
+
+`remote` prints the path to stdout and nothing else. It is `bin/aui-remote` of the AUI package the project imports or,
+with [AUIB_AUI_AS](#AUIB_LIB_AS), of the project's build directory; in the latter case it is built on demand with
+`cmake --build build -t aui.remote`.
 
 ## Prebuilt packages { #PREBUILT_PACKAGES }
 
@@ -810,6 +820,8 @@ if(CMAKE_SCRIPT_MODE_FILE)
         message("  update [version]        Update aui.boot.cmake to the specified version")
         message("                          (default: master branch)")
         message("  create                  Create a new project in the current directory")
+        message("  remote [build dir]      Print the path to aui-remote of the AUI used by the project")
+        message("                          configured in build dir (default: build)")
         message("")
         message("For more information, see https://aui-framework.github.io/master/getting-started")
         message("")
@@ -861,6 +873,41 @@ if(CMAKE_SCRIPT_MODE_FILE)
         message(STATUS "")
         message(STATUS "Next steps:")
         message(STATUS "  cmake -B build && cmake --build build")
+    elseif("${_auib_cli_command}" STREQUAL "remote")
+        if(NOT "${CMAKE_ARGV4}" STREQUAL "")
+            set(_auib_build_dir "${CMAKE_ARGV4}")
+        else()
+            set(_auib_build_dir "build")
+        endif()
+        get_filename_component(_auib_build_dir "${_auib_build_dir}" ABSOLUTE)
+        if(NOT EXISTS "${_auib_build_dir}/CMakeCache.txt")
+            message(FATAL_ERROR "${_auib_build_dir} is not a configured build directory; configure the project first "
+                    "(cmake -B build) or pass its build directory: cmake -P aui.boot.cmake remote <build dir>")
+        endif()
+        load_cache("${_auib_build_dir}" READ_WITH_PREFIX _auib_cache_ aui_DIR AUIB_AUI_AS)
+        set(_auib_candidates "${_auib_build_dir}/bin")
+        if(_auib_cache_aui_DIR)
+            list(APPEND _auib_candidates "${_auib_cache_aui_DIR}/bin")
+        endif()
+        unset(_auib_remote)
+        foreach(_dir ${_auib_candidates})
+            foreach(_name aui-remote aui-remote.exe)
+                if(EXISTS "${_dir}/${_name}" AND NOT _auib_remote)
+                    set(_auib_remote "${_dir}/${_name}")
+                endif()
+            endforeach()
+        endforeach()
+        if(NOT _auib_remote)
+            if(_auib_cache_AUIB_AUI_AS)
+                message(FATAL_ERROR "aui-remote is not built yet: cmake --build ${_auib_build_dir} -t aui.remote")
+            endif()
+            string(REPLACE ";" ", " _auib_candidates "${_auib_candidates}")
+            message(FATAL_ERROR "aui-remote is not found in ${_auib_candidates}. It comes with AUI distributions "
+                    "for the host platform that have the views, curl, json, image, crypt and network components; "
+                    "older versions of AUI don't have it.")
+        endif()
+        # stdout, so that $(cmake -P aui.boot.cmake remote) gives the path alone
+        execute_process(COMMAND "${CMAKE_COMMAND}" -E echo "${_auib_remote}")
     elseif("${_auib_cli_command}" STREQUAL "_auib_run_logged")
         # Internal, used by _auib_execute_logged:
         # cmake -P aui.boot.cmake _auib_run_logged -- <log file> <merge stderr> <command...>
