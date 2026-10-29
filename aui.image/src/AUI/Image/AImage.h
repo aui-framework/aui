@@ -50,6 +50,13 @@ private:
 public:
     AImage() = default;
 
+    // mData must point to our own buffer, not to the buffer of the image we copied from
+    AImage(const AImage& other) : AImageView(other), mOwnedBuffer(other.mOwnedBuffer) { mData = mOwnedBuffer; }
+
+    // the heap block changes owner, so mData stays valid
+    AImage(AImage&&) noexcept = default;
+    AImage& operator=(AImage&&) noexcept = default;
+
     explicit AImage(AImageView imageView) : AImage(imageView.buffer(), imageView.size(), imageView.format()) {}
 
     AImage(AByteBuffer buffer, glm::uvec2 size, APixelFormat format) : mOwnedBuffer(std::move(buffer)) {
