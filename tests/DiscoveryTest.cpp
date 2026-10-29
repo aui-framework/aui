@@ -4,7 +4,7 @@
 
 #include <AUI/Platform/AProcess.h>
 
-#include "Remote/Discovery.h"
+#include "remote/Discovery.h"
 #include "TestUtil.h"
 
 using namespace aui_remote;

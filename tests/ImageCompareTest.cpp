@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "Cli/ImageCompare.h"
+#include "cli/ImageCompare.h"
 #include <AUI/Image/AImage.h>
 
 using namespace aui_remote::cli;

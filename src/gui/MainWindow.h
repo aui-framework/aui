@@ -4,7 +4,7 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Thread/AAsyncHolder.h>
 
-#include "Remote/Discovery.h"
+#include "remote/Discovery.h"
 
 class ACheckBox;
 class ADrawableView;

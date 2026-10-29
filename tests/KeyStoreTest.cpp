@@ -2,7 +2,7 @@
 
 #include <sys/stat.h>
 
-#include "Remote/KeyStore.h"
+#include "remote/KeyStore.h"
 #include "TestUtil.h"
 
 using namespace aui_remote;

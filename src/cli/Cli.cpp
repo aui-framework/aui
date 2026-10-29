@@ -8,8 +8,8 @@
 #include <AUI/Platform/AProcess.h>
 
 #include "ImageCompare.h"
-#include "Remote/KeyStore.h"
-#include "Remote/RpcClient.h"
+#include "remote/KeyStore.h"
+#include "remote/RpcClient.h"
 
 using namespace std::chrono_literals;
 

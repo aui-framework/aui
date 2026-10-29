@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
-#include "Cli/Args.h"
-#include "Cli/Cli.h"
+#include "cli/Args.h"
+#include "cli/Cli.h"
 
 using namespace aui_remote;
 using namespace aui_remote::cli;

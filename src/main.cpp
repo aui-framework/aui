@@ -1,7 +1,7 @@
 #include <AUI/Platform/Entry.h>
 
-#include "Cli/Cli.h"
-#include "Gui/MainWindow.h"
+#include "cli/Cli.h"
+#include "gui/MainWindow.h"
 
 AUI_ENTRY {
     if (auto exitCode = aui_remote::cli::tryRun(args)) {

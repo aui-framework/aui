@@ -5,8 +5,8 @@
 #include <AUI/View/ALabel.h>
 #include <AUI/View/ATextField.h>
 
-#include "Remote/KeyStore.h"
-#include "Remote/RpcClient.h"
+#include "remote/KeyStore.h"
+#include "remote/RpcClient.h"
 
 using namespace declarative;
 using namespace aui_remote;

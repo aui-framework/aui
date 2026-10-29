@@ -11,9 +11,9 @@
 #include <AUI/View/AScrollArea.h>
 
 #include "PairingDialog.h"
-#include "Remote/KeyStore.h"
-#include "Remote/RpcClient.h"
-#include "Remote/Skill.h"
+#include "remote/KeyStore.h"
+#include "remote/RpcClient.h"
+#include "remote/Skill.h"
 
 using namespace declarative;
 using namespace aui_remote;

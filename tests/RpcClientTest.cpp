@@ -6,10 +6,10 @@
 #include <AUI/Platform/AProcess.h>
 #include <sstream>
 
-#include "Cli/Cli.h"
+#include "cli/Cli.h"
 #include "FakeAgent.h"
-#include "Remote/KeyStore.h"
-#include "Remote/RpcClient.h"
+#include "remote/KeyStore.h"
+#include "remote/RpcClient.h"
 #include "TestUtil.h"
 
 using namespace aui_remote;
