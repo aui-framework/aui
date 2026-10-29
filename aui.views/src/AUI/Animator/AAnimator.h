@@ -52,6 +52,13 @@ using AAnimationCurve = std::function<float(float)>;
  *
  * To implement your own animator, derive from AAnimator and override `doAnimation`, which receives the animation
  * progress `theta` (from 0 to 1) and the renderer to apply a transform to.
+ *
+ * !!! note
+ *
+ *     When animations move to the [AProperty]-based solution, the time of all animations must be controllable from the
+ *     in-process devtools and from the `aui-remote` GUI and CLI: pause, resume, step and scale (slow down or speed
+ *     up). Paused time makes screenshots deterministic and lets `wait.idle` of the remote agent finish in the presence
+ *     of endless animations, such as progress indicators.
  */
 class API_AUI_VIEWS AAnimator {
 private:
