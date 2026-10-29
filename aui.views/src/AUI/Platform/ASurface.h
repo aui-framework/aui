@@ -210,6 +210,13 @@ public:
 
     void closeOverlappingSurfacesOnClick();
 
+    /**
+     * @brief Closes all overlapping surfaces (context menus, dropdowns, tooltips) attached to this surface.
+     * @details
+     * Subclasses call it from their destructor: ~ASurface can't, closeOverlappingSurfaceImpl is pure virtual there.
+     */
+    void closeOverlappingSurfaces();
+
     bool isFocused() const { return mIsFocused; }
 
     [[nodiscard]]

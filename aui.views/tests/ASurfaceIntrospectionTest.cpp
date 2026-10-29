@@ -50,6 +50,22 @@ TEST_F(ASurfaceIntrospectionTest, OverlappingSurfacesAreListed) {
     EXPECT_TRUE(window->overlappingSurfaces().empty());
 }
 
+TEST_F(ASurfaceIntrospectionTest, WindowWithOverlappingSurfaceIsDestroyed) {
+    auto window = _new<AWindow>();
+    window->setContents(Centered { Label { "text" } });
+    window->show();
+    uitest::frame();
+    auto popup = window->createOverlappingSurface({ 10, 10 }, { 50, 50 });
+    uitest::frame();
+
+    // used to call the pure virtual closeOverlappingSurfaceImpl from ~ASurface
+    window->close();
+    auto weak = window.weak();
+    window = nullptr;
+    uitest::frame();
+    EXPECT_TRUE(weak.expired());
+}
+
 TEST_F(ASurfaceIntrospectionTest, InjectedPressReachesViews) {
     auto window = _new<AWindow>();
     auto clicked = 0;

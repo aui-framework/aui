@@ -323,6 +323,8 @@ void AWindow::destroyNativeWindow() {
     if (std::exchange(mNativeDestroyed, true)) {
         return;
     }
+    // popups may be native windows hosted by ours, so they go first
+    closeOverlappingSurfaces();
 #if AUI_PLATFORM_WIN
     if (mHandle) {
         ShowWindow(mHandle, SW_HIDE);
