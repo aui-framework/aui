@@ -1,7 +1,7 @@
 #include <gtest/gtest.h>
 
 #include "cli/TreeText.h"
-#include "remote/ViewTree.h"
+#include "network/ViewTree.h"
 
 using namespace aui_remote;
 

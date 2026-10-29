@@ -1,6 +1,6 @@
 #include "FakeAgent.h"
 
-#include "remote/RpcClient.h"
+#include "network/RpcClient.h"
 
 namespace aui_remote::test {
 

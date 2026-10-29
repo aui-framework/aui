@@ -7,10 +7,10 @@
 #include <AUI/View/ATitlebar.h>
 #include <AUI/View/Dynamic.h>
 
-#include "AppTab.h"
+#include "ui/tab/AppTab.h"
 #include "PairingDialog.h"
-#include "WelcomePage.h"
-#include "remote/KeyStore.h"
+#include "ui/tab/WelcomePage.h"
+#include "network/KeyStore.h"
 
 using namespace declarative;
 using namespace aui_remote;

@@ -8,7 +8,7 @@
 #include <AUI/View/AView.h>
 
 #include "ViewportMapping.h"
-#include "remote/FrameStream.h"
+#include "network/FrameStream.h"
 
 /**
  * @brief Draws the latest frame of the controlled application and forwards the input to it.

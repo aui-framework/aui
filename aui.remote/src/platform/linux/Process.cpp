@@ -1,4 +1,4 @@
-#include "remote/Process.h"
+#include "platform/Process.h"
 
 #include <cerrno>
 #include <signal.h>

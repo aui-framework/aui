@@ -1,6 +1,6 @@
 #include "Discovery.h"
 
-#include "Process.h"
+#include "platform/Process.h"
 
 #include <algorithm>
 #include <fstream>

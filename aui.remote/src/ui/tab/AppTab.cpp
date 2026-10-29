@@ -12,10 +12,10 @@
 #include <AUI/View/ASplitter.h>
 #include <AUI/View/ATextField.h>
 
-#include "PairingDialog.h"
-#include "RemoteViewport.h"
-#include "remote/KeyStore.h"
-#include "remote/RpcClient.h"
+#include "ui/window/PairingDialog.h"
+#include "ui/view/RemoteViewport.h"
+#include "network/KeyStore.h"
+#include "network/RpcClient.h"
 
 using namespace declarative;
 using namespace aui_remote;

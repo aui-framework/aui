@@ -9,9 +9,9 @@
 
 #include "ImageCompare.h"
 #include "TreeText.h"
-#include "remote/KeyStore.h"
-#include "remote/Pairing.h"
-#include "remote/RpcClient.h"
+#include "network/KeyStore.h"
+#include "network/Pairing.h"
+#include "network/RpcClient.h"
 
 using namespace std::chrono_literals;
 

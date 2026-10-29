@@ -4,7 +4,7 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Thread/AAsyncHolder.h>
 
-#include "remote/Discovery.h"
+#include "network/Discovery.h"
 
 class AppTab;
 class ATimer;

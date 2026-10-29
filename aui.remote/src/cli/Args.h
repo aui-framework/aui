@@ -6,7 +6,7 @@
 #include <AUI/Common/AVector.h>
 #include <AUI/Json/AJson.h>
 
-#include "remote/RpcClient.h"
+#include "network/RpcClient.h"
 
 namespace aui_remote::cli {
 

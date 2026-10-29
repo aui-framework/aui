@@ -1,6 +1,6 @@
 #include <gtest/gtest.h>
 
-#include "gui/ViewportMapping.h"
+#include "ui/view/ViewportMapping.h"
 
 using aui_remote::ViewportMapping;
 

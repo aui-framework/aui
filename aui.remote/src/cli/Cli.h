@@ -5,7 +5,7 @@
 #include <AUI/IO/APath.h>
 
 #include "Args.h"
-#include "remote/Discovery.h"
+#include "network/Discovery.h"
 
 namespace aui_remote::cli {
 

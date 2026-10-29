@@ -8,8 +8,8 @@
 
 #include "cli/Cli.h"
 #include "FakeAgent.h"
-#include "remote/KeyStore.h"
-#include "remote/RpcClient.h"
+#include "network/KeyStore.h"
+#include "network/RpcClient.h"
 #include "TestUtil.h"
 
 using namespace aui_remote;

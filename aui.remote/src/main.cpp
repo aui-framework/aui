@@ -1,7 +1,7 @@
 #include <AUI/Platform/Entry.h>
 
 #include "cli/Cli.h"
-#include "gui/MainWindow.h"
+#include "ui/window/MainWindow.h"
 
 #if AUI_REMOTE_SELF_DEBUG
 #include <AUI/Remote/ARemoteDebug.h>

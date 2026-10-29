@@ -8,7 +8,7 @@
 #include <AUI/View/AScrollArea.h>
 #include <AUI/View/AText.h>
 
-#include "remote/ViewTree.h"
+#include "network/ViewTree.h"
 
 using namespace declarative;
 using namespace aui_remote;

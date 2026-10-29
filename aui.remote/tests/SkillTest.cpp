@@ -3,7 +3,7 @@
 #include <fstream>
 #include <sstream>
 
-#include "remote/Skill.h"
+#include "network/Skill.h"
 #include "TestUtil.h"
 
 using namespace aui_remote;

@@ -9,8 +9,8 @@
 #include <AUI/View/AForEachUI.h>
 #include <AUI/View/ASpinnerV2.h>
 
-#include "remote/KeyStore.h"
-#include "remote/Skill.h"
+#include "network/KeyStore.h"
+#include "network/Skill.h"
 
 using namespace declarative;
 using namespace aui_remote;

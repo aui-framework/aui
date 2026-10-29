@@ -7,11 +7,11 @@
 #include <AUI/View/ATextField.h>
 #include <AUI/View/AViewContainer.h>
 
-#include "remote/Discovery.h"
-#include "RemoteViewport.h"
-#include "ViewDetails.h"
-#include "ViewTreeView.h"
-#include "remote/FrameStream.h"
+#include "network/Discovery.h"
+#include "ui/view/RemoteViewport.h"
+#include "ui/view/ViewDetails.h"
+#include "ui/view/ViewTreeView.h"
+#include "network/FrameStream.h"
 
 /**
  * @brief The page of a single connection: pairing, the live view of one application (frames, input and the view tree).

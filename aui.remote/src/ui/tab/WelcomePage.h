@@ -3,7 +3,7 @@
 #include <AUI/Common/AProperty.h>
 #include <AUI/View/AViewContainer.h>
 
-#include "remote/Discovery.h"
+#include "network/Discovery.h"
 
 /**
  * @brief The first tab: the switch that installs the skill for AI agents and the list of available connections.

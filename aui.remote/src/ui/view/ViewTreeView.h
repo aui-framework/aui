@@ -6,7 +6,7 @@
 #include <AUI/View/AScrollArea.h>
 #include <AUI/View/AViewContainer.h>
 
-#include "remote/ViewTree.h"
+#include "network/ViewTree.h"
 
 /**
  * @brief View hierarchy of the remote application, as the tree of the in-process devtools (ATreeView logic, without

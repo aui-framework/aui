@@ -8,7 +8,7 @@
 #include <AUI/Util/ARandom.h>
 
 #include "FakeAgent.h"
-#include "remote/FrameStream.h"
+#include "network/FrameStream.h"
 
 using namespace aui_remote;
 using namespace aui_remote::test;

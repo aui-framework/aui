@@ -4,7 +4,7 @@
 #include <AUI/Platform/AWindow.h>
 #include <AUI/Thread/AAsyncHolder.h>
 
-#include "remote/Discovery.h"
+#include "network/Discovery.h"
 
 /**
  * @brief Modal window where the user enters the 6-digit code shown by the application.
