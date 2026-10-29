@@ -40,11 +40,11 @@ PairingDialog::PairingDialog(AWindow& parent, AppInfo app)
     setContents(Vertical {
       Label { "Enter the 6-digit code shown in the window of the application." },
       _new<ATextField>() && mCode,
-      _new<ALabel>() & mStatus,
+      Label { AUI_REACT(*mStatus) },
       Horizontal {
         SpacerExpanding {},
-        _new<AButton>("Cancel").connect(&AView::clicked, this, [this] { close(); }),
-        _new<AButton>("Pair").connect(&AView::clicked, this, [this] { confirm(); }),
+        Button { .content = Label { "Cancel" }, .onClick = [this] { close(); } },
+        Button { .content = Label { "Pair" }, .onClick = [this] { confirm(); } },
       } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
     } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Padding { 8_dp } });
     begin();

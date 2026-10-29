@@ -6,13 +6,12 @@
 
 #include "remote/Discovery.h"
 
-class ACheckBox;
-class ADrawableView;
+class AppTab;
 class ATimer;
+class WelcomePage;
 
 /**
- * @brief The GUI of aui-remote: running applications, pairing, a look at the selected application and the switch that
- * installs the skill for AI agents.
+ * @brief The GUI of aui-remote: a strip of tabs on top. The first tab is the Welcome page, the others are connections.
  */
 class MainWindow : public AWindow {
 public:
@@ -20,28 +19,20 @@ public:
     ~MainWindow() override;
 
 private:
-    AProperty<AVector<aui_remote::AppInfo>> mApps;
-    AProperty<AOptional<std::uint32_t>> mSelectedPid;
-    AProperty<AString> mStatus;
-    AProperty<AString> mAppTitle;
-    AProperty<AString> mTree;
-    AProperty<bool> mBusy = false;
-    _<AViewContainer> mAppList;
-    _<AViewContainer> mAppActions;
-    _<ADrawableView> mScreenshot;
-    _<ACheckBox> mSkillCheckBox;
+    _<WelcomePage> mWelcome;
+    AProperty<AVector<_<AppTab>>> mTabs;
+    AVector<aui_remote::AppInfo> mApps;
+    AProperty<AOptional<std::uint32_t>> mCurrentPid;   // nullopt = Welcome
     _<ATimer> mTimer;
     AAsyncHolder mAsync;
 
-    [[nodiscard]] AOptional<aui_remote::AppInfo> selectedApp() const;
-    [[nodiscard]] bool isPaired(const aui_remote::AppInfo& app) const;
+    [[nodiscard]] _<AppTab> findTab(std::uint32_t pid) const;
 
     void refreshApps();
-    void rebuildAppList();
-    void rebuildActions();
-    void select(std::uint32_t pid);
-    void pair();
-    void inspect();
-    void skillToggled(bool wanted);
-    void syncSkillCheckBox();
+    void updateWelcome();
+    void pair(const aui_remote::AppInfo& app);
+    void openTab(const aui_remote::AppInfo& app);
+    void closeTab(std::uint32_t pid);
+    [[nodiscard]] _<AView> tabStrip();
+    [[nodiscard]] _<AView> currentPage();
 };

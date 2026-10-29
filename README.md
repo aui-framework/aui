@@ -3,8 +3,10 @@
 Client of the remote agent of [AUI](https://github.com/aui-framework/aui) applications (`aui::dev_extras`). It lets a
 human or an AI coding agent look at a running AUI app, click and type into it, read its log and compare screenshots.
 
-- GUI (`aui-remote`): running applications, pairing, view tree and screenshot of the selected one, and the checkbox
-  "Let Agents drive AUI remote" that installs the Claude Code skill.
+- GUI (`aui-remote`): running applications, pairing, the live frame of the selected one with the input forwarded to it,
+  and the checkbox "Let Agents drive AUI remote" that installs the Claude Code skill. The view tree works like the
+  in-process devtools: hovering a view draws its content, padding and margin over the frame, clicking it shows its
+  properties, and moving the pointer over the frame with CTRL held picks the view under it.
 - CLI (`aui-remote cli <command>`): the same through the command line. Every command prints one JSON object on the
   last line of stdout, logs go to stderr, the exit code is non-zero on errors (the object is then `{"error": {...}}`).
 

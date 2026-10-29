@@ -1,19 +1,15 @@
 #include "MainWindow.h"
 
 #include <AUI/Common/ATimer.h>
-#include <AUI/Platform/AProcess.h>
-#include <AUI/Util/AImageDrawable.h>
 #include <AUI/Util/UIBuildingHelpers.h>
-#include <AUI/View/AButton.h>
-#include <AUI/View/ACheckBox.h>
-#include <AUI/View/ADrawableView.h>
 #include <AUI/View/ALabel.h>
-#include <AUI/View/AScrollArea.h>
+#include <AUI/View/ATitlebar.h>
+#include <AUI/View/Dynamic.h>
 
+#include "AppTab.h"
 #include "PairingDialog.h"
+#include "WelcomePage.h"
 #include "remote/KeyStore.h"
-#include "remote/RpcClient.h"
-#include "remote/Skill.h"
 
 using namespace declarative;
 using namespace aui_remote;
@@ -21,60 +17,37 @@ using namespace std::chrono_literals;
 
 namespace {
 
-void renderTree(const AJson& node, int depth, AString& out) {
-    out += AString(depth * 2, ' ');
-    out += node.containsOpt("type") ? (node)["type"].asString() : AString("?");
-    if (auto text = node.containsOpt("text"); text && text->isString() && !text->asString().empty()) {
-        out += " \"" + text->asString() + "\"";
+AColor dotColor(AppTab::State state) {
+    switch (state) {
+        case AppTab::State::READY: return AColor::GREEN.darker(0.3f);
+        case AppTab::State::CONNECTING: return 0xffe0a000_argb;
+        case AppTab::State::NEEDS_PAIRING: return 0xffe0a000_argb;
+        case AppTab::State::ERROR: return AColor::RED;
+        case AppTab::State::EXITED: return 0xff999999_argb;
     }
-    if (auto ref = node.containsOpt("ref"); ref && ref->isString()) {
-        out += "  [" + ref->asString() + "]";
-    }
-    if (auto visible = node.containsOpt("visible"); visible && visible->isBool() && !visible->asBool()) {
-        out += "  (hidden)";
-    }
-    out += "\n";
-    if (auto children = node.containsOpt("children"); children && children->isArray()) {
-        for (const auto& child : children->asArray()) {
-            renderTree(child, depth + 1, out);
-        }
-    }
+    return 0xff999999_argb;
 }
 
 }   // namespace
 
-MainWindow::MainWindow() : AWindow("AUI Remote", 900_dp, 600_dp) {
-    mAppList = Vertical {} AUI_OVERRIDE_STYLE { LayoutSpacing { 2_dp } };
-    mAppActions = Horizontal {} AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } };
-    mScreenshot = _new<ADrawableView>();
-    mSkillCheckBox = _new<ACheckBox>(Label { "Let Agents drive AUI remote" });
-    mStatus = "Start an application with AUI_REMOTE=1 and it will show up here.";
+MainWindow::MainWindow()
+  : AWindow(Init {
+      .title = "AUI Remote",
+      .width = 900_dp,
+      .height = 600_dp,
+      .decoration = Init::DecorationExtended {},
+    }) {
+    mWelcome = _new<WelcomePage>();
 
     setContents(Vertical {
-      Horizontal::Expanding {
-        Vertical {
-          Label { "Running applications" } AUI_OVERRIDE_STYLE { FontSize { 12_pt } },
-          mAppList,
-          _new<AButton>("Refresh").connect(&AView::clicked, this, [this] { refreshApps(); }),
-        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, MinSize { 220_dp, 0 } },
-        Vertical::Expanding {
-          _new<ALabel>() & mAppTitle AUI_OVERRIDE_STYLE { FontSize { 12_pt } },
-          mAppActions,
-          Horizontal::Expanding {
-            AScrollArea::Builder().withExpanding().withContents(_new<ALabel>() & mTree).build(),
-            Centered::Expanding { mScreenshot } AUI_OVERRIDE_STYLE { MinSize { 300_dp, 0 } },
-          } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-        } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-      } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
-      Horizontal {
-        mSkillCheckBox,
-        SpacerExpanding {},
-        _new<ALabel>() & mStatus,
-      } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
-    } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp }, Padding { 8_dp } });
+      Titlebar {
+        experimental::Dynamic { AUI_REACT(tabStrip()) },
+      } AUI_OVERRIDE_STYLE { BackgroundSolid { nullptr } },
+      experimental::Dynamic { AUI_REACT(currentPage()) } AUI_OVERRIDE_STYLE { Expanding() },
+    });
 
-    connect(mSkillCheckBox->box()->userCheckedChange, this, [this](bool wanted) { skillToggled(wanted); });
-    syncSkillCheckBox();
+    connect(mWelcome->openRequested, this, [this](const AppInfo& app) { openTab(app); });
+    connect(mWelcome->pairRequested, this, [this](const AppInfo& app) { pair(app); });
 
     mTimer = _new<ATimer>(2s);
     connect(mTimer->fired, this, [this] { refreshApps(); });
@@ -84,152 +57,106 @@ MainWindow::MainWindow() : AWindow("AUI Remote", 900_dp, 600_dp) {
 
 MainWindow::~MainWindow() = default;
 
-AOptional<AppInfo> MainWindow::selectedApp() const {
-    if (!*mSelectedPid) {
-        return std::nullopt;
-    }
-    for (const auto& app : *mApps) {
-        if (app.pid == **mSelectedPid) {
-            return app;
+_<AppTab> MainWindow::findTab(std::uint32_t pid) const {
+    for (const auto& tab : *mTabs) {
+        if (tab->app().pid == pid) {
+            return tab;
         }
     }
-    return std::nullopt;
+    return nullptr;
 }
-
-bool MainWindow::isPaired(const AppInfo& app) const { return KeyStore().load(app).hasValue(); }
 
 void MainWindow::refreshApps() {
     mAsync << AUI_THREADPOOL {
         auto apps = discovery::list();
         KeyStore().pruneExcept(apps);
         AUI_UI_THREAD {
-            mApps = std::move(apps);
-            rebuildAppList();
-            rebuildActions();
+            mApps = apps;
+            updateWelcome();
+            for (const auto& tab : *mTabs) {
+                bool alive = false;
+                for (const auto& app : apps) {
+                    if (app.pid == tab->app().pid) {
+                        alive = true;
+                        break;
+                    }
+                }
+                tab->setAlive(alive);
+            }
         };
     };
 }
 
-void MainWindow::rebuildAppList() {
-    mAppList->removeAllViews();
-    if (mApps->empty()) {
-        mAppList->addView(Label { "No applications found" });
-        return;
+void MainWindow::updateWelcome() {
+    AVector<std::uint32_t> openPids;
+    for (const auto& tab : *mTabs) {
+        openPids << tab->app().pid;
     }
-    for (const auto& app : *mApps) {
-        const bool selected = mSelectedPid->hasValue() && **mSelectedPid == app.pid;
-        AString title = app.displayName();
-        title += isPaired(app) ? "  paired" : "  not paired";
-        auto label = _new<ALabel>(title);
-        label->setAssName("selected", selected);
-        if (selected) {
-            label->setCustomStyle({ BackgroundSolid { AColor::BLUE.transparentize(0.6f) }, Padding { 4_dp } });
-        } else {
-            label->setCustomStyle({ Padding { 4_dp } });
-        }
-        connect(label->clicked, this, [this, pid = app.pid] { select(pid); });
-        mAppList->addView(label);
-    }
+    mWelcome->setApps(mApps, openPids);
 }
 
-void MainWindow::rebuildActions() {
-    mAppActions->removeAllViews();
-    auto app = selectedApp();
-    if (!app) {
-        mAppTitle = "Select an application";
-        return;
-    }
-    mAppTitle = "{}, port {}"_format(app->displayName(), app->port);
-    if (isPaired(*app)) {
-        mAppActions->addView(
-            _new<AButton>("Inspect").connect(&AView::clicked, this, [this] { inspect(); }));
-    } else {
-        mAppActions->addView(_new<AButton>("Pair...").connect(&AView::clicked, this, [this] { pair(); }));
-    }
-}
-
-void MainWindow::select(std::uint32_t pid) {
-    mSelectedPid = pid;
-    mTree = "";
-    mScreenshot->setDrawable(nullptr);
-    rebuildAppList();
-    rebuildActions();
-    if (auto app = selectedApp(); app && isPaired(*app)) {
-        inspect();
-    }
-}
-
-void MainWindow::pair() {
-    auto app = selectedApp();
-    if (!app) {
-        return;
-    }
-    auto dialog = _new<PairingDialog>(*this, *app);
-    connect(dialog->paired, this, [this] {
-        mStatus = "Paired.";
-        refreshApps();
-        inspect();
-    });
+void MainWindow::pair(const AppInfo& app) {
+    // the tab appears only after the code is accepted
+    auto dialog = _new<PairingDialog>(*this, app);
+    connect(dialog->paired, this, [this, app] { openTab(app); });
     dialog->show();
 }
 
-void MainWindow::inspect() {
-    auto app = selectedApp();
-    if (!app || mBusy) {
-        return;
+void MainWindow::openTab(const AppInfo& app) {
+    if (!findTab(app.pid)) {
+        mTabs.writeScope()->push_back(_new<AppTab>(app));
+        updateWelcome();
     }
-    auto key = KeyStore().load(*app);
-    if (!key) {
-        return;
-    }
-    mBusy = true;
-    mStatus = "Looking at {}..."_format(app->displayName());
-    mAsync << AUI_THREADPOOL {
-        AString tree;
-        AString error;
-        _<AImage> image;
-        try {
-            auto client = RpcClient::forApp(*app, *key);
-            const auto json = client.call("view.tree", AJson { { "depth", 12 } });
-            renderTree(json, 0, tree);
-            const auto shot = client.call("screenshot");
-            image = AImage::fromFile(APath(shot["path"].asString()));
-        } catch (const RpcError& e) {
-            error = e.getMessage();
-            if (auto hint = e.data().isObject() ? e.data().containsOpt("hint") : std::nullopt; hint && hint->isString()) {
-                error += ". " + hint->asString();
-            }
-        } catch (const AException& e) {
-            error = e.getMessage();
-        }
-        AUI_UI_THREAD {
-            mBusy = false;
-            if (!error.empty()) {
-                mStatus = error;
-                return;
-            }
-            mTree = tree;
-            mStatus = "Updated.";
-            if (image) {
-                mScreenshot->setDrawable(_new<AImageDrawable>(image));
-            }
-        };
-    };
+    mCurrentPid = app.pid;
 }
 
-void MainWindow::syncSkillCheckBox() { mSkillCheckBox->checked() = skill::isInstalled(); }
-
-void MainWindow::skillToggled(bool wanted) {
-    try {
-        if (wanted) {
-            skill::install(skill::builtinTemplate(), AProcess::self()->getPathToExecutable());
-            mStatus = "Skill installed to {}"_format(skill::defaultFile());
-        } else {
-            skill::uninstall();
-            mStatus = "Skill removed.";
-        }
-    } catch (const AException& e) {
-        mStatus = "Can't change the skill: " + e.getMessage();
+void MainWindow::closeTab(std::uint32_t pid) {
+    mTabs.writeScope()->removeIf([&](const _<AppTab>& tab) { return tab->app().pid == pid; });
+    updateWelcome();
+    if (*mCurrentPid == pid) {
+        mCurrentPid = std::nullopt;
     }
-    syncSkillCheckBox();
+}
+
+_<AView> MainWindow::tabStrip() {
+    auto tabItem = [this](_<AView> content, bool selected, std::function<void()> onClick) {
+        auto tab = Horizontal { std::move(content) } AUI_OVERRIDE_STYLE {
+            LayoutSpacing { 4_dp },
+            Padding { 4_dp, 8_dp },
+            BorderRadius { 6_dp },
+            BackgroundSolid { selected ? AColor::BLUE.transparentize(0.75f) : AColor(0x14000000_argb) },
+        };
+        tab->addAssName(".override-title-dragging");
+        connect(tab->clicked, this, std::move(onClick));
+        return tab;
+    };
+
+    auto strip = Horizontal {
+        tabItem(Label { "Welcome" }, !mCurrentPid->hasValue(), [this] { mCurrentPid = std::nullopt; }),
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 2_dp }, Padding { 4_dp, 4_dp, 0, 4_dp } };
+
+    for (const auto& tab : *mTabs) {
+        const auto pid = tab->app().pid;
+        auto close = Label { "×" } AUI_OVERRIDE_STYLE { Padding { 0, 4_dp } };
+        connect(close->clicked, this, [this, pid] { closeTab(pid); });
+        strip->addView(tabItem(
+            Horizontal {
+              Label { "●" } AUI_OVERRIDE_STYLE { TextColor { dotColor(*tab->state()) } },
+              Label { tab->title() },
+              close,
+            } AUI_OVERRIDE_STYLE { LayoutSpacing { 6_dp } },
+            *mCurrentPid == pid, [this, pid] { mCurrentPid = pid; }));
+    }
+    return strip;
+}
+
+_<AView> MainWindow::currentPage() {
+    _<AViewContainer> page = mWelcome;
+    if (mCurrentPid->hasValue()) {
+        if (auto tab = findTab(**mCurrentPid)) {
+            page = tab;
+        }
+    }
+    page->setExpanding();
+    return page;
 }
