@@ -168,11 +168,31 @@ void ASerializable<AJson>::write(IOutputStream& os, const AJson& value) {
             os << (v ? "true" : "false");
         },
         [&](const AString& v) {
-            os << '"' << v.replacedAll("\\", "\\\\")
-                .replacedAll("\"", "\\\"")
-                .replacedAll("\r\n", "\\n")
-                .replacedAll("\n", "\\n")
-                .replacedAll("\t", "\\t") << '"';
+            // RFC 8259: quotation mark, reverse solidus and the control characters (U+0000 through U+001F) must be
+            // escaped. bytes of multibyte UTF-8 sequences are >= 0x80, so they pass through untouched.
+            std::string escaped;
+            escaped.reserve(v.bytes().size() + 2);
+            escaped += '"';
+            for (char c : v.bytes()) {
+                switch (c) {
+                    case '"': escaped += "\\\""; break;
+                    case '\\': escaped += "\\\\"; break;
+                    case '\n': escaped += "\\n"; break;
+                    case '\r': escaped += "\\r"; break;
+                    case '\t': escaped += "\\t"; break;
+                    default:
+                        if (static_cast<unsigned char>(c) < 0x20) {
+                            constexpr char HEX[] = "0123456789abcdef";
+                            escaped += "\\u00";
+                            escaped += HEX[c >> 4];
+                            escaped += HEX[c & 0xf];
+                        } else {
+                            escaped += c;
+                        }
+                }
+            }
+            escaped += '"';
+            os.write(escaped.data(), escaped.size());
         },
         [&](std::nullptr_t) {
             os << "null";
