@@ -77,6 +77,17 @@ if(AUIB_COMPONENTS)
             list(APPEND AUIB_COMPONENTS toolbox)
         endif()
     endif()
+    # aui-remote comes along when everything it needs is built
+    set(_remote_deps views curl json image crypt network)
+    set(_remote_possible TRUE)
+    foreach(_dep ${_remote_deps})
+        if (NOT _dep IN_LIST AUIB_COMPONENTS)
+            set(_remote_possible FALSE)
+        endif()
+    endforeach()
+    if (_remote_possible AND NOT CMAKE_CROSSCOMPILING)
+        list(APPEND AUIB_COMPONENTS remote)
+    endif()
 endif()
 list(REMOVE_DUPLICATES AUIB_COMPONENTS)
 
@@ -131,6 +142,10 @@ define_aui_component(json)
 define_aui_component(audio)
 define_aui_component(updater)
 define_aui_component(dev_extras)
+if (NOT CMAKE_CROSSCOMPILING)
+    # a tool for the host, needs the modules above
+    define_aui_component(remote)
+endif()
 
 if (NOT ANDROID AND NOT IOS)
     define_aui_component(uitests)
@@ -167,6 +182,7 @@ set(AUI_ALL_COMPONENTS core
                        audio
                        updater
                        dev_extras
+                       remote
         )
 
 
