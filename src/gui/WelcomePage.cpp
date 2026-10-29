@@ -25,7 +25,7 @@ WelcomePage::WelcomePage() {
           CheckBox {
             .checked = AUI_REACT(*mSkillInstalled),
             .onCheckedChange = [this](bool wanted) { skillToggled(wanted); },
-            .content = Label { "Let Claude drive AUI development" },
+            .content = Label { "Allow Claude to use AUI Remote" },
           },
           Label { AUI_REACT(*mSkillStatus) } AUI_OVERRIDE_STYLE { TextColor { 0xff777777_argb }, Margin { 0, 0, 0, 20_dp } },
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 2_dp } },
