@@ -442,6 +442,8 @@ public:
      */
     void setScalingParams(ScalingParams params);
 
+    [[nodiscard]] const ScalingParams& getScalingParams() const noexcept { return mScalingParams; }
+
     /**
      * @brief Get profiling settings (mutable).
      */

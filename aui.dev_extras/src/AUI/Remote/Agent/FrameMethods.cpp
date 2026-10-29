@@ -107,7 +107,7 @@ tree_diff::Tree buildTree(RefTable& refs, const _<AWindow>& window) {
 }
 
 /// A frame ready to leave: the heavy part (downscale, encoding, serialization) is done off the UI thread.
-AString encodeFrame(AImage image, Params params, std::int64_t seq, glm::ivec2 windowSize,
+AString encodeFrame(AImage image, Params params, std::int64_t seq, glm::ivec2 windowSize, float scalingFactor,
                     const tree_diff::Diff& treeDiff) {
     if (params.scale < 1.f) {
         const glm::uvec2 target = glm::max(glm::uvec2(glm::vec2(image.size()) * params.scale + 0.5f), glm::uvec2(1));
@@ -121,6 +121,7 @@ AString encodeFrame(AImage image, Params params, std::int64_t seq, glm::ivec2 wi
         { "height", int(image.height()) },
         { "windowWidth", windowSize.x },
         { "windowHeight", windowSize.y },
+        { "scalingFactor", scalingFactor },
         { "jpeg", jpeg.toBase64String() },
     };
     frame["tree"] = tree_diff::toJson(treeDiff);
@@ -239,9 +240,10 @@ void Subscription::produce() {
     mInFlight = true;
     AThreadPool::global().run([weak = weakPtr(), connection = std::move(connection), image = std::move(image),
                                params = mParams, seq, windowSize = window->getSize(),
+                               scalingFactor = window->getScalingParams().scalingFactor,
                                treeDiff = std::move(treeDiff)]() mutable {
         try {
-            connection->sendText(encodeFrame(std::move(image), params, seq, windowSize, treeDiff));
+            connection->sendText(encodeFrame(std::move(image), params, seq, windowSize, scalingFactor, treeDiff));
         } catch (const AException& e) {
             ALogger::err(LOG_TAG) << "unable to send frame " << seq << ": " << e.getMessage();
         }

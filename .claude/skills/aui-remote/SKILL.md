@@ -16,7 +16,7 @@ description: Run, look at, click and type into a running AUI application through
 3. Loop: `view.interactive` (what can be clicked) -> `input.pointer` / `input.type` / `input.key` -> `wait.idle`
    -> `screenshot` (returns a PNG path; look at the file) -> fix the code, rebuild, repeat.
 
-Methods: `session.hello`, `window.list`, `window.resize`, `view.tree`, `view.find`, `view.properties`, `view.hitTest`,
+Methods: `session.hello`, `window.list`, `window.resize`, `window.setScale`, `view.tree`, `view.find`, `view.properties`, `view.hitTest`,
 `view.interactive`, `view.scrollIntoView`, `screenshot`, `input.pointer`, `input.touch`, `input.gesture`, `input.type`, `input.key`, `wait.idle`, `wait.view`,
 `diag.log`, `fn.list`, `fn.call`. Full description: `docs/agentic-development.md`.
 

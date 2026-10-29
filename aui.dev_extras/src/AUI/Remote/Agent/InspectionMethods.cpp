@@ -112,6 +112,7 @@ void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
                   { "x", window->getWindowPosition().x },
                   { "y", window->getWindowPosition().y },
                   { "dpi", window->getDpiRatio() },
+                  { "scalingFactor", window->getScalingParams().scalingFactor },
                 });
             }
             return array(std::move(windows));

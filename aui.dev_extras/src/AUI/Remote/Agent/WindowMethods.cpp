@@ -25,6 +25,9 @@ using namespace std::chrono_literals;
 /// size a few times after the request.
 constexpr auto SETTLE = 100ms;
 
+constexpr float MIN_SCALE = 0.25f;
+constexpr float MAX_SCALE = 4.f;
+
 int sizeParam(const AJson& params, const char* name) {
     auto v = params.containsOpt(name);
     if (!v || !v->isInt() || v->asInt() <= 0) {
@@ -102,6 +105,64 @@ void registerWindowMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
                 return result;
             },
             timeout, "the window to be resized");
+        return poller->start();
+    }));
+
+    // params: factor (0.25..4) | reset: true, windowId (optional), timeoutMs (default 3000)
+    dispatcher.registerMethod("window.setScale", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
+        float factor = 1.f;
+        if (auto reset = params.containsOpt("reset"); reset && reset->isBool() && reset->asBool()) {
+            factor = 1.f;
+        } else if (auto v = params.containsOpt("factor"); v && v->isNumber()) {
+            factor = float(v->asNumber());
+            if (!(factor >= MIN_SCALE && factor <= MAX_SCALE)) {
+                throw RpcException(rpc_code::INVALID_PARAMS, "factor must be within 0.25..4",
+                                   "1 is the system scale; pass reset: true to return to it");
+            }
+        } else {
+            throw RpcException(rpc_code::INVALID_PARAMS, "missing param: factor", "pass factor (i.e. 1.5) or reset: true");
+        }
+        const auto timeout = millisParam(params, "timeoutMs", 3s);
+
+        struct State {
+            bool started = false;
+            _weak<AWindow> window;
+            Clock::time_point stableSince;
+        };
+        auto state = std::make_shared<State>();
+        auto poller = std::make_shared<Poller>(
+            [&refs, params = params, factor, state](std::chrono::milliseconds) -> AOptional<AJson> {
+                const auto now = Clock::now();
+                if (!state->started) {
+                    state->started = true;
+                    auto window = windowFromParams(params, refs);
+                    auto scaling = window->getScalingParams();
+                    scaling.scalingFactor = factor;
+                    window->setScalingParams(std::move(scaling));
+                    state->window = window;
+                    state->stableSince = now;
+                    return std::nullopt;
+                }
+                auto window = state->window.lock();
+                if (!window) {
+                    throw RpcException(rpc_code::NO_SUCH_WINDOW, "the window was closed while scaling",
+                                       "list the windows with window.list");
+                }
+                if (window->hasPendingLayout()) {
+                    state->stableSince = now;
+                    return std::nullopt;
+                }
+                if (now - state->stableSince < SETTLE) {
+                    return std::nullopt;
+                }
+                return AJson {
+                    { "scalingFactor", window->getScalingParams().scalingFactor },
+                    { "dpi", window->getDpiRatio() },
+                    { "width", window->getSize().x },
+                    { "height", window->getSize().y },
+                };
+            },
+            timeout, "the window to be rescaled");
         return poller->start();
     }));
 

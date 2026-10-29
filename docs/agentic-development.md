@@ -87,6 +87,7 @@ Text frames, JSON-RPC 2.0, protocol version 1. Errors carry `data.hint` with a s
 | `session.hello`                                       | protocol version, pid and the list of methods                  |
 | `window.list`                                         | windows and their ids                                          |
 | `window.resize`                                       | resizes a window (`width`, `height`), answers when the layout is done |
+| `window.setScale`                                     | the DPI scale on top of the system one (`factor` or `reset`)   |
 | `view.tree`, `view.find`, `view.properties`           | inspect views; `view.find` filters by `type`, `text`, `assName`|
 | `view.hitTest`, `view.interactive`                    | the views under a point; clickable / typeable elements         |
 | `view.scrollIntoView`                                 | scrolls the scroll areas around a view so that it is visible   |
@@ -127,6 +128,12 @@ Touch gestures always use fingers, whatever `pointer` says, and the call returns
 `window.resize` returns once the size has stayed the same for 100 ms with no pending layout, so a screenshot taken right
 after it shows the new size. A window is never smaller than its contents need, and the window manager may adjust the
 size too; in that case the result also has `requestedWidth`, `requestedHeight`, `minWidth` and `minHeight`.
+
+`window.setScale` does what the Scale slider of the in-process devtools does: it multiplies the DPI ratio of the window
+by `factor` (0.25..4, `ASurface::setScalingParams`), so the contents are laid out as on a screen with a different pixel
+density while the window keeps its size in pixels. `reset: true` returns to the system scale. It answers when the layout
+has settled, with `scalingFactor` and the resulting `dpi`. `window.list` and every `frames.frame` report
+`scalingFactor` too.
 
 For three seconds after every command, each window shows a pink "this AUI application is being debugged/controlled
 remotely" banner at its top edge. Hover and click also leave a pink pointer on the screen for the same time (an arrow

@@ -578,6 +578,29 @@ TEST_F(AgentTest, ScrollIntoView) {
     EXPECT_EQ(errorCode("view.scrollIntoView", AJson { { "ref", "v0:99999" } }), rpc_code::STALE_REF);
 }
 
+TEST_F(AgentTest, WindowSetScale) {
+    auto window = showWindow(Label { "hi" });
+    const auto systemDpi = window->getDpiRatio();
+
+    auto result = ok("window.setScale", AJson { { "factor", 2 } });
+    EXPECT_FLOAT_EQ(float(result["scalingFactor"].asNumber()), 2.f);
+    EXPECT_FLOAT_EQ(float(result["dpi"].asNumber()), systemDpi * 2.f);
+    EXPECT_FLOAT_EQ(window->getDpiRatio(), systemDpi * 2.f);
+    const auto windows = ok("window.list");
+    for (const auto& w : windows.asArray()) {
+        if (w["title"].asString() == "Agent test") {
+            EXPECT_FLOAT_EQ(float(w["scalingFactor"].asNumber()), 2.f);
+        }
+    }
+
+    auto reset = ok("window.setScale", AJson { { "reset", true } });
+    EXPECT_FLOAT_EQ(float(reset["scalingFactor"].asNumber()), 1.f);
+    EXPECT_FLOAT_EQ(window->getDpiRatio(), systemDpi);
+
+    EXPECT_EQ(errorCode("window.setScale", AJson { { "factor", 10 } }), rpc_code::INVALID_PARAMS);
+    EXPECT_EQ(errorCode("window.setScale", AJson::fromString("{}")), rpc_code::INVALID_PARAMS);
+}
+
 TEST_F(AgentTest, ListedWindowIdWorks) {
     auto window = showWindow(Label { "hi" });
     auto windows = ok("window.list");

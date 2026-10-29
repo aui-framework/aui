@@ -37,7 +37,7 @@ AJson findViews(RefTable& refs, const AJson& params);
 void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
 
 /**
- * `window.resize`, `view.scrollIntoView`.
+ * `window.resize`, `window.setScale`, `view.scrollIntoView`.
  */
 void registerWindowMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
 
