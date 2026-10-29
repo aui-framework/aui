@@ -168,7 +168,7 @@ AJson doLaunch(const ParsedArgs& args, const Directories& directories) {
     }
     const auto key = KeyStore::generateKey();
 
-    AMap<AString, AString> environment = { { "AUI_REMOTE", "1" }, { "AUI_REMOTE_KEY", key } };
+    AMap<AString, AString> environment = { { "AUI_REMOTE_KEY", key } };
     for (const auto& kv : args.getAll("env")) {
         auto eq = kv.find('=');
         if (eq == AString::NPOS || eq == 0) {
@@ -232,7 +232,7 @@ AJson doLaunch(const ParsedArgs& args, const Directories& directories) {
         if (!discovery::isProcessAlive(pid)) {
             throw clientError(
                 "the application exited before the remote agent started",
-                "check that it links aui::dev_extras and the executable path is right",
+                "check that it links aui::dev_extras, calls ARemoteDebug::start() and the executable path is right",
                 AJson { { "stderrTail", tail(stderrPath) }, { "stderr", stderrPath.toStdString() } });
         }
         std::this_thread::sleep_for(100ms);
@@ -240,7 +240,7 @@ AJson doLaunch(const ParsedArgs& args, const Directories& directories) {
     discovery::terminateProcess(pid);
     throw clientError(
         "the remote agent did not start in {} s"_format(timeout.count()),
-        "the application was stopped; no discovery file appeared, does it link aui::dev_extras?",
+        "the application was stopped; no discovery file appeared, does it link aui::dev_extras and call ARemoteDebug::start()?",
         AJson { { "pid", int(pid) }, { "stderr", stderrPath.toStdString() } });
 }
 
@@ -294,7 +294,7 @@ AppInfo selectApp(const ParsedArgs& args, const AVector<AppInfo>& apps) {
     }
     if (apps.empty()) {
         throw clientError("no application with a remote agent is running",
-                          "start one with `aui-remote cli launch -- <exe>` or run it with AUI_REMOTE=1");
+                          "start one with `aui-remote cli launch -- <exe>`; it must call ARemoteDebug::start()");
     }
     if (apps.size() > 1) {
         throw clientError("several applications are running, choose one with --pid N",

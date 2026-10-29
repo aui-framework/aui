@@ -8,8 +8,9 @@ human or an AI coding agent look at a running AUI app, click and type into it, r
 - CLI (`aui-remote cli <command>`): the same through the command line. Every command prints one JSON object on the
   last line of stdout, logs go to stderr, the exit code is non-zero on errors (the object is then `{"error": {...}}`).
 
-The application under test links `aui::dev_extras` (development builds only) and runs with `AUI_REMOTE=1`; see
-`docs/agentic-development.md` of AUI.
+The application under test links `aui::dev_extras` (development builds only) and starts `ARemoteDebug` from its code,
+typically `ARemoteDebug::start(ARemoteDebug::Options::fromEnvironment())` under `#if AUI_DEBUG`. Nothing is listening
+otherwise. See `docs/agentic-development.md` and `examples/ui/remote_debug` of AUI.
 
 ## CLI
 
@@ -30,7 +31,8 @@ it. The full list of options is in [SKILL.md](assets/skill/SKILL.md), which is a
 
 ### Pairing and keys
 
-Applications started with `launch` get a key through `AUI_REMOTE_KEY` and need no pairing. For any other application,
+Applications started with `launch` get a key through `AUI_REMOTE_KEY` (picked up by `Options::fromEnvironment()`) and
+need no pairing. For any other application,
 `pair` asks it to show a 6-digit code (in its window and log); `pair --code` confirms it and stores a random key in
 `~/.aui/remote/clients/<pid>-<startedAt>.key` (mode 0600). The key is valid until the application exits.
 

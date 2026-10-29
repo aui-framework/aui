@@ -9,7 +9,8 @@ description: Run, look at, click and type into a running AUI application (screen
 prints one JSON object on the last line of stdout; on failure the exit code is non-zero and the object is
 `{"error":{"code","message","data":{"hint"}}}`. Read `data.hint`.
 
-The application must link `aui::dev_extras` (development builds only, never ship it). The connection is `wss` to
+The application must link `aui::dev_extras` (development builds only, never ship it) and call `ARemoteDebug::start()`
+under `#if AUI_DEBUG` (see `examples/ui/remote_debug` in AUI); if it does not, add that first. The connection is `wss` to
 127.0.0.1 with the certificate pinned from the app's discovery file; `list` shows `supported: false` for apps that
 don't offer it.
 
@@ -19,10 +20,10 @@ don't offer it.
 {{EXE}} cli launch [--cwd dir] [--env K=V]... -- <exe> [args]
 ```
 
-Prints `{pid, port, stdout, stderr}`. The app is started with `AUI_REMOTE=1` and a key that is already trusted, no
-pairing needed. Stop it with `{{EXE}} cli stop <pid>`.
+Prints `{pid, port, stdout, stderr}`. The app gets a trusted key in `AUI_REMOTE_KEY` (the app has to read it with
+`ARemoteDebug::Options::fromEnvironment()`), no pairing needed. Stop it with `{{EXE}} cli stop <pid>`.
 
-An application that was started by someone else (`AUI_REMOTE=1 ./myapp`) must be paired once:
+An application that was started by someone else (`./myapp`) must be paired once:
 
 ```
 {{EXE}} cli list                      # running apps and whether they are paired
