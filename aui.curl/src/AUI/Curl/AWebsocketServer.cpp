@@ -24,6 +24,7 @@
 #include "AUI/Network/AInet4Address.h"
 #include "AUI/Network/ATcpServerSocket.h"
 #include "AUI/Network/ATcpSocket.h"
+#include "AUI/Thread/AThread.h"
 
 using namespace aui::websocket;
 
@@ -458,6 +459,8 @@ private:
             ALogger::debug(LOG_TAG) << "connection failed: " << e.getMessage();
         } catch (const std::exception& e) {
             ALogger::err(LOG_TAG) << "connection failed: " << e.what();
+        } catch (const AThread::Interrupted&) {
+            // the blocking call was cancelled; on Windows WSACleanup at exit does that
         }
         shutdownSocket();
         if (onClosed) {
@@ -496,6 +499,9 @@ void AWebsocketServer::Impl::acceptLoop() {
         _<ATcpSocket> client;
         try {
             client = serverSocket->accept();
+        } catch (const AThread::Interrupted&) {
+            // on Windows WSACleanup at exit cancels accept() this way; there is nothing to serve anymore
+            return;
         } catch (const AException& e) {
             if (stopping) {
                 return;

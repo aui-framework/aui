@@ -18,6 +18,7 @@
 #include "AUI/Curl/AWebsocket.h"
 #include "AUI/Curl/AWebsocketServer.h"
 #include "AUI/Curl/Detail/WebsocketFrame.h"
+#include "AUI/IO/AEOFException.h"
 #include "AUI/Network/AInet4Address.h"
 #include "AUI/Network/ATcpSocket.h"
 #include "AUI/Thread/AThread.h"
@@ -134,7 +135,13 @@ private:
     _<ATlsSession> mTls;
     FrameDecoder mDecoder;
 
-    std::size_t readSome(char* dst, std::size_t size) { return mTls ? mTls->read(dst, size) : mSocket.read(dst, size); }
+    std::size_t readSome(char* dst, std::size_t size) {
+        try {
+            return mTls ? mTls->read(dst, size) : mSocket.read(dst, size);
+        } catch (const AEOFException&) {
+            return 0;   // the server reset the connection (Windows reports RST where Linux sees a clean FIN)
+        }
+    }
     void writeSome(const char* src, std::size_t size) {
         if (mTls) {
             mTls->write(src, size);
