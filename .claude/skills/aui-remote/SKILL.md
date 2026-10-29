@@ -14,7 +14,8 @@ description: Run, look at, click and type into a running AUI application through
    if installed. An application you start yourself with `AUI_REMOTE_KEY=<key>` (read by
    `ARemoteDebug::Options::fromEnvironment()`) needs no pairing.
 3. Loop: `view.interactive` (what can be clicked) -> `input.pointer` / `input.type` / `input.key` -> `wait.idle`
-   -> `screenshot` (returns a PNG path; look at the file) -> fix the code, rebuild, repeat.
+   -> `screenshot` (returns a PNG path; look at the file) -> fix the code, rebuild, repeat. On an unfamiliar screen,
+   `screenshot` with `annotate: true` numbers the interactive views on the picture and maps the numbers to refs.
 
 Methods: `session.hello`, `window.list`, `window.resize`, `window.setScale`, `view.tree`, `view.find`, `view.properties`, `view.hitTest`,
 `view.interactive`, `view.scrollIntoView`, `screenshot`, `input.pointer`, `input.touch`, `input.gesture`, `input.type`, `input.key`, `wait.idle`, `wait.view`,

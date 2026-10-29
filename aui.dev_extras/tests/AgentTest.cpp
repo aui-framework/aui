@@ -27,6 +27,7 @@
 #include "AUI/Remote/Agent/TreeDiff.h"
 #include <condition_variable>
 #include "AUI/UITest.h"
+#include "AUI/Image/AImage.h"
 #include "AUI/Util/UIBuildingHelpers.h"
 #include "AUI/View/A2FingerTransformArea.h"
 #include "AUI/View/AButton.h"
@@ -305,6 +306,71 @@ TEST_F(AgentTest, ScreenshotSavesPngAndCrops) {
     EXPECT_LT(cropped["width"].asInt(), full["width"].asInt());
     EXPECT_LT(cropped["height"].asInt(), full["height"].asInt());
     EXPECT_NE(cropped["path"].asString(), fullPath);
+}
+
+TEST_F(AgentTest, AnnotatedScreenshotMarksInteractiveViews) {
+    int clicks = 0;
+    auto second = _new<AButton>("Second");
+    AObject::connect(second->clicked, second, [&] { ++clicks; });
+    auto window = showWindow(Vertical {
+      _new<AButton>("First"),
+      second,
+      _new<ATextField>(),
+      Label { "text" },
+    });
+    const auto plainBefore = ok("screenshot");
+    const auto interactive = ok("view.interactive").asArray();
+    const auto annotated = ok("screenshot", AJson { { "annotate", true } });
+    const auto& marks = annotated["marks"].asArray();
+    // every mark is one of the interactive views; the labels inside the buttons are not marked separately
+    AVector<AString> texts;
+    for (std::size_t i = 0; i < marks.size(); ++i) {
+        EXPECT_EQ(marks[i]["label"].asInt(), int(i) + 1);
+        const bool listed = std::any_of(interactive.begin(), interactive.end(), [&](const AJson& e) {
+            return e["role"].asString() == marks[i]["role"].asString() &&
+                   e["rect"]["absX"].asInt() == marks[i]["rect"]["x"].asInt() &&
+                   e["rect"]["absY"].asInt() == marks[i]["rect"]["y"].asInt();
+        });
+        EXPECT_TRUE(listed) << AJson::toString(marks[i]);
+        texts << marks[i]["text"].asString();
+    }
+    EXPECT_EQ(std::count(texts.begin(), texts.end(), "First"), 1);
+    EXPECT_EQ(std::count(texts.begin(), texts.end(), "Second"), 1);
+    EXPECT_TRUE(std::any_of(marks.begin(), marks.end(), [](const AJson& m) { return m["role"].asString() == "textbox"; }));
+
+    // the refs of the marks work right after the call
+    for (const auto& mark : marks) {
+        if (mark["text"].asString() == "Second") {
+            ok("input.pointer", AJson { { "ref", mark["ref"] } });
+        }
+    }
+    EXPECT_EQ(clicks, 1);
+
+    // the marks change the picture only around the marked views, and a plain screenshot stays plain
+    auto plain = AImage::fromFile(APath(plainBefore["path"].asString()));
+    auto withMarks = AImage::fromFile(APath(annotated["path"].asString()));
+    auto plainAfter = AImage::fromFile(APath(ok("screenshot")["path"].asString()));
+    ASSERT_EQ(plain->size(), withMarks->size());
+    const float scale = annotated["scale"].asNumber();
+    const int reach = int(40 * scale);   // the box line and the number plate around the box
+    int changed = 0;
+    for (unsigned y = 0; y < plain->height(); ++y) {
+        for (unsigned x = 0; x < plain->width(); ++x) {
+            EXPECT_EQ(plain->get({ x, y }), plainAfter->get({ x, y })) << x << "," << y;
+            if (plain->get({ x, y }) == withMarks->get({ x, y })) {
+                continue;
+            }
+            ++changed;
+            const glm::vec2 p = glm::vec2(x, y) / scale;
+            const bool nearMark = std::any_of(marks.begin(), marks.end(), [&](const AJson& m) {
+                const auto& r = m["rect"];
+                return p.x >= r["x"].asInt() - reach && p.y >= r["y"].asInt() - reach &&
+                       p.x <= r["x"].asInt() + r["w"].asInt() + reach && p.y <= r["y"].asInt() + r["h"].asInt() + reach;
+            });
+            ASSERT_TRUE(nearMark) << "changed pixel far from the marks: " << x << "," << y;
+        }
+    }
+    EXPECT_GT(changed, 0);
 }
 
 TEST_F(AgentTest, ClickInvokesButton) {

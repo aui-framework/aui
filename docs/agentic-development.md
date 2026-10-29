@@ -91,7 +91,7 @@ Text frames, JSON-RPC 2.0, protocol version 1. Errors carry `data.hint` with a s
 | `view.tree`, `view.find`, `view.properties`           | inspect views; `view.find` filters by `type`, `text`, `assName`|
 | `view.hitTest`, `view.interactive`                    | the views under a point; clickable / typeable elements         |
 | `view.scrollIntoView`                                 | scrolls the scroll areas around a view so that it is visible   |
-| `screenshot`                                          | saves a PNG to the temp folder and returns its path; `ref` crops to a view |
+| `screenshot`                                          | saves a PNG to the temp folder and returns its path; `ref` crops to a view, `annotate` numbers the interactive views |
 | `input.pointer`                                       | `click`, `doubleClick`, `press`, `release`, `move`, `drag`, `scroll`, `longPress`, `fling` |
 | `input.touch`                                         | several fingers at once: `pinch`, `rotate` or arbitrary tracks |
 | `input.gesture`                                       | a long press gesture alone, for clients that hold the finger themselves |
@@ -124,6 +124,12 @@ Touch gestures always use fingers, whatever `pointer` says, and the call returns
   other views see the fingers as separate pointers.
 - `input.gesture` with `gesture: "longPress"` delivers only the gesture at the point. The `aui-remote` GUI sends it
   when a finger has been held still for 500 ms in T mode.
+
+`screenshot` with `annotate: true` draws a numbered box over every interactive view that can be seen (set-of-mark) and
+returns `marks: [{label, ref, role, text, rect}]`, so the numbers on the picture lead straight to refs for
+`input.pointer`. The views are those of `view.interactive`, minus the ones inside an already marked view (the label of a
+button); `rect` is in logical pixels of the window. The refs are of a new generation, like after `view.interactive`. The
+marks are drawn into the saved image only: the window and the frame stream don't show them.
 
 `window.resize` returns once the size has stayed the same for 100 ms with no pending layout, so a screenshot taken right
 after it shows the new size. A window is never smaller than its contents need, and the window manager may adjust the
