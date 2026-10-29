@@ -335,6 +335,7 @@ GType gtk_event_controller_key_get_type();
 void gtk_widget_add_controller(GtkWidget* widget, GtkEventController* controller);
 GtkEventController* gtk_event_controller_legacy_new();
 GtkEventController* gtk_event_controller_key_new();
+GtkEventController* gtk_event_controller_focus_new();
 void gtk_event_controller_key_set_im_context(GtkEventControllerKey* controller, GtkIMContext* im_context);
 GType gdk_scroll_event_get_type();
 guint gdk_button_event_get_button(GdkEvent* event);
