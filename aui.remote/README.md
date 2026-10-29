@@ -68,6 +68,57 @@ aui::curl, because `AWebsocket` can't pin certificates.
 
 Notes from agents that used it to develop AUI applications, `aui-remote` itself included.
 
+**Where to run the application**
+
+Run the application in a headless environment by default, so that (a) its windows don't pop up over the user's work
+and (b) the user's mouse and keyboard don't interfere with the agent. Work in the user's environment only:
+
+- when the user asked to debug an application that is already open, or explicitly asked to work in their environment;
+- otherwise, with the user's permission, as a fallback when a headless environment can't be set up.
+
+Never inject OS-level input (XTest and alike) into the user's session without permission: it moves their cursor, types
+into whatever window has focus and may make the desktop ask to allow remote control.
+
+aui-remote itself does not set up environments: it only talks to AUI applications. How an application behaves on a
+particular desktop is a matter of AUI. A headless environment that worked on Linux with GNOME (mutter 50) and the X11
+backend of AUI:
+
+```bash
+# if dbus-daemon is available, give the compositor a session bus of its own, so it doesn't touch services and portals
+# of the user's session:
+#   export DBUS_SESSION_BUS_ADDRESS=$(dbus-daemon --session --fork --print-address=1)
+mutter --headless --wayland --virtual-monitor 1920x1080 --wayland-display aui-agent > mutter.log 2>&1 &
+MUTTER_PID=$!
+# the log says "Using public X11 display :N"; Xwayland's cookie is the newest of these files
+XAUTH=$(ls -t /run/user/$(id -u)/.mutter-Xwaylandauth.* | head -1)
+
+# X11 backend (the default one of AUI)
+env -u WAYLAND_DISPLAY DISPLAY=:N XAUTHORITY=$XAUTH aui-remote cli launch -- ./app
+# GTK backend (not tried yet)
+env WAYLAND_DISPLAY=aui-agent AUI_PA=adw1 aui-remote cli launch -- ./app
+
+kill $MUTTER_PID   # by pid: the user's desktop is mutter too, never kill by name
+```
+
+- The input of `click`, `type` and the rest is injected into the application by the agent, so it works there as
+  anywhere else. The window manager is real: modality, focus and size hints behave as on the user's desktop.
+- `echo "Xft.dpi: 144" | xrdb -merge` (with `DISPLAY` and `XAUTHORITY` of that display) gives the X11 backend a scale of
+  1.5, to check how the app looks on a HiDPI screen.
+- To debug how AUI itself interacts with the desktop (pointer grabs, size hints, modality), the input has to go through
+  the OS instead: XTest on that display, i.e. a small Xlib program with `XTestFakeMotionEvent`,
+  `XTestFakeButtonEvent`, `XTestFakeKeyEvent`, and `XGetImage` for screenshots of the actual window. There it stays
+  inside the virtual monitor. Windows are placed at the center and overlap each other: check what is under the point
+  (`XQueryPointer`) and activate the window (`_NET_ACTIVE_WINDOW`) before clicking.
+- XTest does not reach Wayland windows (the GTK backend). In a GNOME session (the user's one, with their permission),
+  OS-level input and screenshots of a monitor go through the D-Bus API of mutter:
+  `org.gnome.Mutter.RemoteDesktop.CreateSession`, then `org.gnome.Mutter.ScreenCast.CreateSession` with
+  `remote-desktop-session-id` and `RecordMonitor`, `Start`; `NotifyPointerMotionAbsolute` (monitor pixels),
+  `NotifyPointerButton` (`BTN_LEFT` = 0x110), `NotifyKeyboardKeysym`; the stream is captured with
+  `gst-launch-1.0 pipewiresrc path=<node of PipeWireStreamAdded>`. The session closes with the D-Bus connection that
+  created it, so all the calls have to come from one process (Python with `gi`, not separate `gdbus` calls).
+- With no headless environment at hand (macOS, Windows, other desktops), set one up yourself if you can and the user
+  agrees (a VM, a separate session), or fall back to the user's environment with their permission.
+
 **Starting**
 
 - Start the application with `cli launch`, not by setting `AUI_REMOTE_KEY` yourself: `launch` stores the key it passes,
