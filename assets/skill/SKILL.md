@@ -39,7 +39,7 @@ With several apps running pass `--pid N` to every command.
 
 1. `interactive` lists what can be clicked or typed into (with refs); `find --type Button --text OK` searches.
 2. Act: `click <ref>`, `click <x> <y>`, `type "text" [--ref R]`, `key Enter [--mod ctrl]`.
-3. `wait-idle` after every input, then `shot` and look at the PNG whose path is in the result.
+3. `wait-idle` after every input, then `screenshot` and look at the PNG whose path is in the result.
 4. Fix the code, rebuild, `stop` and `launch` again.
 
 ## Commands
@@ -52,7 +52,7 @@ With several apps running pass `--pid N` to every command.
 | `props <ref>`                                                   | properties of a view                                  |
 | `hit <x> <y> [--window W]`                                      | views under a point                                   |
 | `interactive [--window W]`                                      | clickable and typeable views                          |
-| `shot [--window W] [--ref R] [--padding N]`                     | saves a PNG, prints `path`; `--ref` crops to a view   |
+| `screenshot [--window W] [--ref R] [--padding N]`               | saves a PNG, prints `path`; `--ref` crops to a view   |
 | `click\|dblclick\|press\|release\|move <ref \| x y> [--button b] [--mod m]...` | pointer                   |
 | `drag <ref \| x y> <ref \| x y>`                                | drag from one point to another                        |
 | `scroll <ref \| x y> --dx N --dy N`                             | wheel                                                 |

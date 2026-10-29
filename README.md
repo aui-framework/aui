@@ -22,7 +22,7 @@ aui-remote cli launch [--cwd dir] [--env K=V]... [--timeout s] -- <exe> [args]
 aui-remote cli stop <pid>
 aui-remote cli pair <pid>                 # the application shows a 6-digit code
 aui-remote cli pair <pid> --code 123456
-aui-remote cli windows | tree | find | props | hit | interactive | shot
+aui-remote cli windows | tree | find | props | hit | interactive | screenshot
 aui-remote cli click | dblclick | press | release | move | drag | scroll
 aui-remote cli type | key | wait-idle | wait-view | logs | functions | call
 aui-remote cli compare a.png b.png [--threshold 0..255]

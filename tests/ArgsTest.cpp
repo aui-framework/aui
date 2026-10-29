@@ -140,7 +140,7 @@ TEST(ArgsTest, WaitCommandsExtendClientTimeout) {
 }
 
 TEST(ArgsTest, ShotLogsCallHit) {
-    auto shot = request({ "shot", "--ref", "v1:2", "--padding", "8", "--window", "v1:1" });
+    auto shot = request({ "screenshot", "--ref", "v1:2", "--padding", "8", "--window", "v1:1" });
     EXPECT_EQ(shot.method, "screenshot");
     EXPECT_EQ(shot.params["padding"].asInt(), 8);
     EXPECT_EQ(shot.params["windowId"].asString(), "v1:1");

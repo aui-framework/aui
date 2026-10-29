@@ -181,10 +181,10 @@ ParsedArgs ParsedArgs::parse(const AStringVector& args) {
 }
 
 AStringVector commandNames() {
-    return { "list",    "pair",  "hello",    "windows", "tree",      "find",     "props",     "hit",
-             "shot",    "interactive", "click", "dblclick", "press", "release", "drag",       "scroll",
-             "move",    "type",  "key",      "wait-idle", "wait-view", "logs",     "functions", "call",
-             "launch",  "stop",  "compare" };
+    return { "list",     "pair",  "hello",    "windows", "tree",      "find",     "props",     "hit",
+             "screenshot", "interactive", "click", "dblclick", "press", "release", "drag",       "scroll",
+             "move",     "type",  "key",      "wait-idle", "wait-view", "logs",     "functions", "call",
+             "launch",   "stop",  "compare" };
 }
 
 AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {
@@ -225,7 +225,7 @@ AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {
     } else if (cmd == "interactive") {
         request.method = "view.interactive";
         copyWindow(args, params);
-    } else if (cmd == "shot") {
+    } else if (cmd == "screenshot") {
         request.method = "screenshot";
         if (auto v = args.get("ref")) {
             params["ref"] = *v;
