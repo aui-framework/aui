@@ -480,10 +480,18 @@ void PlatformAbstractionX11::windowFlagRedraw(AWindow& window) { redrawFlag(wind
 void PlatformAbstractionX11::windowShow(AWindow& window) {
     if (bool(PlatformAbstractionX11::ourDisplay) && nativeHandle(window)) {
         AThread::current() << [&]() {
+            if (!window.isPopup()) {
+                // the contents are known by now: a non-resizable window is mapped at a size they fit in rather than
+                // resized right after (see windowAnnounceMinMaxSize).
+                window.ensureAssUpdated();
+                windowAnnounceMinMaxSize(window);
+            }
             XMapWindow(PlatformAbstractionX11::ourDisplay, nativeHandle(window));
-            if (window.isPopup()) {
+            if (window.isPopup() && AMenu::isOpen()) {
                 // owner_events = True: clicks in our own windows are delivered as usual, clicks elsewhere (window
                 // manager's decorations, other apps) are redirected to this popup so it can dismiss itself.
+                // Only menus are dismissed this way; grabbing for other popups (i.e., an overlay which stays open
+                // until closed explicitly) would take the pointer away from the whole desktop.
                 XGrabPointer(
                     PlatformAbstractionX11::ourDisplay, nativeHandle(window), True,
                     ButtonPressMask | ButtonReleaseMask | PointerMotionMask, GrabModeAsync, GrabModeAsync, None, None,
@@ -701,16 +709,33 @@ void PlatformAbstractionX11::windowHideTouchscreenKeyboardImpl(AWindow& window) 
 void PlatformAbstractionX11::windowMoveToCenter(AWindow& window) {}
 
 void PlatformAbstractionX11::windowAnnounceMinMaxSize(AWindow& window) {
-    if (PlatformAbstractionX11::ourDisplay != nullptr && nativeHandle(window) && windowIsResizable(window)) {
-        auto sizeHints = aui::ptr::manage_unique(XAllocSizeHints(), XFree);
-        sizeHints->flags = PMinSize | PMaxSize;
-        const auto minSize = window.getMinimumSize();
-        sizeHints->min_width = minSize.x;
-        sizeHints->min_height = minSize.y;
-        sizeHints->max_width = window.getMaxSize().x == -1 ? 100000 : window.getMaxSize().x;
-        sizeHints->max_height = window.getMaxSize().y == -1 ? 100000 : window.getMaxSize().y;
-        XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizeHints.get());
+    if (PlatformAbstractionX11::ourDisplay == nullptr || !nativeHandle(window)) {
+        return;
     }
+    if (!windowIsResizable(window)) {
+        // the size is locked by size hints (see xApplySizeHints). when the contents need more (i.e., the size passed
+        // to AWindow::Init is less than the minimum size, or dpi has changed), the lock is moved to the size they fit
+        // in; otherwise, the window manager keeps the window smaller than its contents and they are cut off.
+        auto hints = aui::ptr::manage_unique(XAllocSizeHints(), XFree);
+        long userhints;
+        XGetWMNormalHints(ourDisplay, nativeHandle(window), hints.get(), &userhints);
+        const glm::ivec2 locked { hints->min_width, hints->min_height };
+        const auto size = glm::max(locked, glm::max(window.getSize(), window.getMinimumSize()));
+        if (size != locked) {
+            xApplySizeHints(window, size);
+            XResizeWindow(ourDisplay, nativeHandle(window), size.x, size.y);
+            XFlush(ourDisplay);
+        }
+        return;
+    }
+    auto sizeHints = aui::ptr::manage_unique(XAllocSizeHints(), XFree);
+    sizeHints->flags = PMinSize | PMaxSize;
+    const auto minSize = window.getMinimumSize();
+    sizeHints->min_width = minSize.x;
+    sizeHints->min_height = minSize.y;
+    sizeHints->max_width = window.getMaxSize().x == -1 ? 100000 : window.getMaxSize().x;
+    sizeHints->max_height = window.getMaxSize().y == -1 ? 100000 : window.getMaxSize().y;
+    XSetWMNormalHints(PlatformAbstractionX11::ourDisplay, nativeHandle(window), sizeHints.get());
 }
 
 namespace {
