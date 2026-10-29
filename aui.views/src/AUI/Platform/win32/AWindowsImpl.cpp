@@ -230,6 +230,13 @@ LRESULT AWindow::winProc(HWND hwnd, UINT uMsg, WPARAM wParam, LPARAM lParam) {
         case WM_USER:
             return 0;
 
+        case WM_MOUSEACTIVATE:
+            if (isPopup()) {
+                // a click into a popup leaves the parent active, see CommonRenderingContext::init
+                return MA_NOACTIVATE;
+            }
+            break;
+
         case WM_SETFOCUS:
             onFocusAcquired();
             return 0;
@@ -575,7 +582,7 @@ void AWindow::showImpl() {
   };
 
   UpdateWindow(mHandle);
-  ShowWindow(mHandle, SW_SHOWNORMAL);
+  ShowWindow(mHandle, isPopup() ? SW_SHOWNOACTIVATE : SW_SHOWNORMAL);
 
   updateDpi();
 
