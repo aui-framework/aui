@@ -135,6 +135,7 @@ ARemoteDebug::ARemoteDebug(Options options) : mImpl(std::make_unique<Impl>()) {
         };
     }));
     registerInspectionMethods(dispatcher, impl.refs);
+    registerWindowMethods(dispatcher, impl.refs);
     registerScreenshotMethods(dispatcher, impl.refs);
     registerInputMethods(dispatcher, impl.refs);
     registerWaitMethods(dispatcher, impl.refs);

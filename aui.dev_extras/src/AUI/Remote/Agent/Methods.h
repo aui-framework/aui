@@ -37,6 +37,11 @@ AJson findViews(RefTable& refs, const AJson& params);
 void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
 
 /**
+ * `window.resize`.
+ */
+void registerWindowMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);
+
+/**
  * `screenshot`.
  */
 void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs);

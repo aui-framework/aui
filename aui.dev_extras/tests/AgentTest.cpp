@@ -453,6 +453,24 @@ TEST_F(AgentTest, LogIsAvailable) {
     EXPECT_EQ(errorCode("diag.log", AJson { { "level", "loud" } }), rpc_code::INVALID_PARAMS);
 }
 
+TEST_F(AgentTest, WindowResize) {
+    // the stub window manager packs windows to their minimum size on every frame, so a resize below the minimum is what
+    // can be observed here; growing a window is checked against a real window manager
+    auto window = showWindow(Label { "a label wide enough to have a minimum width" });
+    auto result = ok("window.resize", AJson { { "width", 1 }, { "height", 1 } });
+    EXPECT_EQ(result["width"].asInt(), window->getSize().x);
+    EXPECT_EQ(result["height"].asInt(), window->getSize().y);
+    EXPECT_EQ(result["requestedWidth"].asInt(), 1);
+    EXPECT_EQ(result["requestedHeight"].asInt(), 1);
+    EXPECT_EQ(result["minWidth"].asInt(), window->getMinimumSize().x);
+    EXPECT_GE(result["width"].asInt(), result["minWidth"].asInt());
+
+    EXPECT_EQ(errorCode("window.resize", AJson { { "width", 0 }, { "height", 100 } }), rpc_code::INVALID_PARAMS);
+    EXPECT_EQ(errorCode("window.resize", AJson { { "width", 100 } }), rpc_code::INVALID_PARAMS);
+    EXPECT_EQ(errorCode("window.resize", AJson { { "width", 100 }, { "height", 100 }, { "windowId", "v0:99999" } }),
+              rpc_code::STALE_REF);
+}
+
 TEST_F(AgentTest, ListedWindowIdWorks) {
     auto window = showWindow(Label { "hi" });
     auto windows = ok("window.list");

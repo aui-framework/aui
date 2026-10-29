@@ -86,6 +86,7 @@ Text frames, JSON-RPC 2.0, protocol version 1. Errors carry `data.hint` with a s
 |-------------------------------------------------------|----------------------------------------------------------------|
 | `session.hello`                                       | protocol version, pid and the list of methods                  |
 | `window.list`                                         | windows and their ids                                          |
+| `window.resize`                                       | resizes a window (`width`, `height`), answers when the layout is done |
 | `view.tree`, `view.find`, `view.properties`           | inspect views; `view.find` filters by `type`, `text`, `assName`|
 | `view.hitTest`, `view.interactive`                    | the views under a point; clickable / typeable elements         |
 | `screenshot`                                          | saves a PNG to the temp folder and returns its path; `ref` crops to a view |
@@ -101,6 +102,10 @@ selects the device: `mouse` (default) or `finger`, which delivers the same actio
 is ignored then).
 
 `click` holds the button for 50 ms before releasing it, and the call returns only after the release was delivered.
+
+`window.resize` returns once the size has stayed the same for 100 ms with no pending layout, so a screenshot taken right
+after it shows the new size. A window is never smaller than its contents need, and the window manager may adjust the
+size too; in that case the result also has `requestedWidth`, `requestedHeight`, `minWidth` and `minHeight`.
 
 For three seconds after every command, each window shows a pink "this AUI application is being debugged/controlled
 remotely" banner at its top edge. Hover and click also leave a pink pointer on the screen for the same time (an arrow
