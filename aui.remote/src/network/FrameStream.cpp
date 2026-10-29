@@ -200,6 +200,14 @@ void FrameStream::start(float scale, aui::ranged_number<int, 0, 100> quality) {
             constexpr std::size_t MAX_HISTORY = 64;
             std::map<int, ViewTree> history;
             ViewTree tree;
+
+            // The frame that has reached the UI. A frame equal to it is not passed on: showing it would make the
+            // viewport render again for nothing. When aui-remote looks at its own window, every render makes a frame,
+            // and the nested images of the viewport stop changing after a few, so this is what ends the loop.
+            AString shownJpeg;
+            glm::ivec2 shownWindowSize { 0, 0 };
+            double shownScalingFactor = 0;
+            ViewTree shownTree;
             while (!session->stopped) {
                 auto text = connection->readText(POLL_INTERVAL);
                 if (!text) {
@@ -285,13 +293,26 @@ void FrameStream::start(float scale, aui::ranged_number<int, 0, 100> quality) {
                                               << ", " << tree.size() << " views";
                 session->enqueue("frames.ack", AJson { { "seq", seq } }, {}, false);
 
+                const glm::ivec2 windowSize { params["windowWidth"].asInt(), params["windowHeight"].asInt() };
+                double scalingFactor = 1.0;
+                if (auto v = params.containsOpt("scalingFactor"); v && v->isNumber()) {
+                    scalingFactor = v->asNumber();
+                }
+                const auto& jpeg = params["jpeg"].asString();
+                if (jpeg == shownJpeg && windowSize == shownWindowSize && scalingFactor == shownScalingFactor &&
+                    tree.sameContent(shownTree)) {
+                    continue;
+                }
+                shownJpeg = jpeg;
+                shownWindowSize = windowSize;
+                shownScalingFactor = scalingFactor;
+                shownTree = tree;
+
                 FrameUpdate update;
                 update.seq = seq;
-                update.windowSize = { params["windowWidth"].asInt(), params["windowHeight"].asInt() };
-                if (auto v = params.containsOpt("scalingFactor"); v && v->isNumber()) {
-                    update.scalingFactor = float(v->asNumber());
-                }
-                update.image = AImage::fromBuffer(AByteBuffer::fromBase64String(params["jpeg"].asString()));
+                update.windowSize = windowSize;
+                update.scalingFactor = float(scalingFactor);
+                update.image = AImage::fromBuffer(AByteBuffer::fromBase64String(jpeg));
                 if (!update.image) {
                     throw AException("can't decode the frame " + AString::number(seq));
                 }

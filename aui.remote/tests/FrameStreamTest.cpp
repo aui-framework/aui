@@ -141,6 +141,25 @@ TEST(FrameStreamTest, DiffAgainstAnOlderFrameThanTheNewestApplied) {
     ASSERT_TRUE(waitFor([&] { return agent.acks().size() == 3; }));
 }
 
+TEST(FrameStreamTest, UnchangedFrameIsAckedButNotPassedOn) {
+    // aui-remote looking at its own window: showing a frame renders the window, which makes the next frame
+    FakeAgent agent("k");
+    auto stream = _new<FrameStream>(appOf(agent), "k");
+    AVector<FrameUpdate> frames;
+    AObject::connect(stream->frameReceived, stream, [&](const FrameUpdate& f) { frames << f; });
+    stream->start();
+    ASSERT_TRUE(waitFor([&] { return agent.subscribers() == 1; }));
+
+    agent.pushFrame(frame(1, tree(nullptr, "one")));
+    agent.pushFrame(frame(2, tree(1, "one")));
+    ASSERT_TRUE(waitFor([&] { return agent.acks().size() == 2; }));
+    agent.pushFrame(frame(3, tree(2, "three")));
+    ASSERT_TRUE(waitFor([&] { return frames.size() == 2; }));
+    EXPECT_EQ(frames[0].seq, 1);
+    EXPECT_EQ(frames[1].seq, 3);
+    ASSERT_TRUE(waitFor([&] { return agent.acks().size() == 3; }));
+}
+
 TEST(FrameStreamTest, LargeFramesSpanningManyTlsRecords) {
     FakeAgent agent("k");
     auto stream = _new<FrameStream>(appOf(agent), "k");
