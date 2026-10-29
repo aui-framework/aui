@@ -2,6 +2,7 @@
 
 #include <AUI/Common/AProperty.h>
 #include <AUI/Thread/AAsyncHolder.h>
+#include <AUI/View/ATextField.h>
 #include <AUI/View/AViewContainer.h>
 
 #include "remote/Discovery.h"
@@ -51,6 +52,9 @@ private:
     AProperty<bool> mBusy = false;   // connecting
     AProperty<RemoteViewport::Pointer> mPointer = RemoteViewport::Pointer::MOUSE;
     _<RemoteViewport> mViewport;
+    _<ATextField> mWidthField;
+    _<ATextField> mHeightField;
+    glm::ivec2 mRemoteSize { 0, 0 };
     _<ViewTreeView> mTreeView;
     _<ViewDetails> mDetails;
     _<const aui_remote::ViewTree> mTree;
@@ -66,4 +70,6 @@ private:
     void updateHighlight();
     void inspectAt(glm::vec2 windowPos);
     void showDetails(const AString& ref);
+    void showRemoteSize(glm::ivec2 size);
+    void resizeRemoteWindow();
 };

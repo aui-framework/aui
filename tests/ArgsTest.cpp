@@ -161,6 +161,18 @@ TEST(ArgsTest, ShotLogsCallHit) {
     EXPECT_EQ(hit.params["x"].asInt(), 5);
 }
 
+TEST(ArgsTest, Resize) {
+    auto resize = request({ "resize", "800", "600", "--window", "v1:1" });
+    EXPECT_EQ(resize.method, "window.resize");
+    EXPECT_EQ(resize.params["width"].asInt(), 800);
+    EXPECT_EQ(resize.params["height"].asInt(), 600);
+    EXPECT_EQ(resize.params["windowId"].asString(), "v1:1");
+    EXPECT_GT(request({ "resize", "1", "1", "--timeout", "20000" }).timeout, std::chrono::milliseconds(20000));
+    EXPECT_THROW(buildRequest(parse({ "resize", "800" })), ArgsError);
+    EXPECT_THROW(buildRequest(parse({ "resize", "800", "0" })), ArgsError);
+    EXPECT_THROW(buildRequest(parse({ "resize", "wide", "600" })), ArgsError);
+}
+
 TEST(ArgsTest, LocalCommandsAreNotAgentCalls) {
     for (auto c : { "list", "pair", "launch", "stop", "compare", "nonsense" }) {
         EXPECT_FALSE(buildRequest(parse({ c })).hasValue()) << c;

@@ -181,7 +181,7 @@ ParsedArgs ParsedArgs::parse(const AStringVector& args) {
 }
 
 AStringVector commandNames() {
-    return { "list",     "pair",  "hello",    "windows", "tree",      "find",     "props",     "hit",
+    return { "list",     "pair",  "hello",    "windows", "resize", "tree",      "find",     "props",     "hit",
              "screenshot", "interactive", "click", "dblclick", "press", "release", "drag",       "scroll",
              "move",     "type",  "key",      "wait-idle", "wait-view", "logs",     "functions", "call",
              "launch",   "stop",  "compare" };
@@ -197,6 +197,22 @@ AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {
         request.method = "session.hello";
     } else if (cmd == "windows") {
         request.method = "window.list";
+    } else if (cmd == "resize") {
+        requirePositional(args, 2, "resize <width> <height> [--window id] [--timeout ms]");
+        request.method = "window.resize";
+        for (auto [i, name] : { std::pair { 0, "width" }, std::pair { 1, "height" } }) {
+            auto value = args.positional[i].toInt();
+            if (!value || *value <= 0) {
+                throw ArgsError("{} must be a positive integer, got '{}'"_format(name, args.positional[i]));
+            }
+            params[name] = *value;
+        }
+        if (args.has("timeout")) {
+            const int timeout = intOption(args, "timeout", 0);
+            params["timeoutMs"] = timeout;
+            request.timeout = std::chrono::milliseconds(timeout) + WAIT_MARGIN;
+        }
+        copyWindow(args, params);
     } else if (cmd == "tree") {
         request.method = "view.tree";
         if (auto v = args.get("ref")) {

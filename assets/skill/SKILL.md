@@ -47,6 +47,7 @@ With several apps running pass `--pid N` to every command.
 | Command                                                         | Purpose                                               |
 |-----------------------------------------------------------------|-------------------------------------------------------|
 | `windows`                                                       | windows and their ids                                 |
+| `resize <width> <height> [--window W]`                          | resizes the window, prints the size it got            |
 | `tree [--ref R] [--depth N] [--json] [--inspector] [--window W]` | view hierarchy, compact text (`--json` or `--inspector`: JSON) |
 | `find [--type T] [--text S] [--ass NAME] [--ref R] [--interactive] [--include-invisible] [--window W]` | search views |
 | `props <ref>`                                                   | properties of a view                                  |

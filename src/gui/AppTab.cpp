@@ -7,7 +7,9 @@
 #include <AUI/View/ARulerArea.h>
 #include <AUI/View/AScrollArea.h>
 #include <AUI/View/ASpinnerV2.h>
+#include <AUI/View/ASpacerFixed.h>
 #include <AUI/View/ASplitter.h>
+#include <AUI/View/ATextField.h>
 
 #include "PairingDialog.h"
 #include "RemoteViewport.h"
@@ -30,7 +32,16 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
         return button;
     };
 
-    // the viewport inside the ruler area, with the mode switch [ M | T ] in the corner
+    auto sizeField = [this] {
+        auto field = _new<ATextField>();
+        connect(field->actionButtonPressed, me::resizeRemoteWindow);
+        connect(field->textChanged, me::resizeRemoteWindow);   // editing finished
+        return field AUI_OVERRIDE_STYLE { FixedSize { 56_dp, {} } };
+    };
+    mWidthField = sizeField();
+    mHeightField = sizeField();
+
+    // the viewport inside the ruler area, with the remote window size and the mode switch [ M | T ] in the corner
     _<AView> viewportArea = Stacked::Expanding {
         _new<ARulerArea>(Stacked {
             mViewport
@@ -38,6 +49,10 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
         Vertical::Expanding {
           Horizontal {
             SpacerExpanding {},
+            mWidthField,
+            Label { "×" },
+            mHeightField,
+            SpacerFixed { 8_dp },
             pointerButton("M", RemoteViewport::Pointer::MOUSE),
             pointerButton("T", RemoteViewport::Pointer::FINGER),
           } AUI_OVERRIDE_STYLE { LayoutSpacing { 2_dp }, Margin { 24_dp, 8_dp, 0, 0 } },
@@ -179,6 +194,7 @@ void AppTab::startStream() {
         }
         if (frame.image) {
             mViewport->setFrame(frame.image, frame.windowSize);
+            showRemoteSize(frame.windowSize);
         }
         if (frame.tree && !frame.tree->empty()) {
             setTree(frame.tree);
@@ -265,4 +281,31 @@ void AppTab::showDetails(const AString& ref) {
                           }
                       });
                   });
+}
+
+void AppTab::showRemoteSize(glm::ivec2 size) {
+    mRemoteSize = size;
+    // a value being typed is not overwritten
+    if (!mWidthField->hasFocus()) {
+        mWidthField->setText(AString::number(size.x));
+    }
+    if (!mHeightField->hasFocus()) {
+        mHeightField->setText(AString::number(size.y));
+    }
+}
+
+void AppTab::resizeRemoteWindow() {
+    const auto width = mWidthField->text()->trim().toInt();
+    const auto height = mHeightField->text()->trim().toInt();
+    if (!mStream || !width || !height || *width <= 0 || *height <= 0) {
+        showRemoteSize(mRemoteSize);
+        return;
+    }
+    const glm::ivec2 size { *width, *height };
+    if (size == mRemoteSize) {
+        return;
+    }
+    // the next frame shows the size the window got, which may differ (its minimum size, the window manager)
+    mAsync << mStream->request("window.resize", AJson { { "width", size.x }, { "height", size.y } })
+                  .onError([](const AException& e) { ALogger::warn("AppTab") << "window.resize: " << e; });
 }
