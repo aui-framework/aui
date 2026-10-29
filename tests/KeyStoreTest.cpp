@@ -8,8 +8,9 @@
 using namespace aui_remote;
 
 namespace {
-AppInfo app(std::uint32_t pid, AString startedAt) {
+AppInfo app(std::uint32_t pid, AString startedAt, AString exe = "/opt/app/myapp") {
     AppInfo a;
+    a.exe = std::move(exe);
     a.pid = pid;
     a.port = 1;
     a.startedAt = std::move(startedAt);
@@ -34,7 +35,27 @@ TEST(KeyStoreTest, StoreAndLoad) {
     EXPECT_FALSE(store.load(a));
     store.store(a, "abcdef");
     EXPECT_EQ(store.load(a), "abcdef");
-    EXPECT_EQ(store.pathFor(a).filename(), "100-2026_10_25T10_00_00Z.key");
+    EXPECT_EQ(store.sessionPathFor(a).filename(), "100-2026_10_25T10_00_00Z.session");
+    EXPECT_TRUE(store.pathFor(a).filename().startsWith("myapp-"));
+}
+
+TEST(KeyStoreTest, PairedKeySurvivesRestartOfTheApplication) {
+    test::TempDir dir;
+    KeyStore store(dir.path());
+    store.store(app(100, "t1"), "paired-key");
+    EXPECT_EQ(store.load(app(555, "t2")), "paired-key");   // new pid, same executable
+    EXPECT_FALSE(store.load(app(555, "t2", "/opt/other/myapp")));
+}
+
+TEST(KeyStoreTest, SessionKeyIsPreferredAndDiesWithTheProcess) {
+    test::TempDir dir;
+    KeyStore store(dir.path());
+    store.store(app(1, "a"), "paired-key");
+    store.storeSession(app(1, "a"), "session-key");
+    EXPECT_EQ(store.load(app(1, "a")), "session-key");
+    EXPECT_EQ(store.load(app(2, "b")), "paired-key");
+    store.pruneExcept({});
+    EXPECT_EQ(store.load(app(1, "a")), "paired-key");   // paired keys are not pruned
 }
 
 TEST(KeyStoreTest, GeneratedKeyRoundTrips) {
@@ -45,10 +66,10 @@ TEST(KeyStoreTest, GeneratedKeyRoundTrips) {
     EXPECT_EQ(store.load(app(7, "t")), key);
 }
 
-TEST(KeyStoreTest, KeyBelongsToTheProcessNotThePid) {
+TEST(KeyStoreTest, SessionKeyBelongsToTheProcessNotThePid) {
     test::TempDir dir;
     KeyStore store(dir.path());
-    store.store(app(100, "t1"), "key1");
+    store.storeSession(app(100, "t1"), "key1");
     EXPECT_FALSE(store.load(app(100, "t2")));
     EXPECT_EQ(store.load(app(100, "t1")), "key1");
 }
@@ -73,8 +94,8 @@ TEST(KeyStoreTest, FileIsPrivate) {
 TEST(KeyStoreTest, PruneRemovesKeysOfGoneApps) {
     test::TempDir dir;
     KeyStore store(dir.path());
-    store.store(app(1, "a"), "k1");
-    store.store(app(2, "b"), "k2");
+    store.storeSession(app(1, "a"), "k1");
+    store.storeSession(app(2, "b"), "k2");
     store.pruneExcept({ app(2, "b") });
     EXPECT_FALSE(store.load(app(1, "a")));
     EXPECT_TRUE(store.load(app(2, "b")));
@@ -84,6 +105,7 @@ TEST(KeyStoreTest, Remove) {
     test::TempDir dir;
     KeyStore store(dir.path());
     store.store(app(1, "a"), "k1");
+    store.storeSession(app(1, "a"), "k2");
     store.remove(app(1, "a"));
     EXPECT_FALSE(store.load(app(1, "a")));
     store.remove(app(1, "a"));   // not an error

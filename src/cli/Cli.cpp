@@ -9,6 +9,7 @@
 
 #include "ImageCompare.h"
 #include "remote/KeyStore.h"
+#include "remote/Pairing.h"
 #include "remote/RpcClient.h"
 
 using namespace std::chrono_literals;
@@ -91,14 +92,29 @@ AJson doList(const Directories& directories) {
 AJson doPair(const ParsedArgs& args, const Directories& directories) {
     const auto app = appByPid(pidArgument(args), directories);
     KeyStore store(directories.keys);
-    if (auto code = args.get("code")) {
-        const auto key = KeyStore::generateKey();
-        auto result = RpcClient::forApp(app, "").call("pair.confirm", AJson { { "code", *code }, { "key", key } });
-        if (!(result.isObject() && result.containsOpt("paired") && (result)["paired"].asBool())) {
-            throw clientError("the application did not confirm the pairing", "call pair again", result);
+    if (auto key = store.load(app)) {
+        try {
+            RpcClient::forApp(app, *key).call("session.hello");
+            note("Already paired with {}, no code is needed."_format(app.displayName()));
+            return AJson { { "paired", true }, { "alreadyPaired", true }, { "pid", int(app.pid) } };
+        } catch (const RpcError& e) {
+            if (e.code() != rpc_code::UNAUTHORIZED) {
+                throw;
+            }
+            store.remove(app);   // the application has forgotten this client
         }
-        store.store(app, key);
-        return AJson { { "paired", true }, { "pid", int(app.pid) } };
+    }
+    if (auto code = args.get("code")) {
+        const auto result = pairing::confirm(app, *code, store);
+        AJson json { { "paired", true }, { "pid", int(app.pid) }, { "remembered", result.remembered } };
+        if (result.remembered) {
+            json["hint"] = "pairing is a one-time procedure: no code is needed again, even after the application restarts";
+        } else if (result.connectionOnly) {
+            json["hint"] = "the application asks for a code on every connection (AUI_REMOTE_PAIRING=always)";
+        } else {
+            json["hint"] = "the application does not remember clients: pair again after it restarts";
+        }
+        return json;
     }
     RpcClient::forApp(app, "").call("pair.begin");
     note("The window of {} shows a 6-digit code. Finish with: aui-remote cli pair {} --code <code>"_format(
@@ -221,7 +237,7 @@ AJson doLaunch(const ParsedArgs& args, const Directories& directories) {
     const auto deadline = std::chrono::steady_clock::now() + timeout;
     while (std::chrono::steady_clock::now() < deadline) {
         if (auto app = discovery::find(pid, directories.discovery)) {
-            KeyStore(directories.keys).store(*app, key);
+            KeyStore(directories.keys).storeSession(*app, key);
             return AJson {
                 { "pid", int(pid) },
                 { "port", int(app->port) },
@@ -264,7 +280,18 @@ AJson doRemoteCommand(const ParsedArgs& args, const CommandRequest& request, con
             AJson { { "hint", "run `aui-remote cli pair {}` and enter the code shown by the application"_format(
                                   app.pid) } });
     }
-    return RpcClient::forApp(app, *key).call(request.method, request.params, request.timeout);
+    try {
+        return RpcClient::forApp(app, *key).call(request.method, request.params, request.timeout);
+    } catch (const RpcError& e) {
+        if (e.code() == rpc_code::UNAUTHORIZED) {
+            // the application does not know this key anymore (it asks for the code after a restart, or every time)
+            KeyStore(directories.keys).remove(app);
+            throw RpcError(e.code(), "{} no longer trusts this client"_format(app.displayName()),
+                           AJson { { "hint", "run `aui-remote cli pair {}` and enter the code shown by the "
+                                             "application"_format(app.pid) } });
+        }
+        throw;
+    }
 }
 
 }   // namespace

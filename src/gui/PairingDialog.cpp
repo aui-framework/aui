@@ -6,6 +6,7 @@
 #include <AUI/View/ATextField.h>
 
 #include "remote/KeyStore.h"
+#include "remote/Pairing.h"
 #include "remote/RpcClient.h"
 
 using namespace declarative;
@@ -70,13 +71,11 @@ void PairingDialog::confirm() {
     mStatus = "Checking the code...";
     mAsync << AUI_THREADPOOL {
         const auto code = (*mCode).trim();
-        const auto key = KeyStore::generateKey();
         AString status;
         bool ok = false;
         bool needNewCode = false;
         try {
-            RpcClient::forApp(mApp, "").call("pair.confirm", AJson { { "code", code }, { "key", key } });
-            KeyStore().store(mApp, key);
+            pairing::confirm(mApp, code, KeyStore());
             ok = true;
         } catch (const RpcError& e) {
             status = describe(e);

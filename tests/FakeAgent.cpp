@@ -64,10 +64,13 @@ AJson FakeAgent::handle(const AString& method, const AJson& params, bool& author
         mKeys.insert(params["key"].asString().toStdString());
         mCodeActive = false;
         authorized = true;
-        return AJson { { "paired", true } };
+        return AJson { { "paired", true }, { "trust", "persistent" } };
     }
     if (!authorized) {
         throw RpcError(rpc_code::UNAUTHORIZED, "unauthorized", AJson { { "hint", "pair first" } });
+    }
+    if (method == "session.hello") {
+        return AJson { { "protocol", 1 } };
     }
     if (method == "window.list") {
         return AJson { { "windows", AJson::Array { AJson { { "windowId", "v1:1" }, { "title", "Fake" } } } } };

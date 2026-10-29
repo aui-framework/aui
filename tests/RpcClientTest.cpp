@@ -144,8 +144,7 @@ TEST(CliTest, ListShowsPairedFlagAndPrunesDeadApps) {
     EXPECT_FALSE(r.json["apps"][0]["paired"].asBool());
     EXPECT_FALSE((d.discovery / "1073741808.json").isRegularFileExists());
 
-    AppInfo app = AppInfo::fromJson(AJson::fromString(R"({"pid":)" + AString::number(AProcess::self()->getPid()) +
-                                                     R"(,"port":1234,"startedAt":"t0"})"));
+    auto app = discovery::list(d.discovery).first();
     KeyStore(d.keys).store(app, "k");
     EXPECT_TRUE(runCli({ "list" }, d).json["apps"][0]["paired"].asBool());
 }
@@ -182,6 +181,14 @@ TEST(CliTest, PairingFlow) {
     auto key = KeyStore(d.keys).load(app);
     ASSERT_TRUE(key);
     EXPECT_TRUE(agent.hasKey(*key));
+    EXPECT_TRUE(ok.json["remembered"].asBool());
+    EXPECT_TRUE(KeyStore(d.keys).pathFor(app).isRegularFileExists());   // the one-time key, not a session one
+
+    // already paired: no code, no new key
+    auto again = runCli({ "pair", pidText.toStdString().c_str() }, d);
+    ASSERT_EQ(again.exitCode, 0) << again.stdoutText;
+    EXPECT_TRUE(again.json["alreadyPaired"].asBool());
+    EXPECT_EQ(agent.pairBeginCalls(), 1);   // still the one from the first pair
 
     // the stored key is used by the later invocations
     auto windows = runCli({ "windows" }, d);
@@ -189,6 +196,28 @@ TEST(CliTest, PairingFlow) {
     EXPECT_EQ(windows.json["windows"][0]["title"].asString(), "Fake");
     auto tree = runCli({ "tree", "--depth", "2" }, d);
     EXPECT_EQ(tree.json["echoDepth"].asInt(), 2);
+}
+
+TEST(CliTest, ForgottenClientIsAskedToPairAgain) {
+    TempDir dir;
+    FakeAgent agent;
+    cli::Directories d { dir / "apps", dir / "keys" };
+    const auto pid = AProcess::self()->getPid();
+    writeDiscovery(d.discovery, pid, agent.port(), agent.certSha256());
+    auto app = discovery::list(d.discovery).first();
+    KeyStore(d.keys).store(app, "key-the-application-has-never-seen");   // i.e. it forgot after a restart
+
+    auto r = runCli({ "windows" }, d);
+    EXPECT_EQ(r.exitCode, 1);
+    EXPECT_EQ(r.json["error"]["code"].asInt(), rpc_code::UNAUTHORIZED);
+    EXPECT_TRUE(r.json["error"]["data"]["hint"].asString().contains("pair"));
+    EXPECT_FALSE(KeyStore(d.keys).load(app));   // the stale key is dropped
+
+    // pair then asks for the code instead of claiming it is paired
+    KeyStore(d.keys).store(app, "key-the-application-has-never-seen");
+    auto begin = runCli({ "pair", AString::number(pid).toStdString().c_str() }, d);
+    ASSERT_EQ(begin.exitCode, 0) << begin.stdoutText;
+    EXPECT_TRUE(begin.json["pending"].asBool());
 }
 
 TEST(CliTest, ErrorsAreJsonWithNonZeroExit) {
