@@ -23,7 +23,7 @@ AColor dotColor(AppTab::State state) {
         case AppTab::State::READY: return AColor::GREEN.darker(0.3f);
         case AppTab::State::CONNECTING: return 0xffe0a000_argb;
         case AppTab::State::NEEDS_PAIRING: return 0xffe0a000_argb;
-        case AppTab::State::ERROR: return AColor::RED;
+        case AppTab::State::FAILED: return AColor::RED;
         case AppTab::State::EXITED: return 0xff999999_argb;
     }
     return 0xff999999_argb;

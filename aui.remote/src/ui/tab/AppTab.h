@@ -22,7 +22,7 @@ public:
         CONNECTING,
         NEEDS_PAIRING,
         READY,
-        ERROR,
+        FAILED,   // not ERROR: windows.h defines it as a macro
         EXITED,
     };
 

@@ -20,10 +20,13 @@ TEST(SkillTest, InstalledStateComesFromTheFile) {
     skill::install("exe: {{EXE}}", "/bin/x", file);
     EXPECT_TRUE(skill::isInstalled(file));
 
-    std::ifstream in(file.toStdString());
-    std::stringstream ss;
-    ss << in.rdbuf();
-    EXPECT_EQ(ss.str(), "exe: /bin/x");
+    {
+        // closed before removeFile: Windows can't delete a file that is open
+        std::ifstream in(file.toStdString());
+        std::stringstream ss;
+        ss << in.rdbuf();
+        EXPECT_EQ(ss.str(), "exe: /bin/x");
+    }
 
     // somebody deletes the file by hand: the state follows
     file.removeFile();
@@ -49,9 +52,23 @@ TEST(SkillTest, UninstallKeepsFolderWithOtherFiles) {
     EXPECT_TRUE((file.parent() / "extra.txt").isRegularFileExists());
 }
 
+namespace {
+void setEnvironmentVariable(const char* name, const char* value) {
+#if AUI_PLATFORM_WIN
+    _putenv_s(name, value);   // an empty value removes the variable
+#else
+    if (*value == '\0') {
+        unsetenv(name);
+    } else {
+        setenv(name, value, 1);
+    }
+#endif
+}
+}   // namespace
+
 TEST(SkillTest, DefaultFileHonoursClaudeConfigDir) {
-    ::setenv("CLAUDE_CONFIG_DIR", "/tmp/claude-cfg", 1);
+    setEnvironmentVariable("CLAUDE_CONFIG_DIR", "/tmp/claude-cfg");
     EXPECT_EQ(skill::defaultFile(), APath("/tmp/claude-cfg/skills/aui-remote/SKILL.md"));
-    ::unsetenv("CLAUDE_CONFIG_DIR");
+    setEnvironmentVariable("CLAUDE_CONFIG_DIR", "");
     EXPECT_TRUE(skill::defaultFile().endsWith(".claude/skills/aui-remote/SKILL.md"));
 }

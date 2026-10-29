@@ -110,7 +110,7 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
         Button { .content = Label { "Retry" }, .onClick = [this] { inspect(); } },
       } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp }, Padding { 6_dp } } AUI_LET {
           connect(
-              AUI_REACT(*mState == State::ERROR || *mState == State::EXITED ? Visibility::VISIBLE : Visibility::GONE),
+              AUI_REACT(*mState == State::FAILED || *mState == State::EXITED ? Visibility::VISIBLE : Visibility::GONE),
               it->visibility());
       },
       Centered {
@@ -234,7 +234,7 @@ void AppTab::startStream() {
             return;
         }
         showBanner(message);
-        setState(State::ERROR);
+        setState(State::FAILED);
     });
     mStream->start();
 }

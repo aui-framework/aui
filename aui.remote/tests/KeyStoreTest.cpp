@@ -83,6 +83,9 @@ TEST(KeyStoreTest, OverwriteReplacesTheKey) {
 }
 
 TEST(KeyStoreTest, FileIsPrivate) {
+#if AUI_PLATFORM_WIN
+    GTEST_SKIP() << "no POSIX permissions; the ACL of the user's profile keeps the keys private";
+#endif
     test::TempDir dir;
     KeyStore store(dir.path());
     store.store(app(1, "t"), "secret");

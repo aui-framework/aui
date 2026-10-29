@@ -56,7 +56,6 @@ public:
 
 private:
     _<ATlsIdentity> mIdentity = ATlsIdentity::generateSelfSigned("aui-remote-test");
-    std::unique_ptr<AWebsocketServer> mServer;
     mutable std::mutex mMutex;
     std::set<std::string> mKeys;
     std::atomic<int> mPairBegin = 0;
@@ -68,6 +67,8 @@ private:
     AJson mLastSubscribe;
     AVector<int> mAcks;
     AVector<Call> mInputCalls;
+    // the last member: stopping the server calls onClosed, which touches the members above
+    std::unique_ptr<AWebsocketServer> mServer;
 
     AJson handle(const AString& method, const AJson& params, bool& authorized, AWebsocketServer::Connection* connection);
 };
