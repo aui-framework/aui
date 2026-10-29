@@ -249,8 +249,10 @@ public:
 
     template <typename F>
     Arc(F&& f)
-        requires requires { aui::implicit_shared_ptr_ctor<F>{}; }
-      : std::shared_ptr<T>(aui::implicit_shared_ptr_ctor<F>{}(std::forward<F>(f))) {}
+        requires requires(F&& f) {
+            { aui::implicit_shared_ptr_ctor<std::decay_t<F>>{}(std::forward<F>(f)) } -> aui::convertible_to<std::shared_ptr<T>>;
+        }
+      : std::shared_ptr<T>(aui::implicit_shared_ptr_ctor<std::decay_t<F>>{}(std::forward<F>(f))) {}
 
     Arc& operator=(const Arc& rhs) noexcept {
         std::shared_ptr<T>::operator=(rhs);

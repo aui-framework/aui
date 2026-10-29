@@ -965,3 +965,12 @@ TEST_F(UILayoutTest, AdvancedGridLayoutMarginTest) {
     EXPECT_EQ(br->getPosition().x, 16 * 4);
     EXPECT_EQ(br->getPosition().y, 16 * 4);
 }
+
+static_assert(aui::convertible_to<declarative::Centered, _<AViewContainer>>);
+static_assert(aui::convertible_to<declarative::Vertical, _<AViewContainer>>);
+static_assert(aui::convertible_to<declarative::Horizontal, _<AViewContainer>>);
+static_assert(aui::convertible_to<declarative::Stacked, _<AViewContainer>>);
+static_assert(aui::convertible_to<declarative::Button, _<AViewContainer>>);
+static_assert(!aui::convertible_to<declarative::Label, _<AViewContainer>>);
+static_assert(!aui::convertible_to<_<AView>, _<AViewContainer>>);
+static_assert(!aui::convertible_to<_<ALabel>, _<AViewContainer>>);

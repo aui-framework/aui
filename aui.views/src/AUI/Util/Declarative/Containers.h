@@ -28,7 +28,11 @@ public:
     view_helper() {}
 
     operator View() const { return asViewFactory()->operator()(); }
-    operator ViewContainer() const { return asViewFactory()->operator()(); }
+    operator ViewContainer() const
+        requires requires(ViewFactory f) { { f() } -> aui::convertible_to<ViewContainer>; }
+    {
+        return asViewFactory()->operator()();
+    }
     auto operator<<(const AString& assEntry) const { return asViewFactory()->operator()() << assEntry; }
     template <typename T>
     auto operator^(const T& t) const {
