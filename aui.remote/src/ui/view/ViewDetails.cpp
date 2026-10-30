@@ -62,11 +62,14 @@ void ViewDetails::show(const AString& ref, const AJson& fields) {
     };
     const auto box = ViewTree::boxOf(fields);
 
+    // built apart: in one expression with the rest, MSVC 19.29 crashes (C1001)
+    _<AView> copyButton = Button { .content = Label { "Copy" }, .onClick = [ref] { AClipboard::copyToClipboard(ref); } };
+
     AVector<_<AView>> views {
         Label { ViewTree::prettyName(fields) } AUI_OVERRIDE_STYLE { FontSize { 14_pt } },
         Horizontal {
           Label { ref },
-          Button { .content = Label { "Copy" }, .onClick = [ref] { AClipboard::copyToClipboard(ref); } },
+          copyButton,
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
         row("Position", "{}, {} (in parent {}, {})"_format(box.position.x, box.position.y, field("x"), field("y"))),
         row("Size", "{}x{}"_format(box.size.x, box.size.y)),

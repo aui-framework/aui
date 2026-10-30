@@ -95,6 +95,11 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
         inspector,
     }).build();
 
+    // the buttons are built apart: in one expression with the rest, MSVC 19.29 crashes (C1001)
+    _<AView> reconnect = Button { .content = Label { "Reconnect" }, .onClick = [this] { inspect(); } };
+    _<AView> retry = Button { .content = Label { "Retry" }, .onClick = [this] { inspect(); } };
+    _<AView> pairButton = Button { .content = Label { "Pair..." }, .onClick = [this] { pair(); } };
+
     setContents(Vertical {
       Horizontal {
         Label { "{}, port {}"_format(mApp.displayName(), mApp.port) } AUI_OVERRIDE_STYLE { FontSize { 12_pt } },
@@ -102,12 +107,12 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
             connect(AUI_REACT(*mBusy ? Visibility::VISIBLE : Visibility::GONE), it->visibility());
         },
         SpacerExpanding {},
-        Button { .content = Label { "Reconnect" }, .onClick = [this] { inspect(); } },
+        reconnect,
       } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
       Horizontal {
         Label { AUI_REACT(*mBanner) } AUI_OVERRIDE_STYLE { TextColor { AColor::RED } },
         SpacerExpanding {},
-        Button { .content = Label { "Retry" }, .onClick = [this] { inspect(); } },
+        retry,
       } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp }, Padding { 6_dp } } AUI_LET {
           connect(
               AUI_REACT(*mState == State::FAILED || *mState == State::EXITED ? Visibility::VISIBLE : Visibility::GONE),
@@ -117,7 +122,7 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
         Vertical {
           Label { "This application needs to confirm the access" } AUI_OVERRIDE_STYLE { FontSize { 12_pt } },
           Label { "It will show a 6-digit code. The connection is encrypted and the certificate is pinned." },
-          Button { .content = Label { "Pair..." }, .onClick = [this] { pair(); } },
+          pairButton,
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
       } AUI_LET {
           it->setExpanding();

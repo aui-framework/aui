@@ -32,6 +32,21 @@ namespace aui::remote {
 namespace {
 constexpr auto LOG_TAG = "ARemoteDebug";
 
+// out of the lambda in showOverlay: MSVC 19.29 crashes on this expression there (C1001)
+_<AView> overlayContents(const std::string& code, const _<AOverlappingSurface>& overlay) {
+    using namespace declarative;
+    _<AView> dismiss = Button {
+        .content = Label { "Dismiss" },
+        .onClick = [overlay = overlay.weak()] { AUI_NULLSAFE(overlay.lock())->close(); },
+    };
+    return Vertical {
+        Label { "An AUI debugger wants to attach to this application" } AUI_OVERRIDE_STYLE { TextColor { 0xffffff_rgb } },
+        Label { AString::fromUtf8(code) } AUI_OVERRIDE_STYLE { TextColor { 0xffffff_rgb }, FontSize { 28_pt } },
+        Label { "Enter the code to aui-remote" } AUI_OVERRIDE_STYLE { TextColor { 0xffffff_rgb } },
+        dismiss,
+    } AUI_OVERRIDE_STYLE { Padding { 12_dp }, BackgroundSolid { 0x303030_rgb }, Border { 1_px, 0x808080_rgb } };
+}
+
 bool constantTimeEquals(const std::string& a, const std::string& b) {
     if (a.size() != b.size()) {
         return false;
@@ -251,20 +266,7 @@ void Pairing::showOverlay(std::string code) {
         }
         constexpr glm::ivec2 SIZE { 380, 130 };
         state->surface = window->createOverlappingSurface((window->getSize() - SIZE) / 2, SIZE);
-        using namespace declarative;
-        ALayoutInflater::inflate(state->surface,
-                                 Vertical {
-                                   Label { "An AUI debugger wants to attach to this application" } AUI_OVERRIDE_STYLE { TextColor { 0xffffff_rgb } },
-                                   Label { AString::fromUtf8(code) } AUI_OVERRIDE_STYLE { TextColor { 0xffffff_rgb },
-                                                                                          FontSize { 28_pt } },
-                                   Label { "Enter the code to aui-remote" } AUI_OVERRIDE_STYLE { TextColor { 0xffffff_rgb } },
-                                   Button {
-                                       .content = Label { "Dismiss" },
-                                       .onClick = [overlay = state->surface.weak()] {
-                                           AUI_NULLSAFE(overlay.lock())->close();
-                                       },
-                                   },
-                                 } AUI_OVERRIDE_STYLE { Padding { 12_dp }, BackgroundSolid { 0x303030_rgb }, Border { 1_px, 0x808080_rgb } });
+        ALayoutInflater::inflate(state->surface, overlayContents(code, state->surface));
         state->surface->pack();
         state->window = window;
     });
