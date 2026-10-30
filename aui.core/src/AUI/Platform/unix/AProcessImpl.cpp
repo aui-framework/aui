@@ -42,7 +42,7 @@
 #include <fcntl.h>
 #include <cerrno>
 
-#if AUI_PLATFORM_APPLE
+#if AUI_PLATFORM_MACOS
 #include <libproc.h>
 #endif
 
@@ -84,7 +84,7 @@ public:
 
     APath getPathToExecutable() override {
         char buf[0x800];
-#if AUI_PLATFORM_APPLE
+#if AUI_PLATFORM_MACOS
         const auto length = proc_pidpath(mHandle, buf, sizeof(buf));
         return length > 0 ? APath(buf, length) : APath {};
 #else

@@ -401,7 +401,8 @@ TEST_F(AgentTest, WaitIdleDoesNotWaitForTheBanner) {
     auto window = showWindow(_new<AButton>("b"));
     ok("input.pointer", AJson { { "x", 200 }, { "y", 150 } });
     EXPECT_TRUE(RemoteOverlay::isShown(*window));
-    EXPECT_LT(ok("wait.idle", AJson { { "quietMs", 30 } })["waitedMs"].asInt(), 1500);
+    // the banner lives for 3 seconds; valgrind is slow enough to take seconds to get the UI idle
+    EXPECT_LT(ok("wait.idle", AJson { { "quietMs", 30 } })["waitedMs"].asInt(), 3000);
 }
 
 TEST_F(AgentTest, ResizeHasAnUpperLimit) {

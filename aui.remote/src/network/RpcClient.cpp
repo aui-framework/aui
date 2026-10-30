@@ -41,8 +41,8 @@ AString RpcClient::target() const {
     return result;
 }
 
-_<AWebsocket> aui_remote::connectToAgent(std::uint16_t port, const AString& certSha256, const AString& target,
-                                         std::chrono::milliseconds timeout) {
+_<AWebsocket> connectToAgent(std::uint16_t port, const AString& certSha256, const AString& target,
+                             std::chrono::milliseconds timeout) {
     const auto url = "wss://127.0.0.1:{}{}"_format(port, target);
     auto socket = _new<AWebsocket>(url, AWebsocket::Options {
                                           .expectedFingerprint = AByteBuffer::fromHexString(certSha256),
