@@ -222,9 +222,10 @@ protected:
     /// Runs the child and returns what it printed.
     static AString probe(AMap<AString, AString> environment, bool inherit, AString names) {
         environment["AUI_TEST_PROBE"] = std::move(names);
+        AProcess::ArgStringList args { { "--gtest_filter=ProcessEnvironmentChild.Probe" } };
         auto p = AProcess::create({
           .executable = AProcess::self()->getPathToExecutable(),
-          .args = AProcess::ArgStringList { { "--gtest_filter=ProcessEnvironmentChild.Probe" } },
+          .args = std::move(args),
           .environment = std::move(environment),
           .inheritEnvironment = inherit,
         });
