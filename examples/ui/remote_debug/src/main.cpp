@@ -48,7 +48,7 @@ AUI_ENTRY {
     // additional feature: you can register your own functions to be called by aui-remote GUI, CLI or an AI agent
     debug->registerFunction("show_window", "Show a modal window.", [](const AJson& args) -> AFuture<AJson> {
         AMessageBox::show(nullptr, "Remote window", AJson::toString(args));
-        co_return AJson::Object { { "ok", true } };
+        return AFuture<AJson>::fromValue(AJson::Object { { "ok", true } });
     });
 #endif
     // [ARemoteDebug_start]

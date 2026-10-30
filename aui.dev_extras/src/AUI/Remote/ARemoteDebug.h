@@ -83,7 +83,7 @@ public:
         ALWAYS,
     };
 
-    struct Options {
+    struct API_AUI_DEV_EXTRAS Options {
         /**
          * @brief Address to listen. Keep it on the loopback.
          */
