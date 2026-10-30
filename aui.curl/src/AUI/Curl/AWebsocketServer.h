@@ -71,7 +71,7 @@ public:
     /**
      * @brief Parsed HTTP upgrade request.
      */
-    struct Request {
+    struct API_AUI_CURL Request {
         AString method;
 
         /**

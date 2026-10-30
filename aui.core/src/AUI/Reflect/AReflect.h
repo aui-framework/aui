@@ -25,7 +25,7 @@
 
 namespace AReflect {
 
-#if AUI_COMPILER_MSVC
+#ifndef __GNUG__ // MSVC ABI: MSVC and Clang targeting it; their names are not mangled
     namespace detail {
         /**
          * @brief Brings a type name of MSVC to the form of GCC and Clang: drops the class keys ("class AButton",
@@ -67,7 +67,7 @@ namespace AReflect {
     template<typename T>
     AString name(T* v) {
         if (!v) return "nullptr";
-#if AUI_COMPILER_MSVC
+#ifndef __GNUG__
         return detail::normalizeMsvcTypeName(typeid(*v).name());
 #else
         int status;

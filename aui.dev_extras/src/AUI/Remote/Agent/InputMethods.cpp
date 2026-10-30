@@ -145,6 +145,12 @@ AFuture<AJson> inTwoSteps(First first, Second second) {
     });
 }
 
+/// Calls `fn` on the UI thread after `delay` without blocking it. `fn` may return a value or an AFuture.
+template <typename Fn>
+auto later(std::chrono::milliseconds delay, Fn fn) {
+    return AThread::asyncSleep(delay).map([fn = std::move(fn)] { return AThread::main()->async(fn); });
+}
+
 constexpr auto CLICK_DURATION = std::chrono::milliseconds(50);
 
 // AUI has no long press timer of its own: on Android ALongPressEvent comes from the system GestureDetector, whose
@@ -208,31 +214,42 @@ AVector<TouchEvent> timelineOf(const AVector<Track>& tracks) {
     return events;
 }
 
-/// Plays the fingers in real time; resumes on the UI thread when all of them are released.
-AFuture<> playTracks(_<AWindow> window, AVector<Track> tracks) {
-    const auto events = timelineOf(tracks);
-    const auto start = std::chrono::steady_clock::now();
-    RemoteOverlay::enable(*window);
-    for (const auto& e : events) {
-        const auto due = start + e.time;
-        if (const auto now = std::chrono::steady_clock::now(); due > now) {
-            co_await AThread::asyncSleep(std::chrono::duration_cast<std::chrono::milliseconds>(due - now));
-        }
-        const auto index = APointerIndex::finger(e.finger);
-        switch (e.kind) {
-            case TouchEvent::Kind::PRESS:
-                window->injectEvent(APointerPressedEvent { e.position, index });
-                break;
-            case TouchEvent::Kind::MOVE:
-                window->injectEvent(AInjectedPointerMove { e.position, APointerMoveEvent { index } });
-                break;
-            case TouchEvent::Kind::RELEASE:
-                window->injectEvent(APointerReleasedEvent { e.position, index });
-                break;
-        }
-        RemoteOverlay::showPointer(*window, e.position, index, e.kind == TouchEvent::Kind::PRESS,
-                                   e.kind != TouchEvent::Kind::RELEASE);
+void inject(AWindow& window, const TouchEvent& e) {
+    const auto index = APointerIndex::finger(e.finger);
+    switch (e.kind) {
+        case TouchEvent::Kind::PRESS:
+            window.injectEvent(APointerPressedEvent { e.position, index });
+            break;
+        case TouchEvent::Kind::MOVE:
+            window.injectEvent(AInjectedPointerMove { e.position, APointerMoveEvent { index } });
+            break;
+        case TouchEvent::Kind::RELEASE:
+            window.injectEvent(APointerReleasedEvent { e.position, index });
+            break;
     }
+    RemoteOverlay::showPointer(window, e.position, index, e.kind == TouchEvent::Kind::PRESS,
+                               e.kind != TouchEvent::Kind::RELEASE);
+}
+
+/// Injects the events due by now, starting from `from`, and schedules the rest.
+AFuture<> playFrom(_<AWindow> window, _<const AVector<TouchEvent>> events, std::size_t from,
+                   std::chrono::steady_clock::time_point start) {
+    for (auto i = from; i < events->size(); ++i) {
+        const auto due = start + (*events)[i].time;
+        if (const auto now = std::chrono::steady_clock::now(); due > now) {
+            return later(std::chrono::duration_cast<std::chrono::milliseconds>(due - now),
+                         [=] { return playFrom(window, events, i, start); });
+        }
+        inject(*window, (*events)[i]);
+    }
+    return AFuture<>::fromValue();
+}
+
+/// Plays the fingers in real time; completes on the UI thread when all of them are released.
+AFuture<> playTracks(_<AWindow> window, const AVector<Track>& tracks) {
+    RemoteOverlay::enable(*window);
+    return playFrom(std::move(window), _new<const AVector<TouchEvent>>(timelineOf(tracks)), 0,
+                    std::chrono::steady_clock::now());
 }
 
 void validate(const AVector<Track>& tracks) {
@@ -313,22 +330,23 @@ AFuture<AJson> inputTouch(RefTable& refs, AJson params) {
                            "fingers: [{ finger, points: [{ x, y, t }] }], or gesture: pinch | rotate");
     }
     validate(tracks);
-    co_await playTracks(window, tracks);
     std::chrono::milliseconds duration { 0 };
     for (const auto& track : tracks) {
         duration = std::max(duration, track.points.last().first);
     }
-    co_return AJson {
-        { "fingers", int(tracks.size()) },
-        { "durationMs", int(duration.count()) },
-    };
+    return playTracks(window, tracks).map([fingers = int(tracks.size()), duration] {
+        return AJson {
+            { "fingers", fingers },
+            { "durationMs", int(duration.count()) },
+        };
+    });
 }
 
 // params: action (click|doubleClick|press|release|move|drag|scroll|longPress|fling; default click), ref | x, y,
 //         pointer (mouse|finger; default: defaultPointer()), button (left|right|middle; mouse only), modifiers, drag: toRef | toX, toY, scroll: dx, dy,
 //         longPress: durationMs; fling: dx, dy (the way of the finger), velocity (px/s, default 2000).
 //         longPress and fling are touch gestures, they use a finger whatever `pointer` says.
-// A coroutine, so `click` can hold the button without blocking the UI thread. Resumes on the UI thread.
+// `click` holds the button without blocking the UI thread; the result completes on the UI thread.
 AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
     const auto action = params.containsOpt("action") ? params["action"].asString() : AString("click");
     const auto pointer = params.containsOpt("pointer") ? params["pointer"].asString() : defaultPointer();
@@ -342,9 +360,10 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
     auto& window = target.window;
     auto position = target.position;
 
-    OverrideScope modifiers(modifiersOf(params));
+    // held until the result is ready, i.e. until a click releases the button
+    auto modifiers = _new<OverrideScope>(modifiersOf(params));
     // a finger has no buttons for AInput to report
-    auto overrideButton = [&](bool down) {
+    auto overrideButton = [finger, button](bool down) {
         if (finger) {
             return;
         }
@@ -354,16 +373,24 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
             AInput::resetOverride(button);
         }
     };
-    auto move = [&](glm::vec2 to) {
+    auto move = [window, index](glm::vec2 to) {
         window->injectEvent(AInjectedPointerMove { to, APointerMoveEvent { index } });
     };
     auto press = [&] {
         overrideButton(true);
         window->injectEvent(APointerPressedEvent { position, index });
     };
-    auto release = [&] {
-        window->injectEvent(APointerReleasedEvent { position, index });
+    auto release = [window, index, overrideButton](glm::vec2 at) {
+        window->injectEvent(APointerReleasedEvent { at, index });
         overrideButton(false);
+    };
+    auto result = [window, index, action, target, modifiers](glm::vec2 at) {
+        RemoteOverlay::enable(*window);
+        // between `press` and `release` the pointer stays on the screen
+        RemoteOverlay::showPointer(*window, at, index, action != "move" && action != "scroll", action == "press");
+        return AJson {
+            { "at", describePoint(target) },
+        };
     };
 
     if (action == "move") {
@@ -380,15 +407,17 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
         press();
         // a real click lasts a moment; the caller gets the answer only after the button is released
         RemoteOverlay::showPointer(*window, position, index, true, true);
-        co_await AThread::asyncSleep(CLICK_DURATION);
-        release();
+        return later(CLICK_DURATION, [release, result, position] {
+            release(position);
+            return result(position);
+        });
     } else if (action == "doubleClick") {
         move(position);
         press();
-        release();
+        release(position);
         overrideButton(true);
         window->injectEvent(AInjectedPointerDoubleClick { APointerPressedEvent { position, index } });
-        release();
+        release(position);
     } else if (action == "drag") {
         const auto to = resolveTarget(params, refs, "to").position;
         constexpr int STEPS = 10;
@@ -399,22 +428,25 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
             move(glm::mix(position, to, float(i) / STEPS));
         }
         position = to;
-        release();
+        release(position);
     } else if (action == "longPress") {
         const auto duration = std::chrono::milliseconds(intOr(params, "durationMs", LONG_PRESS_DURATION.count()));
         const auto finger = APointerIndex::finger(0);
         RemoteOverlay::enable(*window);
         window->injectEvent(APointerPressedEvent { position, finger });
         RemoteOverlay::showPointer(*window, position, finger, true, true);
-        co_await AThread::asyncSleep(std::clamp(duration, std::chrono::milliseconds(0), std::chrono::milliseconds(30000)));
-        // as the platform does when the timeout passes; a handled long press is not followed by a click
-        const bool handled = window->onGesture(glm::ivec2(position), ALongPressEvent {});
-        window->injectEvent(APointerReleasedEvent { position, finger });
-        RemoteOverlay::showPointer(*window, position, finger, false, false);
-        co_return AJson {
-            { "at", describePoint(target) },
-            { "handled", handled },
-        };
+        return later(std::clamp(duration, std::chrono::milliseconds(0), std::chrono::milliseconds(30000)),
+                     [window, position, finger, target] {
+                         // as the platform does when the timeout passes; a handled long press is not followed by a
+                         // click
+                         const bool handled = window->onGesture(glm::ivec2(position), ALongPressEvent {});
+                         window->injectEvent(APointerReleasedEvent { position, finger });
+                         RemoteOverlay::showPointer(*window, position, finger, false, false);
+                         return AJson {
+                             { "at", describePoint(target) },
+                             { "handled", handled },
+                         };
+                     });
     } else if (action == "fling") {
         const glm::vec2 way { numberOr(params, "dx", 0.f), numberOr(params, "dy", 0.f) };
         const float length = glm::length(way);
@@ -428,11 +460,13 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
         for (int i = 0; i <= steps; ++i) {
             track.points << std::pair { TOUCH_FRAME * i, position + way * (float(i) / float(steps)) };
         }
-        co_await playTracks(window, { std::move(track) });
-        co_return AJson {
-            { "at", describePoint(target) },
-            { "velocity", int(length / float(steps) * TOUCH_FRAMES_PER_SECOND) },
-        };
+        return playTracks(window, { std::move(track) })
+            .map([target, velocity = int(length / float(steps) * TOUCH_FRAMES_PER_SECOND)] {
+                return AJson {
+                    { "at", describePoint(target) },
+                    { "velocity", velocity },
+                };
+            });
     } else if (action == "scroll") {
         move(position);
         window->injectEvent(AScrollEvent {
@@ -444,12 +478,7 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
         throw RpcException(rpc_code::INVALID_PARAMS, "unknown action: " + action,
                            "click, doubleClick, press, release, move, drag, scroll, longPress or fling");
     }
-    RemoteOverlay::enable(*window);
-    // between `press` and `release` the pointer stays on the screen
-    RemoteOverlay::showPointer(*window, position, index, action != "move" && action != "scroll", action == "press");
-    co_return AJson {
-        { "at", describePoint(target) },
-    };
+    return AFuture<AJson>::fromValue(result(position));
 }
 
 }   // namespace
