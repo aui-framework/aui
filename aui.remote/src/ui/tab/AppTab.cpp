@@ -20,6 +20,12 @@
 using namespace declarative;
 using namespace aui_remote;
 
+namespace {
+// FontSize in _pt and a declarative Button/CheckBox with a lambda in the same function crash MSVC (C1001),
+// so the styled label is built here.
+_<AView> heading(AString text) { return Label { std::move(text) } AUI_OVERRIDE_STYLE { FontSize { 12_pt } }; }
+}   // namespace
+
 AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
     mPointer = mApp.defaultPointer == "finger" ? RemoteViewport::Pointer::FINGER : RemoteViewport::Pointer::MOUSE;
     mViewport = _new<RemoteViewport>();
@@ -95,24 +101,19 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
         inspector,
     }).build();
 
-    // the buttons are built apart: in one expression with the rest, MSVC 19.29 crashes (C1001)
-    _<AView> reconnect = Button { .content = Label { "Reconnect" }, .onClick = [this] { inspect(); } };
-    _<AView> retry = Button { .content = Label { "Retry" }, .onClick = [this] { inspect(); } };
-    _<AView> pairButton = Button { .content = Label { "Pair..." }, .onClick = [this] { pair(); } };
-
     setContents(Vertical {
       Horizontal {
-        Label { "{}, port {}"_format(mApp.displayName(), mApp.port) } AUI_OVERRIDE_STYLE { FontSize { 12_pt } },
+        heading("{}, port {}"_format(mApp.displayName(), mApp.port)),
         _new<ASpinnerV2>() AUI_LET {
             connect(AUI_REACT(*mBusy ? Visibility::VISIBLE : Visibility::GONE), it->visibility());
         },
         SpacerExpanding {},
-        reconnect,
+        Button { .content = Label { "Reconnect" }, .onClick = [this] { inspect(); } },
       } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
       Horizontal {
         Label { AUI_REACT(*mBanner) } AUI_OVERRIDE_STYLE { TextColor { AColor::RED } },
         SpacerExpanding {},
-        retry,
+        Button { .content = Label { "Retry" }, .onClick = [this] { inspect(); } },
       } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp }, Padding { 6_dp } } AUI_LET {
           connect(
               AUI_REACT(*mState == State::FAILED || *mState == State::EXITED ? Visibility::VISIBLE : Visibility::GONE),
@@ -120,9 +121,9 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
       },
       Centered {
         Vertical {
-          Label { "This application needs to confirm the access" } AUI_OVERRIDE_STYLE { FontSize { 12_pt } },
+          heading("This application needs to confirm the access"),
           Label { "It will show a 6-digit code. The connection is encrypted and the certificate is pinned." },
-          pairButton,
+          Button { .content = Label { "Pair..." }, .onClick = [this] { pair(); } },
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
       } AUI_LET {
           it->setExpanding();

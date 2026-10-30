@@ -66,7 +66,7 @@ WsConnection::WsConnection(std::uint16_t port, const AString& certSha256, const 
         }
         head += char(c);
     }
-    if (head.rfind("HTTP/1.1 101", 0) != 0) {
+    if (!head.starts_with("HTTP/1.1 101")) {
         const auto line = head.substr(0, head.find("\r\n"));
         throw RpcError(
             rpc_code::CLIENT_ERROR, "the application refused the connection: " + AString::fromUtf8(line),

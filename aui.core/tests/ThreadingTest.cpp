@@ -196,7 +196,7 @@ TEST(Threading, PararellWithResult) {
 
 TEST(Threading, FutureCancellationBeforeExecution) {
     AThreadPool localThreadPool(1);
-    size_t foreignLambdaCallCount = 0;
+    std::atomic<size_t> foreignLambdaCallCount = 0;   // wait() may run the second one on this thread
     auto foreignLambda = [&] {
         try {
             AThread::sleep(500ms);

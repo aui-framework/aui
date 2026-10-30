@@ -43,6 +43,6 @@ struct Mark {
  * @param pixelsPerDp image pixels per density-independent pixel; lines and digits are sized in dp, so they keep up with
  *        the text of the application at any DPI.
  */
-void draw(AImage& image, const AVector<Mark>& marks, float pixelsPerDp);
+API_AUI_DEV_EXTRAS void draw(AImage& image, const AVector<Mark>& marks, float pixelsPerDp);
 
 }   // namespace aui::remote::marks

@@ -29,6 +29,10 @@ _<AView> row(const AString& name, const AString& value) {
     } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } };
 }
 
+// FontSize in _pt and a declarative Button/CheckBox with a lambda in the same function crash MSVC (C1001),
+// so the styled label is built here.
+_<AView> title(AString text) { return Label { std::move(text) } AUI_OVERRIDE_STYLE { FontSize { 14_pt } }; }
+
 AString boxText(const std::array<int, 4>& fields) {
     // AUI's order is (top, right, bottom, left), as in CSS
     return "{} {} {} {}"_format(fields[1], fields[2], fields[3], fields[0]);
@@ -62,14 +66,11 @@ void ViewDetails::show(const AString& ref, const AJson& fields) {
     };
     const auto box = ViewTree::boxOf(fields);
 
-    // built apart: in one expression with the rest, MSVC 19.29 crashes (C1001)
-    _<AView> copyButton = Button { .content = Label { "Copy" }, .onClick = [ref] { AClipboard::copyToClipboard(ref); } };
-
     AVector<_<AView>> views {
-        Label { ViewTree::prettyName(fields) } AUI_OVERRIDE_STYLE { FontSize { 14_pt } },
+        title(ViewTree::prettyName(fields)),
         Horizontal {
           Label { ref },
-          copyButton,
+          Button { .content = Label { "Copy" }, .onClick = [ref] { AClipboard::copyToClipboard(ref); } },
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
         row("Position", "{}, {} (in parent {}, {})"_format(box.position.x, box.position.y, field("x"), field("y"))),
         row("Size", "{}x{}"_format(box.size.x, box.size.y)),

@@ -40,7 +40,7 @@ namespace aui::remote {
  *
  * Thread-safe; the code overlay is shown and hidden on the UI thread.
  */
-class Pairing {
+class API_AUI_DEV_EXTRAS Pairing {
 public:
     static constexpr int MIN_KEY_LENGTH = 16;
     static constexpr int MAX_ATTEMPTS = 3;

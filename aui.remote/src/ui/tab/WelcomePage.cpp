@@ -15,28 +15,27 @@
 using namespace declarative;
 using namespace aui_remote;
 
+namespace {
+// FontSize in _pt and a declarative Button/CheckBox with a lambda in the same function crash MSVC (C1001),
+// so the styled label is built here.
+_<AView> heading(AString text) { return Label { std::move(text) } AUI_OVERRIDE_STYLE { FontSize { 12_pt } }; }
+}   // namespace
+
 WelcomePage::WelcomePage() {
     mSkillInstalled = skill::isInstalled();
     mSkillStatus = "Installs {}"_format(skill::defaultFile());
 
-    // built apart: in one expression with the rest, MSVC 19.29 crashes (C1001)
-    _<AView> skillCheckBox = CheckBox {
-        .checked = AUI_REACT(*mSkillInstalled),
-        .onCheckedChange = [this](bool wanted) { skillToggled(wanted); },
-        .content = Label { "Allow Claude to use AUI Remote" },
-    };
-    _<AView> copyButton = Button {
-        .content = Label { "Copy" },
-        .onClick = [] { AClipboard::copyToClipboard("ARemoteDebug::start();"); },
-    };
-
     setContents(Centered {
       Vertical {
         Vertical {
-          skillCheckBox,
+          CheckBox {
+            .checked = AUI_REACT(*mSkillInstalled),
+            .onCheckedChange = [this](bool wanted) { skillToggled(wanted); },
+            .content = Label { "Allow Claude to use AUI Remote" },
+          },
           Label { AUI_REACT(*mSkillStatus) } AUI_OVERRIDE_STYLE { TextColor { 0xff777777_argb }, Margin { 0, 0, 0, 20_dp } },
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 2_dp } },
-        Label { "Available connections" } AUI_OVERRIDE_STYLE { FontSize { 12_pt } },
+        heading("Available connections"),
         AUI_DECLARATIVE_FOR(row, *mRows, AVerticalLayout) {
             return connectionRow(row);
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
@@ -48,7 +47,10 @@ WelcomePage::WelcomePage() {
           Label { "Run an application that calls" },
           Horizontal {
             Label { "ARemoteDebug::start();" } AUI_OVERRIDE_STYLE { BackgroundSolid { 0x14000000_argb }, Padding { 4_dp } },
-            copyButton,
+            Button {
+              .content = Label { "Copy" },
+              .onClick = [] { AClipboard::copyToClipboard("ARemoteDebug::start();"); },
+            },
           } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
           Label { "and it will show up here." },
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } } AUI_LET {

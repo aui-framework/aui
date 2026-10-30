@@ -33,7 +33,7 @@ namespace aui::remote {
  *
  * Must be used on the UI thread only.
  */
-class RemoteOverlay {
+class API_AUI_DEV_EXTRAS RemoteOverlay {
 public:
     /**
      * @brief Turns the overlay on for the window. Does nothing if it is already on.
