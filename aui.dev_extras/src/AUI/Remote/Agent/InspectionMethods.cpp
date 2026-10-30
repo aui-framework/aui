@@ -13,7 +13,6 @@
 
 #include <algorithm>
 
-#include "UiThread.h"
 #include "ViewJson.h"
 
 namespace aui::remote {
@@ -98,7 +97,7 @@ AJson findViews(RefTable& refs, const AJson& params) {
 
 void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     dispatcher.registerMethod("window.list", JsonRpcDispatcher::Handler([&refs](const AJson&) {
-        return onUiThread([&refs] {
+        return AThread::main()->async([&refs] {
             refs.newGeneration();
             aui::impl::JsonArray windows;
             for (const auto& window : ASurface::getWindowManager().getWindows()) {
@@ -120,7 +119,7 @@ void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     }));
 
     dispatcher.registerMethod("view.tree", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
-        return onUiThread([&refs, params = params] {
+        return AThread::main()->async([&refs, params = params] {
             refs.newGeneration();
             _<AView> root = params.contains("ref") ? viewFromParams(params, refs) : _<AView>(windowFromParams(params, refs));
             const auto depth = std::clamp(intParam(params, "depth", 8), 0, 64);
@@ -129,7 +128,7 @@ void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     }));
 
     dispatcher.registerMethod("view.properties", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
-        return onUiThread([&refs, params = params] {
+        return AThread::main()->async([&refs, params = params] {
             auto view = viewFromParams(params, refs);
             auto node = describe(refs, view);
             node["inspector"] = view_json::inspector(view);
@@ -141,11 +140,11 @@ void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     }));
 
     dispatcher.registerMethod("view.find", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
-        return onUiThread([&refs, params = params] { return findViews(refs, params); });
+        return AThread::main()->async([&refs, params = params] { return findViews(refs, params); });
     }));
 
     dispatcher.registerMethod("view.hitTest", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
-        return onUiThread([&refs, params = params] {
+        return AThread::main()->async([&refs, params = params] {
             refs.newGeneration();
             auto window = windowFromParams(params, refs);
             const glm::ivec2 position { params["x"].asInt(), params["y"].asInt() };
@@ -163,7 +162,7 @@ void registerInspectionMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     }));
 
     dispatcher.registerMethod("view.interactive", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
-        return onUiThread([&refs, params = params] {
+        return AThread::main()->async([&refs, params = params] {
             refs.newGeneration();
             auto window = windowFromParams(params, refs);
             aui::impl::JsonArray elements;

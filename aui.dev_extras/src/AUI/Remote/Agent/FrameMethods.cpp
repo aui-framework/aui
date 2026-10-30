@@ -23,7 +23,6 @@
 #include "AUI/Thread/AThreadPool.h"
 #include "RemoteOverlay.h"
 #include "TreeDiff.h"
-#include "UiThread.h"
 #include "ViewJson.h"
 
 namespace aui::remote {
@@ -294,7 +293,7 @@ void registerFrameMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
         "frames.subscribe",
         JsonRpcDispatcher::ConnectionHandler([&refs, registry](const AJson& params, const _<RpcConnection>& connection) {
             requireConnection(connection);
-            return onUiThread([&refs, registry, params = params, connection] {
+            return AThread::main()->async([&refs, registry, params = params, connection] {
                 auto window = windowFromParams(params, refs);
                 const auto parsed = parseParams(params);
                 // the new subscription replaces the old one and starts with a full tree; the numbering goes on
@@ -330,7 +329,7 @@ void registerFrameMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
         "frames.unsubscribe",
         JsonRpcDispatcher::ConnectionHandler([registry](const AJson&, const _<RpcConnection>& connection) {
             requireConnection(connection);
-            return onUiThread([registry, connection] {
+            return AThread::main()->async([registry, connection] {
                 if (registry->find(connection)) {
                     ALogger::info(LOG_TAG) << "unsubscribed";
                     registry->subscriptions.erase(connection.get());
@@ -345,7 +344,7 @@ void registerFrameMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
         JsonRpcDispatcher::ConnectionHandler([registry](const AJson& params, const _<RpcConnection>& connection) {
             requireConnection(connection);
             const auto seq = params["seq"].asLongInt();
-            return onUiThread([registry, connection, seq] {
+            return AThread::main()->async([registry, connection, seq] {
                 if (auto subscription = registry->find(connection)) {
                     subscription->ack(seq);
                 }

@@ -20,6 +20,11 @@
 #include <AUI/Platform/AStacktrace.h>
 #include <AUI/Thread/AMutex.h>
 #include <AUI/Util/AMessageQueue.h>
+#include <AUI/Traits/concepts.h>
+
+#if AUI_COROUTINES
+#include <coroutine>
+#endif
 
 class IEventLoop;
 class AString;
@@ -27,6 +32,18 @@ class AConditionVariable;
 
 template<typename T = void>
 class AFuture;
+
+namespace aui::impl::future {
+template <typename T>
+struct Unwrap {
+    using type = T;
+};
+
+template <typename T>
+struct Unwrap<AFuture<T>> {
+    using type = T;
+};
+}   // namespace aui::impl::future
 
 /**
  * @brief Represents an abstract thread which might be not created with AThread.
@@ -119,6 +136,52 @@ public:
     inline void operator*(Callable fun) {
         enqueue(fun);
     }
+
+    /**
+     * @brief Runs `fn` on this thread and returns the future of its result.
+     * @details
+     * `fn` runs when this thread processes its messages, never inline, even when called from this very thread. An
+     * exception thrown by `fn` fails the future. If `fn` returns an `AFuture<T>`, the result is `AFuture<T>` that
+     * completes with it, not `AFuture<AFuture<T>>`.
+     *
+     * ```cpp
+     * AFuture<AString> title = AThread::main()->async([this] { return mLabel->text(); });
+     * ```
+     *
+     * If the future is cancelled before this thread gets to `fn`, `fn` is not called. If the thread stops without
+     * processing the message, the future fails with [AFutureAbandonedException].
+     *
+     * !!! warning
+     *
+     *     Don't block on the returned future on this same thread: the message can't be processed while the thread
+     *     waits for it. In a coroutine, `co_await` it instead, or continue on this thread with `switchTo`.
+     */
+    template <aui::invocable Fn>
+    auto async(Fn fn) -> AFuture<typename aui::impl::future::Unwrap<std::invoke_result_t<Fn&>>::type>;
+
+#if AUI_COROUTINES
+    /**
+     * @brief Continues the coroutine on this thread: `co_await AThread::main()->switchTo();`.
+     * @details
+     * Suspends the coroutine and resumes it when this thread processes its messages. Does not suspend if the
+     * coroutine is on this thread already. The coroutine stays on this thread until the next switch: a following
+     * `co_await future` resumes here too.
+     *
+     * ```cpp
+     * AFuture<> MyView::reload() {
+     *     auto data = co_await loadData();       // network, on whatever thread called reload()
+     *     co_await AThread::main()->switchTo();
+     *     setText(data.title);                   // UI thread
+     * }
+     * ```
+     *
+     * The thread must process its messages (run an event loop), otherwise the coroutine is never resumed. If the
+     * thread stops without processing the message, the coroutine is destroyed; a coroutine returning AFuture then
+     * fails with [AFutureAbandonedException].
+     */
+    [[nodiscard]]
+    auto switchTo();
+#endif
 
     [[nodiscard]]
     const AString& threadName() const noexcept {
@@ -295,3 +358,37 @@ public:
      */
     void join();
 };
+
+#if AUI_COROUTINES
+namespace aui::impl {
+struct ThreadSwitchAwaiter {
+    AAbstractThread* thread;
+
+    [[nodiscard]]
+    bool await_ready() const noexcept {
+        return thread == AThread::current().get();
+    }
+
+    void await_suspend(std::coroutine_handle<> handle) const {
+        struct Resume {
+            std::coroutine_handle<> handle;
+
+            ~Resume() {
+                // the message is dropped without a call (the thread has stopped): don't leak the coroutine
+                if (handle) {
+                    handle.destroy();
+                }
+            }
+        };
+        // std::function requires a copyable callable
+        thread->enqueue([resume = std::make_shared<Resume>(handle)] { std::exchange(resume->handle, nullptr).resume(); });
+    }
+
+    void await_resume() const noexcept {}
+};
+}   // namespace aui::impl
+
+inline auto AAbstractThread::switchTo() {
+    return aui::impl::ThreadSwitchAwaiter { this };
+}
+#endif

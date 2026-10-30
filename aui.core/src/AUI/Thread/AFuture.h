@@ -700,6 +700,20 @@ public:
                 std::forward<Callback>(callback));
         }
 
+        /**
+         * @brief Completes the future the way `other` completes, like `resolve(otherPromise)` in JavaScript.
+         * @details
+         * The future keeps `other` alive while anybody waits for it, so cancelling the future cancels `other`. If
+         * `other` is cancelled, the future fails with [AFutureAbandonedException].
+         */
+        void supplyFrom(AFuture other) const {
+            using namespace aui::impl::future;
+            other.inner_().subscribe(
+                [resolver = *this](const auto&... value) { resolver.supplyValue(value...); },
+                [resolver = *this](const AException& e) { resolver.supplyException(causeOf(e)); }, NoCallback {});
+            onCancel([other = std::move(other)] {});
+        }
+
     private:
         friend class AFuture;
         friend class AThreadPool;
@@ -1187,6 +1201,37 @@ struct Access {
 };
 
 }   // namespace aui::impl::future
+
+template <aui::invocable Fn>
+auto AAbstractThread::async(Fn fn) -> AFuture<typename aui::impl::future::Unwrap<std::invoke_result_t<Fn&>>::type> {
+    using Result = std::invoke_result_t<Fn&>;
+    using Future = AFuture<typename aui::impl::future::Unwrap<Result>::type>;
+    return Future::create([&](typename Future::Resolver resolver) {
+        auto run = [fn = std::move(fn), resolver = std::move(resolver)]() mutable {
+            if (resolver.isCancelled()) {
+                return;
+            }
+            try {
+                if constexpr (std::is_void_v<Result>) {
+                    fn();
+                    resolver.supplyValue();
+                } else if constexpr (std::is_same_v<Result, Future>) {
+                    resolver.supplyFrom(fn());
+                } else {
+                    resolver.supplyValue(fn());
+                }
+            } catch (...) {
+                resolver.supplyException();
+            }
+        };
+        if constexpr (std::is_copy_constructible_v<decltype(run)>) {
+            enqueue(std::move(run));
+        } else {
+            // std::function requires a copyable callable
+            enqueue([shared = std::make_shared<decltype(run)>(std::move(run))] { (*shared)(); });
+        }
+    });
+}
 
 template <typename T>
 template <typename... Types>

@@ -19,7 +19,6 @@
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/AWindow.h"
 #include "RemoteOverlay.h"
-#include "UiThread.h"
 
 namespace aui::remote {
 
@@ -453,25 +452,6 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
     };
 }
 
-/// Runs a coroutine of an input method on the UI thread.
-template <typename Coroutine>
-AFuture<AJson> onUiThreadAsync(RefTable& refs, AJson params, Coroutine coroutine) {
-    return AFuture<AJson>::create([&](AFuture<AJson>::Resolver result) {
-        AThread::main()->enqueue([&refs, params = std::move(params), result = std::move(result), coroutine] {
-            try {
-                auto work = coroutine(refs, params);
-                result.onCancel([work] {});   // the coroutine runs while somebody waits for it
-                work.onValue([result](const AJson& value) { result.supplyValue(value); });
-                work.onException([result](const AException& e) {
-                    result.supplyException(aui::impl::future::causeOf(e));
-                });
-            } catch (...) {
-                result.supplyException();
-            }
-        });
-    });
-}
-
 }   // namespace
 
 AString defaultPointer() {
@@ -484,18 +464,18 @@ AString defaultPointer() {
 
 void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     dispatcher.registerMethod("input.pointer", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
-        return onUiThreadAsync(refs, params, inputPointer);
+        return AThread::main()->async([&refs, params = params] { return inputPointer(refs, params); });
     }));
 
     dispatcher.registerMethod("input.touch", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
-        return onUiThreadAsync(refs, params, inputTouch);
+        return AThread::main()->async([&refs, params = params] { return inputTouch(refs, params); });
     }));
 
     // params: gesture (longPress), ref | x, y, windowId?
     // Only the gesture, as the platform reports it; a client that holds a finger itself (the GUI) sends it when its
     // own long press timeout passes.
     dispatcher.registerMethod("input.gesture", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
-        return onUiThread([&refs, params = params] {
+        return AThread::main()->async([&refs, params = params] {
             const auto gesture = params.containsOpt("gesture") ? params["gesture"].asString() : AString {};
             if (gesture != "longPress") {
                 throw RpcException(rpc_code::INVALID_PARAMS, "unknown gesture: " + gesture, "longPress");

@@ -13,7 +13,6 @@
 #include "AUI/UITest.h"
 #include "AUI/Remote/Agent/JsonRpc.h"
 #include "AUI/Remote/Agent/RefTable.h"
-#include "AUI/Remote/Agent/UiThread.h"
 
 using namespace aui::remote;
 
@@ -96,27 +95,4 @@ TEST_F(RefTableTest, ForgetsOldestBeyondCapacity) {
     EXPECT_THROW((void) table.resolve(refs[0]), RpcException);
     EXPECT_THROW((void) table.resolve(refs[1]), RpcException);
     EXPECT_EQ(table.resolve(refs[4]), views[4]);
-}
-
-TEST(UiThread, RunsOnTheMainThreadAndReturnsTheResult) {
-    auto future = onUiThread([] { return AThread::current() == AThread::main() ? 42 : -1; });
-    EXPECT_FALSE(future.hasResult());   // never inline
-    AThread::processMessages();
-    ASSERT_TRUE(future.hasResult());
-    EXPECT_EQ(*future, 42);
-}
-
-TEST(UiThread, ExceptionsEndUpInTheFuture) {
-    auto future = onUiThread([]() -> int { throw AException("nope"); });
-    AThread::processMessages();
-    ASSERT_TRUE(future.hasResult());
-    EXPECT_ANY_THROW((void) *future);
-}
-
-TEST(UiThread, VoidFunctions) {
-    int calls = 0;
-    auto future = onUiThread([&] { ++calls; });
-    AThread::processMessages();
-    EXPECT_TRUE(future.hasResult());
-    EXPECT_EQ(calls, 1);
 }

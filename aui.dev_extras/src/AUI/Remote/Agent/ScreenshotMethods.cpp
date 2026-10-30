@@ -25,7 +25,6 @@
 #include "AUI/View/AScrollArea.h"
 #include "Marks.h"
 #include "RemoteOverlay.h"
-#include "UiThread.h"
 #include "ViewJson.h"
 
 namespace aui::remote {
@@ -110,7 +109,7 @@ void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     //         annotate? (numbered boxes over the interactive views, listed in `marks`)
     // result: { path, width, height, scale, crop?, marks? }
     dispatcher.registerMethod("screenshot", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
-        return onUiThread([&refs, params = params] {
+        return AThread::main()->async([&refs, params = params] {
             auto window = windowFromParams(params, refs);
 
             // the remote control overlay must not appear in screenshots: render a clean frame to capture.
