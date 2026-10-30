@@ -18,7 +18,7 @@ static void Layout(benchmark::State& state) {
     for (auto _2 : state) {
         _<AViewContainer> v = declarative::Centered { uiBenchmarkScene() };
         v->pack();
-        v->applyGeometryToChildrenIfNecessary();
+        v->layout(v->getPosition(), v->getSize());
     }
 }
 

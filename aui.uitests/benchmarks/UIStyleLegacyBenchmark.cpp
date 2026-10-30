@@ -64,7 +64,7 @@ public:
     void popMaskAfter() override {}
     void setBlending(Blending blending) override {}
     [[nodiscard]] _unique<IRenderViewToTexture> newRenderViewToTexture() noexcept override { return nullptr; }
-    void setWindow(AWindowBase* window) override {}
+    void setWindow(ASurface* window) override {}
     glm::mat4 getProjectionMatrix() const override { return glm::mat4(1.0f); }
 
 protected:
