@@ -12,7 +12,6 @@
 #include "network/KeyStore.h"
 #include "network/Pairing.h"
 #include "network/RpcClient.h"
-#include "platform/Process.h"
 
 using namespace std::chrono_literals;
 
@@ -169,16 +168,19 @@ AString tail(const APath& file, std::size_t bytes = 2000) {
     return AString::fromUtf8(result);
 }
 
-AString shellQuote(const AString& s) {
-    AString result = "'";
-    for (auto c : s) {
-        if (c == '\'') {
-            result += "'\\''";
-        } else {
-            result += c;
-        }
+/**
+ * @return path to the executable like a shell would find it: relative to the working directory of the child, or by name
+ * in PATH
+ */
+APath resolveExecutable(const APath& exe, const APath& workDir) {
+    const auto inWorkDir = exe.isAbsolute() || workDir.empty() ? exe : workDir / exe;
+    if (inWorkDir.isRegularFileExists()) {
+        return inWorkDir.absolute();
     }
-    return result + "'";
+    if (auto found = APath::find(exe, {}, APathFinder::USE_SYSTEM_PATHS); !found.empty()) {
+        return found.first();
+    }
+    throw clientError("no such executable: " + exe, "check the path after `--`");
 }
 
 AJson doLaunch(const ParsedArgs& args, const Directories& directories) {
@@ -204,46 +206,23 @@ AJson doLaunch(const ParsedArgs& args, const Directories& directories) {
     const auto stdoutPath = logsFolder / "launch-{}-stdout.txt"_format(stamp);
     const auto stderrPath = logsFolder / "launch-{}-stderr.txt"_format(stamp);
 
-    const auto& exe = args.rest[0];
     AProcess::ProcessCreationInfo info;
     info.environment = std::move(environment);
     if (auto cwd = args.get("cwd")) {
         info.workDir = *cwd;
     }
+    info.executable = resolveExecutable(args.rest[0], info.workDir);
+    info.args = AProcess::ArgStringList { AStringVector(args.rest.begin() + 1, args.rest.end()) };
+    info.stdOutFile = stdoutPath;
+    info.stdErrFile = stderrPath;
 
-#if AUI_PLATFORM_WIN
-    AString commandLine = "/S /C \"\"" + exe + "\"";
-    for (std::size_t i = 1; i < args.rest.size(); ++i) {
-        commandLine += " \"" + args.rest[i] + "\"";
-    }
-    commandLine += " > \"" + stdoutPath + "\" 2> \"" + stderrPath + "\" < NUL\"";
-    info.executable = APath(AString::fromLatin1(std::getenv("COMSPEC") ? std::getenv("COMSPEC") : "cmd.exe"));
-    info.args = AProcess::ArgSingleString { std::move(commandLine) };
-#else
-    // the shell redirects the streams to files and replaces itself with the application, so the pid stays the same
-    AStringVector shellArgs = { "-c",
-                                "exec \"$0\" \"$@\" > " + shellQuote(stdoutPath) + " 2> " + shellQuote(stderrPath) +
-                                    " < /dev/null",
-                                exe };
-    for (std::size_t i = 1; i < args.rest.size(); ++i) {
-        shellArgs << args.rest[i];
-    }
-    info.executable = "/bin/sh";
-    info.args = AProcess::ArgStringList { std::move(shellArgs) };
-#endif
-
-    platform::keepStreamsFromChildren();
     auto process = AProcess::create(std::move(info));
     process->run(ASubProcessExecutionFlags::DETACHED);
-    const auto pid = process->getPid();   // of the shell
-    auto appPid = pid;
+    const auto appPid = process->getPid();
 
     const auto timeout = std::chrono::seconds(args.getInt("timeout").valueOr(30));
     const auto deadline = std::chrono::steady_clock::now() + timeout;
     while (std::chrono::steady_clock::now() < deadline) {
-        if (auto launched = platform::launchedApplicationPid(pid)) {
-            appPid = *launched;
-        }
         if (auto app = discovery::find(appPid, directories.discovery)) {
             KeyStore(directories.keys).storeSession(*app, key);
             return AJson {
@@ -253,7 +232,7 @@ AJson doLaunch(const ParsedArgs& args, const Directories& directories) {
                 { "stderr", stderrPath.toStdString() },
             };
         }
-        if (!discovery::isProcessAlive(pid)) {
+        if (!discovery::isProcessAlive(appPid)) {
             throw clientError(
                 "the application exited before the remote agent started",
                 "check that it links aui::dev_extras, calls ARemoteDebug::start() and the executable path is right",
@@ -262,7 +241,6 @@ AJson doLaunch(const ParsedArgs& args, const Directories& directories) {
         std::this_thread::sleep_for(100ms);
     }
     discovery::terminateProcess(appPid);
-    discovery::terminateProcess(pid);
     throw clientError(
         "the remote agent did not start in {} s"_format(timeout.count()),
         "the application was stopped; no discovery file appeared, does it link aui::dev_extras and call ARemoteDebug::start()?",
@@ -343,14 +321,12 @@ int run(const AStringVector& args, const Directories& directories) {
     try {
         auto parsed = ParsedArgs::parse(args);
         if (parsed.command.empty() || parsed.command == "help" || parsed.has("help")) {
-            note("commands: " + commandNames().join(' '));
-            print(AJson { { "commands", [] {
-                              AJson r = AJson::Array {};
-                              for (const auto& c : commandNames()) {
-                                  r.push_back(c);
-                              }
-                              return r;
-                          }() } });
+            AJson commands = AJson::Array {};
+            for (const auto& command : commandHelp()) {
+                note(command.usage + "\n    " + command.purpose);
+                commands.push_back(AJson { { "usage", command.usage }, { "purpose", command.purpose } });
+            }
+            print(AJson { { "commands", std::move(commands) } });
             return parsed.command.empty() ? 2 : 0;
         }
         AJson result;

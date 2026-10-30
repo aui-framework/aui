@@ -16,7 +16,7 @@ APath defaultFile();
 AString builtinTemplate();
 
 /**
- * @return the template with `{{EXE}}` replaced by the path to the executable
+ * @return the template with `{{EXE}}` replaced by the path to the executable and `{{COMMANDS}}` by the table of commands
  */
 AString render(const AString& templateText, const APath& exe);
 

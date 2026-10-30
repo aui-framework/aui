@@ -1,5 +1,6 @@
 #include "FrameStream.h"
 
+#include <AUI/Crypt/ATlsSession.h>
 #include <condition_variable>
 #include <deque>
 #include <map>
@@ -13,7 +14,6 @@
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Thread/AThread.h>
 
-#include "WsConnection.h"
 
 using namespace std::chrono_literals;
 
@@ -77,7 +77,7 @@ struct FrameStream::Session {
     std::mutex mutex;
     std::condition_variable cv;
     std::deque<AString> outbox;
-    std::shared_ptr<WsConnection> connection;
+    _<AWebsocket> connection;
     std::unordered_map<int, Pending> pending;
     int nextId = 1;
 
@@ -178,12 +178,11 @@ void FrameStream::start(float scale, aui::ranged_number<int, 0, 100> quality) {
     // reader: connects, subscribes, applies and decodes the frames
     std::thread([session, weakSelf, postFailure, ui, app = mApp, key = mKey, scale, quality] {
         try {
-            const auto deadline = std::chrono::steady_clock::now() + CONNECT_TIMEOUT;
             AString target = "/";
             if (!key.empty()) {
                 target += "?key=" + key;
             }
-            auto connection = std::make_shared<WsConnection>(app.port, app.certSha256, target, deadline);
+            auto connection = connectToAgent(app.port, app.certSha256, target, CONNECT_TIMEOUT);
             {
                 std::unique_lock lock(session->mutex);
                 if (session->stopped) {
@@ -212,13 +211,13 @@ void FrameStream::start(float scale, aui::ranged_number<int, 0, 100> quality) {
             double shownScalingFactor = 0;
             ViewTree shownTree;
             while (!session->stopped) {
-                auto text = connection->readText(POLL_INTERVAL);
+                auto text = connection->read(POLL_INTERVAL);
                 if (!text) {
                     continue;
                 }
                 AJson message;
                 try {
-                    message = AJson::fromString(*text);
+                    message = AJson::fromString(AString::fromUtf8(*text));
                 } catch (const AJsonException&) {
                     continue;
                 }
@@ -339,7 +338,7 @@ void FrameStream::start(float scale, aui::ranged_number<int, 0, 100> quality) {
         try {
             for (;;) {
                 AString text;
-                std::shared_ptr<WsConnection> connection;
+                _<AWebsocket> connection;
                 {
                     std::unique_lock lock(session->mutex);
                     session->cv.wait(lock, [&] {
@@ -352,7 +351,7 @@ void FrameStream::start(float scale, aui::ranged_number<int, 0, 100> quality) {
                     text = std::move(session->outbox.front());
                     session->outbox.pop_front();
                 }
-                connection->sendText(text);
+                connection->writeText(text);
             }
         } catch (...) {
             if (!session->stopped) {

@@ -19,6 +19,7 @@
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Util/Util.h"
 #include <gmock/gmock.h>
+#include <AUI/IO/AFileInputStream.h>
 
 using namespace std::chrono_literals;
 
@@ -272,4 +273,26 @@ TEST_F(ProcessEnvironmentTest, NoInheritanceAndNoVariables) {
     setParentVariable("AUI_TEST_PARENT", "from parent");
     auto output = probe({}, false, "AUI_TEST_PARENT");
     EXPECT_TRUE(output.contains("PROBE AUI_TEST_PARENT=<unset>;")) << output;
+}
+
+TEST_F(ProcessTest, OutputToFile) {
+    const auto file = APath::processTemporaryDir() / "ProcessTestOutput.txt";
+    AProcess::ProcessCreationInfo info;
+    info.executable = mSelf;
+    info.args = AProcess::ArgStringList { { "--help" } };
+    info.stdOutFile = file;
+    auto p = AProcess::create(std::move(info));
+    AString piped;
+    AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { piped += AString::fromUtf8(buffer); });
+    p->run();
+    EXPECT_EQ(p->waitForExitCode(), 0);
+    AThread::processMessages();
+    EXPECT_TRUE(piped.empty());
+    EXPECT_TRUE(AString::fromUtf8(AByteBuffer::fromStream(AFileInputStream(file)))
+                    .contains("This program contains tests written using Google Test."));
+}
+
+TEST_F(ProcessTest, FromPid) {
+    EXPECT_NE(AProcess::fromPid(AProcess::self()->getPid()), nullptr);
+    EXPECT_EQ(AProcess::fromPid(0x3ffffff0), nullptr);
 }

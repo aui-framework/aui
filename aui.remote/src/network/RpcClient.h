@@ -1,5 +1,7 @@
 #pragma once
 
+#include <AUI/Curl/AWebsocket.h>
+
 #include <chrono>
 #include <cstdint>
 #include <utility>
@@ -45,6 +47,14 @@ constexpr int UNAUTHORIZED = -32001;
  */
 constexpr int CLIENT_ERROR = -32099;
 }   // namespace rpc_code
+
+/**
+ * @brief Connects to the agent: TLS pinned to `certSha256` (hex), `target` is the path and the query of the url.
+ * @throws RpcError if the application refuses the connection
+ * @throws AException (ATlsException, AIOException...) on a transport failure
+ */
+[[nodiscard]] _<AWebsocket> connectToAgent(std::uint16_t port, const AString& certSha256, const AString& target,
+                                           std::chrono::milliseconds timeout);
 
 struct RpcRequest {
     AString method;

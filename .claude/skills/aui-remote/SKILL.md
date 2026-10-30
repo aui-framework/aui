@@ -16,8 +16,8 @@ description: Run, look at, click and type into a running AUI application through
    `type "text" [--ref R]`, `key Enter`, `wait-idle`, `screenshot` (look at the PNG), fix the code, rebuild, repeat.
 
 Every command prints one JSON object on the last line of stdout; errors are `{"error":{"code","message","data":{"hint"}}}`.
-With several applications running pass `--pid N`. All the commands and options are in `aui.remote/assets/skill/SKILL.md`,
-the protocol is in `docs/agentic-development.md`.
+With several applications running pass `--pid N`. `aui-remote cli help` lists the commands, `aui.remote/assets/skill/SKILL.md` has
+the notes on using them, the protocol is in `docs/agentic-development.md`.
 
 Rules:
 - Refs (`v<gen>:<id>`) go stale after the tree changes; on `STALE_REF` call `find` again.

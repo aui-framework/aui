@@ -204,6 +204,48 @@ ParsedArgs ParsedArgs::parse(const AStringVector& args) {
     return result;
 }
 
+const AVector<CommandHelp>& commandHelp() {
+    static const AVector<CommandHelp> result = {
+        { R"(list)", R"(running applications and whether they are paired)" },
+        { R"(launch [--cwd dir] [--env K=V]... [--timeout s] -- <exe> [args])", R"(starts an application with a trusted key, prints {pid, port, stdout, stderr})" },
+        { R"(stop <pid>)", R"(stops an application)" },
+        { R"(pair <pid> [--code N])", R"(makes the application show a 6-digit code; with --code confirms it)" },
+        { R"(windows)", R"(windows and their ids)" },
+        { R"(resize <width> <height> [--window W])", R"(resizes the window, prints the size it got)" },
+        { R"(scale <factor|reset> [--window W])", R"(DPI scale on top of the system one (0.25..4; `reset` = 1))" },
+        { R"(tree [--ref R] [--depth N] [--json] [--inspector] [--window W])", R"(view hierarchy, compact text (`--json` or `--inspector`: JSON))" },
+        { R"(find [--type T] [--text S] [--ass NAME] [--ref R] [--interactive] [--include-invisible] [--window W])", R"(search views)" },
+        { R"(props <ref>)", R"(properties of a view)" },
+        { R"(hit <x> <y> [--window W])", R"(views under a point)" },
+        { R"(scroll-into-view <ref>)", R"(scrolls the scroll areas so the view is visible; prints `visible`)" },
+        { R"(interactive [--window W])", R"(clickable and typeable views)" },
+        { R"(screenshot [--window W] [--ref R] [--padding N] [--annotate])", R"(saves a PNG, prints `path`; `--ref` crops to a view; `--annotate` numbers the interactive views and prints `marks` (number -> ref))" },
+        { R"(click|dblclick|press|release|move <ref | x y> [--pointer mouse|finger] [--button b] [--mod m]...)", R"(pointer; without `--pointer` the app uses its native one (mouse on desktop, finger on Android/iOS))" },
+        { R"(drag <ref | x y> <ref | x y>)", R"(drag from one point to another)" },
+        { R"(scroll <ref | x y> --dx N --dy N)", R"(wheel)" },
+        { R"(long-press <ref | x y> [--duration ms])", R"(touch and hold; prints `handled`)" },
+        { R"(fling <ref | x y> [--dx N] [--dy N] [--velocity px/s])", R"(swipe and lift, the list keeps scrolling; `wait-idle` waits for it)" },
+        { R"(pinch <ref | x y> --from D --to D [--angle deg])", R"(two fingers, distance from D to D (zoom))" },
+        { R"(rotate <ref | x y> --degrees N [--distance D])", R"(two fingers turning around the point)" },
+        { R"(touch --fingers '[{"finger":0,"points":[{"x":1,"y":2,"t":0},...]}]')", R"(any multi-touch: finger tracks, `t` in ms)" },
+        { R"(type <text> [--ref R] [--window W] / key <key> [--mod ctrl|shift|alt|cmd]... [--ref R] [--window W])", R"(keyboard; goes to the window of `--ref`, or `--window`, or the main one (a dialog is a window of its own))" },
+        { R"(wait-idle [--timeout ms] [--quiet ms])", R"(until nothing is happening)" },
+        { R"(wait-view <find filters> [--state visible|gone] [--timeout ms])", R"(until a view appears or disappears)" },
+        { R"(logs [--since N] [--level L] [--limit N])", R"(log of the app; `next` of the result is the next `since`)" },
+        { R"(functions / call <name> [--args '{"k":1}'])", R"(application specific functions)" },
+        { R"(compare <a.png> <b.png> [--threshold 0..255])", R"(percentage of different pixels)" },
+    };
+    return result;
+}
+
+AString commandHelpTable() {
+    AString result = "| Command | Purpose |\n|---|---|\n";
+    for (const auto& command : commandHelp()) {
+        result += "| `{}` | {} |\n"_format(command.usage.replacedAll("|", "\\|"), command.purpose.replacedAll("|", "\\|"));
+    }
+    return result;
+}
+
 AStringVector commandNames() {
     return { "list",     "pair",  "hello",    "windows", "resize", "scale", "scroll-into-view", "tree",      "find",     "props",     "hit",
              "screenshot", "interactive", "click", "dblclick", "press", "release", "drag",       "scroll",

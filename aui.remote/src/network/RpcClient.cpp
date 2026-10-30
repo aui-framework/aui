@@ -1,12 +1,12 @@
 #include "RpcClient.h"
 
+#include <AUI/Crypt/ATlsSession.h>
 #include <random>
 
 #if !AUI_PLATFORM_WIN
 #include <signal.h>
 #endif
 
-#include "WsConnection.h"
 
 using namespace aui::websocket;
 using namespace std::chrono_literals;
@@ -41,6 +41,23 @@ AString RpcClient::target() const {
     return result;
 }
 
+_<AWebsocket> aui_remote::connectToAgent(std::uint16_t port, const AString& certSha256, const AString& target,
+                                         std::chrono::milliseconds timeout) {
+    const auto url = "wss://127.0.0.1:{}{}"_format(port, target);
+    auto socket = _new<AWebsocket>(url, AWebsocket::Options {
+                                          .expectedFingerprint = AByteBuffer::fromHexString(certSha256),
+                                          .connectTimeout = timeout,
+                                        });
+    try {
+        socket->connect();
+    } catch (const AWebsocketHandshakeException& e) {
+        throw RpcError(
+            rpc_code::CLIENT_ERROR, "the application refused the connection: " + e.getMessage(),
+            AJson { { "hint", "the key is missing or wrong; run `aui-remote cli pair <pid>`" } });
+    }
+    return socket;
+}
+
 AVector<AJson> RpcClient::callSequence(const AVector<RpcRequest>& requests, std::chrono::milliseconds timeout) const {
 #if !AUI_PLATFORM_WIN
     // a vanished peer must be an error of the call, not the death of the process
@@ -49,7 +66,7 @@ AVector<AJson> RpcClient::callSequence(const AVector<RpcRequest>& requests, std:
     const auto deadline = std::chrono::steady_clock::now() + timeout;
     AVector<AJson> results;
     try {
-        WsConnection connection(mPort, mCertSha256, target(), deadline);
+        auto connection = connectToAgent(mPort, mCertSha256, target(), timeout);
         for (std::size_t i = 0; i < requests.size(); ++i) {
             const auto& request = requests[i];
             AJson json = AJson::Object {};
@@ -59,12 +76,20 @@ AVector<AJson> RpcClient::callSequence(const AVector<RpcRequest>& requests, std:
             if (!request.params.isEmpty() && !request.params.isNull()) {
                 json["params"] = request.params;
             }
-            connection.sendText(AJson::toString(json));
+            connection->writeText(AJson::toString(json));
 
             for (;;) {
                 AJson answer;
                 try {
-                    answer = AJson::fromString(connection.readText());
+                    const auto left = std::chrono::duration_cast<std::chrono::milliseconds>(
+                        deadline - std::chrono::steady_clock::now());
+                    auto text = connection->read(left);
+                    if (!text) {
+                        throw RpcError(
+                            rpc_code::CLIENT_ERROR, "timeout waiting for the application",
+                            AJson { { "hint", "the application is busy or hung; try again or raise the timeout" } });
+                    }
+                    answer = AJson::fromString(AString::fromUtf8(*text));
                 } catch (const AJsonException&) {
                     continue;
                 }

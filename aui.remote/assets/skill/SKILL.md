@@ -46,32 +46,9 @@ With several apps running pass `--pid N` to every command.
 
 ## Commands
 
-| Command                                                         | Purpose                                               |
-|-----------------------------------------------------------------|-------------------------------------------------------|
-| `windows`                                                       | windows and their ids                                 |
-| `resize <width> <height> [--window W]`                          | resizes the window, prints the size it got            |
-| `scale <factor\|reset> [--window W]`                            | DPI scale on top of the system one (0.25..4; `reset` = 1) |
-| `tree [--ref R] [--depth N] [--json] [--inspector] [--window W]` | view hierarchy, compact text (`--json` or `--inspector`: JSON) |
-| `find [--type T] [--text S] [--ass NAME] [--ref R] [--interactive] [--include-invisible] [--window W]` | search views |
-| `props <ref>`                                                   | properties of a view                                  |
-| `hit <x> <y> [--window W]`                                      | views under a point                                   |
-| `scroll-into-view <ref>`                                        | scrolls the scroll areas so the view is visible; prints `visible` |
-| `interactive [--window W]`                                      | clickable and typeable views                          |
-| `screenshot [--window W] [--ref R] [--padding N] [--annotate]`  | saves a PNG, prints `path`; `--ref` crops to a view; `--annotate` numbers the interactive views and prints `marks` (number -> ref) |
-| `click\|dblclick\|press\|release\|move <ref \| x y> [--pointer mouse\|finger] [--button b] [--mod m]...` | pointer; without `--pointer` the app uses its native one (mouse on desktop, finger on Android/iOS) |
-| `drag <ref \| x y> <ref \| x y>`                                | drag from one point to another                        |
-| `scroll <ref \| x y> --dx N --dy N`                             | wheel                                                 |
-| `long-press <ref \| x y> [--duration ms]`                       | touch and hold; prints `handled`                      |
-| `fling <ref \| x y> [--dx N] [--dy N] [--velocity px/s]`        | swipe and lift, the list keeps scrolling; `wait-idle` waits for it |
-| `pinch <ref \| x y> --from D --to D [--angle deg]`              | two fingers, distance from D to D (zoom)              |
-| `rotate <ref \| x y> --degrees N [--distance D]`                | two fingers turning around the point                  |
-| `touch --fingers '[{"finger":0,"points":[{"x":1,"y":2,"t":0},...]}]'` | any multi-touch: finger tracks, `t` in ms        |
-| `type <text> [--ref R] [--window W]`, `key <key> [--mod ctrl\|shift\|alt\|cmd]... [--ref R] [--window W]` | keyboard; goes to the window of `--ref`, or `--window`, or the main one (a dialog is a window of its own) |
-| `wait-idle [--timeout ms] [--quiet ms]`                         | until nothing is happening                            |
-| `wait-view <find filters> [--state visible\|gone] [--timeout ms]` | until a view appears or disappears                  |
-| `logs [--since N] [--level L] [--limit N]`                      | log of the app; `next` of the result is the next `since` |
-| `functions`, `call <name> [--args '{"k":1}']`                   | application specific functions                        |
-| `compare <a.png> <b.png> [--threshold 0..255]`                  | percentage of different pixels                        |
+`{{EXE}} cli help` prints the same.
+
+{{COMMANDS}}
 
 Coordinates are logical pixels of the window (the screenshot may be scaled, see `scale` in its result).
 
@@ -81,3 +58,67 @@ Coordinates are logical pixels of the window (the screenshot may be scaled, see 
 - Always `wait-idle` after input before taking a screenshot.
 - Check `logs` when something does not work.
 - Look at the screenshot, do not assume that the UI looks as intended.
+
+## Where to run the application
+
+Run the application in a headless environment by default, so that (a) its windows don't pop up over the user's work
+and (b) the user's mouse and keyboard don't interfere with the agent. Work in the user's environment only:
+
+- when the user asked to debug an application that is already open, or explicitly asked to work in their environment;
+- otherwise, with the user's permission, as a fallback when a headless environment can't be set up.
+
+Never inject OS-level input (XTest and alike) into the user's session without permission: it moves their cursor, types
+into whatever window has focus and may make the desktop ask to allow remote control.
+
+How to set up a headless environment is in `docs/agentic-development.md` of AUI.
+
+## Notes
+
+### Starting
+
+- Start the application with `{{EXE}} cli launch`, not by setting `AUI_REMOTE_KEY` yourself: `launch` stores the key it passes,
+  a key you invent is unknown to the client and every command fails with "no longer trusts this client".
+- The user often has their own instance of the same app running. Run `cli list` first and pass `--pid` (taken from the
+  output of `launch`) to every command. Write it out in each command instead of keeping `--pid N` in one shell variable:
+  zsh does not split variables, so `$R cli windows $P` sends `--pid 123` as a single argument.
+- `stop` what you launched when you are done; leftovers pile up in `list`.
+- If the app exits right away, `launch` returns `stderrTail`; read it before rebuilding anything.
+
+### Looking
+
+- On a screen you haven't seen yet, take `screenshot --annotate`: every interactive view gets a numbered box on the
+  picture, and `marks` maps the numbers to refs, so "click 7" is `click <ref of mark 7>` without matching coordinates.
+- Start with `tree` (compact text) and `interactive`; use `tree --json` or `props <ref>` only when you need geometry or
+  inspector fields. `hit <x> <y>` tells what is under a pixel you saw on a screenshot.
+- A dialog is a window of its own: `type` and `key` go to the window of `--ref`, or `--window`, or the main one.
+- Numbers don't prove that the UI is right; look at the picture. `resize` once reported the right size while the
+  contents were still laid out for the old one, and only the screenshot showed it.
+- `screenshot` returns `scale`: screenshot pixels divided by it are the window coordinates that `click` and `hit` take.
+- Refs go stale after every `tree`/`find`/`interactive` call and after the UI changes. Re-run `find` on `STALE_REF`,
+  don't reuse refs from an earlier step.
+- An element of a long list may be outside of the visible part of its scroll area: `scroll-into-view <ref>` before
+  clicking it or looking at it.
+
+### Acting
+
+- `wait-idle` after every input and every `resize`, then `screenshot`. Without it you see the frame before the change.
+- `move` gives hover without a click (tooltips, hover styles); `press`, `move`, `release` give a drag with control over
+  every step. Pointer commands use the pointer native to the app's platform (mouse on desktop, finger on Android and
+  iOS); `--pointer finger` emulates touch on desktop. The GUI starts in the same mode and switches with M/T.
+- Touch gestures (`long-press`, `fling`, `pinch`, `rotate`, `touch`) always use fingers and return when the last
+  finger is lifted. After a `fling` the list keeps scrolling: `wait-idle` before the screenshot. Two-finger gestures
+  reach views built on `A2FingerTransformArea`; elsewhere the fingers are just separate pointers.
+- In T mode of the GUI, holding the finger still for half a second is a long press, as on a phone.
+- To check responsive layouts, `resize` to a few sizes (a phone-like 360x740, a narrow desktop, a wide one) and take a
+  screenshot of each. A size below the window's minimum or above 16384 is clamped; the result says to what.
+- `scale 2` (or 0.75, 1.5, ...) shows the app as on a screen with another pixel density without changing the window
+  size in pixels, unless the contents no longer fit: then the window grows to their minimum and keeps that size after
+  `scale reset`, which returns to the system scale. The GUI has the same as the percentage next to the size.
+- Read `logs --level warn` when something does not react: failed bindings, ASS errors and exceptions land there.
+
+### Known gaps
+
+- Native dialogs (file pickers, message boxes) are drawn by the OS, not by AUI: they are absent from `tree` and
+  screenshots and don't take injected input. An agent that opens one is stuck until a human closes it. Avoid them in
+  the flows an agent drives, or expose the action as a function (`ARemoteDebug::registerFunction`) that takes the path
+  directly.

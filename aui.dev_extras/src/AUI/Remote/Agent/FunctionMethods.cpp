@@ -60,24 +60,8 @@ void registerFunctionMethods(JsonRpcDispatcher& dispatcher, FunctionRegistry& fu
             throw RpcException(rpc_code::UNKNOWN_FUNCTION, "no such function: " + name, "see fn.list");
         }
         AJson arguments = params.containsOpt("arguments") ? params["arguments"] : AJson(nullptr);
-        return AFuture<AJson>::create([&](AFuture<AJson>::Resolver result) {
-            AThread::main()->enqueue([result = std::move(result), handler = std::move(entry->handler),
-                                      arguments = std::move(arguments)] {
-                try {
-                    auto future = handler(arguments);
-                    result.onCancel([future] {});   // the call is running while somebody waits for it
-                    future.onValue([result](const AJson& value) { result.supplyValue(value); });
-                    future.onException([result](const AException& e) {
-                        if (auto invocation = dynamic_cast<const AInvocationTargetException*>(&e)) {
-                            result.supplyException(invocation->causedBy());
-                        } else {
-                            result.supplyException(std::make_exception_ptr(AException(e.getMessage())));
-                        }
-                    });
-                } catch (...) {
-                    result.supplyException();
-                }
-            });
+        return AThread::main()->async([handler = entry->handler, arguments = std::move(arguments)] {
+            return handler(arguments);
         });
     }));
 }

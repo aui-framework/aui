@@ -1,5 +1,7 @@
 #include "Skill.h"
 
+#include "cli/Args.h"
+
 #include <cstdlib>
 #include <fstream>
 #include <sstream>
@@ -29,7 +31,9 @@ AString builtinTemplate() {
     return AString::fromUtf8(result);
 }
 
-AString render(const AString& templateText, const APath& exe) { return templateText.replacedAll("{{EXE}}", exe); }
+AString render(const AString& templateText, const APath& exe) {
+    return templateText.replacedAll("{{COMMANDS}}", cli::commandHelpTable()).replacedAll("{{EXE}}", exe);
+}
 
 bool isInstalled(const APath& file) { return file.isRegularFileExists(); }
 

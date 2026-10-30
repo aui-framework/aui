@@ -23,7 +23,6 @@
 #include <AUI/Platform/ADragNDrop.h>
 #include <AUI/Platform/ATouchscreenKeyboardPolicy.h>
 #include <AUI/Util/ATouchScroller.h>
-#include <AUI/Event/AInjectedEvent.h>
 #include <chrono>
 #include <optional>
 
@@ -351,24 +350,6 @@ public:
      */
     [[nodiscard]]
     bool hasPendingLayout() const noexcept;
-
-    /**
-     * @brief Feeds an input event as if the pointer device or the keyboard made it.
-     * @details
-     * For synthetic input, i.e., remote control. The event takes the same path as a real one (focus, hover and pointer
-     * capture work as usual), except that a pointer press skips window manager interactions of the window: pressing
-     * on a custom caption of a real window would start moving the window instead of reaching the views under it.
-     *
-     * ```cpp
-     * window->injectEvent(APointerPressedEvent { position, APointerIndex::button(AInput::LBUTTON) });
-     * window->injectEvent(APointerReleasedEvent { position, APointerIndex::button(AInput::LBUTTON) });
-     * window->injectEvent(AInjectedChar { 'a' });
-     * ```
-     *
-     * Use from the UI thread. Modifiers and buttons that views read with AInput::isKeyDown are reported by
-     * AInput::overrideState.
-     */
-    void injectEvent(const AInjectedEvent& event);
 
     void onFocusLost() override;
     void render(ARenderContext context) override;

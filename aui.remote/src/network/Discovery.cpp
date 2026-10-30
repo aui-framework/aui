@@ -1,6 +1,6 @@
 #include "Discovery.h"
 
-#include "platform/Process.h"
+#include <AUI/Platform/AProcess.h>
 
 #include <algorithm>
 #include <fstream>
@@ -81,19 +81,20 @@ AppInfo AppInfo::fromJson(const AJson& json) {
 
 APath discovery::defaultDirectory() { return APath::getDefaultPath(APath::HOME) / ".aui" / "remote"; }
 
-bool discovery::isProcessAlive(std::uint32_t pid) { return platform::isProcessAlive(pid); }
+bool discovery::isProcessAlive(std::uint32_t pid) { return AProcess::fromPid(pid) != nullptr; }
 
 bool discovery::terminateProcess(std::uint32_t pid, std::chrono::milliseconds grace) {
-    if (!isProcessAlive(pid)) {
+    auto process = AProcess::fromPid(pid);
+    if (!process) {
         return true;
     }
-    platform::requestTermination(pid);
+    process->terminate();
     const auto deadline = std::chrono::steady_clock::now() + grace;
     while (isProcessAlive(pid) && std::chrono::steady_clock::now() < deadline) {
         std::this_thread::sleep_for(std::chrono::milliseconds(50));
     }
     if (isProcessAlive(pid)) {
-        platform::forceTermination(pid);
+        process->kill();
         std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
     return !isProcessAlive(pid);

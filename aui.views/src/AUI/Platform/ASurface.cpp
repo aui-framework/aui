@@ -447,34 +447,6 @@ void ASurface::flagRedraw() {}
 
 bool ASurface::hasPendingLayout() const noexcept { return mWantsLayoutUpdate || !mPendingLayoutRoots.empty(); }
 
-void ASurface::injectEvent(const AInjectedEvent& event) {
-    std::visit(
-        aui::lambda_overloaded {
-          // skips AWindow::onPointerPressed, which treats presses on the caption as window dragging.
-          [&](const APointerPressedEvent& e) { ASurface::onPointerPressed(e); },
-          [&](const APointerReleasedEvent& e) { onPointerReleased(e); },
-          [&](const AInjectedPointerMove& e) { onPointerMove(e.position, e.event); },
-          [&](const AInjectedPointerDoubleClick& e) { onPointerDoubleClicked(e.event); },
-          [&](const AScrollEvent& e) { onScroll(e); },
-          [&](const AInjectedGesture& e) { onGesture(e.origin, e.event); },
-          [&](const AInjectedKey& e) {
-              switch (e.action) {
-                  case AInjectedKey::Action::DOWN:
-                      onKeyDown(e.key);
-                      break;
-                  case AInjectedKey::Action::REPEAT:
-                      onKeyRepeat(e.key);
-                      break;
-                  case AInjectedKey::Action::UP:
-                      onKeyUp(e.key);
-                      break;
-              }
-          },
-          [&](const AInjectedChar& e) { onCharEntered(e.character); },
-        },
-        event);
-}
-
 void ASurface::onLayout(glm::ivec2 size) {
     APerformanceSection updateLayout("layout update");
     AViewContainer::onLayout(size);

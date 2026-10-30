@@ -196,6 +196,20 @@ public:
          * Defaults to true.
          */
         bool inheritEnvironment = true;
+
+        /**
+         * @details
+         * If set, the stdout of the child process goes to this file (created or truncated) instead of a pipe or
+         * `ASubProcessExecutionFlags::TIE_STDOUT`, and `stdOut` is not emitted. Lets a detached process outlive this one
+         * without holding its streams.
+         */
+        APath stdOutFile;
+
+        /**
+         * @details
+         * If set, the stderr of the child process goes to this file. See `stdOutFile`.
+         */
+        APath stdErrFile;
     };
 
     /**
@@ -274,6 +288,14 @@ public:
      * @return process by id
      */
     static _<AProcess> fromPid(uint32_t pid);
+
+    /**
+     * @brief Asks the process to exit.
+     * @details
+     * Sends SIGTERM on unix, so the process has a chance to clean up. Windows has no such way for an arbitrary process,
+     * so it is killed there.
+     */
+    void terminate() const noexcept;
 
     void kill() const noexcept;
 };

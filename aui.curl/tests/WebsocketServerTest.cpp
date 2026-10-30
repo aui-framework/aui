@@ -637,6 +637,43 @@ TEST(WebsocketServerTlsTest, AWebsocketClientOverWss) {
     EXPECT_EQ(received, "hello over tls");
 }
 
+TEST(WebsocketServerTlsTest, PinnedCertificateIsAccepted) {
+    auto identity = ATlsIdentity::generateSelfSigned("aui-test");
+    AWebsocketServer server(tlsEchoConfig(identity));
+    server.start();
+
+    AWebsocket ws("wss://127.0.0.1:" + AString::number(server.port()) + "/",
+                  AWebsocket::Options { .expectedFingerprint = identity->fingerprintSha256() });
+    ws.connect();
+    ws.writeText("pinned");
+    auto message = ws.read(std::chrono::seconds(5));
+    ASSERT_TRUE(message.hasValue());
+    EXPECT_EQ(AString::fromUtf8(*message), "pinned");
+}
+
+TEST(WebsocketServerTlsTest, OtherCertificateIsRejected) {
+    auto identity = ATlsIdentity::generateSelfSigned("aui-test");
+    AWebsocketServer server(tlsEchoConfig(identity));
+    server.start();
+
+    AWebsocket ws("wss://127.0.0.1:" + AString::number(server.port()) + "/",
+                  AWebsocket::Options {
+                    .expectedFingerprint = ATlsIdentity::generateSelfSigned("other")->fingerprintSha256(),
+                  });
+    EXPECT_THROW(ws.connect(), ATlsException);
+}
+
+TEST(WebsocketServerTest, ReadTimesOutWithoutMessages) {
+    AWebsocketServer server(echoConfig());
+    server.start();
+
+    AWebsocket ws("ws://127.0.0.1:" + AString::number(server.port()) + "/");
+    ws.connect();
+    EXPECT_FALSE(ws.read(std::chrono::milliseconds(50)).hasValue());
+    ws.writeText("still alive");
+    EXPECT_TRUE(ws.read(std::chrono::seconds(5)).hasValue());
+}
+
 TEST(WebsocketServerTlsTest, StopWithConnectedTlsClients) {
     auto identity = ATlsIdentity::generateSelfSigned("aui-test");
     auto server = std::make_unique<AWebsocketServer>(tlsEchoConfig(identity));

@@ -1,5 +1,8 @@
 #include "PairingDialog.h"
 
+#include <AUI/Common/AProperty.h>
+#include <AUI/Platform/AWindow.h>
+#include <AUI/Thread/AAsyncHolder.h>
 #include <AUI/Util/UIBuildingHelpers.h>
 #include <AUI/View/AButton.h>
 #include <AUI/View/ALabel.h>
@@ -25,79 +28,92 @@ AString describe(const RpcError& e) {
     return result;
 }
 
+struct State {
+    AppInfo app;
+    std::function<void()> onPaired;
+    AProperty<AString> code;
+    AProperty<AString> status = "Asking the application to show a code...";
+    AProperty<bool> busy = false;
+    AView* field = nullptr;   // a child of the window; the container returned to the caller doesn't stay in it
+    AAsyncHolder async;
+
+    void close() {
+        if (auto window = dynamic_cast<AWindow*>(field->getWindow())) {
+            window->close();
+        }
+    }
+
+    void begin(AString waitingStatus) {
+        async << AUI_THREADPOOL_X[this, waitingStatus = std::move(waitingStatus)] {
+            AString result;
+            try {
+                RpcClient::forApp(app, "").call("pair.begin");
+                result = waitingStatus;
+            } catch (const RpcError& e) {
+                result = "Can't start pairing: " + e.getMessage();
+            }
+            AUI_UI_THREAD { status = result; };
+        };
+    }
+
+    void confirm() {
+        if (busy) {
+            return;
+        }
+        busy = true;
+        status = "Checking the code...";
+        async << AUI_THREADPOOL_X[this, code = (*code).trim()] {
+            AString result;
+            bool ok = false;
+            bool needNewCode = false;
+            try {
+                pairing::confirm(app, code, KeyStore());
+                ok = true;
+            } catch (const RpcError& e) {
+                result = describe(e);
+                needNewCode = e.data().isObject() && e.data().containsOpt("attemptsLeft") &&
+                              (*e.data().containsOpt("attemptsLeft")).isInt() &&
+                              (*e.data().containsOpt("attemptsLeft")).asInt() <= 0;
+            } catch (const AException& e) {
+                result = e.getMessage();
+            }
+            AUI_UI_THREAD {
+                busy = false;
+                if (ok) {
+                    onPaired();
+                    close();
+                    return;
+                }
+                status = result;
+                if (needNewCode) {
+                    begin(result);
+                }
+            };
+        };
+    }
+};
+
 }   // namespace
 
-PairingDialog::PairingDialog(AWindow& parent, AppInfo app)
-  : AWindow(AWindow::Init {
-      .title = "Pair with " + app.displayName(),
-      .width = 380_dp,
-      .height = 170_dp,
-      .parent = AWindow::Init::Parent { .window = parent, .modal = true },
-      .resizable = false,
-    }),
-    mApp(std::move(app)) {
-    mStatus = "Asking the application to show a code...";
-    setContents(Vertical {
+_<AViewContainer> pairingDialog(AppInfo app, std::function<void()> onPaired) {
+    auto state = _new<State>();
+    state->app = std::move(app);
+    state->onPaired = std::move(onPaired);
+
+    _<AViewContainer> result = Vertical {
       Label { "Enter the 6-digit code shown in the window of the application." },
-      (_new<ATextField>() && mCode) AUI_LET {
-          connect(it->actionButtonPressed, me::confirm);
+      (_new<ATextField>() && state->code) AUI_LET {
+          AObject::connect(it->actionButtonPressed, it, [state = state.get()] { state->confirm(); });
           it->focus();
+          state->field = it.get();
       },
-      Label { AUI_REACT(*mStatus) },
+      Label { AUI_REACT(*state->status) },   // owns the state
       Horizontal {
         SpacerExpanding {},
-        Button { Label { "Cancel" }, [this] { close(); } },
-        Button { Label { "Pair" }, [this] { confirm(); } },
+        Button { Label { "Cancel" }, [state = state.get()] { state->close(); } },
+        Button { Label { "Pair" }, [state = state.get()] { state->confirm(); } },
       } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
-    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Padding { 8_dp } });
-    begin("Waiting for the code.");
-}
-
-void PairingDialog::begin(AString waitingStatus) {
-    mAsync << AUI_THREADPOOL_X[this, waitingStatus = std::move(waitingStatus)] {
-        AString status;
-        try {
-            RpcClient::forApp(mApp, "").call("pair.begin");
-            status = waitingStatus;
-        } catch (const RpcError& e) {
-            status = "Can't start pairing: " + e.getMessage();
-        }
-        AUI_UI_THREAD { mStatus = status; };
-    };
-}
-
-void PairingDialog::confirm() {
-    if (mBusy) {
-        return;
-    }
-    mBusy = true;
-    mStatus = "Checking the code...";
-    mAsync << AUI_THREADPOOL_X[this, code = (*mCode).trim()] {
-        AString status;
-        bool ok = false;
-        bool needNewCode = false;
-        try {
-            pairing::confirm(mApp, code, KeyStore());
-            ok = true;
-        } catch (const RpcError& e) {
-            status = describe(e);
-            needNewCode = e.data().isObject() && e.data().containsOpt("attemptsLeft") &&
-                          (*e.data().containsOpt("attemptsLeft")).isInt() &&
-                          (*e.data().containsOpt("attemptsLeft")).asInt() <= 0;
-        } catch (const AException& e) {
-            status = e.getMessage();
-        }
-        AUI_UI_THREAD {
-            mBusy = false;
-            if (ok) {
-                emit paired;
-                close();
-                return;
-            }
-            mStatus = status;
-            if (needNewCode) {
-                begin(status);
-            }
-        };
-    };
+    } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Padding { 8_dp } };
+    state->begin("Waiting for the code.");
+    return result;
 }

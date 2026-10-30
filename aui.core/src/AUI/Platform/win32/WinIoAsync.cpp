@@ -86,6 +86,9 @@ private:
                         [](DWORD dwErrorCode, DWORD bytesTransferred, LPOVERLAPPED overlapped) {
                             reinterpret_cast<WinIoAsync::Impl*>(overlapped->Pointer)->handleCallback(dwErrorCode, bytesTransferred);
                         })) {
+            if (GetLastError() == ERROR_BROKEN_PIPE) {
+                return;   // the writer has gone between two reads: the end of the stream, as in handleCallback
+            }
             throw AException("ReadFileEx failed: {}"_format(aui::impl::formatSystemError().description));
         }
     }

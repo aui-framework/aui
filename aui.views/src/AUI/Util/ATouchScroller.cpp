@@ -33,10 +33,13 @@ void ATouchScroller::handlePointerReleased(const APointerReleasedEvent& e) {
         auto velocity = glm::max(glm::length(s->prevPrevVelocity),
                                  glm::length(s->prevVelocity),
                                  glm::length(s->currentVelocity));
-        // the fps is measured once a second; until then, assume a usual screen instead of dividing by zero
+        // getFps() is measured once a second and is 0 before the first measurement, i.e., a fling right after the surface
+        // has appeared. The value is only the time step of kinetic scrolling, so a guess is enough: 60 is the most common
+        // refresh rate, and on a faster screen the very first fling just decelerates a bit differently.
+        constexpr auto FALLBACK_FPS = 60.f;
         auto fps = static_cast<float>(ASurface::current()->getFps());
         if (fps <= 0.f) {
-            fps = 60.f;
+            fps = FALLBACK_FPS;
         }
         mState = KineticScrollingState{
             .pointer = e.pointerIndex,

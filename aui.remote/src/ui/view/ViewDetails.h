@@ -1,41 +1,35 @@
 #pragma once
 
+#include <AUI/Common/AProperty.h>
 #include <AUI/Json/AJson.h>
-#include <AUI/View/AViewContainer.h>
+#include <AUI/View/AView.h>
+
+/**
+ * @brief What the panel of view details shows.
+ */
+struct ViewDetailsModel {
+    /**
+     * @brief Ref of the view; empty if none.
+     */
+    AString ref;
+
+    /**
+     * @brief Fields of the view in the tree (ViewTree::fields()): name, geometry, box model.
+     */
+    AJson fields;
+
+    /**
+     * @brief The result of `view.properties`; it comes later than the rest.
+     */
+    AOptional<AJson> properties;
+
+    /**
+     * @brief `view.properties` has failed.
+     */
+    AString propertiesError;
+};
 
 /**
  * @brief Details of the selected view, like the properties panel of the in-process devtools.
- * @details
- * What the view tree knows (name, geometry, box model) is shown right away; debugInspectorInfo and the state come
- * with `view.properties`, see setProperties().
  */
-class ViewDetails : public AViewContainerBase {
-public:
-    ViewDetails();
-
-    /**
-     * @brief Shows the view.
-     * @param ref ref of the view; empty clears the panel
-     * @param fields fields of the view in the tree (ViewTree::fields())
-     */
-    void show(const AString& ref, const AJson& fields);
-
-    void clear();
-
-    /**
-     * @brief Adds the result of `view.properties`. Ignored unless the view is still shown.
-     */
-    void setProperties(const AString& ref, const AJson& properties);
-
-    /**
-     * @brief `view.properties` has failed. Ignored unless the view is still shown.
-     */
-    void setPropertiesError(const AString& ref, const AString& message);
-
-    [[nodiscard]] const AString& ref() const noexcept { return mRef; }
-
-private:
-    AString mRef;
-    _<AViewContainer> mContent;
-    _<AViewContainer> mProperties;
-};
+_<AView> viewDetails(_<AProperty<ViewDetailsModel>> model);

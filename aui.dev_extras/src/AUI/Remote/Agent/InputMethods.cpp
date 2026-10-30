@@ -15,7 +15,6 @@
 #include <numbers>
 
 #include "AUI/Event/AGestureEvent.h"
-#include "AUI/Event/AInjectedEvent.h"
 #include "AUI/Platform/AInput.h"
 #include "AUI/Platform/AWindow.h"
 #include "RemoteOverlay.h"
@@ -139,28 +138,18 @@ AJson describePoint(const Target& target) {
 /// (i.e. AView::focus) are applied.
 template <typename First, typename Second>
 AFuture<AJson> inTwoSteps(First first, Second second) {
-    return AFuture<AJson>::create([&](AFuture<AJson>::Resolver result) {
-        AThread::main()->enqueue(
-            [result = std::move(result), first = std::move(first), second = std::move(second)]() mutable {
-                try {
-                    first();
-                } catch (...) {
-                    result.supplyException();
-                    return;
-                }
-                AThread::main()->enqueue([result = std::move(result), second = std::move(second)]() mutable {
-                    try {
-                        result.supplyValue(second());
-                    } catch (...) {
-                        result.supplyException();
-                    }
-                });
-            });
+    return AThread::main()->async(std::move(first)).map([second = std::move(second)] {
+        return AThread::main()->async(second);
     });
 }
 
 // MSVC can't aggregate-initialize these events inside a lambda (C2440)
 APointerPressedEvent pressedAt(glm::vec2 position, APointerIndex index) { return { position, index }; }
+
+/// Skips AWindow::onPointerPressed: it treats a press on a custom caption as dragging the window, while a remote client
+/// wants to reach the views under the pointer.
+void pressPointer(AWindow& window, const APointerPressedEvent& event) { window.ASurface::onPointerPressed(event); }
+
 APointerReleasedEvent releasedAt(glm::vec2 position, APointerIndex index) { return { position, index }; }
 
 /// Calls `fn` on the UI thread after `delay` without blocking it. `fn` may return a value or an AFuture.
@@ -236,13 +225,13 @@ void inject(AWindow& window, const TouchEvent& e) {
     const auto index = APointerIndex::finger(e.finger);
     switch (e.kind) {
         case TouchEvent::Kind::PRESS:
-            window.injectEvent(APointerPressedEvent { e.position, index });
+            pressPointer(window, { e.position, index });
             break;
         case TouchEvent::Kind::MOVE:
-            window.injectEvent(AInjectedPointerMove { e.position, APointerMoveEvent { index } });
+            window.onPointerMove(e.position, APointerMoveEvent { index });
             break;
         case TouchEvent::Kind::RELEASE:
-            window.injectEvent(APointerReleasedEvent { e.position, index });
+            window.onPointerReleased({ e.position, index });
             break;
     }
     RemoteOverlay::showPointer(window, e.position, index, e.kind == TouchEvent::Kind::PRESS,
@@ -392,14 +381,14 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
         }
     };
     auto move = [window, index](glm::vec2 to) {
-        window->injectEvent(AInjectedPointerMove { to, APointerMoveEvent { index } });
+        window->onPointerMove(to, APointerMoveEvent { index });
     };
     auto press = [&] {
         overrideButton(true);
-        window->injectEvent(pressedAt(position, index));
+        pressPointer(*window, pressedAt(position, index));
     };
     auto release = [window, index, overrideButton](glm::vec2 at) {
-        window->injectEvent(releasedAt(at, index));
+        window->onPointerReleased(releasedAt(at, index));
         overrideButton(false);
     };
     auto result = [window, index, action, target, modifiers](glm::vec2 at) {
@@ -419,7 +408,7 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
         press();
         overrideButton(false);
     } else if (action == "release") {
-        window->injectEvent(APointerReleasedEvent { position, index });
+        window->onPointerReleased({ position, index });
     } else if (action == "click") {
         move(position);
         press();
@@ -434,7 +423,7 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
         press();
         release(position);
         overrideButton(true);
-        window->injectEvent(AInjectedPointerDoubleClick { APointerPressedEvent { position, index } });
+        window->onPointerDoubleClicked({ position, index });
         release(position);
     } else if (action == "drag") {
         const auto to = resolveTarget(params, refs, "to").position;
@@ -451,14 +440,14 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
         const auto duration = std::chrono::milliseconds(intOr(params, "durationMs", LONG_PRESS_DURATION.count()));
         const auto finger = APointerIndex::finger(0);
         RemoteOverlay::enable(*window);
-        window->injectEvent(APointerPressedEvent { position, finger });
+        pressPointer(*window, { position, finger });
         RemoteOverlay::showPointer(*window, position, finger, true, true);
         return later(std::clamp(duration, std::chrono::milliseconds(0), std::chrono::milliseconds(30000)),
                      [window, position, finger, target] {
                          // as the platform does when the timeout passes; a handled long press is not followed by a
                          // click
                          const bool handled = window->onGesture(glm::ivec2(position), ALongPressEvent {});
-                         window->injectEvent(releasedAt(position, finger));
+                         window->onPointerReleased(releasedAt(position, finger));
                          RemoteOverlay::showPointer(*window, position, finger, false, false);
                          return AJson {
                              { "at", describePoint(target) },
@@ -487,7 +476,7 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
             });
     } else if (action == "scroll") {
         move(position);
-        window->injectEvent(AScrollEvent {
+        window->onScroll(AScrollEvent {
           .origin = position,
           .delta = { params.containsOpt("dx") ? number(params, "dx") : 0.f,
                      params.containsOpt("dy") ? number(params, "dy") : 0.f },
@@ -558,7 +547,7 @@ void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
                 auto window = keyboardWindow(view, windowParams, refs);
                 int count = 0;
                 for (AChar c : text) {
-                    window->injectEvent(AInjectedChar { c });
+                    window->onCharEntered(c);
                     ++count;
                 }
                 return AJson { { "typed", count } };
@@ -589,14 +578,14 @@ void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
                 OverrideScope scope(modifiers);
                 if (action == "press" || action == "down") {
                     for (auto m : modifiers) {
-                        window->injectEvent(AInjectedKey { AInjectedKey::Action::DOWN, m });
+                        window->onKeyDown(m);
                     }
-                    window->injectEvent(AInjectedKey { AInjectedKey::Action::DOWN, key });
+                    window->onKeyDown(key);
                 }
                 if (action == "press" || action == "up") {
-                    window->injectEvent(AInjectedKey { AInjectedKey::Action::UP, key });
+                    window->onKeyUp(key);
                     for (auto m : modifiers) {
-                        window->injectEvent(AInjectedKey { AInjectedKey::Action::UP, m });
+                        window->onKeyUp(m);
                     }
                 }
                 return AJson { { "key", AEnumerate<AInput::Key>::toName(key) } };

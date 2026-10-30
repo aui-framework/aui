@@ -78,6 +78,21 @@ AOptional<CommandRequest> buildRequest(const ParsedArgs& args);
 /**
  * @return names of all commands
  */
+struct CommandHelp {
+    AString usage;
+    AString purpose;
+};
+
+/**
+ * @brief The reference of the commands; the only one, `help` and the skill print it.
+ */
+const AVector<CommandHelp>& commandHelp();
+
+/**
+ * @return commandHelp() as a markdown table
+ */
+AString commandHelpTable();
+
 AStringVector commandNames();
 
 }   // namespace aui_remote::cli

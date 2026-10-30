@@ -113,6 +113,9 @@ Read the relevant doc before making non-trivial changes:
 - In AUI's own sources, initialize declarative views positionally: `Button { Label { "OK" }, [] {} }`, not
   `Button { .content = Label { "OK" }, ... }`. The latter crashes MSVC v142, which CI builds with; see `MSVC_C1001` in
   `docs/troubleshoot-list.md`. `examples/` are exempt.
+- In `aui.remote` and other AUI applications, don't subclass `AWindow`: expose a function that returns the contents and
+  keep the state in an anonymous `struct State { AProperty... }`; creating the window is up to the caller. Note that
+  `AWindow::setContents` takes the views of the given container and drops the container itself.
 - Formatting is governed by `.clang-format`; disable locally with `// clang-format off` / `on`.
 
 ---

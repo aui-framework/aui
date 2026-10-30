@@ -7,6 +7,7 @@
 #include <AUI/View/ALabel.h>
 #include <AUI/View/AScrollArea.h>
 #include <AUI/View/AText.h>
+#include <AUI/View/Dynamic.h>
 
 #include "network/ViewTree.h"
 
@@ -36,28 +37,39 @@ AString boxText(const std::array<int, 4>& fields) {
     return "{} {} {} {}"_format(fields[1], fields[2], fields[3], fields[0]);
 }
 
-}   // namespace
-
-ViewDetails::ViewDetails() {
-    mContent = Vertical {} AUI_OVERRIDE_STYLE { LayoutSpacing { 2_dp }, Padding { 4_dp } };
-    setContents(Stacked { AScrollArea::Builder().withContents(mContent).build() AUI_LET { it->setExpanding(); } });
-    clear();
-}
-
-void ViewDetails::clear() {
-    mRef.clear();
-    mProperties = nullptr;
-    mContent->setViews({ AText::fromString("Hover a view in the tree to see its box model, click it to see the "
-                                           "details. Hold CTRL over the frame to pick a view.")
-                             AUI_OVERRIDE_STYLE { Opacity { 0.6f } } });
-}
-
-void ViewDetails::show(const AString& ref, const AJson& fields) {
-    if (ref.empty()) {
-        clear();
-        return;
+_<AView> propertiesView(const ViewDetailsModel& model) {
+    AVector<_<AView>> views;
+    if (!model.propertiesError.empty()) {
+        views << (Label { model.propertiesError } AUI_OVERRIDE_STYLE { TextColor { AColor::RED } });
+    } else if (!model.properties) {
+        views << (Label { "Loading properties..." } AUI_OVERRIDE_STYLE { Opacity { 0.6f } });
+    } else {
+        for (const char* key : { "enabled", "focused", "role" }) {
+            if (auto v = model.properties->containsOpt(key)) {
+                views << row(key, valueText(*v));
+            }
+        }
+        if (auto inspector = model.properties->containsOpt("inspector"); inspector && inspector->isObject()) {
+            views << (Label { "Inspector" } AUI_OVERRIDE_STYLE { FontSize { 11_pt }, Margin { 4_dp, 0, 0, 0 } });
+            for (const auto& [name, value] : inspector->asObject()) {
+                views << row(name, valueText(value));
+            }
+        }
     }
-    mRef = ref;
+    auto result = Vertical {} AUI_OVERRIDE_STYLE { LayoutSpacing { 2_dp }, Margin { 8_dp, 0, 0, 0 } };
+    result->setViews(std::move(views));
+    return result;
+}
+
+_<AView> content(const ViewDetailsModel& model) {
+    auto result = Vertical::Expanding {} AUI_OVERRIDE_STYLE { LayoutSpacing { 2_dp }, Padding { 4_dp } };
+    if (model.ref.empty()) {
+        result->setViews({ AText::fromString("Hover a view in the tree to see its box model, click it to see the "
+                                             "details. Hold CTRL over the frame to pick a view.")
+                               AUI_OVERRIDE_STYLE { Opacity { 0.6f } } });
+        return result;
+    }
+    const auto& fields = model.fields;
     auto field = [&](const char* key) -> AString {
         auto v = fields.containsOpt(key);
         return v ? valueText(*v) : AString {};
@@ -67,8 +79,8 @@ void ViewDetails::show(const AString& ref, const AJson& fields) {
     AVector<_<AView>> views {
         title(ViewTree::prettyName(fields)),
         Horizontal {
-          Label { ref },
-          Button { Label { "Copy" }, [ref] { AClipboard::copyToClipboard(ref); } },
+          Label { model.ref },
+          Button { Label { "Copy" }, [ref = model.ref] { AClipboard::copyToClipboard(ref); } },
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
         row("Position", "{}, {} (in parent {}, {})"_format(box.position.x, box.position.y, field("x"), field("y"))),
         row("Size", "{}x{}"_format(box.size.x, box.size.y)),
@@ -82,34 +94,17 @@ void ViewDetails::show(const AString& ref, const AJson& fields) {
     if (auto names = field("name"); !names.empty()) {
         views << row("ASS names", names.replacedAll(" ", ", "));
     }
-    mProperties = Vertical { Label { "Loading properties..." } AUI_OVERRIDE_STYLE { Opacity { 0.6f } } };
-    mProperties AUI_OVERRIDE_STYLE { LayoutSpacing { 2_dp }, Margin { 8_dp, 0, 0, 0 } };
-    views << mProperties;
-    mContent->setViews(std::move(views));
+    views << propertiesView(model);
+    result->setViews(std::move(views));
+    return result;
 }
 
-void ViewDetails::setProperties(const AString& ref, const AJson& properties) {
-    if (ref != mRef || !mProperties) {
-        return;
-    }
-    AVector<_<AView>> views;
-    for (const char* key : { "enabled", "focused", "role" }) {
-        if (auto v = properties.containsOpt(key)) {
-            views << row(key, valueText(*v));
-        }
-    }
-    if (auto inspector = properties.containsOpt("inspector"); inspector && inspector->isObject()) {
-        views << (Label { "Inspector" } AUI_OVERRIDE_STYLE { FontSize { 11_pt }, Margin { 4_dp, 0, 0, 0 } });
-        for (const auto& [name, value] : inspector->asObject()) {
-            views << row(name, valueText(value));
-        }
-    }
-    mProperties->setViews(std::move(views));
-}
+}   // namespace
 
-void ViewDetails::setPropertiesError(const AString& ref, const AString& message) {
-    if (ref != mRef || !mProperties) {
-        return;
-    }
-    mProperties->setViews({ Label { message } AUI_OVERRIDE_STYLE { TextColor { AColor::RED } } });
+_<AView> viewDetails(_<AProperty<ViewDetailsModel>> model) {
+    return Stacked {
+        AScrollArea::Builder()
+            .withContents(experimental::Dynamic { AUI_REACT(content(**model)) } AUI_OVERRIDE_STYLE { Expanding() })
+            .build() AUI_LET { it->setExpanding(); },
+    };
 }
