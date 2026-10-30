@@ -1288,6 +1288,8 @@ AFuture<std::tuple<aui::impl::future::Storage<Types>...>> AFuture<T>::all(AFutur
     using namespace aui::impl::future;
     using Result = std::tuple<Storage<Types>...>;
     using Resolver = typename AFuture<Result>::Resolver;
+    // the lambdas below refer to the tuple rather than to the pack: MSVC can't expand a captured pack (C3520)
+    std::tuple<AFuture<Types>...> sources(std::move(futures)...);
     return AFuture<Result>::create([&](Resolver resolver) {
         struct State {
             Resolver resolver;
@@ -1309,11 +1311,11 @@ AFuture<std::tuple<aui::impl::future::Storage<Types>...>> AFuture<T>::all(AFutur
             resolver.supplyValue(Result {});
         } else {
             auto state = _new<State>(resolver);
-            state->futures.emplace(futures...);
+            state->futures.emplace(sources);
             resolver.onCancel([state] { state->dropFutures(); });
             [&]<std::size_t... I>(std::index_sequence<I...>) {
                 (Access::subscribe(
-                     futures,
+                     std::get<I>(sources),
                      [state](const auto&... value) {
                          if constexpr (sizeof...(value) == 0) {
                              std::get<I>(state->values).emplace();
@@ -1347,6 +1349,8 @@ AFuture<std::variant<aui::impl::future::Storage<Types>...>> AFuture<T>::any(AFut
     using namespace aui::impl::future;
     using Result = std::variant<Storage<Types>...>;
     using Resolver = typename AFuture<Result>::Resolver;
+    // the lambdas below refer to the tuple rather than to the pack: MSVC can't expand a captured pack (C3520)
+    std::tuple<AFuture<Types>...> sources(std::move(futures)...);
     return AFuture<Result>::create([&](Resolver resolver) {
         struct State {
             Resolver resolver;
@@ -1363,11 +1367,11 @@ AFuture<std::variant<aui::impl::future::Storage<Types>...>> AFuture<T>::any(AFut
             }
         };
         auto state = _new<State>(resolver);
-        state->futures.emplace(futures...);
+        state->futures.emplace(sources);
         resolver.onCancel([state] { state->dropFutures(); });
         [&]<std::size_t... I>(std::index_sequence<I...>) {
             (Access::subscribe(
-                 futures,
+                 std::get<I>(sources),
                  [state](const auto&... value) {
                      if constexpr (sizeof...(value) == 0) {
                          state->resolver.supplyValue(Result(std::in_place_index<I>));
