@@ -95,7 +95,7 @@ struct ATlsSession::Impl {
     static int send(void* ctx, const unsigned char* buffer, std::size_t size) {
         auto* self = static_cast<Impl*>(ctx);
         try {
-            self->transport.write(reinterpret_cast<const char*>(buffer), size);
+            self->transport.write(std::as_bytes(std::span(buffer, size)));
             return static_cast<int>(size);
         } catch (...) {
             self->transportError = std::current_exception();
@@ -110,7 +110,7 @@ struct ATlsSession::Impl {
             if (!self->transport.waitForRead(0ms)) {
                 return MBEDTLS_ERR_SSL_WANT_READ;
             }
-            const auto n = self->transport.read(reinterpret_cast<char*>(buffer), size);
+            const auto n = self->transport.read(std::as_writable_bytes(std::span(buffer, size)));
             return static_cast<int>(n);   // 0 is end of stream
         } catch (...) {
             self->transportError = std::current_exception();
@@ -230,7 +230,7 @@ _<ATlsSession> ATlsSession::connect(ATlsTransport transport, const ClientOptions
     return aui::ptr::manage_shared(new ATlsSession(std::move(impl)));
 }
 
-std::size_t ATlsSession::read(char* dst, std::size_t size) {
+std::size_t ATlsSession::read(std::span<std::byte> destination) {
     auto& impl = *mImpl;
     for (;;) {
         int result;
@@ -239,7 +239,7 @@ std::size_t ATlsSession::read(char* dst, std::size_t size) {
             if (impl.closed) {
                 return 0;
             }
-            result = mbedtls_ssl_read(&impl.ssl, reinterpret_cast<unsigned char*>(dst), size);
+            result = mbedtls_ssl_read(&impl.ssl, reinterpret_cast<unsigned char*>(destination.data()), destination.size());
             if (result > 0) {
                 return static_cast<std::size_t>(result);
             }
@@ -257,14 +257,14 @@ std::size_t ATlsSession::read(char* dst, std::size_t size) {
     }
 }
 
-void ATlsSession::write(const char* src, std::size_t size) {
+void ATlsSession::write(std::span<const std::byte> source) {
     auto& impl = *mImpl;
     std::lock_guard lock(impl.mutex);
-    while (size > 0) {
-        const int result = mbedtls_ssl_write(&impl.ssl, reinterpret_cast<const unsigned char*>(src), size);
+    while (!source.empty()) {
+        const int result =
+            mbedtls_ssl_write(&impl.ssl, reinterpret_cast<const unsigned char*>(source.data()), source.size());
         if (result > 0) {
-            src += result;
-            size -= static_cast<std::size_t>(result);
+            source = source.subspan(static_cast<std::size_t>(result));
         } else if (result != MBEDTLS_ERR_SSL_WANT_WRITE && result != MBEDTLS_ERR_SSL_WANT_READ) {
             impl.fail(result, "TLS write failed");
         }

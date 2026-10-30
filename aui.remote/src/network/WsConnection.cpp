@@ -40,8 +40,8 @@ WsConnection::WsConnection(std::uint16_t port, const AString& certSha256, const 
     mSocket.setTimeout(std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now()));
     ATlsTransport transport {
         [this](std::chrono::milliseconds t) { return mSocket.waitForRead(t); },
-        [this](char* dst, std::size_t size) { return mSocket.read(dst, size); },
-        [this](const char* src, std::size_t size) { mSocket.write(src, size); },
+        [this](std::span<std::byte> dst) { return mSocket.read(dst); },
+        [this](std::span<const std::byte> src) { mSocket.write(reinterpret_cast<const char*>(src.data()), src.size()); },
     };
     ATlsSession::ClientOptions options;
     options.expectedFingerprint = fromHex(certSha256);
@@ -56,15 +56,15 @@ WsConnection::WsConnection(std::uint16_t port, const AString& certSha256, const 
                           " HTTP/1.1\r\nHost: 127.0.0.1\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
                           "Sec-WebSocket-Version: 13\r\nSec-WebSocket-Key: " +
                           AByteBuffer(nonce, sizeof(nonce)).toBase64String().toStdString() + "\r\n\r\n";
-    mTls->write(request.data(), request.size());
+    mTls->write(std::as_bytes(std::span(request)));
 
     std::string head;
-    char c;
+    std::byte c;
     while (head.find("\r\n\r\n") == std::string::npos) {
-        if (mTls->read(&c, 1) == 0) {
+        if (mTls->read({ &c, 1 }) == 0) {
             break;
         }
-        head += c;
+        head += char(c);
     }
     if (head.rfind("HTTP/1.1 101", 0) != 0) {
         const auto line = head.substr(0, head.find("\r\n"));
@@ -120,12 +120,12 @@ std::optional<AString> WsConnection::readTextUntil(std::chrono::steady_clock::ti
         if (left <= 0ms || !mSocket.waitForRead(std::chrono::duration_cast<std::chrono::milliseconds>(left))) {
             return std::nullopt;
         }
-        char buf[1 << 15];   // at least a TLS record: what is left of it is invisible to poll()
-        const auto n = mTls->read(buf, sizeof(buf));
+        std::byte buf[1 << 15];   // at least a TLS record: what is left of it is invisible to poll()
+        const auto n = mTls->read(buf);
         if (n == 0) {
             throw RpcError(rpc_code::CLIENT_ERROR, "the application closed the connection");
         }
-        mDecoder.feed(AByteBufferView(buf, n));
+        mDecoder.feed(AByteBufferView(reinterpret_cast<const char*>(buf), n));
     }
 }
 
@@ -137,7 +137,7 @@ void WsConnection::send(Opcode opcode, AByteBufferView payload) {
     }
     auto frame = encodeFrame(opcode, payload, true, mask);
     std::unique_lock lock(mSendMutex);
-    mTls->write(frame.data(), frame.size());
+    mTls->write(std::as_bytes(std::span(frame.data(), frame.size())));
 }
 
 }   // namespace aui_remote

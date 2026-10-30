@@ -118,8 +118,10 @@ public:
         }
         ATlsTransport transport {
             [socket = mSocket](std::chrono::milliseconds timeout) { return socket->waitForRead(timeout); },
-            [socket = mSocket](char* dst, std::size_t size) { return socket->read(dst, size); },
-            [socket = mSocket](const char* src, std::size_t size) { socket->write(src, size); },
+            [socket = mSocket](std::span<std::byte> dst) { return socket->read(dst); },
+            [socket = mSocket](std::span<const std::byte> src) {
+                socket->write(reinterpret_cast<const char*>(src.data()), src.size());
+            },
         };
         mTls = ATlsSession::accept(std::move(transport), mServer.config.tls, mServer.config.handshakeTimeout);
     }
@@ -190,7 +192,7 @@ private:
         }
         try {
             if (mTls) {
-                mTls->write(data.data(), data.size());
+                mTls->write(std::as_bytes(std::span(data.data(), data.size())));
             } else {
                 mSocket->write(data.data(), data.size());
             }
@@ -223,7 +225,7 @@ private:
     bool mHandshaking = true;
 
     std::size_t readSome(char* dst, std::size_t size) {
-        return mTls ? mTls->read(dst, size) : mSocket->read(dst, size);
+        return mTls ? mTls->read(std::as_writable_bytes(std::span(dst, size))) : mSocket->read(dst, size);
     }
 
     void respond(std::string_view status, std::string_view extraHeaders = {}) {

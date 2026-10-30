@@ -903,8 +903,8 @@ TEST_F(AgentTest, PresentedCertificateMatchesThePublishedFingerprint) {
         ATcpSocket socket(AInet4Address::fromString("127.0.0.1", agent()->port()));
         ATlsTransport transport {
             [&](std::chrono::milliseconds t) { return socket.waitForRead(t); },
-            [&](char* dst, std::size_t size) { return socket.read(dst, size); },
-            [&](const char* src, std::size_t size) { socket.write(src, size); },
+            [&](std::span<std::byte> dst) { return socket.read(dst); },
+            [&](std::span<const std::byte> src) { socket.write(reinterpret_cast<const char*>(src.data()), src.size()); },
         };
         auto session = ATlsSession::connect(transport);
         ASSERT_TRUE(session->peerFingerprintSha256());

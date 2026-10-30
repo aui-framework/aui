@@ -14,6 +14,7 @@
 #include <chrono>
 #include <functional>
 #include <memory>
+#include <span>
 
 #include <AUI/Common/AByteBuffer.h>
 #include <AUI/Common/AException.h>
@@ -43,14 +44,14 @@ struct ATlsTransport {
     std::function<bool(std::chrono::milliseconds)> waitForRead;
 
     /**
-     * @brief Reads at most `size` bytes, blocks until there is something. Returns 0 on end of stream.
+     * @brief Reads at most `destination.size()` bytes, blocks until there is something. Returns 0 on end of stream.
      */
-    std::function<std::size_t(char* dst, std::size_t size)> read;
+    std::function<std::size_t(std::span<std::byte> destination)> read;
 
     /**
-     * @brief Writes all `size` bytes.
+     * @brief Writes all bytes of `source`.
      */
-    std::function<void(const char* src, std::size_t size)> write;
+    std::function<void(std::span<const std::byte> source)> write;
 };
 
 /**
@@ -63,8 +64,9 @@ struct ATlsTransport {
  *
  * ```cpp
  * auto session = ATlsSession::accept(transport, identity);
- * auto n = session->read(buffer, sizeof(buffer));
- * session->write("hello", 5);
+ * std::byte buffer[4096];
+ * auto n = session->read(buffer);
+ * session->write(std::as_bytes(std::span("hello", 5)));
  * ```
  *
  * Client:
@@ -119,16 +121,16 @@ public:
             std::chrono::milliseconds timeout = std::chrono::seconds(10));
 
     /**
-     * @brief Reads decrypted data; blocks until there is some.
+     * @brief Reads at most `destination.size()` bytes of decrypted data; blocks until there is some.
      * @return number of bytes; 0 if the peer closed the session
      * @throws ATlsException when the stream is broken; the transport's exception is rethrown as is
      */
-    std::size_t read(char* dst, std::size_t size);
+    std::size_t read(std::span<std::byte> destination);
 
     /**
-     * @brief Encrypts and writes all the data.
+     * @brief Encrypts and writes all bytes of `source`.
      */
-    void write(const char* src, std::size_t size);
+    void write(std::span<const std::byte> source);
 
     /**
      * @brief Sends close_notify. Does not close the transport.

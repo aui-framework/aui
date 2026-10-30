@@ -23,16 +23,17 @@ using namespace std::chrono_literals;
 
 namespace {
 
+std::span<const std::byte> bytes(std::string_view data) { return std::as_bytes(std::span(data)); }
+
 /// One direction of an in-memory connection.
 class Pipe {
 public:
-    void push(const char* data, std::size_t size) {
+    void push(std::span<const std::byte> data) {
         {
             std::lock_guard lock(mMutex);
-            for (std::size_t i = 0; i < size; ++i) {
-                char c = data[i];
+            for (std::byte c : data) {
                 if (mCorruptNext && mPushed++ >= mCorruptFrom) {
-                    c ^= 0x55;
+                    c ^= std::byte(0x55);
                 }
                 mBytes.push_back(c);
             }
@@ -53,11 +54,11 @@ public:
         return mCondition.wait_for(lock, timeout, [&] { return !mBytes.empty() || mClosed; });
     }
 
-    std::size_t read(char* dst, std::size_t size) {
+    std::size_t read(std::span<std::byte> dst) {
         std::unique_lock lock(mMutex);
         mCondition.wait(lock, [&] { return !mBytes.empty() || mClosed; });
         std::size_t n = 0;
-        while (n < size && !mBytes.empty()) {
+        while (n < dst.size() && !mBytes.empty()) {
             dst[n++] = mBytes.front();
             mBytes.pop_front();
         }
@@ -74,7 +75,7 @@ public:
 private:
     std::mutex mMutex;
     std::condition_variable mCondition;
-    std::deque<char> mBytes;
+    std::deque<std::byte> mBytes;
     bool mClosed = false;
     bool mCorruptNext = false;
     std::size_t mCorruptFrom = 0;
@@ -88,16 +89,16 @@ struct Link {
     ATlsTransport clientSide() {
         return {
             [this](std::chrono::milliseconds t) { return serverToClient.waitForRead(t); },
-            [this](char* dst, std::size_t size) { return serverToClient.read(dst, size); },
-            [this](const char* src, std::size_t size) { clientToServer.push(src, size); },
+            [this](std::span<std::byte> dst) { return serverToClient.read(dst); },
+            [this](std::span<const std::byte> src) { clientToServer.push(src); },
         };
     }
 
     ATlsTransport serverSide() {
         return {
             [this](std::chrono::milliseconds t) { return clientToServer.waitForRead(t); },
-            [this](char* dst, std::size_t size) { return clientToServer.read(dst, size); },
-            [this](const char* src, std::size_t size) { serverToClient.push(src, size); },
+            [this](std::span<std::byte> dst) { return clientToServer.read(dst); },
+            [this](std::span<const std::byte> src) { serverToClient.push(src); },
         };
     }
 };
@@ -135,13 +136,13 @@ struct Connected {
 
 std::string readExactly(ATlsSession& session, std::size_t size) {
     std::string result;
-    char buffer[4096];
+    std::byte buffer[4096];
     while (result.size() < size) {
-        const auto n = session.read(buffer, std::min(sizeof(buffer), size - result.size()));
+        const auto n = session.read(std::span(buffer).first(std::min(sizeof(buffer), size - result.size())));
         if (n == 0) {
             break;
         }
-        result.append(buffer, n);
+        result.append(reinterpret_cast<const char*>(buffer), n);
     }
     return result;
 }
@@ -163,9 +164,9 @@ TEST(TlsIdentity, IdentitiesAreDistinct) {
 
 TEST(Tls, HandshakeAndEcho) {
     Connected c;
-    c.client->write("ping", 4);
+    c.client->write(bytes("ping"));
     EXPECT_EQ(readExactly(*c.server, 4), "ping");
-    c.server->write("pong!", 5);
+    c.server->write(bytes("pong!"));
     EXPECT_EQ(readExactly(*c.client, 5), "pong!");
 }
 
@@ -183,8 +184,8 @@ TEST(Tls, LargeTransferBothWays) {
     }
     std::string receivedByServer;
     std::thread reader([&] { receivedByServer = readExactly(*c.server, data.size()); });
-    std::thread echo([&] { c.server->write(data.data(), data.size()); });
-    c.client->write(data.data(), data.size());
+    std::thread echo([&] { c.server->write(bytes(data)); });
+    c.client->write(bytes(data));
     auto receivedByClient = readExactly(*c.client, data.size());
     reader.join();
     echo.join();
@@ -197,9 +198,9 @@ TEST(Tls, WriteWhileAnotherThreadIsReading) {
     std::string received;
     std::thread reader([&] { received = readExactly(*c.client, 5); });   // blocks in read
     std::this_thread::sleep_for(100ms);
-    c.client->write("hello", 5);   // must not wait for the reader
+    c.client->write(bytes("hello"));   // must not wait for the reader
     EXPECT_EQ(readExactly(*c.server, 5), "hello");
-    c.server->write("world", 5);
+    c.server->write(bytes("world"));
     reader.join();
     EXPECT_EQ(received, "world");
 }
@@ -211,8 +212,8 @@ TEST(Tls, WrongFingerprintIsRejectedByClient) {
     std::thread serverThread([&] {
         try {
             auto s = ATlsSession::accept(link.serverSide(), identity, 5s);
-            char c;
-            s->read(&c, 1);   // returns once the client is gone
+            std::byte c;
+            s->read({ &c, 1 });   // returns once the client is gone
         } catch (const AException&) {
         }
     });
@@ -225,20 +226,20 @@ TEST(Tls, WrongFingerprintIsRejectedByClient) {
 
 TEST(Tls, CloseNotifyEndsReading) {
     Connected c;
-    c.client->write("bye", 3);
+    c.client->write(bytes("bye"));
     c.client->close();
     EXPECT_EQ(readExactly(*c.server, 3), "bye");
-    char buffer[8];
-    EXPECT_EQ(c.server->read(buffer, sizeof(buffer)), 0u);
+    std::byte buffer[8];
+    EXPECT_EQ(c.server->read(buffer), 0u);
 }
 
 TEST(Tls, TransportEndOfStreamEndsReading) {
     Connected c;
     c.link.clientToServer.closeWriter();
-    char buffer[8];
+    std::byte buffer[8];
     // either an orderly 0 or an error: the stream is over and must not hang
     try {
-        EXPECT_EQ(c.server->read(buffer, sizeof(buffer)), 0u);
+        EXPECT_EQ(c.server->read(buffer), 0u);
     } catch (const AException&) {
     }
 }
@@ -247,16 +248,16 @@ TEST(Tls, CorruptedRecordsAreDetected) {
     Connected c;
     // everything the client sends from now on is damaged
     c.link.clientToServer.corruptAfter(0);
-    c.client->write("tampered", 8);
-    char buffer[32];
-    EXPECT_THROW(c.server->read(buffer, sizeof(buffer)), ATlsException);
+    c.client->write(bytes("tampered"));
+    std::byte buffer[32];
+    EXPECT_THROW(c.server->read(buffer), ATlsException);
 }
 
 TEST(Tls, GarbageInsteadOfClientHelloFails) {
     Link link;
     auto identity = ATlsIdentity::generateSelfSigned("aui-test");
     const std::string garbage = "GET / HTTP/1.1\r\nHost: x\r\n\r\n";
-    link.clientToServer.push(garbage.data(), garbage.size());
+    link.clientToServer.push(bytes(garbage));
     EXPECT_THROW((void) ATlsSession::accept(link.serverSide(), identity, 2s), ATlsException);
 }
 
@@ -272,7 +273,7 @@ TEST(Tls, TransportExceptionsPropagate) {
     Link link;
     auto identity = ATlsIdentity::generateSelfSigned("aui-test");
     auto transport = link.serverSide();
-    transport.read = [](char*, std::size_t) -> std::size_t { throw std::runtime_error("transport is gone"); };
+    transport.read = [](std::span<std::byte>) -> std::size_t { throw std::runtime_error("transport is gone"); };
     transport.waitForRead = [](std::chrono::milliseconds) { return true; };
     EXPECT_THROW((void) ATlsSession::accept(transport, identity, 2s), std::runtime_error);
 }

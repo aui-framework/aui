@@ -58,6 +58,7 @@ public:
 
     ~ATcpSocket() override;
 
+    using IInputStream::read;
     size_t read(char* dst, size_t size) override;
     void write(const char* buffer, size_t size) override;
 

@@ -63,8 +63,10 @@ public:
     RawClient(std::uint16_t port, AByteBuffer pin) : RawClient(port) {
         ATlsTransport transport {
             [this](std::chrono::milliseconds t) { return mSocket.waitForRead(t); },
-            [this](char* dst, std::size_t size) { return mSocket.read(dst, size); },
-            [this](const char* src, std::size_t size) { mSocket.write(src, size); },
+            [this](std::span<std::byte> dst) { return mSocket.read(dst); },
+            [this](std::span<const std::byte> src) {
+                mSocket.write(reinterpret_cast<const char*>(src.data()), src.size());
+            },
         };
         ATlsSession::ClientOptions options;
         options.expectedFingerprint = std::move(pin);
@@ -137,14 +139,14 @@ private:
 
     std::size_t readSome(char* dst, std::size_t size) {
         try {
-            return mTls ? mTls->read(dst, size) : mSocket.read(dst, size);
+            return mTls ? mTls->read(std::as_writable_bytes(std::span(dst, size))) : mSocket.read(dst, size);
         } catch (const AEOFException&) {
             return 0;   // the server reset the connection (Windows reports RST where Linux sees a clean FIN)
         }
     }
     void writeSome(const char* src, std::size_t size) {
         if (mTls) {
-            mTls->write(src, size);
+            mTls->write(std::as_bytes(std::span(src, size)));
         } else {
             mSocket.write(src, size);
         }
