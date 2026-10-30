@@ -172,8 +172,9 @@ AFuture<> MyView::load() {
 }
 ```
 
-`future.withTimeout(5s)` fails with [AFutureTimeoutException] if `future` does not complete in time. It is a shortcut
-for `AFuture<>::any(future, AThread::asyncSleep(5s))`.
+`future.withTimeout(5s)` fails with [ATimeoutException] as the cause if `future` does not complete in time. It works
+like `AFuture<>::any(future, AThread::asyncSleep(5s))` that keeps the type of the value, except that on timeout
+`future` is cancelled even if somebody else holds it, so its producer can abort the operation.
 
 ## Coming from other languages
 

@@ -310,7 +310,7 @@ TEST(Future, WithTimeoutFails) {
         *future;
         FAIL();
     } catch (const AInvocationTargetException& e) {
-        EXPECT_EQ(rootMessage(e), AFutureTimeoutException().getMessage());
+        EXPECT_THAT(rootMessage(e), testing::HasSubstr("timed out"));
     }
     EXPECT_TRUE(resolver->isCancelled());
 }

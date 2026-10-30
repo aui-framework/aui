@@ -82,12 +82,13 @@ public:
 };
 
 /**
- * @brief The exception [AFuture::withTimeout] fails with when the future does not complete in time.
+ * @brief The cause of the exception [AFuture::withTimeout] fails with when the future does not complete in time.
  * @ingroup core
  */
-class AFutureTimeoutException : public AException {
+class ATimeoutException : public AException {
 public:
-    AFutureTimeoutException() : AException("the future did not complete in time") {}
+    ATimeoutException(const AString& message = "timed out") : AException(message, nullptr) {}
+    ~ATimeoutException() noexcept override = default;
 };
 
 namespace aui::impl::future {
@@ -872,9 +873,20 @@ public:
     static AFuture<std::variant<aui::impl::future::Storage<Types>...>> any(AFuture<Types>... futures);
 
     /**
-     * @brief The same future that fails with [AFutureTimeoutException] if it does not complete in time.
+     * @brief A future that completes with this one, or fails with [ATimeoutException] as the cause if this one does
+     * not complete in time.
      * @details
-     * `any(*this, AThread::asyncSleep(duration))`. On timeout, this future is dropped by the returned one.
+     * Works like `any(*this, AThread::asyncSleep(duration))`, keeping the type of the value. On timeout, this future
+     * is cancelled, so its producer can abort the operation (see `Resolver::onCancel`). The returned future keeps this
+     * one alive; cancelling or destroying the returned future cancels this one too.
+     *
+     * ```cpp
+     * try {
+     *     auto reply = co_await sendRequest().withTimeout(10s);
+     * } catch (const AException& e) {
+     *     // timed out, or sendRequest failed
+     * }
+     * ```
      */
     [[nodiscard]]
     AFuture withTimeout(std::chrono::milliseconds duration) const;
@@ -1083,6 +1095,32 @@ public:
     [[nodiscard(AUI_IMPL_FUTURE_DISCARDED)]]
     AFuture onFinally(Callback&& callback) && {
         onFinally(std::forward<Callback>(callback));
+        return std::move(*this);
+    }
+
+    /**
+     * @brief Calls the callback when the future is cancelled before it has a result.
+     * @details
+     * Cancellation happens by `cancel()` or when the last AFuture is destroyed. The callback is called on the thread
+     * that cancels, right away if the future is cancelled already, and never if the future completes. It must not hold
+     * this future, otherwise the future can't be cancelled by destruction.
+     *
+     * A producer that holds the [AFuture::Resolver] uses `Resolver::onCancel` instead.
+     */
+    template <aui::invocable Callback>
+    const AFuture& onCancel(Callback&& callback) const& {
+        inner_().subscribe(
+            aui::impl::future::NoCallback {}, aui::impl::future::NoCallback {}, std::forward<Callback>(callback));
+        return *this;
+    }
+
+    /**
+     * @copybrief onCancel
+     */
+    template <aui::invocable Callback>
+    [[nodiscard(AUI_IMPL_FUTURE_DISCARDED)]]
+    AFuture onCancel(Callback&& callback) && {
+        onCancel(std::forward<Callback>(callback));
         return std::move(*this);
     }
 
@@ -1342,21 +1380,30 @@ AFuture<std::variant<aui::impl::future::Storage<Types>...>> AFuture<T>::any(AFut
 
 template <typename T>
 AFuture<T> AFuture<T>::withTimeout(std::chrono::milliseconds duration) const {
-    auto race = any(*this, AThread::asyncSleep(duration));
-    if constexpr (isVoid) {
-        return race.map([](const auto& result) {
-            if (result.index() == 1) {
-                throw AFutureTimeoutException();
-            }
-        });
-    } else {
-        return race.map([](const auto& result) -> T {
-            if (result.index() == 1) {
-                throw AFutureTimeoutException();
-            }
-            return std::get<0>(result);
-        });
-    }
+    using namespace aui::impl::future;
+    return create([&](Resolver resolver) {
+        auto timer = AThread::asyncSleep(duration);
+        inner_().subscribe(
+            [resolver](const auto&... value) {
+                if constexpr (std::is_void_v<T> || std::is_copy_constructible_v<T>) {
+                    resolver.supplyValue(value...);
+                } else {
+                    // a move-only value is moved out, as co_await does
+                    resolver.supplyValue(std::move(const_cast<T&>(value))...);
+                }
+            },
+            [resolver](const AException& e) { resolver.supplyException(causeOf(e)); },
+            [resolver] { resolver.supplyException(cancelledException()); });
+        timer.inner_().subscribe(
+            [resolver, source = *this, duration] {
+                resolver.supplyException(std::make_exception_ptr(
+                    ATimeoutException("timed out after " + AString::number(duration.count()) + "ms")));
+                // let the producer abort the operation
+                source.cancel();
+            },
+            NoCallback {}, NoCallback {});
+        resolver.onCancel([source = *this, timer = std::move(timer)] { source.cancel(); });
+    });
 }
 
 template <typename T>
