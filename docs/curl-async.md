@@ -8,7 +8,7 @@
 requests) and returns `AFuture<ACurl::Response>`. Network errors are delivered as an exception of the future.
 
 ```cpp
-ACurl::Builder("https://example.com/api/items").runAsync().onSuccess([this](const ACurl::Response& r) {
+ACurl::Builder("https://example.com/api/items").runAsync().onValue([this](const ACurl::Response& r) {
     // not the UI thread; hop to it before touching views.
     AUI_UI_THREAD_X [this, text = AString::fromUtf8(r.body)] {
         mLabel->setText(text);

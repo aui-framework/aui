@@ -28,12 +28,12 @@ public:
     void start() {
         mAsync << (AUI_THREADPOOL {
             return heavyComputation();
-        }).onSuccess([this](int result) {
+        }).onValue([this](int result) {
             // callback thread is not specified, so jump to the UI thread when touching views
             AUI_UI_THREAD {
                 mResult = result;
             };
-        }).onError([](const AException& e) {
+        }).onException([](const AException& e) {
             ALogger::err("Downloader") << "Failed: " << e;
         });
     }
@@ -44,9 +44,13 @@ private:
 };
 ```
 
-`onSuccess`, `onError` and `onFinally` are called exactly once when the future resolves, or immediately if it has
+`onValue`, `onException` and `onFinally` are called exactly once when the future resolves, or immediately if it has
 already resolved. They don't keep the future alive, so something has to own it: that's the job of [AAsyncHolder]
 (a set of `AFuture<>` that cancels everything in the destructor, so a callback can't run on a dead `this`).
+Calling `onValue` on a temporary future and dropping the result produces a compiler warning for this reason.
+
+An exception reaches `onException` and `*future` wrapped into [AInvocationTargetException]. Every future between the
+throw and the catch adds one level, so the chain of causes shows the whole path through nested coroutines.
 
 `AUI_UI_THREAD { ... };` posts a lambda to the main thread's event loop.
 
@@ -83,6 +87,89 @@ AFuture<> MyView::load() {
 ```
 
 Keep the returned future in an [AAsyncHolder].
+
+A coroutine is cancelled together with its future: when the last copy of the future is destroyed, the coroutine stops
+at its next `co_await` with an exception that unwinds it.
+
+## Wrapping a callback-based API
+
+[AFuture::create] turns a callback-based API (a native dialog, a network library, a timer) into a future. Its body
+gets an [AFuture::Resolver], the producer side of the future, and may move it anywhere: to another thread, into a
+callback.
+
+```cpp
+AFuture<APath> browseForFile() {
+    return AFuture<APath>::create([](AFuture<APath>::Resolver resolver) {
+        nativeDialog.show([resolver](APath path) {
+            resolver.supplyValue(std::move(path));
+        });
+    });
+}
+```
+
+The future keeps its promise even if the code around it doesn't:
+
+- the first `supplyValue` or `supplyException` wins, later ones are ignored;
+- an exception thrown by the body of `create` fails the future;
+- if every copy of the resolver is destroyed without a result (a forgotten branch, an early return, an exception in a
+  callback), the future fails with [AFutureAbandonedException] instead of hanging forever.
+
+The resolver also tells whether anybody still waits: `isCancelled()` and `onCancel(callback)` let the producer stop
+the work when the future is cancelled.
+
+A future that is complete from the start is made with [AFuture::fromValue] or [AFuture::fromException].
+
+## Fire and forget
+
+Destroying the last copy of a future cancels the operation. When the result is not needed, but the operation has to
+finish anyway (sending a log, saving a file), call [AFuture::keepAlive]:
+
+```cpp
+sendAnalytics(event).onException([](const AException& e) {
+    ALogger::warn("Analytics") << e;
+}).keepAlive();
+```
+
+The operation then runs until it completes or fails, and the callbacks are still called.
+
+## Combining futures
+
+[AFuture::all] waits for several futures and gives their values as a tuple; it fails as soon as one of them fails.
+[AFuture::any] takes the first future to complete or fail; the value comes as a variant whose index is the position of
+that future. `void` futures give `std::monostate`. Both drop the futures that are still running once they are done, so
+those are cancelled.
+
+```cpp
+AFuture<> MyView::load() {
+    auto [user, avatar] = co_await AFuture<>::all(loadUser(mId), loadAvatar(mId));
+    // ...
+}
+```
+
+`future.withTimeout(5s)` fails with [AFutureTimeoutException] if `future` does not complete in time. It is a shortcut
+for `AFuture<>::any(future, AThread::asyncSleep(5s))`.
+
+## Coming from other languages
+
+| AUI                                     | JavaScript                              | Kotlin                        | C#                                  | Rust                          |
+|-----------------------------------------|-----------------------------------------|-------------------------------|-------------------------------------|-------------------------------|
+| `AFuture<T>`                            | `Promise<T>`                            | `Deferred<T>`                 | `Task<T>`                           | `impl Future<Output = T>`     |
+| `AUI_THREADPOOL { ... }`                | `new Worker(...)`                       | `async(Dispatchers.Default)`  | `Task.Run(...)`                     | `tokio::spawn_blocking(...)`  |
+| `AFuture<T>::create(...)`               | `new Promise((resolve, reject) => ...)` | `suspendCancellableCoroutine` | `TaskCompletionSource<T>`           | `oneshot::channel()`          |
+| `Resolver::onCancel`                    | `AbortSignal`                           | `invokeOnCancellation`        | `CancellationToken`                 | drop of the receiver          |
+| `onValue` / `onException` / `onFinally` | `then` / `catch` / `finally`            | `invokeOnCompletion`          | `ContinueWith`                      | `.map(...)` / `.or_else(...)` |
+| `co_await future`                       | `await promise`                         | `deferred.await()`            | `await task`                        | `future.await`                |
+| `map(...)`                              | `then(v => ...)`                        | `async { f(d.await()) }`      | `ContinueWith(t => ...)`            | `.map(...)`                   |
+| `AFuture<>::all(...)`                   | `Promise.all`                           | `awaitAll`                    | `Task.WhenAll`                      | `join!`                       |
+| `AFuture<>::any(...)`                   | `Promise.race`                          | `select`                      | `Task.WhenAny`                      | `select!`                     |
+| `withTimeout(duration)`                 | `AbortSignal.timeout`                   | `withTimeout`                 | `WaitAsync(timeout)`                | `tokio::time::timeout`        |
+| `fromValue` / `fromException`           | `Promise.resolve` / `Promise.reject`    | `CompletableDeferred(value)`  | `Task.FromResult` / `FromException` | `ready(...)`                  |
+| `AAsyncHolder`                          | —                                       | `CoroutineScope`              | —                                   | `JoinSet`                     |
+| `keepAlive()`                           | default behavior                        | `GlobalScope.launch`          | default behavior                    | `tokio::spawn`                |
+
+The main difference from JavaScript and C#: destroying the last copy of an `AFuture` cancels the operation, as in
+Kotlin's structured concurrency and in Rust, where dropping a future stops it. Keep the future (in a field or an
+[AAsyncHolder]) while you need the result, or call `keepAlive()`.
 
 ## Periodic work with ATimer
 

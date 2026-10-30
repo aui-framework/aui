@@ -25,7 +25,7 @@ the information inline.
 ## File and folder choosers
 
 `ADesktop::browseForFile` and `ADesktop::browseForDir` open the native dialog and return an `AFuture<APath>`. Do not
-call a blocking getter on the future from the UI thread; subscribe with `onSuccess`. An empty path means the user
+call a blocking getter on the future from the UI thread; subscribe with `onValue`. An empty path means the user
 cancelled.
 
 <!-- aui:snippet examples/ui/views/src/ExampleWindow.cpp browse_file -->
