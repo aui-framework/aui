@@ -176,7 +176,9 @@ struct Inner {
      * time. Durations are small enough so it is worth to just busy wait instead of making syscalls.
      */
     ASpinlockMutex mutex;
-    AConditionVariable cv;
+    // created by the first blocking wait(): most futures are never waited for this way, and a condition variable costs
+    // an allocation, a syscall-backed destructor and a lock on every notify
+    std::unique_ptr<AConditionVariable> cv;
     Task task;
     _<AAbstractThread> thread;
     bool keptAlive = false;
@@ -188,6 +190,13 @@ struct Inner {
 
     explicit Inner(std::uint64_t counters, Task task = nullptr) noexcept
       : counters(counters), task(std::move(task)) {}
+
+    // under mutex
+    void notifyWaiters() noexcept {
+        if (cv) {
+            cv->notify_all();
+        }
+    }
 
     void acquireFuture() noexcept { counters.fetch_add(FUTURE, std::memory_order_relaxed); }
     void acquireResolver() noexcept { counters.fetch_add(RESOLVER, std::memory_order_relaxed); }
@@ -287,7 +296,7 @@ struct Inner {
         auto localOnException = std::exchange(onException, nullptr);
         auto localOnCancel = std::exchange(onCancel, nullptr);
         bool releaseKeepAlive = std::exchange(keptAlive, false);
-        cv.notify_all();
+        notifyWaiters();
         lock.unlock();
         if (localOnValue) {
             if constexpr (isVoid) {
@@ -315,7 +324,7 @@ struct Inner {
         auto localOnException = std::exchange(onException, nullptr);
         auto localOnCancel = std::exchange(onCancel, nullptr);
         bool releaseKeepAlive = std::exchange(keptAlive, false);
-        cv.notify_all();
+        notifyWaiters();
         lock.unlock();
         if (localOnException) {
             invokeCallback(localOnException, "onException", *exception);
@@ -349,7 +358,7 @@ struct Inner {
         if (executing && thread) {
             thread->interrupt();
         }
-        cv.notify_all();
+        notifyWaiters();
         lock.unlock();
         bool hadTask = bool(localTask);
         localTask = nullptr;
@@ -453,7 +462,7 @@ struct Inner {
                     self->thread = nullptr;
                     if (self->state.load(std::memory_order_relaxed) == State::CANCELLED) {
                         // isSettled() of a cancelled future waits for the task to stop
-                        self->cv.notify_all();
+                        self->notifyWaiters();
                     }
                 }
                 self->releaseResolver();
@@ -1336,7 +1345,10 @@ void aui::impl::future::Inner<T>::wait(ABitField<AFutureWait> flags) {
                 // self wait?
                 return;
             }
-            cv.wait(lock);
+            if (!cv) {
+                cv = std::make_unique<AConditionVariable>();
+            }
+            cv->wait(lock);
         }
     } catch (const AThread::Interrupted& e) {
         e.needRethrow();
