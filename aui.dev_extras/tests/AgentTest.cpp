@@ -519,7 +519,8 @@ TEST_F(AgentTest, PlainLabelsAreNotInteractive) {
       Label { "text" },
       _new<AButton>("b"),
     });
-    for (const auto& element : ok("view.interactive").asArray()) {
+    const auto interactive = ok("view.interactive");
+    for (const auto& element : interactive.asArray()) {
         EXPECT_NE(element["label"].asString(), "text") << AJson::toString(element);
     }
 }
