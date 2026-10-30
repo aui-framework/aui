@@ -21,8 +21,6 @@ using namespace declarative;
 using namespace aui_remote;
 
 namespace {
-// FontSize in _pt and a declarative Button/CheckBox with a lambda in the same function crash MSVC (C1001),
-// so the styled label is built here.
 _<AView> heading(AString text) { return Label { std::move(text) } AUI_OVERRIDE_STYLE { FontSize { 12_pt } }; }
 }   // namespace
 
@@ -33,8 +31,8 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
 
     auto pointerButton = [this](AString text, RemoteViewport::Pointer pointer) {
         auto button = Button {
-            .content = Label { std::move(text) },
-            .onClick = [this, pointer] { mPointer = pointer; },
+            Label { std::move(text) },
+            [this, pointer] { mPointer = pointer; },
         }();
         connect(AUI_REACT(*mPointer == pointer), AUI_SLOT(button)::setDefault);
         return button;
@@ -108,12 +106,12 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
             connect(AUI_REACT(*mBusy ? Visibility::VISIBLE : Visibility::GONE), it->visibility());
         },
         SpacerExpanding {},
-        Button { .content = Label { "Reconnect" }, .onClick = [this] { inspect(); } },
+        Button { Label { "Reconnect" }, [this] { inspect(); } },
       } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
       Horizontal {
         Label { AUI_REACT(*mBanner) } AUI_OVERRIDE_STYLE { TextColor { AColor::RED } },
         SpacerExpanding {},
-        Button { .content = Label { "Retry" }, .onClick = [this] { inspect(); } },
+        Button { Label { "Retry" }, [this] { inspect(); } },
       } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp }, Padding { 6_dp } } AUI_LET {
           connect(
               AUI_REACT(*mState == State::FAILED || *mState == State::EXITED ? Visibility::VISIBLE : Visibility::GONE),
@@ -123,7 +121,7 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
         Vertical {
           heading("This application needs to confirm the access"),
           Label { "It will show a 6-digit code. The connection is encrypted and the certificate is pinned." },
-          Button { .content = Label { "Pair..." }, .onClick = [this] { pair(); } },
+          Button { Label { "Pair..." }, [this] { pair(); } },
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
       } AUI_LET {
           it->setExpanding();

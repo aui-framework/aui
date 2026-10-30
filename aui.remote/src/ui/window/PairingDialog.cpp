@@ -46,8 +46,8 @@ PairingDialog::PairingDialog(AWindow& parent, AppInfo app)
       Label { AUI_REACT(*mStatus) },
       Horizontal {
         SpacerExpanding {},
-        Button { .content = Label { "Cancel" }, .onClick = [this] { close(); } },
-        Button { .content = Label { "Pair" }, .onClick = [this] { confirm(); } },
+        Button { Label { "Cancel" }, [this] { close(); } },
+        Button { Label { "Pair" }, [this] { confirm(); } },
       } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
     } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Padding { 8_dp } });
     begin();

@@ -29,8 +29,6 @@ _<AView> row(const AString& name, const AString& value) {
     } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } };
 }
 
-// FontSize in _pt and a declarative Button/CheckBox with a lambda in the same function crash MSVC (C1001),
-// so the styled label is built here.
 _<AView> title(AString text) { return Label { std::move(text) } AUI_OVERRIDE_STYLE { FontSize { 14_pt } }; }
 
 AString boxText(const std::array<int, 4>& fields) {
@@ -70,7 +68,7 @@ void ViewDetails::show(const AString& ref, const AJson& fields) {
         title(ViewTree::prettyName(fields)),
         Horizontal {
           Label { ref },
-          Button { .content = Label { "Copy" }, .onClick = [ref] { AClipboard::copyToClipboard(ref); } },
+          Button { Label { "Copy" }, [ref] { AClipboard::copyToClipboard(ref); } },
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
         row("Position", "{}, {} (in parent {}, {})"_format(box.position.x, box.position.y, field("x"), field("y"))),
         row("Size", "{}x{}"_format(box.size.x, box.size.y)),

@@ -16,8 +16,6 @@ using namespace declarative;
 using namespace aui_remote;
 
 namespace {
-// FontSize in _pt and a declarative Button/CheckBox with a lambda in the same function crash MSVC (C1001),
-// so the styled label is built here.
 _<AView> heading(AString text) { return Label { std::move(text) } AUI_OVERRIDE_STYLE { FontSize { 12_pt } }; }
 }   // namespace
 
@@ -29,9 +27,9 @@ WelcomePage::WelcomePage() {
       Vertical {
         Vertical {
           CheckBox {
-            .checked = AUI_REACT(*mSkillInstalled),
-            .onCheckedChange = [this](bool wanted) { skillToggled(wanted); },
-            .content = Label { "Allow Claude to use AUI Remote" },
+            AUI_REACT(*mSkillInstalled),
+            [this](bool wanted) { skillToggled(wanted); },
+            Label { "Allow Claude to use AUI Remote" },
           },
           Label { AUI_REACT(*mSkillStatus) } AUI_OVERRIDE_STYLE { TextColor { 0xff777777_argb }, Margin { 0, 0, 0, 20_dp } },
         } AUI_OVERRIDE_STYLE { LayoutSpacing { 2_dp } },
@@ -48,8 +46,8 @@ WelcomePage::WelcomePage() {
           Horizontal {
             Label { "ARemoteDebug::start();" } AUI_OVERRIDE_STYLE { BackgroundSolid { 0x14000000_argb }, Padding { 4_dp } },
             Button {
-              .content = Label { "Copy" },
-              .onClick = [] { AClipboard::copyToClipboard("ARemoteDebug::start();"); },
+              Label { "Copy" },
+              [] { AClipboard::copyToClipboard("ARemoteDebug::start();"); },
             },
           } AUI_OVERRIDE_STYLE { LayoutSpacing { 8_dp } },
           Label { "and it will show up here." },
@@ -87,8 +85,8 @@ _<AView> WelcomePage::connectionRow(const Row& row) {
       Label { row.app.displayName() },
       SpacerExpanding {},
       Button {
-        .content = Label { std::move(text) },
-        .onClick = [this, app = row.app, action = row.action] {
+        Label { std::move(text) },
+        [this, app = row.app, action = row.action] {
             if (action == Action::PAIR) {
                 emit pairRequested(app);
             } else {

@@ -110,6 +110,9 @@ Read the relevant doc before making non-trivial changes:
       Label { "Down" },   // <- trailing comma
   });
   ```
+- In AUI's own sources, initialize declarative views positionally: `Button { Label { "OK" }, [] {} }`, not
+  `Button { .content = Label { "OK" }, ... }`. The latter crashes MSVC v142, which CI builds with; see `MSVC_C1001` in
+  `docs/troubleshoot-list.md`. `examples/` are exempt.
 - Formatting is governed by `.clang-format`; disable locally with `// clang-format off` / `on`.
 
 ---
