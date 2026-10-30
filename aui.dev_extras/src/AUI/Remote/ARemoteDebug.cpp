@@ -209,6 +209,9 @@ ARemoteDebug::ARemoteDebug(Options options) : mImpl(std::make_unique<Impl>()) {
                 { "certSha256", impl.identity->fingerprintHex() },
                 { "exe", AString(AProcess::self()->getPathToExecutable()) },
                 { "defaultPointer", defaultPointer() },
+                { "pairing", impl.options.pairing == PairingPolicy::REMEMBER  ? "remember"
+                             : impl.options.pairing == PairingPolicy::SESSION ? "session"
+                                                                              : "always" },
                 { "argv", AJson(std::move(argv)) },
                 { "cwd", AString(std::filesystem::current_path().string()) },
                 { "startedAt", static_cast<std::int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
@@ -283,6 +286,10 @@ AJson ARemoteDebug::handleUnauthorized(const AString& text, std::atomic<bool>& a
         }
         return jsonRpcError(id, rpc_code::UNAUTHORIZED, "not paired",
                             "call pair.begin, read the code in the application window and send it with pair.confirm");
+    } catch (const WrongPairingCode& e) {
+        auto response = jsonRpcError(id, e.code(), e.getMessage(), e.hint());
+        response["error"]["data"]["attemptsLeft"] = e.attemptsLeft();
+        return response;
     } catch (const RpcException& e) {
         return jsonRpcError(id, e.code(), e.getMessage(), e.hint());
     } catch (const AException& e) {

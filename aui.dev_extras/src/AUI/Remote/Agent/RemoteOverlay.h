@@ -63,6 +63,13 @@ public:
     static bool isShown(AWindow& window);
 
     /**
+     * @return true if the frame scheduled for the window was asked for by the overlay alone, i.e. nothing else in the
+     *         window wanted to be drawn again when the last frame was finished.
+     */
+    [[nodiscard]]
+    static bool isAnimatingAlone(AWindow& window);
+
+    /**
      * @brief Hides the overlay while `hidden` is true, so that the next frame is clean. Used by screenshots.
      */
     static void setHidden(AWindow& window, bool hidden);
@@ -102,6 +109,7 @@ private:
 
     AWindow& mWindow;
     bool mHidden = false;
+    bool mAnimatingAlone = false;
     AVector<std::pair<const void*, std::function<void()>>> mBeforeDraw;
     std::chrono::steady_clock::time_point mActivityTime {};
     /// The mouse is -1, fingers are their indices.

@@ -47,7 +47,9 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
 }
 
 void SoftwareRenderingContext::endResize(ASurface &window) {
-
+    if (mBitmapSize != glm::uvec2(window.getSize())) {
+        reallocate(window);
+    }
 }
 AImage SoftwareRenderingContext::makeScreenshot() {
     if (!mBitmapBlob) {
@@ -69,7 +71,7 @@ void SoftwareRenderingContext::reallocate() {
     if (mBitmapBlob) {
         free(mBitmapBlob);
     }
-    mBitmapBlob = static_cast<uint8_t *>(malloc(mBitmapSize.x * mBitmapSize.y * 4));
+    mBitmapBlob = static_cast<uint8_t *>(calloc(mBitmapSize.x * mBitmapSize.y, 4));
 
     mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
 }

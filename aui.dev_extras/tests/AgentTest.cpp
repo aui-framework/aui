@@ -397,6 +397,22 @@ TEST_F(AgentTest, ClickByCoordinates) {
     EXPECT_EQ(clicks, 1);
 }
 
+TEST_F(AgentTest, WaitIdleDoesNotWaitForTheBanner) {
+    auto window = showWindow(_new<AButton>("b"));
+    ok("input.pointer", AJson { { "x", 200 }, { "y", 150 } });
+    EXPECT_TRUE(RemoteOverlay::isShown(*window));
+    EXPECT_LT(ok("wait.idle", AJson { { "quietMs", 30 } })["waitedMs"].asInt(), 1500);
+}
+
+TEST_F(AgentTest, ResizeHasAnUpperLimit) {
+    auto window = showWindow(_new<AButton>("b"));
+    // the stub window manager packs the window, see WindowResize; the size that was asked for can't be observed
+    auto result = ok("window.resize", AJson { { "width", 1000000 }, { "height", 100 } });
+    EXPECT_LE(result["width"].asInt(), 16384);
+    EXPECT_EQ(result["requestedWidth"].asInt(), 1000000);
+    EXPECT_EQ(result["maxWidth"].asInt(), 16384);
+}
+
 TEST_F(AgentTest, ClickHoldsTheButtonBeforeRelease) {
     auto button = _new<AButton>("Click me");
     auto window = showWindow(button);
@@ -453,9 +469,59 @@ TEST_F(AgentTest, TypeIntoTextField) {
     EXPECT_EQ(field->text(), "hello");
     ok("input.key", AJson { { "key", "BACKSPACE" } });
     EXPECT_EQ(field->text(), "hell");
+#if AUI_PLATFORM_APPLE
+    ok("input.key", AJson { { "key", "A" }, { "modifiers", AJson::fromString(R"(["cmd"])") } });
+#else
     ok("input.key", AJson { { "key", "A" }, { "modifiers", AJson::fromString(R"(["ctrl"])") } });
+#endif
     ok("input.type", AJson { { "text", "x" } });
     EXPECT_EQ(field->text(), "x");
+}
+
+TEST_F(AgentTest, KeyboardGoesToTheWindowOfTheRef) {
+    auto mainField = _new<ATextField>();
+    auto window = showWindow(mainField);
+    auto dialogField = _new<ATextField>();
+    dialogField->setText("dialog");
+    auto dialog = showWindow(dialogField);
+
+    const auto dialogId = ok("window.list").asArray().back()["windowId"];
+    const auto found = ok("view.find", AJson { { "text", "dialog" }, { "windowId", dialogId } }).asArray();
+    ASSERT_EQ(found.size(), 1u);
+    const auto ref = found.front()["ref"].asString();
+    ok("input.type", AJson { { "ref", ref }, { "text", "!" } });
+    EXPECT_EQ(dialogField->text(), "dialog!");
+    EXPECT_EQ(mainField->text(), "");
+    ok("input.key", AJson { { "ref", ref }, { "key", "BACKSPACE" } });
+    EXPECT_EQ(dialogField->text(), "dialog");
+}
+
+TEST_F(AgentTest, Drag) {
+    auto view = _new<AView>();
+    int pressed = 0, released = 0;
+    auto window = showWindow(view AUI_OVERRIDE_STYLE { ass::FixedSize { 200_px, 100_px } });
+    AObject::connect(view->pressed, AObject::GENERIC_OBSERVER, [&] { ++pressed; });
+    AObject::connect(view->released, AObject::GENERIC_OBSERVER, [&] { ++released; });
+    const auto at = glm::ivec2(view->getCenterPointInWindow());
+
+    ok("input.pointer", AJson { { "action", "drag" }, { "x", at.x - 20 }, { "y", at.y }, { "toX", at.x + 20 }, { "toY", at.y } });
+    EXPECT_EQ(pressed, 1);
+    EXPECT_EQ(released, 1);
+
+    const auto ref = ok("view.find", AJson { { "type", "AView" } }).asArray().front()["ref"].asString();
+    ok("input.pointer", AJson { { "action", "drag" }, { "x", at.x - 20 }, { "y", at.y }, { "toRef", ref } });
+    EXPECT_EQ(pressed, 2);
+    EXPECT_EQ(released, 2);
+}
+
+TEST_F(AgentTest, PlainLabelsAreNotInteractive) {
+    auto window = showWindow(Vertical {
+      Label { "text" },
+      _new<AButton>("b"),
+    });
+    for (const auto& element : ok("view.interactive").asArray()) {
+        EXPECT_NE(element["label"].asString(), "text") << AJson::toString(element);
+    }
 }
 
 TEST_F(AgentTest, InputErrors) {
@@ -781,6 +847,7 @@ TEST_F(AgentTest, PairingFlow) {
     ASSERT_EQ(session.replies.size(), 4u);
     EXPECT_TRUE(AJson::fromString(session.replies[0])["result"]["pending"].asBool());
     EXPECT_EQ(AJson::fromString(session.replies[1])["error"]["code"].asInt(), rpc_code::UNAUTHORIZED);
+    EXPECT_EQ(AJson::fromString(session.replies[1])["error"]["data"]["attemptsLeft"].asInt(), 2);
     EXPECT_TRUE(AJson::fromString(session.replies[2])["result"]["paired"].asBool());
     EXPECT_EQ(AJson::fromString(session.replies[3])["result"]["protocol"].asInt(), 1);
 
@@ -1184,6 +1251,7 @@ TEST_F(FramesTest, UnsubscribeStopsFrames) {
     ASSERT_TRUE(waitForFrames(1));
     settle();
     EXPECT_FALSE(call("frames.unsubscribe").contains("error"));
+    settle();   // a frame that was on its way when the unsubscribe came may still arrive
     const auto before = connection->messages().size();
     label->setText("b");
     settle();

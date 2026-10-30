@@ -59,7 +59,9 @@ AppTab::AppTab(AppInfo app) : mApp(std::move(app)) {
     _<AView> viewportArea = Stacked::Expanding {
         _new<ARulerArea>(Stacked {
             mViewport
-        } AUI_OVERRIDE_STYLE { BoxShadow { 0, 4_dp, 16_dp, AColor::GRAY.transparentize(0.5f) } }),
+        } AUI_OVERRIDE_STYLE { BoxShadow { 0, 4_dp, 16_dp, AColor::GRAY.transparentize(0.5f) } }) AUI_LET {
+            it->setFitContents(true);
+        },
         Vertical::Expanding {
           Horizontal {
             SpacerExpanding {},
@@ -301,14 +303,16 @@ void AppTab::showDetails(const AString& ref) {
 }
 
 void AppTab::showRemoteSize(glm::ivec2 size) {
-    mRemoteSize = size;
-    // a value being typed is not overwritten
-    if (!mWidthField->hasFocus()) {
-        mWidthField->setText(AString::number(size.x));
-    }
-    if (!mHeightField->hasFocus()) {
-        mHeightField->setText(AString::number(size.y));
-    }
+    // a value being typed is not overwritten; a focused field that shows the old size is not being typed into, and
+    // would send that size again when it loses focus
+    const auto update = [](ATextField& field, int oldValue, int value) {
+        if (!field.hasFocus() || field.text() == AString::number(oldValue)) {
+            field.setText(AString::number(value));
+        }
+    };
+    const auto oldSize = std::exchange(mRemoteSize, size);
+    update(*mWidthField, oldSize.x, size.x);
+    update(*mHeightField, oldSize.y, size.y);
 }
 
 void AppTab::resizeRemoteWindow() {

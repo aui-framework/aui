@@ -139,11 +139,19 @@ ViewportMapping RemoteViewport::mapping() const noexcept {
     return { glm::vec2(getSize()), glm::vec2(mWindowSize) };
 }
 
-glm::ivec2 RemoteViewport::onIntrinsicMeasure(AConstraints) {
+glm::ivec2 RemoteViewport::onIntrinsicMeasure(AConstraints constraints) {
     if (mWindowSize.x <= 0 || mWindowSize.y <= 0) {
         return { 320, 240 };
     }
-    return mWindowSize;
+    // the frame is never upscaled, but a window larger than the viewport is shown whole
+    float scale = 1.f;
+    if (!constraints.isUnlimitedInline()) {
+        scale = std::min(scale, float(constraints.maxInline) / float(mWindowSize.x));
+    }
+    if (!constraints.isUnlimitedBlock()) {
+        scale = std::min(scale, float(constraints.maxBlock) / float(mWindowSize.y));
+    }
+    return glm::max(glm::ivec2(glm::vec2(mWindowSize) * scale), glm::ivec2(1));
 }
 
 void RemoteViewport::render(ARenderContext ctx) {

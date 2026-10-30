@@ -7,27 +7,21 @@ description: Run, look at, click and type into a running AUI application through
 
 1. The application must link `aui::dev_extras` (development builds only) and call `ARemoteDebug::start()` under
    `#if AUI_DEBUG`; see `examples/ui/remote_debug`. If it does not, add it.
-2. Find it in `~/.aui/remote/<pid>.json` (`port`). The first time, pair: `pair.begin` makes the application show a
-   6-digit code; ask the user for it and send `pair.confirm` with `{ code, key }` (`key` is a random string you
-   generate). Then connect to `wss://127.0.0.1:<port>/?key=<key>`, accepting only the certificate whose SHA-256 is `certSha256` from
-   the discovery file. Speak JSON-RPC 2.0, or use `aui-remote cli`
-   if installed. An application you start yourself with `AUI_REMOTE_KEY=<key>` (read by
-   `ARemoteDebug::Options::fromEnvironment()`) needs no pairing.
-3. Loop: `view.interactive` (what can be clicked) -> `input.pointer` / `input.type` / `input.key` -> `wait.idle`
-   -> `screenshot` (returns a PNG path; look at the file) -> fix the code, rebuild, repeat. On an unfamiliar screen,
-   `screenshot` with `annotate: true` numbers the interactive views on the picture and maps the numbers to refs.
+2. Build the client: `cmake --build build -t aui.remote`. It is `build/bin/aui-remote`, on macOS
+   `build/bin/aui-remote.app/Contents/MacOS/aui-remote`. Below it is `aui-remote`.
+3. Start the application with `aui-remote cli launch -- <exe> [args]`, which needs no pairing, and stop it with
+   `aui-remote cli stop <pid>`. One started by someone else has to be paired once: `aui-remote cli pair <pid>` makes it
+   show a 6-digit code; ask the user for it and run `aui-remote cli pair <pid> --code <code>`. Never guess the code.
+4. Loop: `screenshot --annotate` on a screen you haven't seen (numbered boxes, `marks` maps them to refs), `click <ref>`,
+   `type "text" [--ref R]`, `key Enter`, `wait-idle`, `screenshot` (look at the PNG), fix the code, rebuild, repeat.
 
-Methods: `session.hello`, `window.list`, `window.resize`, `window.setScale`, `view.tree`, `view.find`, `view.properties`, `view.hitTest`,
-`view.interactive`, `view.scrollIntoView`, `screenshot`, `input.pointer`, `input.touch`, `input.gesture`, `input.type`, `input.key`, `wait.idle`, `wait.view`,
-`diag.log`, `fn.list`, `fn.call`. Full description: `docs/agentic-development.md`.
-
-`input.pointer` with `action: "move"` hovers without clicking; `pointer: "finger"` sends touch instead of mouse. Touch gestures:
-`input.pointer` `longPress` / `fling` (`dx`, `dy`, `velocity`), `input.touch` `pinch` / `rotate` or raw finger tracks.
-The application shows a pink banner (for 3 s after a command) and a pink pointer
-for the user; neither is part of screenshots.
+Every command prints one JSON object on the last line of stdout; errors are `{"error":{"code","message","data":{"hint"}}}`.
+With several applications running pass `--pid N`. All the commands and options are in `aui.remote/assets/skill/SKILL.md`,
+the protocol is in `docs/agentic-development.md`.
 
 Rules:
-- Refs (`v<gen>:<id>`) go stale after the tree changes; on `STALE_REF` call `view.find` again.
-- Always `wait.idle` after input before taking a screenshot.
+- Refs (`v<gen>:<id>`) go stale after the tree changes; on `STALE_REF` call `find` again.
+- Always `wait-idle` after input before taking a screenshot.
+- A dialog is a window of its own: `type` and `key` go to the window of `--ref`, or `--window`, or the main one.
 - Errors contain `data.hint`; read it.
 - Never ship `aui::dev_extras` in release builds.

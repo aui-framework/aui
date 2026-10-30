@@ -112,7 +112,8 @@ AJson doPair(const ParsedArgs& args, const Directories& directories) {
         if (result.remembered) {
             json["hint"] = "pairing is a one-time procedure: no code is needed again, even after the application restarts";
         } else if (result.connectionOnly) {
-            json["hint"] = "the application asks for a code on every connection (AUI_REMOTE_PAIRING=always)";
+            json["hint"] = "the application asks for a code on every connection (AUI_REMOTE_PAIRING=always) and every CLI "
+                         "command is a connection of its own: drive it from the GUI, or restart it with another policy";
         } else {
             json["hint"] = "the application does not remember clients: pair again after it restarts";
         }

@@ -18,7 +18,7 @@ AString describe(const RpcError& e) {
     AString result = e.getMessage();
     if (e.data().isObject()) {
         if (auto left = e.data().containsOpt("attemptsLeft"); left && left->isInt()) {
-            result += left->asInt() > 0 ? " ({} attempts left)"_format(left->asInt())
+            result += left->asInt() > 0 ? " (attempts left: {})"_format(left->asInt())
                                         : " (the code is void, a new one is shown in the application)";
         }
     }
@@ -50,15 +50,15 @@ PairingDialog::PairingDialog(AWindow& parent, AppInfo app)
         Button { Label { "Pair" }, [this] { confirm(); } },
       } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp } },
     } AUI_OVERRIDE_STYLE { LayoutSpacing { 4_dp }, Padding { 8_dp } });
-    begin();
+    begin("Waiting for the code.");
 }
 
-void PairingDialog::begin() {
-    mAsync << AUI_THREADPOOL {
+void PairingDialog::begin(AString waitingStatus) {
+    mAsync << AUI_THREADPOOL_X[this, waitingStatus = std::move(waitingStatus)] {
         AString status;
         try {
             RpcClient::forApp(mApp, "").call("pair.begin");
-            status = "Waiting for the code.";
+            status = waitingStatus;
         } catch (const RpcError& e) {
             status = "Can't start pairing: " + e.getMessage();
         }
@@ -96,7 +96,7 @@ void PairingDialog::confirm() {
             }
             mStatus = status;
             if (needNewCode) {
-                begin();
+                begin(status);
             }
         };
     };

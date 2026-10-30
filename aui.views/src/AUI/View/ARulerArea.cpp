@@ -68,9 +68,19 @@ void ARulerArea::onLayout(glm::ivec2 size) {
     // the wrapped view is positioned relative to the wrapper (the area without the rulers), so the wrapper is laid out
     // first
     AViewContainerBase::onLayout(size);
-    const auto wrappedSize = mWrappedView->measure(AConstraints {});
+    AConstraints constraints {};
+    if (const auto wrapper = mWrappedView->getParent(); mFitContents && wrapper) {
+        constraints.maxInline = wrapper->getWidth();
+        constraints.maxBlock = wrapper->getHeight();
+    }
+    const auto wrappedSize = mWrappedView->measure(constraints);
     mWrappedView->layout(0, 0, wrappedSize.x, wrappedSize.y);
     updatePosition();
+}
+
+void ARulerArea::setFitContents(bool fitContents) {
+    mFitContents = fitContents;
+    requestLayout();
 }
 
 void ARulerArea::setWrappedViewPosition(const glm::ivec2& pos) {

@@ -66,7 +66,7 @@ With several apps running pass `--pid N` to every command.
 | `pinch <ref \| x y> --from D --to D [--angle deg]`              | two fingers, distance from D to D (zoom)              |
 | `rotate <ref \| x y> --degrees N [--distance D]`                | two fingers turning around the point                  |
 | `touch --fingers '[{"finger":0,"points":[{"x":1,"y":2,"t":0},...]}]'` | any multi-touch: finger tracks, `t` in ms        |
-| `type <text> [--ref R]`, `key <key> [--mod m]... [--ref R]`     | keyboard                                              |
+| `type <text> [--ref R] [--window W]`, `key <key> [--mod ctrl\|shift\|alt\|cmd]... [--ref R] [--window W]` | keyboard; goes to the window of `--ref`, or `--window`, or the main one (a dialog is a window of its own) |
 | `wait-idle [--timeout ms] [--quiet ms]`                         | until nothing is happening                            |
 | `wait-view <find filters> [--state visible\|gone] [--timeout ms]` | until a view appears or disappears                  |
 | `logs [--since N] [--level L] [--limit N]`                      | log of the app; `next` of the result is the next `since` |

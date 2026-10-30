@@ -91,7 +91,7 @@ private:
     std::unordered_map<int /* fd */, FDInfo> mFdInfo;
 #else
     AVector<pollfd> mPollFd;
-    AVector<Callback> mCallbacks;
+    AVector<_<Callback>> mCallbacks;
 #endif
     AMessageQueue<> mMessageQueue;
 

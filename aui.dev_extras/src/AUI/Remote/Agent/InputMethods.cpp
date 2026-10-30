@@ -29,7 +29,7 @@ AInput::Key keyByName(AString name) {
     static const AMap<AString, AString> ALIASES = {
         { "ENTER", "RETURN" },    { "ESC", "ESCAPE" },       { "CTRL", "LCONTROL" }, { "CONTROL", "LCONTROL" },
         { "SHIFT", "LSHIFT" },    { "ALT", "LALT" },         { "CMD", "LSYSTEM" },   { "META", "LSYSTEM" },
-        { "SUPER", "LSYSTEM" },   { "DELETE", "DEL" },
+        { "SUPER", "LSYSTEM" },   { "DELETE", "DEL" },       { "COMMAND", "LSYSTEM" }, { "OPTION", "LALT" },
     };
     if (auto alias = ALIASES.contains(name)) {
         name = ALIASES.at(name);
@@ -41,7 +41,8 @@ AInput::Key keyByName(AString name) {
         }
     }
     throw RpcException(rpc_code::INVALID_PARAMS, "unknown key: " + name,
-                       "use AInput::Key names, i.e. RETURN, ESCAPE, TAB, LEFT, F5, A, NUM1");
+                       "use AInput::Key names, i.e. RETURN, ESCAPE, TAB, LEFT, F5, A, NUM1; modifiers are ctrl, "
+                       "shift, alt and cmd");
 }
 
 AInput::Key buttonByName(const AJson& params) {
@@ -63,6 +64,16 @@ AVector<AInput::Key> modifiersOf(const AJson& params) {
         }
     }
     return result;
+}
+
+/// The window of the view being typed into; the default one without a view. A dialog is not the default window.
+_<AWindow> keyboardWindow(const _<AView>& view, const AJson& params, RefTable& refs) {
+    if (view && view->getWindow()) {
+        if (auto window = _cast<AWindow>(aui::ptr::shared_from_this(view->getWindow()))) {
+            return window;
+        }
+    }
+    return windowFromParams(params, refs);
 }
 
 /// Makes AInput::isKeyDown report the keys as pressed while the synthetic input is being delivered.
@@ -99,8 +110,11 @@ float number(const AJson& params, const char* name) {
 
 /// A point by `<prefix>ref` (center of the view) or `<prefix>x`/`<prefix>y` (window coordinates).
 Target resolveTarget(const AJson& params, RefTable& refs, const char* prefix = "") {
-    const AString refName = AString(prefix) + "ref";
-    if (auto ref = params.containsOpt(refName.toStdString().c_str())) {
+    const AString prefixName(prefix);
+    const auto paramName = [&](const char* name, const char* prefixedName) {
+        return prefixName.empty() ? AString(name) : prefixName + prefixedName;
+    };
+    if (auto ref = params.containsOpt(paramName("ref", "Ref").toStdString().c_str())) {
         auto view = refs.resolve(ref->asString());
         auto window = _cast<AWindow>(aui::ptr::shared_from_this(view->getWindow()));
         if (!window) {
@@ -109,7 +123,7 @@ Target resolveTarget(const AJson& params, RefTable& refs, const char* prefix = "
         }
         return { window, view, glm::vec2(view->getCenterPointInWindow()) };
     }
-    const AString x = AString(prefix) + "x", y = AString(prefix) + "y";
+    const AString x = paramName("x", "X"), y = paramName("y", "Y");
     return { windowFromParams(params, refs), nullptr,
              glm::vec2(number(params, x.toStdString().c_str()), number(params, y.toStdString().c_str())) };
 }
@@ -540,8 +554,8 @@ void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
                     view->focus();
                 }
             },
-            [&refs, text, windowParams] {
-                auto window = windowFromParams(windowParams, refs);
+            [&refs, view, text, windowParams] {
+                auto window = keyboardWindow(view, windowParams, refs);
                 int count = 0;
                 for (AChar c : text) {
                     window->injectEvent(AInjectedChar { c });
@@ -570,8 +584,8 @@ void registerInputMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
                     view->focus();
                 }
             },
-            [&refs, key, modifiers, action, windowParams] {
-                auto window = windowFromParams(windowParams, refs);
+            [&refs, view, key, modifiers, action, windowParams] {
+                auto window = keyboardWindow(view, windowParams, refs);
                 OverrideScope scope(modifiers);
                 if (action == "press" || action == "down") {
                     for (auto m : modifiers) {

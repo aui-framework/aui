@@ -96,10 +96,14 @@ void KeyStore::store(const AppInfo& app, const AString& key) const { writePrivat
 void KeyStore::storeSession(const AppInfo& app, const AString& key) const { writePrivate(sessionPathFor(app), key); }
 
 void KeyStore::remove(const AppInfo& app) const {
-    for (const auto& path : { pathFor(app), sessionPathFor(app) }) {
-        if (path.isRegularFileExists()) {
-            path.removeFile();
-        }
+    const auto session = sessionPathFor(app);
+    if (session.isRegularFileExists()) {
+        session.removeFile();
+    }
+    // an application that remembers no clients ignores the paired key, not forgets it: it works again with `remember`
+    const auto paired = pathFor(app);
+    if (app.pairing == "remember" && paired.isRegularFileExists()) {
+        paired.removeFile();
     }
 }
 

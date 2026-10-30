@@ -21,6 +21,7 @@
 #include "AUI/Thread/AFuture.h"
 #include "AUI/Thread/AThread.h"
 #include "JsonRpc.h"
+#include "RemoteOverlay.h"
 
 namespace aui::remote {
 
@@ -33,7 +34,8 @@ inline bool uiBusy() {
         return true;
     }
     for (const auto& window : ASurface::getWindowManager().getWindows()) {
-        if (window->isFrameScheduled() || window->hasPendingLayout()) {
+        // the fading banner schedules frames for seconds, while the application has settled long ago
+        if ((window->isFrameScheduled() && !RemoteOverlay::isAnimatingAlone(*window)) || window->hasPendingLayout()) {
             return true;
         }
     }

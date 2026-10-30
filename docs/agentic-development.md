@@ -58,7 +58,7 @@ behind your back:
 Pairing is a one-time procedure. The application stores a SHA-256 of the key (not the key itself) next to the path of its
 executable, and the client stores the key the same way, so from now on the client connects with
 `wss://127.0.0.1:<port>/?key=<key>` and needs no code, even after the application is restarted.
-A code is valid for 2 minutes and 3 attempts; after a few wasted codes `pair.begin` is refused (`RATE_LIMITED`, -32007)
+A code is valid for 2 minutes and 3 attempts (a refused `pair.confirm` reports `data.attemptsLeft`); after a few wasted codes `pair.begin` is refused (`RATE_LIMITED`, -32007)
 for a period that doubles every time. Until paired, a connection can call nothing but `pair.begin` and
 `pair.confirm`; connections with an `Origin` header (web pages) are rejected altogether.
 
@@ -69,7 +69,7 @@ read by `ARemoteDebug::Options::fromEnvironment()`):
 |------------|-----------------------------------------------------------------------------------|
 | `remember` | the default; the client is paired once                                            |
 | `session`  | the client is trusted until the application exits; after a restart the code is asked again |
-| `always`   | the code is asked on every connection, even from a client with a known key        |
+| `always`   | the code is asked on every connection, even from a client with a known key; `aui-remote cli` opens a connection per command, so only its GUI can work with it |
 
 Where the hashes are kept is `Options::trustedKeysFile`: by default `~/.aui/remote/trusted` on desktop and the
 application data folder on Android and iOS. On Emscripten nothing survives a reload, so it behaves like `session`.
@@ -88,13 +88,13 @@ Text frames, JSON-RPC 2.0, protocol version 1. Errors carry `data.hint` with a s
 | `window.resize`                                       | resizes a window (`width`, `height`), answers when the layout is done |
 | `window.setScale`                                     | the DPI scale on top of the system one (`factor` or `reset`)   |
 | `view.tree`, `view.find`, `view.properties`           | inspect views; `view.find` filters by `type`, `text`, `assName`|
-| `view.hitTest`, `view.interactive`                    | the views under a point; clickable / typeable elements         |
+| `view.hitTest`, `view.interactive`                    | the views under a point; controls, text fields and views with a `clicked` connection |
 | `view.scrollIntoView`                                 | scrolls the scroll areas around a view so that it is visible   |
 | `screenshot`                                          | saves a PNG to the temp folder and returns its path; `ref` crops to a view, `annotate` numbers the interactive views |
 | `input.pointer`                                       | `click`, `doubleClick`, `press`, `release`, `move`, `drag`, `scroll`, `longPress`, `fling` |
 | `input.touch`                                         | several fingers at once: `pinch`, `rotate` or arbitrary tracks |
 | `input.gesture`                                       | a long press gesture alone, for clients that hold the finger themselves |
-| `input.type`, `input.key`                             | typed text and key presses with modifiers                      |
+| `input.type`, `input.key`                             | typed text and key presses with modifiers; they go to the window of `ref`, or `windowId` |
 | `wait.idle`, `wait.view`                              | wait until nothing is happening / until a view appears or is gone |
 | `frames.subscribe`, `frames.unsubscribe`, `frames.ack` | a stream of window frames with the view tree, see below     |
 | `diag.log`                                            | recent log entries                                             |
@@ -131,12 +131,14 @@ button); `rect` is in logical pixels of the window. The refs are of a new genera
 marks are drawn into the saved image only: the window and the frame stream don't show them.
 
 `window.resize` returns once the size has stayed the same for 100 ms with no pending layout, so a screenshot taken right
-after it shows the new size. A window is never smaller than its contents need, and the window manager may adjust the
-size too; in that case the result also has `requestedWidth`, `requestedHeight`, `minWidth` and `minHeight`.
+after it shows the new size. A window is never smaller than its contents need nor larger than 16384 pixels per axis, and
+the window manager may adjust the size too; in that case the result also has `requestedWidth`, `requestedHeight`,
+`minWidth`, `minHeight`, `maxWidth` and `maxHeight`.
 
 `window.setScale` does what the Scale slider of the in-process devtools does: it multiplies the DPI ratio of the window
 by `factor` (0.25..4, `ASurface::setScalingParams`), so the contents are laid out as on a screen with a different pixel
-density while the window keeps its size in pixels. `reset: true` returns to the system scale. It answers when the layout
+density while the window keeps its size in pixels, unless the contents no longer fit: then the window grows to their
+minimum size and stays like that after the scale goes back. `reset: true` returns to the system scale. It answers when the layout
 has settled, with `scalingFactor` and the resulting `dpi`. `window.list` and every `frames.frame` report
 `scalingFactor` too.
 

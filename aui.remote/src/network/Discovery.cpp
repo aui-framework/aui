@@ -65,6 +65,9 @@ AppInfo AppInfo::fromJson(const AJson& json) {
     if (auto v = json.containsOpt("defaultPointer"); v && v->isString()) {
         info.defaultPointer = v->asString();
     }
+    if (auto v = json.containsOpt("pairing"); v && v->isString()) {
+        info.pairing = v->asString();
+    }
     if (auto v = json.containsOpt("startedAt")) {
         info.startedAt = scalarToString(*v);
     }

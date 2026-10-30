@@ -18,6 +18,7 @@
 #include "AUI/Image/IDrawable.h"
 #include "AUI/Render/IRenderer.h"
 #include "AUI/Render/RenderHints.h"
+#include "AUI/Util/kAUI.h"
 
 namespace aui::remote {
 
@@ -141,6 +142,11 @@ bool RemoteOverlay::isShown(AWindow& window) {
     });
 }
 
+bool RemoteOverlay::isAnimatingAlone(AWindow& window) {
+    auto overlay = of(window);
+    return overlay && overlay->mAnimatingAlone;
+}
+
 bool RemoteOverlay::anyHeld() const {
     return std::any_of(mMarkers.begin(), mMarkers.end(), [](const auto& entry) { return entry.second.held; });
 }
@@ -172,6 +178,9 @@ void RemoteOverlay::removeBeforeDraw(AWindow& window, const void* owner) {
 }
 
 void RemoteOverlay::draw(IRenderer& renderer) {
+    // the flag is reset before a frame is drawn: if it is set here, the contents asked for the next frame while drawing
+    const bool contentsAskedForFrame = mWindow.isFrameScheduled();
+    AUI_DEFER { mAnimatingAlone = !contentsAskedForFrame && mWindow.isFrameScheduled(); };
     // a callback may add or remove callbacks
     const auto hooks = mBeforeDraw;
     for (const auto& hook : hooks) {

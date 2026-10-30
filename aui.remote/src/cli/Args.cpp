@@ -368,14 +368,15 @@ AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {
         request.timeout = std::chrono::milliseconds(duration) + WAIT_MARGIN;
         copyWindow(args, params);
     } else if (cmd == "type") {
-        requirePositional(args, 1, "type <text> [--ref ref]");
+        requirePositional(args, 1, "type <text> [--ref ref] [--window id]");
         request.method = "input.type";
         params["text"] = args.positional[0];
         if (auto v = args.get("ref")) {
             params["ref"] = *v;
         }
+        copyWindow(args, params);
     } else if (cmd == "key") {
-        requirePositional(args, 1, "key <key> [--mod ctrl]... [--ref ref] [--action press|release]");
+        requirePositional(args, 1, "key <key> [--mod ctrl]... [--ref ref] [--window id] [--action press|release]");
         request.method = "input.key";
         params["key"] = args.positional[0];
         if (args.has("mod")) {
@@ -385,6 +386,7 @@ AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {
             }
             params["modifiers"] = std::move(modifiers);
         }
+        copyWindow(args, params);
         if (auto v = args.get("ref")) {
             params["ref"] = *v;
         }

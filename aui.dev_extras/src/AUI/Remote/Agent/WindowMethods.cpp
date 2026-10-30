@@ -25,6 +25,9 @@ using namespace std::chrono_literals;
 /// size a few times after the request.
 constexpr auto SETTLE = 100ms;
 
+/// The largest size window.resize asks for, per axis: renderers can't draw much more anyway, and a typo stays a typo.
+constexpr int MAX_WINDOW_SIZE = 16384;
+
 constexpr float MIN_SCALE = 0.25f;
 constexpr float MAX_SCALE = 4.f;
 
@@ -66,7 +69,7 @@ void registerWindowMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
                     state->started = true;
                     auto window = windowFromParams(params, refs);
                     // the window manager would clamp it with the size hints, but not every platform has them
-                    window->setSize(glm::max(requested, window->getMinimumSize()));
+                    window->setSize(glm::max(glm::min(requested, glm::ivec2(MAX_WINDOW_SIZE)), window->getMinimumSize()));
                     // setSize does not lay the contents out, and the window manager does not report a size the window
                     // already has
                     window->requestLayout();
@@ -95,12 +98,15 @@ void registerWindowMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
                     { "height", size.y },
                 };
                 if (size != requested) {
-                    // the window doesn't go below the size its contents need, the window manager has a say as well
+                    // the window doesn't go below the size its contents need nor above the limit, the window
+                    // manager has a say as well
                     const auto minimum = window->getMinimumSize();
                     result["requestedWidth"] = requested.x;
                     result["requestedHeight"] = requested.y;
                     result["minWidth"] = minimum.x;
                     result["minHeight"] = minimum.y;
+                    result["maxWidth"] = MAX_WINDOW_SIZE;
+                    result["maxHeight"] = MAX_WINDOW_SIZE;
                 }
                 return result;
             },

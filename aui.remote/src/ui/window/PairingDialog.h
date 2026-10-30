@@ -26,6 +26,6 @@ private:
     AProperty<bool> mBusy = false;
     AAsyncHolder mAsync;
 
-    void begin();
+    void begin(AString waitingStatus);
     void confirm();
 };

@@ -92,6 +92,11 @@ TEST(ArgsTest, DoubleClickMapsToAgentAction) {
     EXPECT_EQ(request({ "dblclick", "v1:3" }).params["action"].asString(), "doubleClick");
 }
 
+TEST(ArgsTest, KeyboardTakesWindow) {
+    EXPECT_EQ(request({ "type", "hi", "--window", "v1:2" }).params["windowId"].asString(), "v1:2");
+    EXPECT_EQ(request({ "key", "Enter", "--window", "v1:2" }).params["windowId"].asString(), "v1:2");
+}
+
 TEST(ArgsTest, DragAndScroll) {
     auto drag = request({ "drag", "10", "20", "v1:9" });
     EXPECT_EQ(drag.params["action"].asString(), "drag");

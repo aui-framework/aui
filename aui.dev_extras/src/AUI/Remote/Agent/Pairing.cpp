@@ -190,8 +190,8 @@ AJson Pairing::confirm(const AString& code, const std::string& key) {
         std::lock_guard lock(mMutex);
         const bool expired = std::chrono::steady_clock::now() > mExpires;
         if (mCode.empty() || mAttemptsLeft <= 0 || expired) {
-            throw RpcException(rpc_code::UNAUTHORIZED, "there is no valid pairing code",
-                               "call pair.begin and read the new code in the application window");
+            throw WrongPairingCode("there is no valid pairing code",
+                                   "call pair.begin and read the new code in the application window", 0);
         }
         if (!constantTimeEquals(code.toStdString(), mCode)) {
             attemptsLeft = --mAttemptsLeft;
@@ -212,9 +212,10 @@ AJson Pairing::confirm(const AString& code, const std::string& key) {
         if (attemptsLeft == 0) {
             hideOverlay();
         }
-        throw RpcException(rpc_code::UNAUTHORIZED, "wrong code",
-                           attemptsLeft > 0 ? "attempts left: " + AString::number(attemptsLeft)
-                                            : AString("no attempts left, call pair.begin again"));
+        throw WrongPairingCode("wrong code",
+                               attemptsLeft > 0 ? "attempts left: " + AString::number(attemptsLeft)
+                                                : AString("no attempts left, call pair.begin again"),
+                               attemptsLeft);
     }
     hideOverlay();
     ALogger::info(LOG_TAG) << "A client is paired";

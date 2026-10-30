@@ -68,7 +68,8 @@ AString interactiveRole(const _<AView>& view) {
     if (dynamic_cast<ACheckBox*>(view.get())) return "checkbox";
     if (dynamic_cast<ARadioButton*>(view.get())) return "radiobutton";
     if (dynamic_cast<AAbstractTextField*>(view.get())) return "textbox";
-    if (view->capturesFocus() || view->handlesNonMouseNavigation()) return "focusable";
+    // AView::capturesFocus is true for any view, labels and spacers included, and says nothing about the input it takes
+    if (view->handlesNonMouseNavigation()) return "focusable";
     if (view->clicked.hasOutgoingConnections() || view->clickedButton.hasOutgoingConnections()) return "clickable";
     return {};
 }

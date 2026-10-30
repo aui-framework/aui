@@ -3,7 +3,8 @@
 Client of the remote agent of AUI applications (`aui::dev_extras`), module `aui.remote` of AUI. It lets a human or an AI
 coding agent look at a running AUI app, click and type into it, read its log and compare screenshots.
 
-- GUI (`aui-remote`): running applications, pairing, the live frame of the selected one with the input forwarded to it,
+- GUI (`aui-remote`): running applications, pairing, the live frame of the selected one (scaled down to fit, the rulers
+  show the pixels of the viewport then) with the input forwarded to it,
   and the checkbox "Allow Claude to use AUI Remote" that installs the Claude Code skill. The view tree works like the
   in-process devtools: hovering a view draws its content, padding and margin over the frame, clicking it shows its
   properties, and moving the pointer over the frame with CTRL held picks the view under it.
@@ -49,6 +50,9 @@ confirms it with a new random key. What is kept depends on the pairing policy of
 | `remember` (default) | trusts the client after restarts      | the paired key   |
 | `session`            | trusts the client until it exits      | a session key    |
 | `always`             | asks for the code on every connection | nothing          |
+
+Every CLI command is a connection of its own, so `always` is usable from the GUI only. The paired key survives a run of
+the application with `session` or `always`: it is deleted only when an application with `remember` rejects it.
 
 `pair` on an application that already accepts the stored key answers `alreadyPaired` without asking for a code. When an
 application rejects a stored key (it forgot the client), the key is deleted and the error says to pair again.
@@ -135,6 +139,7 @@ kill $MUTTER_PID   # by pid: the user's desktop is mutter too, never kill by nam
   picture, and `marks` maps the numbers to refs, so "click 7" is `click <ref of mark 7>` without matching coordinates.
 - Start with `tree` (compact text) and `interactive`; use `tree --json` or `props <ref>` only when you need geometry or
   inspector fields. `hit <x> <y>` tells what is under a pixel you saw on a screenshot.
+- A dialog is a window of its own: `type` and `key` go to the window of `--ref`, or `--window`, or the main one.
 - Numbers don't prove that the UI is right; look at the picture. `resize` once reported the right size while the
   contents were still laid out for the old one, and only the screenshot showed it.
 - `screenshot` returns `scale`: screenshot pixels divided by it are the window coordinates that `click` and `hit` take.
@@ -154,9 +159,10 @@ kill $MUTTER_PID   # by pid: the user's desktop is mutter too, never kill by nam
   reach views built on `A2FingerTransformArea`; elsewhere the fingers are just separate pointers.
 - In T mode of the GUI, holding the finger still for half a second is a long press, as on a phone.
 - To check responsive layouts, `resize` to a few sizes (a phone-like 360x740, a narrow desktop, a wide one) and take a
-  screenshot of each. A size below the window's minimum is clamped; the result says to what.
+  screenshot of each. A size below the window's minimum or above 16384 is clamped; the result says to what.
 - `scale 2` (or 0.75, 1.5, ...) shows the app as on a screen with another pixel density without changing the window
-  size in pixels; `scale reset` returns to the system one. The GUI has the same as the percentage next to the size.
+  size in pixels, unless the contents no longer fit: then the window grows to their minimum and keeps that size after
+  `scale reset`, which returns to the system scale. The GUI has the same as the percentage next to the size.
 - Read `logs --level warn` when something does not react: failed bindings, ASS errors and exceptions land there.
 
 **Debugging aui-remote with aui-remote**
@@ -169,6 +175,8 @@ like any other app:
 ./build/bin/aui-remote cli launch -- $PWD/build/bin/aui-remote   # prints the pid of the GUI
 ./build/bin/aui-remote cli screenshot --pid <pid>
 ```
+
+On macOS the executable is `build/bin/aui-remote.app/Contents/MacOS/aui-remote`.
 
 Only the GUI starts the agent, CLI invocations don't, and the GUI does not list itself among the connections. The GUI
 shows the frames of the app it inspects inside its own window, so a screenshot of the GUI shows both; compare it with a
@@ -188,7 +196,7 @@ cross-compiled:
 
 ```bash
 cmake -B build -GNinja
-cmake --build build -j8 -t aui.remote          # build/bin/aui-remote
+cmake --build build -j8 -t aui.remote          # build/bin/aui-remote, on macOS build/bin/aui-remote.app/Contents/MacOS/aui-remote
 cmake --build build -j8 -t Tests && ./build/bin/Tests --gtest_filter='EndToEndTest.*:CliTest.*'
 ```
 

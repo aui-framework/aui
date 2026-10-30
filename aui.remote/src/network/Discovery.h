@@ -43,6 +43,11 @@ struct AppInfo {
     AString defaultPointer = "mouse";
 
     /**
+     * @brief The pairing policy of the application: `remember`, `session` or `always`.
+     */
+    AString pairing = "remember";
+
+    /**
      * @return whether the discovery file describes an agent this client can talk to (wss with a pinned certificate)
      */
     [[nodiscard]] bool isSupported() const;

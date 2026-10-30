@@ -21,8 +21,23 @@
 #include "AUI/IO/APath.h"
 #include "AUI/Json/AJson.h"
 #include "AUI/Platform/ASurface.h"
+#include "JsonRpc.h"
 
 namespace aui::remote {
+
+/**
+ * @brief `pair.confirm` was refused because of the code; the error of the response carries `data.attemptsLeft`.
+ */
+class WrongPairingCode : public RpcException {
+public:
+    WrongPairingCode(AString message, AString hint, int attemptsLeft)
+      : RpcException(rpc_code::UNAUTHORIZED, std::move(message), std::move(hint)), mAttemptsLeft(attemptsLeft) {}
+
+    [[nodiscard]] int attemptsLeft() const noexcept { return mAttemptsLeft; }
+
+private:
+    int mAttemptsLeft;
+};
 
 /**
  * @brief Decides which clients may drive the application.
