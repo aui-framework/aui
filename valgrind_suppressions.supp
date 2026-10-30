@@ -92,3 +92,20 @@
    fun:_ZN35Coroutines_CoAwait3rdPartyCoro_Test8TestBodyEv
    ...
 }
+
+{
+   thread stack TLS of a joined std::thread, kept in the glibc stack cache (agent websocket test client)
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   fun:calloc
+   fun:allocate_dtv
+   fun:_dl_allocate_tls
+   fun:allocate_stack
+   fun:pthread_create*
+   ...
+   fun:_ZNSt6thread15_M_start_threadESt10unique_ptrINS_6_StateESt14default_deleteIS1_EEPFvvE
+   ...
+   fun:_ZN12_GLOBAL__N_116WebsocketSessionC2ERK7AStringSt8functionIFS1_RK7AVectorIS1_SaIS1_EEEE
+   ...
+}

@@ -51,11 +51,12 @@ public:
 
     ASmallVector(ASmallVector&& rhs) noexcept {
         if (rhs.isInplaceAllocated()) {
-            new (&mBase.inplace) StaticVector(*rhs.inplace());
+            new (&mBase.inplace) StaticVector(std::move(*rhs.inplace()));
         } else {
-            new (&mBase.dynamic) DynamicVector(*rhs.dynamic());
+            new (&mBase.dynamic) DynamicVector(std::move(*rhs.dynamic()));
         }
 
+        // both moves leave rhs empty, so nothing is lost by constructing over it
         new (&rhs.mBase.inplace) StaticVector();
     }
 

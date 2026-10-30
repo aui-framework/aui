@@ -689,11 +689,12 @@ struct WebsocketSession {
         thread = std::thread([this, url, script = std::move(script)] {
             try {
                 auto ws = _new<AWebsocket>(url);
-                AObject::connect(ws->connected, ws, [&, ws] {
+                // the slots live in ws itself: a strong capture would never let it go
+                AObject::connect(ws->connected, ws, [&, ws = ws.get()] {
                     connected = true;
                     ws->writeText(script(replies));
                 });
-                AObject::connect(ws->received, ws, [&, ws](AByteBufferView payload) {
+                AObject::connect(ws->received, ws, [&, ws = ws.get()](AByteBufferView payload) {
                     replies << AString::fromUtf8(payload);
                     auto next = script(replies);
                     if (next.empty()) {
