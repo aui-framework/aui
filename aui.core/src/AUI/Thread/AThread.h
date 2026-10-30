@@ -163,9 +163,11 @@ public:
     /**
      * @brief Continues the coroutine on this thread: `co_await AThread::main()->switchTo();`.
      * @details
-     * Suspends the coroutine and resumes it when this thread processes its messages. Does not suspend if the
-     * coroutine is on this thread already. The coroutine stays on this thread until the next switch: a following
-     * `co_await future` resumes here too.
+     * Suspends the coroutine and posts its resumption to this thread with `enqueue`, the same way as
+     * `AUI_UI_THREAD { ... }` posts a lambda. The coroutine continues when this thread processes its messages: the UI
+     * thread does it in its event loop; a thread of your own needs an [AEventLoop] (or calls
+     * `AThread::processMessages()`). Does not suspend if the coroutine is on this thread already. The coroutine stays
+     * on this thread until the next switch: a following `co_await future` resumes here too.
      *
      * ```cpp
      * AFuture<> MyView::reload() {
@@ -175,9 +177,9 @@ public:
      * }
      * ```
      *
-     * The thread must process its messages (run an event loop), otherwise the coroutine is never resumed. If the
-     * thread stops without processing the message, the coroutine is destroyed; a coroutine returning AFuture then
-     * fails with [AFutureAbandonedException].
+     * If the thread never processes its messages, the coroutine is never resumed. If the thread stops without
+     * processing the message, the coroutine is destroyed; a coroutine returning AFuture then fails with
+     * [AFutureAbandonedException].
      */
     [[nodiscard]]
     auto switchTo();

@@ -1161,24 +1161,35 @@ public:
     }
 
     /**
-     * @brief Maps the value of this future to the value of another future.
+     * @brief Maps the value of this future to the value of another future, like `then` in JavaScript.
      * @details
-     * The counterpart of `then` returning a value in JavaScript. If the callback throws, the returned future fails
-     * with the exception. If this future fails, the returned one fails as well. The returned future holds this one:
-     * dropping the returned future drops this one.
+     * If the callback returns an `AFuture<U>`, the result is `AFuture<U>` that completes with it, not
+     * `AFuture<AFuture<U>>`. This is how asynchronous steps are chained without coroutines:
+     *
+     * ```cpp
+     * AFuture<AImage> loadAvatar(AString userId) {
+     *     return fetchUser(std::move(userId)).map([](const User& user) { return fetchImage(user.avatarUrl); });
+     * }
+     * ```
+     *
+     * If the callback throws, the returned future fails with the exception. If this future fails, the returned one
+     * fails as well. The returned future holds this one: dropping the returned future drops this one.
      */
     template <aui::impl::future::OnValueCallback<T> Callback>
     [[nodiscard]]
     auto map(Callback&& callback) const {
-        using R = typename std::conditional_t<
+        using C = typename std::conditional_t<
             isVoid, std::invoke_result<Callback>, std::invoke_result<Callback, const NonVoid&>>::type;
+        using R = typename aui::impl::future::Unwrap<C>::type;
         return AFuture<R>::create(
             [&](typename AFuture<R>::Resolver resolver) {
                 resolver.onCancel([source = *this] {});
                 inner_().subscribe(
                     [resolver, callback = std::forward<Callback>(callback)](const auto&... value) mutable {
                         try {
-                            if constexpr (std::is_void_v<R>) {
+                            if constexpr (!std::is_same_v<C, R>) {
+                                resolver.supplyFrom(callback(value...));
+                            } else if constexpr (std::is_void_v<R>) {
                                 callback(value...);
                                 resolver.supplyValue();
                             } else {

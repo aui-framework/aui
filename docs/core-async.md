@@ -114,8 +114,31 @@ AFuture<> MyView::reload() {
 }
 ```
 
-`switchTo` does not suspend if the coroutine is on that thread already. The coroutine stays on the thread until the
-next switch, including after a following `co_await future`. The thread must run an event loop.
+`switchTo` suspends the coroutine and posts its resumption to the thread's message queue with `enqueue`, like
+`AUI_UI_THREAD { ... }` posts a lambda. The coroutine continues when the thread processes its messages, so the thread
+must run an event loop: the UI thread has one; a thread of your own needs an [AEventLoop]. `switchTo` does not
+suspend if the coroutine is on that thread already. The coroutine stays on the thread until the next switch, including
+after a following `co_await future`: an awaited future resumes the coroutine through the queue of the thread it
+was suspended on.
+
+## Waiting for a future inside an asynchronous function
+
+A function that returns an `AFuture` often has to wait for another future first. There are three ways:
+
+- **`co_await`**, in a coroutine. The coroutine suspends; the thread keeps running.
+- **`map`**, without coroutines. The next step goes into a callback; if it returns another `AFuture`, `map` returns
+  that future's result, so the steps don't nest:
+  ```cpp
+  AFuture<AImage> loadAvatar(AString userId) {
+      return fetchUser(std::move(userId)).map([](const User& user) { return fetchImage(user.avatarUrl); });
+  }
+  ```
+  `AFuture<>::all` and `AFuture<>::any` combine several futures the same way, and [AAbstractThread::async] returns
+  the result of a future its lambda returns. Inside [AFuture::create], hand a future over with
+  `resolver.supplyFrom(other)`.
+- **`*future`**, only on a thread pool thread. The worker runs other tasks of the pool while waiting (a stackful
+  coroutine), so the pool doesn't deadlock; don't hold locks across the wait. Anywhere else `*future` blocks the
+  thread: never do it on the UI thread or in a C++20 coroutine.
 
 ## Wrapping a callback-based API
 

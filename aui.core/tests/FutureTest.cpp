@@ -209,6 +209,40 @@ TEST(Future, MapPassesTheExceptionOn) {
     EXPECT_THROW(*throwing, AInvocationTargetException);
 }
 
+TEST(Future, MapFlattensAFuture) {
+    AOptional<AFuture<AString>::Resolver> second;
+    auto chained = AFuture<int>::fromValue(1).map([&](int v) {
+        return AFuture<AString>::create([&](AFuture<AString>::Resolver r) { second = std::move(r); });
+    });
+    static_assert(std::is_same_v<decltype(chained), AFuture<AString>>);
+    EXPECT_FALSE(chained.hasResult());
+    second->supplyValue("two");
+    EXPECT_EQ(*chained, "two");
+}
+
+TEST(Future, MapFlattenedExceptionKeepsTheCause) {
+    auto chained = AFuture<int>::fromValue(1).map([](int) {
+        return AFuture<int>::fromException(std::make_exception_ptr(AException("second step")));
+    });
+    try {
+        *chained;
+        FAIL();
+    } catch (const AException& e) {
+        EXPECT_EQ(rootMessage(e), "second step");
+    }
+}
+
+TEST(Future, DroppingMappedFutureCancelsTheFlattenedStep) {
+    AOptional<AFuture<int>::Resolver> second;
+    {
+        auto chained = AFuture<>::fromValue().map([&] {
+            return AFuture<int>::create([&](AFuture<int>::Resolver r) { second = std::move(r); });
+        });
+        EXPECT_FALSE(second->isCancelled());
+    }
+    EXPECT_TRUE(second->isCancelled());
+}
+
 TEST(Future, DroppingMappedFutureCancelsTheSource) {
     AOptional<AFuture<int>::Resolver> resolver;
     {

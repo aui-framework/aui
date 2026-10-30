@@ -16,8 +16,8 @@ ACurl::Builder("https://example.com/api/items").runAsync().onValue([this](const 
 });
 ```
 
-Inside a pool/coroutine task, you may simply dereference the future (`future->body`), which suspends the task rather than
-the thread.
+In a coroutine, `co_await` the future; to continue with another request, return it from `map`. See
+[core-async] for the ways to wait for a future inside an asynchronous function.
 
 To use a dedicated multi instead of the global one, pass it: `runAsync(curlMulti)`.
 
