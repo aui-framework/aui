@@ -71,6 +71,17 @@ To check a change without pushing it, install the `MSVC v142` component and buil
 `-T v142` (Visual Studio generators), or run `vcvarsall.bat x64 -vcvars_ver=14.29` and compile the file in question with
 `cl`.
 
+## Unresolved `__std_*` symbols on MSVC
+
+Symptoms: linking fails with `unresolved external symbol __std_rotate` (`__std_search_1`, `__std_find_trivial_1`, etc.)
+referenced from a library of a dependency, i.e., `gtest.lib`.
+
+Cause: the dependency was built by a newer MSVC toolset than the one linking it. `<BUILD_SPECIFIER>` includes the
+compiler name but not its version, so [AUIB_CACHE] shared between toolsets gives binaries of one toolset to the other.
+
+Solution: use a separate cache per toolset. On CI, include the toolset in the cache key and do not fall back to a key of
+another toolset. Locally, set a different `AUIB_CACHE_DIR` or delete the affected package from the cache.
+
 ## Build cache invalidation { #BUILD_CACHE_INVALIDATION }
 
 Symptoms:
