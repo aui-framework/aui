@@ -145,6 +145,10 @@ AFuture<AJson> inTwoSteps(First first, Second second) {
     });
 }
 
+// MSVC can't aggregate-initialize these events inside a lambda (C2440)
+APointerPressedEvent pressedAt(glm::vec2 position, APointerIndex index) { return { position, index }; }
+APointerReleasedEvent releasedAt(glm::vec2 position, APointerIndex index) { return { position, index }; }
+
 /// Calls `fn` on the UI thread after `delay` without blocking it. `fn` may return a value or an AFuture.
 template <typename Fn>
 auto later(std::chrono::milliseconds delay, Fn fn) {
@@ -378,10 +382,10 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
     };
     auto press = [&] {
         overrideButton(true);
-        window->injectEvent(APointerPressedEvent { position, index });
+        window->injectEvent(pressedAt(position, index));
     };
     auto release = [window, index, overrideButton](glm::vec2 at) {
-        window->injectEvent(APointerReleasedEvent { at, index });
+        window->injectEvent(releasedAt(at, index));
         overrideButton(false);
     };
     auto result = [window, index, action, target, modifiers](glm::vec2 at) {
@@ -440,7 +444,7 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
                          // as the platform does when the timeout passes; a handled long press is not followed by a
                          // click
                          const bool handled = window->onGesture(glm::ivec2(position), ALongPressEvent {});
-                         window->injectEvent(APointerReleasedEvent { position, finger });
+                         window->injectEvent(releasedAt(position, finger));
                          RemoteOverlay::showPointer(*window, position, finger, false, false);
                          return AJson {
                              { "at", describePoint(target) },

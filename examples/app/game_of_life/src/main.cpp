@@ -89,7 +89,7 @@ public:
 
 private:
     _<ATimer> mTimer = _new<ATimer>(100ms);
-    AFuture<> mFrame;
+    AFuture<> mFrame = nullptr;
     glm::ivec2 mSize {};
     AVector<CellState> mStorage;
     AVector<CellState> mNextPopulation;
