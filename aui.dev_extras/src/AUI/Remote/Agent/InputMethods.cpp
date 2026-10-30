@@ -126,23 +126,24 @@ AJson describePoint(const Target& target) {
 /// (i.e. AView::focus) are applied.
 template <typename First, typename Second>
 AFuture<AJson> inTwoSteps(First first, Second second) {
-    AFuture<AJson> result;
-    AThread::main()->enqueue([result, first = std::move(first), second = std::move(second)]() mutable {
-        try {
-            first();
-        } catch (...) {
-            result.supplyException();
-            return;
-        }
-        AThread::main()->enqueue([result, second = std::move(second)]() mutable {
-            try {
-                result.supplyValue(second());
-            } catch (...) {
-                result.supplyException();
-            }
-        });
+    return AFuture<AJson>::create([&](AFuture<AJson>::Resolver result) {
+        AThread::main()->enqueue(
+            [result = std::move(result), first = std::move(first), second = std::move(second)]() mutable {
+                try {
+                    first();
+                } catch (...) {
+                    result.supplyException();
+                    return;
+                }
+                AThread::main()->enqueue([result = std::move(result), second = std::move(second)]() mutable {
+                    try {
+                        result.supplyValue(second());
+                    } catch (...) {
+                        result.supplyException();
+                    }
+                });
+            });
     });
-    return result;
 }
 
 constexpr auto CLICK_DURATION = std::chrono::milliseconds(50);
@@ -452,34 +453,23 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
     };
 }
 
-/// Passes the outcome of `work` to `result`.
-/// A coroutine is cancelled when its future is destroyed, so `self` holds the future of this very coroutine until it is
-/// done.
-AFuture<> answer(AFuture<AJson> work, AFuture<AJson> result, std::shared_ptr<AFuture<>> self) {
-    try {
-        result.supplyValue(co_await work);
-    } catch (...) {
-        result.supplyException();
-    }
-    *self = nullptr;
-}
-
 /// Runs a coroutine of an input method on the UI thread.
 template <typename Coroutine>
 AFuture<AJson> onUiThreadAsync(RefTable& refs, AJson params, Coroutine coroutine) {
-    AFuture<AJson> result;
-    AThread::main()->enqueue([&refs, params = std::move(params), result, coroutine] {
-        auto self = std::make_shared<AFuture<>>();
-        AFuture<AJson> work;
-        try {
-            work = coroutine(refs, params);
-        } catch (...) {
-            result.supplyException();
-            return;
-        }
-        *self = answer(std::move(work), result, self);
+    return AFuture<AJson>::create([&](AFuture<AJson>::Resolver result) {
+        AThread::main()->enqueue([&refs, params = std::move(params), result = std::move(result), coroutine] {
+            try {
+                auto work = coroutine(refs, params);
+                result.onCancel([work] {});   // the coroutine runs while somebody waits for it
+                work.onValue([result](const AJson& value) { result.supplyValue(value); });
+                work.onException([result](const AException& e) {
+                    result.supplyException(aui::impl::future::causeOf(e));
+                });
+            } catch (...) {
+                result.supplyException();
+            }
+        });
     });
-    return result;
 }
 
 }   // namespace

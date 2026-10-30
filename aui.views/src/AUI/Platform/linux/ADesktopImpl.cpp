@@ -57,11 +57,11 @@ ADesktop::browseForFile(ASurface *parent, const APath &startingLocation, const A
         options                                 // options
     );
 
-    AFuture<APath> f;
-
-    auto unsubscribe = std::shared_ptr(ADBus::session().addSignalListener(
+    std::shared_ptr<ADBus::MessageFilter> unsubscribe;
+    auto f = AFuture<APath>::create([&](AFuture<APath>::Resolver resolver) {
+      unsubscribe = ADBus::session().addSignalListener(
         std::move(p), "org.freedesktop.portal.Request", "Response",
-        [f](std::uint32_t response, AMap<std::string, aui::dbus::Variant> results) {
+        [resolver](std::uint32_t response, AMap<std::string, aui::dbus::Variant> results) {
             // The following results get returned via the :ref:`org.freedesktop.portal.Request::Response` signal:
             //
             //  * ``uris`` (``as``)
@@ -87,17 +87,21 @@ ADesktop::browseForFile(ASurface *parent, const APath &startingLocation, const A
                     if (const auto t = std::get_if<AVector<aui::dbus::Unknown> >(&c->second)) {
                         if (AString path; !t->empty() && t->first().as(path)) {
                             const AUrl result = path;
-                            f.supplyValue(result.path());
+                            resolver.supplyValue(result.path());
                             return;
                         }
                     }
                 }
-                f.supplyValue({});
+                resolver.supplyValue({});
             } catch (...) {
-                f.supplyException();
+                resolver.supplyException();
                 throw;
             }
-        }));
+        });
+      resolver.onCancel([parent, unsubscribe] {
+          AThread::main()->enqueue([parent] { AUI_NULLSAFE(parent)->blockUserInput(false); });
+      });
+    });
 
     f.onFinally([parent, unsubscribe = std::move(unsubscribe)] {
         AThread::current()->enqueue([parent] {
@@ -133,27 +137,31 @@ AFuture<APath> ADesktop::browseForDir(ASurface *parent, const APath &startingLoc
         options                                 // options
     );
 
-    AFuture<APath> f;
-
-    auto unsubscribe = std::shared_ptr(ADBus::session().addSignalListener(
+    std::shared_ptr<ADBus::MessageFilter> unsubscribe;
+    auto f = AFuture<APath>::create([&](AFuture<APath>::Resolver resolver) {
+      unsubscribe = ADBus::session().addSignalListener(
         std::move(p), "org.freedesktop.portal.Request", "Response",
-        [f](std::uint32_t response, AMap<std::string, aui::dbus::Variant> results) {
+        [resolver](std::uint32_t response, AMap<std::string, aui::dbus::Variant> results) {
             try {
                 if (const auto c = results.contains("uris")) {
                     if (const auto t = std::get_if<AVector<aui::dbus::Unknown> >(&c->second)) {
                         if (AString path; !t->empty() && t->first().as(path)) {
                             const AUrl result = path;
-                            f.supplyValue(result.path());
+                            resolver.supplyValue(result.path());
                             return;
                         }
                     }
                 }
-                f.supplyValue({});
+                resolver.supplyValue({});
             } catch (...) {
-                f.supplyException();
+                resolver.supplyException();
                 throw;
             }
-        }));
+        });
+      resolver.onCancel([parent, unsubscribe] {
+          AThread::main()->enqueue([parent] { AUI_NULLSAFE(parent)->blockUserInput(false); });
+      });
+    });
 
     f.onFinally([parent, unsubscribe = std::move(unsubscribe)] {
         AUI_NULLSAFE(parent)->blockUserInput(false);

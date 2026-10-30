@@ -52,7 +52,7 @@ API_AUI_VIEWS void playSystemSound(ADesktop::SystemSound s);
  * @return AFuture returning selected path. If user cancelled the operation, the returned path is empty.
  * @details
  * The future is returned instead of the regular path due to platform limitations on Windows. Never try to call
- * blocking getter since it would cause deadlock. Use AFuture::onSuccess callback instead.
+ * blocking getter since it would cause deadlock. Use AFuture::onValue callback instead.
  */
 API_AUI_VIEWS AFuture<APath> browseForDir(ASurface* parent, const APath& startingLocation = {});
 
@@ -65,7 +65,7 @@ API_AUI_VIEWS AFuture<APath> browseForDir(ASurface* parent, const APath& startin
  * @return AFuture returning selected path. If user cancelled the operation, the returned path is empty.
  * @details
  * The future is returned instead of the regular path due to platform limitations on Windows. Never try to call
- * blocking getter since it would cause deadlock. Use AFuture::onSuccess callback instead.
+ * blocking getter since it would cause deadlock. Use AFuture::onValue callback instead.
  */
 API_AUI_VIEWS AFuture<APath> browseForFile(
     ASurface* parent, const APath& startingLocation = {},

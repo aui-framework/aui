@@ -147,25 +147,11 @@ public:
     template <aui::invocable Callable>
     [[nodiscard]] inline auto operator*(Callable fun) {
         using Value = std::invoke_result_t<Callable>;
-        AFuture<Value> future(std::move(fun));
-        run(
-            [innerWeak = future.inner().weak()]() {
-                /*
-                 * Avoid holding a strong reference - we need to keep future cancellation on reference count exceeding
-                 * even while actual future execution.
-                 */
-                if (auto lock = innerWeak.lock()) {
-                    auto innerUnsafePointer = lock->ptr().get();   // using .get() here in order to bypass
-                                                                   // null check in operator->
-
-                    lock = nullptr;   // destroy strong ref
-
-                    innerUnsafePointer->tryExecute(innerWeak);   // there's a check inside tryExecute to check its
-                                                                 // validity
-                }
-            },
+        auto handles = AFuture<Value>::deferred(std::move(fun));
+        // the queue holds a resolver, not the future: dropping the last future cancels the task even while it runs
+        run([resolver = std::move(handles.second)] { AFuture<Value>::execute(resolver); },
             AThreadPool::PRIORITY_LOWEST);
-        return future;
+        return std::move(handles.first);
     }
 
     class TryLaterException {};
@@ -219,7 +205,7 @@ public:
      *
      * The thread on which your callback will be called is undefined.
      *
-     * AFutureSet is not required to be alive when AFutures would potentially call onSuccess callback since a
+     * AFutureSet is not required to be alive when AFutures would potentially call onValue callback since a
      * temporary object is created to keep track of the task completeness.
      */
     template <aui::invocable OnComplete>
@@ -241,7 +227,7 @@ public:
         };
         auto temporary = _new<Temporary>(std::forward<OnComplete>(onComplete), *this);
         for (const AFuture<T>& v : *this) {
-            v.onSuccess([temporary](const auto& v) {
+            v.onValue([temporary](const auto&... v) {
                 for (const AFuture<T>& v : temporary->myCopy) {
                     if (!v.hasResult()) {
                         return;

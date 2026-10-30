@@ -66,7 +66,8 @@ AJson makeRequest(int id, const AString& method, const AJson& params) {
 
 struct FrameStream::Session {
     struct Pending {
-        AFuture<AJson> future;
+        /// empty for a request nobody waits for
+        AOptional<AFuture<AJson>::Resolver> resolver;
         AString method;
         bool fireAndForget;
     };
@@ -109,7 +110,9 @@ struct FrameStream::Session {
             try {
                 throw RpcError(rpc_code::CLIENT_ERROR, "the stream is stopped");
             } catch (...) {
-                p.future.supplyException();
+                if (p.resolver) {
+                    p.resolver->supplyException();
+                }
             }
         }
     }
@@ -249,10 +252,10 @@ void FrameStream::start(float scale, aui::ranged_number<int, 0, 100> quality) {
                         if (entry.fireAndForget) {
                             ALogger::warn("FrameStream") << entry.method << " failed: " << error.getMessage();
                         } else {
-                            entry.future.supplyException(std::make_exception_ptr(error));
+                            entry.resolver->supplyException(std::make_exception_ptr(error));
                         }
                     } else if (!entry.fireAndForget && entry.method != "frames.subscribe") {
-                        entry.future.supplyValue(message.containsOpt("result") ? message["result"] : AJson(nullptr));
+                        entry.resolver->supplyValue(message.containsOpt("result") ? message["result"] : AJson(nullptr));
                     }
                     continue;
                 }
@@ -368,15 +371,12 @@ void FrameStream::call(AString method, AJson params) {
 }
 
 AFuture<AJson> FrameStream::request(AString method, AJson params) {
-    AFuture<AJson> future;
-    if (!mSession || !mSession->enqueue(method, params, Session::Pending { future, method, false })) {
-        try {
+    // an exception, also from parsing the reply, destroys the resolver, so the request fails instead of hanging
+    return AFuture<AJson>::create([&](AFuture<AJson>::Resolver resolver) {
+        if (!mSession || !mSession->enqueue(method, params, Session::Pending { std::move(resolver), method, false })) {
             throw RpcError(rpc_code::CLIENT_ERROR, "the stream is not started");
-        } catch (...) {
-            future.supplyException();
         }
-    }
-    return future;
+    });
 }
 
 }   // namespace aui_remote

@@ -278,7 +278,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         DWORD exitCode;
         int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
         AUI_ASSERT(r && r != STILL_ACTIVE);
-        mExitCode.supplyValue(exitCode);
+        mExitCodeResolver->supplyValue(exitCode);
         emit finished;
     }, INFINITE, WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
 

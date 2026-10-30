@@ -280,14 +280,14 @@ void AppTab::showDetails(const AString& ref) {
     // the response comes on a worker thread
     auto self = _weak<AppTab>(aui::ptr::shared_from_this(this));
     mAsync << mStream->request("view.properties", AJson { { "ref", ref } })
-                  .onSuccess([self, ref](const AJson& properties) {
+                  .onValue([self, ref](const AJson& properties) {
                       AThread::main()->enqueue([self, ref, properties] {
                           if (auto tab = self.lock()) {
                               tab->mDetails->setProperties(ref, properties);
                           }
                       });
                   })
-                  .onError([self, ref](const AException& e) {
+                  .onException([self, ref](const AException& e) {
                       AThread::main()->enqueue([self, ref, message = e.getMessage()] {
                           if (auto tab = self.lock()) {
                               tab->mDetails->setPropertiesError(ref, message);
@@ -320,7 +320,7 @@ void AppTab::resizeRemoteWindow() {
     }
     // the next frame shows the size the window got, which may differ (its minimum size, the window manager)
     mAsync << mStream->request("window.resize", AJson { { "width", size.x }, { "height", size.y } })
-                  .onError([](const AException& e) { ALogger::warn("AppTab") << "window.resize: " << e; });
+                  .onException([](const AException& e) { ALogger::warn("AppTab") << "window.resize: " << e; });
 }
 
 void AppTab::addScaleOption(float factor) {
@@ -350,5 +350,5 @@ void AppTab::rescaleRemoteWindow(int index) {
         return;
     }
     mAsync << mStream->request("window.setScale", AJson { { "factor", double(factor) } })
-                  .onError([](const AException& e) { ALogger::warn("AppTab") << "window.setScale: " << e; });
+                  .onException([](const AException& e) { ALogger::warn("AppTab") << "window.setScale: " << e; });
 }

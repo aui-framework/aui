@@ -398,9 +398,9 @@ public:
 
             aui::parameter_pack::for_each([&](const auto& v) { aui::dbus::iter_append(&dbusArgs, v); }, args...);
         }
-        AFuture<Return> result;
+        return AFuture<Return>::create([&](typename AFuture<Return>::Resolver result) {
         UnixIoThread::inst().thread()->enqueue(
-            [this, msg = std::move(msg), result, formatError = std::move(formatError)]() mutable {
+            [this, msg = std::move(msg), result = std::move(result), formatError = std::move(formatError)]() mutable {
               try {
                   auto pending = aui::ptr::manage_unique(
                       [&] {
@@ -413,7 +413,7 @@ public:
                         return pending;
                       }(),
                       dbus_pending_call_unref);
-                  auto handler = [result = std::move(result), formatError = std::move(formatError)](DBusPendingCall* pending) {
+                  auto handler = [result, formatError](DBusPendingCall* pending) {
                     try {
                         auto msg =
                             aui::ptr::manage_unique(dbus_pending_call_steal_reply(pending), dbus_message_unref);
@@ -452,7 +452,7 @@ public:
                   result.supplyException();
               }
             });
-        return result;
+        });
     }
 
     struct MessageFilter {

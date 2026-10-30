@@ -22,20 +22,20 @@
  *
  * @details
  * ASharedRaiiHelper is intended to track the completion of multiple futures, exploiting the destruction
- * of AFuture::onSuccess or AFuture::onError callbacks when they called. This approach allows to easily integrate
+ * of AFuture::onValue or AFuture::onException callbacks when they called. This approach allows to easily integrate
  * ASharedRaiiHelper to the existing code.
  *
- * Note that the callback will be called even if onSuccess is not.
+ * Note that the callback will be called even if onValue is not.
  *
  * ```cpp
  * auto marker = ASharedRaiiHelper::make([] {
- *     // will be called when all futures called onSuccess or destroyed
+ *     // will be called when all futures called onValue or destroyed
  * });
  * auto future = AUI_THREADPOOL {
  *     // hard work
  * }
  * //                      VVVVVV ASharedRaiiHelper should be captured!
- * future.onSuccess([this, marker]() {
+ * future.onValue([this, marker]() {
  *     // handle the hard work
  * });
  *

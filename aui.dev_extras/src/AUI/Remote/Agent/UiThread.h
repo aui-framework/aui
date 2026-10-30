@@ -31,21 +31,24 @@ namespace aui::remote {
 template <typename Fn>
 auto onUiThread(Fn fn) {
     using Result = std::invoke_result_t<Fn&>;
-    AFuture<Result> future;
-    auto shared = std::make_shared<Fn>(std::move(fn));
-    AThread::main()->enqueue([future, shared]() mutable {
-        try {
-            if constexpr (std::is_void_v<Result>) {
-                (*shared)();
-                future.supplyValue();
-            } else {
-                future.supplyValue((*shared)());
+    return AFuture<Result>::create([&](typename AFuture<Result>::Resolver resolver) {
+        // std::function requires a copyable callable
+        AThread::main()->enqueue([shared = std::make_shared<Fn>(std::move(fn)), resolver = std::move(resolver)] {
+            if (resolver.isCancelled()) {
+                return;
             }
-        } catch (...) {
-            future.supplyException();
-        }
+            try {
+                if constexpr (std::is_void_v<Result>) {
+                    (*shared)();
+                    resolver.supplyValue();
+                } else {
+                    resolver.supplyValue((*shared)());
+                }
+            } catch (...) {
+                resolver.supplyException();
+            }
+        });
     });
-    return future;
 }
 
 }   // namespace aui::remote

@@ -23,20 +23,21 @@ public:
     void init(HANDLE fileHandle, std::function<void(const AByteBuffer&)> callback) {
         mCallback = std::move(callback);
         auto self = shared_from_this();
-        AFuture<> cs;
-        WinIoThread::enqueue([&, self = std::move(self), fileHandle] {
-            try {
-                self->mBuffer.resize(0x1000);
-                self->mOverlapped.Pointer = self.get();
-                self->mFileHandle = fileHandle;
-                nextRead();
-                cs.supplyValue();
-            } catch (...) {
-                cs.supplyException();
-                throw;
-            }
+        auto done = AFuture<>::create([&](AFuture<>::Resolver resolver) {
+            WinIoThread::enqueue([&, self = std::move(self), fileHandle, resolver = std::move(resolver)] {
+                try {
+                    self->mBuffer.resize(0x1000);
+                    self->mOverlapped.Pointer = self.get();
+                    self->mFileHandle = fileHandle;
+                    nextRead();
+                    resolver.supplyValue();
+                } catch (...) {
+                    resolver.supplyException();
+                    throw;
+                }
+            });
         });
-        cs.wait();
+        done.wait();
     }
 
 

@@ -38,15 +38,11 @@ class MyUpdater : public AUpdater {
 public:
     MyUpdater() {
         ON_CALL(*this, checkForUpdatesImpl()).WillByDefault([] {
-            AFuture<void> f;
-            f.supplyValue();
-            return f;
+            return AFuture<>::fromValue();
         });
 
         ON_CALL(*this, downloadUpdateImpl(testing::_)).WillByDefault([] {
-            AFuture<void> f;
-            f.supplyValue();
-            return f;
+            return AFuture<>::fromValue();
         });
     }
 

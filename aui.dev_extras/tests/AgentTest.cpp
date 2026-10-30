@@ -489,14 +489,10 @@ TEST_F(AgentTest, WaitViewAppearsAndDisappears) {
 
 TEST_F(AgentTest, RegisteredFunctionsAreCallable) {
     agent()->registerFunction("echo", "returns its arguments", [](const AJson& args) {
-        AFuture<AJson> result;
-        result.supplyValue(AJson { { "echo", args["value"] } });
-        return result;
+        return AFuture<AJson>::fromValue(AJson { { "echo", args["value"] } });
     });
     agent()->registerFunction("fail", "always fails", [](const AJson&) {
-        AFuture<AJson> result;
-        result.supplyException(std::make_exception_ptr(AException("boom")));
-        return result;
+        return AFuture<AJson>::fromException(std::make_exception_ptr(AException("boom")));
     });
     auto list = ok("fn.list");
     bool found = false;

@@ -11,7 +11,7 @@ static constexpr auto VALUE = 228;
 
 static void FutureImmediateValue(benchmark::State& state) {
     for (auto _ : state) {
-        AFuture f(VALUE);
+        auto f = AFuture<int>::fromValue(VALUE);
         auto value = *f;
         AUI_ASSERT(value == VALUE);
         benchmark::DoNotOptimize(value);
@@ -21,8 +21,7 @@ BENCHMARK(FutureImmediateValue);
 
 static void FutureSingleThread(benchmark::State& state) {
     for (auto _ : state) {
-        AFuture<int> f;
-        f.supplyValue(VALUE);
+        auto f = AFuture<int>::create([](AFuture<int>::Resolver r) { r.supplyValue(VALUE); });
         auto value = *f;
         AUI_ASSERT(value == VALUE);
         benchmark::DoNotOptimize(value);
@@ -32,7 +31,7 @@ BENCHMARK(FutureSingleThread);
 
 /// A copy of a future: what passing it around costs.
 static void FutureCopy(benchmark::State& state) {
-    AFuture f(VALUE);
+    auto f = AFuture<int>::fromValue(VALUE);
     for (auto _ : state) {
         auto copy = f;
         benchmark::DoNotOptimize(copy);
@@ -43,10 +42,11 @@ BENCHMARK(FutureCopy);
 /// A callback is subscribed before the result arrives.
 static void FutureSubscribeThenResolve(benchmark::State& state) {
     for (auto _ : state) {
-        AFuture<int> f;
+        AOptional<AFuture<int>::Resolver> resolver;
+        auto f = AFuture<int>::create([&](AFuture<int>::Resolver r) { resolver = std::move(r); });
         int received = 0;
-        f.onSuccess([&](int v) { received = v; });
-        f.supplyValue(VALUE);
+        f.onValue([&](int v) { received = v; });
+        resolver->supplyValue(VALUE);
         AUI_ASSERT(received == VALUE);
         benchmark::DoNotOptimize(received);
     }
@@ -56,7 +56,8 @@ BENCHMARK(FutureSubscribeThenResolve);
 /// A pending future nobody waits for anymore: cancellation by destruction.
 static void FutureDropPending(benchmark::State& state) {
     for (auto _ : state) {
-        AFuture<int> f;
+        AOptional<AFuture<int>::Resolver> resolver;
+        auto f = AFuture<int>::create([&](AFuture<int>::Resolver r) { resolver = std::move(r); });
         benchmark::DoNotOptimize(f);
     }
 }

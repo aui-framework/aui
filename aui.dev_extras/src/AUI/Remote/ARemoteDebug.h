@@ -165,9 +165,7 @@ public:
      * ```cpp
      * ARemoteDebug::start()->registerFunction("openDocument", "arguments: { path: string }", [](const AJson& args) {
      *     openDocument(args["path"].asString());
-     *     AFuture<AJson> result;
-     *     result.supplyValue(AJson { { "ok", true } });
-     *     return result;
+     *     return AFuture<AJson>::fromValue(AJson { { "ok", true } });
      * });
      * ```
      */

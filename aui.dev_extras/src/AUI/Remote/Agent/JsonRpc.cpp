@@ -115,7 +115,7 @@ void JsonRpcDispatcher::registerMethod(AString name, Handler handler) {
 
 void JsonRpcDispatcher::registerMethod(AString name, SyncHandler handler) {
     registerMethod(std::move(name), Handler([handler = std::move(handler)](const AJson& params) {
-        return AFuture<AJson>(handler(params));
+        return AFuture<AJson>::fromValue(handler(params));
     }));
 }
 
@@ -237,17 +237,18 @@ void JsonRpcDispatcher::handleOne(const AJson& request, Reply reply, const _<Rpc
         return;
     }
 
-    AFuture<AJson> future;
+    AFuture<AJson> future = nullptr;
     try {
         future = handler(params, connection);
     } catch (...) {
         answer(errorFromException(id, std::current_exception()));
         return;
     }
-    future.onSuccess([answer, id](const AJson& result) { answer(successResponse(id, result)); });
-    future.onError([answer, id](const AException& e) {
+    future.onValue([answer, id](const AJson& result) { answer(successResponse(id, result)); });
+    future.onException([answer, id](const AException& e) {
         answer(errorFromException(id, e.causedBy() ? e.causedBy() : std::make_exception_ptr(e)));
     });
+    future.keepAlive();   // nobody holds the future of a request; it has to be answered anyway
 }
 
 }   // namespace aui::remote

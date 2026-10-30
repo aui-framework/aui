@@ -12,31 +12,18 @@
  *
  * AComplexFutureOperation is intended to construct a future with makeFuture(). makeFuture() must be called.
  *
- * If AComplexFutureOperation get destroyed, it reports error to it's future if it does not have a result.
- * AComplexFutureOperation should be carried with AFuture::onSuccess callbacks of other futures or any other
- * callback-based structure, hence the destruction without result is treated as an error.
+ * If AComplexFutureOperation and its copies of the resolver are destroyed without a result, the future fails with
+ * AFutureAbandonedException.
+ *
+ * @deprecated use a coroutine or AFuture::create.
  */
 template<typename T>
-class AComplexFutureOperation {
+class [[deprecated("use a coroutine or AFuture::create")]] AComplexFutureOperation {
 public:
-    class NoValueException: AException {
-    public:
-        NoValueException(): AException("no value") {}
-    };
-
-    AComplexFutureOperation(): mFutureWeakReference(mFutureStrongReference.inner().weak()) {}
+    AComplexFutureOperation(): mHandles(aui::impl::future::Access::pending<T>()) {}
 
     ~AComplexFutureOperation() {
-        AUI_ASSERTX(mFutureStrongReference.inner() == nullptr, "makeFuture() is not called. Please check docs");
-        if (auto f = mFutureWeakReference.lock()) {
-            if (!(*f)->hasResult()) {
-                try {
-                    throw NoValueException();
-                } catch (...) {
-                    (*f)->reportException();
-                }
-            }
-        }
+        AUI_ASSERTX(mHandles.first == nullptr, "makeFuture() is not called. Please check docs");
     }
 
     /**
@@ -46,67 +33,32 @@ public:
      */
     [[nodiscard]]
     AFuture<T> makeFuture() noexcept {
-        auto r = std::move(mFutureStrongReference);
-        AUI_ASSERT(mFutureStrongReference.inner() == nullptr);
-        return r;
+        AUI_ASSERTX(mHandles.first != nullptr, "makeFuture() is called twice");
+        return std::move(mHandles.first);
     }
 
     /**
-     * @brief Adds a direct dependency on other AFuture<T>.
-     * @param rhs other future
-     * @details
-     * Stores other AFuture to internal AAsyncHolder storage. Passes rhs's onError calls to AComplexFutureOperation's
-     * future, if it does not have result.
+     * @brief Holds the future and passes its exception to the future of this operation.
      */
     template<typename OtherT>
     AComplexFutureOperation& operator<<(AFuture<OtherT> rhs) {
-        rhs.onError([weakRef = mFutureWeakReference](const AException& e) {
-            if (auto f = weakRef.lock()) {
-                if ((*f)->hasResult()) {
-                    return;
-                }
-                try {
-                    throw e;
-                } catch (...) {
-                    (*f)->reportException();
-                }
-            }
+        rhs.onException([resolver = mHandles.second](const AException& e) {
+            resolver.supplyException(aui::impl::future::causeOf(e));
         });
         mAsyncHolder << std::move(rhs);
         return *this;
     }
 
-    /**
-     * @brief Pushes the result of operation to it's AFuture<T>.
-     * @param value operation
-     */
-    void supplyValue(T value) {
-        if (auto l = mFutureWeakReference.lock()) {
-            auto& inner = *l;
-            std::unique_lock lock(inner->mutex);
-            inner->value = std::move(value);
-            inner->cv.notify_all();
-            inner->notifyOnSuccessCallback(lock);
-        }
+    template<typename... Args>
+    void supplyValue(Args&&... args) {
+        mHandles.second.supplyValue(std::forward<Args>(args)...);
     }
 
-    /**
-     * @brief Pushes the result of operation to it's AFuture<T>.
-     */
-    void supplyException() {
-        if (auto l = mFutureWeakReference.lock()) {
-            auto& inner = *l;
-            inner->reportException();
-        }
+    void supplyException(std::exception_ptr causedBy = std::current_exception()) {
+        mHandles.second.supplyException(std::move(causedBy));
     }
 
 private:
-    AFuture<T> mFutureStrongReference;
+    std::pair<AFuture<T>, typename AFuture<T>::Resolver> mHandles;
     AAsyncHolder mAsyncHolder;
-
-    /*
-     * Avoid holding a strong reference - we need to keep future cancellation on reference count exceeding
-     * even while actual future execution.
-     */
-    _weak<typename AFuture<T>::Inner> mFutureWeakReference;
 };

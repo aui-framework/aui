@@ -348,13 +348,18 @@ signals:
     emits<AByteBuffer> stdErr;
 
 private:
-    AChildProcess() = default;
+    AChildProcess() {
+        mExitCode = AFuture<int>::create([this](AFuture<int>::Resolver resolver) {
+            mExitCodeResolver.emplace(std::move(resolver));
+        });
+    }
     ProcessCreationInfo mInfo;
 
     _<IOutputStream> mStdInStream;
 
 
-    AFuture<int> mExitCode;
+    AFuture<int> mExitCode = nullptr;
+    AOptional<AFuture<int>::Resolver> mExitCodeResolver;
 #if AUI_PLATFORM_WIN
     PROCESS_INFORMATION mProcessInformation;
     AWin32EventWait mExitEvent;

@@ -102,13 +102,18 @@ private:
             return;
         }
 
-        AFuture<> cs;
-        mMessageQueue.enqueue([&] {
-            callback();
-            cs.supplyValue();
+        auto done = AFuture<>::create([&](AFuture<>::Resolver resolver) {
+            mMessageQueue.enqueue([&callback, resolver = std::move(resolver)] {
+                try {
+                    callback();
+                    resolver.supplyValue();
+                } catch (...) {
+                    resolver.supplyException();
+                }
+            });
         });
         mNotifyEvent.set();
-        cs.wait();
+        *done;
     }
 
     UnixIoThread() noexcept;

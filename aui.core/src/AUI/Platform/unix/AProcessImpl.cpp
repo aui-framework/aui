@@ -359,7 +359,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                 continue;
             }
 
-            mExitCode.supplyValue(WEXITSTATUS(loc));
+            mExitCodeResolver->supplyValue(WEXITSTATUS(loc));
             emit finished;
             break;
         }

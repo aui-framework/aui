@@ -132,25 +132,27 @@ TEST(JsonRpc, OtherExceptionsAreInternalErrors) {
 
 TEST(JsonRpc, AsyncHandlerAnswersLater) {
     JsonRpcDispatcher d;
-    AFuture<AJson> pending;
+    AOptional<AFuture<AJson>::Resolver> resolver;
+    auto pending = AFuture<AJson>::create([&](AFuture<AJson>::Resolver r) { resolver = std::move(r); });
     d.registerMethod("later", JsonRpcDispatcher::Handler([&](const AJson&) { return pending; }));
     AString result = "<none>";
     d.handle(R"({"jsonrpc":"2.0","method":"later","id":1})", [&](AString r) { result = std::move(r); });
     EXPECT_EQ(result, "<none>");
-    pending.supplyValue(AJson("done"));
+    resolver->supplyValue(AJson("done"));
     EXPECT_EQ(AJson::fromString(result)["result"].asString(), "done");
 }
 
 TEST(JsonRpc, AsyncHandlerErrorKeepsCode) {
     JsonRpcDispatcher d;
-    AFuture<AJson> pending;
+    AOptional<AFuture<AJson>::Resolver> resolver;
+    auto pending = AFuture<AJson>::create([&](AFuture<AJson>::Resolver r) { resolver = std::move(r); });
     d.registerMethod("later", JsonRpcDispatcher::Handler([&](const AJson&) { return pending; }));
     AString result = "<none>";
     d.handle(R"({"jsonrpc":"2.0","method":"later","id":1})", [&](AString r) { result = std::move(r); });
     try {
         throw RpcException(rpc_code::TIMEOUT, "too slow");
     } catch (...) {
-        pending.supplyException();
+        resolver->supplyException();
     }
     auto r = AJson::fromString(result);
     EXPECT_EQ(r["error"]["code"].asInt(), rpc_code::TIMEOUT);

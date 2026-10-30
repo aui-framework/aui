@@ -64,8 +64,10 @@ public:
       : mCheck(std::move(check)), mDeadline(Clock::now() + timeout), mStarted(Clock::now()), mWhat(std::move(what)) {}
 
     AFuture<AJson> start() {
-        schedule();
-        return mResult;
+        return AFuture<AJson>::create([&](AFuture<AJson>::Resolver resolver) {
+            mResolver.emplace(std::move(resolver));
+            schedule();
+        });
     }
 
 private:
@@ -73,17 +75,20 @@ private:
     Clock::time_point mDeadline;
     Clock::time_point mStarted;
     AString mWhat;
-    AFuture<AJson> mResult;
+    AOptional<AFuture<AJson>::Resolver> mResolver;
 
     void schedule() {
         AThread::main()->enqueue([self = shared_from_this()] { self->tick(); });
     }
 
     void tick() {
+        if (mResolver->isCancelled()) {
+            return;
+        }
         const auto waited = std::chrono::duration_cast<std::chrono::milliseconds>(Clock::now() - mStarted);
         try {
             if (auto result = mCheck(waited)) {
-                mResult.supplyValue(std::move(*result));
+                mResolver->supplyValue(std::move(*result));
                 return;
             }
             if (Clock::now() >= mDeadline) {
@@ -91,10 +96,10 @@ private:
                                    "increase timeoutMs or check the application state with view.tree and screenshot");
             }
         } catch (...) {
-            mResult.supplyException();
+            mResolver->supplyException();
             return;
         }
-        AThread::asyncSleep(PERIOD).onSuccess([self = shared_from_this()] { self->schedule(); });
+        AThread::asyncSleep(PERIOD).onValue([self = shared_from_this()] { self->schedule(); }).keepAlive();
     }
 };
 

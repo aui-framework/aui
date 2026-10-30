@@ -99,12 +99,13 @@ void UnixIoThread::unregisterCallback(int fd) noexcept {
 }
 
 AFuture<ABitField<UnixPollEvent>> UnixIoThread::waitForEvent(int fd, ABitField<UnixPollEvent> flags) {
-    AFuture<ABitField<UnixPollEvent>> future;
-    registerCallback(fd, flags, [this, future, fd](ABitField<UnixPollEvent> event) {
-         unregisterCallback(fd);
-         future.supplyValue(event);
+    using Future = AFuture<ABitField<UnixPollEvent>>;
+    return Future::create([&](Future::Resolver resolver) {
+        registerCallback(fd, flags, [this, resolver = std::move(resolver), fd](ABitField<UnixPollEvent> event) {
+            unregisterCallback(fd);
+            resolver.supplyValue(event);
+        });
     });
-    return future;
 }
 
 UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
@@ -118,11 +119,10 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     });
 
     mThread->start();
-    AFuture<> cs;
-    mThread->enqueue([&] {
-        cs.supplyValue();
+    auto started = AFuture<>::create([&](AFuture<>::Resolver resolver) {
+        mThread->enqueue([resolver = std::move(resolver)] { resolver.supplyValue(); });
     });
-    cs.wait();
+    started.wait();
 }
 
 #else
@@ -211,10 +211,9 @@ UnixIoThread::UnixIoThread() noexcept: mThread(_new<AThread>([&] {
     };
     mThread->start();
 
-    AFuture<> cs;
-    mThread->enqueue([&] {
-        cs.supplyValue();
+    auto started = AFuture<>::create([&](AFuture<>::Resolver resolver) {
+        mThread->enqueue([resolver = std::move(resolver)] { resolver.supplyValue(); });
     });
-    cs.wait();
+    started.wait();
 }
 #endif
