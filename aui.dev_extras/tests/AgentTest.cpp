@@ -1172,8 +1172,7 @@ TEST_F(FramesTest, OverlayDoesNotLoopAndIsHiddenFromFrames) {
     call("frames.subscribe");
     ASSERT_TRUE(waitForFrames(1));
     call("frames.ack", AJson { { "seq", 1 } });
-    // the overlay is not hidden for good; the banner lives 3 s, which a slow run (valgrind) spends by now
-    RemoteOverlay::flagActivity(*window);
+    // the overlay is not hidden for good
     settle();
     EXPECT_TRUE(RemoteOverlay::isShown(*window));
 }
