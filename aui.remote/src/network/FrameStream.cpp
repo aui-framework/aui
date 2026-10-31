@@ -96,6 +96,23 @@ struct FrameStream::Session {
         return id;
     }
 
+    /// Publishes the connection to the writer, with the subscription ahead of the calls queued while connecting.
+    /// @return false if the session is stopped
+    bool connected(_<AWebsocket> newConnection, const AJson& subscribeParams) {
+        {
+            std::unique_lock lock(mutex);
+            if (stopped) {
+                return false;
+            }
+            const int id = nextId++;
+            pending.emplace(id, Pending { {}, "frames.subscribe", false });
+            outbox.push_front(AJson::toString(makeRequest(id, "frames.subscribe", subscribeParams)));
+            connection = std::move(newConnection);
+        }
+        cv.notify_all();
+        return true;
+    }
+
     void stop() {
         std::unordered_map<int, Pending> toFail;
         {
@@ -183,16 +200,9 @@ void FrameStream::start(float scale, aui::ranged_number<int, 0, 100> quality) {
                 target += "?key=" + key;
             }
             auto connection = connectToAgent(app.port, app.certSha256, target, CONNECT_TIMEOUT);
-            {
-                std::unique_lock lock(session->mutex);
-                if (session->stopped) {
-                    return;
-                }
-                session->connection = connection;
+            if (!session->connected(connection, AJson { { "scale", double(scale) }, { "quality", quality } })) {
+                return;
             }
-            session->enqueue(
-                "frames.subscribe", AJson { { "scale", double(scale) }, { "quality", quality } },
-                Session::Pending { {}, "frames.subscribe", false });
 
             ALogger::info("FrameStream") << "connected to " << app.displayName() << ", port " << app.port
                                          << "; subscribing (scale " << scale << ", quality " << quality << ")";
