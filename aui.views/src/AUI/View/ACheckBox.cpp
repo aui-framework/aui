@@ -40,3 +40,10 @@ _<AView> declarative::CheckBox::operator()() {
     onCheckedChange.bindTo(checkbox->box()->userCheckedChange);
     return checkbox;
 }
+
+IInspectable::DebugInspectorInfo ACheckBox::debugInspectorInfo() {
+    auto info = AViewContainerBase::debugInspectorInfo();
+    const bool checked = mBox->checked;
+    info.push_back({ "checked", checked });
+    return info;
+}

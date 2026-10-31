@@ -82,11 +82,11 @@ AFuture<APath> ADesktop::browseForDir(ASurface* parent, const APath& startingLoc
 
         if (response == NSModalResponseOK) {
             NSURL* selectedFolder = [[panel URLs] objectAtIndex:0];
-            return AFuture(APath([[selectedFolder path] UTF8String]));
+            return AFuture<APath>::fromValue(APath([[selectedFolder path] UTF8String]));
         }
     }
 
-    return AFuture(APath());
+    return AFuture<APath>::fromValue(APath());
 }
 
 AFuture<APath>
@@ -158,11 +158,11 @@ ADesktop::browseForFile(ASurface* parent, const APath& startingLocation, const A
 
         if (response == NSModalResponseOK) {
             NSURL* selectedFolder = [[panel URLs] objectAtIndex:0];
-            return AFuture(APath([[selectedFolder path] UTF8String]));
+            return AFuture<APath>::fromValue(APath([[selectedFolder path] UTF8String]));
         }
     }
 
-    return AFuture(APath());
+    return AFuture<APath>::fromValue(APath());
 }
 
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {

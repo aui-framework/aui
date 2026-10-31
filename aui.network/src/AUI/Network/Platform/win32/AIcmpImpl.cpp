@@ -30,21 +30,22 @@
 extern void aui_wsa_init();
 
 AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address destination, std::chrono::milliseconds timeout) noexcept {
-    AFuture<std::chrono::high_resolution_clock::duration> result;
-    WinIoThread::enqueue([result, destination, timeout]() mutable {
+    using Future = AFuture<std::chrono::high_resolution_clock::duration>;
+    return Future::create([&](Future::Resolver result) {
+    WinIoThread::enqueue([result = std::move(result), destination, timeout]() mutable {
 
         try {
             char sendData[] = "Hello";
 
             struct Icmp {
                 HANDLE handle = IcmpCreateFile();
-                AFuture<std::chrono::high_resolution_clock::duration> result;
+                Future::Resolver result;
                 struct {
                     ICMP_ECHO_REPLY icmp;
                     char message[sizeof(sendData)];
                 } reply;
 
-                Icmp(AFuture<std::chrono::high_resolution_clock::duration> result) : result(std::move(result)) {
+                Icmp(Future::Resolver result) : result(std::move(result)) {
                     AUI_ASSERT(handle != INVALID_HANDLE_VALUE);
                 }
 
@@ -55,7 +56,7 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
 
             aui_wsa_init();
 
-            auto icmp = new Icmp(std::move(result));
+            auto icmp = new Icmp(result);
             auto r = IcmpSendEcho2(icmp->handle,
                                    nullptr, // event
                                    [](void* userdata, PIO_STATUS_BLOCK result, ULONG Reserved) {
@@ -90,7 +91,5 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
             result.supplyException();
         }
     });
-
-
-    return result;
+    });
 }

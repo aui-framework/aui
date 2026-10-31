@@ -18,6 +18,8 @@
 #include <AUI/Util/ARaiiHelper.h>
 #include "AUI/Thread/AMutex.h"
 #include "AUI/IO/AFileOutputStream.h"
+#include <memory>
+#include <vector>
 #include <fmt/format.h>
 #include <fmt/chrono.h>
 #include <AUI/Thread/AMutexWrapper.h>
@@ -137,7 +139,7 @@ public:
                     };
                 }
                 auto& h = std::get<HeapBuffer>(mBuffer);
-                return { h.data(), h.size() };
+                return { h.data(), h.size() - 1 };
             }
         };
 
@@ -240,10 +242,78 @@ public:
         return mLogFile.valueOrException().path();
     }
 
-    void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
-        std::unique_lock lock(mOnLogged);
-        mOnLogged = std::move(callback);
-    }
+    /**
+     * @brief A log entry passed to sinks.
+     */
+    struct Entry {
+        Level level;
+        AStringView prefix;
+        AStringView message;
+    };
+
+    /**
+     * @brief Destination of log entries, like a sink of spdlog.
+     * @details
+     * Sinks are called on the thread that logs, from any number of threads at once, so implementations must be
+     * thread-safe and quick.
+     */
+    class ISink {
+    public:
+        virtual ~ISink() = default;
+
+        virtual void log(const Entry& entry) = 0;
+
+        /**
+         * @brief Writes out whatever the sink has buffered.
+         */
+        virtual void flush() {}
+    };
+
+    /**
+     * @brief Sink that calls a function, like callback_sink of spdlog.
+     */
+    class CallbackSink final : public ISink {
+    public:
+        explicit CallbackSink(std::function<void(const Entry&)> callback) : mCallback(std::move(callback)) {}
+
+        void log(const Entry& entry) override { mCallback(entry); }
+
+    private:
+        std::function<void(const Entry&)> mCallback;
+    };
+
+    /**
+     * @brief Adds a sink that receives every log entry.
+     * @details
+     * Any number of sinks can coexist. Sinks are called before the entry is written to the log destinations of the
+     * logger itself.
+     *
+     * ```cpp
+     * auto sink = _new<ALogger::CallbackSink>([](const ALogger::Entry& entry) { ... });
+     * ALogger::global().addSink(sink);
+     * // ...
+     * ALogger::global().removeSink(sink);
+     * ```
+     */
+    void addSink(_<ISink> sink);
+
+    /**
+     * @brief Removes the sink added by addSink. A call that has already started may still complete.
+     */
+    void removeSink(const _<ISink>& sink);
+
+    /**
+     * @brief Flushes all sinks.
+     */
+    void flush();
+
+    /**
+     * @brief Sets the single legacy callback, replacing the previous one set by this function (sinks added by addSink
+     * are not affected).
+     */
+    [[deprecated("use addSink with ALogger::CallbackSink instead")]]
+    void onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback);
+
     /**
      * @brief Allows to perform some action (access safely) on log file (which is opened all over the execution process)
      * @details
@@ -291,7 +361,8 @@ public:
 private:
     AOptional<AFileOutputStream> mLogFile;
     AMutex mLogSync;
-    AMutexWrapper<std::function<void(const AString& prefix, const AString& message, Level level)>> mOnLogged;
+    AMutexWrapper<std::vector<_<ISink>>> mSinks;
+    _<ISink> mLegacySink;   // guarded by mSinks
 
     bool mDebug = AUI_DEBUG;
     bool mTrace = isTraceImpl();

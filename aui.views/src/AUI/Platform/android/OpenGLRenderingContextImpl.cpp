@@ -54,8 +54,3 @@ void OpenGLRenderingContext::endPaint(ASurface& window) {
 
 OpenGLRenderingContext::~OpenGLRenderingContext() {
 }
-
-AImage OpenGLRenderingContext::makeScreenshot() {
-    // stub
-    return AImage();
-}

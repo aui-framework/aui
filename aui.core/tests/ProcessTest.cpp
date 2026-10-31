@@ -19,6 +19,7 @@
 #include "AUI/Logging/ALogger.h"
 #include "AUI/Util/Util.h"
 #include <gmock/gmock.h>
+#include <AUI/IO/AFileInputStream.h>
 
 using namespace std::chrono_literals;
 
@@ -195,3 +196,103 @@ TEST_F(ProcessTest, Launching_executable) { // HEADER_H2
     // returns its exit code. If the exit code is 0, it means the process completed successfully.
 }
 #endif
+
+// Child side of the environment tests: prints variables requested by AUI_TEST_PROBE (comma separated names). It is
+// started by ProcessEnvironmentTest and does nothing when run on its own.
+TEST(ProcessEnvironmentChild, Probe) {
+    const char* names = std::getenv("AUI_TEST_PROBE");
+    if (names == nullptr) {
+        GTEST_SKIP() << "helper of ProcessEnvironmentTest";
+    }
+    for (const auto& name : AString(names).split(',')) {
+        const char* value = std::getenv(name.toStdString().c_str());
+        std::cout << "PROBE " << name.toStdString() << "=" << (value ? value : "<unset>") << ";" << std::endl;
+    }
+}
+
+class ProcessEnvironmentTest : public ::testing::Test {
+protected:
+    static void setParentVariable(const char* name, const char* value) {
+#if AUI_PLATFORM_WIN
+        _putenv_s(name, value);
+#else
+        setenv(name, value, 1);
+#endif
+    }
+
+    /// Runs the child and returns what it printed.
+    static AString probe(AMap<AString, AString> environment, bool inherit, AString names) {
+        environment["AUI_TEST_PROBE"] = std::move(names);
+        AProcess::ArgStringList args { { "--gtest_filter=ProcessEnvironmentChild.Probe" } };
+        auto p = AProcess::create({
+          .executable = AProcess::self()->getPathToExecutable(),
+          .args = std::move(args),
+          .environment = std::move(environment),
+          .inheritEnvironment = inherit,
+        });
+        AString accumulator;
+        AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { accumulator += AString::fromUtf8(buffer); });
+        p->run();
+        p->waitForExitCode();
+        AThread::processMessages();
+        return accumulator;
+    }
+};
+
+TEST_F(ProcessEnvironmentTest, AddsVariables) {
+    auto output = probe({ { "AUI_TEST_NEW", "hello world" } }, true, "AUI_TEST_NEW");
+    EXPECT_TRUE(output.contains("PROBE AUI_TEST_NEW=hello world;")) << output;
+}
+
+TEST_F(ProcessEnvironmentTest, InheritsByDefault) {
+    setParentVariable("AUI_TEST_PARENT", "from parent");
+    auto output = probe({ { "AUI_TEST_NEW", "1" } }, true, "AUI_TEST_PARENT,AUI_TEST_NEW");
+    EXPECT_TRUE(output.contains("PROBE AUI_TEST_PARENT=from parent;")) << output;
+    EXPECT_TRUE(output.contains("PROBE AUI_TEST_NEW=1;")) << output;
+}
+
+TEST_F(ProcessEnvironmentTest, OverridesInherited) {
+    setParentVariable("AUI_TEST_PARENT", "from parent");
+    auto output = probe({ { "AUI_TEST_PARENT", "overridden" } }, true, "AUI_TEST_PARENT");
+    EXPECT_TRUE(output.contains("PROBE AUI_TEST_PARENT=overridden;")) << output;
+}
+
+TEST_F(ProcessEnvironmentTest, EmptyValueIsKept) {
+    auto output = probe({ { "AUI_TEST_EMPTY", "" } }, true, "AUI_TEST_EMPTY");
+    EXPECT_TRUE(output.contains("PROBE AUI_TEST_EMPTY=;")) << output;
+}
+
+TEST_F(ProcessEnvironmentTest, CanDropInheritedEnvironment) {
+    setParentVariable("AUI_TEST_PARENT", "from parent");
+    auto output = probe({ { "AUI_TEST_NEW", "1" } }, false, "AUI_TEST_PARENT,AUI_TEST_NEW");
+    EXPECT_TRUE(output.contains("PROBE AUI_TEST_PARENT=<unset>;")) << output;
+    EXPECT_TRUE(output.contains("PROBE AUI_TEST_NEW=1;")) << output;
+}
+
+TEST_F(ProcessEnvironmentTest, NoInheritanceAndNoVariables) {
+    setParentVariable("AUI_TEST_PARENT", "from parent");
+    auto output = probe({}, false, "AUI_TEST_PARENT");
+    EXPECT_TRUE(output.contains("PROBE AUI_TEST_PARENT=<unset>;")) << output;
+}
+
+TEST_F(ProcessTest, OutputToFile) {
+    const auto file = APath::processTemporaryDir() / "ProcessTestOutput.txt";
+    AProcess::ProcessCreationInfo info;
+    info.executable = mSelf;
+    info.args = AProcess::ArgStringList { { "--help" } };
+    info.stdOutFile = file;
+    auto p = AProcess::create(std::move(info));
+    AString piped;
+    AObject::connect(p->stdOut, p, [&](const AByteBuffer& buffer) { piped += AString::fromUtf8(buffer); });
+    p->run();
+    EXPECT_EQ(p->waitForExitCode(), 0);
+    AThread::processMessages();
+    EXPECT_TRUE(piped.empty());
+    EXPECT_TRUE(AString::fromUtf8(AByteBuffer::fromStream(AFileInputStream(file)))
+                    .contains("This program contains tests written using Google Test."));
+}
+
+TEST_F(ProcessTest, FromPid) {
+    EXPECT_NE(AProcess::fromPid(AProcess::self()->getPid()), nullptr);
+    EXPECT_EQ(AProcess::fromPid(0x3ffffff0), nullptr);
+}

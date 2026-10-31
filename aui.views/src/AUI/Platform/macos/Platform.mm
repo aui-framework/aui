@@ -48,9 +48,7 @@ AString PlatformMacOS::getClipboardText() {
 AMessageBox::ResultButton PlatformMacOS::messageBoxShow(
     AWindow* parent, const AString& title, const AString& message, AMessageBox::Icon icon,
     AMessageBox::Button b) {
-    using namespace AMessageBox;
-
-
+    return showMessageBox(parent, title, message, icon, b);
 }
 
 } // namespace aui

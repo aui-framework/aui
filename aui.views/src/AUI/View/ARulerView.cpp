@@ -16,6 +16,7 @@
 
 #include "ARulerView.h"
 #include <AUI/Platform/AWindow.h>
+#include <AUI/Render/RenderHints.h>
 #include <glm/gtc/matrix_transform.hpp>
 
 ARulerView::ARulerView(ALayoutDirection layoutDirection) : mLayoutDirection(layoutDirection) {
@@ -34,6 +35,9 @@ ARulerView::ARulerView(ALayoutDirection layoutDirection) : mLayoutDirection(layo
 void ARulerView::render(ARenderContext ctx) {
     AView::render(ctx);
 
+    // the transform is restored before postRender, which pops the overflow mask with it; otherwise the mask would be
+    // popped from the rotated area and the stencil would keep the ruler unmasked for the views drawn after it
+    RenderHints::PushMatrix m(ctx.render);
     if (mLayoutDirection == ALayoutDirection::VERTICAL) {
         ctx.render.setTransform(glm::translate(
                     glm::rotate(glm::mat4(1.f), glm::radians(90.f), glm::vec3{0, 0, 1.f}),

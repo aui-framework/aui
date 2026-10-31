@@ -11,6 +11,8 @@
 
 #pragma once
 
+#include <cstring>
+
 #include <AUI/Platform/CommonRenderingContext.h>
 #include <AUI/Platform/AWindow.h>
 
@@ -64,6 +66,9 @@ public:
 
         return { dataPtr[2], dataPtr[1], dataPtr[0], dataPtr[3] };
     }
+    inline void clearBitmap() noexcept {
+        std::memset(mBitmapBlob.data() + sizeof(BITMAPINFO), 0, mBitmapSize.x * mBitmapSize.y * 4);
+    }
 #else
     inline void putPixel(const glm::uvec2& position, const glm::u8vec4& color) noexcept {
         AUI_ASSERTX(glm::all(glm::lessThan(position, mBitmapSize)), "image out of bounds");
@@ -84,6 +89,11 @@ public:
             dataPtr[0],
             dataPtr[3],
         };
+    }
+    inline void clearBitmap() noexcept {
+        if (mBitmapBlob) {
+            std::memset(mBitmapBlob, 0, mBitmapSize.x * mBitmapSize.y * 4);
+        }
     }
 #endif
 

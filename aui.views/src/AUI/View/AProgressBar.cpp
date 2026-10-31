@@ -53,3 +53,9 @@ _<AView> declarative::ProgressBar::operator()() {
     }
     return view;
 }
+
+IInspectable::DebugInspectorInfo AProgressBar::debugInspectorInfo() {
+    auto info = AViewContainerBase::debugInspectorInfo();
+    info.push_back({ "value", float(mValue) });
+    return info;
+}

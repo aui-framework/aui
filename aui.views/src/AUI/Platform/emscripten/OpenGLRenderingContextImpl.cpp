@@ -32,6 +32,10 @@ void OpenGLRenderingContext::init(const Init& init) {
     atrs.alpha = true;
     atrs.depth = true;
     atrs.stencil = false;
+#if AUI_DEBUG
+    // otherwise the canvas is cleared once presented and makeScreenshot() gets a blank picture.
+    atrs.preserveDrawingBuffer = true;
+#endif
 
     auto emctx = emscripten_webgl_create_context("#canvas", &atrs);
     emscripten_webgl_make_context_current(emctx);
@@ -62,9 +66,4 @@ void OpenGLRenderingContext::endPaint(ASurface& window) {
 }
 
 OpenGLRenderingContext::~OpenGLRenderingContext() {
-}
-
-AImage OpenGLRenderingContext::makeScreenshot() {
-    // stub
-    return AImage();
 }

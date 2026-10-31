@@ -128,6 +128,8 @@ void OpenGLRenderingContext::endPaint(ASurface& window) {
 OpenGLRenderingContext::~OpenGLRenderingContext() {
 }
 
-AImage OpenGLRenderingContext::makeScreenshot() {
-    return AImage();
+void OpenGLRenderingContext::runWithGlContext(const std::function<void()>& callback) {
+    // the context is shared between all windows; framebuffers belong to the context, so the attached view doesn't matter.
+    [static_cast<NSOpenGLContext*>(ourContext) makeCurrentContext];
+    callback();
 }

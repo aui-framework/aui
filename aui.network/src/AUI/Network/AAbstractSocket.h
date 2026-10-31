@@ -62,6 +62,12 @@ protected:
     void bind(uint16_t bindingPort);
 
     /**
+     * @brief Binds socket to the given address and port. Port 0 lets the system pick a free port; the picked port is
+     * available through getAddress() afterwards.
+     */
+    void bind(const AInet4Address& bindingAddress);
+
+    /**
      * @brief Creates socket handle.
      */
     virtual int createSocket() = 0;
@@ -80,6 +86,14 @@ public:
      * A blocked read that waits longer than `timeout` fails. Zero disables the timeout.
      */
     void setTimeout(std::chrono::milliseconds timeout);
+
+    /**
+     * @brief Waits until a read would not block.
+     * @param timeout how long to wait; zero just checks
+     * @return true if there is data to read, or the peer has closed the connection (read returns 0)
+     * @throws AIOException if the socket is closed or broken
+     */
+    [[nodiscard]] bool waitForRead(std::chrono::milliseconds timeout);
 
     const AInet4Address& getAddress() const { return mSelfAddress; }
 };

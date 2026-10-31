@@ -408,21 +408,21 @@ ACurl::Response ACurl::Builder::runBlocking() {
 AFuture<ACurl::Response> ACurl::Builder::runAsync() { return runAsync(ACurlMulti::global()); }
 
 AFuture<ACurl::Response> ACurl::Builder::runAsync(ACurlMulti& curlMulti) {
-    AFuture<ACurl::Response> result;
-    auto body = _new<AByteBuffer>();
-    if (!mWriteCallback) withDestinationBuffer(*body);
-    withOnSuccess([result, body = std::move(body)](ACurl& c) {
-        result.supplyValue(makeResponse(c, std::move(*body)));
+    return AFuture<Response>::create([&](AFuture<Response>::Resolver resolver) {
+        auto body = _new<AByteBuffer>();
+        if (!mWriteCallback) withDestinationBuffer(*body);
+        withOnSuccess([resolver, body = std::move(body)](ACurl& c) {
+            resolver.supplyValue(makeResponse(c, std::move(*body)));
+        });
+        withErrorCallback([resolver](const ErrorDescription& error) {
+            try {
+                error.throwException();
+            } catch (...) {
+                resolver.supplyException();
+            }
+        });
+        curlMulti << _new<ACurl>(std::move(*this));
     });
-    withErrorCallback([result](const ErrorDescription& error) {
-        try {
-            error.throwException();
-        } catch (...) {
-            result.supplyException();
-        }
-    });
-    curlMulti << _new<ACurl>(std::move(*this));
-    return result;
 }
 
 ACurl::Builder& ACurl::Builder::withTimeout(std::chrono::seconds timeout) {

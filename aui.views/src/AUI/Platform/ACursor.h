@@ -79,10 +79,52 @@ public:
         NESW_RESIZE,
     };
 
+    /**
+     * @brief Well-known values for `Properties::hotspot`.
+     */
+    struct Hotspot {
+        static constexpr glm::vec2 TOP_LEFT { 0.f, 0.f };
+        static constexpr glm::vec2 CENTER { 0.5f, 0.5f };
+    };
+
+    /**
+     * @brief Parameters of a custom (image) cursor.
+     * @details
+     * ```cpp
+     * setCursor(ACursor(drawable, { .size = 32, .hotspot = ACursor::Hotspot::CENTER }));
+     * ```
+     */
+    struct Properties {
+        /**
+         * @brief Size of the cursor, in dips.
+         */
+        int size = 16;
+
+        /**
+         * @brief The active point of the cursor, relative to its image: `{0, 0}` is the top left corner (the tip of
+         * an arrow), `{0.5, 0.5}` is the center (a crosshair or a circle), `{1, 1}` is the bottom right corner.
+         * @details
+         * Relative, so it does not depend on the size of the cursor or the display scaling.
+         */
+        glm::vec2 hotspot = Hotspot::TOP_LEFT;
+    };
+
     ACursor(System systemCursor): mValue(systemCursor) {}
-    explicit ACursor(AImageView image, int size = 16);
-    explicit ACursor(aui::non_null<_<IDrawable>> drawable, int size = 16);
-    explicit ACursor(AUrl imageUrl, int size = 16);
+    // a default argument `Properties = {}` can't be used here: Properties is not complete yet at this point.
+    explicit ACursor(AImageView image) : ACursor(std::move(image), Properties {}) {}
+    explicit ACursor(AImageView image, Properties properties);
+    explicit ACursor(aui::non_null<_<IDrawable>> drawable) : ACursor(std::move(drawable), Properties {}) {}
+    explicit ACursor(aui::non_null<_<IDrawable>> drawable, Properties properties);
+    explicit ACursor(AUrl imageUrl) : ACursor(std::move(imageUrl), Properties {}) {}
+    explicit ACursor(AUrl imageUrl, Properties properties);
+
+    /**
+     * @brief Shortcuts for a cursor with the top left hotspot of the specified size.
+     */
+    explicit ACursor(AImageView image, int size) : ACursor(std::move(image), Properties { .size = size }) {}
+    explicit ACursor(aui::non_null<_<IDrawable>> drawable, int size)
+      : ACursor(std::move(drawable), Properties { .size = size }) {}
+    explicit ACursor(AUrl imageUrl, int size) : ACursor(std::move(imageUrl), Properties { .size = size }) {}
 
     ~ACursor();
 
@@ -94,7 +136,20 @@ public:
     const std::variant<System, _<Custom>, _<IDrawable>>& value() const { return mValue; }
     int size() const { return mSize; }
 
+    /**
+     * @return `Properties::hotspot`
+     */
+    glm::vec2 hotspot() const { return mHotspot; }
+
+    /**
+     * @return the hotspot in pixels of an image of the specified size
+     */
+    static glm::ivec2 hotspotInPixels(glm::vec2 hotspot, glm::uvec2 imageSize) {
+        return glm::ivec2(glm::round(hotspot * glm::vec2(imageSize)));
+    }
+
 private:
     std::variant<System, _<Custom>, _<IDrawable>> mValue;
-    int mSize;
+    int mSize = 16;
+    glm::vec2 mHotspot = Hotspot::TOP_LEFT;
 };

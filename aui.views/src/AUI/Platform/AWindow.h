@@ -399,6 +399,7 @@ class API_AUI_VIEWS AWindow: public ASurface
     friend class CommonRenderingContext;
     friend class SoftwareRenderingContext;
     friend class AWindowManager;
+    friend class AStubWindowManager;
     friend struct painter;
 public:
     /**
@@ -727,6 +728,15 @@ public:
 
     void flagRedraw() override;
 
+    [[nodiscard]]
+    bool isFrameScheduled() const noexcept override {
+#if AUI_PLATFORM_WIN
+        return !mRedrawFlag;   // on Windows the flag means "a redraw may be requested", see flagRedraw
+#else
+        return mRedrawFlag;
+#endif
+    }
+
     /**
      * Shows the window.
      * <dl>
@@ -872,6 +882,15 @@ public:
     void setMobileScreenOrientation(AScreenOrientation screenOrientation);
 
 signals:
+    /**
+     * @brief Emitted at the end of every frame, after the contents of the window are drawn.
+     * @details
+     * Whatever a slot draws (with `getRenderingContext()->renderer()`) appears on top of everything else. It is the
+     * place for things which are not part of the UI, i.e., the remote control indication of `aui::dev_extras`. A slot
+     * that animates should call AWindow::flagRedraw by itself.
+     */
+    emits<> postRender;
+
     emits<> closed;
     emits<> shown;
 

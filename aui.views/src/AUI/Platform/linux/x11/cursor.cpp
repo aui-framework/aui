@@ -35,15 +35,15 @@ private:
 
 class CursorCustomX11 : public ACursor::Custom, public NativeCursorHandle {
 public:
-    CursorCustomX11(AImageView img)
+    CursorCustomX11(AImageView img, glm::ivec2 hotspot)
       : NativeCursorHandle([&]() -> Cursor {
           auto image = XcursorImageCreate(img.width(), img.height());
           if (image == nullptr) {
               ALogger::err("XCursor") << "XcursorImageCreate failed";
               return None;
           }
-          image->xhot = 0;
-          image->yhot = 0;
+          image->xhot = hotspot.x;
+          image->yhot = hotspot.y;
           image->delay = 0;
           static constexpr auto X_FORMAT = APixelFormat::BGRA | APixelFormat::BYTE;
           AFormattedImageView<X_FORMAT> destination(
@@ -95,7 +95,7 @@ void setFontCursor(AWindow* window, int cursor) {
 }
 }   // namespace
 
-_<ACursor::Custom> PlatformAbstractionX11::createCustomCursor(AImageView image) { return _new<CursorCustomX11>(image); }
+_<ACursor::Custom> PlatformAbstractionX11::createCustomCursor(AImageView image, glm::ivec2 hotspot) { return _new<CursorCustomX11>(image, hotspot); }
 
 void PlatformAbstractionX11::applyNativeCursor(const ACursor& cursor, AWindow* pWindow) {
     if (!bool(PlatformAbstractionX11::ourDisplay)) {
@@ -146,11 +146,13 @@ void PlatformAbstractionX11::applyNativeCursor(const ACursor& cursor, AWindow* p
               }
           },
           [&](const _<IDrawable>& drawable) {
-              static AMap<_<IDrawable>, AMap<int, _<CursorCustomX11>>> cache;
+              static AMap<_<IDrawable>, AMap<std::tuple<int, int, float, float>, _<CursorCustomX11>>> cache;
 
-              auto custom = cache[drawable].getOrInsert(int(pWindow->getDpiRatio() * 10), [&] {
-                  return _new<CursorCustomX11>(drawable->rasterize(glm::ivec2(cursor.size() * pWindow->getDpiRatio())));
-              });
+              auto custom = cache[drawable].getOrInsert(
+                  { int(pWindow->getDpiRatio() * 10), cursor.size(), cursor.hotspot().x, cursor.hotspot().y }, [&] {
+                      auto image = drawable->rasterize(glm::ivec2(cursor.size() * pWindow->getDpiRatio()));
+                      return _new<CursorCustomX11>(image, ACursor::hotspotInPixels(cursor.hotspot(), image.size()));
+                  });
 
               setCursor(pWindow, custom->handle());
           } },

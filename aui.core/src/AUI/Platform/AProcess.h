@@ -18,6 +18,7 @@
 #include <AUI/IO/APath.h>
 #include <AUI/Common/AException.h>
 #include <AUI/Common/AVector.h>
+#include <AUI/Common/AMap.h>
 #include <AUI/Common/AObject.h>
 #include <AUI/Common/ASignal.h>
 #include <AUI/IO/IInputStream.h>
@@ -181,6 +182,34 @@ public:
          * Process working directory. Defaults to working directory of the calling process.
          */
         APath workDir;
+
+        /**
+         * @details
+         * Environment variables of the child process. They are added to the environment of the calling process (or
+         * used alone if `inheritEnvironment` is false). A variable replaces an inherited one with the same name.
+         */
+        AMap<AString, AString> environment;
+
+        /**
+         * @details
+         * Whether the child process gets the environment of the calling process in addition to `environment`.
+         * Defaults to true.
+         */
+        bool inheritEnvironment = true;
+
+        /**
+         * @details
+         * If set, the stdout of the child process goes to this file (created or truncated) instead of a pipe or
+         * `ASubProcessExecutionFlags::TIE_STDOUT`, and `stdOut` is not emitted. Lets a detached process outlive this one
+         * without holding its streams.
+         */
+        APath stdOutFile;
+
+        /**
+         * @details
+         * If set, the stderr of the child process goes to this file. See `stdOutFile`.
+         */
+        APath stdErrFile;
     };
 
     /**
@@ -260,6 +289,14 @@ public:
      */
     static _<AProcess> fromPid(uint32_t pid);
 
+    /**
+     * @brief Asks the process to exit.
+     * @details
+     * Sends SIGTERM on unix, so the process has a chance to clean up. Windows has no such way for an arbitrary process,
+     * so it is killed there.
+     */
+    void terminate() const noexcept;
+
     void kill() const noexcept;
 };
 
@@ -333,13 +370,18 @@ signals:
     emits<AByteBuffer> stdErr;
 
 private:
-    AChildProcess() = default;
+    AChildProcess() {
+        mExitCode = AFuture<int>::create([this](AFuture<int>::Resolver resolver) {
+            mExitCodeResolver.emplace(std::move(resolver));
+        });
+    }
     ProcessCreationInfo mInfo;
 
     _<IOutputStream> mStdInStream;
 
 
-    AFuture<int> mExitCode;
+    AFuture<int> mExitCode = nullptr;
+    AOptional<AFuture<int>::Resolver> mExitCodeResolver;
 #if AUI_PLATFORM_WIN
     PROCESS_INFORMATION mProcessInformation;
     AWin32EventWait mExitEvent;

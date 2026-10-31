@@ -62,9 +62,25 @@ ARulerArea::ARulerArea(const _<AView>& wrappedView) : mWrappedView(wrappedView) 
 }
 
 void ARulerArea::onLayout(glm::ivec2 size) {
-    mWrappedView->setSize(mWrappedView->measure(AConstraints {}));
-    updatePosition();
+    // the wrapper has no layout manager, so the wrapped view is laid out here; otherwise it would stay
+    // AView::mSkipUntilLayoutUpdate forever, would not consume clicks and views stacked above the ruler area would win
+    // the hit test
+    // the wrapped view is positioned relative to the wrapper (the area without the rulers), so the wrapper is laid out
+    // first
     AViewContainerBase::onLayout(size);
+    AConstraints constraints {};
+    if (const auto wrapper = mWrappedView->getParent(); mFitContents && wrapper) {
+        constraints.maxInline = wrapper->getWidth();
+        constraints.maxBlock = wrapper->getHeight();
+    }
+    const auto wrappedSize = mWrappedView->measure(constraints);
+    mWrappedView->layout(0, 0, wrappedSize.x, wrappedSize.y);
+    updatePosition();
+}
+
+void ARulerArea::setFitContents(bool fitContents) {
+    mFitContents = fitContents;
+    requestLayout();
 }
 
 void ARulerArea::setWrappedViewPosition(const glm::ivec2& pos) {
@@ -128,7 +144,9 @@ void ARulerArea::updatePosition() {
 }
 
 glm::ivec2 ARulerArea::getTargetPosition() const {
-    return (getSize() - mWrappedView->getSize()) / 2;
+    // centered in the wrapper
+    const auto wrapper = mWrappedView->getParent();
+    return ((wrapper ? wrapper->getSize() : getSize()) - mWrappedView->getSize()) / 2;
 }
 
 void ARulerArea::invalidateFont() {

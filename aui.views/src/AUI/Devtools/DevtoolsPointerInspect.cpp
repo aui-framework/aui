@@ -158,7 +158,7 @@ DevtoolsPointerInspect::DevtoolsPointerInspect(ASurface* targetWindow) : mTarget
           Horizontal {
             Label { "Address (AView*):" },
             mAddress,
-            Button { .content = Label { "Inspect" }, .onClick = [this] {
+            Button { Label { "Inspect" }, [this] {
                 try {
                     auto ptr = [&] {
                         auto ptr = (*mAddress->text()).toStdString();

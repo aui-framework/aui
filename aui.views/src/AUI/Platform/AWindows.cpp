@@ -258,6 +258,7 @@ void AWindow::redraw() {
 #endif
 
         doDrawWindow();
+        emit postRender;
 
         // measure frame time
         auto after = duration_cast<milliseconds>(high_resolution_clock::now().time_since_epoch());
@@ -322,6 +323,8 @@ void AWindow::destroyNativeWindow() {
     if (std::exchange(mNativeDestroyed, true)) {
         return;
     }
+    // popups may be native windows hosted by ours, so they go first
+    closeOverlappingSurfaces();
 #if AUI_PLATFORM_WIN
     if (mHandle) {
         ShowWindow(mHandle, SW_HIDE);
@@ -500,9 +503,6 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     auto window = _new<AOverlappingWindow>(*this);
     auto finalPos = unmapPosition(position);
     window->setGeometry(finalPos.x, finalPos.y, size.x, size.y);
-    // show later
-    AUI_UI_THREAD { window->show(); };
-
     class MyOverlappingSurface : public AOverlappingSurface {
     public:
         void setOverlappingSurfacePosition(glm::ivec2 position) override { emit positionSet(position); }
@@ -516,6 +516,15 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
 
     auto surface = _new<MyOverlappingSurface>();
     ALayoutInflater::inflate(window, surface);
+
+    // show later; the surface may be closed until then (closeOverlappingSurface removes it from the list)
+    AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken), window, surface = _weak<AOverlappingSurface>(surface)] {
+        auto s = surface.lock();
+        if (alive.expired() || !s || !overlappingSurfaces().contains(s)) {
+            return;
+        }
+        window->show();
+    };
     connect(surface->positionSet, window, [this, window = window.get()](const glm::ivec2& newPos) {
         window->setPosition(unmapPosition(newPos));
     });

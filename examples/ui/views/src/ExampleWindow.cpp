@@ -361,7 +361,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                         .connect(&AView::clicked, this,
                                  [&] {
                                      /// [browse_file]
-                                     mAsync << ADesktop::browseForFile(this).onSuccess([&](const APath& f) {
+                                     mAsync << ADesktop::browseForFile(this).onValue([&](const APath& f) {
                                          if (f.empty()) {
                                              AMessageBox::show(this, "Result", "Cancelled");
                                          } else {
@@ -373,7 +373,7 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
                     _new<AButton>("Show folder chooser")
                         .connect(&AView::clicked, this,
                                  [&] {
-                                     mAsync << ADesktop::browseForDir(this).onSuccess([&](const APath& f) {
+                                     mAsync << ADesktop::browseForDir(this).onValue([&](const APath& f) {
                                          if (f.empty()) {
                                              AMessageBox::show(this, "Result", "Cancelled");
                                          } else {

@@ -141,3 +141,11 @@ TEST(Json, Error10)
 })"));
 }
 
+
+TEST(Json, ControlCharactersAreEscaped) {
+    const auto source = AString("a\"b\\c\nd\re\tf") + AString(std::string_view("\0\x01\x1f", 3));
+    const auto serialized = AJson::toString(AJson(source));
+    const AString expected = "\"a\\\"b\\\\c\\nd\\re\\tf\\u0000\\u0001\\u001f\"";
+    EXPECT_EQ(serialized, expected);
+    EXPECT_EQ(AJson::fromString(serialized).asString(), source);
+}

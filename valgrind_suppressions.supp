@@ -92,3 +92,16 @@
    fun:_ZN35Coroutines_CoAwait3rdPartyCoro_Test8TestBodyEv
    ...
 }
+
+{
+   thread stack TLS of a joined std::thread, kept in the glibc stack cache
+   Memcheck:Leak
+   match-leak-kinds: possible
+   fun:calloc
+   ...
+   fun:allocate_dtv
+   ...
+   fun:pthread_create*
+   ...
+   fun:_ZNSt6thread15_M_start_thread*
+}

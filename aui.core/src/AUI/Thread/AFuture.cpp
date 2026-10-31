@@ -11,9 +11,3 @@
 
 #include "AFuture.h"
 #include "AAsyncHolder.h"
-#include "AUI/Common/ATimer.h"
-#include "AUI/Util/AScheduler.h"
-
-void aui::impl::future::scheduleTimeout(std::chrono::milliseconds duration, std::function<void()> callback) {
-    ATimer::scheduler().enqueue(duration, std::move(callback));
-}

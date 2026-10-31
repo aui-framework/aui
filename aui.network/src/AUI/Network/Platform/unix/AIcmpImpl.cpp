@@ -42,6 +42,7 @@ namespace {
 
 class IcmpImpl: public aui::noncopyable {
 public:
+    using Future = AFuture<std::chrono::high_resolution_clock::duration>;
     static constexpr int SOCKET_TYPE = SOCK_DGRAM;
 
     static void setEUid() {
@@ -61,6 +62,7 @@ public:
         if (mSocket < 0) {
             throw AIOException("bad socket: "_format(aui::impl::formatSystemError().description));
         }
+        mResult = Future::create([this](Future::Resolver resolver) { mResolver.emplace(std::move(resolver)); });
     }
 
     static uint16_t calculateCheckum(AByteBufferView buffer)
@@ -128,7 +130,7 @@ public:
                 }
             }
         } catch (...) {
-            mResult.supplyException();
+            mResolver->supplyException();
         }
 
         return mResult;
@@ -204,12 +206,12 @@ public:
             if (replyChecksum != calculateCheckum(AByteBufferView::fromRaw(*reply))) {
                 throw AException("bad checksum");
             }
-            mResult.supplyValue(std::chrono::high_resolution_clock::now() - mTime);
+            mResolver->supplyValue(std::chrono::high_resolution_clock::now() - mTime);
 
             return true;
 
         } catch (...) {
-            mResult.supplyException();
+            mResolver->supplyException();
         }
         return true;
     }
@@ -220,13 +222,14 @@ public:
 
     int mSocket;
 
-    const AFuture<std::chrono::high_resolution_clock::duration>& result() const noexcept {
-        return mResult;
+    const Future::Resolver& resolver() const noexcept {
+        return *mResolver;
     }
 
 private:
     AInet4Address mDestination;
-    AFuture<std::chrono::high_resolution_clock::duration> mResult;
+    Future mResult = nullptr;
+    AOptional<Future::Resolver> mResolver;
 
     std::chrono::high_resolution_clock::time_point mTime;
 };
@@ -236,7 +239,7 @@ AFuture<std::chrono::high_resolution_clock::duration> AIcmp::ping(AInet4Address 
     auto impl = _new<IcmpImpl>(destination);
     auto timer = _new<ATimer>(timeout);
     AObject::connect(timer->fired, timer, [impl = impl.get()]() {
-        impl->result().supplyException(std::make_exception_ptr(AIOException("timeout")));
+        impl->resolver().supplyException(std::make_exception_ptr(AIOException("timeout")));
         UnixIoThread::inst().unregisterCallback(impl->mSocket);
     });
 

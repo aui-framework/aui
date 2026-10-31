@@ -8,7 +8,7 @@
 requests) and returns `AFuture<ACurl::Response>`. Network errors are delivered as an exception of the future.
 
 ```cpp
-ACurl::Builder("https://example.com/api/items").runAsync().onSuccess([this](const ACurl::Response& r) {
+ACurl::Builder("https://example.com/api/items").runAsync().onValue([this](const ACurl::Response& r) {
     // not the UI thread; hop to it before touching views.
     AUI_UI_THREAD_X [this, text = AString::fromUtf8(r.body)] {
         mLabel->setText(text);
@@ -16,8 +16,8 @@ ACurl::Builder("https://example.com/api/items").runAsync().onSuccess([this](cons
 });
 ```
 
-Inside a pool/coroutine task, you may simply dereference the future (`future->body`), which suspends the task rather than
-the thread.
+In a coroutine, `co_await` the future; to continue with another request, return it from `then`. See
+[core-async] for the ways to wait for a future inside an asynchronous function.
 
 To use a dedicated multi instead of the global one, pass it: `runAsync(curlMulti)`.
 

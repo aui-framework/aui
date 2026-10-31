@@ -21,21 +21,23 @@ aui.<module>/
 
 ### Modules
 
-| Module            | Purpose                                                         |
-|-------------------|-----------------------------------------------------------------|
+| Module            | Purpose                                                                                 |
+|-------------------|-----------------------------------------------------------------------------------------|
 | `aui.core`        | Central library: types, containers, threading, i/o, reflection, signal-slot, properties |
-| `aui.views`       | UI toolkit: views, layouts, ASS styling, rendering              |
-| `aui.image`       | Image loading and processing                                    |
-| `aui.crypt`       | OpenSSL wrapper                                                  |
-| `aui.curl`        | http(s)/ftp requests                                            |
-| `aui.network`     | TCP/UDP networking                                              |
-| `aui.json`        | JSON parser                                                     |
-| `aui.xml`         | XML parser                                                      |
-| `aui.audio`       | Audio recording and playback                                    |
-| `aui.uitests`     | UI testing utilities                                            |
-| `aui.updater`     | App auto-updates for non-centralized distribution               |
-| `aui.toolbox`     | Build-time tool (e.g. converts assets to embeddable `.cpp`)     |
-| `aui.mysql`, `aui.remote_tools` | Additional/optional modules                      |
+| `aui.views`       | UI toolkit: views, layouts, ASS styling, rendering                                      |
+| `aui.image`       | Image loading and processing                                                            |
+| `aui.crypt`       | OpenSSL wrapper                                                                         |
+| `aui.curl`        | http(s)/ftp requests                                                                    |
+| `aui.network`     | TCP/UDP networking                                                                      |
+| `aui.json`        | JSON parser                                                                             |
+| `aui.xml`         | XML parser                                                                              |
+| `aui.audio`       | Audio recording and playback                                                            |
+| `aui.uitests`     | UI testing utilities                                                                    |
+| `aui.updater`     | App auto-updates for non-centralized distribution                                       |
+| `aui.toolbox`     | Build-time tool (e.g. converts assets to embeddable `.cpp`)                             |
+| `aui.mysql`       | MySQL (disabled)                                                                        |
+| `aui.dev_extras`  | Optional modules for development and agentic (AI) work                                  |
+| `aui.remote`      | `aui-remote`: GUI and CLI client of the remote agent of `aui.dev_extras` (host tool)    |
 
 ### Top-level things worth knowing
 
@@ -80,7 +82,7 @@ Read the relevant doc before making non-trivial changes:
 - **Style & contributing**: `code-style.md`, `contributing.md`, `forking-aui.md`
 - **Packaging & platforms**: `packaging.md`, `android.md`, `ios.md`, `linux.md`, `macos.md`,
   `windows.md`, `emscripten.md`, `crosscompiling*.md`
-- **Runtime**: `runtime-dependency-resolution.md`, `devtools.md`, `troubleshoot-list.md`
+- **Runtime**: `runtime-dependency-resolution.md`, `devtools.md`, `agentic-development.md`, `troubleshoot-list.md`
 
 ---
 
@@ -108,6 +110,12 @@ Read the relevant doc before making non-trivial changes:
       Label { "Down" },   // <- trailing comma
   });
   ```
+- In AUI's own sources, initialize declarative views positionally: `Button { Label { "OK" }, [] {} }`, not
+  `Button { .content = Label { "OK" }, ... }`. The latter crashes MSVC v142, which CI builds with; see `MSVC_C1001` in
+  `docs/troubleshoot-list.md`. `examples/` are exempt.
+- In `aui.remote` and other AUI applications, don't subclass `AWindow`: expose a function that returns the contents and
+  keep the state in an anonymous `struct State { AProperty... }`; creating the window is up to the caller. Note that
+  `AWindow::setContents` takes the views of the given container and drops the container itself.
 - Formatting is governed by `.clang-format`; disable locally with `// clang-format off` / `on`.
 
 ---
@@ -129,6 +137,15 @@ Platform/compiler branching uses `AUI_PLATFORM_*` and `AUI_COMPILER_*` in both C
 use compiler-specific things like `#ifdef _WIN32`.
 
 ---
+
+## Looking at a running application
+
+To verify a UI change in a real window, link `aui::dev_extras` (development builds only) and start the remote agent
+from the application: `ARemoteDebug::start()` under `#if AUI_DEBUG`, see `examples/ui/remote_debug`. Then drive it
+through the agent: inspect views, click, type, take screenshots. The `aui-remote` tool (module `aui.remote`, shipped in
+`bin/` of AUI distributions) wraps this into a CLI; in a consumer project, the `aui` entry of `build/package-lock.json`
+leads to it (`install_dir`). The `aui-remote` skill in `.claude/skills` describes the loop. The first connection has to be paired with a 6-digit code the
+application shows in its window: ask the user for it. See `docs/agentic-development.md`.
 
 ## Contributing conventions
 

@@ -22,6 +22,13 @@
 #include <AUI/Traits/memory.h>
 #include <AUI/Logging/ALogger.h>
 #include <psapi.h>
+#include <AUI/Util/kAUI.h>
+#include <algorithm>
+#include <cwchar>
+#include <cwctype>
+#include <map>
+#include <memory>
+#include <vector>
 #include <AUI/IO/AFileInputStream.h>
 #include <AUI/Util/ATokenizer.h>
 #include <AUI/Platform/Pipe.h>
@@ -137,8 +144,9 @@ _<AProcess> AProcess::self() {
 }
 
 void AChildProcess::run(ASubProcessExecutionFlags flags) {
-    STARTUPINFO startupInfo;
-    aui::zero(startupInfo);
+    STARTUPINFOEX startupInfoEx;
+    aui::zero(startupInfoEx);
+    auto& startupInfo = startupInfoEx.StartupInfo;
 
     bool mergeStdoutStderr = bool(flags & ASubProcessExecutionFlags::MERGE_STDOUT_STDERR);
     bool tieStdout = bool(flags & ASubProcessExecutionFlags::TIE_STDOUT);
@@ -163,6 +171,26 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         startupInfo.hStdOutput = pipeStdout.in();
     }
     startupInfo.hStdInput = pipeStdin.out();
+
+    auto openOutput = [](const APath& path) {
+        SECURITY_ATTRIBUTES attributes { .nLength = sizeof(attributes), .bInheritHandle = true };
+        HANDLE handle = CreateFile(aui::win32::toWchar(path).c_str(), GENERIC_WRITE, FILE_SHARE_READ | FILE_SHARE_WRITE,
+                                   &attributes, CREATE_ALWAYS, FILE_ATTRIBUTE_NORMAL, nullptr);
+        if (handle == INVALID_HANDLE_VALUE) {
+            throw AProcessException("can't open {}: {}"_format(path, aui::impl::formatSystemError().description));
+        }
+        return std::unique_ptr<void, decltype(&CloseHandle)>(handle, &CloseHandle);
+    };
+    std::unique_ptr<void, decltype(&CloseHandle)> stdoutFile(nullptr, &CloseHandle);
+    std::unique_ptr<void, decltype(&CloseHandle)> stderrFile(nullptr, &CloseHandle);
+    if (!mInfo.stdOutFile.empty()) {
+        stdoutFile = openOutput(mInfo.stdOutFile);
+        startupInfo.hStdOutput = stdoutFile.get();
+    }
+    if (!mInfo.stdErrFile.empty()) {
+        stderrFile = openOutput(mInfo.stdErrFile);
+        startupInfo.hStdError = stderrFile.get();
+    }
     startupInfo.dwFlags = STARTF_USESTDHANDLES;
     startupInfo.cb = sizeof(startupInfo);
 
@@ -178,7 +206,9 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         }
     });
 
-    auto args = "\"" + mInfo.executable + "\" " + std::visit(aui::lambda_overloaded {
+    // argv[0] with native separators: some programs parse their own path out of the command line, and cmd.exe takes
+    // the slashes of "C:/Windows/system32/cmd.exe" for switches ("The filename ... syntax is incorrect")
+    auto args = "\"" + AString(mInfo.executable).replacedAll("/", "\\") + "\" " + std::visit(aui::lambda_overloaded {
         [](const ArgSingleString& single) {
             return single.arg;
         },
@@ -209,6 +239,74 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         creationFlags |= DETACHED_PROCESS;
     }
 
+    // block of "NAME=value\0" strings terminated by an extra \0, sorted by name as CreateProcess recommends.
+    std::wstring environmentBlock;
+    if (!mInfo.environment.empty() || !mInfo.inheritEnvironment) {
+        std::map<std::wstring, std::wstring> entries;   // upper-cased name (names are case-insensitive) -> NAME=value
+        auto add = [&](std::wstring_view name, std::wstring_view value) {
+            std::wstring key(name);
+            for (auto& c : key) {
+                c = static_cast<wchar_t>(std::towupper(c));
+            }
+            entries[std::move(key)] = std::wstring(name) + L"=" + std::wstring(value);
+        };
+        if (mInfo.inheritEnvironment) {
+            if (LPWCH inherited = GetEnvironmentStringsW()) {
+                for (const wchar_t* p = inherited; *p; p += std::wcslen(p) + 1) {
+                    std::wstring_view entry = p;
+                    // skip the leading '=' of the hidden per-drive variables (=C:=C:\)
+                    if (auto eq = entry.find(L'=', 1); eq != std::wstring_view::npos) {
+                        add(entry.substr(0, eq), entry.substr(eq + 1));
+                    }
+                }
+                FreeEnvironmentStringsW(inherited);
+            }
+        }
+        for (const auto& [name, value] : mInfo.environment) {
+            add(aui::win32::toWchar(name), aui::win32::toWchar(value));
+        }
+        for (const auto& [_, entry] : entries) {
+            environmentBlock += entry;
+            environmentBlock.push_back(L'\0');
+        }
+        environmentBlock.push_back(L'\0');
+        if (entries.empty()) {
+            environmentBlock.push_back(L'\0');
+        }
+        creationFlags |= CREATE_UNICODE_ENVIRONMENT;
+    }
+
+    // with the output in files the child is usually meant to outlive this process, so it must not inherit anything else:
+    // holding a stdout of the parent keeps whoever reads that stdout waiting for the child
+    AByteBuffer attributeList;
+    std::vector<HANDLE> inheritedHandles;
+    if (stdoutFile || stderrFile) {
+        for (HANDLE handle : { startupInfo.hStdInput, startupInfo.hStdOutput, startupInfo.hStdError }) {
+            DWORD handleFlags = 0;
+            if (GetHandleInformation(handle, &handleFlags) && (handleFlags & HANDLE_FLAG_INHERIT) &&
+                std::find(inheritedHandles.begin(), inheritedHandles.end(), handle) == inheritedHandles.end()) {
+                inheritedHandles.push_back(handle);
+            }
+        }
+        SIZE_T size = 0;
+        InitializeProcThreadAttributeList(nullptr, 1, 0, &size);
+        attributeList.resize(size);
+        startupInfoEx.lpAttributeList = reinterpret_cast<LPPROC_THREAD_ATTRIBUTE_LIST>(attributeList.data());
+        if (!InitializeProcThreadAttributeList(startupInfoEx.lpAttributeList, 1, 0, &size) ||
+            !UpdateProcThreadAttribute(startupInfoEx.lpAttributeList, 0, PROC_THREAD_ATTRIBUTE_HANDLE_LIST,
+                                       inheritedHandles.data(), inheritedHandles.size() * sizeof(HANDLE), nullptr,
+                                       nullptr)) {
+            throw AProcessException("can't set up handles of the child: " + aui::impl::formatSystemError().description);
+        }
+        creationFlags |= EXTENDED_STARTUPINFO_PRESENT;
+        startupInfo.cb = sizeof(startupInfoEx);
+    }
+    AUI_DEFER {
+        if (startupInfoEx.lpAttributeList) {
+            DeleteProcThreadAttributeList(startupInfoEx.lpAttributeList);
+        }
+    };
+
     auto wExecutable = aui::win32::toWchar(mInfo.executable);
     auto wArgs = aui::win32::toWchar(args);
     auto wWorkDir = aui::win32::toWchar(mInfo.workDir);
@@ -218,7 +316,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                        nullptr,
                        true,
                        creationFlags,
-                       nullptr,
+                       environmentBlock.empty() ? nullptr : environmentBlock.data(),
                        mInfo.workDir.empty() ? nullptr : wWorkDir.data(),
                        &startupInfo,
                        &mProcessInformation)) {
@@ -236,7 +334,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
         DWORD exitCode;
         int r = GetExitCodeProcess(mProcessInformation.hProcess, &exitCode);
         AUI_ASSERT(r && r != STILL_ACTIVE);
-        mExitCode.supplyValue(exitCode);
+        mExitCodeResolver->supplyValue(exitCode);
         emit finished;
     }, INFINITE, WT_EXECUTEDEFAULT | WT_EXECUTEONLYONCE);
 
@@ -281,6 +379,7 @@ _<AProcess> AProcess::fromPid(uint32_t pid) {
         if (exitCode == STILL_ACTIVE) {
             return _new<AOtherProcess>(handle);
         }
+        CloseHandle(handle);
     }
     return nullptr;
 }
@@ -295,6 +394,8 @@ size_t AChildProcess::processMemory() const {
     return (size_t)info.WorkingSetSize; 
 }
 
+
+void AProcess::terminate() const noexcept { kill(); }
 
 void AProcess::kill() const noexcept {
     auto process = OpenProcess(PROCESS_TERMINATE, false, getPid());

@@ -90,6 +90,22 @@ TEST(Reflect, NameStruct) { ASSERT_EQ(AClass<MyStruct>::name(), "MyStruct"); }
 
 TEST(Reflect, NameEnum) { ASSERT_EQ((AClass<ATest>::name()), "ATest"); }
 
+namespace {
+struct Anonymous {
+    virtual ~Anonymous() = default;
+};
+template <typename T>
+struct Holder : Anonymous {};
+}   // namespace
+
+TEST(Reflect, RuntimeNameIsTheSameOnAllCompilers) {
+    MyStruct myStruct;
+    EXPECT_EQ(AReflect::name(&myStruct), "MyStruct");
+    Holder<MyStruct> holder;
+    Anonymous* base = &holder;
+    EXPECT_EQ(AReflect::name(base), "(anonymous namespace)::Holder<MyStruct>");
+}
+
 TEST(Reflect, EnumerateAll) {
     AMap<AString, ATest> ref = {
         { "VALUE1", VALUE1 },

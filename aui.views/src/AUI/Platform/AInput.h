@@ -192,6 +192,20 @@ namespace AInput {
 
     API_AUI_VIEWS void overrideStateForTesting(Key k, bool value);
 
+    /**
+     * @brief Makes isKeyDown(k) report `value` regardless of the hardware state.
+     * @details
+     * Intended for synthetic input outside of UI tests (i.e., events injected by remote control), so views that
+     * check modifiers or buttons with isKeyDown see them. Call resetOverride when the synthetic input is over.
+     * Use from the UI thread.
+     */
+    API_AUI_VIEWS void overrideState(Key k, bool value);
+
+    /**
+     * @brief Reverts overrideState: isKeyDown(k) reports the hardware state again.
+     */
+    API_AUI_VIEWS void resetOverride(Key k);
+
 
     namespace native {
         API_AUI_VIEWS bool isKeyDown(Key k);

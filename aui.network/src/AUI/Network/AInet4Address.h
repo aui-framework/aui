@@ -54,6 +54,11 @@ private:
 public:
 	uint64_t toLong() const;
 	uint32_t toLongAddressOnly() const;
+
+	/**
+	 * @return port in host byte order
+	 */
+	[[nodiscard]] uint16_t port() const noexcept { return mPort; }
 	AInet4Address();
 	AInet4Address(const sockaddr_in& other);
 	AInet4Address(const AInet4Address& other);

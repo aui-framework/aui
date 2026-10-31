@@ -10,6 +10,9 @@
  */
 
 #include <AUI/Platform/SoftwareRenderingContext.h>
+#include "AUI/Common/AByteBufferView.h"
+#include "AUI/Image/AImage.h"
+#include "AUI/Image/APixelFormat.h"
 #include <AUI/Software/SoftwareRenderer.h>
 
 SoftwareRenderingContext::SoftwareRenderingContext() {
@@ -44,10 +47,19 @@ void SoftwareRenderingContext::init(const IRenderingContext::Init &init) {
 }
 
 void SoftwareRenderingContext::endResize(ASurface &window) {
-
+    if (mBitmapSize != glm::uvec2(window.getSize())) {
+        reallocate(window);
+    }
 }
 AImage SoftwareRenderingContext::makeScreenshot() {
-    return AImage{};
+    if (!mBitmapBlob) {
+        return {};
+    }
+    AByteBuffer data;
+    const size_t s = mBitmapSize.x * mBitmapSize.y * 4;
+    data.resize(s);
+    std::memcpy(data.data(), mBitmapBlob, s);
+    return AImageView(data, mBitmapSize, APixelFormat::BGRA | APixelFormat::BYTE).convert(APixelFormat::RGBA_BYTE);
 }
 
 void SoftwareRenderingContext::reallocate(const ASurface& window) {
@@ -59,7 +71,7 @@ void SoftwareRenderingContext::reallocate() {
     if (mBitmapBlob) {
         free(mBitmapBlob);
     }
-    mBitmapBlob = static_cast<uint8_t *>(malloc(mBitmapSize.x * mBitmapSize.y * 4));
+    mBitmapBlob = static_cast<uint8_t *>(calloc(mBitmapSize.x * mBitmapSize.y, 4));
 
     mStencilBlob.reallocate(mBitmapSize.x * mBitmapSize.y);
 }

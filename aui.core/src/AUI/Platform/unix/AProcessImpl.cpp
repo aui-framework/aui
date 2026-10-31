@@ -28,6 +28,9 @@
 #include <sys/types.h>
 #include <sys/wait.h>
 #include <cassert>
+#include <map>
+#include <string>
+#include <vector>
 #include <spawn.h>
 #include <AUI/Common/AStringVector.h>
 #include <cstring>
@@ -37,6 +40,11 @@
 #include <AUI/Platform/ErrorToException.h>
 #include <AUI/Logging/ALogger.h>
 #include <fcntl.h>
+#include <cerrno>
+
+#if AUI_PLATFORM_MACOS
+#include <libproc.h>
+#endif
 
 namespace {
 size_t processMemory(pid_t pid) {
@@ -76,6 +84,10 @@ public:
 
     APath getPathToExecutable() override {
         char buf[0x800];
+#if AUI_PLATFORM_MACOS
+        const auto length = proc_pidpath(mHandle, buf, sizeof(buf));
+        return length > 0 ? APath(buf, length) : APath {};
+#else
         char path[0x100];
         *fmt::format_to_n(std::begin(path), sizeof(path), "/proc/{}/exe", mHandle).out = '\0';
         APath p(buf, readlink(path, buf, sizeof(buf)));
@@ -84,6 +96,7 @@ public:
             p.resize(p.size() - ENDS_WITH.size());
         }
         return p;
+#endif
     }
 
     uint32_t getPid() const noexcept override { return mHandle; }
@@ -107,8 +120,15 @@ _<AProcess> AProcess::self() {
     return _new<AOtherProcess>(*AString(buf, readlink("/proc/self", buf, sizeof(buf))).toUInt());
 }
 
-_<AProcess> AProcess::fromPid(uint32_t pid) { return _new<AOtherProcess>(pid_t(pid)); }
 #endif
+
+_<AProcess> AProcess::fromPid(uint32_t pid) {
+    // EPERM: the process exists, but belongs to somebody else
+    if (pid == 0 || (::kill(pid_t(pid), 0) != 0 && errno != EPERM)) {
+        return nullptr;
+    }
+    return _new<AOtherProcess>(pid_t(pid));
+}
 
 extern char** environ;
 
@@ -146,6 +166,54 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                                     nullRange)
                | ranges::to_vector;
     }();
+
+    // the child must not allocate between fork() and exec(), so the environment is prepared in advance.
+    std::vector<std::string> environmentStrings;
+    std::vector<char*> envp;
+    char** childEnvironment = environ;
+    if (!mInfo.environment.empty() || !mInfo.inheritEnvironment) {
+        std::map<std::string, std::string> merged;
+        if (mInfo.inheritEnvironment) {
+            for (char** e = environ; e != nullptr && *e != nullptr; ++e) {
+                std::string_view entry = *e;
+                if (auto eq = entry.find('='); eq != std::string_view::npos && eq > 0) {
+                    merged[std::string(entry.substr(0, eq))] = std::string(entry.substr(eq + 1));
+                }
+            }
+        }
+        for (const auto& [name, value] : mInfo.environment) {
+            merged[name.toStdString()] = value.toStdString();
+        }
+        for (const auto& [name, value] : merged) {
+            environmentStrings.push_back(name + "=" + value);
+        }
+        for (auto& s : environmentStrings) {
+            envp.push_back(s.data());
+        }
+        envp.push_back(nullptr);
+        childEnvironment = envp.data();
+    }
+
+    // opened here, so a failure throws in the caller rather than in the child
+    struct OutputFile {
+        int fd = -1;
+        explicit OutputFile(const APath& path) {
+            if (path.empty()) {
+                return;
+            }
+            fd = ::open(path.toStdString().c_str(), O_WRONLY | O_CREAT | O_TRUNC | O_CLOEXEC, 0644);
+            if (fd < 0) {
+                throw AProcessException("can't open {}: {}"_format(path, aui::impl::unix_based::formatSystemError().description));
+            }
+        }
+        ~OutputFile() {
+            if (fd >= 0) {
+                ::close(fd);
+            }
+        }
+    };
+    OutputFile stdoutFile(mInfo.stdOutFile);
+    OutputFile stderrFile(mInfo.stdErrFile);
 
     Pipe pipeStdin;
     Pipe pipeStdout;
@@ -190,19 +258,21 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
             auto execute = [&] {
                 while ((dup2(pipeStdin.out(), STDIN_FILENO) == -1) && (errno == EINTR)) {
                 }
-                if (!tieStdout) {
-                    while ((dup2(pipeStdout.in(), STDOUT_FILENO) == -1) && (errno == EINTR)) {
+                if (stdoutFile.fd >= 0 || !tieStdout) {
+                    const int fd = stdoutFile.fd >= 0 ? stdoutFile.fd : pipeStdout.in();
+                    while ((dup2(fd, STDOUT_FILENO) == -1) && (errno == EINTR)) {
                     }
                 }
-                if (!tieStderr) {
-                    while ((dup2(mergeStdoutStderr ? pipeStdout.in() : pipeStderr.in(), STDERR_FILENO) == -1) &&
-                           (errno == EINTR)) {
+                if (stderrFile.fd >= 0 || !tieStderr) {
+                    const int fd = stderrFile.fd >= 0 ? stderrFile.fd
+                                                      : (mergeStdoutStderr ? pipeStdout.in() : pipeStderr.in());
+                    while ((dup2(fd, STDERR_FILENO) == -1) && (errno == EINTR)) {
                     }
                 }
                 if (!mInfo.workDir.empty()) {
                     chdir(mInfo.workDir.toStdString().c_str());
                 }
-                execve(executable.c_str(), argv.data(), environ);
+                execve(executable.c_str(), argv.data(), childEnvironment);
             };
 
             if (detachedSpecific) {
@@ -329,7 +399,7 @@ void AChildProcess::run(ASubProcessExecutionFlags flags) {
                 continue;
             }
 
-            mExitCode.supplyValue(WEXITSTATUS(loc));
+            mExitCodeResolver->supplyValue(WEXITSTATUS(loc));
             emit finished;
             break;
         }
@@ -352,5 +422,7 @@ int AChildProcess::waitForExitCode() { return *mExitCode; }
 uint32_t AChildProcess::getPid() const noexcept { return mPid; }
 
 size_t AChildProcess::processMemory() const { return ::processMemory(mPid); }
+
+void AProcess::terminate() const noexcept { ::kill(getPid(), SIGTERM); }
 
 void AProcess::kill() const noexcept { ::kill(getPid(), SIGKILL); }

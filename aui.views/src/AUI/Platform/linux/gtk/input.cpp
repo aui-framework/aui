@@ -14,6 +14,10 @@
 #include <AUI/Platform/linux/gtk/gdkkeysyms.h>
 
 static constexpr AInput::Key fromNativeImpl(unsigned int w) {
+    if (w >= GDK_KEY_a && w <= GDK_KEY_z) {
+        // letters are reported in the case they would be typed in; a key is the same regardless of Shift.
+        w += GDK_KEY_A - GDK_KEY_a;
+    }
     switch (w) {
         case GDK_KEY_A: return AInput::Key::A;
         case GDK_KEY_B: return AInput::Key::B;
@@ -74,7 +78,8 @@ static constexpr AInput::Key fromNativeImpl(unsigned int w) {
         case GDK_KEY_minus: return AInput::Key::DASH;
         case GDK_KEY_space: return AInput::Key::SPACE;
         case GDK_KEY_ISO_Enter: return AInput::Key::RETURN;
-        case GDK_KEY_Return: return AInput::Key::BACKSPACE;
+        case GDK_KEY_Return: return AInput::Key::RETURN;
+        case GDK_KEY_BackSpace: return AInput::Key::BACKSPACE;
         case GDK_KEY_Tab: return AInput::Key::TAB;
         case GDK_KEY_Page_Up: return AInput::Key::PAGEUP;
         case GDK_KEY_Page_Down: return AInput::Key::PAGEDOWN;

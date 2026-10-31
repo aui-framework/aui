@@ -18,7 +18,7 @@
 
 struct CursorCustomImpl: ACursor::Custom {
 public:
-    CursorCustomImpl(AImageView img) : mCursor(aui::win32::imageToCursor(img)) {}
+    CursorCustomImpl(AImageView img, glm::ivec2 hotspot) : mCursor(aui::win32::imageToCursor(img, hotspot)) {}
 
     HCURSOR cursor() const noexcept {
         return mCursor.get();
@@ -28,7 +28,10 @@ private:
     aui::win32::Icon mCursor;
 };
 
-ACursor::ACursor(AImageView image, int size) : mValue(std::make_unique<CursorCustomImpl>(image)), mSize(size) {}
+ACursor::ACursor(AImageView image, Properties properties)
+  : mValue(std::make_unique<CursorCustomImpl>(image, hotspotInPixels(properties.hotspot, image.size()))),
+    mSize(properties.size),
+    mHotspot(properties.hotspot) {}
 
 void ACursor::applyNativeCursor(AWindow* pWindow) const {
     std::visit(aui::lambda_overloaded {
@@ -82,11 +85,13 @@ void ACursor::applyNativeCursor(AWindow* pWindow) const {
                 }
             },
             [&](const _<IDrawable>& drawable) {
-                static AMap<_<IDrawable>, AMap<int, _<CursorCustomImpl>>> cache;
+                static AMap<_<IDrawable>, AMap<std::tuple<int, int, float, float>, _<CursorCustomImpl>>> cache;
 
-                auto custom = cache[drawable].getOrInsert(int(pWindow->getDpiRatio() * 10), [&] {
-                    return _new<CursorCustomImpl>(drawable->rasterize(glm::ivec2(mSize * pWindow->getDpiRatio())));
-                });
+                auto custom = cache[drawable].getOrInsert(
+                    { int(pWindow->getDpiRatio() * 10), mSize, mHotspot.x, mHotspot.y }, [&] {
+                        auto image = drawable->rasterize(glm::ivec2(mSize * pWindow->getDpiRatio()));
+                        return _new<CursorCustomImpl>(image, hotspotInPixels(mHotspot, image.size()));
+                    });
 
                 SetCursor(custom->cursor());
             }

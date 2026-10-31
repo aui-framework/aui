@@ -40,16 +40,6 @@ ASurface* ASurface::current() { return currentWindowStorage(); }
 ASurface::ASurface() {}
 
 ASurface::~ASurface() {
-    // Close any overlapping surfaces (context menus, dropdowns, tooltips) that were attached to this window.
-    AVector<_<AOverlappingSurface>> toClose;
-    toClose.reserve(mOverlappingSurfaces.size());
-    for (auto& surface : mOverlappingSurfaces) {
-        toClose << surface;
-    }
-    for (auto& surface : toClose) {
-        closeOverlappingSurface(surface);
-    }
-
     if (currentWindowStorage() == this) {
         currentWindowStorage() = nullptr;
     }
@@ -204,6 +194,18 @@ void ASurface::focusNextView() {
 
     if (target != this) {
         target->focus();
+    }
+}
+
+void ASurface::closeOverlappingSurfaces() {
+    // creating copy because of comodification
+    AVector<_<AOverlappingSurface>> toClose;
+    toClose.reserve(mOverlappingSurfaces.size());
+    for (auto& surface : mOverlappingSurfaces) {
+        toClose << surface;
+    }
+    for (auto& surface : toClose) {
+        closeOverlappingSurface(surface);
     }
 }
 
@@ -442,6 +444,8 @@ void ASurface::createDevtoolsWindow() {
 }
 
 void ASurface::flagRedraw() {}
+
+bool ASurface::hasPendingLayout() const noexcept { return mWantsLayoutUpdate || !mPendingLayoutRoots.empty(); }
 
 void ASurface::onLayout(glm::ivec2 size) {
     APerformanceSection updateLayout("layout update");

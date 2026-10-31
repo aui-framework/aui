@@ -33,6 +33,7 @@ public:
     AAsyncHolder() = default;
     ~AAsyncHolder() {
         std::unique_lock lock(mSync);
+        mDead = true;   // cancellation calls the removal callbacks; they have nothing to do from now on
 
         while (!mFutureSet.empty()) {
             auto l = std::move(mFutureSet.last());
@@ -52,7 +53,6 @@ public:
             l = nullptr;
             lock.lock();
         }
-        mDead = true;
     }
 
     template<typename T>
@@ -65,52 +65,56 @@ public:
         auto notifyCallerEventLoop = [callerThread] {
             callerThread->notifyCurrentEventLoop();
         };
+        // the future is removed when it completes, fails or is cancelled by somebody else
         if constexpr (std::is_same_v<void, T>) {
-            auto impl = future.inner().get();
+            auto impl = future.inner();
             mFutureSet << future;
             lock.unlock();
-            future.onSuccess([this, impl, notifyCallerEventLoop]() {
+            auto remove = [this, impl, notifyCallerEventLoop] {
                 std::unique_lock lock(mSync);
+                if (mDead) {
+                    return;
+                }
                 mFutureSet.removeIf([&](const AFuture<>& f) {
-                    return f.inner().get() == impl;
+                    return f.inner() == impl;
                 });
                 lock.unlock();
                 notifyCallerEventLoop();
-            });
-
-            future.onError([this, impl, notifyCallerEventLoop](const AException& e) {
-                std::unique_lock lock(mSync);
-                mOnException(e);
-                mFutureSet.removeIf([&](const AFuture<>& f) {
-                    return f.inner().get() == impl;
-                });
-                lock.unlock();
-                notifyCallerEventLoop();
-            });
+            };
+            aui::impl::future::Access::subscribe(
+                future, remove,
+                [this, remove](const AException& e) {
+                    if (!mDead) {
+                        mOnException(e);
+                    }
+                    remove();
+                },
+                remove);
         } else {
             auto uniquePtr = std::make_unique<Future<T>>(future);
             auto it = mCustomTypeFutures.insert(mCustomTypeFutures.end(), std::move(uniquePtr));
 
             lock.unlock();
 
-            future.onSuccess([this, it, notifyCallerEventLoop](const T& result) {
-                AUI_ASSERTX(!mDead, "you have concurrency issues");
+            auto remove = [this, it, notifyCallerEventLoop] {
                 std::unique_lock lock(mSync);
+                if (mDead) {
+                    return;
+                }
                 AUI_ASSERT(!mCustomTypeFutures.empty());
                 mCustomTypeFutures.erase(it);
                 lock.unlock();
                 notifyCallerEventLoop();
-            });
-
-            future.onError([this, it, notifyCallerEventLoop](const AException& result) {
-                AUI_ASSERTX(!mDead, "you have concurrency issues");
-                std::unique_lock lock(mSync);
-                mOnException(result);
-                AUI_ASSERT(!mCustomTypeFutures.empty());
-                mCustomTypeFutures.erase(it);
-                lock.unlock();
-                notifyCallerEventLoop();
-            });
+            };
+            aui::impl::future::Access::subscribe(
+                future, [remove](const T&) { remove(); },
+                [this, remove](const AException& e) {
+                    if (!mDead) {
+                        mOnException(e);
+                    }
+                    remove();
+                },
+                remove);
         }
         return *this;
     }
