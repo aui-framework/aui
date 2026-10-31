@@ -136,10 +136,10 @@ TEST_F(EndToEndTest, WindowsTreeAndClick) {
 
 TEST_F(EndToEndTest, ScreenshotIsSaved) {
     auto window = showWindow(Label { "picture" });
-    auto shot = cli({ "screenshot", "--annotate" });
-    ASSERT_EQ(shot.exitCode, 0) << shot.text;
-    EXPECT_TRUE(APath(shot.json["path"].asString()).isRegularFileExists()) << shot.text;
-    EXPECT_TRUE(shot.json.contains("marks")) << shot.text;
+    auto screenshot = cli({ "screenshot", "--annotate" });
+    ASSERT_EQ(screenshot.exitCode, 0) << screenshot.text;
+    EXPECT_TRUE(APath(screenshot.json["path"].asString()).isRegularFileExists()) << screenshot.text;
+    EXPECT_TRUE(screenshot.json.contains("marks")) << screenshot.text;
 }
 
 TEST_F(EndToEndTest, ErrorsOfTheAgentReachTheCli) {

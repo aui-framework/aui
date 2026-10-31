@@ -293,7 +293,7 @@ TEST_F(AgentTest, WindowIdMustBeAWindow) {
 }
 
 TEST_F(AgentTest, ScreenshotSavesPngAndCrops) {
-    auto window = showWindow(_new<AButton>("Shot"));
+    auto window = showWindow(_new<AButton>("Screenshot"));
     auto full = ok("screenshot");
     const auto fullPath = full["path"].asString();
     EXPECT_TRUE(APath(fullPath).isRegularFileExists());

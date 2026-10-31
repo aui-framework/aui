@@ -31,18 +31,18 @@ namespace aui::remote {
 
 namespace {
 
-APath shotsFolder() {
+APath screenshotsFolder() {
     auto folder = APath::getDefaultPath(APath::TEMP) / "aui-remote";
     folder.makeDirs();
     return folder;
 }
 
-APath nextShotPath() {
+APath nextScreenshotPath() {
     static std::atomic<unsigned> counter = 0;
     const auto ms = std::chrono::duration_cast<std::chrono::milliseconds>(
                         std::chrono::system_clock::now().time_since_epoch())
                         .count();
-    return shotsFolder() / ("shot-" + AString::number(static_cast<long long>(ms)) + "-" +
+    return screenshotsFolder() / ("screenshot-" + AString::number(static_cast<long long>(ms)) + "-" +
                             AString::number(++counter) + ".png");
 }
 
@@ -196,7 +196,7 @@ void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
                 result["marks"] = AJson(std::move(listed));
             }
 
-            const auto path = nextShotPath();
+            const auto path = nextScreenshotPath();
             PngImageLoader::save(AFileOutputStream(path), image);
             result["path"] = path.toStdString();
             result["width"] = int(image.width());
