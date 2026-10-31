@@ -138,7 +138,7 @@ AJson describePoint(const Target& target) {
 /// (i.e. AView::focus) are applied.
 template <typename First, typename Second>
 AFuture<AJson> inTwoSteps(First first, Second second) {
-    return AThread::main()->async(std::move(first)).map([second = std::move(second)] {
+    return AThread::main()->async(std::move(first)).then([second = std::move(second)] {
         return AThread::main()->async(second);
     });
 }
@@ -155,7 +155,7 @@ APointerReleasedEvent releasedAt(glm::vec2 position, APointerIndex index) { retu
 /// Calls `fn` on the UI thread after `delay` without blocking it. `fn` may return a value or an AFuture.
 template <typename Fn>
 auto later(std::chrono::milliseconds delay, Fn fn) {
-    return AThread::asyncSleep(delay).map([fn = std::move(fn)] { return AThread::main()->async(fn); });
+    return AThread::asyncSleep(delay).then([fn = std::move(fn)] { return AThread::main()->async(fn); });
 }
 
 constexpr auto CLICK_DURATION = std::chrono::milliseconds(50);
@@ -341,7 +341,7 @@ AFuture<AJson> inputTouch(RefTable& refs, AJson params) {
     for (const auto& track : tracks) {
         duration = std::max(duration, track.points.last().first);
     }
-    return playTracks(window, tracks).map([fingers = int(tracks.size()), duration] {
+    return playTracks(window, tracks).then([fingers = int(tracks.size()), duration] {
         return AJson {
             { "fingers", fingers },
             { "durationMs", int(duration.count()) },
@@ -468,7 +468,7 @@ AFuture<AJson> inputPointer(RefTable& refs, AJson params) {
             track.points << std::pair { TOUCH_FRAME * i, position + way * (float(i) / float(steps)) };
         }
         return playTracks(window, { std::move(track) })
-            .map([target, velocity = int(length / float(steps) * TOUCH_FRAMES_PER_SECOND)] {
+            .then([target, velocity = int(length / float(steps) * TOUCH_FRAMES_PER_SECOND)] {
                 return AJson {
                     { "at", describePoint(target) },
                     { "velocity", velocity },

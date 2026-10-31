@@ -737,7 +737,7 @@ public:
         }
     };
 
-    AFuture() = delete; // use create instead
+    AFuture() = delete; // use create instead (see https://github.com/aui-framework/aui/pull/793)
 
     /**
      * @brief A null future, a placeholder to assign a real one to later.
@@ -1029,9 +1029,9 @@ public:
     /**
      * @brief Calls the callback with the value when it is supplied.
      * @details
-     * The counterpart of `then` in JavaScript. The callback is called on the thread that supplies the value, or right
-     * away if the value is already there. It is not called if the future fails or is cancelled, including by the
-     * destruction of its last AFuture. To keep the future alive, put it into an AAsyncHolder of your window or object:
+     * The callback is called on the thread that supplies the value, or right away if the value is already there. It
+     * is not called if the future fails or is cancelled, including by the destruction of its last AFuture. To keep the
+     * future alive, put it into an AAsyncHolder of your window or object:
      *
      * ```cpp
      * mAsync << functionReturningFuture().onValue(...); // or onException
@@ -1161,14 +1161,14 @@ public:
     }
 
     /**
-     * @brief Maps the value of this future to the value of another future, like `then` in JavaScript.
+     * @brief Continues with the value of this future and returns a future of the result, like `then` in JavaScript.
      * @details
      * If the callback returns an `AFuture<U>`, the result is `AFuture<U>` that completes with it, not
      * `AFuture<AFuture<U>>`. This is how asynchronous steps are chained without coroutines:
      *
      * ```cpp
      * AFuture<AImage> loadAvatar(AString userId) {
-     *     return fetchUser(std::move(userId)).map([](const User& user) { return fetchImage(user.avatarUrl); });
+     *     return fetchUser(std::move(userId)).then([](const User& user) { return fetchImage(user.avatarUrl); });
      * }
      * ```
      *
@@ -1177,7 +1177,7 @@ public:
      */
     template <aui::impl::future::OnValueCallback<T> Callback>
     [[nodiscard]]
-    auto map(Callback&& callback) const {
+    auto then(Callback&& callback) const {
         using C = typename std::conditional_t<
             isVoid, std::invoke_result<Callback>, std::invoke_result<Callback, const NonVoid&>>::type;
         using R = typename aui::impl::future::Unwrap<C>::type;

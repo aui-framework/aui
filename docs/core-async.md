@@ -126,11 +126,11 @@ was suspended on.
 A function that returns an `AFuture` often has to wait for another future first. There are three ways:
 
 - **`co_await`**, in a coroutine. The coroutine suspends; the thread keeps running.
-- **`map`**, without coroutines. The next step goes into a callback; if it returns another `AFuture`, `map` returns
-  that future's result, so the steps don't nest:
+- **`then`**, without coroutines. The next step goes into a callback; if it returns another `AFuture`, `then`
+  returns that future's result, so the steps don't nest:
   ```cpp
   AFuture<AImage> loadAvatar(AString userId) {
-      return fetchUser(std::move(userId)).map([](const User& user) { return fetchImage(user.avatarUrl); });
+      return fetchUser(std::move(userId)).then([](const User& user) { return fetchImage(user.avatarUrl); });
   }
   ```
   `AFuture<>::all` and `AFuture<>::any` combine several futures the same way, and [AAbstractThread::async] returns
@@ -211,7 +211,7 @@ like `AFuture<>::any(future, AThread::asyncSleep(5s))` that keeps the type of th
 | `thread->async(...)`                    | `postMessage` to a worker               | `async(Dispatchers.Main)`       | `Dispatcher.InvokeAsync(...)`       | `spawn` on a local executor   |
 | `co_await thread->switchTo()`           | —                                       | `withContext(Dispatchers.Main)` | `await dispatcher` (`SwitchTo`)     | —                             |
 | `co_await future`                       | `await promise`                         | `deferred.await()`              | `await task`                        | `future.await`                |
-| `map(...)`                              | `then(v => ...)`                        | `async { f(d.await()) }`        | `ContinueWith(t => ...)`            | `.map(...)`                   |
+| `then(...)`                             | `then(v => ...)`                        | `async { f(d.await()) }`        | `ContinueWith(t => ...)`            | `.map(...)`                   |
 | `AFuture<>::all(...)`                   | `Promise.all`                           | `awaitAll`                      | `Task.WhenAll`                      | `join!`                       |
 | `AFuture<>::any(...)`                   | `Promise.race`                          | `select`                        | `Task.WhenAny`                      | `select!`                     |
 | `withTimeout(duration)`                 | `AbortSignal.timeout`                   | `withTimeout`                   | `WaitAsync(timeout)`                | `tokio::time::timeout`        |

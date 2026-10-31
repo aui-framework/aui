@@ -189,29 +189,29 @@ TEST(Future, InterruptedTaskFails) {
     EXPECT_THROW(future.get(AFutureWait::JUST_WAIT), AInvocationTargetException);
 }
 
-TEST(Future, MapTransformsTheValue) {
-    auto mapped = AFuture<int>::fromValue(20).map([](int v) { return v + 1; });
-    EXPECT_EQ(*mapped, 21);
-    auto toString = AFuture<int>::fromValue(1).map([](int v) { return AString::number(v); });
+TEST(Future, ThenTransformsTheValue) {
+    auto chained = AFuture<int>::fromValue(20).then([](int v) { return v + 1; });
+    EXPECT_EQ(*chained, 21);
+    auto toString = AFuture<int>::fromValue(1).then([](int v) { return AString::number(v); });
     EXPECT_EQ(*toString, "1");
 }
 
-TEST(Future, MapPassesTheExceptionOn) {
-    auto mapped = AFuture<int>::fromException(std::make_exception_ptr(AException("source")))
-                      .map([](int v) { return v; });
+TEST(Future, ThenPassesTheExceptionOn) {
+    auto chained = AFuture<int>::fromException(std::make_exception_ptr(AException("source")))
+                      .then([](int v) { return v; });
     try {
-        *mapped;
+        *chained;
         FAIL();
     } catch (const AException& e) {
         EXPECT_EQ(rootMessage(e), "source");
     }
-    auto throwing = AFuture<int>::fromValue(1).map([](int) -> int { throw AException("mapper"); });
+    auto throwing = AFuture<int>::fromValue(1).then([](int) -> int { throw AException("callback"); });
     EXPECT_THROW(*throwing, AInvocationTargetException);
 }
 
-TEST(Future, MapFlattensAFuture) {
+TEST(Future, ThenFlattensAFuture) {
     AOptional<AFuture<AString>::Resolver> second;
-    auto chained = AFuture<int>::fromValue(1).map([&](int v) {
+    auto chained = AFuture<int>::fromValue(1).then([&](int v) {
         return AFuture<AString>::create([&](AFuture<AString>::Resolver r) { second = std::move(r); });
     });
     static_assert(std::is_same_v<decltype(chained), AFuture<AString>>);
@@ -220,8 +220,8 @@ TEST(Future, MapFlattensAFuture) {
     EXPECT_EQ(*chained, "two");
 }
 
-TEST(Future, MapFlattenedExceptionKeepsTheCause) {
-    auto chained = AFuture<int>::fromValue(1).map([](int) {
+TEST(Future, ThenFlattenedExceptionKeepsTheCause) {
+    auto chained = AFuture<int>::fromValue(1).then([](int) {
         return AFuture<int>::fromException(std::make_exception_ptr(AException("second step")));
     });
     try {
@@ -232,10 +232,10 @@ TEST(Future, MapFlattenedExceptionKeepsTheCause) {
     }
 }
 
-TEST(Future, DroppingMappedFutureCancelsTheFlattenedStep) {
+TEST(Future, DroppingChainedFutureCancelsTheFlattenedStep) {
     AOptional<AFuture<int>::Resolver> second;
     {
-        auto chained = AFuture<>::fromValue().map([&] {
+        auto chained = AFuture<>::fromValue().then([&] {
             return AFuture<int>::create([&](AFuture<int>::Resolver r) { second = std::move(r); });
         });
         EXPECT_FALSE(second->isCancelled());
@@ -243,10 +243,10 @@ TEST(Future, DroppingMappedFutureCancelsTheFlattenedStep) {
     EXPECT_TRUE(second->isCancelled());
 }
 
-TEST(Future, DroppingMappedFutureCancelsTheSource) {
+TEST(Future, DroppingChainedFutureCancelsTheSource) {
     AOptional<AFuture<int>::Resolver> resolver;
     {
-        auto mapped = AFuture<int>::create([&](AFuture<int>::Resolver r) { resolver = std::move(r); }).map([](int v) {
+        auto chained = AFuture<int>::create([&](AFuture<int>::Resolver r) { resolver = std::move(r); }).then([](int v) {
             return v;
         });
         EXPECT_FALSE(resolver->isCancelled());
