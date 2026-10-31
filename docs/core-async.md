@@ -104,13 +104,15 @@ Keep the returned future in an [AAsyncHolder].
 A coroutine is cancelled together with its future: when the last copy of the future is destroyed, the coroutine stops
 at its next `co_await` with an exception that unwinds it.
 
-In a coroutine, [AAbstractThread::switchTo] moves the rest of the coroutine to another thread:
+`co_await` of a future returns to the thread the coroutine was on, so it never moves the coroutine. To do that, use
+[AAbstractThread::switchTo], for example to run blocking code on a thread of your own and get back to the UI:
 
 ```cpp
 AFuture<> MyView::reload() {
-    auto data = co_await loadData();        // on whatever thread called reload()
+    co_await mDatabaseThread->switchTo();
+    auto title = mDatabase->queryTitle();   // blocking, on mDatabaseThread
     co_await AThread::main()->switchTo();
-    setText(data.title);                    // UI thread
+    setText(title);                         // UI thread
 }
 ```
 

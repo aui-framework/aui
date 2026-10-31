@@ -171,9 +171,10 @@ public:
      *
      * ```cpp
      * AFuture<> MyView::reload() {
-     *     auto data = co_await loadData();       // network, on whatever thread called reload()
+     *     co_await mDatabaseThread->switchTo();
+     *     auto title = mDatabase->queryTitle();  // blocking, on mDatabaseThread
      *     co_await AThread::main()->switchTo();
-     *     setText(data.title);                   // UI thread
+     *     setText(title);                        // UI thread
      * }
      * ```
      *
