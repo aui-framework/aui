@@ -73,7 +73,6 @@ Available commands:
 | `help` | Print help message |
 | `update [version]` | Update `aui.boot.cmake` to the specified version (default: `master`) |
 | `create` | Create a new project in the current directory (clones `example_app`) |
-| `remote [build dir]` | Print the path to `aui-remote` of the AUI used by the project configured in `build dir` (default: `build`) |
 
 Example — updating to the latest release:
 ```shell
@@ -85,14 +84,30 @@ Example — bootstrapping a new project:
 cmake -P aui.boot.cmake create
 ```
 
-Example — running `aui-remote` (see [agentic-development]) of the AUI a project is built with:
-```shell
-$(cmake -P aui.boot.cmake remote build) cli list
+## package-lock.json { #AUIB_PACKAGE_LOCK }
+
+On configure, AUI Boot writes `package-lock.json` to the build directory: what each dependency resolved to. Read it
+instead of guessing paths in the cache, for example to look at the sources of a dependency or to find a tool of AUI.
+
+```json
+{
+  "aui": {
+    "version": "v8.0.0-rc.21",
+    "source_dir": "/home/user/.aui/repo/aui-v8.0.0-rc.21",
+    "pin": "4aacd81",
+    "as_subdirectory": false,
+    "install_dir": "/home/user/.aui/prefix/aui/eb150bfbe0f5cb7c27de82f1dae4a920"
+  }
+}
 ```
 
-`remote` prints the path to stdout and nothing else. It is `bin/aui-remote` of the AUI package the project imports or,
-with [AUIB_AUI_AS](#AUIB_LIB_AS), of the project's build directory; in the latter case it is built on demand with
-`cmake --build build -t aui.remote`.
+| Field | Description |
+|---|---|
+| `version` | The version requested in `auib_import` |
+| `source_dir` | The sources, if the package was built locally |
+| `pin` | The commit the sources are at |
+| `as_subdirectory` | `true` if the package is a part of the build tree: see [AUIB_LIB_AS](#AUIB_LIB_AS) |
+| `install_dir` | The installed package, with `bin/`, `lib/` and `include/`. Absent if `as_subdirectory` is `true`: the executables are in `bin/` of the build directory |
 
 ## Prebuilt packages { #PREBUILT_PACKAGES }
 
@@ -820,8 +835,6 @@ if(CMAKE_SCRIPT_MODE_FILE)
         message("  update [version]        Update aui.boot.cmake to the specified version")
         message("                          (default: master branch)")
         message("  create                  Create a new project in the current directory")
-        message("  remote [build dir]      Print the path to aui-remote of the AUI used by the project")
-        message("                          configured in build dir (default: build)")
         message("")
         message("For more information, see https://aui-framework.github.io/master/getting-started")
         message("")
@@ -873,41 +886,6 @@ if(CMAKE_SCRIPT_MODE_FILE)
         message(STATUS "")
         message(STATUS "Next steps:")
         message(STATUS "  cmake -B build && cmake --build build")
-    elseif("${_auib_cli_command}" STREQUAL "remote")
-        if(NOT "${CMAKE_ARGV4}" STREQUAL "")
-            set(_auib_build_dir "${CMAKE_ARGV4}")
-        else()
-            set(_auib_build_dir "build")
-        endif()
-        get_filename_component(_auib_build_dir "${_auib_build_dir}" ABSOLUTE)
-        if(NOT EXISTS "${_auib_build_dir}/CMakeCache.txt")
-            message(FATAL_ERROR "${_auib_build_dir} is not a configured build directory; configure the project first "
-                    "(cmake -B build) or pass its build directory: cmake -P aui.boot.cmake remote <build dir>")
-        endif()
-        load_cache("${_auib_build_dir}" READ_WITH_PREFIX _auib_cache_ aui_DIR AUIB_AUI_AS)
-        set(_auib_candidates "${_auib_build_dir}/bin")
-        if(_auib_cache_aui_DIR)
-            list(APPEND _auib_candidates "${_auib_cache_aui_DIR}/bin")
-        endif()
-        unset(_auib_remote)
-        foreach(_dir ${_auib_candidates})
-            foreach(_name aui-remote aui-remote.exe)
-                if(EXISTS "${_dir}/${_name}" AND NOT _auib_remote)
-                    set(_auib_remote "${_dir}/${_name}")
-                endif()
-            endforeach()
-        endforeach()
-        if(NOT _auib_remote)
-            if(_auib_cache_AUIB_AUI_AS)
-                message(FATAL_ERROR "aui-remote is not built yet: cmake --build ${_auib_build_dir} -t aui.remote")
-            endif()
-            string(REPLACE ";" ", " _auib_candidates "${_auib_candidates}")
-            message(FATAL_ERROR "aui-remote is not found in ${_auib_candidates}. It comes with AUI distributions "
-                    "for the host platform that have the views, curl, json, image, crypt and network components; "
-                    "older versions of AUI don't have it.")
-        endif()
-        # stdout, so that $(cmake -P aui.boot.cmake remote) gives the path alone
-        execute_process(COMMAND "${CMAKE_COMMAND}" -E echo "${_auib_remote}")
     elseif("${_auib_cli_command}" STREQUAL "_auib_run_logged")
         # Internal, used by _auib_execute_logged:
         # cmake -P aui.boot.cmake _auib_run_logged -- <log file> <merge stderr> <command...>
@@ -1685,7 +1663,7 @@ function(_auib_git_clone _url _version _source_dir)
     set(_auib_git_clone_ok TRUE PARENT_SCOPE)
 endfunction()
 
-function(_auib_update_package_lock _module_name _tag_or_hash _source_dir _as_subdirectory)
+function(_auib_update_package_lock _module_name _tag_or_hash _source_dir _as_subdirectory _install_dir)
     # Resolve the actual pinned commit hash if a git repo is available
     set(_pin "${_tag_or_hash}")
     if (GIT_EXECUTABLE AND EXISTS "${_source_dir}/.git")
@@ -1712,33 +1690,41 @@ function(_auib_update_package_lock _module_name _tag_or_hash _source_dir _as_sub
     string(REPLACE "\"" "\\\"" _pin_esc "${_pin_esc}")
     string(REPLACE "\\" "\\\\" _src_esc "${_source_dir}")
     string(REPLACE "\"" "\\\"" _src_esc "${_src_esc}")
+    string(REPLACE "\\" "\\\\" _install_esc "${_install_dir}")
+    string(REPLACE "\"" "\\\"" _install_esc "${_install_esc}")
 
     if (_as_subdirectory)
         set(_as_sub_str "true")
+        set(_install_dir_field "")
     else()
         set(_as_sub_str "false")
+        set(_install_dir_field ",\n    \"install_dir\": \"${_install_esc}\"")
     endif()
 
-    set(_new_entry "  \"${_module_name_esc}\": {\n    \"version\": \"${_tag_esc}\",\n    \"source_dir\": \"${_src_esc}\",\n    \"pin\": \"${_pin_esc}\",\n    \"as_subdirectory\": ${_as_sub_str}\n  }")
+    set(_new_entry "  \"${_module_name_esc}\": {\n    \"version\": \"${_tag_esc}\",\n    \"source_dir\": \"${_src_esc}\",\n    \"pin\": \"${_pin_esc}\",\n    \"as_subdirectory\": ${_as_sub_str}${_install_dir_field}\n  }")
 
     set(_lock_file "${CMAKE_BINARY_DIR}/package-lock.json")
 
     # Read existing file or start fresh
     if (EXISTS "${_lock_file}")
         file(READ "${_lock_file}" _contents)
+        # older versions of this function nested the braces; such a file can't be updated, every package rewrites it
+        if (_contents MATCHES "^[ \t\r\n]*\\{[ \t\r\n]*\\{")
+            set(_contents "{}")
+        endif()
         # Strip outer braces and trailing whitespace/newlines
-        string(REGEX REPLACE "^[[:space:]]*\\{" "" _contents "${_contents}")
-        string(REGEX REPLACE "}[[:space:]]*$" "" _contents "${_contents}")
+        string(REGEX REPLACE "^[ \t\r\n]*\\{" "" _contents "${_contents}")
+        string(REGEX REPLACE "}[ \t\r\n]*$" "" _contents "${_contents}")
         # Remove existing entry for this module (if present) so we can replace it
         # Match: optional comma before, the entry itself, optional trailing comma
-        string(REGEX REPLACE ",?[[:space:]]*\n?[[:space:]]*\"${_module_name_esc}\"[[:space:]]*:[[:space:]]*\\{[^}]*\\}" "" _contents "${_contents}")
-        string(REGEX REPLACE "^,[[:space:]]*\n" "" _contents "${_contents}")
+        string(REGEX REPLACE ",?[ \t\r\n]*\n?[ \t\r\n]*\"${_module_name_esc}\"[ \t\r\n]*:[ \t\r\n]*\\{[^}]*\\}" "" _contents "${_contents}")
+        string(REGEX REPLACE "^,[ \t\r\n]*\n" "" _contents "${_contents}")
         # Strip leading/trailing whitespace
         string(STRIP "${_contents}" _contents)
         if (_contents STREQUAL "")
             set(_body "${_new_entry}")
         else()
-            set(_body "${_contents},\n${_new_entry}")
+            set(_body "  ${_contents},\n${_new_entry}")
         endif()
     else()
         set(_body "${_new_entry}")
@@ -2347,7 +2333,8 @@ function(auib_import AUI_MODULE_NAME URL)
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
 
     # write/update package-lock.json in the binary dir for LLM/human inspection
-    _auib_update_package_lock(${AUI_MODULE_NAME} "${TAG_OR_HASH}" "${DEP_SOURCE_DIR}" "${DEP_ADD_SUBDIRECTORY}")
+    _auib_update_package_lock(${AUI_MODULE_NAME} "${TAG_OR_HASH}" "${DEP_SOURCE_DIR}" "${DEP_ADD_SUBDIRECTORY}"
+                              "${DEP_INSTALL_PREFIX}")
 
     # display the imported targets (available since CMake 3.21)
     if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)

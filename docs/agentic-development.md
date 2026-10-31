@@ -228,14 +228,14 @@ ARemoteDebug::start()->registerFunction("openDocument", "arguments: { path: stri
 
 `aui-remote` (module `aui.remote`) wraps the protocol into a command line that an agent can call; its GUI installs a
 skill that teaches the agent the loop. It is built for the host along with AUI and comes in `bin/` of AUI
-distributions, next to `aui.toolbox`. In a consumer project, AUI.Boot prints its path:
+distributions, next to `aui.toolbox`. In a consumer project, find it through the `aui` entry of
+`build/package-lock.json`, which AUI.Boot writes on configure:
 
-```shell
-$(cmake -P aui.boot.cmake remote build) cli list
-```
+- `as_subdirectory` is `false`: the tool is `<install_dir>/bin/aui-remote`;
+- `as_subdirectory` is `true` (`-DAUIB_AUI_AS=ON`, see [configure flags](aui-configure-flags.md)): AUI is a part of the
+  consumer's build, so build it with `cmake --build build -t aui.remote` and take `build/bin/aui-remote`.
 
-With `-DAUIB_AUI_AS=ON` (see [configure flags](aui-configure-flags.md)), AUI is a part of the consumer's build and
-`aui-remote` is built on demand: `cmake --build build -t aui.remote`. Anything that speaks WebSocket works as well.
+Anything that speaks WebSocket works as well.
 
 The commands are listed by `aui-remote cli help`; the skill contains the same table and the instructions for the agent.
 

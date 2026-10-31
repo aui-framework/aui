@@ -143,8 +143,8 @@ use compiler-specific things like `#ifdef _WIN32`.
 To verify a UI change in a real window, link `aui::dev_extras` (development builds only) and start the remote agent
 from the application: `ARemoteDebug::start()` under `#if AUI_DEBUG`, see `examples/ui/remote_debug`. Then drive it
 through the agent: inspect views, click, type, take screenshots. The `aui-remote` tool (module `aui.remote`, shipped in
-`bin/` of AUI distributions) wraps this into a CLI; in a consumer project, `cmake -P aui.boot.cmake remote build` prints
-its path. The `aui-remote` skill in `.claude/skills` describes the loop. The first connection has to be paired with a 6-digit code the
+`bin/` of AUI distributions) wraps this into a CLI; in a consumer project, the `aui` entry of `build/package-lock.json`
+leads to it (`install_dir`). The `aui-remote` skill in `.claude/skills` describes the loop. The first connection has to be paired with a 6-digit code the
 application shows in its window: ask the user for it. See `docs/agentic-development.md`.
 
 ## Contributing conventions

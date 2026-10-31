@@ -38,9 +38,9 @@ cmake --build build -j8 -t Tests && ./build/bin/Tests --gtest_filter='EndToEndTe
 Its tests run in the `Tests` of AUI. `EndToEndTest` drives the real agent of `aui.dev_extras` with the CLI, so a change
 of the protocol has to keep both sides in step; `FakeAgent` stands in for the agent where a test needs to control it.
 
-In a consumer project, `cmake -P aui.boot.cmake remote build` prints the path to the `aui-remote` of the AUI the project
-uses. With `-DAUIB_AUI_AS=ON` AUI is a part of the consumer's build: `aui.remote` is then excluded from all and built
-with `cmake --build build -t aui.remote`.
+In a consumer project, the `aui` entry of `build/package-lock.json` tells where the `aui-remote` of the AUI the project
+uses is: `<install_dir>/bin/aui-remote`. With `-DAUIB_AUI_AS=ON` (`as_subdirectory` is `true`), AUI is a part of the
+consumer's build: `aui.remote` is then excluded from all and built with `cmake --build build -t aui.remote`.
 
 ## Claude Code skill
 
