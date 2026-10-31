@@ -242,8 +242,9 @@ The commands are listed by `aui-remote cli help`; the skill contains the same ta
 ## Running in a headless environment
 
 aui-remote itself does not set up environments: it only talks to AUI applications. How an application behaves on a
-particular desktop is a matter of AUI. A headless environment that worked on Linux with GNOME (mutter 50) and the X11
-backend of AUI:
+particular desktop is a matter of AUI. A headless environment is optional: an agent prefers one if it can get one, so
+the windows don't get in the user's way, and otherwise works on the desktop. An example that worked on Linux with GNOME
+(mutter 50) and the X11 backend of AUI:
 
 ```bash
 # if dbus-daemon is available, give the compositor a session bus of its own, so it doesn't touch services and portals
@@ -278,8 +279,8 @@ kill $MUTTER_PID   # by pid: the user's desktop is mutter too, never kill by nam
   `NotifyPointerButton` (`BTN_LEFT` = 0x110), `NotifyKeyboardKeysym`; the stream is captured with
   `gst-launch-1.0 pipewiresrc path=<node of PipeWireStreamAdded>`. The session closes with the D-Bus connection that
   created it, so all the calls have to come from one process (Python with `gi`, not separate `gdbus` calls).
-- With no headless environment at hand (macOS, Windows, other desktops), set one up yourself if you can and the user
-  agrees (a VM, a separate session), or fall back to the user's environment with their permission.
+- With no headless environment at hand (macOS, Windows, other desktops), work in the user's environment. The input of
+  `aui-remote` goes to the application, so it does not take over the user's pointer or keyboard.
 
 ## Debugging aui-remote with aui-remote
 

@@ -61,16 +61,16 @@ Coordinates are logical pixels of the window (the screenshot may be scaled, see 
 
 ## Where to run the application
 
-Run the application in a headless environment by default, so that (a) its windows don't pop up over the user's work
-and (b) the user's mouse and keyboard don't interfere with the agent. Work in the user's environment only:
-
-- when the user asked to debug an application that is already open, or explicitly asked to work in their environment;
-- otherwise, with the user's permission, as a fallback when a headless environment can't be set up.
+Prefer a headless environment if you can get one, so that (a) the application's windows don't pop up over the user's
+work and (b) the user's mouse and keyboard don't interfere with you. It is a preference, not a requirement: not every
+platform and desktop has one. Without one, or when the user asked to debug an application that is already open, work in
+the user's environment and say so in your report.
 
 Never inject OS-level input (XTest and alike) into the user's session without permission: it moves their cursor, types
-into whatever window has focus and may make the desktop ask to allow remote control.
+into whatever window has focus and may make the desktop ask to allow remote control. The input of this tool is
+injected into the application and does none of that.
 
-How to set up a headless environment is in `docs/agentic-development.md` of AUI.
+Examples of headless environments are in `docs/agentic-development.md` of AUI.
 
 ## Notes
 
