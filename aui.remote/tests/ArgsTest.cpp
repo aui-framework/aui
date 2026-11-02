@@ -197,6 +197,15 @@ TEST(ArgsTest, ScreenshotLogsCallHit) {
     EXPECT_FALSE(screenshot.params.contains("annotate"));
     auto annotated = request({ "screenshot", "--annotate" });
     EXPECT_TRUE(annotated.params["annotate"].asBool());
+    auto cropped = request({ "screenshot", "--crop", "10,20,300,400", "--scale", "0.5" });
+    EXPECT_EQ(cropped.params["crop"]["x"].asInt(), 10);
+    EXPECT_EQ(cropped.params["crop"]["y"].asInt(), 20);
+    EXPECT_EQ(cropped.params["crop"]["width"].asInt(), 300);
+    EXPECT_EQ(cropped.params["crop"]["height"].asInt(), 400);
+    EXPECT_FLOAT_EQ(cropped.params["scale"].asNumber(), 0.5f);
+    EXPECT_THROW(buildRequest(parse({ "screenshot", "--crop", "10,20" })), ArgsError);
+    EXPECT_THROW(buildRequest(parse({ "screenshot", "--crop", "a,b,c,d" })), ArgsError);
+    EXPECT_THROW(buildRequest(parse({ "screenshot", "--scale", "half" })), ArgsError);
 
     auto logs = request({ "logs", "--since", "5", "--level", "warn", "--limit", "10" });
     EXPECT_EQ(logs.method, "diag.log");

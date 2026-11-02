@@ -106,11 +106,22 @@ AVector<Candidate> interactiveCandidates(const _<AWindow>& window) {
 
 void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     // params: windowId?, ref? (crop to the view), padding? (logical pixels around the view, default 0),
+    //         crop? ({ x, y, width, height } in logical pixels, instead of ref), scale? (downscale, (0, 1]),
     //         annotate? (numbered boxes over the interactive views, listed in `marks`)
-    // result: { path, width, height, scale, crop?, marks? }
+    // result: { path, width, height, scale, crop?, marks? }; `scale` is pixels of the saved image per logical pixel
     dispatcher.registerMethod("screenshot", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
         return AThread::main()->async([&refs, params = params] {
             auto window = windowFromParams(params, refs);
+
+            const auto ref = params.containsOpt("ref");
+            const auto crop = params.containsOpt("crop");
+            if (ref && crop) {
+                throw RpcException(rpc_code::INVALID_PARAMS, "ref and crop can't be used together", "pass one of them");
+            }
+            const float downscale = params.containsOpt("scale") ? params["scale"].asNumber() : 1.f;
+            if (!(downscale > 0.f && downscale <= 1.f)) {
+                throw RpcException(rpc_code::INVALID_PARAMS, "scale must be in (0, 1]", "0.5 gives half of the size");
+            }
 
             // the remote control overlay must not appear in screenshots: render a clean frame to capture.
             RemoteOverlay::setHidden(*window, true);
@@ -137,21 +148,30 @@ void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
             AJson result;
             // the screenshot is in device pixels; geometry everywhere else is in logical ones.
             const auto windowSize = glm::max(window->getSize(), glm::ivec2(1));
-            const auto scale = float(image.width()) / float(windowSize.x);
-            result["scale"] = scale;
+            auto scale = float(image.width()) / float(windowSize.x);
+            const auto deviceScale = scale;
 
             glm::ivec2 cropOrigin { 0, 0 };   // logical pixels
-            if (auto ref = params.containsOpt("ref")) {
-                auto view = refs.resolve(ref->asString());
-                const int padding = params.containsOpt("padding") ? params["padding"].asInt() : 0;
-                const auto topLeft = glm::max(view->getPositionInWindow() - glm::ivec2(padding), glm::ivec2(0));
-                const auto bottomRight = glm::min(
-                    view->getPositionInWindow() + view->getSize() + glm::ivec2(padding), windowSize);
-                const auto size = bottomRight - topLeft;
-                if (size.x <= 0 || size.y <= 0) {
-                    throw RpcException(rpc_code::INVALID_PARAMS, "the view is outside of the window",
-                                       "scroll it into view or check view.properties");
+            if (ref || crop) {
+                ARect<int> wanted;
+                if (ref) {
+                    auto view = refs.resolve(ref->asString());
+                    const int padding = params.containsOpt("padding") ? params["padding"].asInt() : 0;
+                    wanted = { view->getPositionInWindow() - glm::ivec2(padding),
+                               view->getPositionInWindow() + view->getSize() + glm::ivec2(padding) };
+                } else {
+                    wanted = ARect<int>::fromTopLeftPositionAndSize(
+                        { (*crop)["x"].asInt(), (*crop)["y"].asInt() },
+                        { (*crop)["width"].asInt(), (*crop)["height"].asInt() });
                 }
+                const auto area = intersection(wanted, ARect<int>::fromTopLeftPositionAndSize({}, windowSize));
+                if (isEmpty(area)) {
+                    throw RpcException(rpc_code::INVALID_PARAMS,
+                                       ref ? "the view is outside of the window" : "crop is outside of the window",
+                                       ref ? "scroll it into view or check view.properties" : "check window.list");
+                }
+                const auto topLeft = area.p1;
+                const auto size = area.p2 - area.p1;
                 const glm::uvec2 pixelPosition(glm::vec2(topLeft) * scale);
                 glm::uvec2 pixelSize(glm::vec2(size) * scale);
                 pixelSize = glm::min(pixelSize, image.size() - pixelPosition);
@@ -164,6 +184,14 @@ void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
                     { "height", size.y },
                 };
             }
+
+            // resizedLinearDownscale reads the next pixel of both axes, so a line of pixels stays as it is
+            if (const auto newSize = glm::max(glm::uvec2(glm::vec2(image.size()) * downscale), glm::uvec2(1));
+                newSize != image.size() && image.width() > 1 && image.height() > 1) {
+                scale *= float(newSize.x) / float(image.width());
+                image = image.resizedLinearDownscale(newSize);
+            }
+            result["scale"] = scale;
 
             if (params.containsOpt("annotate") && params["annotate"].asBool()) {
                 // the refs of the marks are of a new generation, valid right after this call
@@ -192,7 +220,8 @@ void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
                                         { "w", size.x }, { "h", size.y } } },
                     });
                 }
-                marks::draw(image, drawn, scale * window->getDpiRatio());
+                // of the same size on a downscaled image: the numbers have to stay readable
+                marks::draw(image, drawn, deviceScale * window->getDpiRatio());
                 result["marks"] = AJson(std::move(listed));
             }
 

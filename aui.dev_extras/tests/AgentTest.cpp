@@ -308,6 +308,82 @@ TEST_F(AgentTest, ScreenshotSavesPngAndCrops) {
     EXPECT_NE(cropped["path"].asString(), fullPath);
 }
 
+TEST_F(AgentTest, ScreenshotCropsToAnArea) {
+    auto window = showWindow(_new<AButton>("Screenshot"));
+    const auto full = ok("screenshot");
+    const float scale = full["scale"].asNumber();
+
+    const auto cropped = ok("screenshot", AJson { { "crop", AJson {
+        { "x", 2 }, { "y", 3 }, { "width", 20 }, { "height", 10 },
+    } } });
+    EXPECT_EQ(cropped["crop"]["x"].asInt(), 2);
+    EXPECT_EQ(cropped["crop"]["y"].asInt(), 3);
+    EXPECT_EQ(cropped["width"].asInt(), int(20 * scale));
+    EXPECT_EQ(cropped["height"].asInt(), int(10 * scale));
+
+    // the same pixels as in the full screenshot
+    auto fullImage = AImage::fromFile(APath(full["path"].asString()));
+    auto croppedImage = AImage::fromFile(APath(cropped["path"].asString()));
+    const glm::uvec2 origin(glm::vec2(2, 3) * scale);
+    for (unsigned y = 0; y < croppedImage->height(); ++y) {
+        for (unsigned x = 0; x < croppedImage->width(); ++x) {
+            EXPECT_EQ(croppedImage->get({ x, y }), fullImage->get(origin + glm::uvec2(x, y))) << x << "," << y;
+        }
+    }
+
+    // an area that sticks out of the window is cut by it
+    const auto cut = ok("screenshot", AJson { { "crop", AJson {
+        { "x", -5 }, { "y", -5 }, { "width", 15 }, { "height", 15 },
+    } } });
+    EXPECT_EQ(cut["crop"]["x"].asInt(), 0);
+    EXPECT_EQ(cut["crop"]["width"].asInt(), 10);
+
+    const AJson outside { { "x", 100000 }, { "y", 0 }, { "width", 10 }, { "height", 10 } };
+    EXPECT_EQ(errorCode("screenshot", AJson { { "crop", outside } }), rpc_code::INVALID_PARAMS);
+    const AJson empty { { "x", 0 }, { "y", 0 }, { "width", 0 }, { "height", 10 } };
+    EXPECT_EQ(errorCode("screenshot", AJson { { "crop", empty } }), rpc_code::INVALID_PARAMS);
+
+    const auto ref = ok("view.find", AJson { { "type", "AButton" } }).asArray().front()["ref"].asString();
+    const AJson area { { "x", 0 }, { "y", 0 }, { "width", 10 }, { "height", 10 } };
+    EXPECT_EQ(errorCode("screenshot", AJson { { "ref", ref }, { "crop", area } }), rpc_code::INVALID_PARAMS);
+}
+
+TEST_F(AgentTest, ScreenshotDownscales) {
+    auto window = showWindow(_new<AButton>("Screenshot"));
+    const auto full = ok("screenshot");
+
+    const auto half = ok("screenshot", AJson { { "scale", 0.5 } });
+    EXPECT_EQ(half["width"].asInt(), full["width"].asInt() / 2);
+    EXPECT_EQ(half["height"].asInt(), full["height"].asInt() / 2);
+    auto image = AImage::fromFile(APath(half["path"].asString()));
+    EXPECT_EQ(int(image->width()), half["width"].asInt());
+
+    // `scale` of the result still turns pixels of the image to the coordinates of the window
+    EXPECT_NEAR(half["scale"].asNumber(), full["scale"].asNumber() / 2, 0.01);
+
+    const AJson area { { "x", 0 }, { "y", 0 }, { "width", 40 }, { "height", 20 } };
+    const auto both = ok("screenshot", AJson { { "crop", area }, { "scale", 0.5 } });
+    const float scale = full["scale"].asNumber();
+    EXPECT_EQ(both["width"].asInt(), int(40 * scale) / 2);
+    EXPECT_EQ(both["crop"]["width"].asInt(), 40);
+
+    // a line of pixels can't be downscaled, and is not an error
+    const AJson line { { "x", 0 }, { "y", 0 }, { "width", 1 }, { "height", 20 } };
+    if (int(scale) == 1) {
+        const auto thin = ok("screenshot", AJson { { "crop", line }, { "scale", 0.5 } });
+        EXPECT_EQ(thin["width"].asInt(), 1);
+        EXPECT_NEAR(thin["scale"].asNumber(), scale, 0.01);
+    }
+
+    EXPECT_EQ(errorCode("screenshot", AJson { { "scale", 0 } }), rpc_code::INVALID_PARAMS);
+    EXPECT_EQ(errorCode("screenshot", AJson { { "scale", 2 } }), rpc_code::INVALID_PARAMS);
+
+    // marks are placed by the downscaled size
+    const auto annotated = ok("screenshot", AJson { { "scale", 0.5 }, { "annotate", true } });
+    EXPECT_EQ(annotated["width"].asInt(), half["width"].asInt());
+    EXPECT_FALSE(annotated["marks"].asArray().empty());
+}
+
 TEST_F(AgentTest, AnnotatedScreenshotMarksInteractiveViews) {
     int clicks = 0;
     auto second = _new<AButton>("Second");

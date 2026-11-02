@@ -101,8 +101,8 @@ produce frames all the time, and then `wait-idle` always ends with a timeout. Fo
 ## Spending less
 
 - Learn the state from the log. Take a screenshot only for what is visible to the eye alone.
-- `screenshot --ref` crops to a view. To see which screen is open, a downscaled copy of the PNG is enough; `screenshot`
-  has no option for that, so use an image tool. Use the full size for small details only.
+- `screenshot --ref R` crops to a view, `--crop x,y,w,h` to an area of the window, and `--scale 0.25` is enough to see
+  which screen is open. Use the full size for small details only.
 - `logs` returns JSON with every line. For a long session, filter the `stdout` file with `grep` instead.
 - When the same steps are needed more than twice, such as getting past a sign-in or a loading screen, put them into a
   script that ends with the result. One call is cheaper than a screenshot after each click, and a script does not forget
@@ -148,6 +148,7 @@ Rendering and loading depend on the order of asynchronous work, so a single run 
 - Numbers don't prove that the UI is right; look at the picture. `resize` once reported the right size while the
   contents were still laid out for the old one, and only the screenshot showed it.
 - `screenshot` returns `scale`: screenshot pixels divided by it are the window coordinates that `click` and `hit` take.
+  `--scale` is included in it; on a cropped screenshot add the origin of `crop`.
 - Refs go stale after every `tree`/`find`/`interactive` call and after the UI changes. Re-run `find` on `STALE_REF`,
   don't reuse refs from an earlier step.
 - An element of a long list may be outside of the visible part of its scroll area: `scroll-into-view <ref>` before

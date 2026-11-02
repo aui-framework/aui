@@ -219,7 +219,7 @@ const AVector<CommandHelp>& commandHelp() {
         { R"(hit <x> <y> [--window W])", R"(views under a point)" },
         { R"(scroll-into-view <ref>)", R"(scrolls the scroll areas so the view is visible; prints `visible`)" },
         { R"(interactive [--window W])", R"(clickable and typeable views)" },
-        { R"(screenshot [--window W] [--ref R] [--padding N] [--annotate])", R"(saves a PNG, prints `path`; `--ref` crops to a view; `--annotate` numbers the interactive views and prints `marks` (number -> ref))" },
+        { R"(screenshot [--window W] [--ref R] [--padding N] [--crop x,y,w,h] [--scale 0..1] [--annotate])", R"(saves a PNG, prints `path`; `--ref` crops to a view, `--crop` to an area of the window; `--scale` downscales; `--annotate` numbers the interactive views and prints `marks` (number -> ref))" },
         { R"(click|dblclick|press|release|move <ref | x y> [--pointer mouse|finger] [--button b] [--mod m]...)", R"(pointer; without `--pointer` the app uses its native one (mouse on desktop, finger on Android/iOS))" },
         { R"(drag <ref | x y> <ref | x y>)", R"(drag from one point to another)" },
         { R"(scroll <ref | x y> --dx N --dy N)", R"(wheel)" },
@@ -339,6 +339,19 @@ AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {
         if (args.has("padding")) {
             params["padding"] = intOption(args, "padding", 0);
         }
+        if (auto v = args.get("crop")) {
+            const auto parts = v->split(',');
+            if (parts.size() != 4) {
+                throw ArgsError("--crop must be x,y,width,height, got '{}'"_format(*v));
+            }
+            params["crop"] = AJson {
+                { "x", number(parts[0], "--crop x") },
+                { "y", number(parts[1], "--crop y") },
+                { "width", number(parts[2], "--crop width") },
+                { "height", number(parts[3], "--crop height") },
+            };
+        }
+        copyNumber(args, params, "scale", "scale");
         copyWindow(args, params);
     } else if (cmd == "click" || cmd == "dblclick" || cmd == "press" || cmd == "release" || cmd == "move" ||
                cmd == "drag" || cmd == "scroll") {
