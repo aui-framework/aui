@@ -1,18 +1,21 @@
 ---
 name: aui-remote
-description: Run, look at, click and type into a running AUI application (screenshot, view tree, input, logs) through its remote agent. Use to verify UI changes of an AUI app in a real window.
+description: Run, look at, click and type into a running AUI application (screenshot, view tree, input, logs) through its remote agent. Load it before changing anything visible in an AUI app and whenever the user asks to run, test or verify one, so the result is checked in the real window.
 ---
 
 # Driving an AUI application
+
+A UI change is not done until you have seen it work in the running application.
 
 `{{EXE}} cli <command>` talks to the remote agent of an AUI application (module `aui::dev_extras`). Every command
 prints one JSON object on the last line of stdout; on failure the exit code is non-zero and the object is
 `{"error":{"code","message","data":{"hint"}}}`. Read `data.hint`.
 
 The application must link `aui::dev_extras` (development builds only, never ship it) and call `ARemoteDebug::start()`
-under `#if AUI_DEBUG` (see `examples/ui/remote_debug` in AUI); if it does not, add that first. The connection is `wss` to
-127.0.0.1 with the certificate pinned from the app's discovery file; `list` shows `supported: false` for apps that
-don't offer it.
+under `#if AUI_DEBUG` (see `examples/ui/remote_debug` in AUI). If it does not, ask the user before you add that: say that
+it lets you control the application over a loopback port and that release builds don't get it. If the user declines,
+don't add it, and say that the UI was not verified. The connection is `wss` to 127.0.0.1 with the certificate pinned from
+the app's discovery file; `list` shows `supported: false` for apps that don't offer it.
 
 ## Start the application
 
@@ -44,6 +47,9 @@ With several apps running pass `--pid N` to every command.
 3. `wait-idle` after every input, then `screenshot` and look at the PNG whose path is in the result.
 4. Fix the code, rebuild, `stop` and `launch` again.
 
+Exercise the change the way a user would, and look at the PNG before and after: a counter is verified when its text
+changes after clicking, not when the button exists. In your report, say what you clicked and what the screenshot showed.
+
 ## Commands
 
 `{{EXE}} cli help` prints the same.
@@ -55,7 +61,8 @@ Coordinates are logical pixels of the window (the screenshot may be scaled, see 
 ## Rules
 
 - Refs (`v<gen>:<id>`) go stale when the tree changes; on `STALE_REF` run `find` again.
-- Always `wait-idle` after input before taking a screenshot.
+- Always `wait-idle` after input before taking a screenshot, unless the content never goes idle, see
+  [below](#applications-that-draw-their-own-content).
 - Check `logs` when something does not work.
 - Look at the screenshot, do not assume that the UI looks as intended.
 
@@ -71,6 +78,53 @@ into whatever window has focus and may make the desktop ask to allow remote cont
 injected into the application and does none of that.
 
 Examples of headless environments are in `docs/agentic-development.md` of AUI.
+
+Run the application with the arguments and the configuration the user runs it with. If they say "it works here" and it
+does not work for you, compare those first. An application may keep state between runs, such as a signed-in account,
+settings or a server to connect to: it is the user's real data. Ask before you delete it or before an action you can't
+take back, and check which environment the application connected to before you go on.
+
+## Applications that draw their own content
+
+An OpenGL canvas, a game or a video is one view in `tree`, `find` and `--annotate`, whatever it shows. It may also
+produce frames all the time, and then `wait-idle` always ends with a timeout. For such content:
+
+- Find what you are clicking by coordinates. Set a fixed window size with `resize` first and keep the coordinates in
+  one place; they are only valid for that size.
+- Wait for a line in the log, not for a pause. `launch` prints the paths of `stdout` and `stderr`.
+- Look at the screen before you click a fixed point. A popup that opens only sometimes turns a blind click into a click
+  on whatever is under it.
+- Ask the application instead of guessing from pixels. `ARemoteDebug::start()->registerFunction` exposes a function of
+  your own under `#if AUI_DEBUG`, `functions` lists them and `call` runs them. A function that reports the state under a
+  point or switches a feature at runtime answers in one call what screenshots do not answer at all.
+
+## Spending less
+
+- Learn the state from the log. Take a screenshot only for what is visible to the eye alone.
+- `screenshot --ref` crops to a view. To see which screen is open, a downscaled copy of the PNG is enough; `screenshot`
+  has no option for that, so use an image tool. Use the full size for small details only.
+- `logs` returns JSON with every line. For a long session, filter the `stdout` file with `grep` instead.
+- When the same steps are needed more than twice, such as getting past a sign-in or a loading screen, put them into a
+  script that ends with the result. One call is cheaper than a screenshot after each click, and a script does not forget
+  a step.
+
+## Bugs that come and go
+
+Rendering and loading depend on the order of asynchronous work, so a single run proves nothing.
+
+- Do not write "fixed", "one-off" or "unrelated" until you have repeated the run. Compare how often the bug shows up in
+  the same conditions before and after the change, and keep the counts: build, arguments, result.
+- Prefer a loop that checks the result by itself. Run the check on known good and bad images first: `compare` gives the
+  percentage of different pixels. If the check fails, the loop must stop, not continue without an answer.
+- A bug that depends on order can often be forced: expose the order through `registerFunction` and shuffle it within one
+  run. That is faster than restarting and gives a reproduction instead of a chance of one.
+- Add diagnostics before you guess further. Log the state at the moment of failure, and for OpenGL read `glGetError`
+  right after the call you suspect: when one thing renders wrong, the cause may be an earlier call that changed the state.
+- If the user reports that a small change made the bug go away, take it as data about the cause, not as a fix.
+- Before you stop an application with a reproduced bug, take a full screenshot and decide whether you still need it alive.
+- The window gets no frames while the display is off, so the application looks hung and `screenshot` fails. Check that
+  first. On macOS, `caffeinate -d -w <pid>` keeps the display on while the application runs. It can't wake a display that
+  is already off: ask the user.
 
 ## Notes
 
@@ -121,4 +175,4 @@ Examples of headless environments are in `docs/agentic-development.md` of AUI.
 - Native dialogs (file pickers, message boxes) are drawn by the OS, not by AUI: they are absent from `tree` and
   screenshots and don't take injected input. An agent that opens one is stuck until a human closes it. Avoid them in
   the flows an agent drives, or expose the action as a function (`ARemoteDebug::registerFunction`) that takes the path
-  directly.
+  directly. Don't click buttons that open a browser or a file picker in an environment the user can see.

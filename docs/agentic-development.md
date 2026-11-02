@@ -134,6 +134,10 @@ ignored then). Without it, the pointer is the one native to the platform: `finge
 
 `click` holds the button for 50 ms before releasing it, and the call returns only after the release was delivered.
 
+`wait.idle` needs a moment with no scheduled frame, no pending layout and an empty message queue of the UI thread. An
+application that renders all the time never has one, so the call ends with `TIMEOUT` (-32005); wait for a line in the
+log or use `wait.view` instead.
+
 Touch gestures always use fingers, whatever `pointer` says, and the call returns once the last finger is lifted:
 
 - `longPress` holds finger 0 for `durationMs` (600 by default), then delivers the long press gesture and lifts the
@@ -215,6 +219,8 @@ send completes, a frame with the current state is sent. The remote control overl
     `frames.ack` does not show the overlay banner, unlike other commands: otherwise acknowledging a frame would
     render the next one, forever.
 
+## Application functions
+
 Application specific functions help to reach states that are tedious to click through:
 
 ```cpp
@@ -223,6 +229,11 @@ ARemoteDebug::start()->registerFunction("openDocument", "arguments: { path: stri
     return AFuture<AJson>::fromValue(AJson { { "ok", true } });
 });
 ```
+
+They also answer what the view tree can't. An OpenGL canvas, a game or a video is a single view whatever it shows, so
+a function that reports the state under a point or switches a feature at runtime replaces guessing from screenshots. A
+function can force the order of asynchronous work too, which turns a bug that comes and goes into a reproduction.
+`fn.list` lists the functions and `fn.call` runs them; in `aui-remote cli` these are `functions` and `call`.
 
 ## Using with an agent
 

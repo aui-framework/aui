@@ -1,9 +1,11 @@
 ---
 name: aui-remote
-description: Run, look at, click and type into a running AUI application through its remote agent (aui::dev_extras). Use to verify UI changes in a real window.
+description: Run, look at, click and type into a running AUI application through its remote agent (aui::dev_extras). Load it before changing anything visible and whenever asked to run, test or verify an application, so the result is checked in a real window.
 ---
 
 # Driving an AUI application
+
+A UI change is not done until you have seen it work in the running application.
 
 1. The application must link `aui::dev_extras` (development builds only) and call `ARemoteDebug::start()` under
    `#if AUI_DEBUG`; see `examples/ui/remote_debug`. If it does not, add it.
@@ -17,11 +19,13 @@ description: Run, look at, click and type into a running AUI application through
 
 Every command prints one JSON object on the last line of stdout; errors are `{"error":{"code","message","data":{"hint"}}}`.
 With several applications running pass `--pid N`. `aui-remote cli help` lists the commands, `aui.remote/assets/skill/SKILL.md` has
-the notes on using them, the protocol is in `docs/agentic-development.md`.
+the notes on using them (custom-drawn content, saving tokens, intermittent bugs), the protocol is in
+`docs/agentic-development.md`.
 
 Rules:
 - Refs (`v<gen>:<id>`) go stale after the tree changes; on `STALE_REF` call `find` again.
-- Always `wait-idle` after input before taking a screenshot.
+- Always `wait-idle` after input before taking a screenshot. Content that renders all the time never goes idle: wait
+  for a line in the log instead.
 - A dialog is a window of its own: `type` and `key` go to the window of `--ref`, or `--window`, or the main one.
 - Errors contain `data.hint`; read it.
 - Never ship `aui::dev_extras` in release builds.
