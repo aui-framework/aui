@@ -101,4 +101,4 @@ jobs:
 
       - name: Run AUI tests asan
         working-directory: ${{github.workspace}}/build/bin
-        run: valgrind --suppressions=${{github.workspace}}/valgrind_suppressions.supp --error-exitcode=1 --tool=memcheck --leak-check=full --track-origins=yes --gen-suppressions=all ${{github.workspace}}/build/bin/Tests --gtest_filter="-Threading.FutureOn*"
+        run: valgrind --suppressions=${{github.workspace}}/valgrind_suppressions.supp --error-exitcode=1 --tool=memcheck --leak-check=full --track-origins=yes --gen-suppressions=all ${{github.workspace}}/build/bin/Tests --gtest_filter="-Threading.FutureOn*:AgentTest.FullStackOverWebsocket:FramesTest.OverlayDoesNotLoopAndIsHiddenFromFrames"

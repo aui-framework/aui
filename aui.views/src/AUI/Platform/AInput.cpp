@@ -14,6 +14,15 @@
 
 static bool gKeyStateForTesting[AInput::KEYCOUNT] = {0};
 
+namespace {
+/// -1: no override; 0 / 1: forced state.
+struct KeyOverrides {
+    std::int8_t state[AInput::KEYCOUNT];
+    KeyOverrides() { std::fill(std::begin(state), std::end(state), std::int8_t(-1)); }
+};
+KeyOverrides gKeyOverrides;
+}   // namespace
+
 AString AInput::getName(Key k)
 {
     switch (k)
@@ -142,6 +151,9 @@ AString AInput::getName(Key k)
 }
 
 bool AInput::isKeyDown(Key k) {
+    if (const auto o = gKeyOverrides.state[k]; o >= 0) {
+        return o != 0;
+    }
     if (UITestState::isTesting()) {
         return gKeyStateForTesting[k];
     }
@@ -150,4 +162,12 @@ bool AInput::isKeyDown(Key k) {
 
 void AInput::overrideStateForTesting(AInput::Key k, bool value) {
     gKeyStateForTesting[k] = value;
+}
+
+void AInput::overrideState(AInput::Key k, bool value) {
+    gKeyOverrides.state[k] = value ? 1 : 0;
+}
+
+void AInput::resetOverride(AInput::Key k) {
+    gKeyOverrides.state[k] = -1;
 }

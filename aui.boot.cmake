@@ -84,6 +84,31 @@ Example — bootstrapping a new project:
 cmake -P aui.boot.cmake create
 ```
 
+## package-lock.json { #AUIB_PACKAGE_LOCK }
+
+On configure, AUI Boot writes `package-lock.json` to the build directory: what each dependency resolved to. Read it
+instead of guessing paths in the cache, for example to look at the sources of a dependency or to find a tool of AUI.
+
+```json
+{
+  "aui": {
+    "version": "v8.0.0-rc.21",
+    "source_dir": "/home/user/.aui/repo/aui-v8.0.0-rc.21",
+    "pin": "4aacd81",
+    "as_subdirectory": false,
+    "install_dir": "/home/user/.aui/prefix/aui/eb150bfbe0f5cb7c27de82f1dae4a920"
+  }
+}
+```
+
+| Field | Description |
+|---|---|
+| `version` | The version requested in `auib_import` |
+| `source_dir` | The sources, if the package was built locally |
+| `pin` | The commit the sources are at |
+| `as_subdirectory` | `true` if the package is a part of the build tree: see [AUIB_LIB_AS](#AUIB_LIB_AS) |
+| `install_dir` | The installed package, with `bin/`, `lib/` and `include/`. Absent if `as_subdirectory` is `true`: the executables are in `bin/` of the build directory |
+
 ## Prebuilt packages { #PREBUILT_PACKAGES }
 
 AUI Boot is a source-first package manager, however, it can pull precompiled packages instead of building them locally.
@@ -1638,7 +1663,7 @@ function(_auib_git_clone _url _version _source_dir)
     set(_auib_git_clone_ok TRUE PARENT_SCOPE)
 endfunction()
 
-function(_auib_update_package_lock _module_name _tag_or_hash _source_dir _as_subdirectory)
+function(_auib_update_package_lock _module_name _tag_or_hash _source_dir _as_subdirectory _install_dir)
     # Resolve the actual pinned commit hash if a git repo is available
     set(_pin "${_tag_or_hash}")
     if (GIT_EXECUTABLE AND EXISTS "${_source_dir}/.git")
@@ -1665,33 +1690,41 @@ function(_auib_update_package_lock _module_name _tag_or_hash _source_dir _as_sub
     string(REPLACE "\"" "\\\"" _pin_esc "${_pin_esc}")
     string(REPLACE "\\" "\\\\" _src_esc "${_source_dir}")
     string(REPLACE "\"" "\\\"" _src_esc "${_src_esc}")
+    string(REPLACE "\\" "\\\\" _install_esc "${_install_dir}")
+    string(REPLACE "\"" "\\\"" _install_esc "${_install_esc}")
 
     if (_as_subdirectory)
         set(_as_sub_str "true")
+        set(_install_dir_field "")
     else()
         set(_as_sub_str "false")
+        set(_install_dir_field ",\n    \"install_dir\": \"${_install_esc}\"")
     endif()
 
-    set(_new_entry "  \"${_module_name_esc}\": {\n    \"version\": \"${_tag_esc}\",\n    \"source_dir\": \"${_src_esc}\",\n    \"pin\": \"${_pin_esc}\",\n    \"as_subdirectory\": ${_as_sub_str}\n  }")
+    set(_new_entry "  \"${_module_name_esc}\": {\n    \"version\": \"${_tag_esc}\",\n    \"source_dir\": \"${_src_esc}\",\n    \"pin\": \"${_pin_esc}\",\n    \"as_subdirectory\": ${_as_sub_str}${_install_dir_field}\n  }")
 
     set(_lock_file "${CMAKE_BINARY_DIR}/package-lock.json")
 
     # Read existing file or start fresh
     if (EXISTS "${_lock_file}")
         file(READ "${_lock_file}" _contents)
+        # older versions of this function nested the braces; such a file can't be updated, every package rewrites it
+        if (_contents MATCHES "^[ \t\r\n]*\\{[ \t\r\n]*\\{")
+            set(_contents "{}")
+        endif()
         # Strip outer braces and trailing whitespace/newlines
-        string(REGEX REPLACE "^[[:space:]]*\\{" "" _contents "${_contents}")
-        string(REGEX REPLACE "}[[:space:]]*$" "" _contents "${_contents}")
+        string(REGEX REPLACE "^[ \t\r\n]*\\{" "" _contents "${_contents}")
+        string(REGEX REPLACE "}[ \t\r\n]*$" "" _contents "${_contents}")
         # Remove existing entry for this module (if present) so we can replace it
         # Match: optional comma before, the entry itself, optional trailing comma
-        string(REGEX REPLACE ",?[[:space:]]*\n?[[:space:]]*\"${_module_name_esc}\"[[:space:]]*:[[:space:]]*\\{[^}]*\\}" "" _contents "${_contents}")
-        string(REGEX REPLACE "^,[[:space:]]*\n" "" _contents "${_contents}")
+        string(REGEX REPLACE ",?[ \t\r\n]*\n?[ \t\r\n]*\"${_module_name_esc}\"[ \t\r\n]*:[ \t\r\n]*\\{[^}]*\\}" "" _contents "${_contents}")
+        string(REGEX REPLACE "^,[ \t\r\n]*\n" "" _contents "${_contents}")
         # Strip leading/trailing whitespace
         string(STRIP "${_contents}" _contents)
         if (_contents STREQUAL "")
             set(_body "${_new_entry}")
         else()
-            set(_body "${_contents},\n${_new_entry}")
+            set(_body "  ${_contents},\n${_new_entry}")
         endif()
     else()
         set(_body "${_new_entry}")
@@ -2300,7 +2333,8 @@ function(auib_import AUI_MODULE_NAME URL)
     set_property(GLOBAL APPEND PROPERTY AUI_BOOT_IMPORTED_MODULES ${AUI_MODULE_NAME_LOWER})
 
     # write/update package-lock.json in the binary dir for LLM/human inspection
-    _auib_update_package_lock(${AUI_MODULE_NAME} "${TAG_OR_HASH}" "${DEP_SOURCE_DIR}" "${DEP_ADD_SUBDIRECTORY}")
+    _auib_update_package_lock(${AUI_MODULE_NAME} "${TAG_OR_HASH}" "${DEP_SOURCE_DIR}" "${DEP_ADD_SUBDIRECTORY}"
+                              "${DEP_INSTALL_PREFIX}")
 
     # display the imported targets (available since CMake 3.21)
     if (CMAKE_VERSION VERSION_GREATER_EQUAL 3.21)

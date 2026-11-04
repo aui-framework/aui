@@ -64,6 +64,8 @@ public:
     ADropdownList();
     ~ADropdownList() override;
 
+    DebugInspectorInfo debugInspectorInfo() override;
+
     /**
      * @brief Selected id property.
      */

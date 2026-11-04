@@ -29,6 +29,7 @@ private:
     _<ARulerView> mHorizontalRuler;
     _<ARulerView> mVerticalRuler;
     glm::ivec2 mMousePos;
+    bool mFitContents = false;
 
     void setWrappedViewPosition(const glm::ivec2& pos);
 
@@ -45,4 +46,10 @@ public:
     void invalidateFont() override;
 
     void render(ARenderContext ctx) override;
+
+    /**
+     * @brief Tells the wrapped view how much space is available instead of letting it take any size, so it can shrink
+     *        to fit into the area. Off by default.
+     */
+    void setFitContents(bool fitContents);
 };

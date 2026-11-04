@@ -41,6 +41,7 @@ public:
 
     void beginPaint(ASurface& window) override {
         std::memset(mStencilBlob.data(), 0, mStencilBlob.getSize());
+        clearBitmap();   // a transparent window has to show nothing of the previous frame, the overlay of the agent included
     }
 
     void endPaint(ASurface& window) override {}
@@ -65,6 +66,12 @@ void AStubWindowManager::drawFrame() {
         w->pack();
         w->getRenderingContext()->endResize(*w);
         w->redraw();
+        // the frame is drawn; see AWindow::isFrameScheduled
+#if AUI_PLATFORM_WIN
+        w->mRedrawFlag = true;
+#else
+        w->mRedrawFlag = false;
+#endif
     }
 }
 

@@ -100,7 +100,7 @@ private:
     AGlibPtr<GdkCursor> mCursor;
 };
 
-AGlibPtr<GdkCursor> createCursorFromImage(AImageView img) {
+AGlibPtr<GdkCursor> createCursorFromImage(AImageView img, glm::ivec2 hotspot) {
     std::vector<uint8_t> pixels(size_t(img.width()) * img.height() * 4);
     static constexpr auto FORMAT = APixelFormat::RGBA | APixelFormat::BYTE;
     AFormattedImageView<FORMAT> destination(
@@ -120,7 +120,7 @@ AGlibPtr<GdkCursor> createCursorFromImage(AImageView img) {
     auto texture = AGlibPtr<GdkTexture>(
         gdk_memory_texture_new(img.width(), img.height(), GDK_MEMORY_R8G8B8A8, bytes, size_t(img.width()) * 4));
     g_bytes_unref(bytes);
-    return AGlibPtr<GdkCursor>(gdk_cursor_new_from_texture(texture.value(), 0, 0, nullptr));
+    return AGlibPtr<GdkCursor>(gdk_cursor_new_from_texture(texture.value(), hotspot.x, hotspot.y, nullptr));
 }
 
 AGlibPtr<GdkCursor> createSystemCursor(ACursor::System s) {
@@ -209,8 +209,8 @@ PlatformAbstractionGtk::~PlatformAbstractionGtk() {
     g_main_context_release(mMainContext);
 }
 
-_<ACursor::Custom> PlatformAbstractionGtk::createCustomCursor(AImageView image) {
-    return _new<CursorGtk>(createCursorFromImage(image));
+_<ACursor::Custom> PlatformAbstractionGtk::createCustomCursor(AImageView image, glm::ivec2 hotspot) {
+    return _new<CursorGtk>(createCursorFromImage(image, hotspot));
 }
 
 void PlatformAbstractionGtk::applyNativeCursor(const ACursor &cursor, AWindow *pWindow) {
@@ -223,14 +223,16 @@ void PlatformAbstractionGtk::applyNativeCursor(const ACursor &cursor, AWindow *p
               }
           },
           [&](const _<IDrawable>& drawable) {
-              static AMap<_<IDrawable>, AMap<int, _<CursorGtk>>> cache;
+              static AMap<_<IDrawable>, AMap<std::tuple<int, int, float, float>, _<CursorGtk>>> cache;
               AUI_DO_ONCE {
                   ACleanup::afterEntry([&] { cache.clear(); });
               }
-              auto custom = cache[drawable].getOrInsert(int(pWindow->getDpiRatio() * 10), [&] {
-                  return _new<CursorGtk>(createCursorFromImage(
-                      drawable->rasterize(glm::ivec2(cursor.size() * pWindow->getDpiRatio()))));
-              });
+              auto custom = cache[drawable].getOrInsert(
+                  { int(pWindow->getDpiRatio() * 10), cursor.size(), cursor.hotspot().x, cursor.hotspot().y }, [&] {
+                      auto image = drawable->rasterize(glm::ivec2(cursor.size() * pWindow->getDpiRatio()));
+                      return _new<CursorGtk>(
+                          createCursorFromImage(image, ACursor::hotspotInPixels(cursor.hotspot(), image.size())));
+                  });
               setCursor(pWindow, custom->handle());
           },
         },

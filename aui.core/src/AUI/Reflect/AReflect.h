@@ -13,6 +13,10 @@
 
 #include <AUI/Common/AString.h>
 
+#include <algorithm>
+#include <cctype>
+#include <string_view>
+
 #ifdef __GNUG__
 #include <cstdlib>
 #include <memory>
@@ -21,15 +25,50 @@
 
 namespace AReflect {
 
+#ifndef __GNUG__ // MSVC ABI: MSVC and Clang targeting it; their names are not mangled
+    namespace detail {
+        /**
+         * @brief Brings a type name of MSVC to the form of GCC and Clang: drops the class keys ("class AButton",
+         * "AForEachUI<struct Row>") and spells the anonymous namespace as "(anonymous namespace)".
+         */
+        inline AString normalizeMsvcTypeName(std::string_view name) {
+            static constexpr std::string_view KEYS[] = { "class ", "struct ", "union ", "enum " };
+            static constexpr std::string_view ANONYMOUS = "`anonymous namespace'";
+            std::string result;
+            result.reserve(name.size());
+            while (!name.empty()) {
+                if (name.starts_with(ANONYMOUS)) {
+                    result += "(anonymous namespace)";
+                    name.remove_prefix(ANONYMOUS.size());
+                    continue;
+                }
+                const bool wordStart = result.empty() || !(std::isalnum(uint8_t(result.back())) || result.back() == '_');
+                if (wordStart) {
+                    if (auto key = std::ranges::find_if(KEYS, [&](auto k) { return name.starts_with(k); });
+                        key != std::end(KEYS)) {
+                        name.remove_prefix(key->size());
+                        continue;
+                    }
+                }
+                result += name.front();
+                name.remove_prefix(1);
+            }
+            return result;
+        }
+    }
+#endif
+
     /**
      * @brief Runtime reflection based on typeid.
      * @ingroup reflection
+     * @details
+     * The name is the same on all compilers: `AButton`, `ns::Foo<ns::Bar>`, `(anonymous namespace)::Foo`.
      */
     template<typename T>
     AString name(T* v) {
         if (!v) return "nullptr";
-#ifdef _MSC_VER
-        return typeid(*v).name();
+#ifndef __GNUG__
+        return detail::normalizeMsvcTypeName(typeid(*v).name());
 #else
         int status;
         auto mangledName = typeid(*v).name();

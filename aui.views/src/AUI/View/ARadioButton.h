@@ -75,6 +75,8 @@ public:
 
     virtual ~ARadioButton();
 
+    DebugInspectorInfo debugInspectorInfo() override;
+
     [[nodiscard]]
     [[deprecated("use checked() instead.")]]
     bool isChecked() const { return mCircle->checked; }

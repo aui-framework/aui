@@ -32,10 +32,6 @@ AString Devtools::prettyViewName(AView* view) {
         name = AReflect::name(view);
     }
 
-    // remove 'class '
-    if (name.startsWith("class ")) {
-        name = name.substr(6);
-    }
     if (name.startsWith("LayoutVisitor::")) {
         name = "A" + name.substr(15);
     }

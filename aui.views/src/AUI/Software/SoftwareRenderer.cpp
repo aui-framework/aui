@@ -66,11 +66,20 @@ struct BrushHelper {
                 return;
             }
 
+            if (glm::any(glm::greaterThanEqual(glm::uvec2(imagePixelCoords), image.size()))) {
+                return;   // the rectangle is rounded to pixels and may be larger than the image
+            }
+
             auto color = image.get({imagePixelCoords.x, imagePixelCoords.y});
             renderer->putPixel({ x, y }, renderer->getColor() * color);
         } else {
             // faster method
-            auto color = textureHelper->texture->getImage().get(glm::uvec2{ x, y } - glm::uvec2(position));
+            const auto& image = textureHelper->texture->getImage();
+            const auto pixel = glm::uvec2{ x, y } - glm::uvec2(position);
+            if (glm::any(glm::greaterThanEqual(pixel, image.size()))) {
+                return;   // the rectangle is rounded to pixels and may be larger than the image
+            }
+            auto color = image.get(pixel);
             renderer->putPixel({ x, y }, renderer->getColor() * color);
         }
     }

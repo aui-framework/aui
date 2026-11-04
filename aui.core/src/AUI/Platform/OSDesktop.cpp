@@ -24,7 +24,9 @@
 #include <AUI/Platform/AApplication.h>
 
 #if AUI_PLATFORM_WIN
+#include <memory>
 #include <windows.h>
+#include <shellapi.h>
 #include <AUI/Logging/ALogger.h>
 
 #endif
@@ -124,29 +126,11 @@ AUI_EXPORT int aui_main(int argc, char** argv, int(*aui_entry)(const AStringVect
 
 #if AUI_PLATFORM_WIN
     if (argc == 0) {
-        // remove quotation marks
-        AString argsRaw(reinterpret_cast<const char16_t*>(GetCommandLineW()));
-        bool wrappedWithQuots = false;
-        AString currentArg;
-        for (auto c : argsRaw) {
-            switch (c) {
-                case '\"':
-                    wrappedWithQuots = !wrappedWithQuots;
-                    break;
-
-                case ' ':
-                    if (!wrappedWithQuots) {
-                        argsImpl() << std::move(currentArg);
-                        currentArg = {};
-                        AUI_ASSERT(currentArg.empty());
-                        break;
-                    }
-                default:
-                    currentArg += c;
-            }
-        }
-        if (!currentArg.empty()) {
-            argsImpl() << std::move(currentArg);
+        // WinMain: split the command line by the rules of the CRT (quotes, \" escapes, runs of whitespace)
+        int count = 0;
+        std::unique_ptr<LPWSTR, decltype(&LocalFree)> argvW(CommandLineToArgvW(GetCommandLineW(), &count), &LocalFree);
+        for (int i = 0; argvW && i < count; ++i) {
+            argsImpl() << AString(reinterpret_cast<const char16_t*>(argvW.get()[i]));
         }
     }
 #endif

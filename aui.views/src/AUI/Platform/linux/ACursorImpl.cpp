@@ -15,7 +15,11 @@
 #include "AUI/Platform/CommonRenderingContext.h"
 #include "IPlatformAbstraction.h"
 
-ACursor::ACursor(AImageView image, int size) : mValue(IPlatformAbstraction::current().createCustomCursor(image)), mSize(size) {}
+ACursor::ACursor(AImageView image, Properties properties)
+  : mValue(IPlatformAbstraction::current().createCustomCursor(
+        image, hotspotInPixels(properties.hotspot, image.size()))),
+    mSize(properties.size),
+    mHotspot(properties.hotspot) {}
 
 void ACursor::applyNativeCursor(AWindow* pWindow) const {
     IPlatformAbstraction::current().applyNativeCursor(*this, pWindow);

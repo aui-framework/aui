@@ -209,6 +209,13 @@ public:
 
     void closeOverlappingSurfacesOnClick();
 
+    /**
+     * @brief Closes all overlapping surfaces (context menus, dropdowns, tooltips) attached to this surface.
+     * @details
+     * Subclasses call it from their destructor: ~ASurface can't, closeOverlappingSurfaceImpl is pure virtual there.
+     */
+    void closeOverlappingSurfaces();
+
     bool isFocused() const { return mIsFocused; }
 
     [[nodiscard]]
@@ -318,6 +325,32 @@ public:
         }
     }
 
+    /**
+     * @return overlapping surfaces (popups, menus, dropdown lists) that are currently shown over this surface. They are
+     * drawn above and receive pointer events before the contents of this surface.
+     *
+     * !!! note
+     *
+     *     Some platforms implement overlapping surfaces as native popup windows, which are windows of their own in
+     *     the window manager as well (see AWindow::isPopup).
+     */
+    [[nodiscard]]
+    const ASet<_<AOverlappingSurface>>& overlappingSurfaces() const noexcept { return mOverlappingSurfaces; }
+
+    /**
+     * @brief Whether a redraw was requested and the frame is not drawn yet.
+     * @details
+     * Not every platform tracks it: the default implementation returns false.
+     */
+    [[nodiscard]]
+    virtual bool isFrameScheduled() const noexcept { return false; }
+
+    /**
+     * @return true if some view is waiting for the layout update.
+     */
+    [[nodiscard]]
+    bool hasPendingLayout() const noexcept;
+
     void onFocusLost() override;
     void render(ARenderContext context) override;
     void onPointerReleased(const APointerReleasedEvent& event) override;
@@ -396,6 +429,8 @@ public:
      * @see ScalingParams
      */
     void setScalingParams(ScalingParams params);
+
+    [[nodiscard]] const ScalingParams& getScalingParams() const noexcept { return mScalingParams; }
 
     /**
      * @brief Get profiling settings (mutable).

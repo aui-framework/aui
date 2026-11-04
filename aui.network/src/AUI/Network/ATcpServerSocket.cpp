@@ -32,19 +32,38 @@ ATcpServerSocket::~ATcpServerSocket()
 
 _<ATcpSocket> ATcpServerSocket::accept()
 {
-	int res = listen(getHandle(), SOMAXCONN);
-	if (res < 0)
-		handleError("socket listen error", res);
-
 	sockaddr_in addr;
 	socklen_t addrlen = sizeof(addr);
 	int s = ::accept(getHandle(), reinterpret_cast<sockaddr*>(&addr), &addrlen);
+	if (s < 0) {
+		handleError("socket accept error", s);
+	}
+
+#if !AUI_PLATFORM_WIN && defined(SO_NOSIGPIPE)
+	{
+		const int one = 1;
+		setsockopt(s, SOL_SOCKET, SO_NOSIGPIPE, &one, sizeof(one));
+	}
+#endif
 
 	return aui::ptr::manage_shared(new ATcpSocket(s, addr));
 }
 
-ATcpServerSocket::ATcpServerSocket(uint16_t serverPort)
+ATcpServerSocket::ATcpServerSocket(uint16_t serverPort): ATcpServerSocket(AInet4Address(0u, serverPort))
+{
+}
+
+ATcpServerSocket::ATcpServerSocket(const AInet4Address& bindAddress)
 {
 	init();
-	bind(serverPort);
+#if !AUI_PLATFORM_WIN
+	// allows restarting a server right after the previous instance has gone.
+	const int reuse = 1;
+	setsockopt(getHandle(), SOL_SOCKET, SO_REUSEADDR, &reuse, sizeof(reuse));
+#endif
+	bind(bindAddress);
+	int res = listen(getHandle(), SOMAXCONN);
+	if (res < 0) {
+		handleError("socket listen error", res);
+	}
 }

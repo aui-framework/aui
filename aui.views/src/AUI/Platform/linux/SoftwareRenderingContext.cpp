@@ -50,6 +50,9 @@ void SoftwareRenderingContext::reallocate() {
 }
 
 AImage SoftwareRenderingContext::makeScreenshot() {
+    if (!mBitmapBlob) {
+        return {};
+    }
     AByteBuffer data;
     size_t s = mBitmapSize.x * mBitmapSize.y * 4;
     data.resize(s);

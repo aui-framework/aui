@@ -202,7 +202,10 @@ TEST(Coroutines, CoAwait3rdPartyCoro) {
 /**
  * @brief A future that is never completed on its own.
  */
-static AFuture<int> neverCompletes() { return AFuture<int>(); }
+static AFuture<int> neverCompletes() {
+    // the future holds its own resolver until cancelled, so it's never abandoned either
+    return AFuture<int>::create([](AFuture<int>::Resolver resolver) { resolver.onCancel([resolver] {}); });
+}
 
 static bool isTimeout(const AException& e) {
     try {
@@ -282,8 +285,7 @@ TEST(Coroutines, TimeoutPropagatesSourceException) {
 }
 
 TEST(Coroutines, TimeoutAlreadyCompleted) {
-    AFuture<int> source;
-    source.supplyValue(322);
+    auto source = AFuture<int>::fromValue(322);
     auto guarded = source.withTimeout(10s);
     ASSERT_TRUE(guarded.hasValue());
     EXPECT_EQ(*guarded, 322);
@@ -298,8 +300,9 @@ TEST(Coroutines, TimeoutCancelsSource) {
     source = nullptr; // guarded must keep the source alive
     EXPECT_FALSE(cancelled);
 
+    // the source is released right after the result is supplied, on the timer thread
     auto deadline = std::chrono::steady_clock::now() + 5s;
-    while (!guarded.hasResult() && std::chrono::steady_clock::now() < deadline) {
+    while (!(guarded.hasResult() && cancelled) && std::chrono::steady_clock::now() < deadline) {
         AThread::sleep(5ms);
     }
     ASSERT_TRUE(guarded.hasException());
@@ -371,9 +374,10 @@ TEST(Coroutines, OnCancel) {
     }
     {   // completed futures are not cancelled
         int calls = 0;
-        auto f = neverCompletes();
+        AOptional<AFuture<int>::Resolver> resolver;
+        auto f = AFuture<int>::create([&](AFuture<int>::Resolver r) { resolver = std::move(r); });
         f.onCancel([&] { ++calls; });
-        f.supplyValue(1);
+        resolver->supplyValue(1);
         f.cancel();
         EXPECT_EQ(calls, 0);
     }

@@ -29,14 +29,14 @@ TEST(Ping, Localhost) {
 }
 
 TEST(Ping, Fail1) {
-    EXPECT_ANY_THROW(AIcmp::ping(AInet4Address::fromString("192.168.10.54"), 1s)->count());
+    EXPECT_ANY_THROW(AIcmp::ping(AInet4Address::fromString("192.0.2.1"), 1s)->count());
 }
 
 TEST(Ping, Fail2) {
     // Check that AIcmp implementation does not mess up with the results.
 
     AUI_REPEAT(10) {
-        auto fail = AIcmp::ping(AInet4Address::fromString("192.168.10.54"), 1s);
+        auto fail = AIcmp::ping(AInet4Address::fromString("192.0.2.1"), 1s);
         auto good = AIcmp::ping(AInet4Address::fromString("127.0.0.1"));
         EXPECT_ANY_THROW(fail->count());
         EXPECT_GE(good->count(), 0);

@@ -74,6 +74,8 @@ public:
 
     AString getText() const override;
 
+    DebugInspectorInfo debugInspectorInfo() override;
+
     void onCharEntered(AChar c) override;
 
     void onLayout(glm::ivec2 size) override;

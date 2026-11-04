@@ -40,7 +40,7 @@ if ((NOT "aui.toolbox" IN_LIST children) AND (NOT "aui.toolbox.exe" IN_LIST chil
 endif()
 
 foreach (file ${children})
-    if (NOT file MATCHES "(aui.toolbox|.+\.dll)")
+    if (NOT file MATCHES "(aui.toolbox|aui-remote|.+\.dll)")
         message(FATAL_ERROR "unexpected file ${file} in bin/ directory")
     endif ()
 endforeach ()

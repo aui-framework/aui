@@ -47,7 +47,7 @@ public:
     PlatformAbstractionGtk();
     ~PlatformAbstractionGtk() override;
     void init() override;
-    _<ACursor::Custom> createCustomCursor(AImageView image) override;
+    _<ACursor::Custom> createCustomCursor(AImageView image, glm::ivec2 hotspot) override;
     void applyNativeCursor(const ACursor &cursor, AWindow *pWindow) override;
     void setClipboardText(const AString &text) override;
     AString getClipboardText() override;

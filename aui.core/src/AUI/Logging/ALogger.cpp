@@ -66,11 +66,14 @@ void ALogger::setLogFileForGlobal(APath path) { globalImpl(std::move(path)); }
 
 void ALogger::log(Level level, AStringView prefix, AStringView message) {
     {
-        std::unique_lock lock(mOnLogged);
-        if (mOnLogged.value()) {
-            auto onLogged = mOnLogged.value();
-            lock.unlock();
-            onLogged(prefix, message, level);
+        std::vector<_<ISink>> sinks;
+        {
+            std::unique_lock lock(mSinks);
+            sinks = mSinks.value();
+        }
+        const Entry entry { level, prefix, message };
+        for (const auto& sink : sinks) {
+            sink->log(entry);
         }
     }
 
@@ -170,4 +173,38 @@ ALogger::~ALogger() { mLogFile.reset(); }
 
 bool ALogger::isTraceImpl() {
     return std::getenv("AUI_TRACE") != nullptr;
+}
+
+void ALogger::addSink(_<ISink> sink) {
+    std::unique_lock lock(mSinks);
+    mSinks.value().push_back(std::move(sink));
+}
+
+void ALogger::removeSink(const _<ISink>& sink) {
+    std::unique_lock lock(mSinks);
+    std::erase(mSinks.value(), sink);
+}
+
+void ALogger::flush() {
+    std::vector<_<ISink>> sinks;
+    {
+        std::unique_lock lock(mSinks);
+        sinks = mSinks.value();
+    }
+    for (const auto& sink : sinks) {
+        sink->flush();
+    }
+}
+
+void ALogger::onLogged(std::function<void(const AString& prefix, const AString& message, Level level)> callback) {
+    std::unique_lock lock(mSinks);
+    auto& sinks = mSinks.value();
+    std::erase(sinks, mLegacySink);
+    mLegacySink = nullptr;
+    if (callback) {
+        mLegacySink = aui::ptr::manage_shared(new CallbackSink([callback = std::move(callback)](const Entry& entry) {
+            callback(AString(entry.prefix), AString(entry.message), entry.level);
+        }));
+        sinks.push_back(mLegacySink);
+    }
 }

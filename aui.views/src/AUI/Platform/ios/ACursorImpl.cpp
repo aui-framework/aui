@@ -15,7 +15,8 @@
 #include "AUI/Platform/AWindow.h"
 
 
-ACursor::ACursor(AImageView image, int size) : mValue(std::make_unique<ACursor::Custom>()), mSize(size) {}
+ACursor::ACursor(AImageView image, Properties properties)
+  : mValue(std::make_unique<ACursor::Custom>()), mSize(properties.size), mHotspot(properties.hotspot) {}
 
 void ACursor::applyNativeCursor(AWindow* pWindow) const {
 

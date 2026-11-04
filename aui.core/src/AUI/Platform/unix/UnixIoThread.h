@@ -91,7 +91,7 @@ private:
     std::unordered_map<int /* fd */, FDInfo> mFdInfo;
 #else
     AVector<pollfd> mPollFd;
-    AVector<Callback> mCallbacks;
+    AVector<_<Callback>> mCallbacks;
 #endif
     AMessageQueue<> mMessageQueue;
 
@@ -102,13 +102,18 @@ private:
             return;
         }
 
-        AFuture<> cs;
-        mMessageQueue.enqueue([&] {
-            callback();
-            cs.supplyValue();
+        auto done = AFuture<>::create([&](AFuture<>::Resolver resolver) {
+            mMessageQueue.enqueue([&callback, resolver = std::move(resolver)] {
+                try {
+                    callback();
+                    resolver.supplyValue();
+                } catch (...) {
+                    resolver.supplyException();
+                }
+            });
         });
         mNotifyEvent.set();
-        cs.wait();
+        *done;
     }
 
     UnixIoThread() noexcept;

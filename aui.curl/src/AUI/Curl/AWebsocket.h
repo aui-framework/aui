@@ -15,19 +15,37 @@
 
 #pragma once
 
+#include <atomic>
+#include <chrono>
+#include <mutex>
 
-#include "ACurl.h"
-#include "AUI/Common/AByteBufferView.h"
+#include "AUI/Common/AByteBuffer.h"
+#include "AUI/Common/AObject.h"
 #include "AUI/Common/AOptional.h"
+#include "AUI/Common/ASignal.h"
 #include "AUI/Common/AString.h"
-#include "AUI/IO/ADynamicPipe.h"
+#include "AUI/Curl/Detail/WebsocketFrame.h"
+#include "AUI/IO/IOutputStream.h"
+
+class ATcpSocket;
+class ATlsSession;
 
 /**
- * @brief WebSocket client (ws:// and wss://) built on top of ACurl.
+ * @brief The server did not accept the WebSocket upgrade.
+ * @ingroup curl
+ */
+class API_AUI_CURL AWebsocketHandshakeException : public AException {
+public:
+    using AException::AException;
+};
+
+/**
+ * @brief WebSocket client (ws:// and wss://).
  * @ingroup curl
  * @details
- * Connects on run(). Connection, incoming messages and closing are reported with signals; outgoing messages are sent
- * with `writeText` and `writeBinary` (or by using AWebsocket as an `IOutputStream`, which sends text frames).
+ * `run()` connects and blocks until the connection is over. Connection, incoming messages and closing are reported with
+ * signals, emitted on the thread that called `run()`. Outgoing messages are sent with `writeText` and `writeBinary` (or
+ * by using AWebsocket as an `IOutputStream`, which sends text frames) from any thread.
  *
  * ```cpp
  * auto ws = _new<AWebsocket>("wss://ws.postman-echo.com/raw");
@@ -39,102 +57,102 @@
  * ws->run(); // blocks until closed
  * ```
  *
- * `run()` blocks the calling thread, so use a dedicated thread (or an `AThreadPool` task) when the UI thread must stay
- * responsive. Signals are emitted on the thread that runs the connection.
+ * Instead of `run()` and signals, a thread can call `connect()` and pull the messages with `read`:
+ *
+ * ```cpp
+ * AWebsocket ws("wss://127.0.0.1:1234/", { .expectedFingerprint = fingerprint });
+ * ws.connect();
+ * ws.writeText("hello");
+ * if (auto message = ws.read(std::chrono::seconds(5))) { ... }
+ * ```
+ *
+ * By default, wss:// encrypts the traffic but does not authenticate the server: no certificate chain is verified. Pass
+ * `Options::expectedFingerprint` to accept a single known certificate.
  */
-class API_AUI_CURL AWebsocket: public ACurl, public IOutputStream {
+class API_AUI_CURL AWebsocket : public AObject, public IOutputStream {
     friend class WebsocketTest_Receive1_Test;
     friend class WebsocketTest_Receive2_Test;
+    friend class WebsocketTest_FragmentedMessageIsAssembled_Test;
+
 public:
-    AWebsocket(const AString& url, AString key = generateKeyString());
-    void write(const char* src, size_t size) override {
-        writeText(AStringView(src, size));
-    }
+    struct Options {
+        /**
+         * @brief SHA-256 of the server certificate that is accepted (wss:// only). The handshake fails on any other.
+         */
+        AOptional<AByteBuffer> expectedFingerprint;
+
+        /**
+         * @brief Limit of the TLS handshake and of the HTTP upgrade each.
+         */
+        std::chrono::milliseconds connectTimeout = std::chrono::seconds(10);
+
+        /**
+         * @brief Upper bound of an incoming message.
+         */
+        std::size_t maxMessageSize = 1 << 28;
+    };
+
+    explicit AWebsocket(AString url);
+    AWebsocket(AString url, Options options);
+    ~AWebsocket() override;
+
+    /**
+     * @brief Connects and performs the handshake.
+     * @throws AWebsocketHandshakeException if the server refuses the connection
+     * @throws AException (AIOException, ATlsException...) on a transport failure
+     */
+    void connect();
+
+    /**
+     * @brief Connects and emits signals until the connection is closed by either side.
+     */
+    void run();
+
+    /**
+     * @return the next message; nothing if there is none in `timeout`
+     * @throws AIOException when the connection is closed
+     * @throws aui::websocket::ProtocolError if the server breaks the protocol
+     */
+    [[nodiscard]] AOptional<AByteBuffer> read(std::chrono::milliseconds timeout);
+
+    void write(const char* src, size_t size) override { writeText(AStringView(src, size)); }
     void writeText(AStringView text);
     void writeBinary(AByteBufferView data);
 
-    void close() override;
-
-    enum class Opcode {
-        CONTINUATION = 0x0,
-        TEXT = 0x1,
-        BINARY = 0x2,
-        CLOSE = 0x8,
-        PING = 0x9,
-        PONG = 0xa,
-    };
+    /**
+     * @brief Tells the server goodbye and closes the connection. Interrupts `run()` and `read`. Can be called from any
+     * thread.
+     */
+    void close();
 
 private:
-    AString mKey;
-    ADynamicPipe mRead;
-    bool mAccepted = false;
+    AWebsocket();   // for tests
 
-    /**
-     * @brief Websocket frame header.
-     *
-     * @details
-     * WebSocket is a framed protocol in the format:
-     *
-     *    0               1                   2                   3
-     *    0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1 2 3 4 5 6 7 8 9 0 1
-     *   +-+-+-+-+-------+-+-------------+-------------------------------+
-     *   |F|R|R|R| opcode|M| Payload len |    Extended payload length    |
-     *   |I|S|S|S|  (4)  |A|     (7)     |             (16/64)           |
-     *   |N|V|V|V|       |S|             |   (if payload len==126/127)   |
-     *   | |1|2|3|       |K|             |                               |
-     *   +-+-+-+-+-------+-+-------------+ - - - - - - - - - - - - - - - +
-     *   |     Extended payload length continued, if payload len == 127  |
-     *   + - - - - - - - - - - - - - - - +-------------------------------+
-     *   |                               |Masking-key, if MASK set to 1  |
-     *   +-------------------------------+-------------------------------+
-     *   | Masking-key (continued)       |          Payload Data         |
-     *   +-------------------------------- - - - - - - - - - - - - - - - +
-     *   :                     Payload Data continued ...                :
-     *   + - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - - +
-     *   |                     Payload Data continued ...                |
-     *   +---------------------------------------------------------------+
-     *
-     * @see https://tools.ietf.org/html/rfc6455#section-5.2
-     */
-    struct Header {
-        /* first byte: fin + opcode */
-        uint8_t opcode: 4;
-        uint8_t rsv: 3;
-        uint8_t fin: 1;
+    AString mUrl;
+    Options mOptions;
+    _<ATcpSocket> mSocket;
+    _<ATlsSession> mTls;
+    aui::websocket::FrameDecoder mDecoder;
+    AByteBuffer mAssembling;
+    bool mAssemblingActive = false;
+    bool mPeerGone = false;
+    std::atomic_bool mCloseRequested = false;
+    std::mutex mSendMutex;
 
-        /* second byte: mask + payload length */
-        uint8_t payload_len: 7; /* if 126, uses extra 2 bytes (uint16_t)
-                                 * if 127, uses extra 8 bytes (uint64_t)
-                                 * if <=125 is self-contained
-                                 */
-        uint8_t mask: 1; /* if 1, uses 4 extra bytes */
-    };
+    void send(aui::websocket::Opcode opcode, AByteBufferView payload);
+    std::size_t readSome(char* dst, std::size_t size);
+    void handshake(const AString& host, const AString& target);
 
-    static AString generateKeyString();
+    /// Takes the bytes that have arrived in `timeout`, if any, to the decoder.
+    void pull(std::chrono::milliseconds timeout);
 
-    void writeRaw(const char* src, size_t size);
-    void writeRawMasked(const std::uint8_t mask[4], AByteBufferView message);
-    void writeMessage(Opcode opcode, AByteBufferView message);
+    /// Handles control frames on the way.
+    [[nodiscard]] AOptional<AByteBuffer> nextMessage();
 
     std::size_t onDataReceived(AByteBufferView data);
-    std::size_t decodeOnePacket(AByteBufferView data);
-    std::size_t onDataSend(char* dst, std::size_t maxLen);
-
-    AWebsocket(): ACurl(ACurl::Builder("localhost")) {} // for tests
-
-    AOptional<AByteBuffer> mTrailingBuffer;
 
 signals:
     emits<> connected;
     emits<AByteBuffer> received;
     emits<AString /* message */> websocketClosed;
 };
-
-AUI_ENUM_VALUES(AWebsocket::Opcode,
-                AWebsocket::Opcode::CONTINUATION,
-                AWebsocket::Opcode::TEXT,
-                AWebsocket::Opcode::BINARY,
-                AWebsocket::Opcode::CLOSE,
-                AWebsocket::Opcode::PING,
-                AWebsocket::Opcode::PONG
-)

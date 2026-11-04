@@ -73,6 +73,19 @@ static void aui_widget_init(AUIWidget* myWidget) {
             }
         }),
         myWidget);
+    // input methods (i.e., ibus) commit text only to a context that knows its widget and has the keyboard focus.
+    gtk_im_context_set_client_widget(myWidget->imContext, GTK_WIDGET(myWidget));
+    if (auto focusController = gtk_event_controller_focus_new()) {
+        g_signal_connect(
+            focusController, "enter",
+            G_CALLBACK(+[](GtkEventController*, AUIWidget* widget) { gtk_im_context_focus_in(widget->imContext); }),
+            myWidget);
+        g_signal_connect(
+            focusController, "leave",
+            G_CALLBACK(+[](GtkEventController*, AUIWidget* widget) { gtk_im_context_focus_out(widget->imContext); }),
+            myWidget);
+        gtk_widget_add_controller(GTK_WIDGET(myWidget), focusController);
+    }
 
     if (auto keyController = gtk_event_controller_key_new()) {
         auto keyPressed =

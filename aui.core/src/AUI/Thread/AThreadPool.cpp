@@ -73,6 +73,9 @@ bool AThreadPool::Worker::processQueue(std::unique_lock<std::mutex>& mutex, AQue
             mTP.mQueueTryLater.push(std::move(func));
             return true;
         }
+        // destroy captures before taking the queue lock back: that may be expensive (i.e., the last reference to a
+        // future's state), and run() waits for the lock
+        func = nullptr;
         resetInterruptFlag();
         mutex.lock();
         return true;

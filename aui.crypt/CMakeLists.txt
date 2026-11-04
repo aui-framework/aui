@@ -12,7 +12,7 @@ endif()
 aui_module(aui.crypt EXPORT aui)
 aui_enable_tests(aui.crypt)
 aui_link(aui.crypt PUBLIC aui::core)
-aui_link(aui.crypt PRIVATE MbedTLS::mbedcrypto)
+aui_link(aui.crypt PRIVATE MbedTLS::mbedtls MbedTLS::mbedx509 MbedTLS::mbedcrypto)
 
 set(MBEDTLS_INCLUDE_DIR "${MBEDTLS_ROOT_DIR}/include" CACHE STRING "MbedTLS include directory work-around")
 

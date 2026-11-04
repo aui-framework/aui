@@ -495,7 +495,8 @@ def _scan():
             if any(part == 'test' for part in root_path.parts):
                 # root-level test projects; note that AUI/Test (aui.uitests) is a part of the public API
                 continue
-            if "aui.toolbox" in root_path.as_posix():
+            if "aui.toolbox" in root_path.as_posix() or "aui.remote" in root_path.as_posix():
+                # tools, not API
                 continue
             if not file.endswith(('.h', '.hpp')):
                 continue

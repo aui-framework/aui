@@ -60,9 +60,8 @@ WinIoThread::WinIoThread() noexcept: mThread(_new<AThread>([] {
 })) {
     mThread->start();
 
-    AFuture<> cs;
-    mThread->enqueue([&] {
-        cs.supplyValue();
+    auto started = AFuture<>::create([&](AFuture<>::Resolver resolver) {
+        mThread->enqueue([resolver = std::move(resolver)] { resolver.supplyValue(); });
     });
-    cs.wait();
+    started.wait();
 }

@@ -313,3 +313,9 @@ glm::ivec2 AAbstractTextField::getCursorPosition() {
 int AAbstractTextField::getVerticalAlignmentOffset() noexcept {
     return getFontStyle().getBaselineY(getPadding().top, getContentHeight(), mVerticalAlign);
 }
+
+IInspectable::DebugInspectorInfo AAbstractTextField::debugInspectorInfo() {
+    auto info = AView::debugInspectorInfo();
+    info.push_back({ "text", getText() });
+    return info;
+}

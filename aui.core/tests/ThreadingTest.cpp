@@ -196,7 +196,7 @@ TEST(Threading, PararellWithResult) {
 
 TEST(Threading, FutureCancellationBeforeExecution) {
     AThreadPool localThreadPool(1);
-    size_t foreignLambdaCallCount = 0;
+    std::atomic<size_t> foreignLambdaCallCount = 0;   // wait() may run the second one on this thread
     auto foreignLambda = [&] {
         try {
             AThread::sleep(500ms);
@@ -207,7 +207,7 @@ TEST(Threading, FutureCancellationBeforeExecution) {
     };
     auto exec = localThreadPool * foreignLambda;
     {
-        AFuture<> future;
+        AFuture<> future = nullptr;
         {
             auto future1 = localThreadPool * [&] {
                 ADD_FAILURE() << "lambda has called";
@@ -290,7 +290,7 @@ TEST(Threading, FutureOnDone1) {
             auto future = localThreadPool * [] {
                 return 322;
             };
-            future.onSuccess([&](int i) {
+            future.onValue([&](int i) {
                 ASSERT_EQ(i, 322);
                 called = true;
             });
@@ -299,7 +299,7 @@ TEST(Threading, FutureOnDone1) {
 
             AThread::sleep(10ms); // extra delay for the callback to be called
         }
-        ASSERT_TRUE(called) << "onSuccess callback has not called (iteration " << repeatStubIndex << ")";
+        ASSERT_TRUE(called) << "onValue callback has not called (iteration " << repeatStubIndex << ")";
     }
 }
 TEST(Threading, FutureOnDone2) {
@@ -316,7 +316,7 @@ TEST(Threading, FutureOnDone2) {
                 return 322;
             };
             AThread::sleep(std::chrono::milliseconds(repeatStubIndex)); // long task
-            future.onSuccess([&](int i) {
+            future.onValue([&](int i) {
                 ASSERT_EQ(i, 322);
                 called = true;
             });
@@ -325,7 +325,7 @@ TEST(Threading, FutureOnDone2) {
 
             AThread::sleep(10ms); // extra delay for the callback to be called
         }
-        ASSERT_TRUE(called) << "onSuccess callback has not called (iteration " << repeatStubIndex << ")";
+        ASSERT_TRUE(called) << "onValue callback has not called (iteration " << repeatStubIndex << ")";
     }
 }
 
@@ -347,14 +347,14 @@ TEST(Threading, FutureOnSuccess) {
         auto future = localThreadPool * [] {
             return 322;
         };
-        holder << future.onSuccess([&, destructorCallback = std::move(destructorCallback)](int i) {
+        holder << future.onValue([&, destructorCallback = std::move(destructorCallback)](int i) {
             ARaiiHelper raii = std::move(destructorCallback);
             ASSERT_EQ(i, 322);
             called = true;
         });
     }
     AThread::sleep(2000ms);
-    ASSERT_TRUE(called) << "onSuccess callback has not called";
+    ASSERT_TRUE(called) << "onValue callback has not called";
     ASSERT_TRUE(destructorCalled) << "AFuture internal logic is not destructed";
     ASSERT_TRUE(holder.size() == 0) << "holder is not empty";
 }
@@ -378,7 +378,7 @@ TEST(Threading, FutureExecuteOnCallingThread) {
 TEST(Threading, FutureSelfLock1) {
     {
         AThreadPool localThreadPool(1);
-        AFuture<int> future;
+        AFuture<int> future = nullptr;
         future = localThreadPool * [&future] {
             AThread::sleep(1s);
             *future;
@@ -388,7 +388,7 @@ TEST(Threading, FutureSelfLock1) {
     }
     {
         AThreadPool localThreadPool(1);
-        AFuture<> future;
+        AFuture<> future = nullptr;
         future = localThreadPool * [&future] {
             AThread::sleep(1s);
             *future;
@@ -400,7 +400,7 @@ TEST(Threading, FutureSelfLock1) {
 TEST(Threading, FutureSelfLock2) {
     {
         AThreadPool localThreadPool(1);
-        AFuture<int> future;
+        AFuture<int> future = nullptr;
         future = localThreadPool * [&future] {
             AThread::sleep(1s);
             future.wait();
@@ -410,7 +410,7 @@ TEST(Threading, FutureSelfLock2) {
     }
     {
         AThreadPool localThreadPool(1);
-        AFuture<> future;
+        AFuture<> future = nullptr;
         future = localThreadPool * [&future] {
             AThread::sleep(1s);
             future.wait();
@@ -458,10 +458,9 @@ TEST(Threading, FutureSetWaitForAll) {
 }
 
 TEST(Threading, AfterFutureResolvedOnSuccessIsCalled) {
-    AFuture<int> future;
-    future.supplyValue(228);
+    auto future = AFuture<int>::fromValue(228);
     bool called = false;
-    future.onSuccess([&](int v) {
+    future.onValue([&](int v) {
         EXPECT_EQ(v, 228);
         EXPECT_FALSE(called);
         called = true;
@@ -470,10 +469,9 @@ TEST(Threading, AfterFutureResolvedOnSuccessIsCalled) {
 }
 
 TEST(Threading, AfterFutureResolvedOnErrorIsCalled) {
-    AFuture<int> future;
-    future.supplyException(std::make_exception_ptr(AException("ololo")));
+    auto future = AFuture<int>::fromException(std::make_exception_ptr(AException("ololo")));
     bool called = false;
-    future.onError([&](const AException& e) {
+    future.onException([&](const AException& e) {
         EXPECT_THAT(e.getMessage(), testing::HasSubstr("ololo"));
         EXPECT_FALSE(called);
         called = true;
@@ -482,8 +480,7 @@ TEST(Threading, AfterFutureResolvedOnErrorIsCalled) {
 }
 
 TEST(Threading, AfterFutureResolvedOnFinallyIsCalled1) {
-    AFuture<int> future;
-    future.supplyValue(228);
+    auto future = AFuture<int>::fromValue(228);
     bool called = false;
     future.onFinally([&] {
         EXPECT_FALSE(called);
@@ -493,8 +490,7 @@ TEST(Threading, AfterFutureResolvedOnFinallyIsCalled1) {
 }
 
 TEST(Threading, AfterFutureResolvedOnFinallyIsCalled2) {
-    AFuture<int> future;
-    future.supplyException(std::make_exception_ptr(AException("ololo")));
+    auto future = AFuture<int>::fromException(std::make_exception_ptr(AException("ololo")));
     bool called = false;
     future.onFinally([&] {
         EXPECT_FALSE(called);

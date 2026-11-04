@@ -75,3 +75,13 @@ TEST(WebsocketTest, Receive2) {
         EXPECT_EQ(s->onDataReceived(p2), p2.size());
     }
 }
+
+TEST(WebsocketTest, FragmentedMessageIsAssembled) {
+    using namespace aui::websocket;
+    auto r = _new<Receiver>();
+    auto s = aui::ptr::manage_shared(new AWebsocket);
+    AObject::connect(s->received, AUI_SLOT(r)::receive);
+    EXPECT_CALL(*r, receive(AByteBuffer::fromString("hello world")));
+    s->onDataReceived(encodeFrame(Opcode::TEXT, AByteBuffer::fromString("hello "), false));
+    s->onDataReceived(encodeFrame(Opcode::CONTINUATION, AByteBuffer::fromString("world"), true));
+}

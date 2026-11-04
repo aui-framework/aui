@@ -115,6 +115,8 @@ public:
 
     ~ACheckBox() override = default;
 
+    DebugInspectorInfo debugInspectorInfo() override;
+
     [[nodiscard]] [[deprecated("use checked() instead.")]]
     bool isChecked() const {
         return mBox->checked;

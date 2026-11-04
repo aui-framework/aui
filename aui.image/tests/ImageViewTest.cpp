@@ -44,3 +44,12 @@ TEST(ImageView, CroppedRespectsStride) {
         }
     }
 }
+
+TEST(Image, CopyOwnsItsPixels) {
+    auto source = std::make_unique<AImage>(glm::uvec2 { 4, 4 }, APixelFormat::RGBA_BYTE);
+    source->fill(AColor::RED);
+    AImage copy(*source);
+    EXPECT_NE(copy.buffer().data(), source->buffer().data());
+    source.reset();
+    EXPECT_EQ(copy.get({ 3, 3 }), AColor::RED);
+}

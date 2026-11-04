@@ -165,3 +165,20 @@ TEST_F(SmallVector, EraseFromMiddle) {
     EXPECT_EQ(*vector[1], 2);
     EXPECT_EQ(*vector[2], 3);
 }
+
+TEST_F(SmallVector, MoveKeepsNoExtraReferences) {
+    auto value = std::make_shared<int>(0);
+    for (int count : { 1, 4 }) {   // in place and dynamically allocated
+        {
+            ASmallVector<_<int>, 2> source;
+            for (int i = 0; i < count; ++i) {
+                source.push_back(value);
+            }
+            ASmallVector<_<int>, 2> moved(std::move(source));
+            EXPECT_EQ(moved.size(), count);
+            EXPECT_TRUE(source.empty());
+            EXPECT_EQ(value.use_count(), count + 1);
+        }
+        EXPECT_EQ(value.use_count(), 1);
+    }
+}

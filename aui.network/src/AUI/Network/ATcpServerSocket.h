@@ -41,11 +41,24 @@ class API_AUI_NETWORK ATcpServerSocket: public AAbstractSocket
 protected:
 	int createSocket() override;
 public:
+	/**
+	 * @brief Listens on all interfaces.
+	 * @param serverPort port to listen; 0 lets the system pick a free port (see `getAddress()`).
+	 */
 	ATcpServerSocket(uint16_t serverPort);
+
+	/**
+	 * @brief Listens on the given address, i.e., `AInet4Address::fromArray({127, 0, 0, 1}, 0)` for loopback only.
+	 * @details
+	 * Port 0 lets the system pick a free port. The actual address is available through `getAddress()`.
+	 */
+	ATcpServerSocket(const AInet4Address& bindAddress);
 	~ATcpServerSocket() override;
 
     /**
      * @brief Blocks the thread until next connection.
+     * @details
+     * Throws if the server socket was closed from another thread, which is the way to stop a thread blocked here.
      * @return new connection
      */
 	_<ATcpSocket> accept();

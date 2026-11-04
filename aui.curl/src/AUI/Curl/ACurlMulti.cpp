@@ -131,11 +131,10 @@ ACurlMulti& ACurlMulti::global() noexcept {
             multi.emplace();
             thread->start();
 
-            AFuture<> cs;
-            thread->enqueue([&] {
-                cs.supplyValue();
+            auto started = AFuture<>::create([&](AFuture<>::Resolver resolver) {
+                thread->enqueue([resolver = std::move(resolver)] { resolver.supplyValue(); });
             });
-            cs.wait();
+            started.wait();
         }
         ~Instance() {
             thread->interrupt();

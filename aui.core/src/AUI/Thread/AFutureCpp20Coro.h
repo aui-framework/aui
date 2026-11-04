@@ -61,21 +61,12 @@ concept Cpp20HasPromiseType = requires { typename T::promise_type; } && Cpp20Pro
 template <typename T>
 struct CoPromiseTypeBase {
     /**
-     * @brief The future object that will be returned to the caller of the coroutine.
+     * @brief The future returned to the caller of the coroutine and the resolver the coroutine completes it with.
      * @details
-     * This future is fulfilled when the coroutine completes (via return_value or return_void)
-     * or when an unhandled exception occurs.
+     * If the coroutine frame is destroyed without a result (for example, a pending resumption is dropped), the
+     * resolver fails the future with AFutureAbandonedException.
      */
-    AFuture<T> future;
-
-    /**
-     * @brief Weak pointer to the future's inner shared state.
-     * @details
-     * Stored before moving the future out in get_return_object(), so the promise can
-     * still access and fulfill the future after ownership has been transferred to the caller.
-     * This is critical for safely handling cases where the caller has destroyed the future.
-     */
-    typename AFuture<T>::PtrWeak futureWeak = future.inner().weak();
+    std::pair<AFuture<T>, typename AFuture<T>::Resolver> handles = Access::pending<T>();
 
     /**
      * @brief Called immediately by the compiler after the coroutine starts.
@@ -90,92 +81,48 @@ struct CoPromiseTypeBase {
     auto final_suspend() noexcept { return std::suspend_never {}; }
 
     /**
-     * @brief Handles unhandled exceptions thrown within the coroutine body.
-     * @details
-     * Attempts to lock the weak pointer to the future's inner state. If the future is still alive, calls
-     * `AFuture::supplyException()` to propagate the exception to whoever is awaiting the future. If the future has
-     * already been destroyed, the exception is silently discarded.
+     * @brief Passes an exception escaped from the coroutine body to the future. Ignored if the future is cancelled.
      */
-    auto unhandled_exception() noexcept {
-        auto future = this->futureWeak.lock();
-        if (future == nullptr) {
-            return;
-        }
-        AFuture<T>(future).supplyException();
-    }
+    void unhandled_exception() noexcept { handles.second.supplyException(); }
 
     /**
      * @brief Called by the compiler to obtain the return value for the caller of the coroutine.
-     * @return AFuture<T> that the caller receives. The future is moved out, leaving the
-     *         internal future member in a moved-from state.
      */
     AFuture<T> get_return_object() noexcept {
-#if AUI_DEBUG
-        AUI_ASSERT(future.inner() != nullptr);
-#endif
-        auto toReturn = std::move(future);
-#if AUI_DEBUG
-        AUI_ASSERT(toReturn.inner() != nullptr);
-        AUI_ASSERT(future.inner() == nullptr);
-#endif
-        return toReturn;
+        AUI_ASSERT(handles.first != nullptr);
+        return std::move(handles.first);
     }
 
     /**
      * @brief Overload of await_transform for types that are already Cpp20Awaiter.
-     * @tparam NestedAwaiter An existing Awaiter type (e.g., from operator co_await).
-     * @param nestedAwaiter The awaiter to wrap.
-     * @return An Awaiter that delegates to the nested awaiter while adding cancellation
-     *         detection via parentFuture.
      * @details
-     * Wraps a nested Awaiter with cancellation support. Before resuming, checks if the
-     * parent future has been destroyed (via parentFuture weak pointer). If so, throws
-     * AThread::Interrupted to abort the coroutine gracefully instead of resuming into
-     * a destroyed frame.
+     * Before resuming, checks whether the future of this coroutine is cancelled. If so, throws AThread::Interrupted
+     * to unwind the coroutine instead of continuing work nobody waits for.
      */
     template <Cpp20Awaiter NestedAwaiter>
-    auto await_transform(NestedAwaiter &&nestedAwaiter) {
-        /**
-         * @brief Awaiter that wraps a nested awaiter with cancellation detection.
-         */
+    auto await_transform(NestedAwaiter&& nestedAwaiter) {
         struct Awaiter {
             NestedAwaiter nestedAwaiter;
-            typename AFuture<T>::PtrWeak parentFuture;
+            const typename AFuture<T>::Resolver& resolver;
 
-            /** @brief Delegates to the nested awaiter's await_ready. */
             bool await_ready() noexcept { return nestedAwaiter.await_ready(); }
 
-            /**
-             * @brief Resumes by delegating to the nested awaiter, but first checks
-             *        if the parent future has been destroyed (cancellation check).
-             * @throws AThread::Interrupted if the parent future was destroyed while suspended.
-             */
             auto await_resume() {
-                if (parentFuture.expired()) {
+                if (resolver.isCancelled()) {
                     throw AThread::Interrupted {};
                 }
                 return nestedAwaiter.await_resume();
             }
 
-            /**
-             * @brief Delegates suspension to the nested awaiter.
-             * @param ourHandle The coroutine handle for the parent coroutine.
-             */
-            auto await_suspend(std::coroutine_handle<typename Future<T>::CoPromiseType> ourHandle) {
+            auto await_suspend(std::coroutine_handle<CoPromiseType<T>> ourHandle) {
                 return nestedAwaiter.await_suspend(std::move(ourHandle));
             }
         };
-        return Awaiter { .nestedAwaiter = std::forward<NestedAwaiter>(nestedAwaiter), .parentFuture = futureWeak };
+        return Awaiter { .nestedAwaiter = std::forward<NestedAwaiter>(nestedAwaiter), .resolver = handles.second };
     }
 
     /**
      * @brief Overload of await_transform for types that have a promise_type (like AFuture<T>).
-     * @tparam NestedAwaitable An awaitable type (has promise_type), e.g. AFuture<F>.
-     * @param nestedAwaitable The awaitable to transform.
-     * @return An Awaiter (via the other overload) after converting via operator co_await.
-     * @details
-     * Converts the awaitable into an Awaiter via the free operator co_await function,
-     * then delegates to the Cpp20Awaiter overload to wrap it with cancellation support.
      */
     template <Cpp20HasPromiseType NestedAwaitable>
     auto await_transform(NestedAwaitable nestedAwaitable) {
@@ -183,66 +130,31 @@ struct CoPromiseTypeBase {
     }
 
 protected:
-    /**
-     * @brief Handles both return_void and return_value.
-     *
-     * This is a unified implementation used by both derived promise types. It locks the
-     * weak pointer to the future and, if the future is still alive, calls `AFuture::supplyValue()` to propagate the
-     * value to whoever is awaiting the future.
-     *
-     * @tparam F The value type(s). For AFuture<void>, this is an empty parameter pack.
-     *           For AFuture<T>, this is a single forwarding reference to T.
-     * @param v The value(s) to supply to the future.
-     */
     template <typename... F>
-    void return_(F &&...v) noexcept {
-        auto future = this->futureWeak.lock();
-        if (future == nullptr) {
-            return;
-        }
-        AFuture<T>(future).supplyValue(std::forward<F>(v)...);
+    void resolve(F&&... v) noexcept {
+        handles.second.supplyValue(std::forward<F>(v)...);
     }
 };
-}   // namespace aui::impl::future
 
 /**
- * @brief Promise type specialization for non-void AFuture<T> coroutines.
- * @tparam T The value type of the AFuture<T> returned by the coroutine.
- * @details
- * C++20 coroutine rules require a promise to provide either return_value or return_void,
- * but not both. This specialization provides return_value for non-void futures and
- * delegates to CoPromiseTypeBase::return_().
+ * @brief Promise type of coroutines returning AFuture<T> with a value.
  */
 template <typename T>
-struct aui::impl::future::Future<T>::CoPromiseType : aui::impl::future::CoPromiseTypeBase<T> {
-    using super = aui::impl::future::CoPromiseTypeBase<T>;
-
-    /**
-     * @brief Called by the compiler when the coroutine co_return s a value.
-     * @tparam F Forwarding reference to the returned value.
-     * @param v The value to fulfill the future with.
-     */
+struct CoPromiseType : CoPromiseTypeBase<T> {
     template <typename F>
-    void return_value(F &&v) noexcept {
-        super::return_(std::forward<F>(v));
+    void return_value(F&& v) noexcept {
+        this->resolve(std::forward<F>(v));
     }
 };
 
 /**
- * @brief Promise type specialization for AFuture<void> coroutines.
- * @details
- * Provides return_void (required by the coroutine standard for void-returning promises)
- * and delegates to CoPromiseTypeBase::return_() with no arguments.
+ * @brief Promise type of coroutines returning AFuture<void>.
  */
 template <>
-struct aui::impl::future::Future<void>::CoPromiseType : aui::impl::future::CoPromiseTypeBase<void> {
-    using super = aui::impl::future::CoPromiseTypeBase<void>;
-
-    /**
-     * @brief Called by the compiler when the coroutine co_return s without a value.
-     */
-    void return_void() noexcept { super::return_(); }
+struct CoPromiseType<void> : CoPromiseTypeBase<void> {
+    void return_void() noexcept { resolve(); }
 };
+}   // namespace aui::impl::future
 
 // Verify that AFuture<int> and AFuture<void> satisfy the Cpp20HasPromiseType concept.
 static_assert(aui::impl::future::Cpp20HasPromiseType<AFuture<int>>);
@@ -258,7 +170,7 @@ static_assert(aui::impl::future::Cpp20HasPromiseType<AFuture<void>>);
  *
  * - **await_ready**: Returns true if the future already has a result (no suspension).
  * - **await_resume**: Dereferences the future to obtain the value (or void).
- * - **await_suspend**: Registers onSuccess/onError callbacks on the future. When the
+ * - **await_suspend**: Registers callbacks for the value, the exception and the cancellation of the future. When the
  *   future completes (possibly on a different thread), the callback enqueues resumption
  *   onto the **caller's original thread** via AThread::current()->enqueue(). This ensures
  *   the coroutine resumes on the same thread that initiated the co_await, avoiding deep
@@ -269,7 +181,7 @@ auto operator co_await(AFuture<T> future) {
     struct Awaiter {
         AFuture<T> future;
 
-        bool await_ready() const noexcept { return future.hasResult(); }
+        bool await_ready() const noexcept { return future.hasResult() || future.isCancelled(); }
 
         auto await_resume() {
             if constexpr (std::is_same_v<T, void>) {
@@ -280,15 +192,16 @@ auto operator co_await(AFuture<T> future) {
         }
 
         void await_suspend(std::coroutine_handle<> handle) {
-            // onSuccess and onError are called by supplyValue which might have been called on a different thread.
+            // the callbacks are called by the thread that supplies the result, which might be a different thread.
             // if we keep this logic for coroutines, the callstack will grow very fast and inconsistent.
             // for co_await, let's keep the caller thread.
             // if user wants to magically switch threads using co_await, they'll figure out how to shoot their knee.
+            // exactly one of the callbacks is called; a cancelled future resumes the coroutine as well, so that
+            // await_resume throws instead of the coroutine hanging forever.
             auto callback = [handle = std::move(handle), callerThread = AThread::current()](const auto &...) {
                 callerThread->enqueue([handle = std::move(handle)] { handle.resume(); });
             };
-            future.onSuccess(callback);
-            future.onError(std::move(callback));
+            aui::impl::future::Access::subscribe(future, callback, callback, callback);
         }
     };
 

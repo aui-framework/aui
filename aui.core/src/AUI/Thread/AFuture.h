@@ -17,6 +17,9 @@
 #include <exception>
 #include <thread>
 #include <utility>
+#include <chrono>
+#include <tuple>
+#include <variant>
 #if AUI_COROUTINES
 #include <coroutine>
 #endif
@@ -36,7 +39,13 @@
 
 class AThreadPool;
 
-
+/**
+ * @brief An exception thrown by an asynchronous operation, as seen by those who wait for it.
+ * @ingroup core
+ * @details
+ * The original exception is the cause (`causedBy()`). Each future between the throw and the waiter adds one level, so
+ * the chain of causes shows the whole path through nested coroutines.
+ */
 class AInvocationTargetException: public AException {
 
 public:
@@ -61,602 +70,444 @@ public:
 };
 
 /**
- * @brief Thrown (as the cause of AInvocationTargetException) into a future by AFuture::withTimeout() when the timeout has
- * elapsed.
+ * @brief The exception an [AFuture] fails with when every [AFuture::Resolver] of it is destroyed without a result.
+ * @ingroup core
+ * @details
+ * A producer that forgets to call `supplyValue` or `supplyException`, or loses the resolver on an early return or an
+ * exception, would otherwise leave the waiting side hanging forever.
  */
-class ATimeoutException: public AException {
+class AFutureAbandonedException : public AException {
 public:
-    ATimeoutException(const AString& message = "timed out"): AException(message, nullptr) {}
+    AFutureAbandonedException() : AException("the future was abandoned: its resolver was destroyed without a result") {}
+};
+
+/**
+ * @brief The cause of the exception [AFuture::withTimeout] fails with when the future does not complete in time.
+ * @ingroup core
+ */
+class ATimeoutException : public AException {
+public:
+    ATimeoutException(const AString& message = "timed out") : AException(message, nullptr) {}
     ~ATimeoutException() noexcept override = default;
 };
 
-template<typename T>
-class AFuture;
-
 namespace aui::impl::future {
-    /**
-     * @brief Calls callback from the timer thread after the specified duration. Not cancellable.
-     */
-    API_AUI_CORE void scheduleTimeout(std::chrono::milliseconds duration, std::function<void()> callback);
 
-    template<typename T>
-    void bindTimeout(const AFuture<T>& source, const AFuture<T>& result, std::chrono::milliseconds duration);
+/**
+ * @brief Type a future of `T` stores; `std::monostate` for `void`, so `void` futures fit into tuples and variants.
+ */
+template <typename T>
+using Storage = std::conditional_t<std::is_void_v<T>, std::monostate, T>;
+
+template <typename T>
+struct ReturnType {
+    using type = T&;
+};
+
+template <>
+struct ReturnType<void> {
+    using type = void;
+};
+
+template <typename F, typename T>
+concept OnValueCallback =
+    (std::is_void_v<T> && aui::invocable<F>) || (!std::is_void_v<T> && aui::invocable<F, const Storage<T>&>);
+
+/**
+ * @brief Placeholder for a callback `Inner::subscribe` should not register.
+ */
+struct NoCallback {};
+
+// The exception to pass on when a dependent future fails because of `e`. Keeps the exact AInvocationTargetException,
+// so the chain of causes leads through every future of a wait chain.
+inline std::exception_ptr causeOf(const AException& e) {
+    if (auto ite = dynamic_cast<const AInvocationTargetException*>(&e)) {
+        return std::make_exception_ptr(*ite);
+    }
+    return std::make_exception_ptr(e);
 }
 
-namespace aui::impl::future {
+inline std::exception_ptr cancelledException() { return std::make_exception_ptr(AException("the future is cancelled")); }
+
+template <typename F, typename... Args>
+void invokeCallback(F& callback, const char* name, Args&&... args) noexcept {
+    try {
+        std::invoke(callback, std::forward<Args>(args)...);
+    } catch (const AException& e) {
+        ALogger::err("AFuture") << name << " callback has thrown an exception: " << e;
+    } catch (const std::exception& e) {
+        ALogger::err("AFuture") << name << " callback has thrown an exception: " << e.what();
+    } catch (...) {
+        ALogger::err("AFuture") << name << " callback has thrown an exception";
+    }
+}
+
+/**
+ * @brief State shared by AFuture and its AFuture::Resolver.
+ * @details
+ * Three counters share one word: futures (the consumer side), resolvers (the producer side, including a task that has
+ * not started yet) and internal references held for the duration of an operation. The state is deleted when the word
+ * becomes zero. The last future cancels the operation; the last resolver of a pending state abandons it.
+ */
+template <typename T>
+struct Inner {
+    enum class State : std::uint8_t {
+        PENDING,
+        VALUE,
+        EXCEPTION,
+        CANCELLED,
+    };
+    static constexpr bool isVoid = std::is_void_v<T>;
+    using Task = std::function<T()>;
+    using OnValue = std::conditional_t<isVoid, std::function<void()>, std::function<void(const Storage<T>&)>>;
+    using OnException = std::function<void(const AException&)>;
+
+    static constexpr std::uint64_t FUTURE = 1;
+    static constexpr std::uint64_t BITS = 21;
+    static constexpr std::uint64_t RESOLVER = std::uint64_t(1) << BITS;
+    static constexpr std::uint64_t INTERNAL = RESOLVER << BITS;
+    static constexpr std::uint64_t MASK = RESOLVER - 1;
+
+    std::atomic<std::uint64_t> counters;
+    std::atomic<State> state = State::PENDING;
+    std::atomic_bool executing = false;
+
     /**
-     * This class calls cancel() and wait() methods of AFuture::Inner BEFORE AFuture::Inner destruction in order to keep
-     * alive the weak reference created in AThreadPool::operator<<.
+     * Spinlock mutex is used here because AFuture makes frequent calls to mutex and never locks for a long
+     * time. Durations are small enough so it is worth to just busy wait instead of making syscalls.
      */
-    template<typename Inner>
-    struct CancellationWrapper {
+    ASpinlockMutex mutex;
+    // created by the first blocking wait(): most futures are never waited for this way, and a condition variable costs
+    // an allocation, a syscall-backed destructor and a lock on every notify
+    std::unique_ptr<AConditionVariable> cv;
+    Task task;
+    _<AAbstractThread> thread;
+    bool keptAlive = false;
+    std::conditional_t<isVoid, std::monostate, AOptional<T>> value;
+    AOptional<AInvocationTargetException> exception;
+    OnValue onValue;
+    OnException onException;
+    std::function<void()> onCancel;
 
-        explicit CancellationWrapper(_unique<Inner> wrapped) : wrapped(std::move(wrapped)) {}
+    explicit Inner(std::uint64_t counters, Task task = nullptr) noexcept
+      : counters(counters), task(std::move(task)) {}
 
-        ~CancellationWrapper() {
-            wrapped->cancel();
-            wrapped->waitForTask();
+    // under mutex
+    void notifyWaiters() noexcept {
+        if (cv) {
+            cv->notify_all();
         }
+    }
 
-        [[nodiscard]]
-        const _unique<Inner>& ptr() noexcept {
-            return wrapped;
+    void acquireFuture() noexcept { counters.fetch_add(FUTURE, std::memory_order_relaxed); }
+    void acquireResolver() noexcept { counters.fetch_add(RESOLVER, std::memory_order_relaxed); }
+
+    void releaseFuture() noexcept {
+        auto old = counters.load(std::memory_order_relaxed);
+        for (;;) {
+            if ((old & MASK) == FUTURE) {
+                // the last future: hold the state while cancelling
+                if (counters.compare_exchange_weak(
+                        old, old - FUTURE + INTERNAL, std::memory_order_acq_rel, std::memory_order_relaxed)) {
+                    cancel();
+                    releaseInternal();
+                    return;
+                }
+            } else if (counters.compare_exchange_weak(
+                           old, old - FUTURE, std::memory_order_release, std::memory_order_relaxed)) {
+                return;
+            }
         }
+    }
 
-        Inner* operator->() const noexcept {
-            return wrapped.get();
+    void releaseResolver() noexcept {
+        auto old = counters.load(std::memory_order_relaxed);
+        for (;;) {
+            if (((old >> BITS) & MASK) == 1) {
+                // the last resolver: hold the state while abandoning
+                if (counters.compare_exchange_weak(
+                        old, old - RESOLVER + INTERNAL, std::memory_order_acq_rel, std::memory_order_relaxed)) {
+                    abandon();
+                    releaseInternal();
+                    return;
+                }
+            } else if (counters.compare_exchange_weak(
+                           old, old - RESOLVER, std::memory_order_release, std::memory_order_relaxed)) {
+                return;
+            }
         }
+    }
 
-    private:
-        _unique<Inner> wrapped;
-    };
+    void releaseInternal() noexcept {
+        if (counters.fetch_sub(INTERNAL, std::memory_order_acq_rel) == INTERNAL) {
+            delete this;
+        }
+    }
 
-    template<typename T>
-    struct OnSuccessCallback {
-        using type = std::function<void(const T& value)>;
-    };
+    [[nodiscard]]
+    bool hasValue() const noexcept {
+        return state.load(std::memory_order_acquire) == State::VALUE;
+    }
 
-    template<typename T>
-    struct FutureReturnType {
-        using type = T&;
-    };
+    [[nodiscard]]
+    bool hasException() const noexcept {
+        return state.load(std::memory_order_acquire) == State::EXCEPTION;
+    }
 
-    template<>
-    struct FutureReturnType<void> {
-        using type = void;
-    };
+    [[nodiscard]]
+    bool hasResult() const noexcept {
+        auto s = state.load(std::memory_order_acquire);
+        return s == State::VALUE || s == State::EXCEPTION;
+    }
 
+    [[nodiscard]]
+    bool isCancelled() const noexcept {
+        return state.load(std::memory_order_acquire) == State::CANCELLED;
+    }
 
-    template<>
-    struct OnSuccessCallback<void> {
-        using type = std::function<void()>;
-    };
-    template<typename Value = void>
-    class Future
-    {
-    public:
-        static constexpr bool isVoid = std::is_same_v<void, Value>;
-        using TaskCallback = std::function<Value()>;
-
-        using OnSuccessCallback = typename OnSuccessCallback<Value>::type;
-
-        struct Inner {
-            bool interrupted = false;
-            /**
-             * When isVoid = true, bool is a flag whether "void value" supplied or not
-             */
-            std::conditional_t<isVoid, bool, AOptional<Value>> value;
-            AOptional<AInvocationTargetException> exception;
-            /**
-             * Spinlock mutex is used here because AFuture makes frequent calls to mutex and never locks for a long
-             * time. Durations are small enough so it is worth to just busy wait instead of making syscalls.
-             */
-            ASpinlockMutex mutex;
-            AConditionVariable cv;
-            TaskCallback task;
-            OnSuccessCallback onSuccess;
-            std::function<void(const AException& exception)> onError;
-            _<AAbstractThread> thread;
-            bool cancelled = false;
-            std::function<void()> cancelHandler;
-
-            explicit Inner(std::function<Value()> task) noexcept: task(std::move(task)) {
-                if constexpr(isVoid) {
-                    value = false;
-                }
-            }
-
-            void waitForTask() noexcept {
-                std::unique_lock lock(mutex);
-                bool rethrowInterrupted = false;
-                while ((thread) && !hasResult() && !cancelled) {
-                    try {
-                        cv.wait(lock);
-                    } catch (const AThread::Interrupted&) {
-                        rethrowInterrupted = true;
-                    }
-                }
-                if (rethrowInterrupted) {
-                    AThread::current()->interrupt();
-                }
-            }
-
-            [[nodiscard]]
-            bool isWaitNeeded() noexcept {
-                return (thread || !cancelled) && !hasResult();
-            }
-
-            [[nodiscard]]
-            bool hasResult() const noexcept {
-                return value || exception || interrupted;
-            }
-
-            [[nodiscard]]
-            bool hasValue() const noexcept {
-                return bool(value);
-            }
-
-            [[nodiscard]]
-            bool hasException() const noexcept {
-                return bool(exception);
-            }
-
-            void checkForSelfWait() {
-                if (!hasResult() && AThread::current() == thread) {
-                    throw AException("self wait?");
-                }
-            }
-
-            bool setThread(_<AAbstractThread> thr) noexcept {
-                std::unique_lock lock(mutex);
-                if (cancelled) return true;
-                if (thread) return true;
-                thread = std::move(thr);
+    /**
+     * @return true if nothing is going to happen to the state anymore, so waiting is over.
+     */
+    [[nodiscard]]
+    bool isSettled() const noexcept {
+        switch (state.load(std::memory_order_acquire)) {
+            case State::PENDING:
                 return false;
-            }
-
-            void wait(const _weak<CancellationWrapper<Inner>>& innerWeak, ABitField<AFutureWait> flags = AFutureWait::DEFAULT);
-
-            void cancel() noexcept {
-                std::function<void()> handler;
-                {
-                    std::unique_lock lock(mutex);
-                    if (cancelled) {
-                        return;
-                    }
-                    cancelled = true;
-                    if (hasResult()) {
-                        cancelHandler = nullptr;
-                        return;
-                    }
-                    if (thread) {
-                        thread->interrupt();
-                    }
-                    handler = std::move(cancelHandler);
-                    cancelHandler = nullptr;
-                }
-                // called without the lock: the handler is free to touch this future.
-                if (handler) {
-                    handler();
-                }
-            }
-
-            void addCancelHandler(std::function<void()> handler) {
-                std::unique_lock lock(mutex);
-                if (hasResult()) {
-                    return;
-                }
-                if (cancelled) {
-                    lock.unlock();
-                    handler();
-                    return;
-                }
-                if (cancelHandler) {
-                    cancelHandler = [prev = std::move(cancelHandler), handler = std::move(handler)] {
-                        prev();
-                        handler();
-                    };
-                } else {
-                    cancelHandler = std::move(handler);
-                }
-            }
-
-            /**
-             * @brief Executes the task stored in the future.
-             * Using weak_ptr to internal object in order to make possible Future cancellation by it's destruction.
-             * @param innerWeak self weak_ptr
-             * @return true, then task is successfully executed and supplied result.
-             */
-            bool tryExecute(const _weak<CancellationWrapper<Inner>>& innerWeak) {
-                /*
-                 * We should assume that this == nullptr or invalid.
-                 * We can assert that this pointer is safe only if we hold at least one shared_ptr.
-                 * It allows callers to pass a weak_ptr in any state.
-                 */
-                if (auto innerCancellation = innerWeak.lock()) {
-                    if (value) return false;
-                    auto& inner = innerCancellation->ptr();
-                    if (inner->setThread(AThread::current())) return false;
-                    try {
-                        if (task == nullptr) { // task is executed in wait() function
-                            return false;
-                        }
-                        std::unique_lock lock(mutex);
-                        if (task == nullptr) { // task is executed in wait() function
-                            return false;
-                        }
-                        auto func = std::move(task);
-                        AUI_ASSERT(bool(func));
-                        lock.unlock();
-                        innerCancellation = nullptr;
-                        if constexpr(isVoid) {
-                            func();
-                            if (auto sharedPtrLock = innerWeak.lock()) {
-                                lock.lock();
-                                value = true;
-                                cv.notify_all();
-                                notifyOnSuccessCallback(lock);
-
-                                (void)sharedPtrLock; // sharedPtrLock is *used*
-                                if (lock.owns_lock()) lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
-                            }
-                        } else {
-                            auto result = func();
-                            if (auto sharedPtrLock = innerWeak.lock()) {
-                                lock.lock();
-                                value = std::move(result);
-                                cv.notify_all();
-                                notifyOnSuccessCallback(lock);
-
-                                (void)sharedPtrLock; // sharedPtrLock is *used*
-                                if (lock.owns_lock()) lock.unlock(); // unlock earlier because destruction of shared_ptr may cause deadlock
-                            }
-                        }
-                    } catch (const AThread::Interrupted&) {
-                        if (auto sharedPtrLock = innerWeak.lock()) {
-                            inner->reportInterrupted();
-                        }
-                        throw;
-                    } catch (...) {
-                        if (auto sharedPtrLock = innerWeak.lock()) {
-                            inner->reportException();
-                        }
-                        return false;
-                    } 
-                }
+            case State::CANCELLED:
+                return !executing.load(std::memory_order_acquire);
+            default:
                 return true;
-            }
+        }
+    }
 
-            void reportInterrupted() noexcept {
-                std::unique_lock lock(mutex);
-                interrupted = true;
-                cv.notify_all();
+    template <typename... Args>
+    void supplyValue(Args&&... args) noexcept {
+        if (state.load(std::memory_order_acquire) != State::PENDING) {
+            return;
+        }
+        std::unique_lock lock(mutex);
+        if (state.load(std::memory_order_relaxed) != State::PENDING) {
+            return;
+        }
+        if constexpr (!isVoid) {
+            value.emplace(std::forward<Args>(args)...);
+        }
+        state.store(State::VALUE, std::memory_order_release);
+        auto localOnValue = std::exchange(onValue, nullptr);
+        auto localOnException = std::exchange(onException, nullptr);
+        auto localOnCancel = std::exchange(onCancel, nullptr);
+        bool releaseKeepAlive = std::exchange(keptAlive, false);
+        notifyWaiters();
+        lock.unlock();
+        if (localOnValue) {
+            if constexpr (isVoid) {
+                invokeCallback(localOnValue, "onValue");
+            } else {
+                invokeCallback(localOnValue, "onValue", *value);
             }
+        }
+        if (releaseKeepAlive) {
+            releaseFuture();
+        }
+    }
 
-            void reportException(std::exception_ptr causedBy = std::current_exception()) noexcept {
-                if (cancelled) {
-                    return;
+    void supplyException(std::exception_ptr causedBy) noexcept {
+        if (state.load(std::memory_order_acquire) != State::PENDING) {
+            return;
+        }
+        std::unique_lock lock(mutex);
+        if (state.load(std::memory_order_relaxed) != State::PENDING) {
+            return;
+        }
+        exception.emplace("exception reported", std::move(causedBy));
+        state.store(State::EXCEPTION, std::memory_order_release);
+        auto localOnValue = std::exchange(onValue, nullptr);
+        auto localOnException = std::exchange(onException, nullptr);
+        auto localOnCancel = std::exchange(onCancel, nullptr);
+        bool releaseKeepAlive = std::exchange(keptAlive, false);
+        notifyWaiters();
+        lock.unlock();
+        if (localOnException) {
+            invokeCallback(localOnException, "onException", *exception);
+        }
+        if (releaseKeepAlive) {
+            releaseFuture();
+        }
+    }
+
+    void abandon() noexcept {
+        if (state.load(std::memory_order_acquire) != State::PENDING) {
+            return;
+        }
+        supplyException(std::make_exception_ptr(AFutureAbandonedException()));
+    }
+
+    void cancel() noexcept {
+        if (state.load(std::memory_order_acquire) != State::PENDING) {
+            return;
+        }
+        std::unique_lock lock(mutex);
+        if (state.load(std::memory_order_relaxed) != State::PENDING) {
+            return;
+        }
+        state.store(State::CANCELLED, std::memory_order_release);
+        auto localTask = std::exchange(task, nullptr);
+        auto localOnValue = std::exchange(onValue, nullptr);
+        auto localOnException = std::exchange(onException, nullptr);
+        auto localOnCancel = std::exchange(onCancel, nullptr);
+        bool releaseKeepAlive = std::exchange(keptAlive, false);
+        if (executing && thread) {
+            thread->interrupt();
+        }
+        notifyWaiters();
+        lock.unlock();
+        bool hadTask = bool(localTask);
+        localTask = nullptr;
+        if (localOnCancel) {
+            invokeCallback(localOnCancel, "onCancel");
+        }
+        if (hadTask) {
+            releaseResolver();   // the task that is not going to run was a producer
+        }
+        if (releaseKeepAlive) {
+            releaseFuture();
+        }
+    }
+
+    void keepAlive() noexcept {
+        std::unique_lock lock(mutex);
+        if (state.load(std::memory_order_relaxed) != State::PENDING || keptAlive) {
+            return;
+        }
+        keptAlive = true;
+        acquireFuture();
+    }
+
+    /**
+     * @brief Registers callbacks for the value, the exception and the cancellation; or calls the matching one now if
+     * the state is settled already. Pass NoCallback to skip one.
+     */
+    template <typename V, typename E, typename C>
+    void subscribe(V&& v, E&& e, C&& c) {
+        std::unique_lock lock(mutex);
+        switch (state.load(std::memory_order_relaxed)) {
+            case State::PENDING:
+                if constexpr (!std::is_same_v<std::decay_t<V>, NoCallback>) {
+                    append(onValue, std::forward<V>(v));
                 }
-                std::unique_lock lock(mutex);
-                exception.emplace("exception reported", std::move(causedBy));
-                cv.notify_all();
-                if (!onError) {
-                    return;
+                if constexpr (!std::is_same_v<std::decay_t<E>, NoCallback>) {
+                    append(onException, std::forward<E>(e));
                 }
-                auto localOnError = std::move(onError);
+                if constexpr (!std::is_same_v<std::decay_t<C>, NoCallback>) {
+                    append(onCancel, std::forward<C>(c));
+                }
+                return;
+            case State::VALUE:
                 lock.unlock();
-                localOnError(*exception);
-            }
-
-
-            /**
-             * @brief Calls onSuccess callback.
-             * @param lock lock of Inner::mutex mutex.
-             * @details
-             * lock is expected to be locked. Under the lock, callback is moved to local stack, lock is unlocked, and
-             * only then callback is called. This helps to avoid deadlocks (i.e. retreiving AFuture's value in
-             * onSuccess callback). lock is not locked again. If AFuture does not have value or onSuccess callback,
-             * the lock remains untouched.
-             */
-            void notifyOnSuccessCallback(std::unique_lock<decltype(mutex)>& lock) noexcept {
-                AUI_ASSERT(lock.owns_lock());
-                if (cancelled) {
-                    return;
-                }
-                if (value && onSuccess) {
-                    auto localOnSuccess = std::move(onSuccess);
-                    onSuccess = nullptr;
-                    lock.unlock();
-                    invokeOnSuccessCallback(localOnSuccess);
-                }
-            }
-
-            template<typename F>
-            void invokeOnSuccessCallback(F&& f) {
-                try {
+                if constexpr (!std::is_same_v<std::decay_t<V>, NoCallback>) {
                     if constexpr (isVoid) {
-                        f();
+                        invokeCallback(v, "onValue");
                     } else {
-                        f(*value);
+                        invokeCallback(v, "onValue", *value);
                     }
-                } catch (const AException& e) {
-                    ALogger::err("AFuture") << "AFuture onSuccess thrown an exception: " << e;
                 }
-            }
+                return;
+            case State::EXCEPTION:
+                lock.unlock();
+                if constexpr (!std::is_same_v<std::decay_t<E>, NoCallback>) {
+                    invokeCallback(e, "onException", *exception);
+                }
+                return;
+            case State::CANCELLED:
+                lock.unlock();
+                if constexpr (!std::is_same_v<std::decay_t<C>, NoCallback>) {
+                    invokeCallback(c, "onCancel");
+                }
+                return;
+        }
+    }
 
-            template<typename Callback>
-            void addOnSuccessCallback(Callback&& callback) {
-                if constexpr (isVoid) {
-                    if (onSuccess) {
-                        onSuccess = [prev = std::move(onSuccess),
-                                     callback = std::forward<Callback>(callback)]() mutable {
-                            prev();
-                            callback();
-                        };
-                    } else {
-                        onSuccess = [callback = std::forward<Callback>(callback)]() mutable { callback(); };
-                    }
-                } else {
-                    if (onSuccess) {
-                        onSuccess = [prev = std::move(onSuccess),
-                                     callback = std::forward<Callback>(callback)](const Value& v) mutable {
-                            prev(v);
-                            callback(v);
-                        };
-                    } else {
-                        onSuccess = [callback = std::forward<Callback>(callback)](const Value& v) mutable {
-                            callback(v);
-                        };
-                    }
-                }
-            }
-
-            template<typename Callback>
-            void addOnErrorCallback(Callback&& callback) {
-                if (onError) {
-                    onError = [prev = std::move(onError),
-                               callback = std::forward<Callback>(callback)](const AException& v) {
-                        prev(v);
-                        callback(v);
-                    };
-                } else {
-                    onError = [callback = std::forward<Callback>(callback)](const AException& v) { callback(v); };
-                }
-            }
+    template <typename Function, typename Callback>
+    static void append(Function& slot, Callback&& callback) {
+        if (!slot) {
+            slot = std::forward<Callback>(callback);
+            return;
+        }
+        slot = [prev = std::move(slot), callback = std::forward<Callback>(callback)](const auto&... args) mutable {
+            prev(args...);
+            callback(args...);
         };
+    }
 
-        using Ptr = _<CancellationWrapper<Inner>>;
-        using PtrWeak = _weak<CancellationWrapper<Inner>>;
+    /**
+     * @brief Executes the task if nobody has taken it yet.
+     * @return true if this call has executed the task.
+     */
+    bool tryExecute() {
+        std::unique_lock lock(mutex);
+        if (state.load(std::memory_order_relaxed) != State::PENDING || !task) {
+            return false;
+        }
+        auto func = std::exchange(task, nullptr);
+        executing = true;
+        thread = AThread::current();
+        lock.unlock();
+
+        // this call owns the resolver reference of the task from now on
+        struct Finish {
+            Inner* self;
+            ~Finish() {
+                {
+                    std::unique_lock lock(self->mutex);
+                    self->executing = false;
+                    self->thread = nullptr;
+                    if (self->state.load(std::memory_order_relaxed) == State::CANCELLED) {
+                        // isSettled() of a cancelled future waits for the task to stop
+                        self->notifyWaiters();
+                    }
+                }
+                self->releaseResolver();
+            }
+        } finish { this };
+
+        try {
+            if constexpr (isVoid) {
+                func();
+                supplyValue();
+            } else {
+                supplyValue(func());
+            }
+        } catch (const AThread::Interrupted&) {
+            supplyException(std::current_exception());   // no-op if cancelled
+            throw;
+        } catch (...) {
+            supplyException(std::current_exception());
+        }
+        return true;
+    }
+
+    void checkForSelfWait() {
+        if (!hasResult() && executing && AThread::current() == thread) {
+            throw AException("self wait?");
+        }
+    }
+
+    void wait(ABitField<AFutureWait> flags);
+};
 
 #if AUI_COROUTINES
-        /**
-         * @brief promise_type for C++ coroutines TS.
-         */
-        struct CoPromiseType;
+template <typename T>
+struct CoPromiseType;
 #endif
 
-    protected:
-        Ptr mInner;
+struct Access;
 
+}   // namespace aui::impl::future
 
-    public:
-        /**
-         * @param task a callback which will be executed by Future::Inner::tryExecute. Can be null. If null, the result
-         *        should be provided by AFuture::supplyValue function.
-         */
-        Future(TaskCallback task = nullptr): mInner(_new<CancellationWrapper<Inner>>((_unique<Inner>)(new Inner(std::move(task))))) {}
-
-        Future(Ptr ptr) noexcept: mInner(std::move(ptr)) {} // construct AFuture from internal shared_ptr.
-
-        Future(const Future&) = default;
-        Future(Future&&) noexcept = default;
-        Future& operator=(const Future&) = default;
-        Future& operator=(Future&&) noexcept = default;
-
-        [[nodiscard]]
-        const Ptr& inner() const noexcept {
-            return mInner;
-        }
-
-        /**
-         * @return true if call to wait() function would cause thread block.
-         */
-        [[nodiscard]]
-        bool isWaitNeeded() const noexcept {
-            return (*mInner)->isWaitNeeded();
-        }
-
-        /**
-         * @return true if the value or exception or interruption was received.
-         */
-        [[nodiscard]]
-        bool hasResult() const noexcept {
-            return (*mInner)->hasResult();
-        }
-
-        /**
-         * @return true if the exception was received.
-         */
-        [[nodiscard]]
-        bool hasException() const noexcept {
-            return (*mInner)->hasException();
-        }
-
-        /**
-         * @return true if asynchronous operation was successfuly completed and supplied a value, which can be obtained
-         * without waiting.
-         */
-        [[nodiscard]]
-        bool hasValue() const noexcept {
-            return (*mInner)->hasValue();
-        }
-
-        void reportException() const noexcept {
-            (*mInner)->reportException();
-        }
-
-        template<typename Callback>
-        void onSuccess(Callback&& callback) const {
-            if (hasValue()) { // cheap lookahead
-                (*mInner)->invokeOnSuccessCallback(std::forward<Callback>(callback));
-                return;
-            }
-            std::unique_lock lock((*mInner)->mutex);
-            if (hasValue()) { // not so cheap, but cheapier than adding the callback to inner
-                (*mInner)->invokeOnSuccessCallback(std::forward<Callback>(callback));
-                return;
-            }
-            (*mInner)->addOnSuccessCallback(std::forward<Callback>(callback));
-        }
-
-        template<aui::invocable<const AException&> Callback>
-        void onError(Callback&& callback) const {
-            if (hasException()) { // cheap lookahead
-                std::invoke(callback, *(*mInner)->exception);
-                return;
-            }
-            std::unique_lock lock((*mInner)->mutex);
-            if (hasException()) { // not so cheap, but cheapier than adding the callback to inner
-                std::invoke(callback, *(*mInner)->exception);
-                return;
-            }
-            (*mInner)->addOnErrorCallback(std::forward<Callback>(callback));
-        }
-
-        /**
-         * @brief Adds the callback to both onSuccess and onResult.
-         */
-        template<aui::invocable Callback>
-        void onFinally(Callback&& callback) const {
-            if (hasResult()) { // cheap lookahead
-                std::invoke(callback);
-                return;
-            }
-            std::unique_lock lock((*mInner)->mutex);
-            (*mInner)->addOnSuccessCallback([callback](const auto&...) { callback(); });
-            (*mInner)->addOnErrorCallback([callback = std::move(callback)](const auto&...) { callback(); });
-            (*mInner)->notifyOnSuccessCallback(lock);
-        }
-
-        /**
-         * @brief Cancels the AFuture's task.
-         * @details
-         * When cancel() is called, there are 3 possible cases:
-         * 1. AFuture's task is not taken by AThreadPool. The task is simply removed from the AThreadPool queue.
-         * 2. AFuture's task is being executed. The task's thread is
-         * [requested for interrupt](AAbstractThread::interrupt()).
-         * 3. AFuture's task is already completed. cancel() does nothing.
-         */
-        void cancel() const noexcept {
-            (*mInner)->cancel();
-        }
-
-        /**
-         * @brief Registers a callback that is called when this future is cancelled before it has got a result.
-         * @param handler callback. Must not throw.
-         * @details
-         * Cancellation happens by an explicit cancel() call or when the last reference to the future is destroyed.
-         * This is the place for the producer to abort the underlying operation (close a socket, drop a pending
-         * request, etc.). The handler is called without internal locks held, on the thread that cancelled the future.
-         *
-         * If the future is already cancelled, the handler is called immediately. If the future already has a result,
-         * the handler is never called.
-         *
-         * The handler is stored inside the future, so it must not hold a strong reference to the future itself.
-         */
-        void onCancel(std::function<void()> handler) const {
-            (*mInner)->addCancelHandler(std::move(handler));
-        }
-
-        void reportInterrupted() const {
-            (*mInner)->reportInterrupted();
-        }
-
-        /**
-         * @brief Sleeps if the supplyValue is not currently available.
-         * @details
-         * The task will be executed inside wait() function if the threadpool have not taken the task to execute
-         * yet. This behaviour can be disabled by <code>AFutureWait::JUST_WAIT</code> flag.
-         *
-         * Exceptions captured from AFuture's task are not propagated. This function contains
-         * `AThread::interruptionPoint()`: if `wait`'s caller's thread is interrupted, this function throws an
-         * `AThread::Interrupted` exception.
-         */
-        void wait(AFutureWait flags = AFutureWait::DEFAULT) const {
-            (*mInner)->wait(mInner, flags);
-            checkForSelfWait();
-        }
-
-        /**
-         * @brief Returns the supplyValue from the another thread. Sleeps if the supplyValue is not currently available.
-         * <dl>
-         *   <dt><b>Sneaky exceptions</b></dt>
-         *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
-         * </dl>
-         * @return the object stored from the another thread.
-         */
-        typename FutureReturnType<Value>::type get(AFutureWait flags = AFutureWait::DEFAULT) const {
-            AThread::interruptionPoint();
-
-            (*mInner)->wait(mInner, flags);
-
-            if ((*mInner)->exception) {
-                throw *(*mInner)->exception;
-            }
-            if ((*mInner)->interrupted) {
-                throw AInvocationTargetException("Future execution interrupted");
-            }
-            checkForSelfWait();
-            if constexpr(!isVoid) {
-                return *(*mInner)->value;
-            }
-        }
-
-
-        /**
-         * @brief Returns the task result from the another thread. Sleeps if the task result is not currently available.
-         * <dl>
-         *   <dt><b>Sneaky exceptions</b></dt>
-         *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
-         * </dl>
-         * @return the object stored from the another thread.
-         */
-        typename FutureReturnType<Value>::type operator*() const {
-            return **const_cast<Future*>(this);
-        }
-
-        /**
-         * @brief Returns the supplyValue from the another thread. Sleeps if the supplyValue is not currently available.
-         * <dl>
-         *   <dt><b>Sneaky exceptions</b></dt>
-         *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
-         * </dl>
-         * @return the object stored from the another thread.
-         */
-        typename FutureReturnType<Value>::type operator*() {
-            return get();
-        }
-
-        /**
-         * @brief Returns the supplyValue from the another thread. Sleeps if the supplyValue is not currently available.
-         * <dl>
-         *   <dt><b>Sneaky exceptions</b></dt>
-         *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception.</dd>
-         * </dl>
-         * @return the object stored from the another thread.
-         */
-        Value* operator->() const {
-            return &operator*();
-        }
-
-    private:
-        void checkForSelfWait() const {
-            (*mInner)->checkForSelfWait();
-        }
-    };
-
-}
-
+// a string literal is required by [[nodiscard]]
+#define AUI_IMPL_FUTURE_DISCARDED                                                                                      \
+    "the operation is cancelled when its last AFuture is destroyed; keep the result, put it into AAsyncHolder or "     \
+    "call keepAlive()"
 
 /**
  * @brief Represents a value that will be available at some point in the future.
@@ -664,515 +515,955 @@ namespace aui::impl::future {
  * @tparam T result type (void is default)
  * @details
  * <!-- aui:experimental -->
- * AFuture is used as a result for asynchronous functions.
+ * AFuture is the result of an asynchronous operation: a task on a thread pool, a coroutine, a network request, a
+ * dialog. It is the C++ counterpart of a JavaScript `Promise`, a Kotlin `Deferred` or a C# `Task`. See [core-async]
+ * for an overview and a comparison with those.
  *
- * AFuture is returned by [AUI_THREADPOOL] keyword, which is used to perform heavy operations in a background thread.
+ * An AFuture is obtained from one of these:
  *
- * ```cpp
- * AFuture<int> theFuture = AUI_THREADPOOL {
- *   AThread::sleep(1000); // long operation
- *   return 123;
- * };
- * ...
- * cout << *theFuture; // waits for the task, outputs 123
- * ```
+ * - [AUI_THREADPOOL] runs a lambda on the thread pool:
+ *   ```cpp
+ *   AFuture<int> theFuture = AUI_THREADPOOL {
+ *     AThread::sleep(1000); // long operation
+ *     return 123;
+ *   };
+ *   ```
+ * - A coroutine, a function returning AFuture that uses `co_await` or `co_return`:
+ *   ```cpp
+ *   AFuture<int> longOperation();
+ *   AFuture<int> myFunction() {
+ *     int resultOfLongOperation = co_await longOperation();
+ *     co_return resultOfLongOperation + 1;
+ *   }
+ *   ```
+ * - [AFuture::create] wraps a callback-based API, like `new Promise((resolve, reject) => ...)` in JavaScript:
+ *   ```cpp
+ *   AFuture<APath> browseForFile() {
+ *     return AFuture<APath>::create([](AFuture<APath>::Resolver resolver) {
+ *       nativeDialog.show([resolver](APath path) { resolver.supplyValue(std::move(path)); });
+ *     });
+ *   }
+ *   ```
+ * - [AFuture::fromValue] and [AFuture::fromException] make a future that is complete already.
  *
- * If your operation consists of complex future sequences, you have multiple options:
+ * The producer side ([AFuture::Resolver]) supplies the result; the consumer side (AFuture) gets it. The result is
+ * set once: the first `supplyValue` or `supplyException` wins, the later ones are ignored. If every resolver is
+ * destroyed before the result is supplied, the future fails with [AFutureAbandonedException] instead of waiting
+ * forever.
  *
- * 1.  Use stackful coroutines. That is, you can use `operator*` and `get()` methods (blocking value acquiring) within a
- *     threadpool thread (including the one that runs [AUI_THREADPOOL] 's body). If value is not currently available,
- *     these methods temporarily return the thread to threadpool, effeciently allowing it to execute other tasks.
+ * The consumer either blocks with `operator*`, `get()` or `wait()`, awaits with `co_await`, or subscribes with
+ * `onValue()`, `onException()` and `onFinally()`. These callbacks are called exactly once: during resolution, on the
+ * thread that supplies the result; or right away if the future is complete at subscription time.
  *
- *     Be aware fot `std::unique_lock` and similar RAII-based lock functions when performing blocking value
- *     acquiring operation.
+ * Exceptions are wrapped into AInvocationTargetException. Each future of a `co_await` chain adds one level, so the
+ * chain of causes leads from the outermost coroutine to the original exception.
  *
- * 2.  Use stackless coroutines. C++20 introduced coroutines language feature. That is, you can use co_await operator to
- *     AFuture value:
- *     ```cpp
- *     AFuture<int> longOperation();
- *     AFuture<int> myFunction() {
- *       int resultOfLongOperation = co_await longOperation();
- *       co_return resultOfLongOperation + 1;
- *     }
- *     ```
+ * AFuture is a reference counted handle, so it is cheap to copy. When the last AFuture of an operation is destroyed,
+ * the operation is cancelled: a pending thread pool task is removed from the queue, a running one gets its thread
+ * [interrupted](AAbstractThread::interrupt()), a coroutine stops at its next `co_await`, and callbacks are not called.
+ * This is how a window that closes cancels the requests it has started. For "fire and forget", call
+ * [AFuture::keepAlive]; to hold several futures, use AAsyncHolder.
  *
- * 3.  Use AComplexFutureOperation. This class creates AFuture (root AFuture) and forwards all exceptions to the root
- *     AFuture. This method is not recommended for trivial usecases, as it requires you to extensivly youse onSuccess
- *     method in order to get and process AFuture result, leading your code to hardly maintainable spaghetti.
- *
- * For rare cases, you can default-construct AFuture and the result can be supplied manually with the supplyValue() method:
- *
- * ```cpp
- * AFuture<int> theFuture;
- * AThread t([=] {
- *   AThread::sleep(1000); // long operation
- *   theFuture.supplyValue(123);
- * });
- * t.start();
- * cout << *theFuture; // 123
- * ```
- *
- * Be aware of exceptions or control flow keywords! If you don't pass the result, AFuture will always stay
- * unavailable, thus all waiting code will wait indefinitely long, leading to resource leaks (CPU and memory).
- * Consider using one of suggested methods of usage instead.
- *
- * AFuture provides a set of functions for both "value emitting" side: supplyValue(), supplyException(), and "value
- * receiving" side: operator->(), operator*(), get().
- *
- * When AFuture's operation is completed, it calls either `onSuccess()` (on success) or `onError()` (on failure).
- * Use `onFinally()` to handle both cases with a single callback.
- *
- * These callbacks are guaranteed to be called in exactly one of two moments:
- * - **during resolution** — called by `supplyValue()`/`supplyException()` right after the result is stored;
- * - **at subscription time** — if the future is already resolved when `onSuccess()`/`onError()` is called,
- *   the callback is invoked immediately.
- *
- * This design eliminates the race condition between checking the resolution state and registering a callback.
- *
- * AFuture is a shared_ptr-based wrapper so it can be easily copied, pointing to the same task.
- *
- * If all AFutures of the task are destroyed, the task is cancelled. If the task is executing when cancel() is
- * called, AFuture waits for the task, however, task's thread is still requested for interrupt. It guarantees that
- * your task cannot be executed or be executing when AFuture destroyed and allows to efficiently utilize c++'s RAII
- * feature.
- *
- * To manage multiple AFutures, use AAsyncHolder or AFutureSet classes.
- *
- * AFuture implements work-stealing algorithm to prevent deadlocks and optimizaze thread usage: when waiting for result,
- * AFuture may execute the task (if not default-constructed) on the caller thread instead of waiting. See AFuture::wait
- * for details.
+ * When blocking on a pool thread, `operator*`, `get()` and `wait()` work as stackful coroutines: the thread executes
+ * other tasks of the pool until the result is available. Be aware of `std::unique_lock` and similar RAII-based locks
+ * held during such a wait. If the awaited task has not been picked up by the pool yet, the waiting thread executes it
+ * itself. See [AFuture::wait] for details.
  */
-template<typename T>
-class AFuture final: public aui::impl::future::Future<T> {
+
+template <typename T>
+class AFuture final {
 private:
-    using super = typename aui::impl::future::Future<T>;
+    using Inner = aui::impl::future::Inner<T>;
+    using NonVoid = aui::impl::future::Storage<T>;
+    static constexpr bool isVoid = std::is_void_v<T>;
+
+    template <typename>
+    friend class AFuture;
+    friend class AThreadPool;
+    friend struct aui::impl::future::Access;
+
+    Inner* mInner = nullptr;
+
+    struct Adopt {};
+    AFuture(Inner* inner, Adopt) noexcept : mInner(inner) {}
+
+    void reset() noexcept {
+        if (auto inner = std::exchange(mInner, nullptr)) {
+            inner->releaseFuture();
+        }
+    }
+
+    [[nodiscard]]
+    Inner& inner_() const noexcept {
+        AUI_ASSERTX(mInner != nullptr, "the future is null");
+        return *mInner;
+    }
 
 public:
-    using Task = typename super::TaskCallback;
-    using Ptr = typename super::Ptr;
-    using PtrWeak = typename super::PtrWeak;
+    using Value = T;
+    using Task = std::function<T()>;
 #if AUI_COROUTINES
-    using promise_type = typename super::CoPromiseType;
+    using promise_type = aui::impl::future::CoPromiseType<T>;
 #endif
-    using Inner = aui::impl::future::CancellationWrapper<typename super::Inner>;
-
-    explicit AFuture(T immediateValue): super() {
-        auto& inner = (*super::mInner);
-        inner->value = std::move(immediateValue);
-    }
-    AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
-    AFuture(Ptr ptr) noexcept: super(std::move(ptr)) {} // construct AFuture from internal shared_ptr.
-    ~AFuture() = default;
-
-    AFuture(const AFuture&) = default;
-    AFuture(AFuture&&) noexcept = default;
-
-    AFuture& operator=(const AFuture&) = default;
-    AFuture& operator=(AFuture&&) noexcept = default;
 
     /**
-     * @brief Pushes the result to AFuture.
-     * @param v value
+     * @brief The producer side of an AFuture.
      * @details
-     * After AFuture grabbed the value, supplyValue calls onSuccess listeners with the new value.
+     * Obtained from [AFuture::create]. Supplies the result with `supplyValue` or `supplyException`. Copies refer to
+     * the same future. When the last copy is destroyed before a result is supplied, the future fails with
+     * [AFutureAbandonedException].
+     *
+     * A resolver also tells the producer whether anybody still waits: see `isCancelled` and `onCancel`, the
+     * counterparts of `AbortSignal` in JavaScript and `CancellationToken` in C#.
      */
-    void supplyValue(T v) const noexcept {
-        auto& inner = (*super::mInner);
-        AUI_ASSERTX(inner->task == nullptr, "task is already provided");
+    class Resolver {
+    public:
+        Resolver(const Resolver& rhs) noexcept : mInner(rhs.mInner) {
+            if (mInner) {
+                mInner->acquireResolver();
+            }
+        }
+        Resolver(Resolver&& rhs) noexcept : mInner(std::exchange(rhs.mInner, nullptr)) {}
+        Resolver& operator=(const Resolver& rhs) noexcept {
+            if (this != &rhs) {
+                Resolver copy(rhs);
+                std::swap(mInner, copy.mInner);
+            }
+            return *this;
+        }
+        Resolver& operator=(Resolver&& rhs) noexcept {
+            if (this != &rhs) {
+                reset();
+                mInner = std::exchange(rhs.mInner, nullptr);
+            }
+            return *this;
+        }
+        ~Resolver() { reset(); }
 
-        std::unique_lock lock(inner->mutex);
-        inner->value = std::move(v);
-        inner->cv.notify_all();
-        inner->notifyOnSuccessCallback(lock);
-    }
+        /**
+         * @brief Completes the future with a value.
+         * @details
+         * Calls the `onValue` callbacks on the current thread. Does nothing if the future is complete or cancelled.
+         */
+        void supplyValue(NonVoid v) const noexcept
+            requires(!isVoid)
+        {
+            inner_().supplyValue(std::move(v));
+        }
+
+        /**
+         * @brief Completes the future.
+         * @details
+         * Calls the `onValue` callbacks on the current thread. Does nothing if the future is complete or cancelled.
+         */
+        void supplyValue() const noexcept
+            requires isVoid
+        {
+            inner_().supplyValue();
+        }
+
+        /**
+         * @brief Completes the future with an exception, std::current_exception() by default.
+         * @details
+         * Calls the `onException` callbacks on the current thread. Does nothing if the future is complete or
+         * cancelled.
+         */
+        void supplyException(std::exception_ptr causedBy = std::current_exception()) const noexcept {
+            inner_().supplyException(std::move(causedBy));
+        }
+
+        /**
+         * @return true if the value or the exception is supplied.
+         */
+        [[nodiscard]]
+        bool hasResult() const noexcept {
+            return inner_().hasResult();
+        }
+
+        /**
+         * @return true if nobody waits for the result anymore, so the work can be stopped.
+         */
+        [[nodiscard]]
+        bool isCancelled() const noexcept {
+            return inner_().isCancelled();
+        }
+
+        /**
+         * @brief Calls the callback when the future is cancelled, or right away if it is cancelled already.
+         * @details
+         * The callback is dropped without a call if the future completes. Use it to stop the work: close a socket,
+         * abort a request, remove a timer.
+         */
+        template <aui::invocable Callback>
+        void onCancel(Callback&& callback) const {
+            inner_().subscribe(
+                aui::impl::future::NoCallback {}, aui::impl::future::NoCallback {},
+                std::forward<Callback>(callback));
+        }
+
+        /**
+         * @brief Completes the future the way `other` completes, like `resolve(otherPromise)` in JavaScript.
+         * @details
+         * The future keeps `other` alive while anybody waits for it, so cancelling the future cancels `other`. If
+         * `other` is cancelled, the future fails with [AFutureAbandonedException].
+         */
+        void supplyFrom(AFuture other) const {
+            using namespace aui::impl::future;
+            other.inner_().subscribe(
+                [resolver = *this](const auto&... value) { resolver.supplyValue(value...); },
+                [resolver = *this](const AException& e) { resolver.supplyException(causeOf(e)); }, NoCallback {});
+            onCancel([other = std::move(other)] {});
+        }
+
+    private:
+        friend class AFuture;
+        friend class AThreadPool;
+        friend struct aui::impl::future::Access;
+
+        Inner* mInner = nullptr;
+
+        Resolver(Inner* inner, Adopt) noexcept : mInner(inner) {}
+
+        void reset() noexcept {
+            if (auto inner = std::exchange(mInner, nullptr)) {
+                inner->releaseResolver();
+            }
+        }
+
+        [[nodiscard]]
+        Inner& inner_() const noexcept {
+            AUI_ASSERTX(mInner != nullptr, "the resolver is moved out");
+            return *mInner;
+        }
+    };
+
+    AFuture() = delete; // use create instead (see https://github.com/aui-framework/aui/pull/793)
 
     /**
-     * @brief Stores an exception from std::current_exception to the future.
+     * @brief A null future, a placeholder to assign a real one to later.
      */
-    void supplyException(std::exception_ptr causedBy = std::current_exception()) const noexcept {
-        auto& inner = (*super::mInner);
-        inner->reportException(std::move(causedBy));
+    AFuture(std::nullptr_t) noexcept {}
+
+    /**
+     * @deprecated use AFuture::fromValue.
+     */
+    [[deprecated("use AFuture::fromValue")]]
+    explicit AFuture(NonVoid immediateValue)
+        requires(!isVoid)
+      : mInner(new Inner(Inner::FUTURE)) {
+        mInner->supplyValue(std::move(immediateValue));
+    }
+
+    AFuture(const AFuture& rhs) noexcept : mInner(rhs.mInner) {
+        if (mInner) {
+            mInner->acquireFuture();
+        }
+    }
+    AFuture(AFuture&& rhs) noexcept : mInner(std::exchange(rhs.mInner, nullptr)) {}
+
+    AFuture& operator=(const AFuture& rhs) noexcept {
+        if (this != &rhs) {
+            AFuture copy(rhs);
+            std::swap(mInner, copy.mInner);
+        }
+        return *this;
+    }
+
+    AFuture& operator=(AFuture&& rhs) noexcept {
+        if (this != &rhs) {
+            reset();
+            mInner = std::exchange(rhs.mInner, nullptr);
+        }
+        return *this;
     }
 
     AFuture& operator=(std::nullptr_t) noexcept {
-        super::mInner = nullptr;
+        reset();
         return *this;
     }
 
-    [[nodiscard]]
-    bool operator==(std::nullptr_t) const noexcept {
-        return super::mInner == nullptr;
-    }
-
-    [[nodiscard]]
-    bool operator!=(std::nullptr_t) const noexcept {
-        return super::mInner != nullptr;
-    }
-
-    [[nodiscard]]
-    bool operator==(const AFuture& r) const noexcept {
-        return super::mInner == r.mInner;
-    }
+    ~AFuture() { reset(); }
 
     /**
-     * @brief Add onSuccess callback to the future.
+     * @brief Makes a future completed by the code of `body`.
+     * @param body called right away with a [AFuture::Resolver]; it may pass the resolver anywhere: to another thread,
+     *        to a callback of an older API.
      * @details
-     * The callback will be called on the worker's thread when the async task is returned a result.
+     * The counterpart of `new Promise((resolve, reject) => ...)` in JavaScript, `suspendCancellableCoroutine` in
+     * Kotlin and `TaskCompletionSource` in C#.
      *
-     * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
+     * If `body` throws, the future fails with that exception. If the resolver is lost before supplying a result, the
+     * future fails with [AFutureAbandonedException].
      *
-     * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
-     * Example:
      * ```cpp
-     * ...
-     * private:
-     *   AAsyncHolder mAsync;
-     * ...
-     *
-     * mAsync << functionReturningFuture().onSuccess(...); // or onError
+     * AFuture<int> answer() {
+     *   return AFuture<int>::create([](AFuture<int>::Resolver resolver) {
+     *     AThread::main()->enqueue([resolver] { resolver.supplyValue(42); });
+     *   });
+     * }
      * ```
      */
-    template<aui::invocable<const T&> Callback>
-    const AFuture& onSuccess(Callback&& callback) const noexcept {
-        super::onSuccess(std::forward<Callback>(callback));
-        return *this;
+    template <aui::invocable<Resolver> Body>
+    [[nodiscard]]
+    static AFuture create(Body&& body) {
+        auto inner = new Inner(Inner::FUTURE + 2 * Inner::RESOLVER);
+        AFuture future(inner, Adopt {});
+        Resolver guard(inner, Adopt {});   // so an exception from body wins over abandonment
+        try {
+            std::invoke(std::forward<Body>(body), Resolver(inner, Adopt {}));
+        } catch (...) {
+            guard.supplyException();
+        }
+        return future;
     }
 
     /**
-     * @brief Add onError callback to the future.
+     * @brief Makes a future that has the value already, like `Promise.resolve` in JavaScript.
+     */
+    template <typename... Args>
+    [[nodiscard]]
+    static AFuture fromValue(Args&&... args)
+        requires(isVoid ? sizeof...(Args) == 0 : std::is_constructible_v<NonVoid, Args...>)
+    {
+        auto inner = new Inner(Inner::FUTURE);
+        inner->supplyValue(std::forward<Args>(args)...);
+        return AFuture(inner, Adopt {});
+    }
+
+    /**
+     * @brief Makes a future that has failed already, like `Promise.reject` in JavaScript.
+     */
+    [[nodiscard]]
+    static AFuture fromException(std::exception_ptr causedBy = std::current_exception()) {
+        auto inner = new Inner(Inner::FUTURE);
+        inner->supplyException(std::move(causedBy));
+        return AFuture(inner, Adopt {});
+    }
+
+    /**
+     * @brief Completes when every future has a value; fails as soon as one of them fails.
+     * @return the values, in the order of the arguments; std::monostate in place of `void`.
      * @details
-     * The callback will be called on the worker's thread when the async task is returned a result.
+     * The counterpart of `Promise.all` in JavaScript, `awaitAll` in Kotlin and `Task.WhenAll` in C#.
      *
-     * onError does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
+     * The returned future holds the futures given to it. When it completes or fails, it drops them, so the ones still
+     * running are cancelled unless somebody else holds them. When it is cancelled, they are dropped as well.
      *
-     * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
-     * Example:
      * ```cpp
-     * ...
-     * private:
-     *   AAsyncHolder mAsync;
-     * ...
-     *
-     * mAsync << functionReturningFuture().onSuccess(...); // or onError
+     * auto [user, avatar] = co_await AFuture<>::all(loadUser(id), loadAvatar(id));
      * ```
      */
-    template<aui::invocable<const AException&> Callback>
-    const AFuture& onError(Callback&& callback) const noexcept {
-        super::onError(std::forward<Callback>(callback));
-        return *this;
-    }
+    template <typename... Types>
+    [[nodiscard]]
+    static AFuture<std::tuple<aui::impl::future::Storage<Types>...>> all(AFuture<Types>... futures);
 
     /**
-     * @brief Adds the callback to both onSuccess and onResult.
-     */
-    template<aui::invocable Callback>
-    const AFuture& onFinally(Callback&& callback) const noexcept {
-        super::onFinally(std::forward<Callback>(callback));
-        return *this;
-    }
-
-    /**
-     * @brief Maps this AFuture to another type of AFuture.
-     */
-    template<aui::invocable<const T&> Callback>
-    auto map(Callback&& callback) -> AFuture<decltype(callback(std::declval<T>()))> const {
-        AFuture<decltype(callback(std::declval<T>()))> result;
-        onSuccess([result, callback = std::forward<Callback>(callback)](const T& v) {
-            result.supplyValue(callback(v));
-        });
-        onError([result](const AException& v) {
-            try {
-                throw v;
-            } catch (...) {
-                result.reportException();
-            }
-        });
-        return result;
-    }
-
-    /**
-     * @brief Creates a future that mirrors this one but fails if this one does not complete in time.
-     * @param duration timeout.
-     * @return a new future. It completes with this future's result, or with an exception caused by
-     *         ATimeoutException if the timeout elapsed first.
+     * @brief Completes as soon as one of the futures completes or fails, with its value or exception.
+     * @return the value of the first future to complete; its index in the variant is its position in the arguments.
      * @details
-     * When the timeout elapses, this (source) future is cancelled, so its onCancel handler can abort the underlying
-     * operation. The source is kept alive by the returned future; when the returned future is cancelled or destroyed,
-     * the source is cancelled too.
+     * The counterpart of `Promise.race` in JavaScript, `select` in Kotlin and `Task.WhenAny` in C#. The other futures
+     * are dropped, so they are cancelled unless somebody else holds them.
+     *
+     * ```cpp
+     * auto result = co_await AFuture<>::any(fromCache(key), fromNetwork(key));
+     * ```
+     */
+    template <typename... Types>
+    [[nodiscard]]
+    static AFuture<std::variant<aui::impl::future::Storage<Types>...>> any(AFuture<Types>... futures);
+
+    /**
+     * @brief A future that completes with this one, or fails with [ATimeoutException] as the cause if this one does
+     * not complete in time.
+     * @details
+     * Works like `any(*this, AThread::asyncSleep(duration))`, keeping the type of the value. On timeout, this future
+     * is cancelled, so its producer can abort the operation (see `Resolver::onCancel`). The returned future keeps this
+     * one alive; cancelling or destroying the returned future cancels this one too.
      *
      * ```cpp
      * try {
-     *   auto reply = co_await sendRequest().withTimeout(10s);
-     * } catch (const AException&) {
-     *   // timed out (or sendRequest failed)
+     *     auto reply = co_await sendRequest().withTimeout(10s);
+     * } catch (const AException& e) {
+     *     // timed out, or sendRequest failed
      * }
      * ```
      */
     [[nodiscard]]
     AFuture withTimeout(std::chrono::milliseconds duration) const;
-};
-
-template<>
-class AFuture<void> final: public aui::impl::future::Future<void> {
-private:
-    using T = void;
-    using super = typename aui::impl::future::Future<T>;
-
-public:
-    using Task = typename super::TaskCallback;
-    using Ptr = typename super::Ptr;
-    using PtrWeak = typename super::PtrWeak;
-#if AUI_COROUTINES
-    using promise_type = typename super::CoPromiseType;
-#endif
-    using Inner = decltype(std::declval<super>().inner());
-
-    AFuture(Task task = nullptr) noexcept: super(std::move(task)) {}
-    AFuture(Ptr ptr) noexcept: super(std::move(ptr)) {} // construct AFuture from internal shared_ptr.
-    ~AFuture() = default;
-
-    AFuture(const AFuture&) = default;
-    AFuture(AFuture&&) noexcept = default;
-
-    AFuture& operator=(const AFuture&) = default;
-    AFuture& operator=(AFuture&&) noexcept = default;
 
     /**
-     * @brief Stores an exception from std::current_exception to the future.
-     */
-    void supplyException(std::exception_ptr causedBy = std::current_exception()) const noexcept {
-        auto& inner = (*super::mInner);
-        inner->reportException(std::move(causedBy));
-    }
-
-    /**
-     * @brief Pushes "success" result.
+     * @brief Keeps the operation running when every AFuture of it is destroyed, until it completes.
      * @details
-     * supplyValue calls onSuccess listeners with the new value.
+     * "Fire and forget": by default, destroying the last AFuture cancels the operation. Use keepAlive for an
+     * operation whose result nobody waits for, but which has to finish: sending a log, saving a file. The callbacks
+     * subscribed with `onValue`/`onException` are still called.
+     *
+     * ```cpp
+     * sendAnalytics(event).onException([](const AException& e) { ALogger::warn("Analytics") << e; }).keepAlive();
+     * ```
      */
-    void supplyValue() const noexcept {
-        auto& inner = (*super::mInner);
-        AUI_ASSERTX(inner->task == nullptr, "task is already provided");
+    void keepAlive() const noexcept { inner_().keepAlive(); }
 
-        std::unique_lock lock(inner->mutex);
-        inner->value = true;
-        inner->cv.notify_all();
-        inner->notifyOnSuccessCallback(lock);
+    /**
+     * @brief Internal state; an identity of the future.
+     */
+    [[nodiscard]]
+    const void* inner() const noexcept {
+        return mInner;
     }
 
-    AFuture& operator=(std::nullptr_t) noexcept {
-        super::mInner = nullptr;
+    /**
+     * @return true if call to wait() function would cause thread block.
+     */
+    [[nodiscard]]
+    bool isWaitNeeded() const noexcept {
+        return !inner_().isSettled();
+    }
+
+    /**
+     * @return true if the value or the exception was received.
+     */
+    [[nodiscard]]
+    bool hasResult() const noexcept {
+        return inner_().hasResult();
+    }
+
+    /**
+     * @return true if the exception was received.
+     */
+    [[nodiscard]]
+    bool hasException() const noexcept {
+        return inner_().hasException();
+    }
+
+    /**
+     * @return true if the asynchronous operation was successfully completed and supplied a value, which can be
+     * obtained without waiting.
+     */
+    [[nodiscard]]
+    bool hasValue() const noexcept {
+        return inner_().hasValue();
+    }
+
+    /**
+     * @return true if the future was cancelled before it got a result.
+     */
+    [[nodiscard]]
+    bool isCancelled() const noexcept {
+        return inner_().isCancelled();
+    }
+
+    /**
+     * @brief Cancels the operation.
+     * @details
+     * When cancel() is called, there are 3 possible cases:
+     * 1. AFuture's task is not taken by AThreadPool. The task is simply removed from the AThreadPool queue.
+     * 2. AFuture's task is being executed. The task's thread is
+     *    [requested for interrupt](AAbstractThread::interrupt()).
+     * 3. AFuture's task is already completed. cancel() does nothing.
+     *
+     * The `onValue`/`onException` callbacks are dropped without a call; the producer is notified through
+     * `Resolver::onCancel`. Destroying the last AFuture of the operation calls cancel().
+     */
+    void cancel() const noexcept { inner_().cancel(); }
+
+    /**
+     * @brief Sleeps if the result is not currently available.
+     * @details
+     * The task will be executed inside wait() function if the threadpool have not taken the task to execute
+     * yet. This behaviour can be disabled by <code>AFutureWait::JUST_WAIT</code> flag.
+     *
+     * Exceptions captured from AFuture's task are not propagated. This function contains
+     * `AThread::interruptionPoint()`: if `wait`'s caller's thread is interrupted, this function throws an
+     * `AThread::Interrupted` exception.
+     */
+    void wait(AFutureWait flags = AFutureWait::DEFAULT) const {
+        inner_().wait(flags);
+        inner_().checkForSelfWait();
+    }
+
+    /**
+     * @brief Returns the result. Sleeps if it is not currently available.
+     * <dl>
+     *   <dt><b>Sneaky exceptions</b></dt>
+     *   <dd><code>AInvoсationTargetException</code> thrown if invocation target has thrown an exception or the future
+     *   is cancelled.</dd>
+     * </dl>
+     */
+    typename aui::impl::future::ReturnType<T>::type get(AFutureWait flags = AFutureWait::DEFAULT) const {
+        AThread::interruptionPoint();
+        auto& inner = inner_();
+        inner.wait(flags);
+        switch (inner.state.load(std::memory_order_acquire)) {
+            case Inner::State::VALUE:
+                if constexpr (!isVoid) {
+                    return *inner.value;
+                } else {
+                    return;
+                }
+            case Inner::State::EXCEPTION:
+                throw *inner.exception;
+            case Inner::State::CANCELLED:
+                throw AInvocationTargetException("Future is cancelled", nullptr);
+            case Inner::State::PENDING:
+                break;
+        }
+        inner.checkForSelfWait();
+        throw AInvocationTargetException("Future execution interrupted", nullptr);
+    }
+
+    /**
+     * @copybrief get
+     */
+    typename aui::impl::future::ReturnType<T>::type operator*() const { return get(); }
+
+    /**
+     * @copybrief get
+     */
+    NonVoid* operator->() const
+        requires(!isVoid)
+    {
+        return &get();
+    }
+
+    /**
+     * @brief Calls the callback with the value when it is supplied.
+     * @details
+     * The callback is called on the thread that supplies the value, or right away if the value is already there. It
+     * is not called if the future fails or is cancelled, including by the destruction of its last AFuture. To keep the
+     * future alive, put it into an AAsyncHolder of your window or object:
+     *
+     * ```cpp
+     * mAsync << functionReturningFuture().onValue(...); // or onException
+     * ```
+     */
+    template <aui::impl::future::OnValueCallback<T> Callback>
+    const AFuture& onValue(Callback&& callback) const& {
+        inner_().subscribe(
+            std::forward<Callback>(callback), aui::impl::future::NoCallback {}, aui::impl::future::NoCallback {});
         return *this;
+    }
+
+    /**
+     * @copybrief onValue
+     */
+    template <aui::impl::future::OnValueCallback<T> Callback>
+    [[nodiscard(AUI_IMPL_FUTURE_DISCARDED)]]
+    AFuture onValue(Callback&& callback) && {
+        onValue(std::forward<Callback>(callback));
+        return std::move(*this);
+    }
+
+    /**
+     * @brief Calls the callback with the exception when the future fails.
+     * @details
+     * The counterpart of `catch` in JavaScript. The callback gets AInvocationTargetException; its chain of causes
+     * leads to the original exception. Like `onValue`, it is not called if the future is cancelled.
+     */
+    template <aui::invocable<const AException&> Callback>
+    const AFuture& onException(Callback&& callback) const& {
+        inner_().subscribe(
+            aui::impl::future::NoCallback {}, std::forward<Callback>(callback), aui::impl::future::NoCallback {});
+        return *this;
+    }
+
+    /**
+     * @copybrief onException
+     */
+    template <aui::invocable<const AException&> Callback>
+    [[nodiscard(AUI_IMPL_FUTURE_DISCARDED)]]
+    AFuture onException(Callback&& callback) && {
+        onException(std::forward<Callback>(callback));
+        return std::move(*this);
+    }
+
+    /**
+     * @brief Calls the callback when the future completes or fails, like `finally` in JavaScript.
+     */
+    template <aui::invocable Callback>
+    const AFuture& onFinally(Callback&& callback) const& {
+        inner_().subscribe(
+            [callback](const auto&...) mutable { callback(); },
+            [callback](const AException&) mutable { callback(); }, aui::impl::future::NoCallback {});
+        return *this;
+    }
+
+    /**
+     * @copybrief onFinally
+     */
+    template <aui::invocable Callback>
+    [[nodiscard(AUI_IMPL_FUTURE_DISCARDED)]]
+    AFuture onFinally(Callback&& callback) && {
+        onFinally(std::forward<Callback>(callback));
+        return std::move(*this);
+    }
+
+    /**
+     * @brief Calls the callback when the future is cancelled before it has a result.
+     * @details
+     * Cancellation happens by `cancel()` or when the last AFuture is destroyed. The callback is called on the thread
+     * that cancels, right away if the future is cancelled already, and never if the future completes. It must not hold
+     * this future, otherwise the future can't be cancelled by destruction.
+     *
+     * A producer that holds the [AFuture::Resolver] uses `Resolver::onCancel` instead.
+     */
+    template <aui::invocable Callback>
+    const AFuture& onCancel(Callback&& callback) const& {
+        inner_().subscribe(
+            aui::impl::future::NoCallback {}, aui::impl::future::NoCallback {}, std::forward<Callback>(callback));
+        return *this;
+    }
+
+    /**
+     * @copybrief onCancel
+     */
+    template <aui::invocable Callback>
+    [[nodiscard(AUI_IMPL_FUTURE_DISCARDED)]]
+    AFuture onCancel(Callback&& callback) && {
+        onCancel(std::forward<Callback>(callback));
+        return std::move(*this);
+    }
+
+    /**
+     * @deprecated use onValue.
+     */
+    template <aui::impl::future::OnValueCallback<T> Callback>
+    [[deprecated("use onValue")]]
+    const AFuture& onSuccess(Callback&& callback) const& {
+        return onValue(std::forward<Callback>(callback));
+    }
+
+    /**
+     * @deprecated use onValue.
+     */
+    template <aui::impl::future::OnValueCallback<T> Callback>
+    [[deprecated("use onValue"), nodiscard(AUI_IMPL_FUTURE_DISCARDED)]]
+    AFuture onSuccess(Callback&& callback) && {
+        return std::move(*this).onValue(std::forward<Callback>(callback));
+    }
+
+    /**
+     * @deprecated use onException.
+     */
+    template <aui::invocable<const AException&> Callback>
+    [[deprecated("use onException")]]
+    const AFuture& onError(Callback&& callback) const& {
+        return onException(std::forward<Callback>(callback));
+    }
+
+    /**
+     * @deprecated use onException.
+     */
+    template <aui::invocable<const AException&> Callback>
+    [[deprecated("use onException"), nodiscard(AUI_IMPL_FUTURE_DISCARDED)]]
+    AFuture onError(Callback&& callback) && {
+        return std::move(*this).onException(std::forward<Callback>(callback));
+    }
+
+    /**
+     * @brief Continues with the value of this future and returns a future of the result, like `then` in JavaScript.
+     * @details
+     * If the callback returns an `AFuture<U>`, the result is `AFuture<U>` that completes with it, not
+     * `AFuture<AFuture<U>>`. This is how asynchronous steps are chained without coroutines:
+     *
+     * ```cpp
+     * AFuture<AImage> loadAvatar(AString userId) {
+     *     return fetchUser(std::move(userId)).then([](const User& user) { return fetchImage(user.avatarUrl); });
+     * }
+     * ```
+     *
+     * If the callback throws, the returned future fails with the exception. If this future fails, the returned one
+     * fails as well. The returned future holds this one: dropping the returned future drops this one.
+     */
+    template <aui::impl::future::OnValueCallback<T> Callback>
+    [[nodiscard]]
+    auto then(Callback&& callback) const {
+        using C = typename std::conditional_t<
+            isVoid, std::invoke_result<Callback>, std::invoke_result<Callback, const NonVoid&>>::type;
+        using R = typename aui::impl::future::Unwrap<C>::type;
+        return AFuture<R>::create(
+            [&](typename AFuture<R>::Resolver resolver) {
+                resolver.onCancel([source = *this] {});
+                inner_().subscribe(
+                    [resolver, callback = std::forward<Callback>(callback)](const auto&... value) mutable {
+                        try {
+                            if constexpr (!std::is_same_v<C, R>) {
+                                resolver.supplyFrom(callback(value...));
+                            } else if constexpr (std::is_void_v<R>) {
+                                callback(value...);
+                                resolver.supplyValue();
+                            } else {
+                                resolver.supplyValue(callback(value...));
+                            }
+                        } catch (...) {
+                            resolver.supplyException();
+                        }
+                    },
+                    [resolver](const AException& e) { resolver.supplyException(aui::impl::future::causeOf(e)); },
+                    [resolver] { resolver.supplyException(aui::impl::future::cancelledException()); });
+            });
     }
 
     [[nodiscard]]
     bool operator==(std::nullptr_t) const noexcept {
-        return super::mInner == nullptr;
-    }
-
-    [[nodiscard]]
-    bool operator!=(std::nullptr_t) const noexcept {
-        return super::mInner != nullptr;
+        return mInner == nullptr;
     }
 
     [[nodiscard]]
     bool operator==(const AFuture& r) const noexcept {
-        return super::mInner == r.mInner;
+        return mInner == r.mInner;
     }
 
+private:
     /**
-     * @brief Add onSuccess callback to the future.
-     * @details
-     * The callback will be called on the worker's thread when the async task is returned a result.
-     *
-     * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
-     *
-     * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
-     * Example:
-     * ```cpp
-     * ...
-     * private:
-     *   AAsyncHolder mAsync;
-     * ...
-     *
-     * mAsync << functionReturningFuture().onSuccess(...); // or onError
-     * ```
+     * @brief A future of a task that runs on the first call of `Access::execute` or on wait().
      */
-    template<aui::invocable Callback>
-    const AFuture& onSuccess(Callback&& callback) const {
-        super::onSuccess(std::forward<Callback>(callback));
-        return *this;
+    static std::pair<AFuture, Resolver> deferred(Task task) {
+        // a future, the task (a producer until it runs) and the resolver for the executor
+        auto inner = new Inner(Inner::FUTURE + 2 * Inner::RESOLVER, std::move(task));
+        return { AFuture(inner, Adopt {}), Resolver(inner, Adopt {}) };
     }
 
-    /**
-     * @brief Add onSuccess callback to the future.
-     * @details
-     * The callback will be called on the worker's thread when the async task is returned a result.
-     *
-     * onSuccess does not expand AFuture's lifespan, so when AFuture becomes invalid, onSuccess would not be called.
-     *
-     * To expand lifespan, create an AAsyncHolder inside your window or object; then put the instance of AFuture there.
-     * Example:
-     * ```cpp
-     * ...
-     * private:
-     *   AAsyncHolder mAsync;
-     * ...
-     *
-     * mAsync << functionReturningFuture().onSuccess(...); // or onError
-     * ```
-     */
-    template<aui::invocable<const AException&> Callback>
-    const AFuture& onError(Callback&& callback) const {
-        super::onError(std::forward<Callback>(callback));
-        return *this;
-    }
-
-    /**
-     * @brief Adds the callback to both onSuccess and onResult.
-     */
-    template<aui::invocable Callback>
-    const AFuture& onFinally(Callback&& callback) const {
-        super::onFinally(std::forward<Callback>(callback));
-        return *this;
-    }
-
-    /**
-     * @brief Creates a future that mirrors this one but fails if this one does not complete in time.
-     * @param duration timeout.
-     * @return a new future. It completes with this future's result, or with an exception caused by
-     *         ATimeoutException if the timeout elapsed first.
-     * @details
-     * When the timeout elapses, this (source) future is cancelled, so its onCancel handler can abort the underlying
-     * operation. The source is kept alive by the returned future; when the returned future is cancelled or destroyed,
-     * the source is cancelled too.
-     *
-     * ```cpp
-     * try {
-     *   auto reply = co_await sendRequest().withTimeout(10s);
-     * } catch (const AException&) {
-     *   // timed out (or sendRequest failed)
-     * }
-     * ```
-     */
-    [[nodiscard]]
-    AFuture withTimeout(std::chrono::milliseconds duration) const;
+    static bool execute(const Resolver& resolver) { return resolver.inner_().tryExecute(); }
 };
 
-template<typename T>
-AFuture<T> AFuture<T>::withTimeout(std::chrono::milliseconds duration) const {
-    AFuture result;
-    aui::impl::future::bindTimeout(*this, result, duration);
-    return result;
-}
+namespace aui::impl::future {
 
-inline AFuture<void> AFuture<void>::withTimeout(std::chrono::milliseconds duration) const {
-    AFuture result;
-    aui::impl::future::bindTimeout(*this, result, duration);
-    return result;
-}
+/**
+ * @brief Internal access to AFuture for AAsyncHolder, AComplexFutureOperation and coroutines.
+ */
+struct Access {
+    template <typename T>
+    static std::pair<AFuture<T>, typename AFuture<T>::Resolver> pending() {
+        auto inner = new Inner<T>(Inner<T>::FUTURE + Inner<T>::RESOLVER);
+        return { AFuture<T>(inner, typename AFuture<T>::Adopt {}),
+                 typename AFuture<T>::Resolver(inner, typename AFuture<T>::Adopt {}) };
+    }
 
-template<typename T>
-void aui::impl::future::bindTimeout(const AFuture<T>& source, const AFuture<T>& result, std::chrono::milliseconds duration) {
-    // whoever settles the result first (source or timer) sets the flag.
-    auto settled = _new<std::atomic_bool>(false);
-    auto resultWeak = result.inner().weak();
+    /**
+     * @brief Subscribes for the value, the exception and the cancellation at once. Pass NoCallback to skip one.
+     */
+    template <typename T, typename V, typename E, typename C>
+    static void subscribe(const AFuture<T>& future, V&& v, E&& e, C&& c) {
+        future.inner_().subscribe(std::forward<V>(v), std::forward<E>(e), std::forward<C>(c));
+    }
+};
 
-    // the result owns the source (the source's producer may rely on someone holding it) and cancels it when the result
-    // is cancelled/destroyed. The source only knows the result weakly, so there is no reference cycle.
-    result.onCancel([source] { source.cancel(); });
+}   // namespace aui::impl::future
 
-    source.onSuccess([resultWeak, settled](const auto&... v) {
-        if (settled->exchange(true)) {
-            return;
-        }
-        if (auto r = resultWeak.lock()) {
-            AFuture<T> result(std::move(r));
-            if constexpr (std::is_void_v<T>) {
-                result.supplyValue();
-            } else if constexpr (std::is_copy_constructible_v<T>) {
-                result.supplyValue(v...);
-            } else {
-                // move-only value (i.e. unique_ptr). The source is owned by this future and is not going to be read
-                // by anyone else, same as co_await does with the future's value.
-                result.supplyValue(std::move(const_cast<T&>(v))...);
-            }
-        }
-    });
-    source.onError([resultWeak, settled](const AException& e) {
-        if (settled->exchange(true)) {
-            return;
-        }
-        if (auto r = resultWeak.lock()) {
-            AFuture<T>(std::move(r)).supplyException(e.causedBy());
-        }
-    });
-
-    scheduleTimeout(duration, [resultWeak, sourceWeak = source.inner().weak(), settled, duration] {
-        if (settled->exchange(true)) {
-            return;
-        }
-        if (auto r = resultWeak.lock()) {
-            try {
-                throw ATimeoutException(AString("timed out after ") + AString::number(int(duration.count())) + "ms");
-            } catch (...) {
-                AFuture<T>(std::move(r)).supplyException();
-            }
-        }
-        // abort the underlying operation. The source is alive as long as the result is (see onCancel above).
-        if (auto s = sourceWeak.lock()) {
-            AFuture<T>(std::move(s)).cancel();
-        }
-    });
-}
-
-template <typename Value>
-void aui::impl::future::Future<Value>::Inner::wait(const _weak<CancellationWrapper<Inner>>& innerWeak,
-                                                   ABitField<AFutureWait> flags) {
-    if (hasResult()) return; // cheap check
-    std::unique_lock lock(mutex);
-    try {
-        if ((thread || !cancelled) && !hasResult() && flags & AFutureWait::ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP && task) {
-            // task is not have picked up by the threadpool; execute it here
-            lock.unlock();
-            if (tryExecute(innerWeak)) {
+template <aui::invocable Fn>
+auto AAbstractThread::async(Fn fn) -> AFuture<typename aui::impl::future::Unwrap<std::invoke_result_t<Fn&>>::type> {
+    using Result = std::invoke_result_t<Fn&>;
+    using Future = AFuture<typename aui::impl::future::Unwrap<Result>::type>;
+    return Future::create([&](typename Future::Resolver resolver) {
+        auto run = [fn = std::move(fn), resolver = std::move(resolver)]() mutable {
+            if (resolver.isCancelled()) {
                 return;
             }
-            lock.lock();
+            try {
+                if constexpr (std::is_void_v<Result>) {
+                    fn();
+                    resolver.supplyValue();
+                } else if constexpr (std::is_same_v<Result, Future>) {
+                    resolver.supplyFrom(fn());
+                } else {
+                    resolver.supplyValue(fn());
+                }
+            } catch (...) {
+                resolver.supplyException();
+            }
+        };
+        if constexpr (std::is_copy_constructible_v<decltype(run)>) {
+            enqueue(std::move(run));
+        } else {
+            // std::function requires a copyable callable
+            enqueue([shared = std::make_shared<decltype(run)>(std::move(run))] { (*shared)(); });
+        }
+    });
+}
+
+template <typename T>
+template <typename... Types>
+AFuture<std::tuple<aui::impl::future::Storage<Types>...>> AFuture<T>::all(AFuture<Types>... futures) {
+    using namespace aui::impl::future;
+    using Result = std::tuple<Storage<Types>...>;
+    using Resolver = typename AFuture<Result>::Resolver;
+    // the lambdas below refer to the tuple rather than to the pack: MSVC can't expand a captured pack (C3520)
+    std::tuple<AFuture<Types>...> sources(std::move(futures)...);
+    return AFuture<Result>::create([&](Resolver resolver) {
+        struct State {
+            Resolver resolver;
+            std::tuple<AOptional<Storage<Types>>...> values;
+            std::atomic_size_t remaining = sizeof...(Types);
+            ASpinlockMutex mutex;
+            AOptional<std::tuple<AFuture<Types>...>> futures;
+
+            explicit State(Resolver resolver) : resolver(std::move(resolver)) {}
+
+            void dropFutures() {
+                std::unique_lock lock(mutex);
+                auto local = std::move(futures);
+                futures.reset();
+                lock.unlock();
+            }
+        };
+        if constexpr (sizeof...(Types) == 0) {
+            resolver.supplyValue(Result {});
+        } else {
+            auto state = _new<State>(resolver);
+            state->futures.emplace(sources);
+            resolver.onCancel([state] { state->dropFutures(); });
+            [&]<std::size_t... I>(std::index_sequence<I...>) {
+                (Access::subscribe(
+                     std::get<I>(sources),
+                     [state](const auto&... value) {
+                         if constexpr (sizeof...(value) == 0) {
+                             std::get<I>(state->values).emplace();
+                         } else {
+                             std::get<I>(state->values).emplace(value...);
+                         }
+                         if (state->remaining.fetch_sub(1, std::memory_order_acq_rel) == 1) {
+                             state->resolver.supplyValue(std::apply(
+                                 [](auto&... v) { return Result { std::move(*v)... }; }, state->values));
+                             state->dropFutures();
+                         }
+                     },
+                     [state](const AException& e) {
+                         state->resolver.supplyException(causeOf(e));
+                         state->dropFutures();
+                     },
+                     [state] {
+                         state->resolver.supplyException(cancelledException());
+                         state->dropFutures();
+                     }),
+                 ...);
+            }(std::index_sequence_for<Types...> {});
+        }
+    });
+}
+
+template <typename T>
+template <typename... Types>
+AFuture<std::variant<aui::impl::future::Storage<Types>...>> AFuture<T>::any(AFuture<Types>... futures) {
+    static_assert(sizeof...(Types) > 0, "any of nothing never completes");
+    using namespace aui::impl::future;
+    using Result = std::variant<Storage<Types>...>;
+    using Resolver = typename AFuture<Result>::Resolver;
+    // the lambdas below refer to the tuple rather than to the pack: MSVC can't expand a captured pack (C3520)
+    std::tuple<AFuture<Types>...> sources(std::move(futures)...);
+    return AFuture<Result>::create([&](Resolver resolver) {
+        struct State {
+            Resolver resolver;
+            ASpinlockMutex mutex;
+            AOptional<std::tuple<AFuture<Types>...>> futures;
+
+            explicit State(Resolver resolver) : resolver(std::move(resolver)) {}
+
+            void dropFutures() {
+                std::unique_lock lock(mutex);
+                auto local = std::move(futures);
+                futures.reset();
+                lock.unlock();
+            }
+        };
+        auto state = _new<State>(resolver);
+        state->futures.emplace(sources);
+        resolver.onCancel([state] { state->dropFutures(); });
+        [&]<std::size_t... I>(std::index_sequence<I...>) {
+            (Access::subscribe(
+                 std::get<I>(sources),
+                 [state](const auto&... value) {
+                     if constexpr (sizeof...(value) == 0) {
+                         state->resolver.supplyValue(Result(std::in_place_index<I>));
+                     } else {
+                         state->resolver.supplyValue(Result(std::in_place_index<I>, value...));
+                     }
+                     state->dropFutures();
+                 },
+                 [state](const AException& e) {
+                     state->resolver.supplyException(causeOf(e));
+                     state->dropFutures();
+                 },
+                 [state] {
+                     state->resolver.supplyException(cancelledException());
+                     state->dropFutures();
+                 }),
+             ...);
+        }(std::index_sequence_for<Types...> {});
+    });
+}
+
+template <typename T>
+AFuture<T> AFuture<T>::withTimeout(std::chrono::milliseconds duration) const {
+    using namespace aui::impl::future;
+    return create([&](Resolver resolver) {
+        auto timer = AThread::asyncSleep(duration);
+        inner_().subscribe(
+            [resolver](const auto&... value) {
+                if constexpr (std::is_void_v<T> || std::is_copy_constructible_v<T>) {
+                    resolver.supplyValue(value...);
+                } else {
+                    // a move-only value is moved out, as co_await does
+                    resolver.supplyValue(std::move(const_cast<T&>(value))...);
+                }
+            },
+            [resolver](const AException& e) { resolver.supplyException(causeOf(e)); },
+            [resolver] { resolver.supplyException(cancelledException()); });
+        timer.inner_().subscribe(
+            [resolver, source = *this, duration] {
+                resolver.supplyException(std::make_exception_ptr(
+                    ATimeoutException("timed out after " + AString::number(duration.count()) + "ms")));
+                // let the producer abort the operation
+                source.cancel();
+            },
+            NoCallback {}, NoCallback {});
+        resolver.onCancel([source = *this, timer = std::move(timer)] { source.cancel(); });
+    });
+}
+
+template <typename T>
+void aui::impl::future::Inner<T>::wait(ABitField<AFutureWait> flags) {
+    if (isSettled()) {
+        return;   // cheap check
+    }
+    try {
+        if (flags & AFutureWait::ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP) {
+            // the task may be not picked up by the threadpool yet; execute it here
+            if (tryExecute()) {
+                return;
+            }
         }
 
         if (flags & AFutureWait::ALLOW_STACKFUL_COROUTINES) {
             if (auto threadPoolWorker = _cast<AThreadPool::Worker>(AThread::current())) {
-                if (hasResult()) return; // for sure
+                if (isSettled()) {
+                    return;
+                }
                 checkForSelfWait();
-                AUI_ASSERT(lock.owns_lock());
-                auto callback = [threadPoolWorker](auto&&...) {
-                    threadPoolWorker->threadPool().wakeUpAll();
-                };
-                addOnSuccessCallback(callback);
-                addOnErrorCallback(callback);
-
-                threadPoolWorker->loop([&] {
-                  if (lock.owns_lock())
-                    lock.unlock();
-                  return !hasResult();
-                });
-
+                auto wakeUp = [threadPoolWorker](const auto&...) { threadPoolWorker->threadPool().wakeUpAll(); };
+                subscribe(wakeUp, wakeUp, wakeUp);
+                threadPoolWorker->loop([&] { return !isSettled(); });
                 return;
             }
         }
-        while ((thread || !cancelled) && !hasResult()) {
-            if (thread == AThread::current()) [[unlikely]] {
+        std::unique_lock lock(mutex);
+        while (!isSettled()) {
+            if (executing && thread == AThread::current()) [[unlikely]] {
                 // self wait?
                 return;
             }
-            cv.wait(lock);
+            if (!cv) {
+                cv = std::make_unique<AConditionVariable>();
+            }
+            cv->wait(lock);
         }
     } catch (const AThread::Interrupted& e) {
         e.needRethrow();
     }
     AThread::interruptionPoint();
 }
+
+#undef AUI_IMPL_FUTURE_DISCARDED
 
 #if AUI_COROUTINES
 #include "AFutureCpp20Coro.h"

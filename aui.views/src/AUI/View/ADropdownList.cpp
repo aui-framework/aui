@@ -164,3 +164,9 @@ void ADropdownList::destroyWindow() {
 void ADropdownList::onComboBoxWindowCreated() {
 
 }
+
+IInspectable::DebugInspectorInfo ADropdownList::debugInspectorInfo() {
+    auto info = AButton::debugInspectorInfo();
+    info.push_back({ "selection", getSelectionId() });
+    return info;
+}

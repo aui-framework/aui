@@ -39,9 +39,8 @@ AFuture<APath> ADesktop::browseForDir(ASurface* parent, const APath& startingLoc
     else
         ui = AThread::current();
 
-    AFuture<APath> promise;
-
-    ui->enqueue([promise, parent, startingLocation]() mutable {
+    return AFuture<APath>::create([&](AFuture<APath>::Resolver promise) {
+    ui->enqueue([promise = std::move(promise), parent, startingLocation]() mutable {
         Ole::inst();
         APath result;
 
@@ -90,8 +89,7 @@ AFuture<APath> ADesktop::browseForDir(ASurface* parent, const APath& startingLoc
 
         promise.supplyValue(result);   // resolves with {} on cancel or error
     });
-
-    return promise;
+    });
 }
 
 AFuture<APath> ADesktop::browseForFile(ASurface* parent, const APath& startingLocation, const AVector<FileExtension>& extensions) {
@@ -101,9 +99,8 @@ AFuture<APath> ADesktop::browseForFile(ASurface* parent, const APath& startingLo
     else
         ui = AThread::current();
 
-    AFuture<APath> promise;
-
-    ui->enqueue([promise, parent, startingLocation, extensions]() mutable {
+    return AFuture<APath>::create([&](AFuture<APath>::Resolver promise) {
+    ui->enqueue([promise = std::move(promise), parent, startingLocation, extensions]() mutable {
         Ole::inst();
         APath result;
 
@@ -174,8 +171,7 @@ AFuture<APath> ADesktop::browseForFile(ASurface* parent, const APath& startingLo
 
         promise.supplyValue(result);   // cancels with empty path
     });
-
-    return promise;
+    });
 }
 
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {

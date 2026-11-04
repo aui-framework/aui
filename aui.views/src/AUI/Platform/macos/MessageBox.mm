@@ -56,6 +56,10 @@ ResultButton aui::showMessageBox(AWindow* parent, const AString& title, const AS
         if (auto d = dynamic_cast<AWindow *>(parent)) {
             nativeParentWindow = static_cast<NSWindow *>(d->nativeHandle());
         }
+        if (!nativeParentWindow) {
+            // without a window to attach to, the alert would be placed in the center of the screen
+            nativeParentWindow = NSApp.keyWindow ?: NSApp.mainWindow ?: NSApp.orderedWindows.firstObject;
+        }
 
         __block NSModalResponse response = NSModalResponseCancel;
 

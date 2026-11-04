@@ -333,14 +333,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14]
+        os: [macos-15]
         os-name: [MacOS]
         cppstd: ['20']
         build-type: [Debug, Release]
         arch: ['x86_64', 'armv8']
         include:
-          - os: macos-14
-            appleclang-version: 15
+          - os: macos-15
+            appleclang-version: 16
           - build-type: Debug
             cmake-preset: conan-debug
           - build-type: Release
@@ -357,11 +357,11 @@ jobs:
           cmakeVersion: 4.1.0
           ninjaVersion: latest
 
-      - name: Install Xcode 15.4.0
-        if: matrix.appleclang-version == 15
+      - name: Install Xcode 16.2
+        if: matrix.appleclang-version == 16
         uses: maxim-lobanov/setup-xcode@v1.6.0
         with:
-          xcode-version: '15.4.0'
+          xcode-version: '16.2'
 
       - name: Install system dependencies
         run: |
@@ -423,14 +423,14 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        os: [macos-14]
+        os: [macos-15]
         os-name: [MacOS]
         cppstd: ['20']
         build-type: [Debug, Release]
         arch: ['armv8']
         include:
-          - os: macos-14
-            appleclang-version: 15
+          - os: macos-15
+            appleclang-version: 16
           - build-type: Debug
             cmake-preset: conan-debug
           - build-type: Release
@@ -447,11 +447,11 @@ jobs:
           cmakeVersion: 4.1.0
           ninjaVersion: latest        
 
-      - name: Install Xcode 15.4.0
-        if: matrix.appleclang-version == 15
+      - name: Install Xcode 16.2
+        if: matrix.appleclang-version == 16
         uses: maxim-lobanov/setup-xcode@v1.6.0
         with:
-          xcode-version: '15.4.0'
+          xcode-version: '16.2'
 
       - name: Install system dependencies
         run: |

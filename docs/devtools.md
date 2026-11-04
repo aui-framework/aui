@@ -14,3 +14,7 @@ You can hold `CTRL` and hover over your application to peek views:
 
 ![](imgs/Screenshot_20241212_064400.png)
 
+
+## Driving the application from an agent
+
+See [agentic-development] to let an AI agent look at the running application, click and type.

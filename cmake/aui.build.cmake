@@ -1269,9 +1269,10 @@ function(aui_module AUI_MODULE_NAME)
                 TARGET ${AUI_MODULE_NAME}
                 POST_BUILD
                 COMMAND $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:${CMAKE_STRIP}>
+                # one argument for both library types: a generator expression that evaluates to nothing becomes an
+                # empty argument under VERBATIM, and strip takes it for a file name
                 ARGS    $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:-g>
-                        $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<STREQUAL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},TYPE>,STATIC_LIBRARY>>:--strip-unneeded>
-                        $<$<AND:$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>,$<NOT:$<STREQUAL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},TYPE>,STATIC_LIBRARY>>>:-x>
+                        $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:$<IF:$<STREQUAL:$<TARGET_PROPERTY:${AUI_MODULE_NAME},TYPE>,STATIC_LIBRARY>,--strip-unneeded,-x>>
                         $<$<OR:$<CONFIG:Release>,$<CONFIG:MinSizeRel>>:$<TARGET_FILE:${AUI_MODULE_NAME}>>
                 COMMENT "Stripping ${AUI_MODULE_NAME} (only for Release/MinSizeRel)"
                 VERBATIM

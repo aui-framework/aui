@@ -63,7 +63,9 @@ void A2FingerTransformArea::onPointerMove(glm::vec2 pos, const APointerMoveEvent
             } else {
                 scale = glm::clamp(scale, 0.000001f, std::numeric_limits<float>::max());
             }
-            emit transformed(A2DTransform{ .offset = delta / 2.f, .rotation = prevAngle - newAngle, .scale = scale });
+            // atan jumps by a full turn when the line between the fingers crosses the vertical
+            const auto rotation = std::remainder(prevAngle.radians() - newAngle.radians(), 2.f * glm::pi<float>());
+            emit transformed(A2DTransform{ .offset = delta / 2.f, .rotation = AAngleRadians(rotation), .scale = scale });
             break;   
         }
         default:

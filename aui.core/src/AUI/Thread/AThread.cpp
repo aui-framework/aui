@@ -101,14 +101,15 @@ AStacktrace AAbstractThread::threadStacktrace() const {
     }
     auto& payloads = aui::impl::AThread::payloads();
     std::unique_lock lock(payloads);
-    AFuture<AStacktrace> future;
-    payloads.value()[mId] = [future] {
+    auto future = AFuture<AStacktrace>::create([&](AFuture<AStacktrace>::Resolver resolver) {
+        payloads.value()[mId] = [resolver = std::move(resolver)] {
 #if AUI_PLATFORM_WIN
-        future.supplyValue(AStacktrace::capture(1));
+            resolver.supplyValue(AStacktrace::capture(1));
 #else
-        future.supplyValue(AStacktrace::capture(6));
+            resolver.supplyValue(AStacktrace::capture(6));
 #endif
-    };
+        };
+    });
     lock.unlock();
 #if AUI_PLATFORM_WIN
     aui::win32::Handle h = OpenThread(
@@ -305,9 +306,7 @@ const _<AAbstractThread>& AThread::main() noexcept {
 }
 
 AFuture<> AThread::asyncSleep(std::chrono::milliseconds duration) {
-    AFuture<> future;
-    ATimer::scheduler().enqueue(duration, [future] {
-        future.supplyValue();
+    return AFuture<>::create([&](AFuture<>::Resolver resolver) {
+        ATimer::scheduler().enqueue(duration, [resolver = std::move(resolver)] { resolver.supplyValue(); });
     });
-    return future;
 }

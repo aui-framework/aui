@@ -139,7 +139,7 @@ TEST_F(UITextField, HomeEnd) {
 // [ctrl_a]
 TEST_F(UITextField, CtrlA) {
     By::type<ATextField>()
-            .perform(keyDownAndUp(AInput::LCONTROL + AInput::A))
+            .perform(keyDownAndUp(AInput::CMD_CTRL + AInput::A))
             .perform(type("replace"))
             .check(text("replace"));
 }

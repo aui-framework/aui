@@ -83,9 +83,12 @@ void CommonRenderingContext::init(const Init& init) {
     bool dwmFrame = false;
     bool disableClose = false;
     if (init.popup) {
-        // popups are hosted as a child of the parent window; no decorations
-        style = WS_CHILD;
-        exStyle = 0;
+        // a top-level window owned by the parent, placed in screen coordinates (see createOverlappingSurfaceImpl), so
+        // it can stick out of the parent. Not WS_CHILD: a child is positioned relative to the parent's client area and
+        // clipped by it. It never takes activation from the parent: losing focus closes the parent's overlapping
+        // surfaces (ASurface::onFocusLost), the popup itself included.
+        style = WS_POPUP;
+        exStyle = WS_EX_TOOLWINDOW | WS_EX_NOACTIVATE;
     } else {
         std::visit(
             aui::lambda_overloaded {

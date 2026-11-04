@@ -9,285 +9,262 @@
  * file, You can obtain one at http://mozilla.org/MPL/2.0/.
  */
 
-#include <curl/curl.h>
 #include "AWebsocket.h"
-#include "AUI/Common/AByteBufferView.h"
-#include "AUI/Common/AString.h"
-#include "AUI/Util/ARandom.h"
+
+#include <algorithm>
+#include <array>
+#include <cctype>
+#include <random>
+#include <span>
+
 #include "AUI/Crypt/AHash.h"
-#include "AUI/Logging/ALogger.h"
-#include "AUI/IO/AByteBufferInputStream.h"
+#include "AUI/Crypt/ATlsSession.h"
+#include "AUI/IO/AIOException.h"
+#include "AUI/Network/AInet4Address.h"
+#include "AUI/Network/ATcpSocket.h"
 
-/*
- * Thanks to https://github.com/barbieri/barbieri-playground/blob/master/curl-websocket/curl-websocket.c
- */
-
+using namespace aui::websocket;
 using namespace std::chrono_literals;
 
 namespace {
-    static std::default_random_engine gRandomEngine;
+constexpr auto GUID = "258EAFA5-E914-47DA-95CA-C5AB0DC85B11";
+constexpr auto POLL_INTERVAL = 100ms;
 
-    static inline void myHton(uint8_t *mem, uint8_t len)
-    {
-        uint8_t *bytes;
-        uint8_t i, mid;
+/// Scheme, host, port and "path?query" of a ws:// or wss:// url.
+struct Target {
+    bool secure;
+    AString host;
+    std::uint16_t port;
+    AString resource;
+};
 
-        if (len % 2) return;
+Target parse(const AString& url) {
+    const auto schemeEnd = url.find("://");
+    const AString scheme = schemeEnd == AString::NPOS ? AString {} : AString(url.substr(0, schemeEnd));
+    if (scheme != "ws" && scheme != "wss") {
+        throw AException("not a websocket url: " + url);
+    }
+    Target result { .secure = scheme == "wss", .resource = "/" };
+    auto authority = url.substr(schemeEnd + 3);
+    if (auto slash = authority.find('/'); slash != AString::NPOS) {
+        result.resource = authority.substr(slash);
+        authority = authority.substr(0, slash);
+    } else if (auto query = authority.find('?'); query != AString::NPOS) {
+        result.resource = "/" + authority.substr(query);
+        authority = authority.substr(0, query);
+    }
+    result.port = result.secure ? 443 : 80;
+    if (auto colon = authority.find(':'); colon != AString::NPOS) {
+        result.port = authority.substr(colon + 1).toUInt().valueOr(result.port);
+        authority = authority.substr(0, colon);
+    }
+    result.host = std::move(authority);
+    return result;
+}
 
-        mid = len / 2;
-        bytes = mem;
-        for (i = 0; i < mid; i++) {
-            uint8_t tmp = bytes[i];
-            bytes[i] = bytes[len - i - 1];
-            bytes[len - i - 1] = tmp;
+template <std::size_t N>
+std::array<std::uint8_t, N> randomBytes() {
+    std::random_device device;
+    std::array<std::uint8_t, N> result;
+    for (auto& v : result) {
+        v = std::uint8_t(device());
+    }
+    return result;
+}
+}   // namespace
+
+AWebsocket::AWebsocket(AString url) : AWebsocket(std::move(url), Options {}) {}
+
+AWebsocket::AWebsocket(AString url, Options options)
+  : mUrl(std::move(url)), mOptions(std::move(options)), mDecoder(false, mOptions.maxMessageSize) {}
+
+AWebsocket::AWebsocket() : mDecoder(false, mOptions.maxMessageSize) {}
+
+AWebsocket::~AWebsocket() { close(); }
+
+void AWebsocket::connect() {
+    auto target = parse(mUrl);
+    mSocket = _new<ATcpSocket>(AInet4Address::fromString(target.host, target.port));
+    mSocket->setTimeout(mOptions.connectTimeout);
+    if (target.secure) {
+        ATlsTransport transport {
+            [socket = mSocket](std::chrono::milliseconds t) { return socket->waitForRead(t); },
+            [socket = mSocket](std::span<std::byte> dst) { return socket->read(dst); },
+            [socket = mSocket](std::span<const std::byte> src) {
+                socket->write(reinterpret_cast<const char*>(src.data()), src.size());
+            },
+        };
+        ATlsSession::ClientOptions options;
+        options.expectedFingerprint = mOptions.expectedFingerprint;
+        options.serverName = target.host;
+        mTls = ATlsSession::connect(std::move(transport), options, mOptions.connectTimeout);
+    }
+    handshake(target.host, target.resource);
+    emit connected;
+}
+
+void AWebsocket::handshake(const AString& host, const AString& resource) {
+    const auto nonce = randomBytes<16>();
+    const auto key = AByteBuffer(reinterpret_cast<const char*>(nonce.data()), nonce.size()).toBase64String();
+    const auto request = "GET {} HTTP/1.1\r\nHost: {}\r\nUpgrade: websocket\r\nConnection: Upgrade\r\n"
+                         "Sec-WebSocket-Version: 13\r\nSec-WebSocket-Key: {}\r\n\r\n"_format(resource, host, key)
+                             .toStdString();
+    if (mTls) {
+        mTls->write(std::as_bytes(std::span(request)));
+    } else {
+        mSocket->write(request.data(), request.size());
+    }
+
+    // byte by byte: what follows the head are frames
+    std::string head;
+    char c;
+    while (head.find("\r\n\r\n") == std::string::npos && readSome(&c, 1) == 1) {
+        head += c;
+    }
+    if (!head.starts_with("HTTP/1.1 101")) {
+        throw AWebsocketHandshakeException(AString::fromUtf8(head.substr(0, head.find("\r\n"))));
+    }
+
+    const auto expected = AHash::sha1(AByteBuffer::fromString(key + GUID)).toBase64String().toStdString();
+    auto lower = head;
+    std::transform(lower.begin(), lower.end(), lower.begin(), [](char ch) { return char(std::tolower(ch)); });
+    const auto header = lower.find("sec-websocket-accept:");
+    if (header == std::string::npos || head.find(expected, header) == std::string::npos) {
+        throw AWebsocketHandshakeException("websocket key mismatch");
+    }
+}
+
+void AWebsocket::run() {
+    connect();
+    try {
+        while (!mCloseRequested && !mPeerGone) {
+            pull(POLL_INTERVAL);
+            while (auto message = nextMessage()) {
+                emit received(std::move(*message));
+            }
+        }
+    } catch (const AIOException&) {
+        if (!mCloseRequested) {
+            throw;
         }
     }
 }
 
-AWebsocket::AWebsocket(const AString& url, AString key):
-ACurl(ACurl::Builder(url.replacedAll("wss://", "https://").replacedAll("ws://", "http://"))
-    .withHeaders({
-        // Alex2772 (Jul 22 2026):
-        // "Expect: 101" was here.
-        // despite 101 Switching Protocols is always expected and always sent by the server, some servers respond with
-        // 417 Expectation Failed. To address this, let's pass "Expect:" to curl. This essentially says to curl: do not
-        // pass the "Expect" header.
-        "Expect:",
-        "Transfer-Encoding:",
-        "Connection: Upgrade",
-        "Upgrade: websocket",
-        "Sec-WebSocket-Version: 13",
-        "Sec-WebSocket-Key: {}"_format(AByteBuffer::fromString(key).toBase64String()),
-        "Sec-WebSocket-Protocol: chat"
-        })
-    .withHttpVersion(ACurl::Http::VERSION_1_1)
-    .withUpload(true)
-    .withLowSpeedLimit(1)
-    .withCustomRequest("GET")
-    .withHeaderCallback([this](AByteBufferView v) {
-        auto asStr = AString(v.toStdStringView());
-        if (asStr.startsWith("Sec-WebSocket-Accept: ")) {
-            asStr = asStr.trimRight('\n').trimRight('\r');
-            auto serverKeyBase64 = asStr.substr(asStr.find(": ") + 2);
-            auto serverKeySha1 = AByteBuffer::fromBase64String(serverKeyBase64);
-            auto clientKeySha1 = AHash::sha1(AByteBuffer::fromString(AByteBuffer::fromString(mKey).toBase64String() + "258EAFA5-E914-47DA-95CA-C5AB0DC85B11"));
-            if (serverKeySha1 != clientKeySha1) {
-                throw AException("websocket key mismatch");
-            }
-            mAccepted = true;
-        } else if (asStr == "\r\n") {
-            if (!mAccepted) {
-                throw AException("server didn't accept websocket connection");
-            }
-            emit connected;
+AOptional<AByteBuffer> AWebsocket::read(std::chrono::milliseconds timeout) {
+    const auto deadline = std::chrono::steady_clock::now() + timeout;
+    for (;;) {
+        if (auto message = nextMessage()) {
+            return message;
         }
-    }).withWriteCallback([this] (AByteBufferView v) {
-        return onDataReceived(v);
-    }).withBody([this](char* dst, std::size_t maxLen) {
-        return onDataSend(dst, maxLen);
-    })), mKey(std::move(key)) {
-
+        if (mPeerGone || mCloseRequested) {
+            throw AIOException("the connection is closed");
+        }
+        const auto left = std::chrono::duration_cast<std::chrono::milliseconds>(deadline - std::chrono::steady_clock::now());
+        if (left <= 0ms) {
+            return std::nullopt;
+        }
+        pull(left);
+    }
 }
 
+std::size_t AWebsocket::readSome(char* dst, std::size_t size) {
+    return mTls ? mTls->read(std::as_writable_bytes(std::span(dst, size))) : mSocket->read(dst, size);
+}
+
+void AWebsocket::pull(std::chrono::milliseconds timeout) {
+    if (!mSocket->waitForRead(timeout)) {
+        return;
+    }
+    std::array<char, 1 << 15> buffer;   // at least a TLS record: what is left of it is invisible to poll()
+    const auto n = readSome(buffer.data(), buffer.size());
+    if (n == 0) {
+        mPeerGone = true;
+        return;
+    }
+    mDecoder.feed(AByteBufferView(buffer.data(), n));
+}
+
+AOptional<AByteBuffer> AWebsocket::nextMessage() {
+    while (auto frame = mDecoder.next()) {
+        switch (frame->opcode) {
+            case Opcode::TEXT:
+            case Opcode::BINARY:
+                if (mAssemblingActive) {
+                    throw ProtocolError(close_code::PROTOCOL_ERROR, "new message inside a fragmented one");
+                }
+                if (frame->fin) {
+                    return std::move(frame->payload);
+                }
+                mAssembling = std::move(frame->payload);
+                mAssemblingActive = true;
+                break;
+            case Opcode::CONTINUATION:
+                if (!mAssemblingActive) {
+                    throw ProtocolError(close_code::PROTOCOL_ERROR, "unexpected continuation frame");
+                }
+                if (mAssembling.size() + frame->payload.size() > mOptions.maxMessageSize) {
+                    throw ProtocolError(close_code::MESSAGE_TOO_BIG, "message is too big");
+                }
+                mAssembling.write(frame->payload.data(), frame->payload.size());
+                if (frame->fin) {
+                    mAssemblingActive = false;
+                    return std::exchange(mAssembling, {});
+                }
+                break;
+            case Opcode::PING:
+                // RFC 6455 5.5.3: a Pong carries the application data of the Ping
+                send(Opcode::PONG, frame->payload);
+                break;
+            case Opcode::PONG:
+                break;
+            case Opcode::CLOSE: {
+                mPeerGone = true;
+                const auto reason = frame->payload.size() > 2 ? frame->payload.slice(2) : AByteBufferView {};
+                emit websocketClosed(AString::fromUtf8(reason));
+                close();
+                return std::nullopt;
+            }
+        }
+    }
+    return std::nullopt;
+}
 
 std::size_t AWebsocket::onDataReceived(AByteBufferView data) {
-    auto actuallyRead = [this](AByteBufferView data) -> size_t {
-        auto it = data.begin();
-        while (it != data.end()) {
-            auto o = decodeOnePacket(AByteBufferView::fromRange(it, data.end()));
-            if (o == 0) {
-                break;
-            }
-            it += o;
-        }
-        return std::distance(data.begin(), it);
-    };
-
-    if (mTrailingBuffer) {
-        *mTrailingBuffer << data;
-        auto r = actuallyRead(*mTrailingBuffer);
-        if (r == mTrailingBuffer->size()) {
-            mTrailingBuffer.reset();
-        } else {
-            mTrailingBuffer->erase(mTrailingBuffer->begin(), mTrailingBuffer->begin() + r);
-        }
-    } else {
-        auto r = actuallyRead(data);
-        if (r != data.size()) {
-            mTrailingBuffer.emplace(data.slice(r));
-        }
+    mDecoder.feed(data);
+    while (auto message = nextMessage()) {
+        emit received(std::move(*message));
     }
-
-    // (https://curl.se/libcurl/c/CURLOPT_WRITEFUNCTION.html) Your callback should return the number of bytes actually
-    // taken care of. If that amount differs from the amount passed to your callback function, it signals an error
-    // condition to the [libcurl] library. This causes the transfer to get aborted and the libcurl function used returns
-    // CURLE_WRITE_ERROR.
     return data.size();
 }
 
-
-
-std::size_t AWebsocket::onDataSend(char* dst, std::size_t maxLen) {
-    if (mRead.empty()) {
-        return 0;
+void AWebsocket::send(Opcode opcode, AByteBufferView payload) {
+    const auto frame = encodeFrame(opcode, payload, true, randomBytes<4>());
+    std::unique_lock lock(mSendMutex);
+    if (!mSocket) {
+        throw AIOException("websocket is not connected");
     }
-    return mRead.read(dst, maxLen);
-}
-
-
-AString AWebsocket::generateKeyString() {
-    AString s;
-    s.resize(16);
-    for (auto& v : s.bytes()) {
-        v = std::uniform_int_distribution(int('a'), int('z'))(gRandomEngine);
+    if (mTls) {
+        mTls->write(std::as_bytes(std::span(frame.data(), frame.size())));
+    } else {
+        mSocket->write(frame.data(), frame.size());
     }
-    return s;
 }
 
-void AWebsocket::writeRaw(const char* src, size_t size) {
-    mRead.write(src, size);
-    curl_easy_pause(handle(), 0);
-}
+void AWebsocket::writeText(AStringView text) { send(Opcode::TEXT, { text.data(), text.size() }); }
 
-void AWebsocket::writeMessage(AWebsocket::Opcode opcode, AByteBufferView message) {
-    Header h;
-    h.fin = 1;
-    h.rsv = 0;
-    h.opcode = static_cast<uint8_t>(opcode);
-    h.mask = 1;
-    h.payload_len = ((message.size() > std::numeric_limits<std::uint16_t>::max())
-                     ? 127
-                     : (message.size() > 125) ? 126 : message.size());
-
-    writeRaw(reinterpret_cast<const char*>(&h), sizeof(h));
-
-    if (h.payload_len == 127) {
-        std::uint64_t payload_len = message.size();
-        myHton(reinterpret_cast<uint8_t*>(&payload_len), sizeof(payload_len));
-        writeRaw(reinterpret_cast<const char*>(&payload_len), sizeof(payload_len));
-    } else if (h.payload_len == 126) {
-        std::uint16_t payload_len = message.size();
-        myHton(reinterpret_cast<uint8_t*>(&payload_len), sizeof(payload_len));
-        writeRaw(reinterpret_cast<const char*>(&payload_len), sizeof(payload_len));
-    }
-
-    std::uint8_t mask[4];
-    for (auto& v : mask) v = std::uniform_int_distribution(int(std::numeric_limits<std::uint8_t>::min()),
-                                                           int(std::numeric_limits<std::uint8_t>::max()))(gRandomEngine);
-    writeRaw(reinterpret_cast<const char*>(mask), sizeof(mask));
-
-    writeRawMasked(mask, message);
-}
-
-void AWebsocket::writeRawMasked(const std::uint8_t* mask, AByteBufferView message) {
-    AByteBuffer temporaryBuffer;
-    temporaryBuffer.resize(message.size());
-
-    for (std::size_t i = 0; i < message.size(); ++i) {
-        temporaryBuffer.at<std::uint8_t>(i) = message.at<std::uint8_t>(i) ^ mask[i % 4];
-    }
-
-    writeRaw(temporaryBuffer.data(), temporaryBuffer.size());
-}
-
-void AWebsocket::writeText(AStringView text) {
-    writeMessage(Opcode::TEXT, { text.data(), text.size() });
-}
-
-void AWebsocket::writeBinary(AByteBufferView data) {
-    writeMessage(Opcode::BINARY, { data.data(), data.size() });
-}
+void AWebsocket::writeBinary(AByteBufferView data) { send(Opcode::BINARY, data); }
 
 void AWebsocket::close() {
-    writeMessage(Opcode::CLOSE, {nullptr, 0});
-    ACurl::close();
+    if (mCloseRequested.exchange(true) || !mSocket) {
+        return;
+    }
+    try {
+        send(Opcode::CLOSE, {});
+    } catch (...) {
+        // the connection is already broken
+    }
+    if (mTls) {
+        mTls->close();
+    }
+    mSocket->close();
 }
-
-std::size_t AWebsocket::decodeOnePacket(AByteBufferView data) {
-    Header h;
-    if (data.size() < sizeof(Header)) {
-        return 0; // not enough
-    }
-
-    const char* it = data.begin();
-    h = *reinterpret_cast<const Header*>(it);
-
-    if (h.mask) { // 5.1 "client MUST close a connection if it detects a masked frame"
-        ALogger::err("websocket") << "Received masked frame, closing connection";
-        close();
-        return data.size();
-    }
-
-    it += sizeof(Header);
-
-    std::uint64_t payloadLength;
-
-    switch (h.payload_len) {
-        case 126: {
-            std::uint16_t len16;
-            if (it + sizeof(len16) > data.end()) {
-                return 0; // not enough
-            }
-            len16 = *reinterpret_cast<const std::uint16_t*>(it);
-            myHton(reinterpret_cast<uint8_t*>(&len16), sizeof(len16));
-            it += sizeof(len16);
-            payloadLength = len16;
-            break;
-        }
-        case 127: {
-            std::uint64_t len64;
-            if (it + sizeof(len64) > data.end()) {
-                return 0; // not enough
-            }
-            len64 = *reinterpret_cast<const std::uint64_t*>(it);
-            myHton(reinterpret_cast<uint8_t*>(&len64), sizeof(len64));
-            it += sizeof(len64);
-            payloadLength = len64;
-            break;
-        }
-        default:
-            payloadLength = h.payload_len;
-    }
-
-    // We need the full payload in the buffer before we can safely inspect it (e.g. for CLOSE/PING
-    // reason/data), so bail out early if the frame is not fully received yet.
-    if (static_cast<std::uint64_t>(std::distance(it, data.end())) < payloadLength) {
-        // not enough
-        return 0;
-    }
-
-    switch (h.opcode) {
-        case int(Opcode::BINARY):
-        case int(Opcode::TEXT):
-        case int(Opcode::CONTINUATION):
-            break;
-
-        case int(Opcode::CLOSE): {
-            auto reasonLength = payloadLength > 2 ? payloadLength - 2 : 0;
-            emit websocketClosed(std::string_view(it + 2, reasonLength));
-            close();
-            return 0;
-        }
-
-        case int(Opcode::PING):
-            // RFC 6455 5.5.3: a Pong frame sent in response to a Ping frame must have identical
-            // application data as found in the message body of the Ping frame being replied to.
-            writeMessage(Opcode::PONG, { it, static_cast<std::size_t>(payloadLength) });
-            break;
-
-        case int(Opcode::PONG):
-            break;
-
-        default:
-            ALogger::err("AWebsocket") << "Unknown opcode: " << AString::numberHex(h.opcode) << ", closing connection";
-            close();
-            return 0;
-    }
-
-    emit received(AByteBuffer(it, payloadLength));
-
-    it += payloadLength;
-
-    return std::distance(data.begin(), it);
-}
-
