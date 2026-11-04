@@ -54,6 +54,12 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
                 PkgConfig::GLIB
                 PkgConfig::GIO
         )
+        if (TARGET Tests)
+            # ADBusTest uses libdbus API directly to build messages. Tests target is declared in another directory,
+            # hence properties instead of target_link_libraries.
+            set_property(TARGET Tests APPEND PROPERTY INCLUDE_DIRECTORIES ${DBUS_INCLUDE_DIRS})
+            set_property(TARGET Tests APPEND PROPERTY LINK_LIBRARIES ${DBUS_LINK_LIBRARIES})
+        endif ()
 
         file(GLOB_RECURSE sigs src/ *.sigs)
         _aui_check_toolbox()
