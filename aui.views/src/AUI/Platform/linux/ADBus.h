@@ -213,10 +213,9 @@ struct converter<AVector<T>> {
         dbus_message_iter_recurse(iter, &sub);
 
         AVector<T> result;
-        for (;;) {
+        // empty array: sub points to DBUS_TYPE_INVALID right away
+        for (; dbus_message_iter_get_arg_type(&sub) != DBUS_TYPE_INVALID; dbus_message_iter_next(&sub)) {
             result << aui::dbus::iter_get<T>(&sub);
-            if (!dbus_message_iter_next(&sub))
-                break;
         }
 
         return result;
@@ -253,8 +252,11 @@ struct converter<AMap<K, V>> {
         dbus_message_iter_recurse(iter, &sub);
 
         AMap<K, V> result;
-        do {
-            AUI_ASSERT(dbus_message_iter_get_arg_type(&sub) == DBUS_TYPE_DICT_ENTRY);
+        // empty array: sub points to DBUS_TYPE_INVALID right away
+        for (; dbus_message_iter_get_arg_type(&sub) != DBUS_TYPE_INVALID; dbus_message_iter_next(&sub)) {
+            if (auto got = dbus_message_iter_get_arg_type(&sub); got != DBUS_TYPE_DICT_ENTRY) {
+                throw AException("type error: dict entry expected, got '{:c}'"_format(got));
+            }
             DBusMessageIter item;
             dbus_message_iter_recurse(&sub, &item);
             auto k = aui::dbus::iter_get<K>(&item);
@@ -266,7 +268,7 @@ struct converter<AMap<K, V>> {
             // }
             auto v = aui::dbus::iter_get<V>(&item);
             result[k] = v;
-        } while (dbus_message_iter_next(&sub));
+        }
 
         return result;
     }
