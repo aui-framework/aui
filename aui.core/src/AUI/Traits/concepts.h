@@ -154,6 +154,62 @@ namespace aui {
     static_assert(is_tuple<std::tuple<double>>);
     static_assert(!is_tuple<int>);
     static_assert(!is_tuple<double>);
+
+    /**
+     * @brief A variable template that always evaluates to false, dependent on template parameters.
+     * @ingroup useful_templates
+     * @details
+     * In C++ prior to C++23 (CWG2518), a non-dependent `static_assert(false, "...")` inside a template
+     * definition is ill-formed and causes a compilation error even if the template is never instantiated.
+     *
+     * Passing template arguments to `aui::always_false<T...>` makes the condition dependent on template
+     * parameters, deferring the assertion evaluation until template instantiation.
+     *
+     * ### Possible Use Cases
+     *
+     * #### 1. Custom compile-time diagnostic in fallback overloads
+     * Providing a clear, user-friendly compile error instead of a generic "no matching function" error:
+     * ```cpp
+     * template <typename Container>
+     * requires (!aui::convertible_to<Container, _<AViewContainer>>)
+     * void setContents(Container&&) {
+     *     static_assert(
+     *         aui::always_false<Container>,
+     *         "Passed an AView instead of AViewContainer; wrap AView with some kind of container");
+     * }
+     * ```
+     *
+     * #### 2. Exhaustiveness check in `if constexpr` ladders
+     * Ensuring that all expected types are handled at compile time:
+     * ```cpp
+     * template <typename T>
+     * void process(const T& value) {
+     *     if constexpr (std::is_integral_v<T>) {
+     *         processInt(value);
+     *     } else if constexpr (std::is_floating_point_v<T>) {
+     *         processFloat(value);
+     *     } else {
+     *         static_assert(aui::always_false<T>, "Unsupported type passed to process()");
+     *     }
+     * }
+     * ```
+     *
+     * #### 3. Primary template poisoning
+     * Forcing explicit specialization of a template class or struct:
+     * ```cpp
+     * template <typename T>
+     * struct Serializer {
+     *     static_assert(aui::always_false<T>, "Serializer must be specialized for type T");
+     * };
+     * ```
+     *
+     * @tparam Types Template arguments used to make the boolean condition dependent on template parameters.
+     */
+    template<typename...>
+    inline constexpr bool always_false = false;
+    static_assert(!always_false<>);
+    static_assert(!always_false<int>);
+    static_assert(!always_false<int, double>);
 }
 
 // AObject-related concepts
