@@ -18,7 +18,7 @@ permissions:
 jobs:
   clang-tidy:
     name: clang-tidy
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # ubuntu-latest (26.04, clang 21) brings new clang-tidy checks and breaks SingleInstance under valgrind
 
     steps:
       - uses: actions/checkout@v5
@@ -64,7 +64,7 @@ jobs:
 
   valgrind:
     name: valgrind
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-24.04 # ubuntu-latest (26.04, clang 21) brings new clang-tidy checks and breaks SingleInstance under valgrind
 
     steps:
       - uses: actions/checkout@v5
