@@ -17,6 +17,8 @@
 #include "AUI/View/AScrollArea.h"
 #include "AUI/Model/AListModel.h"
 #include "AUI/View/AButton.h"
+#include "AUI/Layout/AAbsoluteLayout.h"
+#include "AUI/View/ASpacerFixed.h"
 
 static constexpr auto LOG_TAG = "UIDeclarativeForTest";
 
@@ -665,4 +667,27 @@ TEST_F(UIDeclarativeForTest, IntGroupingDynamic1) {
     EXPECT_TRUE(By::text("2").one());
     saveScreenshot("");
     EXPECT_EQ(cache<AForEachUI<int>>().size(), 0);
+}
+
+TEST_F(UIDeclarativeForTest, AbsoluteLayoutInScrollAreaPresentsEverything) {
+    // views of AAbsoluteLayout are placed arbitrarily (here: in reverse order, the first one is at the bottom, and the
+    // column is not at the left edge of the scroll area), so lazy semantics can't decide which of them are visible.
+    // AForEachUI must present all of them.
+    static constexpr auto COUNT = 200; // more than AForEachUI materializes for a measurement
+    mWindow->setContents(Centered {
+      AScrollArea::Builder()
+          .withContents(Horizontal {
+              _new<ASpacerFixed>(300_dp),
+              AUI_DECLARATIVE_FOR(i, ranges::views::iota(0, COUNT) | ranges::views::reverse, AAbsoluteLayout) {
+                  _<AView> view = Label { "Item {} with a long title"_format(i) };
+                  view->layout({ 0, i * 10 }, { 50, 10 });
+                  return view;
+              } AUI_OVERRIDE_STYLE { Expanding(), MinSize { 50_dp, 2000_dp } },
+          })
+          .build() AUI_OVERRIDE_STYLE { FixedSize { 400_dp, 100_dp } },
+    });
+    uitest::frame();
+    for (int i = 0; i < COUNT; ++i) {
+        EXPECT_TRUE(By::text("Item {} with a long title"_format(i)).one()) << i;
+    }
 }
