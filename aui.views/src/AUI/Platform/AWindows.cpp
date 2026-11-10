@@ -180,7 +180,13 @@ void AWindow::redraw() {
                 size.x = glm::min(size.x, maxSize.x);
             if (maxSize.y != -1)
                 size.y = glm::min(size.y, maxSize.y);
+#if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS || AUI_PLATFORM_EMSCRIPTEN)
             size = glm::max(size, getMinimumSize());
+#else
+            // mobile and web: the window is exactly the surface the system gave us. it is never grown to fit the
+            // contents (not even FixedSize ones): there is nowhere to grow to, everything beyond the surface is
+            // lost. contents that don't fit are laid out in the space we have and overflow it visually.
+#endif
             AView::setSize(size);
 #if AUI_PLATFORM_WIN || AUI_PLATFORM_MACOS
             // win32 and macos let us resize the native window right here (on macos this also announces the min/max
