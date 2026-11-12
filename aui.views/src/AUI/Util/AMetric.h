@@ -67,14 +67,16 @@ class AString;
  * <!-- aui:index_alias _dp -->
  * <!-- aui:index_alias _pt -->
  * <!-- aui:index_alias _px -->
+ * <!-- aui:index_alias _pr -->
  *
  * Currently supported units:
  *
- * | Unit                       | Enum | Literal | Value                       |
- * | -------------------------- | ---- | ------- | --------------------------- |
- * | Density-independent Pixels | T_DP | _dp     | px * `scale_factor`         |
- * | Typography point           | T_PT | _pt     | px * `scale_factor` * 4 / 3 |
- * | Pixels                     | T_PX | _px     | px                          |
+ * | Unit                       | Enum | Literal | Value                                    |
+ * | -------------------------- | ---- | ------- | ---------------------------------------- |
+ * | Density-independent Pixels | T_DP | _dp     | px * `scale_factor`                      |
+ * | Typography point           | T_PT | _pt     | px * `scale_factor` * 4 / 3              |
+ * | Pixels                     | T_PX | _px     | px                                       |
+ * | Percent                    | T_PR | _pr     | reference_dimension * value / 100        |
  *
  * It's highly recommended to use only Density-independent Pixel unit (_dp). DP guarantees that your application
  * will correctly handle systems with hidpi screens.
@@ -88,6 +90,7 @@ public:
         T_PX,
         T_DP,
         T_PT,
+        T_PR,
     };
 
 private:
@@ -140,6 +143,7 @@ public:
 
     [[nodiscard]] float getValuePx() const;
     [[nodiscard]] float getValueDp() const;
+
 
     static float fromPxToMetric(float value, Unit unit);
 
@@ -247,6 +251,10 @@ constexpr inline AMetric operator""_pt(unsigned long long v)
 {
     return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PT);
 }
+constexpr inline AMetric operator""_pr(unsigned long long v)
+{
+    return AMetric(static_cast<float>(static_cast<long long>(v)), AMetric::T_PR);
+}
 
 inline std::ostream& operator<<(std::ostream& o, const AMetric& value) {
     o << value.getRawValue();
@@ -259,6 +267,9 @@ inline std::ostream& operator<<(std::ostream& o, const AMetric& value) {
             break;
         case AMetric::T_PT:
             o << "_pt";
+            break;
+        case AMetric::T_PR:
+            o << "_pr";
             break;
 
         default:
@@ -279,6 +290,7 @@ template <> struct fmt::formatter<AMetric> {
             case AMetric::T_PX: suffix = "px"; break;
             case AMetric::T_DP: suffix = "dp"; break;
             case AMetric::T_PT: suffix = "pt"; break;
+            case AMetric::T_PR: suffix = "pr"; break;
             default:            suffix = "";   break;
         }
 
