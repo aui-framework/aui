@@ -104,7 +104,6 @@ void AWindow::setGeometry(int x, int y, int width, int height) {
     AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
     AViewContainer::setSize({width, height});
     AUI_NULLSAFE(mRenderingContext)->endResize(*this);
-
 }
 
 glm::ivec2 AWindow::mapPosition(const glm::ivec2& position) {
@@ -135,14 +134,33 @@ namespace aui::emscripten {
         auto s = glm::ivec2(size * emscripten_get_device_pixel_ratio());
         ALogger::info("Emscripten") << "px size: " << s;
         emscripten_set_canvas_element_size("#canvas", s.x, s.y);
-        AUI_NULLSAFE(window)->layout(0, 0, s.x, s.y);
+        if (!window) {
+            return;
+        }
+        window->layout(0, 0, s.x, s.y);
+        window->updateDpi();   // the device pixel ratio changes with the browser zoom
     }
 }
 
-namespace {
+namespace aui::emscripten {
+void setKeyDown(AInput::Key k, bool down);   // AInputImpl.cpp
+}
 
-    auto position(const EmscriptenMouseEvent* mouseEvent) {
-        return glm::dvec2{mouseEvent->targetX, mouseEvent->targetY} * emscripten_get_device_pixel_ratio();
+namespace {
+    // The canvas covers the page from its top left corner (docs/emscripten.md), so client coordinates
+    // are canvas coordinates. Move/up events are listened on the window: a drag that leaves the canvas still ends.
+    glm::vec2 toPixels(double clientX, double clientY) {
+        return glm::vec2(glm::dvec2{clientX, clientY} * emscripten_get_device_pixel_ratio());
+    }
+
+    glm::vec2 position(const EmscriptenMouseEvent* e) { return toPixels(e->clientX, e->clientY); }
+
+    APointerIndex button(const EmscriptenMouseEvent* e) {
+        // DOM: 0 = left, 1 = middle, 2 = right; AInput::LBUTTON, CBUTTON, RBUTTON are the same values
+        if (e->button < 0 || e->button > AInput::RBUTTON) {
+            return APointerIndex::button(AInput::LBUTTON);
+        }
+        return APointerIndex::button(AInput::Key(e->button));
     }
 
     bool layout(int eventType, const EmscriptenUiEvent* event, void *userData) {

@@ -31,14 +31,27 @@ void OpenGLRenderingContext::init(const Init& init) {
     emscripten_webgl_init_context_attributes(&atrs);
     atrs.alpha = true;
     atrs.depth = true;
-    atrs.stencil = false;
-#if AUI_DEBUG
+    // the renderer clips views with the stencil buffer
+    atrs.stencil = true;
+    atrs.antialias = false;
+    atrs.majorVersion = 2;
     // otherwise the canvas is cleared once presented and makeScreenshot() gets a blank picture.
     atrs.preserveDrawingBuffer = true;
-#endif
 
     auto emctx = emscripten_webgl_create_context("#canvas", &atrs);
+    if (emctx <= 0) {
+        // no WebGL 2 (old Safari): the renderer needs GLES 2 only
+        atrs.majorVersion = 1;
+        emctx = emscripten_webgl_create_context("#canvas", &atrs);
+    }
+    if (emctx <= 0) {
+        throw AException("WebGL is not available");
+    }
     emscripten_webgl_make_context_current(emctx);
+    // gl.h is glad: its function pointers are empty until loaded
+    if (!OpenGLRenderer::loadGL((OpenGLRenderer::GLLoadProc)emscripten_webgl_get_proc_address, true)) {
+        throw AException("Failed to load WebGL functions");
+    }
 
     mRenderer = ourRenderer();
 }
