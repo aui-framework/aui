@@ -129,11 +129,41 @@ void AThreadPool::runLaterTasks() {
     mCV.notify_one();
 }
 
+void AThreadPool::runQueuedTasks() {
+    auto next = [&]() -> std::function<void()> {
+        std::unique_lock lck(mQueueLock);
+        for (auto* queue : { &mQueueHighest, &mQueueMedium, &mQueueLowest }) {
+            if (!queue->empty()) {
+                auto func = std::move(queue->front());
+                queue->pop();
+                return func;
+            }
+        }
+        return nullptr;
+    };
+    while (auto func = next()) {
+        try {
+            func();
+        } catch (const AException& e) {
+            ALogger::err("uncaught exception in thread pool: " + e.getMessage());
+        } catch (const AThread::Interrupted&) {
+        } catch (const TryLaterException&) {
+            std::unique_lock lck(mQueueLock);
+            mQueueTryLater.push(std::move(func));
+        }
+    }
+}
+
 void AThreadPool::enqueue(const std::function<void()>& fun, Priority priority) { global().run(fun, priority); }
 
 AThreadPool& AThreadPool::global() {
+#if AUI_PLATFORM_EMSCRIPTEN
+    // no threads in the browser (pthreads need cross-origin isolation): the event loop runs the tasks
+    static AThreadPool* t = new AThreadPool(0);
+#else
     // deadlock fix for mingw
     static AThreadPool* t = new AThreadPool;
+#endif
     return *t;
 }
 

@@ -25,6 +25,8 @@
 #include "AUI/Util/ARandom.h"
 #include "AUI/GL/State.h"
 #include "AUI/Thread/AThread.h"
+#include "AUI/Thread/AThreadPool.h"
+#include "AUI/Common/ATimer.h"
 #include "AUI/GL/OpenGLRenderer.h"
 #include "AUI/Platform/APlatform.h"
 #include "AUI/Platform/OpenGLRenderingContext.h"
@@ -185,6 +187,9 @@ void AWindowManager::loop() {
 
     emscripten_set_main_loop_arg([](void* arg) {
         auto self = (AWindowManager*)arg;
+        // single-threaded: the timers and the thread pool tasks are run here, between frames
+        ATimer::scheduler().iteration(ASchedulerIteration::DONT_BLOCK_INFINITELY | ASchedulerIteration::DONT_BLOCK_TIMED);
+        AThreadPool::global().runQueuedTasks();
         AThread::processMessages();
         if (AWindow::isRedrawWillBeEfficient()) {
             for (auto& window: self->mWindows) {

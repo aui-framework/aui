@@ -100,6 +100,15 @@ public:
     void run(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
     void clear();
     void runLaterTasks();
+
+    /**
+     * @brief Runs the queued tasks on the calling thread until the queues are empty.
+     * @details
+     * For a pool without workers. On emscripten (no pthreads) the global pool has none and the event loop calls this
+     * every frame; a future waited for runs its task right away (AFutureWait::ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP).
+     */
+    void runQueuedTasks();
+
     static void enqueue(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
 
     void setWorkersCount(std::size_t workersCount);
