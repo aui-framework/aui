@@ -17,6 +17,9 @@ using DefaultSystemPlayer = OboeAudioPlayer;
 #elif AUI_PLATFORM_APPLE
 #include "apple/CoreAudioPlayer.h"
 using DefaultSystemPlayer = CoreAudioPlayer;
+#elif AUI_PLATFORM_EMSCRIPTEN
+#include "emscripten/WebAudioPlayer.h"
+using DefaultSystemPlayer = WebAudioPlayer;
 #else
 using DefaultSystemPlayer = StubAudioPlayer;
 #endif
