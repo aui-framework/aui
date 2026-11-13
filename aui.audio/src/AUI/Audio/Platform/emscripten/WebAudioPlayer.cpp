@@ -74,12 +74,17 @@ EM_JS(void, aui_webaudio_start, (int sampleRate, int frames), {
     ctx.onstatechange = () => log('state');
 
     // iOS: Web Audio obeys the ring/silent switch (media does not), so with the switch on silent there is no sound at
-    // all. Safari 17+ lets the page declare itself media; older iOS switches to the media session while an <audio>
-    // element plays, so a silent one loops for that
+    // all. 'session': Safari 17+ lets the page declare itself media (navigator.audioSession); 'element': older iOS
+    // switches to the media session while an <audio> element plays, so a silent one loops (Safari may show it as Now
+    // Playing); 'off': obey the switch. The page may choose with Module.auiAudioSession; by default the session where
+    // there is one, else nothing
+    const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
+    const mode = Module.auiAudioSession || (navigator.audioSession ? 'session' : 'off');
+    console.log('[WebAudio] ios: ' + isIos + ', navigator.audioSession: ' + typeof navigator.audioSession + ', mode: ' + mode);
     let silentLoop = null;
-    if (navigator.audioSession) {
-        try { navigator.audioSession.type = 'playback'; } catch (e) {}
-    } else if (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent))) {
+    if (mode === 'session' && navigator.audioSession) {
+        try { navigator.audioSession.type = 'playback'; } catch (e) { console.log('[WebAudio] audioSession: ' + e); }
+    } else if (mode === 'element') {
         silentLoop = document.createElement('audio');
         silentLoop.setAttribute('x-webkit-airplay', 'deny');
         silentLoop.preload = 'auto';
