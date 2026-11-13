@@ -142,18 +142,63 @@ void AWindowManager::notifyProcessMessages() {
 
 
 
-namespace aui::emscripten {
-    void applySize(ASurface* window, glm::dvec2 size) {
-        auto s = glm::ivec2(size * emscripten_get_device_pixel_ratio());
-        ALogger::info("Emscripten") << "px size: " << s;
-        emscripten_set_canvas_element_size("#canvas", s.x, s.y);
+namespace {
+    // the browser reports the canvas's size in device pixels (ResizeObserver): then it alone resizes the canvas
+    bool gCanvasObserved = false;
+
+    void resizeCanvas(ASurface* window, glm::ivec2 size) {
+        ALogger::info("Emscripten") << "px size: " << size;
+        emscripten_set_canvas_element_size("#canvas", size.x, size.y);
         if (!window) {
             return;
         }
-        window->layout(0, 0, s.x, s.y);
+        window->layout(0, 0, size.x, size.y);
         window->updateDpi();   // the device pixel ratio changes with the browser zoom
     }
 }
+
+namespace aui::emscripten {
+    void applySize(ASurface* window, glm::dvec2 cssSize) {
+        if (gCanvasObserved) {
+            return;
+        }
+        // css size * device pixel ratio is a guess at the canvas's device size: the browser snaps the box to device
+        // pixels in its own way, and a canvas a pixel off is stretched over the page, blurring everything. Rounded,
+        // not truncated: that is what the browser does for the canvas at the page's origin
+        resizeCanvas(window, glm::ivec2(glm::round(cssSize * emscripten_get_device_pixel_ratio())));
+    }
+}
+
+extern "C" EMSCRIPTEN_KEEPALIVE void aui_emscripten_canvas_resized(int width, int height) {
+    auto window = dynamic_cast<AWindow*>(ASurface::current());
+    resizeCanvas(window, { width, height });
+    if (window) {
+        // the observer runs after this frame was drawn, and resizing has cleared the canvas: draw it again before the
+        // browser shows it
+        window->redraw();
+    }
+}
+
+// true if the browser reports the canvas's device pixel size
+EM_JS(bool, aui_emscripten_observe_canvas, (), {
+    if (typeof ResizeObserver === 'undefined') {
+        return false;
+    }
+    const observer = new ResizeObserver(function (entries) {
+        const entry = entries[entries.length - 1];
+        const exact = [entry.devicePixelContentBoxSize[0].inlineSize, entry.devicePixelContentBoxSize[0].blockSize];
+        const guess = [entry.contentRect.width * devicePixelRatio, entry.contentRect.height * devicePixelRatio];
+        // device emulation (DevTools device mode) reports css pixels here: then the guess is the better size
+        const trusted = Math.abs(exact[0] - guess[0]) <= 1 && Math.abs(exact[1] - guess[1]) <= 1;
+        _aui_emscripten_canvas_resized.apply(null, trusted ? exact : guess.map(Math.round));
+    });
+    try {
+        observer.observe(Module.canvas || document.getElementById('canvas'), { box: 'device-pixel-content-box' });
+        return true;
+    } catch (e) {
+        return false;   // no device-pixel-content-box (Safari)
+    }
+});
 
 namespace aui::emscripten {
 void setKeyDown(AInput::Key k, bool down);   // AInputImpl.cpp
@@ -294,6 +339,7 @@ namespace {
 void AWindowManager::loop() {
     AUI_DO_ONCE {
         emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, layout);
+        gCanvasObserved = aui_emscripten_observe_canvas();
         emscripten_set_mousedown_callback("#canvas", nullptr, false, onMousePressed);
         emscripten_set_mousemove_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, onMouseMove);
         emscripten_set_mouseup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, onMouseReleased);
