@@ -1874,6 +1874,10 @@ function(auib_import AUI_MODULE_NAME URL)
 
     # [[BUILD_SPECIFIER]]
     set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_TRIPLET}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${AUIB_IMPORT_CMAKE_ARGS}")
+    if (CMAKE_C_FLAGS OR CMAKE_CXX_FLAGS)
+        # forwarded compiler flags may change the ABI (i.e., the exception model on emscripten)
+        string(APPEND BUILD_SPECIFIER "/${CMAKE_C_FLAGS}/${CMAKE_CXX_FLAGS}")
+    endif()
     string(REPLACE ";" " " BUILD_SPECIFIER "${BUILD_SPECIFIER}")
 
     # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
