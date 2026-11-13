@@ -73,6 +73,10 @@ bool TexturePacker_Lol::check(Rect& res, Rect r) {
 bool TexturePacker_Lol::allocateRect(Rect& t, dim width, dim height) {
     // searching
     if (mRects.empty()) {
+        if (width > side || height > side) {
+            // does not fit even the empty texture (i.e., a large glyph on a high dpi screen): let the caller grow it
+            return false;
+        }
         Rect r(0, 0, width + 1, height + 1); // just put in (0, 0)
         mRects.push_back(r);
         t = Rect(0, 0, width, height);
