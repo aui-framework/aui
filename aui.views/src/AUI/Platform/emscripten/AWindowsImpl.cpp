@@ -32,6 +32,7 @@
 #include "AUI/Platform/OpenGLRenderingContext.h"
 
 #include <chrono>
+#include <span>
 #include <AUI/Logging/ALogger.h>
 #include <AUI/Util/kAUI.h>
 #include <AUI/Traits/memory.h>
@@ -100,7 +101,19 @@ float AWindow::fetchDpiFromSystem() const {
 
 
 void AWindow::setGeometry(int x, int y, int width, int height) {
-    AViewContainer::setPosition({x, y});
+    // the window is the page: it always takes the whole canvas, whatever size the application asks for
+    if (mRenderingContext) {
+        const auto canvas = [] {
+            glm::ivec2 size;
+            emscripten_get_canvas_element_size("#canvas", &size.x, &size.y);
+            return size;
+        }();
+        if (canvas.x > 0 && canvas.y > 0) {
+            width = canvas.x;
+            height = canvas.y;
+        }
+    }
+    AViewContainer::setPosition({0, 0});
     AUI_NULLSAFE(mRenderingContext)->beginResize(*this);
     AViewContainer::setSize({width, height});
     AUI_NULLSAFE(mRenderingContext)->endResize(*this);
@@ -169,37 +182,128 @@ namespace {
     }
 
     bool onMouseMove(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
-        AUI_NULLSAFE(ASurface::current())->onPointerMove(position(mouseEvent), { .pointerIndex = APointerIndex::button((AInput::Key)mouseEvent->button), });
-        return true;
+        AUI_NULLSAFE(ASurface::current())->onPointerMove(position(mouseEvent), { .pointerIndex = button(mouseEvent) });
+        return false;
     }
-
 
     bool onMousePressed(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
         AUI_NULLSAFE(ASurface::current())->onPointerPressed({
             .position = position(mouseEvent),
-            .pointerIndex = APointerIndex::button((AInput::Key)mouseEvent->button),
-            .asButton = AInput::LBUTTON,
+            .pointerIndex = button(mouseEvent),
         });
         return true;
     }
 
-
     bool onMouseReleased(int eventType, const EmscriptenMouseEvent *mouseEvent, void *userData) {
         AUI_NULLSAFE(ASurface::current())->onPointerReleased({
             .position = position(mouseEvent),
-            .pointerIndex = APointerIndex::button((AInput::Key)mouseEvent->button),
-            .asButton = AInput::LBUTTON,
+            .pointerIndex = button(mouseEvent),
+        });
+        return false;
+    }
+
+    bool onWheel(int eventType, const EmscriptenWheelEvent* e, void* userData) {
+        const auto lineHeight = 40.0 * emscripten_get_device_pixel_ratio();
+        const double scale = [&] {
+            switch (e->deltaMode) {
+                case DOM_DELTA_LINE: return lineHeight;
+                case DOM_DELTA_PAGE: return lineHeight * 10;
+                default: return emscripten_get_device_pixel_ratio();
+            }
+        }();
+        AUI_NULLSAFE(ASurface::current())->onScroll({
+            .origin = position(&e->mouse),
+            .delta = glm::vec2(glm::dvec2{e->deltaX, e->deltaY} * scale),
         });
         return true;
+    }
+
+    /// Touches are fingers: AUI turns them into clicks, drags and kinetic scrolling the same way as on Android.
+    /// preventDefault (return true) keeps the browser from scrolling/zooming the page and from emulating mouse events.
+    template<typename Handler>
+    bool forChangedTouches(const EmscriptenTouchEvent* e, Handler&& handler) {
+        auto* surface = ASurface::current();
+        if (!surface) {
+            return true;
+        }
+        for (const auto& t : std::span(e->touches, e->numTouches)) {
+            if (t.isChanged) {
+                handler(*surface, toPixels(t.clientX, t.clientY), APointerIndex::finger(int(t.identifier % 64)));
+            }
+        }
+        return true;
+    }
+
+    bool onTouchStart(int, const EmscriptenTouchEvent* e, void*) {
+        return forChangedTouches(e, [](ASurface& s, glm::vec2 pos, APointerIndex finger) {
+            s.onPointerPressed({ .position = pos, .pointerIndex = finger });
+        });
+    }
+
+    bool onTouchMove(int, const EmscriptenTouchEvent* e, void*) {
+        return forChangedTouches(e, [](ASurface& s, glm::vec2 pos, APointerIndex finger) {
+            s.onPointerMove(pos, { .pointerIndex = finger });
+        });
+    }
+
+    bool onTouchEnd(int, const EmscriptenTouchEvent* e, void*) {
+        return forChangedTouches(e, [](ASurface& s, glm::vec2 pos, APointerIndex finger) {
+            s.onPointerReleased({ .position = pos, .pointerIndex = finger });
+        });
+    }
+
+    /// Browser shortcuts (F5, F12, Ctrl+R...) stay with the browser.
+    bool isBrowserShortcut(const EmscriptenKeyboardEvent* e, AInput::Key key) {
+        return e->ctrlKey || e->metaKey || (key >= AInput::F1 && key <= AInput::F12);
+    }
+
+    bool onKeyDown(int, const EmscriptenKeyboardEvent* e, void*) {
+        auto* surface = ASurface::current();
+        const auto key = AInput::fromNative(int(e->keyCode));
+        aui::emscripten::setKeyDown(key, true);
+        if (!surface) {
+            return false;
+        }
+        if (key != AInput::UNKNOWN) {
+            if (e->repeat) {
+                surface->onKeyRepeat(key);
+            } else {
+                surface->onKeyDown(key);
+            }
+        }
+        // a printable key: `key` is the character it types (UTF-8)
+        if (!e->ctrlKey && !e->metaKey) {
+            // named keys ("Enter", "Shift") are longer than one character
+            if (const auto typed = AStringView(e->key).toUtf32(); typed.size() == 1) {
+                surface->onCharEntered(AChar(typed.front()));
+            }
+        }
+        return !isBrowserShortcut(e, key);
+    }
+
+    bool onKeyUp(int, const EmscriptenKeyboardEvent* e, void*) {
+        const auto key = AInput::fromNative(int(e->keyCode));
+        aui::emscripten::setKeyDown(key, false);
+        if (key != AInput::UNKNOWN) {
+            AUI_NULLSAFE(ASurface::current())->onKeyUp(key);
+        }
+        return !isBrowserShortcut(e, key);
     }
 }
 
 void AWindowManager::loop() {
     AUI_DO_ONCE {
         emscripten_set_resize_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, layout);
-        emscripten_set_mousemove_callback("#canvas", nullptr, false, onMouseMove);
         emscripten_set_mousedown_callback("#canvas", nullptr, false, onMousePressed);
-        emscripten_set_mouseup_callback("#canvas", nullptr, false, onMouseReleased);
+        emscripten_set_mousemove_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, onMouseMove);
+        emscripten_set_mouseup_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, onMouseReleased);
+        emscripten_set_wheel_callback("#canvas", nullptr, false, onWheel);
+        emscripten_set_touchstart_callback("#canvas", nullptr, false, onTouchStart);
+        emscripten_set_touchmove_callback("#canvas", nullptr, false, onTouchMove);
+        emscripten_set_touchend_callback("#canvas", nullptr, false, onTouchEnd);
+        emscripten_set_touchcancel_callback("#canvas", nullptr, false, onTouchEnd);
+        emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, false, onKeyDown);
+        emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, false, onKeyUp);
     }
 
 
