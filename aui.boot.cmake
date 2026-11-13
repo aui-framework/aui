@@ -1874,8 +1874,10 @@ function(auib_import AUI_MODULE_NAME URL)
 
     # [[BUILD_SPECIFIER]]
     set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_TRIPLET}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${AUIB_IMPORT_CMAKE_ARGS}")
-    if (CMAKE_C_FLAGS OR CMAKE_CXX_FLAGS)
-        # forwarded compiler flags may change the ABI (i.e., the exception model on emscripten)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+        # forwarded compiler flags choose the exception model on emscripten. Not on other platforms: there, they are the
+        # toolchain defaults, which differ between projects (i.e., MSVC /GR depends on CMP0117) without changing the ABI,
+        # and would break the EXPECTED_BUILD_SPECIFIER check of an installed AUI in a consumer project
         string(APPEND BUILD_SPECIFIER "/${CMAKE_C_FLAGS}/${CMAKE_CXX_FLAGS}")
     endif()
     string(REPLACE ";" " " BUILD_SPECIFIER "${BUILD_SPECIFIER}")
