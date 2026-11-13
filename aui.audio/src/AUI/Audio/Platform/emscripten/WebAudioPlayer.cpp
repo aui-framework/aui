@@ -69,13 +69,57 @@ EM_JS(void, aui_webaudio_start, (int sampleRate, int frames), {
     };
     node.connect(ctx.destination);
     Module.auiAudio = { ctx: ctx, node: node };
+    const log = (what) => console.log('[WebAudio] ' + what + ': ' + ctx.state + ', ' + ctx.sampleRate + ' Hz');
+    log('created');
+    ctx.onstatechange = () => log('state');
 
-    const resume = () => { if (ctx.state !== 'running' && !document.hidden) ctx.resume(); };
+    // iOS: Web Audio obeys the ring/silent switch (media does not), so with the switch on silent there is no sound at
+    // all. Safari 17+ lets the page declare itself media; older iOS switches to the media session while an <audio>
+    // element plays, so a silent one loops for that
+    let silentLoop = null;
+    if (navigator.audioSession) {
+        try { navigator.audioSession.type = 'playback'; } catch (e) {}
+    } else if (/iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent))) {
+        silentLoop = document.createElement('audio');
+        silentLoop.setAttribute('x-webkit-airplay', 'deny');
+        silentLoop.preload = 'auto';
+        silentLoop.loop = true;
+        // 0.1 s of 8 kHz 8-bit mono silence
+        const samples = 800;
+        const wav = new Uint8Array(44 + samples);
+        const view = new DataView(wav.buffer);
+        const text = (offset, str) => { for (let i = 0; i < str.length; ++i) wav[offset + i] = str.charCodeAt(i); };
+        text(0, 'RIFF'); view.setUint32(4, 36 + samples, true); text(8, 'WAVEfmt ');
+        view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, 1, true);
+        view.setUint32(24, 8000, true); view.setUint32(28, 8000, true); view.setUint16(32, 1, true); view.setUint16(34, 8, true);
+        text(36, 'data'); view.setUint32(40, samples, true); wav.fill(128, 44);
+        silentLoop.src = URL.createObjectURL(new Blob([wav], { type: 'audio/wav' }));
+    }
+
+    // browsers start the context only from a user gesture; older iOS also wants a sound started inside that gesture
+    let unlocked = false;
+    const resume = () => {
+        if (document.hidden) return;
+        if (silentLoop && silentLoop.paused) silentLoop.play().catch(() => {});
+        if (ctx.state !== 'running') ctx.resume().catch(() => {});
+        if (!unlocked) {
+            unlocked = true;
+            const source = ctx.createBufferSource();
+            source.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
+            source.connect(ctx.destination);
+            source.start(0);
+        }
+    };
     for (const type of ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'keydown', 'click']) {
         document.addEventListener(type, resume, { capture: true, passive: true });
     }
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden) ctx.suspend(); else resume();
+        if (document.hidden) {
+            ctx.suspend();
+            if (silentLoop) silentLoop.pause();
+        } else {
+            resume();
+        }
     });
     resume();
 });
