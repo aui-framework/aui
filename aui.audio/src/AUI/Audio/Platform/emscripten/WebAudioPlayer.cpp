@@ -48,30 +48,50 @@ EM_JS(void, aui_webaudio_start, (int sampleRate, int frames), {
     if (Module.auiAudio) return;
     const AudioContextImpl = window.AudioContext || window.webkitAudioContext;
     if (!AudioContextImpl) return;
-    let ctx;
-    try {
-        ctx = new AudioContextImpl({ sampleRate: sampleRate, latencyHint: 'interactive' });
-    } catch (e) {
-        ctx = new AudioContextImpl();   // older Safari: no options; the browser resamples
-    }
-    const node = ctx.createScriptProcessor(frames, 0, 2);
-    node.onaudioprocess = (e) => {
-        const out = e.outputBuffer;
-        const n = out.length;
-        const ptr = _aui_webaudio_render(n) >> 2;
-        const left = out.getChannelData(0);
-        const right = out.getChannelData(1);
-        const heap = HEAPF32;
-        for (let i = 0; i < n; ++i) {
-            left[i] = heap[ptr + 2 * i];
-            right[i] = heap[ptr + 2 * i + 1];
+
+    // Module.auiAudio stays the same object (pages keep it, e.g. for Media Session play/pause); its ctx, node and gain
+    // are replaced when the context has to be created anew
+    const audio = Module.auiAudio = { ctx: null, node: null, gain: null };
+    const log = (what) => console.log('[WebAudio] ' + what + ': ' + audio.ctx.state + ', ' + audio.ctx.sampleRate + ' Hz');
+    let unlocked = false;
+    const create = () => {
+        if (audio.ctx) {
+            audio.node.onaudioprocess = null;
+            audio.ctx.onstatechange = null;
+            audio.ctx.close().catch(() => {});
         }
+        let ctx;
+        try {
+            ctx = new AudioContextImpl({ sampleRate: sampleRate, latencyHint: 'interactive' });
+        } catch (e) {
+            ctx = new AudioContextImpl();   // older Safari: no options; the browser resamples
+        }
+        const node = ctx.createScriptProcessor(frames, 0, 2);
+        node.onaudioprocess = (e) => {
+            const out = e.outputBuffer;
+            const n = out.length;
+            const ptr = _aui_webaudio_render(n) >> 2;
+            const left = out.getChannelData(0);
+            const right = out.getChannelData(1);
+            const heap = HEAPF32;
+            for (let i = 0; i < n; ++i) {
+                left[i] = heap[ptr + 2 * i];
+                right[i] = heap[ptr + 2 * i + 1];
+            }
+        };
+        // through a gain: the sound fades out before the context is suspended and in after it resumes, a hard stop
+        // mid-buffer cracks
+        const gain = ctx.createGain();
+        node.connect(gain);
+        gain.connect(ctx.destination);
+        audio.ctx = ctx;
+        audio.node = node;
+        audio.gain = gain;
+        unlocked = false;   // a new context is unlocked by a gesture of its own
+        log('created');
+        ctx.onstatechange = () => log('state');
     };
-    node.connect(ctx.destination);
-    Module.auiAudio = { ctx: ctx, node: node };
-    const log = (what) => console.log('[WebAudio] ' + what + ': ' + ctx.state + ', ' + ctx.sampleRate + ' Hz');
-    log('created');
-    ctx.onstatechange = () => log('state');
+    create();
 
     // iOS: Web Audio obeys the ring/silent switch (media does not), so with the switch on silent there is no sound at
     // all. 'session': Safari 17+ lets the page declare itself media (navigator.audioSession); 'element': older iOS
@@ -81,10 +101,13 @@ EM_JS(void, aui_webaudio_start, (int sampleRate, int frames), {
     const isIos = /iPhone|iPad|iPod/.test(navigator.userAgent) || (navigator.maxTouchPoints > 1 && /Macintosh/.test(navigator.userAgent));
     const mode = Module.auiAudioSession || (navigator.audioSession ? 'session' : 'off');
     console.log('[WebAudio] ios: ' + isIos + ', navigator.audioSession: ' + typeof navigator.audioSession + ', mode: ' + mode);
-    let silentLoop = null;
-    if (mode === 'session' && navigator.audioSession) {
+    const declareSession = () => {
+        if (mode !== 'session' || !navigator.audioSession) return;
         try { navigator.audioSession.type = 'playback'; } catch (e) { console.log('[WebAudio] audioSession: ' + e); }
-    } else if (mode === 'element') {
+    };
+    declareSession();
+    let silentLoop = null;
+    if (mode === 'element') {
         silentLoop = document.createElement('audio');
         silentLoop.setAttribute('x-webkit-airplay', 'deny');
         silentLoop.preload = 'auto';
@@ -101,31 +124,71 @@ EM_JS(void, aui_webaudio_start, (int sampleRate, int frames), {
         silentLoop.src = URL.createObjectURL(new Blob([wav], { type: 'audio/wav' }));
     }
 
+    const FADE = 0.015;   // s, time constant of the fades (~50 ms to silence)
+    const fadeTo = (value) => {
+        const g = audio.gain.gain;
+        const now = audio.ctx.currentTime;
+        g.cancelScheduledValues(now);
+        g.setValueAtTime(g.value, now);
+        g.setTargetAtTime(value, now, FADE);
+    };
+
+    // iOS Safari leaves a context that was put to background 'interrupted' (or 'suspended' with resume() never
+    // settling): it does not come back by itself, so a context that is not running some time after resume() is replaced
+    let staleTimer = null;
+    const checkRunning = () => {
+        clearTimeout(staleTimer);
+        staleTimer = setTimeout(() => {
+            if (document.hidden || audio.ctx.state === 'running') return;
+            console.log('[WebAudio] the context did not resume (' + audio.ctx.state + '): creating a new one');
+            create();
+            resume();
+        }, 400);
+    };
+
     // browsers start the context only from a user gesture; older iOS also wants a sound started inside that gesture
-    let unlocked = false;
     const resume = () => {
         if (document.hidden) return;
+        if (audio.ctx.state === 'closed' || audio.ctx.state === 'interrupted') create();
         if (silentLoop && silentLoop.paused) silentLoop.play().catch(() => {});
-        if (ctx.state !== 'running') ctx.resume().catch(() => {});
+        if (audio.ctx.state !== 'running') {
+            declareSession();
+            audio.gain.gain.setValueAtTime(0, audio.ctx.currentTime);
+            audio.ctx.resume().catch(() => {});
+            checkRunning();
+        }
+        fadeTo(1);
         if (!unlocked) {
             unlocked = true;
-            const source = ctx.createBufferSource();
-            source.buffer = ctx.createBuffer(1, 1, ctx.sampleRate);
-            source.connect(ctx.destination);
+            const source = audio.ctx.createBufferSource();
+            source.buffer = audio.ctx.createBuffer(1, 1, audio.ctx.sampleRate);
+            source.connect(audio.ctx.destination);
             source.start(0);
         }
     };
     for (const type of ['pointerdown', 'pointerup', 'touchstart', 'touchend', 'mousedown', 'keydown', 'click']) {
         document.addEventListener(type, resume, { capture: true, passive: true });
     }
+    let suspendTimer = null;
+    const hide = () => {
+        clearTimeout(staleTimer);
+        if (silentLoop) silentLoop.pause();
+        if (audio.ctx.state !== 'running') return;
+        // fade out first, suspend once it is silent
+        fadeTo(0);
+        clearTimeout(suspendTimer);
+        suspendTimer = setTimeout(() => {
+            if (document.hidden) audio.ctx.suspend().catch(() => {});
+        }, FADE * 5 * 1000);
+    };
     document.addEventListener('visibilitychange', () => {
-        if (document.hidden) {
-            ctx.suspend();
-            if (silentLoop) silentLoop.pause();
-        } else {
-            resume();
-        }
+        if (document.hidden) hide();
+        else resume();
     });
+    window.addEventListener('pagehide', hide);
+    // back from the bfcache or from the app switcher: visibilitychange may not come on iOS
+    window.addEventListener('pageshow', resume);
+    window.addEventListener('focus', resume);
     resume();
 });
 // clang-format on
