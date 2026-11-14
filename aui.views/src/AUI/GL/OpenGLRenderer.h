@@ -207,6 +207,9 @@ public:
     
     uint32_t getDefaultFb() const noexcept;
     void bindTemporaryVao() const noexcept;
+
+private:
+    bool mDrawingToStencil = false;
 };
 
 

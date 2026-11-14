@@ -356,11 +356,13 @@ void SoftwareRenderer::setBlending(Blending blending) {
 }
 
 void SoftwareRenderer::pushMaskBefore() {
+    mInPushMask = true;
     mDrawingToStencil = true;
     mDrawingStencilDirection = INCREASE;
 }
 
 void SoftwareRenderer::pushMaskAfter() {
+    mInPushMask = false;
     mDrawingToStencil = false;
     mStencilDepth += 1;
 }
@@ -371,6 +373,7 @@ void SoftwareRenderer::popMaskBefore() {
 }
 
 void SoftwareRenderer::popMaskAfter() {
+    mInPushMask = false;
     mDrawingToStencil = false;
     mStencilDepth -= 1;
 }
