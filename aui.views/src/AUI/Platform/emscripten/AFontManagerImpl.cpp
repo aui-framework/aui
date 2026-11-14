@@ -12,6 +12,8 @@
 #include <AUI/Platform/AFontManager.h>
 #include <AUI/Font/FreeType.h>
 #include <AUI/Logging/ALogger.h>
+#include <AUI/IO/APath.h>
+#include <algorithm>
 
 AFontManager::AFontManager():
     mFreeType(_new<FreeType>()),
@@ -20,9 +22,24 @@ AFontManager::AFontManager():
 }
 
 AVector<AFontManager::FallbackCandidate> AFontManager::fallbackCandidates() {
-    // Emscripten has no CJK-capable system font; keep the fallback pool empty.
-    ALogger::warn("Font") << "CJK fallback discovery is not implemented on this platform";
-    return {};
+    // The browser gives no access to the system fonts. An application that needs glyphs its fonts lack (i.e., «», ♥,
+    // emoji, CJK) preloads fallback fonts into the virtual filesystem, i.e., --preload-file=fonts@/usr/share/fonts;
+    // they are tried in the file name order.
+    const APath dir = "/usr/share/fonts";
+    if (!dir.isDirectoryExists()) {
+        ALogger::warn("Font") << "No fallback fonts: nothing is preloaded to " << dir;
+        return {};
+    }
+    auto fonts = dir.listDir(AFileListFlags::REGULAR_FILES | AFileListFlags::RECURSIVE);
+    std::sort(fonts.begin(), fonts.end());
+    AVector<FallbackCandidate> result;
+    for (const auto& font : fonts) {
+        const auto extension = font.extension().lowercase();
+        if (extension == "ttf" || extension == "otf" || extension == "ttc") {
+            result << FallbackCandidate { .path = font };
+        }
+    }
+    return result;
 }
 
 AString AFontManager::getPathToFont(const AString &font) {

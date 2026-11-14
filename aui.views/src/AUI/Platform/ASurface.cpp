@@ -245,6 +245,11 @@ void ASurface::onPointerPressed(const APointerPressedEvent& event) {
 
         // handle touchscreen scroll
         if (event.pointerIndex.isFinger()) {
+            // any new touch stops the inertia, whichever finger has flung it: the new touch has a pointer index of its
+            // own (on iOS Safari every touch gets a new Touch.identifier), so it would not stop by the index alone
+            mScrolls.erase(std::remove_if(mScrolls.begin(), mScrolls.end(), [](const Scroll& scroll) {
+                return scroll.scroller.isKinetic();
+            }), mScrolls.end());
             if (auto it = std::find_if(
                     mScrolls.begin(), mScrolls.end(),
                     [&](const Scroll& scroll) { return event.pointerIndex == scroll.pointer; });

@@ -152,8 +152,9 @@ struct std::hash<AByteBufferView>
         if (t.data() == nullptr || t.size() == 0) {
             return 0;
         }
-        constexpr size_t FNV_offset_basis = 14695981039346656037ULL;
-        constexpr size_t FNV_prime = 1099511628211ULL;
+        // 32-bit FNV-1a on 32-bit targets (wasm32)
+        constexpr size_t FNV_offset_basis = sizeof(size_t) == 8 ? size_t(14695981039346656037ULL) : size_t(2166136261U);
+        constexpr size_t FNV_prime = sizeof(size_t) == 8 ? size_t(1099511628211ULL) : size_t(16777619U);
 
         size_t hash = FNV_offset_basis;
         for (size_t i = 0; i < t.size(); ++i) {

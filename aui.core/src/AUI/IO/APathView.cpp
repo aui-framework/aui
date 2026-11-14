@@ -396,9 +396,9 @@ bool APathView::isEffectivelyAccessible(AFileAccess flags) const noexcept {
     return euidaccess(toStdString().c_str(), int(flags)) == 0;
 #elif AUI_PLATFORM_ANDROID
     return access(toStdString().c_str(), int(flags)) == 0;
-#elif AUI_PLATFORM_APPLE
+#elif AUI_PLATFORM_APPLE || AUI_PLATFORM_EMSCRIPTEN
     return access(toStdString().c_str(), int(flags)) == 0;
-#elif
+#else
 #error "unimplemented"
 #endif
 }

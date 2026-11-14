@@ -128,6 +128,22 @@ if (ANDROID)
 endif()
 
 aui_link(aui.core PRIVATE ZLIB::ZLIB)
+
+if (AUI_PLATFORM_EMSCRIPTEN)
+    # AUI reports errors with exceptions: emscripten's default (-fignore-exceptions) aborts on the first throw.
+    # Native wasm exceptions are supported by every browser since 2022.
+    target_compile_options(aui.core PUBLIC -fwasm-exceptions -sSUPPORT_LONGJMP=wasm)
+    target_link_options(aui.core PUBLIC
+            -fwasm-exceptions
+            -sSUPPORT_LONGJMP=wasm
+            -sALLOW_MEMORY_GROWTH=1
+            # the default 64 KiB stack is not enough for nested layouts and coroutine frames
+            -sSTACK_SIZE=4MB
+            # APath::getDefaultPath(APPDATA) and friends can be persisted with IDBFS
+            -lidbfs.js
+            "-sEXPORTED_RUNTIME_METHODS=['FS','IDBFS','HEAPF32']"
+    )
+endif()
 add_subdirectory(3rdparty/minizip)
 
 # forward platform info
