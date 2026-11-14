@@ -30,6 +30,7 @@ public:
     }
 
     static constexpr APointerIndex finger(int fingerIndex) {
+        assert(("a finger index is never negative, or it reads as a mouse button", fingerIndex >= 0));
         return APointerIndex(fingerIndex + MAX_BUTTON_VALUE + 1);
     }
 

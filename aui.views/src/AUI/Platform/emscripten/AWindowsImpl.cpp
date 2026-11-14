@@ -263,6 +263,13 @@ namespace {
         return true;
     }
 
+    /// Touch.identifier is any long: Chrome counts fingers from 0, iOS Safari hands out large negative numbers. A negative
+    /// remainder would make APointerIndex a mouse button, and a "button" that is not LBUTTON never emits clicked.
+    APointerIndex fingerOf(const EmscriptenTouchPoint& t) {
+        static constexpr long FINGERS = 64;
+        return APointerIndex::finger(int((t.identifier % FINGERS + FINGERS) % FINGERS));
+    }
+
     /// Touches are fingers: AUI turns them into clicks, drags and kinetic scrolling the same way as on Android.
     /// preventDefault (return true) keeps the browser from scrolling/zooming the page and from emulating mouse events.
     template<typename Handler>
@@ -273,7 +280,7 @@ namespace {
         }
         for (const auto& t : std::span(e->touches, e->numTouches)) {
             if (t.isChanged) {
-                handler(*surface, toPixels(t.clientX, t.clientY), APointerIndex::finger(int(t.identifier % 64)));
+                handler(*surface, toPixels(t.clientX, t.clientY), fingerOf(t));
             }
         }
         return true;
