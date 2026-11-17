@@ -42,23 +42,33 @@ which most static hostings do not provide. Hence:
 - `std::thread` and `std::async(std::launch::async, ...)` throw. Do the work inline under `AUI_PLATFORM_EMSCRIPTEN`.
 
 Heavy work that the browser can do by itself (decoding images, `fetch`, compression streams, a Web Worker of your own)
-does not have to block the frame. `aui::js::promise` (`AUI/Platform/emscripten/JsPromise.h`) makes an `AFuture<double>`
+does not have to block the frame. `aui::js::promise<T>` (`AUI/Platform/emscripten/JsPromise.h`) makes an `AFuture<T>`
 out of a JavaScript promise:
 
 ```cpp
-EM_JS(void, fetchLength, (int id, const char* url), {
-    Module.auiSettle(id, fetch(UTF8ToString(url)).then((r) => r.arrayBuffer()).then((b) => b.byteLength));
+EM_JS(void, fetchBytes, (int id, const char* url), {
+    const u = UTF8ToString(url);
+    Module.auiSettle(id, (signal) => fetch(u, { signal }).then((r) => r.arrayBuffer()));
 });
 
-AFuture<std::size_t> length(AString url) {
+AFuture<AByteBuffer> download(AString url) {
     const auto u = url.toStdString();
-    co_return std::size_t(co_await aui::js::promise([&](int id) { fetchLength(id, u.c_str()); }));
+    return aui::js::promise<AByteBuffer>([&](int id) { fetchBytes(id, u.c_str()); });
 }
 ```
 
-The promise resolves with a number (an integer or a pointer from `_malloc`: pass bigger results through the heap) or
-rejects, then the future fails with AException with the reason as text. The future is settled on the main thread by a
-promise reaction, so do not block on it with `*future`: `co_await` it or subscribe with `onValue`.
+- The promise may resolve with anything JSON can hold plus binary data (`ArrayBuffer`, typed arrays). It arrives as
+  `aui::js::Value` (`AUI/Js/Value.h`), a variant of `Undefined`, `bool`, `double`, AString, AByteBuffer, an array and
+  an object, and `aui::js::Converter<T>` turns it into `T`: numbers, AString, AByteBuffer, `AOptional`, `AVector`,
+  `AMap<AString, T>`, `std::tuple` for an array of a fixed length. `promise<>` gives the Value as it is, `promise<void>`
+  ignores it. A value of another type fails the future with a message that says where: `[2]: expected bytes, got
+  string`.
+- Binary data is copied into the wasm heap once and adopted by AByteBuffer (`AByteBuffer::adopt`), without another
+  copy. What JavaScript allocated is freed by C++ even if nobody waits for the result anymore.
+- `work` may be a function that takes an `AbortSignal`: when the last AFuture is destroyed, the signal is aborted.
+- A rejection fails the future with AException carrying the reason as text.
+- The future is settled on the main thread by a promise reaction, so do not block on it with `*future`: `co_await` it
+  or subscribe with `onValue`.
 
 ## Windowing and input
 
