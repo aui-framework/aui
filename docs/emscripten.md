@@ -41,6 +41,25 @@ which most static hostings do not provide. Hence:
 - `ATimer` is driven by the event loop as well;
 - `std::thread` and `std::async(std::launch::async, ...)` throw. Do the work inline under `AUI_PLATFORM_EMSCRIPTEN`.
 
+Heavy work that the browser can do by itself (decoding images, `fetch`, compression streams, a Web Worker of your own)
+does not have to block the frame. `aui::js::promise` (`AUI/Platform/emscripten/JsPromise.h`) makes an `AFuture<double>`
+out of a JavaScript promise:
+
+```cpp
+EM_JS(void, fetchLength, (int id, const char* url), {
+    Module.auiSettle(id, fetch(UTF8ToString(url)).then((r) => r.arrayBuffer()).then((b) => b.byteLength));
+});
+
+AFuture<std::size_t> length(AString url) {
+    const auto u = url.toStdString();
+    co_return std::size_t(co_await aui::js::promise([&](int id) { fetchLength(id, u.c_str()); }));
+}
+```
+
+The promise resolves with a number (an integer or a pointer from `_malloc`: pass bigger results through the heap) or
+rejects, then the future fails with AException with the reason as text. The future is settled on the main thread by a
+promise reaction, so do not block on it with `*future`: `co_await` it or subscribe with `onValue`.
+
 ## Windowing and input
 
 The window is the page: it always takes the whole `#canvas` and follows the browser window size and the device pixel
