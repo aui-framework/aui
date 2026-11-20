@@ -304,6 +304,42 @@ namespace {
         });
     }
 
+    /// The window loses focus when the tab is switched or hidden, or the browser (on a phone: the whole app) goes to the
+    /// background, as a native window does on X11/Win32 (a game pauses on it). Once per loss: blur and a hidden page
+    /// both come for one.
+    void focusLost() {
+        auto* surface = ASurface::current();
+        if (!surface || !surface->isFocused()) {
+            return;
+        }
+        surface->onFocusLost();
+    }
+
+    void focusAcquired() {
+        auto* surface = ASurface::current();
+        if (!surface || surface->isFocused()) {
+            return;
+        }
+        surface->onFocusAcquired();
+    }
+
+    bool onBlur(int, const EmscriptenFocusEvent*, void*) {
+        focusLost();
+        return false;
+    }
+
+    bool onFocus(int, const EmscriptenFocusEvent*, void*) {
+        focusAcquired();
+        return false;
+    }
+
+    bool onVisibilityChange(int, const EmscriptenVisibilityChangeEvent* e, void*) {
+        if (e->hidden) {
+            focusLost();
+        }
+        return false;
+    }
+
     /// Browser shortcuts (F5, F12, Ctrl+R...) stay with the browser.
     bool isBrowserShortcut(const EmscriptenKeyboardEvent* e, AInput::Key key) {
         return e->ctrlKey || e->metaKey || (key >= AInput::F1 && key <= AInput::F12);
@@ -357,6 +393,9 @@ void AWindowManager::loop() {
         emscripten_set_touchcancel_callback("#canvas", nullptr, false, onTouchEnd);
         emscripten_set_keydown_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, false, onKeyDown);
         emscripten_set_keyup_callback(EMSCRIPTEN_EVENT_TARGET_DOCUMENT, nullptr, false, onKeyUp);
+        emscripten_set_blur_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, onBlur);
+        emscripten_set_focus_callback(EMSCRIPTEN_EVENT_TARGET_WINDOW, nullptr, false, onFocus);
+        emscripten_set_visibilitychange_callback(nullptr, false, onVisibilityChange);
     }
 
 
