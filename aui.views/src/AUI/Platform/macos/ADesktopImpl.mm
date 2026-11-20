@@ -165,6 +165,79 @@ ADesktop::browseForFile(ASurface* parent, const APath& startingLocation, const A
     return AFuture<APath>::fromValue(APath());
 }
 
+AFuture<APath> ADesktop::browseForSaveFile(
+    ASurface* parent, const APath& startingLocation, const AString& suggestedName,
+    const AVector<FileExtension>& extensions) {
+    AUI_NULLSAFE(parent)->blockUserInput();
+    AUI_DEFER { AUI_NULLSAFE(parent)->blockUserInput(false); };
+
+    @autoreleasepool {
+        NSSavePanel* panel = [NSSavePanel savePanel];
+        [panel setCanCreateDirectories:YES];
+
+        if (startingLocation.exists()) {
+            NSString* path = [NSString stringWithUTF8String:startingLocation.c_str()];
+            [panel setDirectoryURL:[NSURL fileURLWithPath:path]];
+        }
+        if (!suggestedName.empty()) {
+            [panel setNameFieldStringValue:[NSString stringWithUTF8String:suggestedName.c_str()]];
+        }
+
+        if (!extensions.empty()) {
+#if AUI_MACOS_SUPPORTS_CONTENTTYPES == 1
+            NSMutableArray<UTType*>* allowedTypes = [NSMutableArray array];
+            for (const auto& ext : extensions) {
+                if (ext.extension == "*") {
+                    [allowedTypes removeAllObjects];
+                    break;
+                }
+                UTType* type =
+                    [UTType typeWithFilenameExtension:[NSString stringWithUTF8String:ext.extension.c_str()]];
+                if (type) {
+                    [allowedTypes addObject:type];
+                }
+            }
+            [panel setAllowedContentTypes:allowedTypes];
+#else
+            NSMutableArray<NSString*>* allowedExtensions = [NSMutableArray array];
+            for (const auto& ext : extensions) {
+                if (ext.extension == "*") {
+                    [allowedExtensions removeAllObjects];
+                    break;
+                }
+                [allowedExtensions addObject:[NSString stringWithUTF8String:ext.extension.c_str()]];
+            }
+            [panel setAllowedFileTypes:allowedExtensions];
+#endif
+        }
+
+        NSWindow* nativeParentWindow = nil;
+        if (auto d = dynamic_cast<AWindow*>(parent)) {
+            nativeParentWindow = static_cast<NSWindow*>(d->nativeHandle());
+        }
+
+        __block NSModalResponse response = NSModalResponseCancel;
+
+        if (nativeParentWindow) {
+            [panel
+                beginSheetModalForWindow:nativeParentWindow
+                       completionHandler:^(NSModalResponse result) {
+                         response = result;
+                         [NSApp stopModal];
+                       }];
+            [NSApp runModalForWindow:panel];
+        } else {
+            response = [panel runModal];
+        }
+
+        if (response == NSModalResponseOK) {
+            return AFuture<APath>::fromValue(APath([[[panel URL] path] UTF8String]));
+        }
+    }
+
+    return AFuture<APath>::fromValue(APath());
+}
+
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {
     NSString* filePath = [NSString stringWithUTF8String:file.c_str()];
 

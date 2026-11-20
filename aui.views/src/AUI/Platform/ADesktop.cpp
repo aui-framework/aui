@@ -10,3 +10,18 @@
  */
 
 #include <AUI/Platform/ADesktop.h>
+#include <AUI/IO/AFileOutputStream.h>
+
+#if !AUI_PLATFORM_EMSCRIPTEN
+// the browser downloads the file instead: emscripten/ADesktopImpl.cpp
+AFuture<APath> ADesktop::saveFile(
+    ASurface* parent, const AString& suggestedName, AByteBuffer contents, const AVector<FileExtension>& extensions) {
+    return browseForSaveFile(parent, {}, suggestedName, extensions)
+        .then([contents = std::move(contents)](const APath& path) {
+            if (!path.empty()) {
+                AFileOutputStream(path).write(contents.data(), contents.size());
+            }
+            return path;
+        });
+}
+#endif
