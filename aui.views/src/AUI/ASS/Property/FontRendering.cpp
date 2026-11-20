@@ -22,7 +22,7 @@ void ass::prop::Property<FontRendering>::applyFor(AView* view){
         return;
     }
     fontView->getFontStyle().fontRendering = mInfo;
-#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS || AUI_PLATFORM_EMSCRIPTEN
     if (fontView->getFontStyle().fontRendering == FontRendering::SUBPIXEL) {
         fontView->getFontStyle().fontRendering = FontRendering::ANTIALIASING;
     }

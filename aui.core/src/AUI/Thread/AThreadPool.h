@@ -100,6 +100,15 @@ public:
     void run(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
     void clear();
     void runLaterTasks();
+
+    /**
+     * @brief Runs the queued tasks on the calling thread until the queues are empty.
+     * @details
+     * For a pool without workers. On emscripten (no pthreads) the global pool has none and the event loop calls this
+     * every frame; a future waited for runs its task right away (AFutureWait::ALLOW_TASK_EXECUTION_IF_NOT_PICKED_UP).
+     */
+    void runQueuedTasks();
+
     static void enqueue(const std::function<void()>& fun, Priority priority = PRIORITY_MEDIUM);
 
     void setWorkersCount(std::size_t workersCount);
@@ -247,18 +256,22 @@ auto AThreadPool::parallel(Iterator begin, Iterator end, Functor&& functor) {
     using ResultType = decltype(std::declval<Functor>()(std::declval<Iterator>(), std::declval<Iterator>()));
     AFutureSet<ResultType> futureSet;
 
-    size_t itemCount = end - begin;
-    size_t affinity = (glm::min) (AThreadPool::global().getTotalWorkerCount(), itemCount);
-    if (affinity == 0)
+    const size_t itemCount = end - begin;
+    if (itemCount == 0) {
         return futureSet;
-    size_t itemsPerThread = itemCount / affinity;
+    }
+    // a pool without workers (i.e., on emscripten) still does the work: in one task, run by the waiting thread or the
+    // event loop
+    const size_t affinity = glm::clamp(getTotalWorkerCount(), size_t(1), itemCount);
+    const size_t itemsPerThread = itemCount / affinity;
 
     for (size_t threadIndex = 0; threadIndex < affinity; ++threadIndex) {
         auto forThreadBegin = begin;
         begin += itemsPerThread;
         auto forThreadEnd = threadIndex + 1 == affinity ? end : begin;
+        // each task gets its own copy: forwarding here moved the functor into the first task only
         futureSet.push_back(
-            *this * [functor = std::forward<Functor>(functor), forThreadBegin, forThreadEnd]() -> decltype(auto) {
+            *this * [functor, forThreadBegin, forThreadEnd]() -> decltype(auto) {
                 return functor(forThreadBegin, forThreadEnd);
             });
     }

@@ -194,6 +194,41 @@ TEST(Threading, PararellWithResult) {
     }
 }
 
+// emscripten has no workers: parallel() returned no futures and did nothing
+TEST(Threading, ParallelWithoutWorkers) {
+    AThreadPool tp(0);
+    AVector<int> ints(100, 1);
+    auto result = tp.parallel(ints.begin(), ints.end(), [](AVector<int>::iterator begin, AVector<int>::iterator end) {
+        for (auto it = begin; it != end; ++it) {
+            *it += 1;
+        }
+        return 0;
+    });
+    ASSERT_EQ(result.size(), 1);
+    result.waitForAll();   // runs the task on this thread
+    for (int v : ints) {
+        ASSERT_EQ(v, 2);
+    }
+}
+
+// the functor was forwarded into the first task: the other tasks got a moved-from copy
+TEST(Threading, ParallelGivesEveryTaskTheFunctor) {
+    AThreadPool tp(4);
+    AVector<int> ints(64, 0);
+    auto result = tp.parallel(ints.begin(), ints.end(),
+                              [tag = AString("tag")](AVector<int>::iterator begin, AVector<int>::iterator end) {
+                                  for (auto it = begin; it != end; ++it) {
+                                      *it = int(tag.length());
+                                  }
+                                  return 0;
+                              });
+    EXPECT_EQ(result.size(), 4);
+    result.waitForAll();
+    for (int v : ints) {
+        ASSERT_EQ(v, 3);
+    }
+}
+
 TEST(Threading, FutureCancellationBeforeExecution) {
     AThreadPool localThreadPool(1);
     std::atomic<size_t> foreignLambdaCallCount = 0;   // wait() may run the second one on this thread

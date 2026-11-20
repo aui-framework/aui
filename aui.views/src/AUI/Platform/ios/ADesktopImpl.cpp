@@ -36,6 +36,13 @@ ADesktop::browseForFile(ASurface* parent,
     };
 }
 
+AFuture<APath> ADesktop::browseForSaveFile(ASurface* parent,
+                                           const APath& startingLocation,
+                                           const AString& suggestedName,
+                                           const AVector<FileExtension>& extensions) {
+    return AFuture<APath>::fromValue(APath());
+}
+
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {
     return nullptr;
 }

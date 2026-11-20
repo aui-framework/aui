@@ -1242,7 +1242,10 @@ function(aui_module AUI_MODULE_NAME)
             endif()
         endif()
     endif()
-    if (CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
+    if (AUI_PLATFORM_EMSCRIPTEN)
+        # llvm-strip --strip-unneeded breaks wasm object files (wasm-opt: "popping from empty stack"); emcc strips the
+        # final .wasm itself
+    elseif (CMAKE_CXX_COMPILER_ID MATCHES "AppleClang")
         add_custom_command(
             TARGET ${AUI_MODULE_NAME}
             POST_BUILD

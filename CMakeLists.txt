@@ -117,11 +117,26 @@ function(define_aui_component AUI_COMPONENT_NAME)
     add_subdirectory("aui.${AUI_COMPONENT_NAME}")
 endfunction()
 
+if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+    # One exception/setjmp model for AUI and every dependency AUI.Boot builds (CMAKE_*_FLAGS are forwarded to them):
+    # native wasm exceptions (aui.core/CMakeLists.txt) can't be linked with emscripten's JS setjmp/longjmp that
+    # freetype and plutovg would get by default ("undefined symbol: emscripten_longjmp").
+    string(APPEND CMAKE_C_FLAGS " -fwasm-exceptions -sSUPPORT_LONGJMP=wasm")
+    string(APPEND CMAKE_CXX_FLAGS " -fwasm-exceptions -sSUPPORT_LONGJMP=wasm")
+endif()
+
 if(AUIB_DISABLE)
     find_package(ZLIB REQUIRED)
 else()
+    unset(_zlib_args)
+    if (CMAKE_SYSTEM_NAME STREQUAL "Emscripten")
+        # the functable stubs of runtime CPU detection produce a wasm that wasm-opt fails to parse
+        # ("popping from empty stack"); wasm has a single instruction set anyway
+        set(_zlib_args CMAKE_ARGS -DWITH_RUNTIME_CPU_DETECTION=OFF)
+    endif()
     auib_import(ZLIB https://github.com/aui-framework/zlib-ng
-                VERSION b583a325937227d7834ae541cf88c1f273da113e)
+                VERSION b583a325937227d7834ae541cf88c1f273da113e
+                ${_zlib_args})
 endif()
 
 # define all components

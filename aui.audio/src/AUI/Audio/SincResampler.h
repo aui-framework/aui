@@ -46,6 +46,8 @@ struct RepeatingCallback {
 //#include "base/gtest_prod_util.h"
 #if defined(_MSC_VER)
 #include <malloc.h>  // for _aligned_malloc
+#else
+#include <cstdlib>   // posix_memalign, free
 #endif
 namespace base {
 inline auto AlignedAlloc(size_t size, size_t alignment) -> void* {
