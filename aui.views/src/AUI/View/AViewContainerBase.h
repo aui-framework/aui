@@ -449,4 +449,17 @@ private:
     void removeViewImpl(const _<AView>& view, std::unique_lock<ASpinlockMutex>& lock);
     void setLayoutImpl(_unique<ALayout> layout, std::unique_lock<ASpinlockMutex>& lock);
     void removeAllViewsImpl(std::unique_lock<ASpinlockMutex>& lock);
+
+    /**
+     * @brief Takes the view out of another container it is in now, before it becomes a child of this one.
+     * @details
+     * Otherwise the view stays among the children of its old container, which, on its death or when it loses its
+     * children, would reset the parent of the view, and every redraw() of the view would go nowhere.
+     */
+    void adoptView(const _<AView>& view, std::unique_lock<ASpinlockMutex>& lock);
+
+    /**
+     * @brief Resets the parent of a child that is leaving, unless the child already belongs to another container.
+     */
+    void releaseView(AView& view) noexcept;
 };
