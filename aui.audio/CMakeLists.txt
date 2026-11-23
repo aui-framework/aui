@@ -39,12 +39,12 @@ endif()
 aui_link(aui.audio PRIVATE Opus::opus)
 
 if (AUI_PLATFORM_IOS OR AUI_PLATFORM_MACOS)
-    auib_use_system_libs_begin()
-    find_library(CoreAudio CoreAudio REQUIRED)
-    find_library(AVFoundation AVFoundation REQUIRED)
-    find_library(AudioToolbox AudioToolbox REQUIRED)
-    auib_use_system_libs_end()
-    aui_link(aui.audio PUBLIC ${CoreAudio} ${AVFoundation} ${AudioToolbox})
+    # -framework instead of find_library: find_library yields an absolute path into the SDK of the machine that built
+    # AUI, which lands in INTERFACE_LINK_LIBRARIES of the exported aui::audio and fails AUI.Boot's validation of
+    # precompiled packages ("depends on hardcoded path .../MacOSX.sdk/.../CoreAudio.framework").
+    target_link_libraries(aui.audio PUBLIC "-framework CoreAudio"
+                                           "-framework AVFoundation"
+                                           "-framework AudioToolbox")
 endif()
 if (AUI_PLATFORM_MACOS)
     target_link_libraries(aui.audio PUBLIC "-framework AppKit"
