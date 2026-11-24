@@ -6,6 +6,8 @@ include(${CMAKE_CURRENT_LIST_DIR}/aui.boot.cmake)
 
 # mid pins its own version of base; the parent's base must win
 auib_import(base ${CMAKE_CURRENT_LIST_DIR}/../base_v0 VERSION v0)
+# imported again, as by another module of mid: still the parent's base
+auib_import(base ${CMAKE_CURRENT_LIST_DIR}/../base_v0 VERSION v0)
 
 add_library(mid STATIC mid.cpp)
 add_library(mid::mid ALIAS mid)
