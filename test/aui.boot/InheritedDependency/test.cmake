@@ -19,7 +19,7 @@ function(vendor_mid_boot)
         elseif (_disabled STREQUAL "delegation")
             string(REPLACE "if (AUIB_PARENT_BOOT_SCRIPT AND EXISTS" "if (FALSE AND EXISTS" _text "${_text}")
         elseif (_disabled STREQUAL "newer")
-            string(REPLACE "set(_auib_script_version 2)" "set(_auib_script_version 1000)" _text "${_text}")
+            string(REPLACE "set(_auib_script_version 3)" "set(_auib_script_version 1000)" _text "${_text}")
         elseif (_disabled STREQUAL "check")
             string(REPLACE "AUI_MODULE_NAME_LOWER IN_LIST AUIB_PARENT_PACKAGES" "FALSE" _text "${_text}")
         endif()
@@ -145,6 +145,23 @@ if (NOT _r STREQUAL "0" OR _out MATCHES "Checking for precompiled package")
     message(FATAL_ERROR "precompiled mid must not be used with OVERRIDE base:\n${_out}")
 endif()
 message(STATUS "OK: precompiled mid is not used with OVERRIDE base")
+
+# An installation of comp with fewer components exists: its config imports base before find_package fails, then comp
+# is rebuilt in the same prefix. base is comp's own import there, not the project's one.
+file(REMOVE_RECURSE ${_cache})
+foreach (_components "a" "a\\;b")
+    file(REMOVE_RECURSE ${_build})
+    file(MAKE_DIRECTORY ${_build})
+    execute_process(COMMAND ${CMAKE_COMMAND} ../comp_project -DAUIB_CACHE_DIR=${_cache} "-DTEST_COMPONENTS=${_components}"
+                    WORKING_DIRECTORY ${_build}
+                    RESULT_VARIABLE _r
+                    OUTPUT_VARIABLE _out
+                    ERROR_VARIABLE _out)
+    if (NOT _r STREQUAL "0")
+        message(FATAL_ERROR "configure of comp with components ${_components} failed:\n${_out}")
+    endif()
+endforeach()
+message(STATUS "OK: comp is rebuilt with more components")
 
 # leave the source tree clean
 file(REMOVE_RECURSE ${_cache} ${_build} ${_mid_boot})

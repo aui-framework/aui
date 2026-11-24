@@ -1021,7 +1021,7 @@ endif()
 # Every project vendors its own copy of aui.boot.cmake, but the whole dependency tree must agree on how packages are
 # resolved and reused (see OVERRIDE), so the newest copy in the tree is used. Increment _auib_script_version on every
 # change of this file's behaviour; copies without it are older than any copy with it.
-set(_auib_script_version 2)
+set(_auib_script_version 3)
 get_filename_component(_auib_this_script "${CMAKE_CURRENT_LIST_FILE}" REALPATH)
 
 # A dependency's build: the parent passes its copy.
@@ -2315,7 +2315,14 @@ function(auib_import AUI_MODULE_NAME URL)
                     list(APPEND FORWARDED_LIBS "-D${_entry}")
                     if (_entry MATCHES "^(.+)_ROOT=")
                         string(TOLOWER "${CMAKE_MATCH_1}" _name_lower)
-                        list(APPEND _parent_packages ${_name_lower})
+                        # The config of an existing installation of this very package may have imported its own
+                        # dependencies before find_package failed (i.e., a component is missing). These are the
+                        # package's own imports, not the parent's ones.
+                        get_property(_imported_by GLOBAL PROPERTY AUIB_IMPORTED_BY_${_name_lower})
+                        string(TOLOWER "${_imported_by}" _imported_by)
+                        if (NOT _imported_by STREQUAL AUI_MODULE_NAME_LOWER)
+                            list(APPEND _parent_packages ${_name_lower})
+                        endif()
                     endif()
                 endforeach()
                 # the child uses these to reuse OVERRIDE packages and to reject its own copies of the other ones
