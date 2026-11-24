@@ -432,13 +432,32 @@ Instead of building the dependency from sources, try to import the precompiled b
 
 Overrides `BUILD_SHARED_LIBS` of the dependency, specifying `SHARED` or `STATIC` linking.
 
-#### REQUIRES
+#### REQUIRES { #AUIB_REQUIRES }
 
-List of the package dependencies. Every dependency's root variable (${DEPENDENCY}_ROOT) is checked for existence and
-validness, then it passed directly to `auib_import`ed target (via ${DEPENDENCY}_ROOT).
+List of the packages, already imported by your project, that the dependency is built against. Every dependency's root
+variable (${DEPENDENCY}_ROOT) is checked for existence and validness, then it passed directly to `auib_import`ed target
+(via ${DEPENDENCY}_ROOT).
 
-It is useful when some package root is implicitly defined in your project somewhere and aui.boot does not know about it,
-thus does not forward.
+For a dependency that is not imported as a subdirectory, REQUIRES also means:
+
+- `auib_import` of a REQUIRES package inside the dependency's build uses your project's build of that package instead
+  of the version the dependency asks for. The dependency and your project link the same binary of it.
+- Builds of REQUIRES packages are a part of the dependency's [BUILD_SPECIFIER](#AUIB_CACHE): when you update a REQUIRES
+  package (i.e., bump AUI), the dependency is rebuilt instead of reusing a binary compiled against the old version.
+
+```cmake
+auib_import(aui https://github.com/aui-framework/aui VERSION ${AUI_VERSION})
+# aui.spine is a library on top of AUI: build it against the same AUI
+auib_import(aui.spine https://github.com/aui-framework/aui.spine VERSION ${AUI_SPINE_VERSION} REQUIRES aui)
+```
+
+If the dependency's build imports a package your project has already imported, but it is not listed in REQUIRES, the
+configure fails: another copy of the package would mix two ABIs of it in one binary. Packages your project imports as
+subdirectories are not checked.
+
+A dependency imported as a subdirectory sees your project's targets directly, so REQUIRES packages imported as
+subdirectories are skipped for it. A prebuilt dependency can't be built against a package imported as a subdirectory:
+import both as subdirectories.
 
 ## Variables { #AUIB_VARIABLES }
 
@@ -655,6 +674,24 @@ Another case is `OpenSSL` between `aui.crypt` and `aui.curl`:
 ![image](https://user-images.githubusercontent.com/19491414/153878364-b214f167-8243-400c-93af-a227af2f961b.png)
 
 Because `libcurl` is not a part of AUI, it uses standard CMake's function to find `OpenSSL` (`find_package`).
+
+### Case 3
+
+A dependency imports a package with `auib_import` itself, for example `aui.spine` imports `aui` of a version it was
+developed with. Your project imports `aui` of another version, then `aui.spine`. To build `aui.spine` against your `aui`,
+pass it via [REQUIRES](#AUIB_REQUIRES):
+
+```cmake
+auib_import(aui.spine https://github.com/aui-framework/aui.spine VERSION ... REQUIRES aui)
+```
+
+Without that, `aui.spine` would be compiled against its own copy of `aui`, and the layout of AUI classes it shares with
+your project (i.e., `AView`) would differ, which crashes at runtime. AUI.Boot rejects such a configuration.
+
+Inside a dependency's build, AUI.Boot uses `aui.boot.cmake` of your project instead of the copy vendored by the
+dependency, so the whole dependency tree resolves packages the same way. A dependency whose vendored copy predates this
+behaviour still builds its own copy of a REQUIRES package; AUI.Boot detects that after configuring the dependency and
+fails, asking to update `aui.boot.cmake` in that dependency.
 
 ## Producing packages with dependencies managed by AUI Boot { #AUIB_PRODUCING_PACKAGES }
 
@@ -965,6 +1002,19 @@ endif()
 # ---- End CLI mode ------------------------------------------------------------
 
 # The rest of this file is only for include() mode (project context).
+
+# Inside a dependency's build, use the aui.boot.cmake of the root project instead of the copy vendored by the dependency:
+# the copies may be of different versions, and the whole dependency tree must agree on how packages are resolved and
+# reused (see REQUIRES).
+if (AUIB_PARENT_BOOT_SCRIPT AND EXISTS "${AUIB_PARENT_BOOT_SCRIPT}")
+    get_filename_component(_auib_this_script "${CMAKE_CURRENT_LIST_FILE}" REALPATH)
+    get_filename_component(_auib_parent_script "${AUIB_PARENT_BOOT_SCRIPT}" REALPATH)
+    if (NOT _auib_this_script STREQUAL _auib_parent_script)
+        include("${AUIB_PARENT_BOOT_SCRIPT}")
+        return()
+    endif()
+endif()
+set_property(GLOBAL PROPERTY AUIB_BOOT_SCRIPT "${CMAKE_CURRENT_LIST_FILE}")
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
@@ -1359,6 +1409,21 @@ function(_auib_precompiled_archive_name _output_var _project_name)
     set(_tmp "${_project_name}-${AUI_TARGET_TRIPLET}-${SHARED_OR_STATIC}-${CMAKE_BUILD_TYPE}")
     string(TOLOWER ${_tmp} _tmp)
     set(${_output_var} ${_tmp} PARENT_SCOPE)
+endfunction()
+
+function(_auib_split_inherited_entry _entry _name_var _prefix_var)
+    string(FIND "${_entry}" "=" _pos)
+    string(SUBSTRING "${_entry}" 0 ${_pos} _name)
+    math(EXPR _pos "${_pos} + 1")
+    string(SUBSTRING "${_entry}" ${_pos} -1 _prefix)
+    set(${_name_var} "${_name}" PARENT_SCOPE)
+    set(${_prefix_var} "${_prefix}" PARENT_SCOPE)
+endfunction()
+
+# BUILD_SPECIFIER without the "/deps: ..." part.
+function(_auib_build_specifier_base _specifier _output_var)
+    string(REGEX REPLACE "/deps: .*$" "" _base "${_specifier}")
+    set(${_output_var} "${_base}" PARENT_SCOPE)
 endfunction()
 
 macro(_auib_try_find)
@@ -1791,26 +1856,6 @@ function(auib_import AUI_MODULE_NAME URL)
             "${multiValueArgs}" ${ARGN} )
 
 
-    # check for dependencies
-    foreach (_dep ${AUIB_IMPORT_REQUIRES})
-        set(_dep_root_var ${_dep}_ROOT)
-        if (NOT DEFINED ${_dep_root_var})
-            message(FATAL_ERROR "${AUI_MODULE_NAME} requires ${_dep}, but it's not available (${_dep_root_var} is not set)")
-        endif()
-        set(_dep_root_value ${${_dep_root_var}})
-        set(_dep_root_value_installed ${_dep_root_value}/INSTALLED)
-        if (NOT EXISTS ${_dep_root_value_installed})
-            message(FATAL_ERROR "${AUI_MODULE_NAME} requires ${_dep}, but it's not available (${_dep_root_value_installed} does not exist)")
-        endif()
-
-        # add it to AUI_BOOT_ROOT_ENTRIES if needed
-        get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
-        list(JOIN AUI_BOOT_ROOT_ENTRIES , AUI_BOOT_ROOT_ENTRIES)
-        if (NOT "${AUI_BOOT_ROOT_ENTRIES}" MATCHES ".*${_dep_root_var}.*")
-            set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${_dep_root_var}=${_dep_root_value}")
-        endif ()
-    endforeach()
-
     if (AUIB_IMPORT_ARCHIVE AND AUIB_IMPORT_VERSION)
         message(FATAL_ERROR "ARCHIVE and VERSION arguments are incompatible")
     endif()
@@ -1821,6 +1866,34 @@ function(auib_import AUI_MODULE_NAME URL)
     else()
         set(DEP_ADD_SUBDIRECTORY FALSE)
     endif()
+
+    # check for dependencies
+    foreach (_dep ${AUIB_IMPORT_REQUIRES})
+        set(_dep_root_var ${_dep}_ROOT)
+        set(_dep_root_value ${${_dep_root_var}})
+        set(_dep_root_value_installed ${_dep_root_value}/INSTALLED)
+        if (DEP_ADD_SUBDIRECTORY)
+            # a subdirectory sees the parent's targets directly; the package may be a subdirectory as well
+            if (NOT DEFINED ${_dep_root_var} OR NOT EXISTS ${_dep_root_value_installed})
+                continue()
+            endif()
+        else()
+            if (NOT DEFINED ${_dep_root_var})
+                message(FATAL_ERROR "${AUI_MODULE_NAME} requires ${_dep}, but it's not available (${_dep_root_var} is not set)")
+            endif()
+            if (NOT EXISTS ${_dep_root_value_installed})
+                message(FATAL_ERROR "${AUI_MODULE_NAME} requires ${_dep}, but it's not available (${_dep_root_value_installed} does not exist). "
+                        "If ${_dep} is imported as a subdirectory, import ${AUI_MODULE_NAME} as a subdirectory as well.")
+            endif()
+        endif()
+
+        # add it to AUI_BOOT_ROOT_ENTRIES if needed
+        get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
+        list(JOIN AUI_BOOT_ROOT_ENTRIES , AUI_BOOT_ROOT_ENTRIES)
+        if (NOT "${AUI_BOOT_ROOT_ENTRIES}" MATCHES ".*${_dep_root_var}.*")
+            set_property(GLOBAL APPEND PROPERTY AUI_BOOT_ROOT_ENTRIES "${_dep_root_var}=${_dep_root_value}")
+        endif ()
+    endforeach()
 
     set(AUI_MODULE_PREFIX ${AUI_MODULE_NAME_LOWER})
 
@@ -1872,29 +1945,91 @@ function(auib_import AUI_MODULE_NAME URL)
         set(CMAKE_POSITION_INDEPENDENT_CODE ON) # -fPIC required on linux
     endif()
 
+    # REQUIRES packages are passed to the dependency's build and replace its own imports of them (see
+    # AUIB_INHERITED_PACKAGES), so the binary depends on their exact builds. A subdirectory sees the parent's targets
+    # directly and has no binary of its own.
+    unset(_inherited)
+    if (NOT DEP_ADD_SUBDIRECTORY)
+        foreach (_dep ${AUIB_IMPORT_REQUIRES})
+            list(APPEND _inherited "${_dep}=${${_dep}_ROOT}")
+        endforeach()
+    endif()
+
     # [[BUILD_SPECIFIER]]
     set(BUILD_SPECIFIER "${TAG_OR_HASH}/${AUI_TARGET_TRIPLET}-${CMAKE_BUILD_TYPE}-${SHARED_OR_STATIC}/${AUIB_IMPORT_CMAKE_ARGS}")
     string(REPLACE ";" " " BUILD_SPECIFIER "${BUILD_SPECIFIER}")
+
+    # each REQUIRES package is identified by its own BUILD_SPECIFIER_HASH, so the specifier is transitive
+    if (_inherited)
+        set(_deps_specifier "")
+        foreach (_entry ${_inherited})
+            _auib_split_inherited_entry("${_entry}" _dep_name _dep_prefix)
+            get_filename_component(_dep_hash "${_dep_prefix}" NAME)
+            string(APPEND _deps_specifier " ${_dep_name}@${_dep_hash}")
+        endforeach()
+        set(BUILD_SPECIFIER "${BUILD_SPECIFIER}/deps:${_deps_specifier}")
+    endif()
 
     # convert BUILD_SPECIFIER to hash; on windows msvc path length restricted by 260 chars
     string(MD5 BUILD_SPECIFIER_HASH ${BUILD_SPECIFIER})
     # [[BUILD_SPECIFIER]]
 
-    set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER_HASH}")
-
-    file(WRITE ${DEP_INSTALL_PREFIX}/BUILD_SPECIFIER ${BUILD_SPECIFIER})
-
     if (AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER)
-        if (NOT "${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}" STREQUAL "${BUILD_SPECIFIER}")
+        # The producer's deps may differ from ours, so only the part that describes the package itself is compared.
+        _auib_build_specifier_base("${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}" _expected_base)
+        _auib_build_specifier_base("${BUILD_SPECIFIER}" _actual_base)
+        if (NOT "${_expected_base}" STREQUAL "${_actual_base}")
             message(FATAL_ERROR "Build specifier mismatch. This can be caused by a stale cache. Expected: \"${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}\", got: \"${BUILD_SPECIFIER}\". Try cleaning the CMake cache.")
         endif ()
+        if (AUIB_IMPORT_IMPORTED_FROM_CONFIG)
+            # reuse the exact build the producer was linked with
+            set(BUILD_SPECIFIER "${AUIB_IMPORT_EXPECTED_BUILD_SPECIFIER}")
+            string(MD5 BUILD_SPECIFIER_HASH ${BUILD_SPECIFIER})
+        endif()
     endif()
+
+    set(DEP_INSTALL_PREFIX "${AUIB_CACHE_DIR}/prefix/${AUI_MODULE_NAME_LOWER}/${BUILD_SPECIFIER_HASH}")
 
     if (AUIB_IMPORT_PRECOMPILED_URL_PREFIX)
         if (EXISTS ${AUIB_IMPORT_PRECOMPILED_URL_PREFIX})
             # local file
             set(DEP_INSTALL_PREFIX ${AUIB_IMPORT_PRECOMPILED_URL_PREFIX})
         endif()
+    endif()
+
+    # Inside a dependency's build: a package the parent passed via REQUIRES replaces the version requested here.
+    # Otherwise the dependency would be compiled against its own copy, and linking it to the parent would mix two ABIs
+    # of the same package.
+    unset(_inherited_prefix)
+    if (AUI_BOOT_INSIDE AND NOT DEP_ADD_SUBDIRECTORY)
+        foreach (_entry ${AUIB_INHERITED_PACKAGES})
+            _auib_split_inherited_entry("${_entry}" _dep_name _dep_prefix)
+            string(TOLOWER "${_dep_name}" _dep_name)
+            if (_dep_name STREQUAL AUI_MODULE_NAME_LOWER)
+                set(_inherited_prefix "${_dep_prefix}")
+            endif()
+        endforeach()
+        # an import replayed from a package config takes the producer's exact build (see EXPECTED_BUILD_SPECIFIER above)
+        if (NOT _inherited_prefix AND NOT AUIB_IMPORT_IMPORTED_FROM_CONFIG
+                AND AUI_MODULE_NAME_LOWER IN_LIST AUIB_PARENT_PACKAGES)
+            message(FATAL_ERROR "${AUIB_PARENT_IMPORTING} imports ${AUI_MODULE_NAME}, which the parent project has "
+                    "already imported, but the parent did not pass it. Building another copy of ${AUI_MODULE_NAME} "
+                    "would mix two ABIs of it in one binary. Add REQUIRES ${AUI_MODULE_NAME} to "
+                    "auib_import(${AUIB_PARENT_IMPORTING} ...) in the parent project.")
+        endif()
+    endif()
+    if (_inherited_prefix)
+        if (NOT EXISTS "${_inherited_prefix}/INSTALLED")
+            message(FATAL_ERROR "${AUI_MODULE_NAME} is provided by the parent project, but ${_inherited_prefix}/INSTALLED does not exist")
+        endif()
+        set(DEP_INSTALL_PREFIX "${_inherited_prefix}")
+        get_filename_component(BUILD_SPECIFIER_HASH "${_inherited_prefix}" NAME)
+        if (EXISTS "${_inherited_prefix}/BUILD_SPECIFIER")
+            file(READ "${_inherited_prefix}/BUILD_SPECIFIER" BUILD_SPECIFIER)
+        endif()
+        message(STATUS "${AUI_MODULE_NAME}: using the build provided by the parent project (${BUILD_SPECIFIER}) instead of ${TAG_OR_HASH}")
+    else()
+        file(WRITE ${DEP_INSTALL_PREFIX}/BUILD_SPECIFIER ${BUILD_SPECIFIER})
     endif()
 
 
@@ -2058,9 +2193,23 @@ function(auib_import AUI_MODULE_NAME URL)
 
                 get_property(AUI_BOOT_ROOT_ENTRIES GLOBAL PROPERTY AUI_BOOT_ROOT_ENTRIES)
                 unset(FORWARDED_LIBS)
+                unset(_parent_packages)
                 foreach (_entry ${AUI_BOOT_ROOT_ENTRIES})
                     list(APPEND FORWARDED_LIBS "-D${_entry}")
+                    if (_entry MATCHES "^(.+)_ROOT=")
+                        string(TOLOWER "${CMAKE_MATCH_1}" _name_lower)
+                        list(APPEND _parent_packages ${_name_lower})
+                    endif()
                 endforeach()
+                # the child uses these to reuse REQUIRES packages and to reject its own copies of the other ones
+                string(REPLACE ";" "\\;" _inherited_arg "${_inherited}")
+                string(REPLACE ";" "\\;" _parent_packages "${_parent_packages}")
+                get_property(_boot_script GLOBAL PROPERTY AUIB_BOOT_SCRIPT)
+                list(APPEND FORWARDED_LIBS
+                        "-DAUIB_PARENT_BOOT_SCRIPT=${_boot_script}"
+                        "-DAUIB_INHERITED_PACKAGES=${_inherited_arg}"
+                        "-DAUIB_PARENT_PACKAGES=${_parent_packages}"
+                        "-DAUIB_PARENT_IMPORTING=${AUI_MODULE_NAME}")
                 set(FINAL_CMAKE_ARGS
                         -DAUI_BOOT=TRUE
                         -DAUI_BOOT_INSIDE=TRUE
@@ -2190,6 +2339,29 @@ function(auib_import AUI_MODULE_NAME URL)
                     if (NOT STATUS_CODE EQUAL 0)
                         message(FATAL_ERROR "CMake configure failed: ${STATUS_CODE}\nnote: check logs in ${DEP_INSTALL_PREFIX}")
                     endif()
+                endif()
+
+                # An aui.boot.cmake vendored by the dependency that predates REQUIRES inheritance builds its own copies
+                # of REQUIRES packages. Check that the dependency has really been configured with ours.
+                if (_inherited AND EXISTS "${DEP_BINARY_DIR}/CMakeCache.txt")
+                    file(STRINGS "${DEP_BINARY_DIR}/CMakeCache.txt" _child_roots REGEX "^[^:]+_ROOT:FILEPATH=")
+                    foreach (_entry ${_inherited})
+                        _auib_split_inherited_entry("${_entry}" _dep_name _dep_prefix)
+                        string(TOLOWER "${_dep_name}" _dep_name)
+                        foreach (_line ${_child_roots})
+                            if (NOT _line MATCHES "^(.+)_ROOT:FILEPATH=(.*)$")
+                                continue()
+                            endif()
+                            string(TOLOWER "${CMAKE_MATCH_1}" _child_name)
+                            set(_child_prefix "${CMAKE_MATCH_2}")
+                            if (_child_name STREQUAL _dep_name AND NOT _child_prefix STREQUAL _dep_prefix)
+                                message(FATAL_ERROR "${AUI_MODULE_NAME} has been configured with its own ${_dep_name} "
+                                        "(${_child_prefix}) instead of the one passed via REQUIRES (${_dep_prefix}). "
+                                        "${AUI_MODULE_NAME} probably vendors an old aui.boot.cmake which does not support "
+                                        "REQUIRES inheritance: update aui.boot.cmake in ${AUI_MODULE_NAME}.")
+                            endif()
+                        endforeach()
+                    endforeach()
                 endif()
 
                 message(STATUS "Building ${AUI_MODULE_NAME}")

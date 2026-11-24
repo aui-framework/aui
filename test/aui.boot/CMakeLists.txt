@@ -67,6 +67,7 @@ else()
     define_aui_boot_test(ImportAUIDependency)
     define_aui_boot_test(Tests)
     define_aui_boot_test(BuildSharedLibsAddSubdirectory)
+    define_aui_boot_test(InheritedDependency)
 endif()
 
 # github ci/cd  could not handle this test for unknown reason
