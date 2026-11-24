@@ -442,7 +442,7 @@ For a dependency that is not imported as a subdirectory, REQUIRES also means:
 
 - `auib_import` of a REQUIRES package inside the dependency's build uses your project's build of that package instead
   of the version the dependency asks for. The dependency and your project link the same binary of it.
-- Builds of REQUIRES packages are a part of the dependency's [BUILD_SPECIFIER](#AUIB_CACHE): when you update a REQUIRES
+- Builds of REQUIRES packages are a part of the dependency's [build specifier](#AUIB_CACHE): when you update a REQUIRES
   package (i.e., bump AUI), the dependency is rebuilt instead of reusing a binary compiled against the old version.
 
 ```cmake
