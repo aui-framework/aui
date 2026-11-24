@@ -1,0 +1,8 @@
+auib_import(base "@BASE_DIR@" VERSION v0 IMPORTED_FROM_CONFIG)
+
+foreach (_component ${comp_FIND_COMPONENTS})
+    if (NOT EXISTS ${CMAKE_CURRENT_LIST_DIR}/components/${_component}.component)
+        set(comp_FOUND FALSE)
+        set(comp_NOT_FOUND_MESSAGE "component ${_component} is not installed")
+    endif()
+endforeach()
