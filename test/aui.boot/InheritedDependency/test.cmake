@@ -18,10 +18,14 @@ function(vendor_mid_boot)
             string(REPLACE "foreach (_entry \${AUIB_INHERITED_PACKAGES})" "foreach (_entry \${AUIB_DISABLED})" _text "${_text}")
         elseif (_disabled STREQUAL "delegation")
             string(REPLACE "if (AUIB_PARENT_BOOT_SCRIPT AND EXISTS" "if (FALSE AND EXISTS" _text "${_text}")
+        elseif (_disabled STREQUAL "newer")
+            string(REPLACE "set(_auib_script_version 1)" "set(_auib_script_version 1000)" _text "${_text}")
         elseif (_disabled STREQUAL "check")
             string(REPLACE "AUI_MODULE_NAME_LOWER IN_LIST AUIB_PARENT_PACKAGES" "FALSE" _text "${_text}")
         endif()
     endforeach()
+    # reached only if this copy is the one in use
+    string(APPEND _text "\nmessage(STATUS \"mid's aui.boot.cmake is in use\")\nset_property(GLOBAL PROPERTY MID_BOOT_IN_USE TRUE)\n")
     file(WRITE ${_mid_boot} "${_text}")
 endfunction()
 
@@ -74,6 +78,15 @@ if (_r STREQUAL "0" OR NOT _out MATCHES "import mid as a[ \n]+subdirectory as we
     message(FATAL_ERROR "configure with base as a subdirectory and prebuilt mid must fail:\n${_out}")
 endif()
 message(STATUS "OK: prebuilt mid with base as a subdirectory fails")
+
+# mid's copy is newer than the project's one: mid's build keeps it
+vendor_mid_boot(newer)
+file(REMOVE_RECURSE ${_cache})
+configure_project(v2)
+if (NOT _r STREQUAL "0" OR NOT _out MATCHES "mid's aui.boot.cmake is in use")
+    message(FATAL_ERROR "mid's newer aui.boot.cmake must be used in its build:\n${_out}")
+endif()
+message(STATUS "OK: newer aui.boot.cmake in mid is kept")
 
 # mid's copy predates REQUIRES: it builds its own base, which must be detected
 vendor_mid_boot(inheritance delegation check)

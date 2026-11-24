@@ -688,10 +688,11 @@ auib_import(aui.spine https://github.com/aui-framework/aui.spine VERSION ... REQ
 Without that, `aui.spine` would be compiled against its own copy of `aui`, and the layout of AUI classes it shares with
 your project (i.e., `AView`) would differ, which crashes at runtime. AUI.Boot rejects such a configuration.
 
-Inside a dependency's build, AUI.Boot uses `aui.boot.cmake` of your project instead of the copy vendored by the
-dependency, so the whole dependency tree resolves packages the same way. A dependency whose vendored copy predates this
-behaviour still builds its own copy of a REQUIRES package; AUI.Boot detects that after configuring the dependency and
-fails, asking to update `aui.boot.cmake` in that dependency.
+Every project vendors its own `aui.boot.cmake`, and the newest copy in the dependency tree is used: inside a dependency's
+build, your project's copy replaces the dependency's one unless the latter is newer, and a subdirectory's copy does not
+redefine your project's copy unless it is newer. A dependency whose vendored copy predates this behaviour still builds
+its own copy of a REQUIRES package; AUI.Boot detects that after configuring the dependency and fails, asking to update
+`aui.boot.cmake` in that dependency.
 
 ## Producing packages with dependencies managed by AUI Boot { #AUIB_PRODUCING_PACKAGES }
 
@@ -1003,18 +1004,31 @@ endif()
 
 # The rest of this file is only for include() mode (project context).
 
-# Inside a dependency's build, use the aui.boot.cmake of the root project instead of the copy vendored by the dependency:
-# the copies may be of different versions, and the whole dependency tree must agree on how packages are resolved and
-# reused (see REQUIRES).
-if (AUIB_PARENT_BOOT_SCRIPT AND EXISTS "${AUIB_PARENT_BOOT_SCRIPT}")
-    get_filename_component(_auib_this_script "${CMAKE_CURRENT_LIST_FILE}" REALPATH)
+# Every project vendors its own copy of aui.boot.cmake, but the whole dependency tree must agree on how packages are
+# resolved and reused (see REQUIRES), so the newest copy in the tree is used. Increment _auib_script_version on every
+# change of this file's behaviour; copies without it are older than any copy with it.
+set(_auib_script_version 1)
+get_filename_component(_auib_this_script "${CMAKE_CURRENT_LIST_FILE}" REALPATH)
+
+# A dependency's build: the parent passes its copy.
+if (AUIB_PARENT_BOOT_SCRIPT AND EXISTS "${AUIB_PARENT_BOOT_SCRIPT}" AND NOT AUIB_PARENT_BOOT_VERSION LESS _auib_script_version)
     get_filename_component(_auib_parent_script "${AUIB_PARENT_BOOT_SCRIPT}" REALPATH)
     if (NOT _auib_this_script STREQUAL _auib_parent_script)
         include("${AUIB_PARENT_BOOT_SCRIPT}")
         return()
     endif()
 endif()
-set_property(GLOBAL PROPERTY AUIB_BOOT_SCRIPT "${CMAKE_CURRENT_LIST_FILE}")
+
+# A subdirectory (i.e., ADD_SUBDIRECTORY import) including its copy after the project's one: functions are global, so
+# an older copy must not redefine them.
+get_property(_auib_loaded_script GLOBAL PROPERTY AUIB_BOOT_SCRIPT)
+get_property(_auib_loaded_version GLOBAL PROPERTY AUIB_BOOT_SCRIPT_VERSION)
+if (_auib_loaded_script AND NOT _auib_loaded_script STREQUAL _auib_this_script
+        AND NOT _auib_loaded_version LESS _auib_script_version)
+    return()
+endif()
+set_property(GLOBAL PROPERTY AUIB_BOOT_SCRIPT "${_auib_this_script}")
+set_property(GLOBAL PROPERTY AUIB_BOOT_SCRIPT_VERSION ${_auib_script_version})
 
 define_property(GLOBAL PROPERTY AUIB_IMPORTED_TARGETS
         BRIEF_DOCS "Global list of imported targets"
@@ -2205,8 +2219,10 @@ function(auib_import AUI_MODULE_NAME URL)
                 string(REPLACE ";" "\\;" _inherited_arg "${_inherited}")
                 string(REPLACE ";" "\\;" _parent_packages "${_parent_packages}")
                 get_property(_boot_script GLOBAL PROPERTY AUIB_BOOT_SCRIPT)
+                get_property(_boot_version GLOBAL PROPERTY AUIB_BOOT_SCRIPT_VERSION)
                 list(APPEND FORWARDED_LIBS
                         "-DAUIB_PARENT_BOOT_SCRIPT=${_boot_script}"
+                        "-DAUIB_PARENT_BOOT_VERSION=${_boot_version}"
                         "-DAUIB_INHERITED_PACKAGES=${_inherited_arg}"
                         "-DAUIB_PARENT_PACKAGES=${_parent_packages}"
                         "-DAUIB_PARENT_IMPORTING=${AUI_MODULE_NAME}")
