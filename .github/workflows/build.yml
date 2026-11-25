@@ -246,7 +246,7 @@ jobs:
         uses: actions/cache@v3
         env:
           # BUILD_SPECIFIER does not distinguish versions of a compiler, so the toolsets must not share a cache
-          cache-name: aui-boot-${{ matrix.compiler }}-${{ matrix.generator }}-${{ matrix.shared_or_static }}-${{ matrix.build_type }}-${{ matrix.arch }}
+          cache-name: aui-boot-${{ matrix.compiler }}-${{ matrix.generator }}-${{ matrix.shared_or_static }}-${{ matrix.build_type }}-${{ matrix.arch }}${{ matrix.compiler == 'Clang' && runner.os == 'Windows' && '-llvm22' || '' }}
         with:
           path: |
             ~/.aui
@@ -286,10 +286,12 @@ jobs:
           echo "CC=/usr/bin/clang " >> $GITHUB_ENV
           echo "CXX=/usr/bin/clang++ " >> $GITHUB_ENV
 
-      - name: Setup Clang (Windows)
+      - name: Setup Clang 22 (Windows)
         if: matrix.compiler == 'Clang' && runner.os == 'Windows'
         run: |
-          choco install llvm -y
+          # the runner image has an older LLVM preinstalled, which the MSVC STL of VS 18 rejects (STL1000)
+          choco upgrade llvm --version=22.1.8 --allow-downgrade -y
+          clang++ --version
           echo "CC=clang" >> $env:GITHUB_ENV
           echo "CXX=clang++" >> $env:GITHUB_ENV
 
