@@ -56,19 +56,19 @@ struct State : AObject {
     }
 
     void refreshApps() {
-        async << AUI_THREADPOOL {
+        async << AThreadPool::global().async([this] {
             auto found = discovery::list();
             KeyStore().pruneExcept(found);
             // a debug build is an application with a remote agent too; it is not shown to itself
             found.removeIf([self = AProcess::self()->getPid()](const AppInfo& app) { return app.pid == self; });
-            AUI_UI_THREAD {
+            AThread::main()->enqueue(this, [this, found] {
                 apps = found;
                 updateWelcome();
                 for (const auto& tab : *tabs) {
                     tab.model->alive = found.contains(tab.model->app);
                 }
-            };
-        };
+            });
+        });
     }
 
     void updateWelcome() {

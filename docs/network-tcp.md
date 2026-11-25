@@ -41,7 +41,7 @@ bytes, use `readExact`; for variable-sized messages, send the size first.
 !!! note
 
     Socket calls block the calling thread. Do not use sockets directly in the UI thread; run them in a background
-    thread (see `AUI_THREADPOOL`) and post the result back to the UI thread.
+    thread (see [AThreadPool::async]) and post the result back to the UI thread.
 
 ## Writing a server
 
@@ -53,7 +53,7 @@ AAsyncHolder clients;
 ATcpServerSocket server(8080);
 for (;;) {
     _<ATcpSocket> client = server.accept();
-    clients << AUI_THREADPOOL {
+    clients << AThreadPool::global().async([client] {
         try {
             char buffer[1024];
             while (size_t n = client->read(buffer, sizeof(buffer))) {
@@ -62,7 +62,7 @@ for (;;) {
         } catch (const AIOException& e) {
             ALogger::warn("Net") << "Client dropped: " << e;
         }
-    };
+    });
 }
 ```
 

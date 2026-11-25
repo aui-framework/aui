@@ -171,7 +171,7 @@ TEST(Future, KeptAliveFutureFailsWhenAbandoned) {
 }
 
 TEST(Future, ThreadPoolTaskThrows) {
-    auto future = AUI_THREADPOOL -> int { throw AException("from the pool"); };
+    auto future = AUI_THREADPOOL_X [=]() -> int { throw AException("from the pool"); };
     try {
         *future;
         FAIL();
@@ -181,7 +181,7 @@ TEST(Future, ThreadPoolTaskThrows) {
 }
 
 TEST(Future, InterruptedTaskFails) {
-    auto future = AUI_THREADPOOL {
+    auto future = AUI_THREADPOOL_X [=] {
         AThread::current()->interrupt();
         AThread::interruptionPoint();
     };
@@ -397,7 +397,7 @@ TEST(Future, AnyOfVoid) {
 }
 
 TEST(Future, WithTimeoutPassesTheValue) {
-    auto future = AUI_THREADPOOL { return 1; };
+    auto future = AUI_THREADPOOL_X [=] { return 1; };
     EXPECT_EQ(*future.withTimeout(5s), 1);
 }
 
@@ -432,7 +432,7 @@ AFuture<int> neverResumed(AFuture<int> never) { co_return co_await never; }
 TEST(Future, CoAwaitAll) {
     AEventLoop loop;
     IEventLoop::Handle h(&loop);
-    auto sum = awaitAll(AUI_THREADPOOL { return 1; }, AUI_THREADPOOL { return 2; });
+    auto sum = awaitAll(AUI_THREADPOOL_X [=] { return 1; }, AUI_THREADPOOL_X [=] { return 2; });
     while (!sum.hasResult()) {
         loop.iteration();
     }

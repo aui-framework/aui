@@ -124,7 +124,7 @@ TEST_F(SignalSlotTest, Multithread) {
 
     EXPECT_CALL(*slave, acceptMessage(AString("hello")));
     EXPECT_CALL(*slave, die());
-    auto t = AUI_THREADPOOL {
+    auto t = AUI_THREADPOOL_X [this] {
         master->broadcastMessage("hello");
     };
     t.wait();
@@ -331,7 +331,7 @@ TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
 
         AObject::connect(master->message, AUI_SLOT(slave2)::acceptMessage);
 
-        auto task = AUI_THREADPOOL {
+        auto task = AUI_THREADPOOL_X [=] {
             master->broadcastMessage("hello");
         };
 
@@ -344,7 +344,7 @@ TEST_F(SignalSlotTest, ObjectRemovalMultithread) {
             }
         }
 
-        task = AUI_THREADPOOL {
+        task = AUI_THREADPOOL_X [=] {
             AUI_REPEAT(SEND_COUNT) master->broadcastMessage("hello");
         };
 
@@ -388,7 +388,7 @@ TEST_F(SignalSlotTest, Exception2) {
     EXPECT_CALL(*slave, acceptMessage(AString("hello"))).Times(1);
     EXPECT_CALL(*slave, die());
 
-    auto task = AUI_THREADPOOL {
+    auto task = AUI_THREADPOOL_X [this] {
         master->broadcastMessage("hello");
     };
     *task;

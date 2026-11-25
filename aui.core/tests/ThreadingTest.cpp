@@ -35,7 +35,7 @@ TEST(Threading, Async) {
     auto someInt = _new<std::atomic_int>(0);
     AFutureSet<> f;
     for (int i = 0; i < 100; ++i) {
-        f << AUI_THREADPOOL {
+        f << AUI_THREADPOOL_X [=] {
             (*someInt) += 1;
         };
     }
@@ -82,7 +82,7 @@ TEST(Threading, Future1) {
     auto time = util::measureExecutionTime<std::chrono::milliseconds>([&]() {
         AUI_REPEAT(1000)
         {
-            taskList << AUI_THREADPOOL{
+            taskList << AUI_THREADPOOL_X [=] {
                     double i = 2.0;
                     AUI_REPEAT(1000)
                     {
@@ -101,7 +101,7 @@ TEST(Threading, Future1) {
 
 TEST(Threading, Future2) {
     auto b = _new<bool>(false);
-    auto f = AUI_THREADPOOL{
+    auto f = AUI_THREADPOOL_X [=] {
             AThread::sleep(1000ms);
             *b = true;
     };
@@ -113,16 +113,16 @@ TEST(Threading, Future2) {
 TEST(Threading, Future3) {
     // [core_async_result]
     auto b = _new<bool>(false);
-    auto v8 = AUI_THREADPOOL{
-            AThread::sleep(1000ms);
-            *b = true;
-            return 8;
-    };
-    auto v1231 = AUI_THREADPOOL{
-            AThread::sleep(1000ms);
-            *b = true;
-            return 1231.f;
-    };
+    auto v8 = AThreadPool::global().async([b] {
+        AThread::sleep(1000ms);
+        *b = true;
+        return 8;
+    });
+    auto v1231 = AThreadPool::global().async([b] {
+        AThread::sleep(1000ms);
+        *b = true;
+        return 1231.f;
+    });
     ASSERT_TRUE(!*b);
     AThread::sleep(2000ms);
     ASSERT_TRUE(*b);

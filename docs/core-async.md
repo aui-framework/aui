@@ -5,18 +5,21 @@ when it's no longer needed, and run something periodically.
 
 ## Running a task on the thread pool
 
-`AUI_THREADPOOL` runs a lambda on the global [AThreadPool] and returns an [AFuture] of whatever the lambda returns.
-`*future` (or `future->get()`) blocks until the result is ready.
+[AThreadPool::async] runs a lambda on the global [AThreadPool] and returns an [AFuture] of whatever the lambda
+returns. `*future` (or `future->get()`) blocks until the result is ready.
 
 <!-- aui:snippet aui.core/tests/ThreadingTest.cpp core_async_result -->
 
 !!! warning
 
     A task lives as long as its [AFuture]. If you drop the future (for example by not storing the return value of
-    `AUI_THREADPOOL`), the task is cancelled. Store the future in a field or hand it to an [AAsyncHolder].
+    `async`), the task is cancelled. Store the future in a field or hand it to an [AAsyncHolder].
 
-`AUI_THREADPOOL` captures by value, like `[=]`. If you need another capture list, use `AUI_THREADPOOL_X` followed by
-your own lambda: `AUI_THREADPOOL_X [&] { ... }`.
+Spell the captures out. A task that captures `this`, a raw pointer or a reference may still be running when that
+object is destroyed, see [Cancelling](#cancelling). `AUI_THREADPOOL_X [captures] { ... }` is the same as `async` in
+the form of a macro.
+
+`AUI_THREADPOOL { ... }` is deprecated: its capture is `[=]`, which captures `this` without saying so.
 
 ## Receiving the result without blocking
 
@@ -26,13 +29,13 @@ Blocking on a future in the UI thread defeats its purpose. Attach callbacks inst
 class Downloader: public AObject {
 public:
     void start() {
-        mAsync << (AUI_THREADPOOL {
+        mAsync << AThreadPool::global().async([] {
             return heavyComputation();
         }).onValue([this](int result) {
             // callback thread is not specified, so jump to the UI thread when touching views
-            AUI_UI_THREAD {
+            AThread::main()->enqueue(this, [this, result] {
                 mResult = result;
-            };
+            });
         }).onException([](const AException& e) {
             ALogger::err("Downloader") << "Failed: " << e;
         });
@@ -46,13 +49,17 @@ private:
 
 `onValue`, `onException` and `onFinally` are called exactly once when the future resolves, or immediately if it has
 already resolved. They don't keep the future alive, so something has to own it: that's the job of [AAsyncHolder]
-(a set of `AFuture<>` that cancels everything in the destructor, so a callback can't run on a dead `this`).
+(a set of `AFuture<>` that cancels everything and waits for running tasks in the destructor, so a callback can't run
+on a dead `this`).
 Calling `onValue` on a temporary future and dropping the result produces a compiler warning for this reason.
 
 An exception reaches `onException` and `*future` wrapped into [AInvocationTargetException]. Every future between the
 throw and the catch adds one level, so the chain of causes shows the whole path through nested coroutines.
 
-`AUI_UI_THREAD { ... };` posts a lambda to the main thread's event loop.
+A lambda posted to another thread is not in the holder. `AThread::main()->enqueue(this, fn)` posts `fn` to the main
+thread's event loop bound to `this`: if the object is destroyed by then, `fn` is dropped; while `fn` runs, the object
+is held. The object has to be owned by a shared pointer, as `_new<Downloader>()` is. `AUI_UI_THREAD { ... }` is
+deprecated: nothing owns what it posts, and its `[=]` captures `this` without saying so.
 
 ## Running code on a particular thread
 
@@ -128,6 +135,32 @@ Keep the returned future in an [AAsyncHolder].
 A coroutine is cancelled together with its future: when the last copy of the future is destroyed, the coroutine stops
 at its next `co_await` with an exception that unwinds it.
 
+### Lifetime of what a coroutine uses
+
+A coroutine keeps its parameters and locals in a frame on the heap, and the frame outlives the call that started it.
+Mind what it refers to:
+
+- **Captures of a lambda that is a coroutine** live in the lambda object, not in the frame. A temporary lambda is
+  destroyed at the end of the full expression, while the coroutine is suspended, so its captures dangle after the
+  first `co_await`. Pass what the coroutine needs as parameters by value instead:
+  ```cpp
+  mAsync << [](_<Model> model) -> AFuture<> {   // not [model]() -> AFuture<>
+      co_await model->load();
+  }(mModel);
+  ```
+- **Reference and pointer parameters**, `this` of a member coroutine included, are stored as they are. The object
+  has to outlive the coroutine.
+- **Cancellation doesn't destroy the coroutine at once.** The coroutine stays suspended until the awaited future
+  completes; then it is resumed on its thread and `co_await` throws to unwind it. `catch` blocks and destructors of
+  its locals run at that moment, which may be after the object that owned the future is destroyed: don't touch
+  `this` there. [AAsyncHolder] doesn't wait for that either.
+- **After `switchTo` to another thread**, the coroutine is in the same position as a thread pool task: the owner has
+  to wait for it before destroying what it uses (see [Cancelling](#cancelling)).
+
+A member coroutine that runs on the UI thread only, awaits futures of tasks that capture by value, and is held by an
+[AAsyncHolder] declared last is safe as long as it doesn't touch `this` while it unwinds: the object lives and dies on
+the same thread, so the coroutine can't be running while the object is destroyed.
+
 `co_await` of a future returns to the thread the coroutine was on, so it never moves the coroutine. To do that, use
 [AAbstractThread::switchTo], for example to run blocking code on a thread of your own and get back to the UI:
 
@@ -140,8 +173,7 @@ AFuture<> MyView::reload() {
 }
 ```
 
-`switchTo` suspends the coroutine and posts its resumption to the thread's message queue with `enqueue`, like
-`AUI_UI_THREAD { ... }` posts a lambda. The coroutine continues when the thread processes its messages, so the thread
+`switchTo` suspends the coroutine and posts its resumption to the thread's message queue with `enqueue`. The coroutine continues when the thread processes its messages, so the thread
 must run an event loop: the UI thread has one; a thread of your own needs an [AEventLoop]. `switchTo` does not
 suspend if the coroutine is on that thread already. The coroutine stays on the thread until the next switch, including
 after a following `co_await future`: an awaited future resumes the coroutine through the queue of the thread it
@@ -230,7 +262,7 @@ like `AFuture<>::any(future, AThread::asyncSleep(5s))` that keeps the type of th
 | AUI                                     | JavaScript                              | Kotlin                          | C#                                  | Rust                          |
 |-----------------------------------------|-----------------------------------------|---------------------------------|-------------------------------------|-------------------------------|
 | `AFuture<T>`                            | `Promise<T>`                            | `Deferred<T>`                   | `Task<T>`                           | `impl Future<Output = T>`     |
-| `AUI_THREADPOOL { ... }`                | `new Worker(...)`                       | `async(Dispatchers.Default)`    | `Task.Run(...)`                     | `tokio::spawn_blocking(...)`  |
+| `AThreadPool::global().async(...)`      | `new Worker(...)`                       | `async(Dispatchers.Default)`    | `Task.Run(...)`                     | `tokio::spawn_blocking(...)`  |
 | `AFuture<T>::create(...)`               | `new Promise((resolve, reject) => ...)` | `suspendCancellableCoroutine`   | `TaskCompletionSource<T>`           | `oneshot::channel()`          |
 | `Resolver::onCancel`                    | `AbortSignal`                           | `invokeOnCancellation`          | `CancellationToken`                 | drop of the receiver          |
 | `onValue` / `onException` / `onFinally` | `then` / `catch` / `finally`            | `invokeOnCompletion`            | `ContinueWith`                      | `.map(...)` / `.or_else(...)` |

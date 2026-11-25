@@ -521,12 +521,12 @@ struct Access;
  *
  * An AFuture is obtained from one of these:
  *
- * - [AUI_THREADPOOL] runs a lambda on the thread pool:
+ * - [AThreadPool::async] runs a lambda on the thread pool:
  *   ```cpp
- *   AFuture<int> theFuture = AUI_THREADPOOL {
+ *   AFuture<int> theFuture = AThreadPool::global().async([] {
  *     AThread::sleep(1000); // long operation
  *     return 123;
- *   };
+ *   });
  *   ```
  * - A coroutine, a function returning AFuture that uses `co_await` or `co_return`:
  *   ```cpp

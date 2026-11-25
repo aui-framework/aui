@@ -144,6 +144,22 @@ public:
     template <typename Iterator, typename Functor>
     auto parallel(Iterator begin, Iterator end, Functor&& functor);
 
+    /**
+     * @brief Runs `fun` on this pool and returns the future of its result.
+     * @details
+     * Destroying the last copy of the future cancels the task: a pending one is removed from the queue, a running one
+     * gets its thread interrupted (see AFuture). Spell the captures out: a task that captures `this` or a reference
+     * has to be stopped before that object is destroyed, see AAsyncHolder.
+     *
+     * ```cpp
+     * auto size = AThreadPool::global().async([path] { return APath(path).fileSize(); });
+     * ```
+     */
+    template <aui::invocable Callable>
+    [[nodiscard]] auto async(Callable fun) {
+        return *this * std::move(fun);
+    }
+
     template <aui::invocable Callable>
     [[nodiscard]] inline auto operator*(Callable fun) {
         using Value = std::invoke_result_t<Callable>;
@@ -266,3 +282,13 @@ auto AThreadPool::parallel(Iterator begin, Iterator end, Functor&& functor) {
 
     return futureSet;
 }
+
+namespace aui::impl {
+/// AUI_THREADPOOL goes through this function to warn about its implicit `[=]` capture.
+[[deprecated(
+    "AUI_THREADPOOL captures everything by value, this included: use AThreadPool::global().async([captures] "
+    "{ ... }) or AUI_THREADPOOL_X [captures] { ... }")]]
+inline AThreadPool& threadPoolWithImplicitCapture() {
+    return AThreadPool::global();
+}
+}   // namespace aui::impl

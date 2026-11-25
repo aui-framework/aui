@@ -31,15 +31,15 @@
  * auto marker = ASharedRaiiHelper::make([] {
  *     // will be called when all futures called onValue or destroyed
  * });
- * auto future = AUI_THREADPOOL {
+ * auto future = AThreadPool::global().async([] {
  *     // hard work
- * }
+ * });
  * //                      VVVVVV ASharedRaiiHelper should be captured!
  * future.onValue([this, marker]() {
  *     // handle the hard work
  * });
  *
- * // keep the future alive in AUI_THREADPOOL holder
+ * // keep the future alive in a holder
  * mAsyncHolder << future;
  *
  * ```

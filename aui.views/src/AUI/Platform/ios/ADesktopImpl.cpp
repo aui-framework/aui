@@ -22,18 +22,14 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
 
 AFuture<APath> ADesktop::browseForDir(ASurface* parent,
                                       const APath& startingLocation)  {
-    return AUI_THREADPOOL {
-        return APath();
-    };
+    return AFuture<APath>::fromValue(APath());
 }
 
 AFuture<APath>
 ADesktop::browseForFile(ASurface* parent,
                         const APath& startingLocation,
                         const AVector<FileExtension>& extensions) {
-    return AUI_THREADPOOL {
-        return APath();
-    };
+    return AFuture<APath>::fromValue(APath());
 }
 
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {
