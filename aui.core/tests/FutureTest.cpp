@@ -11,6 +11,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <thread>
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Thread/AAsyncHolder.h>
 #include <AUI/Thread/AEventLoop.h>
@@ -200,18 +201,32 @@ void spinFor(std::chrono::milliseconds duration) {
 
 struct RunState {
     std::atomic_bool started = false;
+    std::atomic_bool released = false;
     std::atomic_bool finished = false;
 
     void waitUntilStarted() const {
         while (!started) {
+            std::this_thread::yield();
         }
     }
 
     void waitUntilFinished() const {
         while (!finished) {
+            std::this_thread::yield();
         }
     }
 };
+
+/// Spins without interruption points until the test releases it.
+auto blockedTask(const _<RunState>& state) {
+    return AUI_THREADPOOL_X [state] {
+        state->started = true;
+        while (!state->released) {
+            std::this_thread::yield();
+        }
+        state->finished = true;
+    };
+}
 
 auto spinningTask(const _<RunState>& state) {
     return AUI_THREADPOOL_X [state] {
@@ -226,11 +241,12 @@ auto spinningTask(const _<RunState>& state) {
 TEST(Future, DroppingTheLastFutureDoesNotWaitForARunningTask) {
     auto state = _new<RunState>();
     {
-        auto future = spinningTask(state);
+        auto future = blockedTask(state);
         state->waitUntilStarted();
     }
-    // the task has no interruption points, so it is still running
+    // the destructor has returned while the task is still running: it can't finish until it is released
     EXPECT_FALSE(state->finished);
+    state->released = true;
     state->waitUntilFinished();
 }
 
