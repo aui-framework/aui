@@ -39,8 +39,8 @@ public:
     }
 
 private:
-    AAsyncHolder mAsync;
     int mResult = 0;
+    AAsyncHolder mAsync;   // the last member: it is destroyed first, before the members its tasks use
 };
 ```
 
@@ -74,6 +74,30 @@ gets interrupted: blocking calls like `AThread::sleep`, waiting on an `AConditio
 throw an exception that unwinds the task.
 
 <!-- aui:snippet aui.core/tests/ThreadingTest.cpp core_async_cancel -->
+
+Neither `cancel()` nor destroying the last copy waits for a running task. A task that does not reach an interruption
+point keeps running after its future is gone. If the task uses an object (for example, it captures `this`), stop it
+before destroying the object: call `cancel()` and then `wait()`, which returns when the task is no longer running.
+[AAsyncHolder] does this in its destructor, so declare it after the members its tasks use:
+
+```cpp
+class Scene {
+public:
+    ~Scene() {
+        // a single future: stop the task before the members it uses are destroyed
+        if (mCompose != nullptr) {
+            mCompose.cancel();
+            mCompose.wait();
+        }
+    }
+
+private:
+    AMutex mSync;
+    AVector<Entity> mEntities;
+    AFuture<> mCompose = nullptr;   // its task locks mSync and reads mEntities
+    AAsyncHolder mAsync;            // the last member: its destructor cancels and waits before the members above die
+};
+```
 
 Use `AThread::interruptionPoint()` inside long loops to make them cancellable:
 

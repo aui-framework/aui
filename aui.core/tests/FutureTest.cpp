@@ -189,6 +189,70 @@ TEST(Future, InterruptedTaskFails) {
     EXPECT_THROW(future.get(AFutureWait::JUST_WAIT), AInvocationTargetException);
 }
 
+namespace {
+
+/// Spins without interruption points, so AAbstractThread::interrupt() can't stop it.
+void spinFor(std::chrono::milliseconds duration) {
+    const auto until = std::chrono::steady_clock::now() + duration;
+    while (std::chrono::steady_clock::now() < until) {
+    }
+}
+
+struct RunState {
+    std::atomic_bool started = false;
+    std::atomic_bool finished = false;
+
+    void waitUntilStarted() const {
+        while (!started) {
+        }
+    }
+
+    void waitUntilFinished() const {
+        while (!finished) {
+        }
+    }
+};
+
+auto spinningTask(const _<RunState>& state) {
+    return AUI_THREADPOOL_X [state] {
+        state->started = true;
+        spinFor(500ms);
+        state->finished = true;
+    };
+}
+
+}   // namespace
+
+TEST(Future, DroppingTheLastFutureDoesNotWaitForARunningTask) {
+    auto state = _new<RunState>();
+    {
+        auto future = spinningTask(state);
+        state->waitUntilStarted();
+    }
+    // the task has no interruption points, so it is still running
+    EXPECT_FALSE(state->finished);
+    state->waitUntilFinished();
+}
+
+TEST(Future, WaitAfterCancelWaitsForARunningTask) {
+    auto state = _new<RunState>();
+    auto future = spinningTask(state);
+    state->waitUntilStarted();
+    future.cancel();
+    future.wait();
+    EXPECT_TRUE(state->finished);
+}
+
+TEST(Future, AsyncHolderWaitsForARunningTask) {
+    auto state = _new<RunState>();
+    {
+        AAsyncHolder holder;
+        holder << spinningTask(state);
+        state->waitUntilStarted();
+    }
+    EXPECT_TRUE(state->finished);
+}
+
 TEST(Future, ThenTransformsTheValue) {
     auto chained = AFuture<int>::fromValue(20).then([](int v) { return v + 1; });
     EXPECT_EQ(*chained, 21);

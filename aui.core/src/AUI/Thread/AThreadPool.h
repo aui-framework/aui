@@ -165,7 +165,8 @@ public:
  * <!-- aui:experimental -->
  * AFutureSet involves functions to efficiently manage multiple AFutures.
  *
- * Guarantees that held futures will never be executed or be during execution after AAsyncHolder is destroyed.
+ * Destroying AFutureSet destroys its futures: the operations nobody else holds are cancelled, but running tasks are not
+ * waited for (see AFuture). To wait for them, use AAsyncHolder.
  */
 template <typename T = void>
 class AFutureSet : public AVector<AFuture<T>> {

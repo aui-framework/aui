@@ -564,6 +564,11 @@ struct Access;
  * This is how a window that closes cancels the requests it has started. For "fire and forget", call
  * [AFuture::keepAlive]; to hold several futures, use AAsyncHolder.
  *
+ * Destroying the last AFuture does not wait for a running task. Until the task reaches an interruption point, it keeps
+ * running after its future is gone, and a task that has none runs to the end. If the task uses an object that is about
+ * to be destroyed (for example, it captures `this`), call `cancel()` and then `wait()` before destroying the object, or
+ * keep the future in an AAsyncHolder.
+ *
  * When blocking on a pool thread, `operator*`, `get()` and `wait()` work as stackful coroutines: the thread executes
  * other tasks of the pool until the result is available. Be aware of `std::unique_lock` and similar RAII-based locks
  * held during such a wait. If the awaited task has not been picked up by the pool yet, the waiting thread executes it
@@ -964,6 +969,9 @@ public:
      *
      * The `onValue`/`onException` callbacks are dropped without a call; the producer is notified through
      * `Resolver::onCancel`. Destroying the last AFuture of the operation calls cancel().
+     *
+     * cancel() does not wait for a running task. To wait for it, call wait() after cancel(): for a cancelled future,
+     * it returns when the task is no longer running.
      */
     void cancel() const noexcept { inner_().cancel(); }
 
@@ -976,6 +984,9 @@ public:
      * Exceptions captured from AFuture's task are not propagated. This function contains
      * `AThread::interruptionPoint()`: if `wait`'s caller's thread is interrupted, this function throws an
      * `AThread::Interrupted` exception.
+     *
+     * For a cancelled future, wait() returns when its task is no longer running, so `cancel(); wait();` makes sure the
+     * task does not use anything after that.
      */
     void wait(AFutureWait flags = AFutureWait::DEFAULT) const {
         inner_().wait(flags);
