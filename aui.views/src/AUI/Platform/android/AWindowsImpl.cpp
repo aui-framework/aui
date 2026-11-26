@@ -148,7 +148,7 @@ void AWindow::allowDragNDrop() {
 }
 
 void AWindow::showTouchscreenKeyboardImpl() {
-    AUI_UI_THREAD {
+    AThread::main()->enqueue(this, [this] {
         ATextInputType type = ATextInputType::DEFAULT;
         ATextInputActionIcon action = ATextInputActionIcon::DEFAULT;
         bool isPassword = false;
@@ -159,7 +159,7 @@ void AWindow::showTouchscreenKeyboardImpl() {
         }
         com::github::aui::android::Platform::showKeyboard(static_cast<int>(type),
                                                         static_cast<int>(action), isPassword);
-    };
+    });
 }
 
 void AWindow::hideTouchscreenKeyboardImpl() {

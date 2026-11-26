@@ -47,7 +47,7 @@ button; the test types a name, presses the button and checks the label.
 ## Processing the UI
 
 A UI is not updated by itself in a test; nothing runs an event loop for you. Layout, style changes and queued messages
-(for example, lambdas posted with `AUI_UI_THREAD`) are processed when you call
+(for example, lambdas posted with `AThread::main()->enqueue`) are processed when you call
 `uitest::frame()`. Every `perform` and `check` of [UIMatcher] calls it before and after the action, so most tests
 never need it. Call it explicitly when you changed something directly and want to look at the result:
 

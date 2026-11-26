@@ -11,6 +11,7 @@
 
 #include <gmock/gmock.h>
 #include <gtest/gtest.h>
+#include <thread>
 #include <AUI/Thread/AFuture.h>
 #include <AUI/Thread/AAsyncHolder.h>
 #include <AUI/Thread/AEventLoop.h>
@@ -171,7 +172,7 @@ TEST(Future, KeptAliveFutureFailsWhenAbandoned) {
 }
 
 TEST(Future, ThreadPoolTaskThrows) {
-    auto future = AUI_THREADPOOL -> int { throw AException("from the pool"); };
+    auto future = AUI_THREADPOOL_X [=]() -> int { throw AException("from the pool"); };
     try {
         *future;
         FAIL();
@@ -181,12 +182,91 @@ TEST(Future, ThreadPoolTaskThrows) {
 }
 
 TEST(Future, InterruptedTaskFails) {
-    auto future = AUI_THREADPOOL {
+    auto future = AUI_THREADPOOL_X [=] {
         AThread::current()->interrupt();
         AThread::interruptionPoint();
     };
     // JUST_WAIT: executed by the waiting thread, the task would interrupt it
     EXPECT_THROW(future.get(AFutureWait::JUST_WAIT), AInvocationTargetException);
+}
+
+namespace {
+
+/// Spins without interruption points, so AAbstractThread::interrupt() can't stop it.
+void spinFor(std::chrono::milliseconds duration) {
+    const auto until = std::chrono::steady_clock::now() + duration;
+    while (std::chrono::steady_clock::now() < until) {
+    }
+}
+
+struct RunState {
+    std::atomic_bool started = false;
+    std::atomic_bool released = false;
+    std::atomic_bool finished = false;
+
+    void waitUntilStarted() const {
+        while (!started) {
+            std::this_thread::yield();
+        }
+    }
+
+    void waitUntilFinished() const {
+        while (!finished) {
+            std::this_thread::yield();
+        }
+    }
+};
+
+/// Spins without interruption points until the test releases it.
+auto blockedTask(const _<RunState>& state) {
+    return AUI_THREADPOOL_X [state] {
+        state->started = true;
+        while (!state->released) {
+            std::this_thread::yield();
+        }
+        state->finished = true;
+    };
+}
+
+auto spinningTask(const _<RunState>& state) {
+    return AUI_THREADPOOL_X [state] {
+        state->started = true;
+        spinFor(500ms);
+        state->finished = true;
+    };
+}
+
+}   // namespace
+
+TEST(Future, DroppingTheLastFutureDoesNotWaitForARunningTask) {
+    auto state = _new<RunState>();
+    {
+        auto future = blockedTask(state);
+        state->waitUntilStarted();
+    }
+    // the destructor has returned while the task is still running: it can't finish until it is released
+    EXPECT_FALSE(state->finished);
+    state->released = true;
+    state->waitUntilFinished();
+}
+
+TEST(Future, WaitAfterCancelWaitsForARunningTask) {
+    auto state = _new<RunState>();
+    auto future = spinningTask(state);
+    state->waitUntilStarted();
+    future.cancel();
+    future.wait();
+    EXPECT_TRUE(state->finished);
+}
+
+TEST(Future, AsyncHolderWaitsForARunningTask) {
+    auto state = _new<RunState>();
+    {
+        AAsyncHolder holder;
+        holder << spinningTask(state);
+        state->waitUntilStarted();
+    }
+    EXPECT_TRUE(state->finished);
 }
 
 TEST(Future, ThenTransformsTheValue) {
@@ -333,7 +413,7 @@ TEST(Future, AnyOfVoid) {
 }
 
 TEST(Future, WithTimeoutPassesTheValue) {
-    auto future = AUI_THREADPOOL { return 1; };
+    auto future = AUI_THREADPOOL_X [=] { return 1; };
     EXPECT_EQ(*future.withTimeout(5s), 1);
 }
 
@@ -368,7 +448,7 @@ AFuture<int> neverResumed(AFuture<int> never) { co_return co_await never; }
 TEST(Future, CoAwaitAll) {
     AEventLoop loop;
     IEventLoop::Handle h(&loop);
-    auto sum = awaitAll(AUI_THREADPOOL { return 1; }, AUI_THREADPOOL { return 2; });
+    auto sum = awaitAll(AUI_THREADPOOL_X [=] { return 1; }, AUI_THREADPOOL_X [=] { return 2; });
     while (!sum.hasResult()) {
         loop.iteration();
     }

@@ -141,8 +141,8 @@ public:
 // [updater_entry] // HIDE
 class MyUpdater : public AUpdater {
 protected:
-    AFuture<void> checkForUpdatesImpl() override { return AUI_THREADPOOL { /* stub */ }; }
-    AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override { return AUI_THREADPOOL { /* stub */ }; }
+    AFuture<void> checkForUpdatesImpl() override { return AUI_THREADPOOL_X [=] { /* stub */ }; }
+    AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override { return AUI_THREADPOOL_X [=] { /* stub */ }; }
 };
 
 AUI_ENTRY {
@@ -282,7 +282,7 @@ TEST(UpdaterTest, Typical_Implementation) {   // HEADER_H2
 
     protected:
         AFuture<void> checkForUpdatesImpl() override {
-            return AUI_THREADPOOL {
+            return AUI_THREADPOOL_X [=] {
                 try {
                     auto githubLatestRelease = aui::updater::github::latestRelease("aui-framework", "example_app");
                     ALogger::info(LOG_TAG) << "Found latest release: " << githubLatestRelease.tag_name;
@@ -332,7 +332,7 @@ TEST(UpdaterTest, Typical_Implementation) {   // HEADER_H2
         }
 
         AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override {
-            return AUI_THREADPOOL {
+            return AUI_THREADPOOL_X [=] {
               try {
                   AUI_ASSERTX(!mDownloadUrl.empty(), "make a successful call to checkForUpdates first");
                   downloadAndUnpack(mDownloadUrl, unpackedUpdateDir);
