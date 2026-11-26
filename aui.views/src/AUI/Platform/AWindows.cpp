@@ -217,12 +217,12 @@ void AWindow::redraw() {
                     mLastWindowTitleRect = titleRect;
                     // we are in the middle of painting; toolkits don't like when their widgets are changed under
                     // painting.
-                    AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken), titlebarRect, titleRect] {
-                        if (alive.expired() || mClosed) {
+                    AThread::main()->enqueue(_weak<void>(mLifetimeToken), [this, titlebarRect, titleRect] {
+                        if (mClosed) {
                             return;
                         }
                         IPlatformAbstraction::current().windowSetTitlebarRect(*this, titlebarRect, titleRect);
-                    };
+                    });
                 }
             }
 #endif
@@ -483,12 +483,7 @@ void AWindow::windowNativePreInit() {
         mInit.parent->window.blockUserInput(true);
     }
 
-    AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken)] {
-        if (alive.expired()) {
-            return;
-        }
-        emit mSizeChanged(getSize());
-    };
+    AThread::main()->enqueue(_weak<void>(mLifetimeToken), [this] { emit mSizeChanged(getSize()); });
 
 #if AUI_PLATFORM_LINUX
     // on linux, we have to manually provide an icon for the system.
@@ -524,13 +519,14 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     ALayoutInflater::inflate(window, surface);
 
     // show later; the surface may be closed until then (closeOverlappingSurface removes it from the list)
-    AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken), window, surface = _weak<AOverlappingSurface>(surface)] {
+    AThread::main()->enqueue(_weak<void>(mLifetimeToken),
+                             [this, window, surface = _weak<AOverlappingSurface>(surface)] {
         auto s = surface.lock();
-        if (alive.expired() || !s || !overlappingSurfaces().contains(s)) {
+        if (!s || !overlappingSurfaces().contains(s)) {
             return;
         }
         window->show();
-    };
+    });
     connect(surface->positionSet, window, [this, window = window.get()](const glm::ivec2& newPos) {
         window->setPosition(unmapPosition(newPos));
     });

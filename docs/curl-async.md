@@ -10,9 +10,9 @@ requests) and returns `AFuture<ACurl::Response>`. Network errors are delivered a
 ```cpp
 ACurl::Builder("https://example.com/api/items").runAsync().onValue([this](const ACurl::Response& r) {
     // not the UI thread; hop to it before touching views.
-    AUI_UI_THREAD_X [this, text = AString::fromUtf8(r.body)] {
+    AThread::main()->enqueue(this, [this, text = AString::fromUtf8(r.body)] {
         mLabel->setText(text);
-    };
+    });
 });
 ```
 

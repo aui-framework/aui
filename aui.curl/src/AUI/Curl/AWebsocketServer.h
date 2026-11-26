@@ -46,8 +46,8 @@
  * ### Threading
  *
  * One thread accepts connections and one thread per connection reads from the socket. Every callback is called from
- * one of these threads, never from the thread that created the server; marshal to your thread (i.e., `AUI_UI_THREAD`)
- * if needed. `Connection::send*` may be called from any thread.
+ * one of these threads, never from the thread that created the server; marshal to your thread (i.e., with
+ * `AThread::main()->enqueue(this, ...)`) if needed. `Connection::send*` may be called from any thread.
  *
  * ### Encryption
  *

@@ -212,10 +212,10 @@ AString AAbstractLabel::getTransformedText() {
 
 void AAbstractLabel::onDpiChanged() {
     AView::onDpiChanged();
-    AUI_UI_THREAD_X [this, self = shared_from_this()] {
+    AThread::main()->enqueue(this, [this] {
         mPrerendered = nullptr;
         redraw();
-    };
+    });
 }
 
 void AAbstractLabel::invalidateFont() {
