@@ -26,6 +26,8 @@ public:
 
     void setVolume(aui::audio::VolumeLevel volume) noexcept;
 
+    void setVolumeSmoothing(std::chrono::milliseconds smoothing) noexcept;
+
     [[nodiscard]]
     const _<ISoundInputStream>& source() const { return mSource; }
 

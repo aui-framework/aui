@@ -4,6 +4,7 @@
 #include <AUI/Common/ASignal.h>
 #include <AUI/Url/AUrl.h>
 #include <AUI/Audio/AAudioResampler.h>
+#include <chrono>
 #include <AUI/Audio/VolumeLevel.h>
 
 /**
@@ -103,6 +104,14 @@ public:
     void setVolume(aui::audio::VolumeLevel volume);
 
     /**
+     * @brief Sets the time over which volume changes are smoothed.
+     * @details
+     * Volume changes are ramped linearly over this time to avoid clicks (zipper noise) when the volume is changed in
+     * steps, e.g., by a fade timer. Zero applies volume changes instantly. Defaults to 40 ms.
+     */
+    void setVolumeSmoothing(std::chrono::milliseconds smoothing);
+
+    /**
      * @return Current volume level.
      */
     [[nodiscard]]
@@ -151,6 +160,7 @@ protected:
 
 private:
     aui::audio::VolumeLevel mVolume = aui::audio::VolumeLevel::MAX;
+    std::chrono::milliseconds mVolumeSmoothing { 40 };
     AOptional<AUrl> mUrl;
     _<ISoundInputStream> mSourceStream;
     AOptional<AAudioResampler> mResamplerStream;
