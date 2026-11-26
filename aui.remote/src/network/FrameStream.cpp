@@ -184,12 +184,12 @@ void FrameStream::start(float scale, aui::ranged_number<int, 0, 100> quality) {
             return;
         }
         session->stop();
-        *ui * [session, weakSelf, failure = std::move(failure)] {
+        ui->enqueue([session, weakSelf, failure = std::move(failure)] {
             auto self = std::static_pointer_cast<FrameStream>(weakSelf.lock());
             if (self) {
                 self->fail(session, failure.code, failure.message);
             }
-        };
+        });
     };
 
     // reader: connects, subscribes, applies and decodes the frames
@@ -329,12 +329,12 @@ void FrameStream::start(float scale, aui::ranged_number<int, 0, 100> quality) {
                     throw AException("can't decode the frame " + AString::number(seq));
                 }
                 update.tree = std::make_shared<const ViewTree>(tree);
-                *ui * [session, weakSelf, update = std::move(update)]() mutable {
+                ui->enqueue([session, weakSelf, update = std::move(update)]() mutable {
                     if (auto self = std::static_pointer_cast<FrameStream>(weakSelf.lock());
                         self && self->mSession == session) {
                         (*self) ^ self->frameReceived(update);
                     }
-                };
+                });
             }
         } catch (...) {
             if (!session->stopped) {

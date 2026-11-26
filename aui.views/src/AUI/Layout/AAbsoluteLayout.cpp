@@ -29,6 +29,10 @@ void AAbsoluteLayout::layout(int x, int y, int width, int height) {
 glm::ivec2 AAbsoluteLayout::onIntrinsicMeasure(AConstraints constraints) {
     glm::ivec2 size = {};
     for (const auto& i : mViews) {
+        if (!i.pivotX || !i.pivotY) {
+            // positioned manually (see layout()); doesn't contribute to our size, as before the layout rework.
+            continue;
+        }
         const int x = i.pivotX.valueOr(AMetric(0)).getValuePx();
         const int y = i.pivotY.valueOr(AMetric(0)).getValuePx();
         const auto measured = i.view->measure({
@@ -46,6 +50,9 @@ glm::ivec2 AAbsoluteLayout::onIntrinsicMeasure(AConstraints constraints) {
 AMinMaxAxis AAbsoluteLayout::onComputeIntrinsicMinMaxAxis(int) {
     AMinMaxAxis result;
     for (const auto& i : mViews) {
+        if (!i.pivotX || !i.pivotY) {
+            continue;
+        }
         const auto minMax = i.view->computeMinMaxAxis();
         const int x = i.pivotX.valueOr(AMetric(0)).getValuePx();
         result.min = glm::max(result.min, x + (i.sizeX ? static_cast<int>(i.sizeX->getValuePx()) : minMax.min));

@@ -628,7 +628,7 @@ void AView::focus(bool needFocusChainUpdate) {
 
     notifyParentChildFocused(mySharedPtr);
 
-    AUI_UI_THREAD_X[mySharedPtr = std::move(mySharedPtr), needFocusChainUpdate]() {
+    AThread::main()->enqueue([mySharedPtr = std::move(mySharedPtr), needFocusChainUpdate]() {
         auto window = mySharedPtr->getWindow();
         if (!window) {
             return;
@@ -637,7 +637,7 @@ void AView::focus(bool needFocusChainUpdate) {
         if (needFocusChainUpdate) {
             window->updateFocusChain();
         }
-    };
+    });
 }
 
 bool AView::capturesFocus() { return true; }

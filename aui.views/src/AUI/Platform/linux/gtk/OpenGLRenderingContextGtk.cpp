@@ -41,6 +41,7 @@ void* get_proc_address(const char* name) {
 
 OpenGLRenderingContextGtk::Texture::~Texture() {
     if (gl_texture) {
+        // GTK still holds the texture; make it drop the GL resources. Calls the release callback synchronously.
         gdk_gl_texture_release(GDK_GL_TEXTURE(gl_texture));
     }
     auto id = gdk_gl_texture_builder_get_id(builder);
@@ -48,9 +49,6 @@ OpenGLRenderingContextGtk::Texture::~Texture() {
         glDeleteTextures(1, &id);
     }
     g_clear_object(&builder);
-    if (gl_texture == nullptr && dmabuf_texture == nullptr) {
-        g_free(gl_texture);
-    }
 }
 
 void OpenGLRenderingContextGtk::init(const IRenderingContext::Init& init) {
@@ -113,10 +111,14 @@ void OpenGLRenderingContextGtk::gtkSnapshot(GtkWidget* widget, GtkSnapshot* snap
         mWindow.redraw();
     });
 
+    // hand the texture over to GTK; the next frame renders to another one
+    auto* texture = mTexture.get();
+    mTextures.push_back(std::move(mTexture));
+
     auto sync = glFenceSync(GL_SYNC_GPU_COMMANDS_COMPLETE, 0);
-    gdk_gl_texture_builder_set_sync(mTexture->builder, sync);
-    mTexture->gl_texture = gdk_gl_texture_builder_build(
-            mTexture->builder,
+    gdk_gl_texture_builder_set_sync(texture->builder, sync);
+    texture->gl_texture = gdk_gl_texture_builder_build(
+            texture->builder,
             [](gpointer data) {
                 auto texture = reinterpret_cast<Texture*>(data);
                 auto sync = (GLsync) gdk_gl_texture_builder_get_sync(texture->builder);
@@ -126,24 +128,28 @@ void OpenGLRenderingContextGtk::gtkSnapshot(GtkWidget* widget, GtkSnapshot* snap
                 }
                 texture->gl_texture = nullptr;
             },
-            &*mTexture);
+            texture);
+    // gdk_gl_texture_builder_build returns a new reference; the snapshot takes its own one, so drop ours at the end.
+    // Otherwise, GdkGLTexture (along with its fence sync) is never released and leaks every frame.
+    auto holder = texture->gl_texture;
 
     gtk_snapshot_save(snapshot);
     {
         const auto scale =
             float(gdk_surface_get_scale(gtk_native_get_surface(gtk_widget_get_native(GTK_WIDGET(widget)))));
 
-        auto physicalWidth = gdk_gl_texture_builder_get_width(mTexture->builder);
-        auto physicalHeight = gdk_gl_texture_builder_get_height(mTexture->builder);
+        auto physicalWidth = gdk_gl_texture_builder_get_width(texture->builder);
+        auto physicalHeight = gdk_gl_texture_builder_get_height(texture->builder);
 
         gtk_snapshot_scale(snapshot, 1.f / scale, 1.f / scale);
         graphene_rect_t rect {
             .origin = { 0.375f, 0.375f },  // from opengl red book
             .size = { float(physicalWidth), float(physicalHeight) },
         };
-        gtk_snapshot_append_scaled_texture(snapshot, mTexture->gl_texture, GSK_SCALING_FILTER_NEAREST, &rect);
+        gtk_snapshot_append_scaled_texture(snapshot, holder, GSK_SCALING_FILTER_NEAREST, &rect);
     }
     gtk_snapshot_restore(snapshot);
+    g_object_unref(holder);
 }
 void OpenGLRenderingContextGtk::endFramebuffer() {
     if (auto fb = std::get_if<gl::Framebuffer>(&mFramebuffer)) {
@@ -198,7 +204,20 @@ void OpenGLRenderingContextGtk::ensureTexture(GtkWidget* widget) {
     }
     AUI_ASSERT(gdk_gl_context_get_current() == ourContext);
     if (!mTexture) {
-        mTexture.emplace();
+        // reuse a texture GTK has released already; drop the spare ones
+        for (auto it = mTextures.begin(); it != mTextures.end();) {
+            if ((*it)->gl_texture != nullptr) {
+                ++it;
+                continue;
+            }
+            if (!mTexture) {
+                mTexture = std::move(*it);
+            }
+            it = mTextures.erase(it);
+        }
+    }
+    if (!mTexture) {
+        mTexture = std::make_unique<Texture>();
 
         mTexture->builder = gdk_gl_texture_builder_new();
         gdk_gl_texture_builder_set_context(mTexture->builder, ourContext);
@@ -253,7 +272,11 @@ void OpenGLRenderingContextGtk::allocateTexture(GtkWidget* widget) {
 
         gdk_gl_texture_builder_set_width(mTexture->builder, width);
         gdk_gl_texture_builder_set_height(mTexture->builder, height);
+    }
 
+    // a texture from the pool may be (re)allocated even though the window size stays the same
+    if (mTextureSize != glm::ivec2 { width, height }) {
+        mTextureSize = { width, height };
         mWindow.onResize(width, height);
     }
 }
@@ -277,19 +300,6 @@ void OpenGLRenderingContextGtk::ensureBuffers(GtkWidget* widget) {
     mHaveBuffers = true;
     glGenFramebuffers(1, &mFramebufferForGtk);
 
-    glBindFramebuffer(GL_FRAMEBUFFER, mFramebufferForGtk);
-    if (!mTexture) {
-        g_warning("No texture");
-        deleteBuffers();
-        return;
-    }
-    glFramebufferTexture2D(
-        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gdk_gl_texture_builder_get_id(mTexture->builder), 0);
-    auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
-    if (status != GL_FRAMEBUFFER_COMPLETE) {
-        g_warning("Framebuffer incomplete: %d", status);
-        deleteBuffers();
-    }
 }
 
 void OpenGLRenderingContextGtk::attachBuffers(GtkWidget* widget) {
@@ -307,7 +317,23 @@ void OpenGLRenderingContextGtk::attachBuffers(GtkWidget* widget) {
     if (!mHaveBuffers) {
         ensureBuffers(widget);
     }
+    if (mFramebufferForGtk == 0) {
+        return;
+    }
     glBindFramebuffer(GL_FRAMEBUFFER, mFramebufferForGtk);
+    if (!mTexture) {
+        g_warning("No texture");
+        deleteBuffers();
+        return;
+    }
+    // the texture changes from frame to frame, see Texture
+    glFramebufferTexture2D(
+        GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, gdk_gl_texture_builder_get_id(mTexture->builder), 0);
+    auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
+    if (status != GL_FRAMEBUFFER_COMPLETE) {
+        g_warning("Framebuffer incomplete: %d", status);
+        deleteBuffers();
+    }
 }
 
 void OpenGLRenderingContextGtk::deleteBuffers() {
@@ -319,7 +345,11 @@ void OpenGLRenderingContextGtk::deleteBuffers() {
     mFramebufferForGtk = 0;
 }
 
-void OpenGLRenderingContextGtk::deleteTextures() { mTexture.reset(); }
+void OpenGLRenderingContextGtk::deleteTextures() {
+    mTexture.reset();
+    mTextures.clear();
+    mTextureSize = {};
+}
 
 void OpenGLRenderingContextGtk::gtkDoUnderContext(const std::function<void()>& callback) {
     auto scope = contextScope();

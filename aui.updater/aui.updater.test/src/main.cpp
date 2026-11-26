@@ -52,13 +52,13 @@ protected:
     }
 
     AFuture<void> downloadUpdateImpl(const APath& unpackedUpdateDir) override {
-        return AUI_THREADPOOL {
+        return AUI_THREADPOOL_X [=] {
             // download logic here
         };
     }
 
     AFuture<void> checkForUpdatesImpl() override {
-        return AUI_THREADPOOL {
+        return AUI_THREADPOOL_X [=] {
           // last version query logic here
         };
     }

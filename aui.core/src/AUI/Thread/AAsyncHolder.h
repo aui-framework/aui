@@ -24,9 +24,12 @@
  * Unlike AFutureSet, AAsyncHolder is intended to hold void futures (AFuture<void>), however, non-void types can be also
  * supported (but with extra overhead). When AFuture's task is complete, the AFuture is removed from AAsyncHolder.
  *
- * Guarantees that held futures will never be executed or be during execution after AAsyncHolder is destroyed.
+ * Guarantees that held futures will never be executed or be during execution after AAsyncHolder is destroyed: the
+ * destructor cancels every held future and waits for the tasks that are already running.
  *
- * Cancels all futures in destructor.
+ * The guarantee starts when the destructor of AAsyncHolder runs. Class members are destroyed in the reverse order of
+ * their declaration, so declare AAsyncHolder after the members its tasks use, usually as the last member. Otherwise,
+ * those members are destroyed while the tasks may still be running.
  */
 class AAsyncHolder {
 public:

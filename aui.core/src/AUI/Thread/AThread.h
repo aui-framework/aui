@@ -21,6 +21,7 @@
 #include <AUI/Thread/AMutex.h>
 #include <AUI/Util/AMessageQueue.h>
 #include <AUI/Traits/concepts.h>
+#include <AUI/Util/Assert.h>
 
 #if AUI_COROUTINES
 #include <coroutine>
@@ -128,13 +129,61 @@ public:
     }
 
     /**
-     * @brief Enqueue message to make. Helper function for AUI_THREADPOOL, AUI_THREADPOOL_X, ui, uiX
+     * @brief Enqueue message to make. Helper function for AUI_UI_THREAD and AUI_UI_THREAD_X.
+     * @deprecated nothing owns the posted lambda, so it runs even if what it captures is destroyed by then. Use
+     * `async(fn)`, which returns AFuture, or `enqueue(context, fn)`.
      * @tparam Callable callable
      * @param fun callable function
      */
     template <class Callable>
+    [[deprecated("nothing owns the posted lambda: use async(fn), which returns AFuture, or enqueue(context, fn)")]]
     inline void operator*(Callable fun) {
         enqueue(fun);
+    }
+
+    /**
+     * @brief Delivers `fn` to this thread's queue; drops it if `context` is destroyed by then.
+     * @details
+     * The counterpart of `QMetaObject::invokeMethod(context, fn)` in Qt. `fn` runs when this thread processes its
+     * messages and only if `context` is still alive. `context` is held for the duration of the call, so it can't be
+     * destroyed in the middle of it. Use it instead of a lambda that captures a raw `this` and is posted to another
+     * thread:
+     *
+     * ```cpp
+     * mAsync << AThreadPool::global().async([path] { return loadText(path); }).onValue([this](AString text) {
+     *     AThread::main()->enqueue(this, [this, text = std::move(text)] { mLabel->setText(text); });
+     * });
+     * ```
+     *
+     * `context` has to be owned by a shared pointer, like every AObject created with `_new`.
+     */
+    template <typename Context, aui::invocable Fn>
+    void enqueue(Context* context, Fn fn) {
+        auto weak = aui::ptr::weak_from_this(context);
+        AUI_ASSERTX(!weak.expired(), "enqueue(context, fn): context is not owned by a shared pointer");
+        enqueue(std::move(weak), std::move(fn));
+    }
+
+    /**
+     * @copybrief enqueue(Context*, Fn)
+     * @details
+     * The same as `enqueue(Context*, Fn)` for an object that is referred to by a weak pointer.
+     */
+    template <typename Context, aui::invocable Fn>
+    void enqueue(_weak<Context> context, Fn fn) {
+        auto run = [context = std::move(context), fn = std::move(fn)]() mutable {
+            if (auto locked = context.lock()) {
+                fn();
+            }
+        };
+        if constexpr (std::is_copy_constructible_v<decltype(run)>) {
+            enqueue(AMessageQueue<>::Message(std::move(run)));
+        } else {
+            // std::function requires a copyable callable
+            enqueue(AMessageQueue<>::Message([shared = std::make_shared<decltype(run)>(std::move(run))] {
+                (*shared)();
+            }));
+        }
     }
 
     /**
@@ -163,11 +212,11 @@ public:
     /**
      * @brief Continues the coroutine on this thread: `co_await AThread::main()->switchTo();`.
      * @details
-     * Suspends the coroutine and posts its resumption to this thread with `enqueue`, the same way as
-     * `AUI_UI_THREAD { ... }` posts a lambda. The coroutine continues when this thread processes its messages: the UI
-     * thread does it in its event loop; a thread of your own needs an [AEventLoop] (or calls
-     * `AThread::processMessages()`). Does not suspend if the coroutine is on this thread already. The coroutine stays
-     * on this thread until the next switch: a following `co_await future` resumes here too.
+     * Suspends the coroutine and posts its resumption to this thread with `enqueue`. The coroutine continues when this
+     * thread processes its messages: the UI thread does it in its event loop; a thread of your own needs an
+     * [AEventLoop] (or calls `AThread::processMessages()`). Does not suspend if the coroutine is on this thread
+     * already. The coroutine stays on this thread until the next switch: a following `co_await future` resumes here
+     * too.
      *
      * ```cpp
      * AFuture<> MyView::reload() {

@@ -54,14 +54,34 @@ protected:
 public:
 
 private:
+    /**
+     * @brief A GL texture the window is rendered to, wrapped into a GdkGLTexture to be handed over to GTK.
+     * @details
+     * A texture handed over to GTK may still be in use by GSK while the next frame is rendered. Hence, each frame takes
+     * a texture that GTK has released already, the same way GtkGLArea does. The fence sync set on the builder belongs to
+     * the GdkGLTexture built from this very builder, so the release callback deletes the right one.
+     */
     struct Texture {
         aui::gtk4_fake::GdkGLTextureBuilder* builder {};
+
+        /**
+         * @brief GdkGLTexture built from builder and still held by GTK; null once GTK released it.
+         */
         aui::gtk4_fake::GdkTexture* gl_texture {};
-        aui::gtk4_fake::GdkTexture* dmabuf_texture {};
 
         ~Texture();
     };
-    AOptional<Texture> mTexture;
+
+    /**
+     * @brief Texture the current frame is rendered to.
+     */
+    std::unique_ptr<Texture> mTexture;
+
+    /**
+     * @brief Textures handed over to GTK. The ones with null gl_texture are released by GTK and can be reused.
+     */
+    std::vector<std::unique_ptr<Texture>> mTextures;
+    glm::ivec2 mTextureSize {};
     static aui::gtk4_fake::GdkGLContext* ourContext;
     GLuint mFramebufferForGtk = 0;
     bool mNeedsResize = false;

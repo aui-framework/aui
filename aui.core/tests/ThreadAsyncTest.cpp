@@ -210,7 +210,7 @@ TEST(ThreadSwitch, FollowingAwaitResumesOnTheSwitchedThread) {
     LoopThread worker;
     auto future = [](AAbstractThread* worker) -> AFuture<bool> {
         co_await worker->switchTo();
-        co_await (AUI_THREADPOOL { AThread::sleep(std::chrono::milliseconds(1)); });
+        co_await (AUI_THREADPOOL_X [=] { AThread::sleep(std::chrono::milliseconds(1)); });
         co_return AThread::current().get() == worker;
     }(worker.get());
     EXPECT_TRUE(*future);
@@ -240,3 +240,46 @@ TEST(ThreadSwitch, CancelledCoroutineStopsAfterTheSwitch) {
 }
 
 #endif
+
+TEST(ThreadAsync, ThreadPoolAsyncReturnsTheResult) {
+    auto future = AThreadPool::global().async([] { return 42; });
+    EXPECT_EQ(*future, 42);
+}
+
+namespace {
+struct Context : AObject {
+    std::atomic_int calls = 0;
+};
+}   // namespace
+
+TEST(ThreadAsync, EnqueueWithContextCallsWhileTheContextIsAlive) {
+    LoopThread worker;
+    auto context = _new<Context>();
+    worker->enqueue(context.get(), [context = context.get()] { ++context->calls; });
+    worker->async([] {}).wait();   // the messages of the thread are processed in order
+    EXPECT_EQ(context->calls, 1);
+}
+
+TEST(ThreadAsync, EnqueueWithContextDropsTheCallWhenTheContextIsDestroyed) {
+    LoopThread worker;
+    bool called = false;
+    // keep the thread busy until the context is gone
+    worker->enqueue([] { AThread::sleep(std::chrono::milliseconds(100)); });
+    {
+        auto context = _new<Context>();
+        worker->enqueue(context.get(), [&called] { called = true; });
+    }
+    worker->async([] {}).wait();
+    EXPECT_FALSE(called);
+}
+
+TEST(ThreadAsync, EnqueueWithContextHoldsTheContextDuringTheCall) {
+    LoopThread worker;
+    auto context = _new<Context>();
+    _weak<Context> weak = context;
+    long useCountDuringTheCall = 0;
+    worker->enqueue(_weak<Context>(context), [&] { useCountDuringTheCall = weak.lock().use_count(); });
+    worker->async([] {}).wait();
+    // the test and enqueue hold it, plus the lock() above
+    EXPECT_EQ(useCountDuringTheCall, 3);
+}

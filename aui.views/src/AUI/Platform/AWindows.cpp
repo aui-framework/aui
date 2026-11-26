@@ -180,7 +180,13 @@ void AWindow::redraw() {
                 size.x = glm::min(size.x, maxSize.x);
             if (maxSize.y != -1)
                 size.y = glm::min(size.y, maxSize.y);
+#if !(AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS || AUI_PLATFORM_EMSCRIPTEN)
             size = glm::max(size, getMinimumSize());
+#else
+            // mobile and web: the window is exactly the surface the system gave us. it is never grown to fit the
+            // contents (not even FixedSize ones): there is nowhere to grow to, everything beyond the surface is
+            // lost. contents that don't fit are laid out in the space we have and overflow it visually.
+#endif
             AView::setSize(size);
 #if AUI_PLATFORM_WIN || AUI_PLATFORM_MACOS
             // win32 and macos let us resize the native window right here (on macos this also announces the min/max
@@ -211,12 +217,12 @@ void AWindow::redraw() {
                     mLastWindowTitleRect = titleRect;
                     // we are in the middle of painting; toolkits don't like when their widgets are changed under
                     // painting.
-                    AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken), titlebarRect, titleRect] {
-                        if (alive.expired() || mClosed) {
+                    AThread::main()->enqueue(_weak<void>(mLifetimeToken), [this, titlebarRect, titleRect] {
+                        if (mClosed) {
                             return;
                         }
                         IPlatformAbstraction::current().windowSetTitlebarRect(*this, titlebarRect, titleRect);
-                    };
+                    });
                 }
             }
 #endif
@@ -477,12 +483,7 @@ void AWindow::windowNativePreInit() {
         mInit.parent->window.blockUserInput(true);
     }
 
-    AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken)] {
-        if (alive.expired()) {
-            return;
-        }
-        emit mSizeChanged(getSize());
-    };
+    AThread::main()->enqueue(_weak<void>(mLifetimeToken), [this] { emit mSizeChanged(getSize()); });
 
 #if AUI_PLATFORM_LINUX
     // on linux, we have to manually provide an icon for the system.
@@ -518,13 +519,14 @@ _<AOverlappingSurface> AWindow::createOverlappingSurfaceImpl(const glm::ivec2& p
     ALayoutInflater::inflate(window, surface);
 
     // show later; the surface may be closed until then (closeOverlappingSurface removes it from the list)
-    AUI_UI_THREAD_X[this, alive = _weak<void>(mLifetimeToken), window, surface = _weak<AOverlappingSurface>(surface)] {
+    AThread::main()->enqueue(_weak<void>(mLifetimeToken),
+                             [this, window, surface = _weak<AOverlappingSurface>(surface)] {
         auto s = surface.lock();
-        if (alive.expired() || !s || !overlappingSurfaces().contains(s)) {
+        if (!s || !overlappingSurfaces().contains(s)) {
             return;
         }
         window->show();
-    };
+    });
     connect(surface->positionSet, window, [this, window = window.get()](const glm::ivec2& newPos) {
         window->setPosition(unmapPosition(newPos));
     });

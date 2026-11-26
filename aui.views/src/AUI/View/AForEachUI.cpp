@@ -11,6 +11,7 @@
 
 #include <range/v3/all.hpp>
 #include "AForEachUI.h"
+#include <AUI/Layout/AAbsoluteLayout.h>
 
 static constexpr auto RENDER_TO_TEXTURE_TILE_SIZE = 256;
 static constexpr auto INFLATE_THRESHOLD_PX = RENDER_TO_TEXTURE_TILE_SIZE / 2;
@@ -401,6 +402,11 @@ glm::ivec2 AForEachUIBase::axisMask() {
 }
 
 _<AScrollAreaViewport> AForEachUIBase::findViewport() {
+    if (dynamic_cast<AAbsoluteLayout*>(getLayout().get())) {
+        // lazy semantics rely on the views following each other in the layout. AAbsoluteLayout places them
+        // arbitrarily, so the visible range can't be derived: present everything.
+        return nullptr;
+    }
     for (auto p = getParent(); p != nullptr; p = p->getParent()) {
         try {
             if (auto viewport = _cast<AScrollAreaViewport>(p->shared_from_this())) {

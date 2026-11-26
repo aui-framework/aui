@@ -295,6 +295,8 @@ using decode_type_t = typename decode_type<T>::type;
  *
  * @ingroup useful_macros
  * @return <code>AFuture<T></code> where <code>T</code> is the return type of the lambda.
+ * @deprecated `[=]` captures `this` and raw pointers without saying so, and the task may outlive them. Use
+ * `AThreadPool::global().async([captures] { ... })` or `AUI_THREADPOOL_X [captures] { ... }`.
  * @details
  * When <code>AFuture<T></code> is destroyed, the corresponding `AUI_THREADPOOL` task is either cancelled or removed
  * from the execution queue. Use AFutureSet or AAsyncHolder to keep multiple AFuture<T> alive.
@@ -331,7 +333,7 @@ using decode_type_t = typename decode_type<T>::type;
  * int status = *futureStatus;
  * ```
  */
-#define AUI_THREADPOOL AThreadPool::global()* [=]()
+#define AUI_THREADPOOL aui::impl::threadPoolWithImplicitCapture()* [=]()
 
 /**
  * @brief Executes following {} block asynchronously in the [global](AThreadPool::global()) thread pool. Unlike
@@ -399,12 +401,17 @@ using decode_type_t = typename decode_type<T>::type;
 /**
  * @brief Executes lambda on main thread.
  * @ingroup useful_macros
+ * @deprecated nothing owns the posted lambda, and `[=]` captures `this` without saying so. Use
+ * `AThread::main()->async([captures] { ... })`, which returns AFuture, or `AThread::main()->enqueue(this, [this] { ...
+ * })`, which drops the call if the object is destroyed by then.
  */
 #define AUI_UI_THREAD (*AThread::main())* [=]()
 
 /**
  * @brief Executes lambda on main thread. Allows to determine lambda's capture.
  * @ingroup useful_macros
+ * @deprecated nothing owns the posted lambda. Use `AThread::main()->async([captures] { ... })`, which returns AFuture,
+ * or `AThread::main()->enqueue(this, [this] { ... })`, which drops the call if the object is destroyed by then.
  */
 #define AUI_UI_THREAD_X (*AThread::main())*
 

@@ -30,7 +30,7 @@ using namespace std::chrono_literals;
  * @return AFuture<int> that resolves to 228.
  */
 static AFuture<int> longTask() {
-    return AUI_THREADPOOL {
+    return AUI_THREADPOOL_X [=] {
         AThread::sleep(500ms); // long tamssk
         return 228;
     };
@@ -41,7 +41,7 @@ static AFuture<int> longTask() {
  * @return AFuture<int> that resolves with AException.
  */
 static AFuture<int> longTaskException() {
-    return AUI_THREADPOOL -> int {
+    return AUI_THREADPOOL_X [=]() -> int {
         AThread::sleep(500ms); // long tamssk
         throw AException("Whoops! Something bad happened");
     };
@@ -342,7 +342,7 @@ TEST(Coroutines, TimeoutMoveOnlyValue) {
     IEventLoop::Handle h(&loop);
     int result = 0;
     async << [](int& result) -> AFuture<> {
-        auto source = AUI_THREADPOOL {
+        auto source = AUI_THREADPOOL_X [=] {
             AThread::sleep(50ms);
             return std::make_unique<int>(322);
         };

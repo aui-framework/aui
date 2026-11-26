@@ -181,22 +181,23 @@ ExampleWindow::ExampleWindow() : AWindow("Examples", 800_dp, 700_dp) {
         Expanding(1, 1),
       },
       Horizontal {} AUI_LET {
-              mAsync << AUI_THREADPOOL {
+              // the window is under construction here, so the call is bound to the container instead of `this`
+              mAsync << AThreadPool::global().async([container = _weak<AViewContainer>(it)] {
                   auto drawable = IDrawable::fromUrl(
                       "https://raster.shields.io/github/stars/aui-framework/aui?style=raster&logo=github");
-                  AUI_UI_THREAD {
+                  AThread::main()->enqueue(container, [container, drawable] {
                       auto view = Icon { drawable } AUI_OVERRIDE_STYLE {
                           FixedSize { 80_dp, 20_dp },
                           BackgroundImage { {}, {}, {}, Sizing::COVER },
                           Margin { 4_dp },
                           ACursor::POINTER,
                       };
-                      connect(view->clicked, [] {
+                      AObject::connect(view->clicked, view, [] {
                           APlatform::openUrl("https://github.com/aui-framework/aui/stargazers");
                       });
-                      it->addView(view);
-                  };
-              };
+                      container.lock()->addView(view);   // alive: enqueue holds it for the call
+                  });
+              });
           },
     } AUI_OVERRIDE_STYLE {
         Expanding(1, 0),

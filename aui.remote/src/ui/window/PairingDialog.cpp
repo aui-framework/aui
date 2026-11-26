@@ -28,7 +28,7 @@ AString describe(const RpcError& e) {
     return result;
 }
 
-struct State {
+struct State : AObject {
     AppInfo app;
     std::function<void()> onPaired;
     AProperty<AString> code;
@@ -52,7 +52,7 @@ struct State {
             } catch (const RpcError& e) {
                 result = "Can't start pairing: " + e.getMessage();
             }
-            AUI_UI_THREAD { status = result; };
+            AThread::main()->enqueue(this, [this, result] { status = result; });
         };
     }
 
@@ -77,7 +77,7 @@ struct State {
             } catch (const AException& e) {
                 result = e.getMessage();
             }
-            AUI_UI_THREAD {
+            AThread::main()->enqueue(this, [this, result, ok, needNewCode] {
                 busy = false;
                 if (ok) {
                     onPaired();
@@ -88,7 +88,7 @@ struct State {
                 if (needNewCode) {
                     begin(result);
                 }
-            };
+            });
         };
     }
 };

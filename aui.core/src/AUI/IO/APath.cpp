@@ -139,6 +139,15 @@ APath APath::getDefaultPath(APath::DefaultPath path) {
             }
             return dir;
         }
+#if AUI_PLATFORM_IOS
+        case HOME:
+            // the container of the application; an iOS application running on a Mac (Designed for iPad) shares it with
+            // the host, so ~/.aui/remote of ARemoteDebug is reachable there
+            if (auto home = getenv("HOME")) {
+                return home;
+            }
+            return APath::workingDir();
+#endif
 #else
         case APPDATA:
             return getDefaultPath(HOME) / ".local/share";
