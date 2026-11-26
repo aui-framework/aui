@@ -107,6 +107,18 @@ T fromAt(Value&& value, AStringView where) {
         throw TypeMismatchException(where + (nested ? "" : ": ") + message);
     }
 }
+
+// A named class template rather than a generic lambda: MSVC rejects the index pack inside a lambda that is nested in
+// the Ts pack expansion (error C3520).
+template <typename Tuple, typename Indices>
+struct TupleFromArray;
+
+template <typename... Ts, std::size_t... I>
+struct TupleFromArray<std::tuple<Ts...>, std::index_sequence<I...>> {
+    static std::tuple<Ts...> from(Array& array) {
+        return std::tuple<Ts...> { fromAt<Ts>(std::move(array[I]), "[{}]"_format(I))... };
+    }
+};
 }   // namespace detail
 
 template <>
@@ -187,9 +199,7 @@ struct Converter<std::tuple<Ts...>> {
         if (array.size() != sizeof...(Ts)) {
             throw TypeMismatchException("expected an array of {}, got {}"_format(sizeof...(Ts), array.size()));
         }
-        return [&]<std::size_t... I>(std::index_sequence<I...>) {
-            return std::tuple<Ts...> { detail::fromAt<Ts>(std::move(array[I]), "[{}]"_format(I))... };
-        }(std::index_sequence_for<Ts...> {});
+        return detail::TupleFromArray<std::tuple<Ts...>, std::index_sequence_for<Ts...>>::from(array);
     }
 };
 
