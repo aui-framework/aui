@@ -132,7 +132,7 @@ AViewContainerBase::AViewContainerBase() {}
 AViewContainerBase::~AViewContainerBase() {
     mLayout = nullptr;
     for (auto& view : mViews) {
-        view->mParent = nullptr;
+        releaseView(*view);
     }
     // Stylesheet::inst().invalidateCache();
     std::unique_lock lock(mViewsSafeIteration, std::try_to_lock);
@@ -145,6 +145,7 @@ void AViewContainerBase::addViews(AVector<_<AView>> views) {
         throw AException("can't use addViews when render/layout is in progress; please enqueue such operation");
     }
     for (const auto& view : views) {
+        adoptView(view, lock);
         view->mParent = this;
         view->mSkipUntilLayoutUpdate = true;
         AUI_NULLSAFE(mLayout)->addView(view);
@@ -181,6 +182,7 @@ void AViewContainerBase::addViewCustomLayout(const _<AView>& view) {
         throw AException(
             "can't use addViewCustomLayout when render/layout is in progress; please enqueue such operation");
     }
+    adoptView(view, lock);
     mViews << view;
     view->mParent = this;
     view->setSize(view->measure(AConstraints {}));
@@ -196,6 +198,7 @@ void AViewContainerBase::addView(size_t index, const _<AView>& view) {
     if (!lock) {
         throw AException("can't use addView when render/layout is in progress; please enqueue such operation");
     }
+    adoptView(view, lock);
     view->mSkipUntilLayoutUpdate = true;
     mViews.insert(mViews.begin() + index, view);
     view->mParent = this;
@@ -218,7 +221,7 @@ void AViewContainerBase::setLayoutImpl(_unique<ALayout> layout, std::unique_lock
     AUI_ASSERTX(lock.owns_lock(), "setLayout: lock is not owned by the caller");
 #endif
     for (const auto& v : mViews) {
-        v->mParent = nullptr;
+        releaseView(*v);
     }
     mViews.clear();
     mLayout = std::move(layout);
@@ -245,9 +248,7 @@ void AViewContainerBase::removeViewImpl(const _<AView>& view, std::unique_lock<A
 #if AUI_DEBUG
     AUI_ASSERTX(lock.owns_lock(), "removeView: lock is not owned by the caller");
 #endif
-    if (view->mParent == this) {
-        view->mParent = nullptr;
-    }
+    releaseView(*view);
     auto index = mViews.removeFirst(view);
     if (!index)
         return;
@@ -255,6 +256,18 @@ void AViewContainerBase::removeViewImpl(const _<AView>& view, std::unique_lock<A
     view->onViewGraphSubtreeChanged();
     invalidateCaches();
     emit childrenChanged;
+}
+
+void AViewContainerBase::adoptView(const _<AView>& view, std::unique_lock<ASpinlockMutex>& lock) {
+    if (view->mParent != nullptr && view->mParent != this) {
+        view->mParent->removeViewImpl(view, lock);
+    }
+}
+
+void AViewContainerBase::releaseView(AView& view) noexcept {
+    if (view.mParent == this) {
+        view.mParent = nullptr;
+    }
 }
 
 void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::const_iterator> views) {
@@ -267,7 +280,7 @@ void AViewContainerBase::removeViews(aui::range<AVector<_<AView>>::const_iterato
     }
     auto idx = std::distance(mViews.cbegin(), views.begin());
     for (const auto& view : views) {
-        view->mParent = nullptr;
+        releaseView(*view);
         AUI_NULLSAFE(mLayout)->removeView(view, idx);
         view->onViewGraphSubtreeChanged();
     }
@@ -282,7 +295,7 @@ void AViewContainerBase::removeView(size_t index) {
         throw AException("can't use removeView when render/layout is in progress; please enqueue such operation");
     }
     auto view = std::move(mViews[index]);
-    view->mParent = nullptr;
+    releaseView(*view);
     mViews.removeAt(index);
     if (mLayout)
         mLayout->removeView(view, index);
@@ -511,7 +524,7 @@ void AViewContainerBase::removeAllViewsImpl(std::unique_lock<ASpinlockMutex>& lo
         std::size_t i = getViews().size();
         for (auto& x : aui::reverse_iterator_wrap(getViews())) {
             mLayout->removeView(x, --i);
-            x->mParent = nullptr;
+            releaseView(*x);
         }
     }
     auto views = std::exchange(mViews, {});
@@ -654,6 +667,7 @@ void AViewContainerBase::setViews(AVector<_<AView>> views) {
     mViews = std::move(views);
 
     for (const auto& view : mViews) {
+        adoptView(view, lock);
         view->mParent = this;
         view->mSkipUntilLayoutUpdate = true;
         if (mLayout)

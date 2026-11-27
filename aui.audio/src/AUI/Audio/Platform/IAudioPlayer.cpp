@@ -17,6 +17,9 @@ using DefaultSystemPlayer = OboeAudioPlayer;
 #elif AUI_PLATFORM_APPLE
 #include "apple/CoreAudioPlayer.h"
 using DefaultSystemPlayer = CoreAudioPlayer;
+#elif AUI_PLATFORM_EMSCRIPTEN
+#include "emscripten/WebAudioPlayer.h"
+using DefaultSystemPlayer = WebAudioPlayer;
 #else
 using DefaultSystemPlayer = StubAudioPlayer;
 #endif
@@ -37,6 +40,7 @@ IAudioPlayer::IAudioPlayer(_<ISoundInputStream> stream) {
     mSourceStream = std::move(stream);
     mResamplerStream.emplace(aui::audio::platform::requested_sample_rate, mSourceStream);
     mResamplerStream->setVolume(mVolume);
+    mResamplerStream->setVolumeSmoothing(mVolumeSmoothing);
 }
 
 void IAudioPlayer::initialize() {
@@ -46,6 +50,7 @@ void IAudioPlayer::initialize() {
     mSourceStream = ISoundInputStream::fromUrl(*mUrl);
     mResamplerStream.emplace(aui::audio::platform::requested_sample_rate, mSourceStream);
     mResamplerStream->setVolume(mVolume);
+    mResamplerStream->setVolumeSmoothing(mVolumeSmoothing);
 }
 
 void IAudioPlayer::play() {
@@ -83,6 +88,11 @@ void IAudioPlayer::setVolume(aui::audio::VolumeLevel volume) {
     mVolume = volume;
     AUI_NULLSAFE(mResamplerStream)->setVolume(volume);
     onVolumeSet();
+}
+
+void IAudioPlayer::setVolumeSmoothing(std::chrono::milliseconds smoothing) {
+    mVolumeSmoothing = smoothing;
+    AUI_NULLSAFE(mResamplerStream)->setVolumeSmoothing(smoothing);
 }
 
 void IAudioPlayer::onFinished() {

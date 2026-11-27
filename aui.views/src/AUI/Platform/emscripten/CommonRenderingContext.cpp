@@ -30,6 +30,7 @@ void CommonRenderingContext::init(const Init& init) {
     glm::dvec2 s;
     emscripten_get_element_css_size("#canvas", &s.x, &s.y);
     aui::emscripten::applySize(&init.window, s);
+    init.window.updateDpi();
 }
 
 void CommonRenderingContext::destroyNativeWindow(ASurface& window) {

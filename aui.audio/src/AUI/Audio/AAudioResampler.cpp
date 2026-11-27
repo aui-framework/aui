@@ -19,6 +19,7 @@ AAudioResampler::AAudioResampler(size_t requestedSampleRate, _<ISoundInputStream
     mOutputFormat.sampleRate = requestedSampleRate;
     mOutputFormat.channelCount = mInputFormat.channelCount;
     mOutputFormat.sampleFormat = ASampleFormat::F32;
+    mGainFilter.setSampleRate(requestedSampleRate);
 
     if (mInputFormat.sampleRate != mOutputFormat.sampleRate) {
         double ratio = static_cast<double>(mInputFormat.sampleRate) / static_cast<double>(requestedSampleRate);
@@ -76,7 +77,7 @@ size_t AAudioResampler::read(std::span<std::byte> dst) {
             processing_data = reinterpret_cast<float*>(mReadBuffer.data());
         }
 
-        mGainFilter.process(processing_data, input_samples_read);
+        mGainFilter.process(processing_data, input_frames_read, mInputFormat.channelCount);
 
         float* output_data;
         size_t output_samples;
@@ -119,7 +120,8 @@ size_t AAudioResampler::read(std::span<std::byte> dst) {
                                    mResamplingBuffer.data() + i * frames_requested);
         }
 
-        mGainFilter.process(mResamplingBuffer.data(), frames_requested * mInputFormat.channelCount);
+        mGainFilter.process(mResamplingBuffer.data(), frames_requested, mInputFormat.channelCount,
+                            AGainFilter::Layout::PLANAR);
 
         size_t mixing_bytes = frames_requested * mOutputFormat.channelCount * sizeof(float);
         aui::impl::reserveVector(mMixingBuffer, mixing_bytes);
@@ -146,6 +148,10 @@ size_t AAudioResampler::read(std::span<std::byte> dst) {
 
 void AAudioResampler::setVolume(aui::audio::VolumeLevel volume) noexcept {
     mGainFilter.setVolume(volume);
+}
+
+void AAudioResampler::setVolumeSmoothing(std::chrono::milliseconds smoothing) noexcept {
+    mGainFilter.setSmoothing(smoothing);
 }
 
 void AAudioResampler::readCallback(size_t channel, int frames, float* destination) {

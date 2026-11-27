@@ -71,6 +71,14 @@ public:
     glm::ivec2 origin() const noexcept;
 
     /**
+     * @return true if the pointer is released and the scroll goes on by inertia.
+     */
+    [[nodiscard]]
+    bool isKinetic() const noexcept {
+        return std::holds_alternative<KineticScrollingState>(mState);
+    }
+
+    /**
      * @return std::nullopt if ATouchScroller is not in kinetic scroll state; value for kinetic
      * scroll otherwise.
      * @details

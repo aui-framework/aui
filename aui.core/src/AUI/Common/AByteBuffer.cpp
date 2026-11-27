@@ -44,13 +44,17 @@ AByteBuffer::AByteBuffer(AByteBuffer&& other) noexcept
 }
 
 void AByteBuffer::reserve(size_t size) {
-    char* buffer = new char[size];
-    if (mBuffer) {
-        memcpy(buffer, mBuffer, glm::min(mCapacity, size));
-        delete[] mBuffer;
+    if (size == 0) {
+        clear();
+        return;
     }
-    mCapacity = size;
+    auto* buffer = static_cast<char*>(std::realloc(mBuffer, size));   // keeps the contents, often without a copy
+    if (!buffer) {
+        throw std::bad_alloc();
+    }
     mBuffer = buffer;
+    mCapacity = size;
+    mSize = glm::min(mSize, size);
 }
 
 void AByteBuffer::write(const char* src, size_t size) {
@@ -126,7 +130,7 @@ std::ostream& operator<<(std::ostream& o, AByteBufferView buffer)
 }
 
 AByteBuffer::~AByteBuffer() {
-    delete[] mBuffer;
+    std::free(mBuffer);
     mBuffer = nullptr;
 }
 

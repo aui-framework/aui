@@ -31,29 +31,34 @@ void ADesktop::setMousePos(const glm::ivec2 &pos) {
     IPlatformAbstraction::current().desktopSetMousePosition(pos);
 }
 
-AFuture<APath>
-ADesktop::browseForFile(ASurface *parent, const APath &startingLocation, const AVector<FileExtension>& extensions) {
+namespace {
+/// `current_folder` of the portal: a NUL-terminated byte array.
+AVector<std::uint8_t> portalPath(const APath& path) {
+    AVector<std::uint8_t> bytes;
+    for (const AByteBufferView buffer(path.data(), path.size()); const auto& byte : buffer) {
+        bytes.push_back(byte);
+    }
+    bytes.push_back(0);
+    return bytes;
+}
+
+/// A method of org.freedesktop.portal.FileChooser (`OpenFile`, `SaveFile`): the first uri the user chose, or an empty
+/// path if they cancelled.
+AFuture<APath> fileChooser(
+    ASurface* parent, const std::string& method, const AString& title, const APath& startingLocation,
+    AMap<std::string, aui::dbus::Variant> options) {
     AUI_NULLSAFE(parent)->blockUserInput();
-    AUI_DEFER { AUI_NULLSAFE(parent)->blockUserInput(false); };
-
-    AMap<std::string, aui::dbus::Variant> options;
-
     if (!startingLocation.empty()) {
-        AVector<std::uint8_t> locationBytes;
-        for (const AByteBufferView buffer(startingLocation.data(), startingLocation.size()); const auto& byte : buffer) {
-            locationBytes.push_back(byte);
-        }
-
-        options.insert_or_assign("current_folder", locationBytes);
+        options.insert_or_assign("current_folder", portalPath(startingLocation));
     }
 
     auto p = *ADBus::session().callWithResult<aui::dbus::ObjectPath>(
         "org.freedesktop.portal.Desktop",       // bus
         "/org/freedesktop/portal/desktop",      // object
         "org.freedesktop.portal.FileChooser",   // interface
-        "OpenFile",                             // method
+        method,                                 // method
         "",                                     // parent_window
-        "Open File"_i18n,                       // title,
+        title,                                  // title,
         options                                 // options
     );
 
@@ -104,70 +109,32 @@ ADesktop::browseForFile(ASurface *parent, const APath &startingLocation, const A
     });
 
     f.onFinally([parent, unsubscribe = std::move(unsubscribe)] {
-        AThread::current()->enqueue([parent] {
-          AUI_NULLSAFE(parent)->blockUserInput(false);
-        });
-    });
-
-    return f;
-}
-
-AFuture<APath> ADesktop::browseForDir(ASurface *parent, const APath &startingLocation) {
-    AUI_NULLSAFE(parent)->blockUserInput();
-
-    AMap<std::string, aui::dbus::Variant> options;
-    options.insert_or_assign("directory", true);
-
-    if (!startingLocation.empty()) {
-        AVector<std::uint8_t> locationBytes;
-        for (const AByteBufferView buffer(startingLocation.data(), startingLocation.size()); const auto &byte : buffer) {
-            locationBytes.push_back(byte);
-        }
-
-        options.insert_or_assign("current_folder", locationBytes);
-    }
-
-    auto p = *ADBus::session().callWithResult<aui::dbus::ObjectPath>(
-        "org.freedesktop.portal.Desktop",       // bus
-        "/org/freedesktop/portal/desktop",      // object
-        "org.freedesktop.portal.FileChooser",   // interface
-        "OpenFile",                             // method
-        "",                                     // parent_window
-        "Open Folder"_i18n,                     // title,
-        options                                 // options
-    );
-
-    std::shared_ptr<ADBus::MessageFilter> unsubscribe;
-    auto f = AFuture<APath>::create([&](AFuture<APath>::Resolver resolver) {
-      unsubscribe = ADBus::session().addSignalListener(
-        std::move(p), "org.freedesktop.portal.Request", "Response",
-        [resolver](std::uint32_t response, AMap<std::string, aui::dbus::Variant> results) {
-            try {
-                if (const auto c = results.contains("uris")) {
-                    if (const auto t = std::get_if<AVector<aui::dbus::Unknown> >(&c->second)) {
-                        if (AString path; !t->empty() && t->first().as(path)) {
-                            const AUrl result = path;
-                            resolver.supplyValue(result.path());
-                            return;
-                        }
-                    }
-                }
-                resolver.supplyValue({});
-            } catch (...) {
-                resolver.supplyException();
-                throw;
-            }
-        });
-      resolver.onCancel([parent, unsubscribe] {
-          AThread::main()->enqueue([parent] { AUI_NULLSAFE(parent)->blockUserInput(false); });
-      });
-    });
-
-    f.onFinally([parent, unsubscribe = std::move(unsubscribe)] {
         AUI_NULLSAFE(parent)->blockUserInput(false);
     });
 
     return f;
+}
+}   // namespace
+
+AFuture<APath>
+ADesktop::browseForFile(ASurface *parent, const APath &startingLocation, const AVector<FileExtension>& extensions) {
+    return fileChooser(parent, "OpenFile", "Open File"_i18n, startingLocation, {});
+}
+
+AFuture<APath> ADesktop::browseForDir(ASurface *parent, const APath &startingLocation) {
+    AMap<std::string, aui::dbus::Variant> options;
+    options.insert_or_assign("directory", true);
+    return fileChooser(parent, "OpenFile", "Open Folder"_i18n, startingLocation, std::move(options));
+}
+
+AFuture<APath> ADesktop::browseForSaveFile(
+    ASurface* parent, const APath& startingLocation, const AString& suggestedName,
+    const AVector<FileExtension>& extensions) {
+    AMap<std::string, aui::dbus::Variant> options;
+    if (!suggestedName.empty()) {
+        options.insert_or_assign("current_name", suggestedName.toStdString());
+    }
+    return fileChooser(parent, "SaveFile", "Save File"_i18n, startingLocation, std::move(options));
 }
 
 _<IDrawable> ADesktop::iconOfFile(const APath &file) { return nullptr; }

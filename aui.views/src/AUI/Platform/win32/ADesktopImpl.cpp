@@ -174,6 +174,94 @@ AFuture<APath> ADesktop::browseForFile(ASurface* parent, const APath& startingLo
     });
 }
 
+AFuture<APath> ADesktop::browseForSaveFile(
+    ASurface* parent, const APath& startingLocation, const AString& suggestedName,
+    const AVector<FileExtension>& extensions) {
+    _<AAbstractThread> ui;
+    if (auto* w = dynamic_cast<AWindow*>(parent))
+        ui = w->getThread();
+    else
+        ui = AThread::current();
+
+    return AFuture<APath>::create([&](AFuture<APath>::Resolver promise) {
+    ui->enqueue([promise = std::move(promise), parent, startingLocation, suggestedName, extensions]() mutable {
+        Ole::inst();
+        APath result;
+
+        IFileSaveDialog* dlg = nullptr;
+        HRESULT hr = CoCreateInstance(
+            CLSID_FileSaveDialog, nullptr, CLSCTX_INPROC_SERVER, IID_IFileSaveDialog, reinterpret_cast<void**>(&dlg));
+        if (SUCCEEDED(hr)) {
+            ARaiiHelper release = [&] { dlg->Release(); };
+
+            AVector<COMDLG_FILTERSPEC> filter;
+            AVector<std::u16string> storage;
+            filter.reserve(extensions.size());
+            storage.reserve(extensions.size() * 2);
+
+            for (const auto& ext : extensions) {
+                auto extMask = "*." + ext.extension;
+                storage << extMask.toUtf16();
+                storage << (ext.name + " (" + extMask + ")").toUtf16();
+                auto w1 = (storage.end() - 1)->c_str();
+                auto w2 = (storage.end() - 2)->c_str();
+                filter << COMDLG_FILTERSPEC {
+                        reinterpret_cast<LPCWSTR>(w1), reinterpret_cast<LPCWSTR>(w2)
+                };
+            }
+
+            if (!filter.empty()) {
+                dlg->SetFileTypes(static_cast<UINT>(filter.size()), filter.data());
+                dlg->SetFileTypeIndex(1);
+            }
+            // the extension of the first filter is appended when the user types a name without one
+            if (!extensions.empty() && extensions.first().extension != "*") {
+                auto defaultExtension = aui::win32::toWchar(extensions.first().extension);
+                dlg->SetDefaultExtension(defaultExtension.c_str());
+            }
+            if (!suggestedName.empty()) {
+                auto name = aui::win32::toWchar(suggestedName);
+                dlg->SetFileName(name.c_str());
+            }
+
+            if (!startingLocation.empty()) {
+                IShellItem* psiFolder = nullptr;
+                for (APath i = startingLocation; !i.empty() && !psiFolder; i = i.parent()) {
+                    APath current = i;
+                    current.replaceAll('/', '\\');
+                    auto wcurrent = aui::win32::toWchar(current);
+                    SHCreateItemFromParsingName(
+                        wcurrent.c_str(), nullptr, IID_IShellItem, reinterpret_cast<void**>(&psiFolder));
+                }
+                if (psiFolder) {
+                    dlg->SetFolder(psiFolder);
+                    psiFolder->Release();
+                }
+            }
+
+            HWND owner = nullptr;
+            if (auto* win = dynamic_cast<AWindow*>(parent))
+                owner = win->nativeHandle();
+
+            hr = dlg->Show(owner);
+            if (SUCCEEDED(hr)) {
+                IShellItem* item = nullptr;
+                if (SUCCEEDED(dlg->GetResult(&item))) {
+                    PWSTR psz = nullptr;
+                    if (SUCCEEDED(item->GetDisplayName(SIGDN_FILESYSPATH, &psz))) {
+                        result = AString(reinterpret_cast<const char16_t*>(psz));
+                        CoTaskMemFree(psz);
+                    }
+                    item->Release();
+                }
+            }
+        }
+
+        promise.supplyValue(result);   // resolves with {} on cancel or error
+    });
+    });
+}
+
 _<IDrawable> ADesktop::iconOfFile(const APath& file) {
     SHFILEINFO info;
     auto wfile = aui::win32::toWchar(file);

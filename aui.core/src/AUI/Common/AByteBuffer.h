@@ -15,7 +15,9 @@
 #include "SharedPtr.h"
 
 #include <cstddef>
+#include <cstdlib>
 #include <cstring>
+#include <span>
 #include <string>
 #include <stdexcept>
 #include <cassert>
@@ -52,6 +54,13 @@
  * valid as long as the buffer is not resized or destroyed.
  *
  * Compression helpers (`aui::zlib::compress` and `aui::zlib::decompress`) accept views and write into a buffer.
+ *
+ * ## Memory from C
+ * The storage is allocated with `std::malloc`, so a block from a C API (or from `_malloc` called by JavaScript in the
+ * Emscripten build) becomes a buffer without a copy:
+ * ```cpp
+ * auto buffer = AByteBuffer::adopt({ static_cast<std::byte*>(std::malloc(size)), size });
+ * ```
  */
 class API_AUI_CORE AByteBuffer final: public IOutputStream {
 private:
@@ -74,6 +83,19 @@ public:
 
     AByteBuffer(const AByteBuffer& other): AByteBuffer(AByteBufferView(other)) {}
     AByteBuffer(AByteBuffer&& other) noexcept;
+
+    /**
+     * @brief Takes the ownership of a block allocated by `std::malloc` (`_malloc` in JavaScript), without a copy.
+     * @details
+     * The block is the payload: `size()` and `capacity()` are its length. The buffer frees it with `std::free`.
+     */
+    [[nodiscard]]
+    static AByteBuffer adopt(std::span<std::byte> allocatedByMalloc) noexcept {
+        AByteBuffer result;
+        result.mBuffer = reinterpret_cast<char*>(allocatedByMalloc.data());
+        result.mCapacity = result.mSize = allocatedByMalloc.size();
+        return result;
+    }
 
     ~AByteBuffer() override;
 
@@ -102,7 +124,7 @@ public:
     }
 
     void clear() {
-        delete[] mBuffer;
+        std::free(mBuffer);
         mBuffer = nullptr;
         mSize = mCapacity = 0;
     }
@@ -221,11 +243,14 @@ public:
      */
     void reallocate(size_t s) {
         if (mCapacity != s) {
-            delete[] mBuffer;
-            if (s == 0) {
-                mBuffer = nullptr;
-            } else {
-                mBuffer = new char[s];
+            std::free(mBuffer);
+            mBuffer = nullptr;
+            mCapacity = 0;
+            if (s != 0) {
+                mBuffer = static_cast<char*>(std::malloc(s));
+                if (!mBuffer) {
+                    throw std::bad_alloc();
+                }
             }
             mCapacity = s;
         }
@@ -272,7 +297,7 @@ public:
             return *this;
         }
 
-        delete[] mBuffer;
+        std::free(mBuffer);
         mBuffer = other.mBuffer;
         mCapacity = other.mCapacity;
         mSize = other.mSize;

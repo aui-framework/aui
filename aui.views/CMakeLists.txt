@@ -127,6 +127,8 @@ if (OPENGL_FOUND OR ANDROID OR IOS)
         aui_link(aui.views PUBLIC freetype)
     elseif (AUI_PLATFORM_EMSCRIPTEN)
         aui_link(aui.views PUBLIC freetype)
+        # WebGL 2 when available (see OpenGLRenderingContextImpl.cpp), WebGL 1 otherwise
+        target_link_options(aui.views PUBLIC -sMAX_WEBGL_VERSION=2 -sMIN_WEBGL_VERSION=1 -sGL_ENABLE_GET_PROC_ADDRESS=1)
     else ()
         aui_link(aui.views PRIVATE freetype)
         aui_link(aui.views PRIVATE OpenGL::GL)
