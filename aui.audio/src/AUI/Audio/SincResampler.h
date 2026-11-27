@@ -27,6 +27,7 @@
 #define USE_NEON
 #endif
 
+#include <cstdlib>  // posix_memalign, free
 #include <memory>
 
 #include <functional>
