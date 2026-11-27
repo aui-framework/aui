@@ -34,7 +34,7 @@ class Pairing;
  * @details
  * The agent listens on the loopback interface and speaks JSON-RPC 2.0 over secure WebSocket (`wss://`, a self-signed
  * certificate that a client pins by the fingerprint from the discovery file; there is no plain `ws://` mode). A client finds it through the
- * discovery file `~/.aui/remote/<pid>.json`, which holds the port. The first time a client connects it has to be paired:
+ * discovery file `~/.aui/remote/<pid>.json` (in the data directory of the application on Android and iOS), which holds the port. The first time a client connects it has to be paired:
  * the application shows a 6-digit code in its window and the client sends it back (`pair.begin`, `pair.confirm`)
  * together with a key it generated. This is done once: the application remembers the key (see
  * ARemoteDebug::Options::pairing) and the client connects with `?key=` and needs no code, even after a restart.

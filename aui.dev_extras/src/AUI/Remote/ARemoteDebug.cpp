@@ -52,6 +52,16 @@ _<ARemoteDebug>& slot() {
 }
 
 
+/// `~/.aui/remote`. A mobile app has no home directory (HOME is unset on Android and `/` is read-only): its data
+/// directory is used instead, otherwise neither the discovery file nor the trusted keys could be written.
+APath remoteDirectory() {
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+    return APath::getDefaultPath(APath::APPDATA) / ".aui" / "remote";
+#else
+    return APath::getDefaultPath(APath::HOME) / ".aui" / "remote";
+#endif
+}
+
 // The same application (its executable) is trusted across restarts, whatever the pid is.
 APath trustedKeysFile() {
     const auto exe = AString(AProcess::self()->getPathToExecutable()).toStdString();
@@ -61,7 +71,7 @@ APath trustedKeysFile() {
     }
     char suffix[17];
     std::snprintf(suffix, sizeof(suffix), "%016llx", static_cast<unsigned long long>(hash));
-    return APath::getDefaultPath(APath::HOME) / ".aui" / "remote" / "trusted" /
+    return remoteDirectory() / "trusted" /
            (AString(AProcess::self()->getPathToExecutable().filename()) + "-" + suffix + ".keys");
 }
 
@@ -219,7 +229,7 @@ ARemoteDebug::ARemoteDebug(Options options) : mImpl(std::make_unique<Impl>()) {
 
     if (impl.options.writeDiscoveryFile) {
         try {
-            const auto directory = APath::getDefaultPath(APath::HOME) / ".aui" / "remote";
+            const auto directory = remoteDirectory();
             directory.makeDirs();
             impl.discoveryFile = directory / (AString::number(int(AProcess::self()->getPid())) + ".json");
             {
