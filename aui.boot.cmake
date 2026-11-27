@@ -584,6 +584,21 @@ Disables precompiled binaries, building all dependencies locally. You may want t
 
 Disables local compilation. If a precompiled binary was not found, a configure-time error is raised.
 
+### AUIB_DISABLE_WERROR (=TRUE|FALSE) { #AUIB_DISABLE_WERROR }
+
+Removes `-Werror`, `-Werror=<warning>`, `-pedantic-errors` (and `/WX` for MSVC) from the build of each *dependency*.
+Whether a *dependency* compiles without warnings with your compiler is none of your business: a new compiler version
+makes a perfectly working library fail to build because of a warning in its own tests. Fixing that is the job of the
+*dependency*'s maintainer.
+
+The flags are removed from the generated build files (`build.ninja`, `flags.make`) between configure and build, so it
+does not matter how the *dependency* has added them (`CMAKE_CXX_FLAGS`, `target_compile_options`, a preset). Only Ninja
+and Unix Makefiles generators are handled; for others a message is printed and nothing is changed.
+
+Per-dependency switch: `AUIB_<NAME>_DISABLE_WERROR`, i.e. `-DAUIB_BENCHMARK_DISABLE_WERROR=FALSE`.
+
+Defaults to `TRUE`.
+
 ### AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT (=FALSE|TRUE)
 
 The `AUIB_PRODUCED_PACKAGES_SELF_SUFFICIENT` flag can be used to enable self-sufficiency of packages produced with AUI
@@ -1701,6 +1716,44 @@ function(_auib_postprocess)
 
 endfunction()
 
+function(_auib_strip_werror _file)
+    file(READ "${_file}" _contents)
+    set(_stripped "${_contents}")
+    # the trailing character is kept (\\2), so that `-Werror-implicit-function-declaration` stays intact
+    string(REGEX REPLACE " -Werror(=[^ \n]*)?([ \n])" "\\2" _stripped "${_stripped}")
+    string(REGEX REPLACE " -pedantic-errors([ \n])" "\\1" _stripped "${_stripped}")
+    string(REGEX REPLACE " /WX([ \n])" "\\1" _stripped "${_stripped}")
+    if (_stripped STREQUAL _contents)
+        return()
+    endif()
+    file(WRITE "${_file}" "${_stripped}")
+    message(STATUS "[AUI.BOOT] Fix: warnings are not errors for ${AUI_MODULE_NAME}: ${_file}")
+endfunction()
+
+function(_auib_disable_werror)
+    option(AUIB_DISABLE_WERROR "AUI.Boot: remove -Werror from the build of dependencies." ON)
+    option(AUIB_${AUI_MODULE_NAME_UPPER}_DISABLE_WERROR "AUI.Boot: remove -Werror from the build of ${AUI_MODULE_NAME}." ${AUIB_DISABLE_WERROR})
+    if (NOT AUIB_${AUI_MODULE_NAME_UPPER}_DISABLE_WERROR)
+        return()
+    endif()
+    if (CMAKE_GENERATOR MATCHES "Ninja")
+        file(GLOB _build_files "${DEP_BINARY_DIR}/*.ninja" "${DEP_BINARY_DIR}/CMakeFiles/*.ninja")
+    elseif (CMAKE_GENERATOR STREQUAL "Unix Makefiles")
+        file(GLOB_RECURSE _build_files "${DEP_BINARY_DIR}/flags.make")
+    else()
+        message(STATUS "[AUI.BOOT] ${CMAKE_GENERATOR} generator: -Werror of ${AUI_MODULE_NAME} is left as is")
+        return()
+    endif()
+    foreach (_build_file ${_build_files})
+        _auib_strip_werror("${_build_file}")
+    endforeach()
+endfunction()
+
+# Runs between configure and build of a dependency.
+function(_auib_postconfigure)
+    _auib_disable_werror()
+endfunction()
+
 function(_auib_git_clone _url _version _source_dir)
     set(_auib_git_clone_ok FALSE PARENT_SCOPE)
 
@@ -2509,6 +2562,8 @@ function(auib_import AUI_MODULE_NAME URL)
                         endforeach()
                     endforeach()
                 endif()
+
+                _auib_postconfigure()
 
                 message(STATUS "Building ${AUI_MODULE_NAME}")
 
