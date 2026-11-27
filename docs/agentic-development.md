@@ -29,11 +29,73 @@ compiling when `aui::dev_extras` is not linked:
 The condition is yours to write: a command line flag, a setting or a debug menu item work as well. The code is the same
 on every platform, including Windows, Android and iOS, where there is no convenient way to set an environment
 variable. The agent listens on `127.0.0.1` at a random port (set `Options::port` to pin it) and writes
-`~/.aui/remote/<pid>.json` with the port and the fingerprint of its certificate. On Android and iOS, where the
-discovery file is out of reach, set `Options::writeDiscoveryFile` to `false`, pick a fixed port and forward it
-(`adb forward tcp:<port> tcp:<port>`).
+`~/.aui/remote/<pid>.json` with the port and the fingerprint of its certificate. A client on another machine can't read
+that file: see [Devices and the network](#devices-and-the-network).
 
 The complete application is `examples/ui/remote_debug`.
+
+## Devices and the network
+
+A client finds an application of its own machine through the discovery file. An application on an Android device (or on
+another computer) writes that file where the client can't read it, so the agent also prints the same JSON to the log:
+
+```
+I ARemoteDebug: discovery {"protocol":1,"pid":12345,"port":41567,"scheme":"wss","certSha256":"3f...","exe":...}
+```
+
+`aui-remote cli attach` takes the JSON from there and stores it next to the local discovery files, after which `list`,
+`pair` and every other command work with `--pid` of the application on the device. A screenshot of an attached
+application travels in the answer (`inline`) and is saved on the host, so the printed `path` is readable there. On Android
+and iOS the agent keeps its files (the discovery file, the trusted keys) in the data directory of the application, since
+there is no home directory.
+
+### Android over adb
+
+The agent listens on the loopback of the device, and `adb forward` brings that port to the host. Nothing is exposed to
+the network:
+
+```bash
+adb install -r app-debug.apk && adb shell am start -n <package>/<activity>
+aui-remote cli attach --adb [--serial <serial>]    # reads logcat, runs `adb forward tcp:0 tcp:<port>`, checks the agent answers
+aui-remote cli pair <pid>                          # the 6-digit code is on the screen of the device
+aui-remote cli pair <pid> --code 123456
+aui-remote cli screenshot --pid <pid>
+```
+
+`adb` is taken from `--adb-path`, `$ADB`, `$ANDROID_HOME/platform-tools` or `PATH`. Things that go wrong:
+
+- **The port changes on every start**, and so does the certificate. After the application restarts (or the device
+  reconnects) run `attach` again; `list` drops entries that stopped answering. A fixed port (`AUI_REMOTE_PORT`, below)
+  only saves the forward, the fingerprint is new anyway.
+- **`attach` reads an old line of logcat** if the application died and the new one has not started the agent yet. It
+  says that the agent does not answer; start the application and retry. `adb logcat -c` before the launch avoids it.
+- **Several devices**: pass `--serial`. `adb` itself refuses to guess.
+- **The pairing is remembered per device**: the client appends `@<serial>` to the executable name, because every
+  Android app is `app_process64`.
+- An Android application has no environment variables, so `Options::fromEnvironment` also reads system properties,
+  `adb shell setprop debug.aui.remote.port 40000` (`debug.aui.remote.bind`). They have to be set before the start.
+
+### Local network
+
+When the device can't be on a cable, or the application runs on another computer, let the agent listen on the network:
+
+| What | Environment (desktop) | Android property |
+|---|---|---|
+| Address to listen | `AUI_REMOTE_BIND=0.0.0.0` | `adb shell setprop debug.aui.remote.bind 0.0.0.0` |
+| Port | `AUI_REMOTE_PORT=40000` | `adb shell setprop debug.aui.remote.port 40000` |
+
+or `ARemoteDebug::Options::bindAddress` and `port` in code. Then:
+
+```bash
+aui-remote cli attach --adb --lan                    # the address of the device comes from `adb shell ip route`
+aui-remote cli attach --host 192.168.1.50 --port 40000 --cert <certSha256 from the log> --pid 1
+```
+
+The traffic is `wss://` pinned to the fingerprint and a client has to be paired, so a stranger in the same network can
+neither read nor drive the application, but it still can try the 6-digit code (a few attempts are allowed) and see that
+the application exists: use it in your own network only. The agent logs a warning when it listens beyond the loopback.
+A firewall has to let the port in; guest Wi-Fi networks often isolate clients from each other, in which case only
+`adb forward` works. `aui-remote cli detach <pid>` forgets an attached application.
 
 ## Encryption
 
@@ -117,7 +179,7 @@ Text frames, JSON-RPC 2.0, protocol version 1. Errors carry `data.hint` with a s
 | `view.tree`, `view.find`, `view.properties`           | inspect views; `view.find` filters by `type`, `text`, `assName`|
 | `view.hitTest`, `view.interactive`                    | the views under a point; controls, text fields and views with a `clicked` connection |
 | `view.scrollIntoView`                                 | scrolls the scroll areas around a view so that it is visible   |
-| `screenshot`                                          | saves a PNG to the temp folder and returns its path; `ref` crops to a view, `crop` to an area, `scale` downscales, `annotate` numbers the interactive views |
+| `screenshot`                                          | saves a PNG to the temp folder and returns its path; `ref` crops to a view, `crop` to an area, `scale` downscales, `annotate` numbers the interactive views; `inline: true` returns the PNG as base64 in `data` instead of a `path` |
 | `input.pointer`                                       | `click`, `doubleClick`, `press`, `release`, `move`, `drag`, `scroll`, `longPress`, `fling` |
 | `input.touch`                                         | several fingers at once: `pinch`, `rotate` or arbitrary tracks |
 | `input.gesture`                                       | a long press gesture alone, for clients that hold the finger themselves |
@@ -250,6 +312,10 @@ distributions, next to `aui.toolbox`. In a consumer project, find it through the
 - `as_subdirectory` is `false`: the tool is `<install_dir>/bin/aui-remote`;
 - `as_subdirectory` is `true` (`-DAUIB_AUI_AS=ON`, see [configure flags](aui-configure-flags.md)): AUI is a part of the
   consumer's build, so build it with `cmake --build build -t aui.remote` and take `build/bin/aui-remote`.
+
+The `source_dir` of the same entry (`~/.aui/repo/aui-<hash>`) is where the sources of that AUI are: read them, and with
+`as_subdirectory` edit them, to see what the agent and the client do. Android and iOS builds are cross-compiled and
+don't build `aui-remote`: use the one of a host build.
 
 Anything that speaks WebSocket works as well.
 

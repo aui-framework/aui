@@ -83,3 +83,26 @@ TEST(DiscoveryTest, RealPidCheck) {
     EXPECT_TRUE(discovery::isProcessAlive(AProcess::self()->getPid()));
     EXPECT_FALSE(discovery::isProcessAlive(0x3ffffff0));
 }
+
+TEST(DiscoveryTest, AttachedApplicationIsStoredWithoutProcessCheck) {
+    test::TempDir dir;
+    AppInfo app;
+    app.pid = 4321;   // a pid on another machine
+    app.port = 40'000;
+    app.host = "192.168.1.5";
+    app.remote = true;
+    app.scheme = "wss";
+    app.certSha256 = AString(64, 'b');
+    app.exe = "app_process64@RF8M";
+    discovery::store(app, dir.path());
+
+    const auto apps = discovery::list(dir.path(), [](std::uint32_t) { return false; });
+    ASSERT_EQ(apps.size(), 1u);
+    EXPECT_EQ(apps[0].host, "192.168.1.5");
+    EXPECT_TRUE(apps[0].remote);
+    EXPECT_EQ(apps[0].port, 40'000);
+
+    EXPECT_TRUE(discovery::forget(4321, dir.path()));
+    EXPECT_FALSE(discovery::forget(4321, dir.path()));
+    EXPECT_TRUE(discovery::list(dir.path(), [](std::uint32_t) { return true; }).empty());
+}

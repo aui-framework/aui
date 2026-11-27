@@ -17,6 +17,7 @@
 
 #include "AUI/Image/AImage.h"
 #include "AUI/Image/png/PngImageLoader.h"
+#include "AUI/IO/AFileInputStream.h"
 #include "AUI/IO/AFileOutputStream.h"
 #include "AUI/IO/APath.h"
 #include "AUI/Platform/ASurface.h"
@@ -107,8 +108,9 @@ AVector<Candidate> interactiveCandidates(const _<AWindow>& window) {
 void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
     // params: windowId?, ref? (crop to the view), padding? (logical pixels around the view, default 0),
     //         crop? ({ x, y, width, height } in logical pixels, instead of ref), scale? (downscale, (0, 1]),
-    //         annotate? (numbered boxes over the interactive views, listed in `marks`)
-    // result: { path, width, height, scale, crop?, marks? }; `scale` is pixels of the saved image per logical pixel
+    //         annotate? (numbered boxes over the interactive views, listed in `marks`),
+    //         inline? (the PNG in `data` as base64 instead of a file at `path`)
+    // result: { path | data, width, height, scale, crop?, marks? }; `scale` is pixels of the saved image per logical pixel
     dispatcher.registerMethod("screenshot", JsonRpcDispatcher::Handler([&refs](const AJson& params) {
         return AThread::main()->async([&refs, params = params] {
             auto window = windowFromParams(params, refs);
@@ -227,7 +229,13 @@ void registerScreenshotMethods(JsonRpcDispatcher& dispatcher, RefTable& refs) {
 
             const auto path = nextScreenshotPath();
             PngImageLoader::save(AFileOutputStream(path), image);
-            result["path"] = path.toStdString();
+            if (params.containsOpt("inline") && params["inline"].asBool()) {
+                // the client can't read the file system of this machine (a device behind adb, another computer)
+                result["data"] = AByteBuffer::fromStream(AFileInputStream(path)).toBase64String();
+                path.removeFile();
+            } else {
+                result["path"] = path.toStdString();
+            }
             result["width"] = int(image.width());
             result["height"] = int(image.height());
             return result;

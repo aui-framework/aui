@@ -4,9 +4,11 @@
 #include <iostream>
 #include <thread>
 
+#include <AUI/IO/AFileOutputStream.h>
 #include <AUI/Image/AImage.h>
 #include <AUI/Platform/AProcess.h>
 
+#include "Attach.h"
 #include "ImageCompare.h"
 #include "TreeText.h"
 #include "network/KeyStore.h"
@@ -27,6 +29,8 @@ AJson toJson(const AppInfo& app, bool paired) {
     return AJson {
         { "pid", int(app.pid) },
         { "port", int(app.port) },
+        { "host", app.host },
+        { "remote", app.remote },
         { "exe", app.exe },
         { "argv", std::move(argv) },
         { "cwd", app.cwd },
@@ -79,8 +83,21 @@ std::uint32_t pidArgument(const ParsedArgs& args) {
     return *pid;
 }
 
-AJson doList(const Directories& directories) {
+/// Applications to choose from: local ones are checked by pid, attached ones by whether they answer.
+AVector<AppInfo> runningApps(const Directories& directories) {
     auto apps = discovery::list(directories.discovery);
+    apps.removeIf([&](const AppInfo& app) {
+        if (!app.remote || isAgentReachable(app)) {
+            return false;
+        }
+        discovery::forget(app.pid, directories.discovery);
+        return true;
+    });
+    return apps;
+}
+
+AJson doList(const Directories& directories) {
+    auto apps = runningApps(directories);
     KeyStore store(directories.keys);
     store.pruneExcept(apps);
     AJson result = AJson::Array {};
@@ -258,8 +275,30 @@ AJson doStop(const ParsedArgs& args, const Directories& directories) {
     return AJson { { "stopped", true }, { "pid", int(pid) } };
 }
 
-AJson doRemoteCommand(const ParsedArgs& args, const CommandRequest& request, const Directories& directories) {
-    auto app = selectApp(args, discovery::list(directories.discovery));
+/// A screenshot of an application on another machine arrives in the answer: it is saved here, where the caller can read it.
+AJson saveInlineScreenshot(AJson result, const AppInfo& app) {
+    const auto data = result.containsOpt("data");
+    if (!data || !data->isString()) {
+        return result;
+    }
+    const auto folder = APath::getDefaultPath(APath::TEMP) / "aui-remote";
+    folder.makeDirs();
+    const auto stamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                           std::chrono::system_clock::now().time_since_epoch())
+                           .count();
+    const auto path = folder / "screenshot-{}-{}.png"_format(app.pid, stamp);
+    const auto png = AByteBuffer::fromBase64String(data->asString());
+    AFileOutputStream(path).write(png.data(), png.size());
+    result.asObject().removeIf([](const auto& entry) { return entry.first == "data"; });
+    result["path"] = path.toStdString();
+    return result;
+}
+
+AJson doRemoteCommand(const ParsedArgs& args, CommandRequest request, const Directories& directories) {
+    auto app = selectApp(args, runningApps(directories));
+    if (app.remote && request.method == "screenshot") {
+        request.params["inline"] = true;
+    }
     auto key = KeyStore(directories.keys).load(app);
     if (!key) {
         throw RpcError(
@@ -268,7 +307,8 @@ AJson doRemoteCommand(const ParsedArgs& args, const CommandRequest& request, con
                                   app.pid) } });
     }
     try {
-        return RpcClient::forApp(app, *key).call(request.method, request.params, request.timeout);
+        auto result = RpcClient::forApp(app, *key).call(request.method, request.params, request.timeout);
+        return app.remote && request.method == "screenshot" ? saveInlineScreenshot(std::move(result), app) : result;
     } catch (const RpcError& e) {
         if (e.code() == rpc_code::UNAUTHORIZED) {
             // the application does not know this key anymore (it asks for the code after a restart, or every time)
@@ -336,6 +376,10 @@ int run(const AStringVector& args, const Directories& directories) {
             result = doPair(parsed, directories);
         } else if (parsed.command == "launch") {
             result = doLaunch(parsed, directories);
+        } else if (parsed.command == "attach") {
+            result = doAttach(parsed, directories);
+        } else if (parsed.command == "detach") {
+            result = doDetach(parsed, directories);
         } else if (parsed.command == "stop") {
             result = doStop(parsed, directories);
         } else if (parsed.command == "compare") {

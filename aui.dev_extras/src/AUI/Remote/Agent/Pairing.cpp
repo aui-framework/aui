@@ -12,7 +12,6 @@
 #include "Pairing.h"
 
 #include <algorithm>
-#include <filesystem>
 #include <fstream>
 #include <random>
 #include <sstream>
@@ -141,10 +140,11 @@ void Pairing::store(const std::string& key) {
         }
         mFile.parent().makeDirs();
         { std::ofstream(mFile.toStdString(), std::ios::trunc); }   // restrict before the content gets in
-        std::error_code ec;
-        std::filesystem::permissions(mFile.toStdString(),
-                                     std::filesystem::perms::owner_read | std::filesystem::perms::owner_write,
-                                     std::filesystem::perm_options::replace, ec);
+        try {
+            mFile.chmod(0600);
+        } catch (const AException& e) {
+            ALogger::warn(LOG_TAG) << "Unable to make the trusted keys file private: " << e;
+        }
         std::ofstream out(mFile.toStdString(), std::ios::trunc);
         for (const auto& hash : hashes) {
             out << hash << '\n';

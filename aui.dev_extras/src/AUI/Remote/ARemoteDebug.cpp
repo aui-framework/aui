@@ -11,9 +11,9 @@
 
 #include "ARemoteDebug.h"
 
+#include <array>
 #include <chrono>
 #include <cstdlib>
-#include <filesystem>
 #include <mutex>
 #include <random>
 
@@ -33,6 +33,10 @@
 #include "Agent/RefTable.h"
 #include "Agent/RemoteOverlay.h"
 
+#if AUI_PLATFORM_ANDROID
+#include <sys/system_properties.h>
+#endif
+
 using namespace aui::remote;
 
 namespace {
@@ -48,6 +52,16 @@ _<ARemoteDebug>& slot() {
 }
 
 
+/// `~/.aui/remote`. A mobile app has no home directory (HOME is unset on Android and `/` is read-only): its data
+/// directory is used instead, otherwise neither the discovery file nor the trusted keys could be written.
+APath remoteDirectory() {
+#if AUI_PLATFORM_ANDROID || AUI_PLATFORM_IOS
+    return APath::getDefaultPath(APath::APPDATA) / ".aui" / "remote";
+#else
+    return APath::getDefaultPath(APath::HOME) / ".aui" / "remote";
+#endif
+}
+
 // The same application (its executable) is trusted across restarts, whatever the pid is.
 APath trustedKeysFile() {
     const auto exe = AString(AProcess::self()->getPathToExecutable()).toStdString();
@@ -57,7 +71,7 @@ APath trustedKeysFile() {
     }
     char suffix[17];
     std::snprintf(suffix, sizeof(suffix), "%016llx", static_cast<unsigned long long>(hash));
-    return APath::getDefaultPath(APath::HOME) / ".aui" / "remote" / "trusted" /
+    return remoteDirectory() / "trusted" /
            (AString(AProcess::self()->getPathToExecutable().filename()) + "-" + suffix + ".keys");
 }
 
@@ -190,48 +204,57 @@ ARemoteDebug::ARemoteDebug(Options options) : mImpl(std::make_unique<Impl>()) {
     impl.server = std::make_unique<AWebsocketServer>(std::move(config));
     impl.server->start();
 
+    aui::impl::JsonArray argv;
+    for (const auto& arg : aui::args()) {
+        argv.push_back(AJson(arg));
+    }
+    const AJson info {
+        { "protocol", PROTOCOL_VERSION },
+        { "pid", int(AProcess::self()->getPid()) },
+        { "port", int(impl.server->port()) },
+        { "scheme", "wss" },
+        // a client pins the self-signed certificate by this fingerprint
+        { "certSha256", impl.identity->fingerprintHex() },
+        { "exe", AString(AProcess::self()->getPathToExecutable()) },
+        { "defaultPointer", defaultPointer() },
+        { "pairing", impl.options.pairing == PairingPolicy::REMEMBER  ? "remember"
+                     : impl.options.pairing == PairingPolicy::SESSION ? "session"
+                                                                      : "always" },
+        { "argv", AJson(std::move(argv)) },
+        { "cwd", AString(APath::workingDir()) },
+        { "startedAt", static_cast<std::int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
+                                                   std::chrono::system_clock::now().time_since_epoch())
+                                                   .count()) },
+    };
+
     if (impl.options.writeDiscoveryFile) {
         try {
-            const auto directory = APath::getDefaultPath(APath::HOME) / ".aui" / "remote";
+            const auto directory = remoteDirectory();
             directory.makeDirs();
             impl.discoveryFile = directory / (AString::number(int(AProcess::self()->getPid())) + ".json");
-
-            aui::impl::JsonArray argv;
-            for (const auto& arg : aui::args()) {
-                argv.push_back(AJson(arg));
-            }
-            AJson info {
-                { "protocol", PROTOCOL_VERSION },
-                { "pid", int(AProcess::self()->getPid()) },
-                { "port", int(impl.server->port()) },
-                { "scheme", "wss" },
-                // a client pins the self-signed certificate by this fingerprint
-                { "certSha256", impl.identity->fingerprintHex() },
-                { "exe", AString(AProcess::self()->getPathToExecutable()) },
-                { "defaultPointer", defaultPointer() },
-                { "pairing", impl.options.pairing == PairingPolicy::REMEMBER  ? "remember"
-                             : impl.options.pairing == PairingPolicy::SESSION ? "session"
-                                                                              : "always" },
-                { "argv", AJson(std::move(argv)) },
-                { "cwd", AString(std::filesystem::current_path().string()) },
-                { "startedAt", static_cast<std::int64_t>(std::chrono::duration_cast<std::chrono::milliseconds>(
-                                                           std::chrono::system_clock::now().time_since_epoch())
-                                                           .count()) },
-            };
-            // keep the file private anyway
             {
                 AFileOutputStream(impl.discoveryFile) << AJson::toString(info);
             }
-            std::error_code ec;
-            std::filesystem::permissions(impl.discoveryFile.toStdString(),
-                                         std::filesystem::perms::owner_read | std::filesystem::perms::owner_write,
-                                         std::filesystem::perm_options::replace, ec);
+            // keep the file private anyway
+            try {
+                impl.discoveryFile.chmod(0600);
+            } catch (const AException& e) {
+                ALogger::warn(LOG_TAG) << "Unable to make the discovery file private: " << e;
+            }
         } catch (const AException& e) {
             ALogger::warn(LOG_TAG) << "Unable to write the discovery file: " << e;
             impl.discoveryFile = {};
         }
     }
 
+    // The discovery file lives on the machine of the application, which a client on another machine (adb, LAN) can't
+    // read. The same content in the log can: `aui-remote cli attach --adb` takes it from logcat.
+    ALogger::info(LOG_TAG) << "discovery " << AJson::toString(info);
+    if (impl.options.bindAddress != "127.0.0.1" && impl.options.bindAddress != "::1" &&
+        impl.options.bindAddress != "localhost") {
+        ALogger::warn(LOG_TAG) << "The agent is reachable from the network (" << impl.options.bindAddress
+                               << "): traffic is encrypted and clients need pairing, but use development networks only";
+    }
     ALogger::info(LOG_TAG) << "Remote agent listens on wss://127.0.0.1:" << impl.server->port()
                            << (impl.discoveryFile.empty() ? AString {} : " (" + AString(impl.discoveryFile) + ")");
 }
@@ -309,8 +332,35 @@ _<ARemoteDebug> ARemoteDebug::running() {
     return slot();
 }
 
+namespace {
+/// An environment variable; on Android, which has no way to pass one to an app, also the system property
+/// `debug.aui.remote.<lowercase suffix>` (`adb shell setprop debug.aui.remote.bind 0.0.0.0`).
+AOptional<std::string> setting(const char* environmentVariable, const char* androidProperty) {
+    if (const char* value = std::getenv(environmentVariable)) {
+        return std::string(value);
+    }
+#if AUI_PLATFORM_ANDROID
+    std::array<char, PROP_VALUE_MAX> value {};
+    if (__system_property_get(androidProperty, value.data()) > 0) {
+        return std::string(value.data());
+    }
+#endif
+    return std::nullopt;
+}
+}   // namespace
+
 ARemoteDebug::Options ARemoteDebug::Options::fromEnvironment() {
     Options options;
+    if (auto bind = setting("AUI_REMOTE_BIND", "debug.aui.remote.bind")) {
+        options.bindAddress = *bind;
+    }
+    if (auto port = setting("AUI_REMOTE_PORT", "debug.aui.remote.port")) {
+        if (auto number = AString(*port).toUInt(); number && *number <= 65'535) {
+            options.port = static_cast<std::uint16_t>(*number);
+        } else {
+            ALogger::warn(LOG_TAG) << "AUI_REMOTE_PORT should be 0..65535, got: " << *port;
+        }
+    }
     if (const char* key = std::getenv("AUI_REMOTE_KEY")) {
         options.key = key;
     }
