@@ -287,8 +287,9 @@ AJson saveInlineScreenshot(AJson result, const AppInfo& app) {
                            std::chrono::system_clock::now().time_since_epoch())
                            .count();
     const auto path = folder / "screenshot-{}-{}.png"_format(app.pid, stamp);
-    AFileOutputStream(path).write(AByteBuffer::fromBase64String(data->asString()));
-    result.asObject().erase("data");
+    const auto png = AByteBuffer::fromBase64String(data->asString());
+    AFileOutputStream(path).write(png.data(), png.size());
+    result.asObject().removeIf([](const auto& entry) { return entry.first == "data"; });
     result["path"] = path.toStdString();
     return result;
 }
@@ -307,7 +308,7 @@ AJson doRemoteCommand(const ParsedArgs& args, CommandRequest request, const Dire
     }
     try {
         auto result = RpcClient::forApp(app, *key).call(request.method, request.params, request.timeout);
-        return app.remote ? saveInlineScreenshot(std::move(result), app) : result;
+        return app.remote && request.method == "screenshot" ? saveInlineScreenshot(std::move(result), app) : result;
     } catch (const RpcError& e) {
         if (e.code() == rpc_code::UNAUTHORIZED) {
             // the application does not know this key anymore (it asks for the code after a restart, or every time)

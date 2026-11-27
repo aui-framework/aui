@@ -44,7 +44,10 @@ I ARemoteDebug: discovery {"protocol":1,"pid":12345,"port":41567,"scheme":"wss",
 ```
 
 `aui-remote cli attach` takes the JSON from there and stores it next to the local discovery files, after which `list`,
-`pair` and every other command work with `--pid` of the application on the device.
+`pair` and every other command work with `--pid` of the application on the device. A screenshot of an attached
+application travels in the answer (`inline`) and is saved on the host, so the printed `path` is readable there. On Android
+and iOS the agent keeps its files (the discovery file, the trusted keys) in the data directory of the application, since
+there is no home directory.
 
 ### Android over adb
 
@@ -176,7 +179,7 @@ Text frames, JSON-RPC 2.0, protocol version 1. Errors carry `data.hint` with a s
 | `view.tree`, `view.find`, `view.properties`           | inspect views; `view.find` filters by `type`, `text`, `assName`|
 | `view.hitTest`, `view.interactive`                    | the views under a point; controls, text fields and views with a `clicked` connection |
 | `view.scrollIntoView`                                 | scrolls the scroll areas around a view so that it is visible   |
-| `screenshot`                                          | saves a PNG to the temp folder and returns its path; `ref` crops to a view, `crop` to an area, `scale` downscales, `annotate` numbers the interactive views |
+| `screenshot`                                          | saves a PNG to the temp folder and returns its path; `ref` crops to a view, `crop` to an area, `scale` downscales, `annotate` numbers the interactive views; `inline: true` returns the PNG as base64 in `data` instead of a `path` |
 | `input.pointer`                                       | `click`, `doubleClick`, `press`, `release`, `move`, `drag`, `scroll`, `longPress`, `fling` |
 | `input.touch`                                         | several fingers at once: `pinch`, `rotate` or arbitrary tracks |
 | `input.gesture`                                       | a long press gesture alone, for clients that hold the finger themselves |
