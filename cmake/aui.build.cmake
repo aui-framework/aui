@@ -829,16 +829,25 @@ macro(_aui_provide_toolbox_for_host)
     set(_workdir ${CMAKE_CURRENT_BINARY_DIR}/aui.toolbox_provider)
     file(MAKE_DIRECTORY ${_workdir})
     file(MAKE_DIRECTORY ${_workdir}/b)
+    if (EXISTS ${AUI_BUILD_AUI_ROOT}/aui.boot.cmake)
+        file(COPY ${AUI_BUILD_AUI_ROOT}/aui.boot.cmake DESTINATION ${_workdir})
+    endif()
     file(WRITE ${_workdir}/CMakeLists.txt [[
 cmake_minimum_required(VERSION 3.16)
 project(aui.toolbox_provider)
 set(CMAKE_CXX_STANDARD 20)
 set(BUILD_SHARED_LIBS FALSE)
 set(AUI_VERSION 377d530a608dc906dbd55d63fee7ceb40150149a)
-file(
-        DOWNLOAD
-        https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
-        ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+# the aui.boot.cmake of the AUI that asked for the toolbox, if it is at hand: fixes of AUI.Boot (i.e., AUIB_DISABLE_WERROR)
+# reach the build of the toolbox's dependencies this way
+if (EXISTS ${CMAKE_CURRENT_SOURCE_DIR}/aui.boot.cmake)
+    file(COPY ${CMAKE_CURRENT_SOURCE_DIR}/aui.boot.cmake DESTINATION ${CMAKE_CURRENT_BINARY_DIR})
+else()
+    file(
+            DOWNLOAD
+            https://raw.githubusercontent.com/aui-framework/aui/${AUI_VERSION}/aui.boot.cmake
+            ${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
+endif()
 include(${CMAKE_CURRENT_BINARY_DIR}/aui.boot.cmake)
 
 auib_import(aui https://github.com/aui-framework/aui
