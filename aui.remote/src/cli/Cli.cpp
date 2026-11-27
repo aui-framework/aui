@@ -4,6 +4,7 @@
 #include <iostream>
 #include <thread>
 
+#include <AUI/IO/AFileOutputStream.h>
 #include <AUI/Image/AImage.h>
 #include <AUI/Platform/AProcess.h>
 
@@ -274,8 +275,29 @@ AJson doStop(const ParsedArgs& args, const Directories& directories) {
     return AJson { { "stopped", true }, { "pid", int(pid) } };
 }
 
-AJson doRemoteCommand(const ParsedArgs& args, const CommandRequest& request, const Directories& directories) {
+/// A screenshot of an application on another machine arrives in the answer: it is saved here, where the caller can read it.
+AJson saveInlineScreenshot(AJson result, const AppInfo& app) {
+    const auto data = result.containsOpt("data");
+    if (!data || !data->isString()) {
+        return result;
+    }
+    const auto folder = APath::getDefaultPath(APath::TEMP) / "aui-remote";
+    folder.makeDirs();
+    const auto stamp = std::chrono::duration_cast<std::chrono::milliseconds>(
+                           std::chrono::system_clock::now().time_since_epoch())
+                           .count();
+    const auto path = folder / "screenshot-{}-{}.png"_format(app.pid, stamp);
+    AFileOutputStream(path).write(AByteBuffer::fromBase64String(data->asString()));
+    result.asObject().erase("data");
+    result["path"] = path.toStdString();
+    return result;
+}
+
+AJson doRemoteCommand(const ParsedArgs& args, CommandRequest request, const Directories& directories) {
     auto app = selectApp(args, runningApps(directories));
+    if (app.remote && request.method == "screenshot") {
+        request.params["inline"] = true;
+    }
     auto key = KeyStore(directories.keys).load(app);
     if (!key) {
         throw RpcError(
@@ -284,7 +306,8 @@ AJson doRemoteCommand(const ParsedArgs& args, const CommandRequest& request, con
                                   app.pid) } });
     }
     try {
-        return RpcClient::forApp(app, *key).call(request.method, request.params, request.timeout);
+        auto result = RpcClient::forApp(app, *key).call(request.method, request.params, request.timeout);
+        return app.remote ? saveInlineScreenshot(std::move(result), app) : result;
     } catch (const RpcError& e) {
         if (e.code() == rpc_code::UNAUTHORIZED) {
             // the application does not know this key anymore (it asks for the code after a restart, or every time)
