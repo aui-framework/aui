@@ -30,7 +30,7 @@ RpcClient RpcClient::forApp(const AppInfo& app, AString key) {
             AJson { { "hint", "the discovery file needs scheme \"wss\" and certSha256; rebuild the application with a "
                               "newer aui::dev_extras" } });
     }
-    return RpcClient(app.port, app.certSha256, std::move(key));
+    return RpcClient(app.host, app.port, app.certSha256, std::move(key));
 }
 
 AString RpcClient::target() const {
@@ -41,9 +41,9 @@ AString RpcClient::target() const {
     return result;
 }
 
-_<AWebsocket> connectToAgent(std::uint16_t port, const AString& certSha256, const AString& target,
+_<AWebsocket> connectToAgent(const AString& host, std::uint16_t port, const AString& certSha256, const AString& target,
                              std::chrono::milliseconds timeout) {
-    const auto url = "wss://127.0.0.1:{}{}"_format(port, target);
+    const auto url = "wss://{}:{}{}"_format(host, port, target);
     auto socket = _new<AWebsocket>(url, AWebsocket::Options {
                                           .expectedFingerprint = AByteBuffer::fromHexString(certSha256),
                                           .connectTimeout = timeout,
@@ -66,7 +66,7 @@ AVector<AJson> RpcClient::callSequence(const AVector<RpcRequest>& requests, std:
     const auto deadline = std::chrono::steady_clock::now() + timeout;
     AVector<AJson> results;
     try {
-        auto connection = connectToAgent(mPort, mCertSha256, target(), timeout);
+        auto connection = connectToAgent(mHost, mPort, mCertSha256, target(), timeout);
         for (std::size_t i = 0; i < requests.size(); ++i) {
             const auto& request = requests[i];
             AJson json = AJson::Object {};

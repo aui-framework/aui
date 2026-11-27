@@ -42,6 +42,12 @@ In a consumer project, the `aui` entry of `build/package-lock.json` tells where 
 uses is: `<install_dir>/bin/aui-remote`. With `-DAUIB_AUI_AS=ON` (`as_subdirectory` is `true`), AUI is a part of the
 consumer's build: `aui.remote` is then excluded from all and built with `cmake --build build -t aui.remote`.
 
+## Devices
+
+`aui-remote cli attach --adb` (Android over `adb forward`, or `--lan`) and `attach --host H --port P --cert SHA256` make an
+application on another machine usable with the rest of the commands; they are described in
+[Agentic development](../docs/agentic-development.md#devices-and-the-network).
+
 ## Claude Code skill
 
 Tick "Allow Claude to use AUI Remote" to write `($CLAUDE_CONFIG_DIR or ~/.claude)/skills/aui-remote/SKILL.md`; untick to

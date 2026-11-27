@@ -7,6 +7,7 @@
 #include <AUI/Image/AImage.h>
 #include <AUI/Platform/AProcess.h>
 
+#include "Attach.h"
 #include "ImageCompare.h"
 #include "TreeText.h"
 #include "network/KeyStore.h"
@@ -27,6 +28,8 @@ AJson toJson(const AppInfo& app, bool paired) {
     return AJson {
         { "pid", int(app.pid) },
         { "port", int(app.port) },
+        { "host", app.host },
+        { "remote", app.remote },
         { "exe", app.exe },
         { "argv", std::move(argv) },
         { "cwd", app.cwd },
@@ -79,8 +82,21 @@ std::uint32_t pidArgument(const ParsedArgs& args) {
     return *pid;
 }
 
-AJson doList(const Directories& directories) {
+/// Applications to choose from: local ones are checked by pid, attached ones by whether they answer.
+AVector<AppInfo> runningApps(const Directories& directories) {
     auto apps = discovery::list(directories.discovery);
+    apps.removeIf([&](const AppInfo& app) {
+        if (!app.remote || isAgentReachable(app)) {
+            return false;
+        }
+        discovery::forget(app.pid, directories.discovery);
+        return true;
+    });
+    return apps;
+}
+
+AJson doList(const Directories& directories) {
+    auto apps = runningApps(directories);
     KeyStore store(directories.keys);
     store.pruneExcept(apps);
     AJson result = AJson::Array {};
@@ -259,7 +275,7 @@ AJson doStop(const ParsedArgs& args, const Directories& directories) {
 }
 
 AJson doRemoteCommand(const ParsedArgs& args, const CommandRequest& request, const Directories& directories) {
-    auto app = selectApp(args, discovery::list(directories.discovery));
+    auto app = selectApp(args, runningApps(directories));
     auto key = KeyStore(directories.keys).load(app);
     if (!key) {
         throw RpcError(
@@ -336,6 +352,10 @@ int run(const AStringVector& args, const Directories& directories) {
             result = doPair(parsed, directories);
         } else if (parsed.command == "launch") {
             result = doLaunch(parsed, directories);
+        } else if (parsed.command == "attach") {
+            result = doAttach(parsed, directories);
+        } else if (parsed.command == "detach") {
+            result = doDetach(parsed, directories);
         } else if (parsed.command == "stop") {
             result = doStop(parsed, directories);
         } else if (parsed.command == "compare") {

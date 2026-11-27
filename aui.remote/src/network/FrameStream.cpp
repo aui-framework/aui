@@ -199,7 +199,7 @@ void FrameStream::start(float scale, aui::ranged_number<int, 0, 100> quality) {
             if (!key.empty()) {
                 target += "?key=" + key;
             }
-            auto connection = connectToAgent(app.port, app.certSha256, target, CONNECT_TIMEOUT);
+            auto connection = connectToAgent(app.host, app.port, app.certSha256, target, CONNECT_TIMEOUT);
             if (!session->connected(connection, AJson { { "scale", double(scale) }, { "quality", quality } })) {
                 return;
             }

@@ -50,6 +50,12 @@ AppInfo AppInfo::fromJson(const AJson& json) {
     if (info.pid == 0 || info.port == 0) {
         throw AException("discovery file has no pid or port");
     }
+    if (auto v = json.containsOpt("host"); v && v->isString()) {
+        info.host = v->asString();
+    }
+    if (auto v = json.containsOpt("remote"); v && v->isBool()) {
+        info.remote = v->asBool();
+    }
     if (auto v = json.containsOpt("exe"); v && v->isString()) {
         info.exe = v->asString();
     }
@@ -115,7 +121,7 @@ AVector<AppInfo> discovery::list(const APath& directory, const std::function<boo
         } catch (const AException&) {
             continue;
         }
-        if (!isAlive(info.pid)) {
+        if (!info.remote && !isAlive(info.pid)) {
             file.removeFile();
             continue;
         }
@@ -123,6 +129,40 @@ AVector<AppInfo> discovery::list(const APath& directory, const std::function<boo
     }
     std::sort(result.begin(), result.end(), [](const AppInfo& a, const AppInfo& b) { return a.pid < b.pid; });
     return result;
+}
+
+void discovery::store(const AppInfo& app, const APath& directory) {
+    directory.makeDirs();
+    AJson argv = AJson::Array {};
+    for (const auto& arg : app.argv) {
+        argv.push_back(arg);
+    }
+    const AJson json {
+        { "protocol", app.protocol },
+        { "pid", int(app.pid) },
+        { "port", int(app.port) },
+        { "host", app.host },
+        { "remote", true },
+        { "scheme", app.scheme },
+        { "certSha256", app.certSha256 },
+        { "exe", app.exe },
+        { "defaultPointer", app.defaultPointer },
+        { "pairing", app.pairing },
+        { "argv", std::move(argv) },
+        { "cwd", app.cwd },
+        { "startedAt", app.startedAt },
+    };
+    std::ofstream((directory / "remote-{}.json"_format(app.pid)).toStdString(), std::ios::binary)
+        << AJson::toString(json).toStdString();
+}
+
+bool discovery::forget(std::uint32_t pid, const APath& directory) {
+    auto file = directory / "remote-{}.json"_format(pid);
+    if (!file.isRegularFileExists()) {
+        return false;
+    }
+    file.removeFile();
+    return true;
 }
 
 AOptional<AppInfo> discovery::find(std::uint32_t pid, const APath& directory) {

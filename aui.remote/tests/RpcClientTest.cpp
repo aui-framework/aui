@@ -61,14 +61,14 @@ void writeDiscovery(const APath& dir, std::uint32_t pid, std::uint16_t port, con
 
 TEST(RpcClientTest, CallsWithKey) {
     FakeAgent agent("goodkey");
-    RpcClient client(agent.port(), agent.certSha256(), "goodkey");
+    RpcClient client("127.0.0.1", agent.port(), agent.certSha256(), "goodkey");
     auto result = client.call("window.list");
     EXPECT_EQ(result["windows"][0]["title"].asString(), "Fake");
 }
 
 TEST(RpcClientTest, SeveralRequestsShareTheConnection) {
     FakeAgent agent("goodkey");
-    RpcClient client(agent.port(), agent.certSha256(), "goodkey");
+    RpcClient client("127.0.0.1", agent.port(), agent.certSha256(), "goodkey");
     auto results = client.callSequence({ { "window.list", {} }, { "view.tree", AJson { { "depth", 4 } } } });
     ASSERT_EQ(results.size(), 2u);
     EXPECT_EQ(results[1]["echoDepth"].asInt(), 4);
@@ -76,7 +76,7 @@ TEST(RpcClientTest, SeveralRequestsShareTheConnection) {
 
 TEST(RpcClientTest, ErrorsCarryCodeAndHint) {
     FakeAgent agent("goodkey");
-    RpcClient client(agent.port(), agent.certSha256(), "goodkey");
+    RpcClient client("127.0.0.1", agent.port(), agent.certSha256(), "goodkey");
     try {
         client.call("fail");
         FAIL();
@@ -88,7 +88,7 @@ TEST(RpcClientTest, ErrorsCarryCodeAndHint) {
 
 TEST(RpcClientTest, UnauthorizedConnectionCanOnlyPair) {
     FakeAgent agent;
-    RpcClient client(agent.port(), agent.certSha256(), "");
+    RpcClient client("127.0.0.1", agent.port(), agent.certSha256(), "");
     try {
         client.call("window.list");
         FAIL();
@@ -102,7 +102,7 @@ TEST(RpcClientTest, WrongCertificateIsRejected) {
     FakeAgent agent("goodkey");
     FakeAgent other;
     try {
-        RpcClient(agent.port(), other.certSha256(), "goodkey").call("window.list");
+        RpcClient("127.0.0.1", agent.port(), other.certSha256(), "goodkey").call("window.list");
         FAIL();
     } catch (const RpcError& e) {
         EXPECT_NE(e.getMessage().find("secure connection failed"), AString::NPOS);
@@ -132,7 +132,7 @@ TEST(RpcClientTest, ConnectionToNothingFails) {
         port = agent.port();
         cert = agent.certSha256();
     }
-    EXPECT_THROW(RpcClient(port, cert, "k").call("window.list", {}, std::chrono::seconds(5)), RpcError);
+    EXPECT_THROW(RpcClient("127.0.0.1", port, cert, "k").call("window.list", {}, std::chrono::seconds(5)), RpcError);
 }
 
 TEST(CliTest, ListShowsPairedFlagAndPrunesDeadApps) {

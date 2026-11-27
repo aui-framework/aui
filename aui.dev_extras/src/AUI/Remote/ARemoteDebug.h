@@ -85,12 +85,16 @@ public:
 
     struct API_AUI_DEV_EXTRAS Options {
         /**
-         * @brief Address to listen. Keep it on the loopback.
+         * @brief Address to listen. The loopback by default, which is enough for a client on the same machine and for
+         * `adb forward`. `0.0.0.0` makes the agent reachable from the local network (the traffic is encrypted and
+         * clients are paired, still development networks only); ARemoteDebug::Options::fromEnvironment takes it from
+         * `AUI_REMOTE_BIND`.
          */
         AString bindAddress = "127.0.0.1";
 
         /**
-         * @brief Port to listen; 0 picks a free one.
+         * @brief Port to listen; 0 picks a free one. A fixed port saves `adb forward` and the address in a client from
+         * changing on every start (`AUI_REMOTE_PORT`).
          */
         std::uint16_t port = 0;
 
@@ -114,6 +118,9 @@ public:
          * @brief Options with the key taken from the environment variable `AUI_REMOTE_KEY`, which a client sets when
          * it launches the application itself. Without the variable, the key is empty and clients pair with a code.
          * The environment variable `AUI_REMOTE_PAIRING` (`remember`, `session` or `always`) sets Options::pairing.
+         * `AUI_REMOTE_BIND` and `AUI_REMOTE_PORT` set Options::bindAddress and Options::port. On Android, which has no
+         * environment to pass to an app, the system properties `debug.aui.remote.bind` and `debug.aui.remote.port` are
+         * read instead (`adb shell setprop`).
          */
         static Options fromEnvironment();
     };

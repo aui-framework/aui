@@ -38,6 +38,16 @@ Never guess the code; after 3 wrong attempts it is void.
 
 With several apps running pass `--pid N` to every command.
 
+An application on an Android device is attached first (the app has to be running and call `ARemoteDebug::start()`):
+
+```
+{{EXE}} cli attach --adb [--serial S]   # takes the agent from logcat and runs `adb forward`; --lan uses the Wi-Fi address
+{{EXE}} cli pair <pid> ...              # as above, the code is on the device screen
+```
+
+After the app restarts, attach again: the port and the certificate are new. `attach --host H --port P --cert SHA256`
+does the same for any machine whose agent listens on the network (`AUI_REMOTE_BIND=0.0.0.0`). `detach <pid>` forgets it.
+
 ## The loop
 
 1. On a screen you haven't seen yet, `screenshot --annotate`: the PNG has a numbered box over every clickable or

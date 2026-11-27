@@ -6,7 +6,7 @@ namespace aui_remote::cli {
 
 namespace {
 
-const std::set<std::string> FLAGS = { "interactive", "include-invisible", "inspector", "json", "annotate", "help" };
+const std::set<std::string> FLAGS = { "interactive", "include-invisible", "inspector", "json", "annotate", "help", "adb", "lan" };
 
 /// number if the text looks like one, string otherwise.
 AJson numberOrString(const AString& text) {
@@ -208,6 +208,8 @@ const AVector<CommandHelp>& commandHelp() {
     static const AVector<CommandHelp> result = {
         { R"(list)", R"(running applications and whether they are paired)" },
         { R"(launch [--cwd dir] [--env K=V]... [--timeout s] -- <exe> [args])", R"(starts an application with a trusted key, prints {pid, port, stdout, stderr})" },
+        { R"(attach --adb [--serial S] [--lan] [--adb-path P] / attach --host H --port P --cert SHA256 [--pid N] [--name NAME])", R"(makes an application on another machine visible: an Android device through `adb forward` (or its Wi-Fi address with --lan), or any host with a known certificate fingerprint; then `pair` and the usual commands with --pid)" },
+        { R"(detach <pid>)", R"(forgets an attached application)" },
         { R"(stop <pid>)", R"(stops an application)" },
         { R"(pair <pid> [--code N])", R"(makes the application show a 6-digit code; with --code confirms it)" },
         { R"(windows)", R"(windows and their ids)" },
@@ -251,7 +253,7 @@ AStringVector commandNames() {
              "screenshot", "interactive", "click", "dblclick", "press", "release", "drag",       "scroll",
              "long-press", "fling", "pinch", "rotate", "touch",
              "move",     "type",  "key",      "wait-idle", "wait-view", "logs",     "functions", "call",
-             "launch",   "stop",  "compare" };
+             "launch",   "attach", "detach", "stop",  "compare" };
 }
 
 AOptional<CommandRequest> buildRequest(const ParsedArgs& args) {

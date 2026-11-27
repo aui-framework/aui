@@ -53,7 +53,7 @@ constexpr int CLIENT_ERROR = -32099;
  * @throws RpcError if the application refuses the connection
  * @throws AException (ATlsException, AIOException...) on a transport failure
  */
-[[nodiscard]] _<AWebsocket> connectToAgent(std::uint16_t port, const AString& certSha256, const AString& target,
+[[nodiscard]] _<AWebsocket> connectToAgent(const AString& host, std::uint16_t port, const AString& certSha256, const AString& target,
                                            std::chrono::milliseconds timeout);
 
 struct RpcRequest {
@@ -75,12 +75,13 @@ public:
     static constexpr std::chrono::milliseconds DEFAULT_TIMEOUT = std::chrono::seconds(15);
 
     /**
+     * @param host address of the agent, `127.0.0.1` for an application on this machine or behind `adb forward`
      * @param port port of the agent
      * @param certSha256 expected SHA-256 of the certificate of the agent, hex
      * @param key key to authorize the connection; empty to connect as unauthorized
      */
-    RpcClient(std::uint16_t port, AString certSha256, AString key)
-      : mPort(port), mCertSha256(std::move(certSha256)), mKey(std::move(key)) {}
+    RpcClient(AString host, std::uint16_t port, AString certSha256, AString key)
+      : mHost(std::move(host)), mPort(port), mCertSha256(std::move(certSha256)), mKey(std::move(key)) {}
 
     /**
      * @throws RpcError if the discovery file describes an agent without the pinned wss (refused to talk)
@@ -106,6 +107,7 @@ public:
     [[nodiscard]] AString target() const;
 
 private:
+    AString mHost;
     std::uint16_t mPort;
     AString mCertSha256;
     AString mKey;

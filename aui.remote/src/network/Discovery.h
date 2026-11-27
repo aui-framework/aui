@@ -18,6 +18,20 @@ struct AppInfo {
     int protocol = 1;
     std::uint32_t pid = 0;
     std::uint16_t port = 0;
+
+    /**
+     * @brief Where the agent is reachable from here: `127.0.0.1` for an application on this machine and for one behind
+     * `adb forward`, the address of the device in a local network otherwise.
+     */
+    AString host = "127.0.0.1";
+
+    /**
+     * @brief The application runs on another machine (attached with `aui-remote cli attach`): `pid` is the one over
+     * there and means nothing here, so the process is not checked and the entry is dropped when the agent stops
+     * answering.
+     */
+    bool remote = false;
+
     AString exe;
     AStringVector argv;
     AString cwd;
@@ -88,10 +102,22 @@ bool terminateProcess(std::uint32_t pid, std::chrono::milliseconds grace = std::
  * @brief Lists the applications described in `directory`.
  * @param isAlive tells whether a pid is alive; the discovery files of dead processes are deleted
  * @details
+ * Attached applications (AppInfo::remote) are not checked with `isAlive`; the caller probes them.
  * Files that are not valid discovery files are skipped, but not deleted. The result is sorted by pid.
  */
 AVector<AppInfo> list(const APath& directory = defaultDirectory(),
                       const std::function<bool(std::uint32_t)>& isAlive = isProcessAlive);
+
+/**
+ * @brief Remembers an application that runs on another machine as `remote-<pid>.json` in `directory`.
+ */
+void store(const AppInfo& app, const APath& directory = defaultDirectory());
+
+/**
+ * @brief Forgets the attached application with this pid.
+ * @return whether there was one
+ */
+bool forget(std::uint32_t pid, const APath& directory = defaultDirectory());
 
 /**
  * @brief Reads `<pid>.json` from `directory`.
